@@ -313,7 +313,15 @@ namespace SmartScreenDock
             try { await HideDock(); Press(VK_LWIN, 0x56); }
             catch (Exception ex) { Logger.Log(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
         }
-        private void BtnCalc_Click(object sender, RoutedEventArgs e) => Process.Start("calc.exe");
+        private void BtnCalc_Click(object sender, RoutedEventArgs e)
+        {
+            try { Process.Start("calc.exe"); }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                new DarkDialog($"Не удалось открыть калькулятор:\n{ex.Message}") { Owner = this }.ShowDialog();
+            }
+        }
         private void BtnSettings_Click(object sender, RoutedEventArgs e) => new SettingsWindow(this).ShowDialog();
         private void BtnClose_Click(object sender, RoutedEventArgs e) { _notifyIcon?.Dispose(); Application.Current.Shutdown(); }
 
