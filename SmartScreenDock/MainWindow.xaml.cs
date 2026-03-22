@@ -40,6 +40,7 @@ namespace SmartScreenDock
 
         private DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
         private bool _shown = false, _isAnimating = false;
+        private bool _isSaving = false;
         private readonly string _configFile;
         private List<CustomElement> _elements = new();
         private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
@@ -186,17 +187,26 @@ namespace SmartScreenDock
 
         public async Task SaveElement(CustomElement updated, string? removeId = null)
         {
-            if (removeId != null)
-                _elements.RemoveAll(x => x.Id == removeId);
+            if (_isSaving) return;
+            _isSaving = true;
+            try
+            {
+                if (removeId != null)
+                    _elements.RemoveAll(x => x.Id == removeId);
 
-            var existing = _elements.FirstOrDefault(x => x.Id == updated.Id);
-            if (existing != null)
-                _elements[_elements.IndexOf(existing)] = updated;
-            else
-                _elements.Add(updated);
+                var existing = _elements.FirstOrDefault(x => x.Id == updated.Id);
+                if (existing != null)
+                    _elements[_elements.IndexOf(existing)] = updated;
+                else
+                    _elements.Add(updated);
 
-            await SaveConfig();
-            await RefreshPanel();
+                await SaveConfig();
+                await RefreshPanel();
+            }
+            finally
+            {
+                _isSaving = false;
+            }
         }
 
         private string GetChromePath() {
