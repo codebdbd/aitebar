@@ -60,18 +60,6 @@ namespace SmartScreenDock
             DwmSetWindowAttribute(hwnd, 20, ref darkTheme, sizeof(int));
         }
 
-        private void LogError(Exception ex)
-        {
-            try
-            {
-                string logPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "Codebdbd", "Aite Deck", "error.log");
-                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {ex}\n\n");
-            }
-            catch { }
-        }
-
         private void LoadKeyList()
         {
             CmbKey.Items.Clear();
@@ -144,7 +132,7 @@ namespace SmartScreenDock
                     var brush = new BrushConverter().ConvertFromString(colorStr) as Brush;
                     if (brush != null) { _selectedColor = colorStr; UpdatePreview(); }
                 }
-            } catch (Exception ex) { LogError(ex); }
+            } catch (Exception ex) { Logger.Log(ex); }
         }
 
         private void BtnOpenCatalog_Click(object sender, RoutedEventArgs e)
@@ -192,7 +180,7 @@ namespace SmartScreenDock
                         {
                             displayName = nameProp.GetString() ?? displayName;
                         }
-                    } catch (Exception ex) { LogError(ex); }
+                    } catch (Exception ex) { Logger.Log(ex); }
                 }
                 CmbChromeProfile.Items.Add(new ComboBoxItem { Content = displayName, Tag = dir });
             }
@@ -245,7 +233,7 @@ namespace SmartScreenDock
             }
             catch (Exception ex)
             {
-                LogError(ex);
+                Logger.Log(ex);
                 new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog();
             }
         }

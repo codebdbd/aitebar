@@ -62,18 +62,6 @@ namespace SmartScreenDock
             InitTrayIcon();
         }
 
-        private void LogError(Exception ex)
-        {
-            try
-            {
-                string logPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                    "Codebdbd", "Aite Deck", "error.log");
-                File.AppendAllText(logPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {ex}\n\n");
-            }
-            catch { }
-        }
-
         private void InitTrayIcon()
         {
             _notifyIcon = new System.Windows.Forms.NotifyIcon();
@@ -84,7 +72,7 @@ namespace SmartScreenDock
                 if (streamInfo != null) {
                     using (var stream = streamInfo.Stream) _notifyIcon.Icon = new Icon(stream);
                 } else _notifyIcon.Icon = SystemIcons.Application;
-            } catch (Exception ex) { LogError(ex); _notifyIcon.Icon = SystemIcons.Application; }
+            } catch (Exception ex) { Logger.Log(ex); _notifyIcon.Icon = SystemIcons.Application; }
 
             _notifyIcon.Text = "SmartScreenDock";
             _notifyIcon.Visible = true;
@@ -109,7 +97,7 @@ namespace SmartScreenDock
         private void OpenUrl(string url) {
             try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
             catch (Exception ex) {
-                LogError(ex);
+                Logger.Log(ex);
                 new DarkDialog($"Не удалось открыть ссылку:\n{ex.Message}") { Owner = this }.ShowDialog();
             }
         }
@@ -132,7 +120,7 @@ namespace SmartScreenDock
             }
             catch (Exception ex)
             {
-                LogError(ex);
+                Logger.Log(ex);
                 new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog();
             }
         }
@@ -146,7 +134,7 @@ namespace SmartScreenDock
                 try {
                     string json = await File.ReadAllTextAsync(_configFile);
                     _elements = JsonSerializer.Deserialize<List<CustomElement>>(json) ?? new();
-                } catch (Exception ex) { LogError(ex); _elements = new(); }
+                } catch (Exception ex) { Logger.Log(ex); _elements = new(); }
 
                 foreach (var el in _elements) {
                     var btn = new Button { 
@@ -170,7 +158,7 @@ namespace SmartScreenDock
                         }
                         catch (Exception ex)
                         {
-                            LogError(ex);
+                            Logger.Log(ex);
                             new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog();
                         }
                     };
@@ -193,7 +181,7 @@ namespace SmartScreenDock
 
         private async Task SaveConfig() {
             try { await File.WriteAllTextAsync(_configFile, JsonSerializer.Serialize(_elements, new JsonSerializerOptions { WriteIndented = true })); }
-            catch (Exception ex) { LogError(ex); Debug.WriteLine($"Ошибка сохранения: {ex.Message}"); }
+            catch (Exception ex) { Logger.Log(ex); Debug.WriteLine($"Ошибка сохранения: {ex.Message}"); }
         }
 
         public async Task SaveElement(CustomElement updated, string? removeId = null)
@@ -220,7 +208,7 @@ namespace SmartScreenDock
                 if (!string.IsNullOrEmpty(regVal) && File.Exists(regVal))
                     return regVal;
             }
-            catch (Exception ex) { LogError(ex); }
+            catch (Exception ex) { Logger.Log(ex); }
 
             string[] paths = { 
                 @"C:\Program Files\Google\Chrome\Application\chrome.exe", 
@@ -296,7 +284,7 @@ namespace SmartScreenDock
                     if (confirm.ShowDialog() != true) return;
                     Process.Start(new ProcessStartInfo("cmd.exe", $"/c {el.ActionValue}") { CreateNoWindow = true, UseShellExecute = false });
                 }
-            } catch (Exception ex) { LogError(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
+            } catch (Exception ex) { Logger.Log(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
         }
 
         private async void BtnSearch_Click(object sender, RoutedEventArgs e) {
@@ -308,22 +296,22 @@ namespace SmartScreenDock
             }
             catch (Exception ex)
             {
-                LogError(ex);
+                Logger.Log(ex);
                 new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog();
             }
         }
 
         private async void BtnScreenshotRegion_Click(object sender, RoutedEventArgs e) {
             try { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true }); }
-            catch (Exception ex) { LogError(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
+            catch (Exception ex) { Logger.Log(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
         }
         private async void BtnRecordVideo_Click(object sender, RoutedEventArgs e) {
             try { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true }); }
-            catch (Exception ex) { LogError(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
+            catch (Exception ex) { Logger.Log(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
         }
         private async void BtnClipboard_Click(object sender, RoutedEventArgs e) {
             try { await HideDock(); Press(VK_LWIN, 0x56); }
-            catch (Exception ex) { LogError(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
+            catch (Exception ex) { Logger.Log(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
         }
         private void BtnCalc_Click(object sender, RoutedEventArgs e) => Process.Start("calc.exe");
         private void BtnSettings_Click(object sender, RoutedEventArgs e) => new SettingsWindow(this).ShowDialog();
