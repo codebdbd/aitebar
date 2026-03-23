@@ -10,5 +10,6 @@
 
   <ItemGroup>
     <Resource Include="Resources\app.ico" />
+    <Resource Include="Resources\Font Awesome 7 Brands-Regular-400.otf" />
   </ItemGroup>
 </Project>

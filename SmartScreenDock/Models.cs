@@ -10,13 +10,23 @@ namespace SmartScreenDock {
         Other = 5
     }
 
+    public enum ActionType
+    {
+        Web,
+        Hotkey,
+        Exe,
+        ScriptFile,
+        Command
+    }
+
     public class CustomElement {
         public string Id { get; set; } = Guid.NewGuid().ToString();
         public int BlockId { get; set; } = 4;
         public string Name { get; set; } = "";
         public string Icon { get; set; } = "\uE710";
+        public string IconFont { get; set; } = "Segoe Fluent Icons";
         public string Color { get; set; } = "#E3E3E3";
-        public string ActionType { get; set; } = "Web";
+        public string ActionType { get; set; } = nameof(SmartScreenDock.ActionType.Web);
         public string ActionValue { get; set; } = "";
         public string ChromeProfile { get; set; } = "";
         

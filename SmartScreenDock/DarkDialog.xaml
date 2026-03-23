@@ -1,6 +1,8 @@
-<Window x:Class="SmartScreenDock.DarkDialog"
+<local:DarkWindow x:Class="SmartScreenDock.DarkDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:SmartScreenDock"
+        Icon="pack://application:,,,/Resources/app.ico"
         Title="Внимание" Width="380" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" Background="#1E1E1E" Foreground="White"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
@@ -45,4 +47,4 @@
             <Button x:Name="BtnOk" Content="ОК" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnOk_Click" Visibility="Collapsed"/>
         </StackPanel>
     </Grid>
-</Window>
+</local:DarkWindow>

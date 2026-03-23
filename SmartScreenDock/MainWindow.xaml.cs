@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -27,23 +28,70 @@ namespace SmartScreenDock
     public partial class MainWindow : Window
     {
         [DllImport("user32.dll")] internal static extern bool GetCursorPos(ref Win32Point pt);
-        [DllImport("user32.dll")] static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
         [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+        [DllImport("user32.dll")] static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
+        [DllImport("user32.dll")] static extern bool UnhookWindowsHookEx(IntPtr hhk);
+        [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+        [DllImport("kernel32.dll")] static extern IntPtr GetModuleHandle(string lpModuleName);
         
         [StructLayout(LayoutKind.Sequential)] internal struct Win32Point { public int X; public int Y; }
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MSLLHOOKSTRUCT
+        {
+            public Win32Point pt;
+            public uint mouseData;
+            public uint flags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        // Win32 INPUT на x64 = 28 байт (4 type + 24 KEYBDINPUT с выравниванием IntPtr).
+        // Size = 28 задаётся явно, чтобы Marshal.SizeOf вернул правильное значение
+        // независимо от разрядности и не требовал поля-заглушки.
+        [StructLayout(LayoutKind.Sequential, Size = 28)]
+        private struct INPUT
+        {
+            public uint type;
+            public KEYBDINPUT ki;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct KEYBDINPUT
+        {
+            public ushort wVk;
+            public ushort wScan;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
 
         const byte VK_LWIN = 0x5B, VK_SHIFT = 0x10, VK_CONTROL = 0x11, VK_MENU = 0x12;
-        const uint KEYUP = 0x0002;
+        private const uint INPUT_KEYBOARD = 1;
+        private const uint KEYEVENTF_KEYUP = 0x0002;
+        private const string AppCompany = "Codebdbd";
+        private const string AppName = "Aite Deck";
         static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         const uint SWP_NOSIZE = 0x0001;
         const uint SWP_NOMOVE = 0x0002;
+        const int WH_MOUSE_LL = 14;
+        const int WM_LBUTTONDOWN = 0x0201;
 
         private DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
         private bool _shown = false, _isAnimating = false;
-        private bool _isSaving = false;
+        private double _panelLeft, _panelTop, _panelRight, _panelBottom, _cachedDpi = 1.0;
+        private static readonly BrushConverter _brushConverter = new();
+        private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
         private readonly string _configFile;
         private List<CustomElement> _elements = new();
         private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
+        // Поле обязательно: делегат передаётся в SetWindowsHookEx и должен оставаться живым.
+        // Если убрать поле — GC соберёт делегат, и хук упадёт с AccessViolationException.
+        private LowLevelMouseProc? _mouseProc;
+        private IntPtr _mouseHook = IntPtr.Zero;
 
         public MainWindow()
         {
@@ -54,13 +102,16 @@ namespace SmartScreenDock
                 this.MaxWidth = SystemParameters.WorkArea.Width - 20;
                 this.Left = (SystemParameters.PrimaryScreenWidth - this.ActualWidth) / 2;
                 if (!_shown && !double.IsNaN(this.ActualHeight)) this.Top = -this.ActualHeight;
+                UpdatePanelBounds();
             };
             
-            string configDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Codebdbd", "Aite Deck");
+            string configDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppCompany, AppName);
             if (!Directory.Exists(configDir)) Directory.CreateDirectory(configDir);
             _configFile = Path.Combine(configDir, "custom_buttons.json");
 
             InitTrayIcon();
+
+            Application.Current.Exit += (_, _) => UninstallMouseHook();
         }
 
         private void InitTrayIcon()
@@ -79,7 +130,7 @@ namespace SmartScreenDock
             _notifyIcon.Visible = true;
 
             var trayMenu = new System.Windows.Forms.ContextMenuStrip();
-            trayMenu.Items.Add("Открыть", null, (s, e) => { if (!_shown) { _shown = true; Toggle(0); } });
+            trayMenu.Items.Add("Открыть", null, (s, e) => { if (!_shown) { _shown = true; Toggle(false); } });
             trayMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
             trayMenu.Items.Add("О программе", null, (s, e) => OpenUrl("https://github.com/codebdbd/intro/en/products/aitedeck/index.html"));
             trayMenu.Items.Add("Справка", null, (s, e) => OpenUrl("https://github.com/codebdbd/intro/en/products/aitedeck/guide.html"));
@@ -90,9 +141,58 @@ namespace SmartScreenDock
             _notifyIcon.ContextMenuStrip = trayMenu;
             _notifyIcon.MouseClick += (s, e) => {
                 if (e.Button == System.Windows.Forms.MouseButtons.Left) {
-                    if (!_shown) { _shown = true; Toggle(0); }
+                    if (!_shown) { _shown = true; Toggle(false); }
                 }
             };
+        }
+
+        private void InstallMouseHook()
+        {
+            try
+            {
+                if (_mouseHook != IntPtr.Zero) return;
+                _mouseProc = MouseHookCallback;
+                using var curProcess = Process.GetCurrentProcess();
+                using var curModule = curProcess.MainModule ?? throw new InvalidOperationException("MainModule is null");
+                _mouseHook = SetWindowsHookEx(WH_MOUSE_LL, _mouseProc, GetModuleHandle(curModule.ModuleName!), 0);
+                if (_mouseHook == IntPtr.Zero) Logger.Log(new Exception("SetWindowsHookEx failed"));
+            }
+            catch (Exception ex) { Logger.Log(ex); }
+        }
+
+        private void UninstallMouseHook()
+        {
+            if (_mouseHook == IntPtr.Zero) return;
+            UnhookWindowsHookEx(_mouseHook);
+            _mouseHook = IntPtr.Zero;
+        }
+
+        private IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode >= 0 && wParam == (IntPtr)WM_LBUTTONDOWN && _shown && !_isAnimating)
+            {
+                var hookStruct = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+                double x = hookStruct.pt.X;
+                double y = hookStruct.pt.Y;
+
+                bool clickedOutside = x < _panelLeft || x > _panelRight || y < _panelTop || y > _panelBottom;
+
+                if (clickedOutside)
+                {
+                    this.Dispatcher.InvokeAsync(async () => await HideDock());
+                }
+            }
+            return CallNextHookEx(_mouseHook, nCode, wParam, lParam);
+        }
+
+        private void UpdatePanelBounds()
+        {
+            if (!this.IsLoaded) return;
+            _cachedDpi = PresentationSource.FromVisual(this)?.CompositionTarget?.TransformToDevice.M11 ?? 1.0;
+            _panelLeft = this.Left * _cachedDpi;
+            _panelTop = this.Top * _cachedDpi;
+            _panelRight = _panelLeft + this.ActualWidth * _cachedDpi;
+            _panelBottom = _panelTop + this.ActualHeight * _cachedDpi;
         }
 
         private void OpenUrl(string url) {
@@ -113,11 +213,11 @@ namespace SmartScreenDock
                     if (GetCursorPos(ref pt)) {
                         double screenWidth = SystemParameters.PrimaryScreenWidth;
                         bool inActivationZone = pt.Y == 0 && pt.X > (screenWidth * 0.35) && pt.X < (screenWidth * 0.65);
-                        if (inActivationZone && !_shown) { _shown = true; Toggle(0); }
-                        else if (pt.Y > this.ActualHeight + 20 && _shown) { _shown = false; Toggle(-1); }
+                        if (inActivationZone && !_shown) { _shown = true; Toggle(false); }
                     }
                 };
                 _timer.Start();
+                InstallMouseHook();
             }
             catch (Exception ex)
             {
@@ -141,7 +241,8 @@ namespace SmartScreenDock
                     var btn = new Button { 
                         Content = el.Icon, 
                         ToolTip = el.Name, 
-                        Foreground = new BrushConverter().ConvertFromString(el.Color) as Brush ?? Brushes.White
+                        FontFamily = FontHelper.Resolve(el.IconFont),
+                        Foreground = _brushConverter.ConvertFromString(el.Color) as Brush ?? Brushes.White
                     };
                     btn.Click += async (s, e) => await ExecuteCustomAction(el);
                     
@@ -149,12 +250,16 @@ namespace SmartScreenDock
                     var editItem = new MenuItem { Header = "Редактировать", Style = (Style)FindResource("DarkMenuItem") };
                     editItem.Click += (s, e) => new SettingsWindow(this, el).ShowDialog();
                     var delItem = new MenuItem { Header = "Удалить", Style = (Style)FindResource("DarkMenuItem") };
+                    var capturedId = el.Id;
+                    var capturedName = el.Name;
                     delItem.Click += async (s, e) => {
                         try
                         {
-                            var dlg = new DarkDialog($"Удалить '{el.Name}'?", isConfirm: true) { Owner = this };
+                            var dlg = new DarkDialog($"Удалить '{capturedName}'?", isConfirm: true) { Owner = this };
                             if (dlg.ShowDialog() == true) {
-                                _elements.Remove(el); await SaveConfig(); await RefreshPanel();
+                                _elements.RemoveAll(x => x.Id == capturedId);
+                                await SaveConfig();
+                                await RefreshPanel();
                             }
                         }
                         catch (Exception ex)
@@ -181,32 +286,32 @@ namespace SmartScreenDock
         }
 
         private async Task SaveConfig() {
-            try { await File.WriteAllTextAsync(_configFile, JsonSerializer.Serialize(_elements, new JsonSerializerOptions { WriteIndented = true })); }
+            await _saveSemaphore.WaitAsync();
+            try
+            {
+                await File.WriteAllTextAsync(_configFile,
+                    JsonSerializer.Serialize(_elements, new JsonSerializerOptions { WriteIndented = true }));
+            }
             catch (Exception ex) { Logger.Log(ex); Debug.WriteLine($"Ошибка сохранения: {ex.Message}"); }
+            finally
+            {
+                _saveSemaphore.Release();
+            }
         }
 
         public async Task SaveElement(CustomElement updated, string? removeId = null)
         {
-            if (_isSaving) return;
-            _isSaving = true;
-            try
-            {
-                if (removeId != null)
-                    _elements.RemoveAll(x => x.Id == removeId);
+            if (removeId != null)
+                _elements.RemoveAll(x => x.Id == removeId);
 
-                var existing = _elements.FirstOrDefault(x => x.Id == updated.Id);
-                if (existing != null)
-                    _elements[_elements.IndexOf(existing)] = updated;
-                else
-                    _elements.Add(updated);
+            var existing = _elements.FirstOrDefault(x => x.Id == updated.Id);
+            if (existing != null)
+                _elements[_elements.IndexOf(existing)] = updated;
+            else
+                _elements.Add(updated);
 
-                await SaveConfig();
-                await RefreshPanel();
-            }
-            finally
-            {
-                _isSaving = false;
-            }
+            await SaveConfig();
+            await RefreshPanel();
         }
 
         private string GetChromePath() {
@@ -229,17 +334,26 @@ namespace SmartScreenDock
             return "chrome.exe";
         }
 
-        private void Toggle(double targetY) {
+        private void Toggle(bool hide) {
             _isAnimating = true;
             _timer.Stop();
-            double finalY = targetY < 0 ? -this.ActualHeight : 0;
+            double finalY = hide ? -this.ActualHeight : 0;
             var anim = new DoubleAnimation(finalY, TimeSpan.FromMilliseconds(200)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-            anim.Completed += (s, ev) => { this.BeginAnimation(TopProperty, null); this.Top = finalY; _isAnimating = false; _timer.Start(); };
+            anim.Completed += (s, ev) => { this.BeginAnimation(TopProperty, null); this.Top = finalY; _isAnimating = false; _timer.Start(); UpdatePanelBounds(); };
             this.BeginAnimation(TopProperty, anim);
         }
 
-        private async Task HideDock() { if (_shown) { _shown = false; Toggle(-1); await Task.Delay(250); } }
-        private void Press(params byte[] keys) { foreach (var k in keys) keybd_event(k, 0, 0, 0); foreach (var k in keys) keybd_event(k, 0, KEYUP, 0); }
+        private async Task HideDock() { if (_shown) { _shown = false; Toggle(true); await Task.Delay(250); } }
+        private void Press(params byte[] keys)
+        {
+            var inputs = new INPUT[keys.Length * 2];
+            for (int i = 0; i < keys.Length; i++)
+            {
+                inputs[i] = new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = keys[i] } };
+                inputs[keys.Length + i] = new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = keys[i], dwFlags = KEYEVENTF_KEYUP } };
+            }
+            SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
+        }
 
         private string AdvanceProfile(CustomElement el) {
             string basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Google\Chrome\User Data");
@@ -248,51 +362,86 @@ namespace SmartScreenDock
             profiles.AddRange(Directory.GetDirectories(basePath, "Profile *").Select(p => Path.GetFileName(p)!));
             profiles = profiles.OrderBy(p => p).ToList();
             int idx = profiles.IndexOf(el.LastUsedProfile);
+            if (idx < 0) return profiles[0];
             return profiles[(idx + 1) % profiles.Count];
         }
 
         private async Task ExecuteCustomAction(CustomElement el) {
             try {
                 await HideDock();
-                if (el.ActionType == "Hotkey") {
-                    if (el.Ctrl) keybd_event(VK_CONTROL, 0, 0, 0);
-                    if (el.Shift) keybd_event(VK_SHIFT, 0, 0, 0);
-                    if (el.Alt) keybd_event(VK_MENU, 0, 0, 0);
-                    if (el.Win) keybd_event(VK_LWIN, 0, 0, 0);
-                    if (Enum.TryParse(typeof(Key), el.Key, out var k)) {
-                        byte vk = (byte)KeyInterop.VirtualKeyFromKey((Key)k!);
-                        keybd_event(vk, 0, 0, 0); keybd_event(vk, 0, KEYUP, 0);
-                    }
-                    if (el.Win) keybd_event(VK_LWIN, 0, KEYUP, 0);
-                    if (el.Alt) keybd_event(VK_MENU, 0, KEYUP, 0);
-                    if (el.Shift) keybd_event(VK_SHIFT, 0, KEYUP, 0);
-                    if (el.Ctrl) keybd_event(VK_CONTROL, 0, KEYUP, 0);
-                } 
-                else if (el.ActionType == "Web") {
-                    string chromePath = GetChromePath(); List<string> args = new();
-                    if (el.IsAppMode) args.Add($"--app=\"{el.ActionValue}\""); else args.Add($"\"{el.ActionValue}\"");
-                    if (el.IsIncognito) args.Add("--incognito");
-                    string prof = el.ChromeProfile;
-                    if (el.UseRotation) { prof = AdvanceProfile(el); el.LastUsedProfile = prof; await SaveConfig(); }
-                    if (!string.IsNullOrEmpty(prof)) args.Add($"--profile-directory=\"{Path.GetFileName(prof)}\"");
-                    var proc = Process.Start(new ProcessStartInfo(chromePath, string.Join(" ", args)) { UseShellExecute = true });
-                    if (el.IsTopmost && proc != null) {
-                        for (int i = 0; i < 25; i++) {
-                            await Task.Delay(200);
-                            proc.Refresh();
-                            if (proc.MainWindowHandle != IntPtr.Zero) {
-                                SetWindowPos(proc.MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-                                break;
+                if (Enum.TryParse<SmartScreenDock.ActionType>(el.ActionType, out var actionType))
+                {
+                    switch (actionType)
+                    {
+                        case SmartScreenDock.ActionType.Hotkey:
+                        {
+                            var downKeys = new List<byte>();
+                            if (el.Ctrl) downKeys.Add(VK_CONTROL);
+                            if (el.Shift) downKeys.Add(VK_SHIFT);
+                            if (el.Alt) downKeys.Add(VK_MENU);
+                            if (el.Win) downKeys.Add(VK_LWIN);
+
+                            byte mainVk = 0;
+                            if (Enum.TryParse(typeof(Key), el.Key, out var k))
+                                mainVk = (byte)KeyInterop.VirtualKeyFromKey((Key)k!);
+
+                            var inputs = new List<INPUT>();
+                            foreach (var vk in downKeys)
+                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = vk } });
+                            if (mainVk != 0)
+                            {
+                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = mainVk } });
+                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = mainVk, dwFlags = KEYEVENTF_KEYUP } });
                             }
+                            foreach (var vk in Enumerable.Reverse(downKeys))
+                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = vk, dwFlags = KEYEVENTF_KEYUP } });
+
+                            SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>());
+                            break;
                         }
+
+                        case SmartScreenDock.ActionType.Web:
+                            string chromePath = GetChromePath();
+                            string prof = el.ChromeProfile;
+                            if (el.UseRotation) { prof = AdvanceProfile(el); el.LastUsedProfile = prof; await SaveConfig(); }
+                            var psi = new ProcessStartInfo(chromePath) { UseShellExecute = false };
+                            if (el.IsAppMode)
+                                psi.ArgumentList.Add($"--app={el.ActionValue}");
+                            else
+                                psi.ArgumentList.Add(el.ActionValue);
+                            if (el.IsIncognito) psi.ArgumentList.Add("--incognito");
+                            if (!string.IsNullOrEmpty(prof)) psi.ArgumentList.Add($"--profile-directory={Path.GetFileName(prof)}");
+                            var proc = Process.Start(psi);
+                            if (el.IsTopmost && proc != null) {
+                                for (int i = 0; i < 25; i++) {
+                                    await Task.Delay(200);
+                                    proc.Refresh();
+                                    if (proc.MainWindowHandle != IntPtr.Zero) {
+                                        SetWindowPos(proc.MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+
+                        case SmartScreenDock.ActionType.Exe:
+                        case SmartScreenDock.ActionType.ScriptFile:
+                            if (!File.Exists(el.ActionValue))
+                                throw new FileNotFoundException("Файл не найден.");
+                            using (Process.Start(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true })) { }
+                            break;
+
+                        case SmartScreenDock.ActionType.Command:
+                            var confirm = new DarkDialog($"Будет выполнена команда:\n\n{el.ActionValue}\n\nПродолжить?", isConfirm: true);
+                            confirm.Owner = Application.Current.MainWindow;
+                            if (confirm.ShowDialog() != true) return;
+                            Process.Start(new ProcessStartInfo("cmd.exe", $"/c \"{el.ActionValue}\"")
+                            {
+                                CreateNoWindow = true,
+                                UseShellExecute = false
+                            });
+                            break;
                     }
-                } 
-                else if (el.ActionType == "Exe" || el.ActionType == "ScriptFile") { if (File.Exists(el.ActionValue)) Process.Start(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true }); else throw new FileNotFoundException("Файл не найден."); }
-                else if (el.ActionType == "Command") {
-                    var confirm = new DarkDialog($"Будет выполнена команда:\n\n{el.ActionValue}\n\nПродолжить?", isConfirm: true);
-                    confirm.Owner = Application.Current.MainWindow;
-                    if (confirm.ShowDialog() != true) return;
-                    Process.Start(new ProcessStartInfo("cmd.exe", $"/c {el.ActionValue}") { CreateNoWindow = true, UseShellExecute = false });
                 }
             } catch (Exception ex) { Logger.Log(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
         }
@@ -302,7 +451,10 @@ namespace SmartScreenDock
             {
                 string t = Clipboard.ContainsText() ? Clipboard.GetText().Trim() : "";
                 if (string.IsNullOrEmpty(t)) { new DarkDialog("Буфер обмена пуст.") { Owner = this }.ShowDialog(); return; }
-                await HideDock(); Process.Start(new ProcessStartInfo(GetChromePath(), $"\"https://www.google.com/search?q={Uri.EscapeDataString(t)}\"") { UseShellExecute = true });
+                await HideDock();
+                var psi = new ProcessStartInfo(GetChromePath()) { UseShellExecute = false };
+                psi.ArgumentList.Add($"https://www.google.com/search?q={Uri.EscapeDataString(t)}");
+                using (Process.Start(psi)) { }
             }
             catch (Exception ex)
             {
@@ -323,17 +475,21 @@ namespace SmartScreenDock
             try { await HideDock(); Press(VK_LWIN, 0x56); }
             catch (Exception ex) { Logger.Log(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
         }
-        private void BtnCalc_Click(object sender, RoutedEventArgs e)
+        private async void BtnCalc_Click(object sender, RoutedEventArgs e)
         {
-            try { Process.Start("calc.exe"); }
+            try { await HideDock(); Process.Start("calc.exe"); }
             catch (Exception ex)
             {
                 Logger.Log(ex);
                 new DarkDialog($"Не удалось открыть калькулятор:\n{ex.Message}") { Owner = this }.ShowDialog();
             }
         }
-        private void BtnSettings_Click(object sender, RoutedEventArgs e) => new SettingsWindow(this).ShowDialog();
-        private void BtnClose_Click(object sender, RoutedEventArgs e) { _notifyIcon?.Dispose(); Application.Current.Shutdown(); }
+        private async void BtnSettings_Click(object sender, RoutedEventArgs e)
+        {
+            await HideDock();
+            new SettingsWindow(this).ShowDialog();
+        }
+        private async void BtnClose_Click(object sender, RoutedEventArgs e) { await HideDock(); }
 
         protected override void OnClosed(EventArgs e) { _notifyIcon?.Dispose(); base.OnClosed(e); }
     }
