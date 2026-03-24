@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Text.Json;
 
 using Button = System.Windows.Controls.Button;
 using FontFamily = System.Windows.Media.FontFamily;
@@ -20,6 +22,8 @@ namespace SmartScreenDock
 
         private readonly List<(Button btn, string searchKey)> _allButtons = new();
         private string _activeFont = FontHelper.FluentKey;
+        private static Dictionary<int, string>? _fluentMap;
+        private static Dictionary<int, string>? _materialMap;
         
         // Маппинг для Font Awesome Brands из старого кода остаётся:
         private static readonly Dictionary<int, string[]> FontAwesomeNameAliases = new()
@@ -89,9 +93,13 @@ namespace SmartScreenDock
             BtnTabBrands.Foreground   = fontName == FontHelper.BrandsKey
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
 
-            TxtSearchHint.Text = fontName == FontHelper.BrandsKey
-                ? "Поиск по имени бренда (github, twitter) или коду"
-                : "Поиск по коду, например: E871";
+            TxtSearchHint.Text = fontName switch
+            {
+                FontHelper.BrandsKey   => "Поиск по имени бренда (github, twitter) или коду",
+                FontHelper.FluentKey   => "Поиск по имени иконки (add, home, search) или коду",
+                FontHelper.MaterialKey => "Поиск по имени иконки (add, home, search) или коду",
+                _ => "Поиск по коду"
+            };
 
             LoadIcons(fontName);
         }
@@ -115,15 +123,8 @@ namespace SmartScreenDock
                 if (glyphTypeface == null) return;
                 
                 var glyphMap = glyphTypeface.CharacterToGlyphMap;
-
-                // Для всех 3-х шрифтов иконки хранятся в Private Use Area (E000+)
-                // Исключаем обычные буквы, цифры и служебные символы.
-                var codes = glyphMap.Keys
-                    .Where(c => glyphMap[c] != 0)
-                    .Where(c => c >= 0xE000 && c <= 0x10FFFF)
-                    .Where(c => c < 0xD800 || c > 0xDFFF) // Исключаем суррогатные пары напрямую
-                    .OrderBy(c => c)
-                    .ToArray();
+                var namedIcons = GetNamedIcons(fontName);
+                var codes = GetDisplayCodes(fontName, glyphMap, namedIcons);
 
                 const int batchSize = 100;
                 for (int batch = 0; batch < codes.Length; batch += batchSize)
@@ -138,9 +139,12 @@ namespace SmartScreenDock
                         try { symbol = char.ConvertFromUtf32(code); }
                         catch { continue; }
 
-                        string searchKey = BuildSearchKey(fontName, code);
+                        string? iconName = null;
+                        namedIcons?.TryGetValue(code, out iconName);
+                        string searchKey = BuildSearchKey(fontName, code, iconName);
+                        string tooltip = iconName != null ? $"{iconName}  U+{code:X4}" : $"U+{code:X4}";
 
-                        var btn = CreateIconButton(btnStyle, symbol, fontFam, $"U+{code:X4}", searchKey, fontName);
+                        var btn = CreateIconButton(btnStyle, symbol, fontFam, tooltip, searchKey, fontName);
                         IconPanel.Children.Add(btn);
                         _allButtons.Add((btn, searchKey));
                     }
@@ -155,15 +159,95 @@ namespace SmartScreenDock
             }
         }
 
-        private static string BuildSearchKey(string fontName, int code)
+        private static int[] GetDisplayCodes(string fontName, IDictionary<int, ushort> glyphMap, Dictionary<int, string>? namedIcons)
+        {
+            if (namedIcons != null)
+            {
+                return namedIcons.Keys
+                    .Where(code => glyphMap.TryGetValue(code, out var glyphIndex) && glyphIndex != 0)
+                    .OrderBy(code => code)
+                    .ToArray();
+            }
+
+            return glyphMap.Keys
+                .Where(code => glyphMap[code] != 0)
+                .Where(code => code >= 0xE000 && code <= 0x10FFFF)
+                .Where(code => code < 0xD800 || code > 0xDFFF)
+                .OrderBy(code => code)
+                .ToArray();
+        }
+
+        private static Dictionary<int, string>? GetNamedIcons(string fontName) => fontName switch
+        {
+            FontHelper.FluentKey => LoadFluentMap(),
+            FontHelper.MaterialKey => LoadMaterialMap(),
+            _ => null
+        };
+
+        private static string BuildSearchKey(string fontName, int code, string? iconName)
         {
             var keyParts = new List<string> { $"{code:X4}".ToLowerInvariant() };
+            if (!string.IsNullOrWhiteSpace(iconName))
+                keyParts.Add(iconName.ToLowerInvariant());
             if (fontName == FontHelper.BrandsKey && FontAwesomeNameAliases.TryGetValue(code, out var aliases))
             {
                 keyParts.AddRange(aliases);
             }
             return string.Join(" ", keyParts);
         }
+
+        private static Dictionary<int, string> LoadFluentMap()
+        {
+            if (_fluentMap != null) return _fluentMap;
+
+            using var stream = OpenResourceStream(FontHelper.FluentCodepointsResource);
+            using var reader = new StreamReader(stream);
+            var json = reader.ReadToEnd();
+            var raw = JsonSerializer.Deserialize<Dictionary<string, int>>(json)
+                ?? throw new InvalidOperationException("Failed to parse Fluent icon metadata.");
+
+            _fluentMap = raw
+                .Where(kv => kv.Key.EndsWith("_24_regular", StringComparison.Ordinal))
+                .GroupBy(kv => kv.Value)
+                .Select(group => group.OrderBy(kv => kv.Key, StringComparer.Ordinal).First())
+                .ToDictionary(kv => kv.Value, kv => FormatFluentName(kv.Key));
+
+            return _fluentMap;
+        }
+
+        private static Dictionary<int, string> LoadMaterialMap()
+        {
+            if (_materialMap != null) return _materialMap;
+
+            using var stream = OpenResourceStream(FontHelper.MaterialCodepointsResource);
+            using var reader = new StreamReader(stream);
+            _materialMap = reader
+                .ReadToEnd()
+                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => line.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                .Where(parts => parts.Length == 2)
+                .GroupBy(parts => Convert.ToInt32(parts[1], 16))
+                .Select(group => group.First())
+                .ToDictionary(
+                    parts => Convert.ToInt32(parts[1], 16),
+                    parts => parts[0].Replace("_", " "));
+
+            return _materialMap;
+        }
+
+        private static Stream OpenResourceStream(string packUri)
+        {
+            var resource = System.Windows.Application.GetResourceStream(new Uri(packUri, UriKind.Absolute));
+            if (resource?.Stream == null)
+                throw new FileNotFoundException($"Resource not found: {packUri}");
+            return resource.Stream;
+        }
+
+        private static string FormatFluentName(string rawName)
+            => rawName
+                .Replace("ic_fluent_", "", StringComparison.Ordinal)
+                .Replace("_24_regular", "", StringComparison.Ordinal)
+                .Replace("_", " ");
 
         private Button CreateIconButton(Style btnStyle, string symbol, FontFamily fontFamily,
             string tooltip, string searchKey, string fontSrcKey)

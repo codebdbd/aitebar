@@ -10,6 +10,8 @@ namespace SmartScreenDock
         public const string MaterialKey = "Material Icons";
         public const string FluentKey   = "Fluent System Icons";
         public const string BrandsKey   = "Font Awesome Brands";
+        public const string MaterialCodepointsResource = "pack://application:,,,/Resources/MaterialIcons.codepoints";
+        public const string FluentCodepointsResource = "pack://application:,,,/Resources/FluentSystemIcons.json";
 
         private static readonly FontFamily _materialFont = new FontFamily(
             new Uri("pack://application:,,,/"),

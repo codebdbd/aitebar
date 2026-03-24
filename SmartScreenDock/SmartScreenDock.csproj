@@ -15,6 +15,8 @@
     <Resource Include="Resources\app.ico" />
     <Resource Include="Resources\Font Awesome 7 Brands-Regular-400.otf" />
     <Resource Include="Resources\MaterialIcons-Regular.ttf" />
+    <Resource Include="Resources\MaterialIcons.codepoints" />
     <Resource Include="Resources\FluentSystemIcons-Regular.ttf" />
+    <Resource Include="Resources\FluentSystemIcons.json" />
   </ItemGroup>
 </Project>
