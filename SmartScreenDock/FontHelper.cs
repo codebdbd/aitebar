@@ -7,7 +7,6 @@ namespace SmartScreenDock
     internal static class FontHelper
     {
         // Ключи, хранящиеся в CustomElement.IconFont
-        public const string SegoeKey    = "Segoe Fluent Icons";   // legacy — может отсутствовать на Win 10
         public const string MaterialKey = "Material Icons";
         public const string FluentKey   = "Fluent System Icons";
         public const string BrandsKey   = "Font Awesome Brands";
@@ -29,9 +28,7 @@ namespace SmartScreenDock
             MaterialKey => _materialFont,
             FluentKey   => _fluentSysFont,
             BrandsKey   => _brandsFont,
-            // Legаcy pack:// URI (старые кнопки, сохранённые раньше)
             _ when fontName.StartsWith("pack://") => ResolvePack(fontName),
-            // Segoe Fluent Icons / любой системный шрифт
             _ => new FontFamily(fontName)
         };
 

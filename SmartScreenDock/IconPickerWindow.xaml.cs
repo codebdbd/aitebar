@@ -16,10 +16,10 @@ namespace SmartScreenDock
     public partial class IconPickerWindow : DarkWindow
     {
         public string SelectedIcon { get; private set; } = "";
-        public string SelectedFont { get; private set; } = FontHelper.MaterialKey;
+        public string SelectedFont { get; private set; } = FontHelper.FluentKey;
 
         private readonly List<(Button btn, string searchKey)> _allButtons = new();
-        private string _activeFont = FontHelper.MaterialKey;
+        private string _activeFont = FontHelper.FluentKey;
         
         // Маппинг для Font Awesome Brands из старого кода остаётся:
         private static readonly Dictionary<int, string[]> FontAwesomeNameAliases = new()
@@ -65,7 +65,7 @@ namespace SmartScreenDock
         public IconPickerWindow()
         {
             InitializeComponent();
-            SetActiveTab(FontHelper.MaterialKey);
+            SetActiveTab(FontHelper.FluentKey);
         }
 
         private void BtnTabMaterial_Click(object sender, RoutedEventArgs e)

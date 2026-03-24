@@ -24,7 +24,7 @@ namespace SmartScreenDock {
         public int BlockId { get; set; } = 4;
         public string Name { get; set; } = "";
         public string Icon { get; set; } = "\uE710";
-        public string IconFont { get; set; } = "Segoe Fluent Icons";
+        public string IconFont { get; set; } = FontHelper.FluentKey;
         public string Color { get; set; } = "#E3E3E3";
         public string ActionType { get; set; } = nameof(SmartScreenDock.ActionType.Web);
         public string ActionValue { get; set; } = "";

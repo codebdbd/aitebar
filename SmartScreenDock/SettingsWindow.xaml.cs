@@ -22,8 +22,8 @@ namespace SmartScreenDock
 {
     public partial class SettingsWindow : DarkWindow
     {
-        private string _selectedIcon = "\ue871"; // dashboard
-        private string _selectedFont = FontHelper.MaterialKey;
+        private string _selectedIcon = "\ue710";
+        private string _selectedFont = FontHelper.FluentKey;
         private string _selectedColor = "#E3E3E3";
         private static readonly BrushConverter _brushConverter = new();
         private readonly MainWindow _mainWindow;
