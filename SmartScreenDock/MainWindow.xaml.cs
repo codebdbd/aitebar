@@ -31,6 +31,7 @@ namespace SmartScreenDock
         [DllImport("user32.dll", SetLastError = true)]
         static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
         [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+        [DllImport("user32.dll")] static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
         [DllImport("user32.dll")] static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
         [DllImport("user32.dll")] static extern bool UnhookWindowsHookEx(IntPtr hhk);
         [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
@@ -102,6 +103,7 @@ namespace SmartScreenDock
         static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         const uint SWP_NOSIZE = 0x0001;
         const uint SWP_NOMOVE = 0x0002;
+        const int SW_MAXIMIZE = 3;
         const int WH_MOUSE_LL = 14;
         const int WM_LBUTTONDOWN = 0x0201;
 
@@ -324,10 +326,15 @@ namespace SmartScreenDock
                     }
                 }
             }
-            Sep1.Visibility = Block2_AI.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-            Sep2.Visibility = Block3_Web.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-            Sep3.Visibility = Block4_Scripts.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-            Sep4.Visibility = Block5_Other.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            bool hasAi = Block2_AI.Children.Count > 0;
+            bool hasWeb = Block3_Web.Children.Count > 0;
+            bool hasScripts = Block4_Scripts.Children.Count > 0;
+            bool hasOther = Block5_Other.Children.Count > 0;
+
+            Sep2.Visibility = hasAi && hasWeb ? Visibility.Visible : Visibility.Collapsed;
+            Sep3.Visibility = (hasAi || hasWeb) && hasScripts ? Visibility.Visible : Visibility.Collapsed;
+            Sep4.Visibility = (hasAi || hasWeb || hasScripts) && hasOther ? Visibility.Visible : Visibility.Collapsed;
+            SepUtils.Visibility = (hasAi || hasWeb || hasScripts || hasOther) ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private async Task SaveConfig() {
@@ -465,12 +472,15 @@ namespace SmartScreenDock
                             if (!string.IsNullOrEmpty(prof)) psi.ArgumentList.Add($"--profile-directory={Path.GetFileName(prof)}");
                             using (var proc = Process.Start(psi))
                             {
-                                if (el.IsTopmost && proc != null) {
+                                if (proc != null && (el.IsTopmost || el.IsAppMode)) {
                                     for (int i = 0; i < 25; i++) {
                                         await Task.Delay(200);
                                         proc.Refresh();
                                         if (proc.MainWindowHandle != IntPtr.Zero) {
-                                            SetWindowPos(proc.MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+                                            if (el.IsAppMode)
+                                                ShowWindow(proc.MainWindowHandle, SW_MAXIMIZE);
+                                            if (el.IsTopmost)
+                                                SetWindowPos(proc.MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
                                             break;
                                         }
                                     }
