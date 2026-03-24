@@ -151,11 +151,11 @@
 
             <TextBlock Text="Тип ссылки:" Foreground="#AAA" Margin="0,0,0,5"/>
             <ComboBox x:Name="CmbActionType" Margin="0,0,0,15" SelectedIndex="0" SelectionChanged="CmbActionType_SelectionChanged">
-                <ComboBoxItem Content="Сайт / Нейросеть" Tag="Web"/>
-                <ComboBoxItem Content="Программа (.exe)" Tag="Exe"/>
-                <ComboBoxItem Content="Файл скрипта (.bat, .ps1)" Tag="ScriptFile"/>
+                <ComboBoxItem Content="URL сайта" Tag="Web"/>
+                <ComboBoxItem Content="Программа" Tag="Exe"/>
+                <ComboBoxItem Content="Скрипт" Tag="ScriptFile"/>
                 <ComboBoxItem Content="Консольная команда" Tag="Command"/>
-                <ComboBoxItem Content="Горячая клавиша" Tag="Hotkey"/>
+                <ComboBoxItem Content="Горячие клавиши" Tag="Hotkey"/>
             </ComboBox>
 
             <StackPanel x:Name="PanelStandardAction">
@@ -165,9 +165,14 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBox x:Name="TxtActionValue"/>
+                    <TextBox x:Name="TxtActionValue" TextChanged="TxtActionValue_TextChanged"/>
+                    <TextBlock x:Name="TxtActionPlaceholder" Margin="10,0,10,0" VerticalAlignment="Center" Foreground="#6F7782" IsHitTestVisible="False" TextWrapping="NoWrap"/>
                     <Button x:Name="BtnBrowse" Grid.Column="1" Content="Обзор..." Width="80" Height="32" Margin="5,0,0,0" Click="BtnBrowse_Click" Visibility="Collapsed" Style="{StaticResource ActionButtonStyle}" Background="#444444" FontSize="12" FontWeight="Normal"/>
                 </Grid>
+
+                <Border x:Name="ActionHelpBox" Background="#252525" BorderBrush="#3A3A3A" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,15" Visibility="Collapsed">
+                    <TextBlock x:Name="TxtActionHelp" Foreground="#9FA7B3" FontSize="11" TextWrapping="Wrap"/>
+                </Border>
 
                 <StackPanel x:Name="PanelWebSettings">
                     <UniformGrid Columns="2">

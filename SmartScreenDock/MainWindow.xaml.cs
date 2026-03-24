@@ -401,6 +401,107 @@ namespace SmartScreenDock
         }
 
         private async Task HideDock() { if (_shown) { _shown = false; Toggle(true); await Task.Delay(250); } }
+
+        private static string FindExecutableOnPath(string fileName)
+        {
+            var pathValue = Environment.GetEnvironmentVariable("PATH");
+            if (string.IsNullOrWhiteSpace(pathValue))
+                return fileName;
+
+            foreach (var dir in pathValue.Split(';', StringSplitOptions.RemoveEmptyEntries))
+            {
+                try
+                {
+                    var candidate = Path.Combine(dir.Trim(), fileName);
+                    if (File.Exists(candidate))
+                        return candidate;
+                }
+                catch
+                {
+                }
+            }
+
+            return fileName;
+        }
+
+        private static ProcessStartInfo CreateScriptProcessStartInfo(string scriptPath)
+        {
+            string workingDirectory = Path.GetDirectoryName(scriptPath) ?? Environment.CurrentDirectory;
+            string extension = Path.GetExtension(scriptPath).ToLowerInvariant();
+            switch (extension)
+            {
+                case ".bat":
+                case ".cmd":
+                {
+                    var psi = new ProcessStartInfo("cmd.exe")
+                    {
+                        UseShellExecute = false,
+                        WorkingDirectory = workingDirectory
+                    };
+                    psi.ArgumentList.Add("/c");
+                    psi.ArgumentList.Add(scriptPath);
+                    return psi;
+                }
+
+                case ".ps1":
+                {
+                    string shell = FindExecutableOnPath("pwsh.exe");
+                    if (!File.Exists(shell))
+                        shell = FindExecutableOnPath("powershell.exe");
+
+                    var psi = new ProcessStartInfo(shell)
+                    {
+                        UseShellExecute = false,
+                        WorkingDirectory = workingDirectory
+                    };
+                    psi.ArgumentList.Add("-NoProfile");
+                    if (Path.GetFileName(shell).Equals("powershell.exe", StringComparison.OrdinalIgnoreCase))
+                    {
+                        psi.ArgumentList.Add("-ExecutionPolicy");
+                        psi.ArgumentList.Add("Bypass");
+                    }
+                    psi.ArgumentList.Add("-File");
+                    psi.ArgumentList.Add(scriptPath);
+                    return psi;
+                }
+
+                case ".py":
+                {
+                    string pythonExe = FindExecutableOnPath("python.exe");
+                    if (!File.Exists(pythonExe))
+                        throw new InvalidOperationException("Python не найден в PATH.");
+
+                    string pythonDir = Path.GetDirectoryName(pythonExe) ?? "";
+                    string tclLibrary = Path.Combine(pythonDir, "tcl", "tcl8.6");
+                    string tkLibrary = Path.Combine(pythonDir, "tcl", "tk8.6");
+
+                    var psi = new ProcessStartInfo("cmd.exe")
+                    {
+                        UseShellExecute = false,
+                        WorkingDirectory = workingDirectory
+                    };
+                    psi.Arguments = $"/c \"\"{pythonExe}\" \"{scriptPath}\"\"";
+                    if (Directory.Exists(tclLibrary))
+                        psi.Environment["TCL_LIBRARY"] = tclLibrary;
+                    if (Directory.Exists(tkLibrary))
+                        psi.Environment["TK_LIBRARY"] = tkLibrary;
+                    return psi;
+                }
+
+                default:
+                    throw new InvalidOperationException("Поддерживаются только .bat, .cmd, .ps1 и .py.");
+            }
+        }
+
+        private Task StartScriptFile(string scriptPath)
+        {
+            var psi = CreateScriptProcessStartInfo(scriptPath);
+            using var proc = Process.Start(psi);
+            if (proc == null)
+                throw new InvalidOperationException("Не удалось запустить скрипт.");
+            return Task.CompletedTask;
+        }
+
         private void Press(params byte[] keys)
         {
             var inputs = new INPUT[keys.Length * 2];
@@ -484,10 +585,15 @@ namespace SmartScreenDock
                             break;
 
                         case SmartScreenDock.ActionType.Exe:
-                        case SmartScreenDock.ActionType.ScriptFile:
                             if (!File.Exists(el.ActionValue))
                                 throw new FileNotFoundException("Файл не найден.");
                             using (Process.Start(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true })) { }
+                            break;
+
+                        case SmartScreenDock.ActionType.ScriptFile:
+                            if (!File.Exists(el.ActionValue))
+                                throw new FileNotFoundException("Файл не найден.");
+                            await StartScriptFile(el.ActionValue);
                             break;
 
                         case SmartScreenDock.ActionType.Command:

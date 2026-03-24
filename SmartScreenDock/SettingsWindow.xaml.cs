@@ -22,6 +22,7 @@ namespace SmartScreenDock
 {
     public partial class SettingsWindow : DarkWindow
     {
+        private static readonly string[] AllowedScriptExtensions = [".bat", ".cmd", ".ps1", ".py"];
         private string _selectedIcon = "\ue710";
         private string _selectedFont = FontHelper.FluentKey;
         private string _selectedColor = "#E3E3E3";
@@ -198,7 +199,7 @@ namespace SmartScreenDock
 
         private void UpdateActionUI()
         {
-            if (PanelHotkeyAction == null || PanelStandardAction == null || CmbActionType.SelectedItem == null) return;
+            if (PanelHotkeyAction == null || PanelStandardAction == null || CmbActionType.SelectedItem == null || ActionHelpBox == null || TxtActionHelp == null || TxtActionPlaceholder == null || TxtActionValue == null) return;
             string typeStr = ((ComboBoxItem)CmbActionType.SelectedItem).Tag?.ToString() ?? "Web";
             if (Enum.TryParse<SmartScreenDock.ActionType>(typeStr, out var actionType))
             {
@@ -207,6 +208,8 @@ namespace SmartScreenDock
                     case SmartScreenDock.ActionType.Hotkey:
                         PanelStandardAction.Visibility = Visibility.Collapsed;
                         PanelHotkeyAction.Visibility = Visibility.Visible;
+                        ActionHelpBox.Visibility = Visibility.Collapsed;
+                        TxtActionPlaceholder.Visibility = Visibility.Collapsed;
                         break;
                     default:
                         PanelStandardAction.Visibility = Visibility.Visible;
@@ -215,17 +218,76 @@ namespace SmartScreenDock
                         BtnBrowse.Visibility = (actionType == SmartScreenDock.ActionType.Exe || actionType == SmartScreenDock.ActionType.ScriptFile)
                             ? Visibility.Visible : Visibility.Collapsed;
                         LblActionValue.Text = actionType switch {
-                            SmartScreenDock.ActionType.Web => "Ссылка (URL):",
+                            SmartScreenDock.ActionType.Web => "URL:",
                             SmartScreenDock.ActionType.Command => "Команда:",
                             _ => "Путь к файлу:"
                         };
+                        switch (actionType)
+                        {
+                            case SmartScreenDock.ActionType.Web:
+                                TxtActionPlaceholder.Text = "https://example.com";
+                                ActionHelpBox.Visibility = Visibility.Collapsed;
+                                break;
+                            case SmartScreenDock.ActionType.Exe:
+                                TxtActionPlaceholder.Text = "calc.exe";
+                                ActionHelpBox.Visibility = Visibility.Collapsed;
+                                break;
+                            case SmartScreenDock.ActionType.Command:
+                                TxtActionPlaceholder.Text = "cmd";
+                                TxtActionHelp.Text = "Примеры:\ncmd, powershell, explorer, control, appwiz.cpl, ncpa.cpl, services.msc, taskmgr, regedit, msconfig\n\nPython-модуль:\ncd /d \"B:\\имя_проекта\" && py -m app.main";
+                                ActionHelpBox.Visibility = Visibility.Visible;
+                                break;
+                            case SmartScreenDock.ActionType.ScriptFile:
+                                TxtActionPlaceholder.Text = "script.bat";
+                                TxtActionHelp.Text = "Поддерживаются .bat, .cmd, .ps1 и standalone .py.\nДля модульных Python-проектов используйте тип \"Консольная команда\".";
+                                ActionHelpBox.Visibility = Visibility.Visible;
+                                break;
+                            default:
+                                TxtActionPlaceholder.Text = "";
+                                ActionHelpBox.Visibility = Visibility.Collapsed;
+                                break;
+                        }
+                        UpdateActionPlaceholderVisibility();
                         break;
                 }
             }
         }
 
         private void CmbActionType_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e) => UpdateActionUI();
-        private void BtnBrowse_Click(object sender, RoutedEventArgs e) { var dlg = new Microsoft.Win32.OpenFileDialog(); if (dlg.ShowDialog() == true) TxtActionValue.Text = dlg.FileName; }
+        private void TxtActionValue_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => UpdateActionPlaceholderVisibility();
+        private void BtnBrowse_Click(object sender, RoutedEventArgs e)
+        {
+            string typeStr = ((ComboBoxItem)CmbActionType.SelectedItem).Tag?.ToString() ?? "Web";
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = typeStr switch
+                {
+                    nameof(SmartScreenDock.ActionType.Exe) => "Программы (*.exe)|*.exe|Все файлы (*.*)|*.*",
+                    nameof(SmartScreenDock.ActionType.ScriptFile) => "Скрипты (*.bat;*.cmd;*.ps1;*.py)|*.bat;*.cmd;*.ps1;*.py",
+                    _ => "Все файлы (*.*)|*.*"
+                }
+            };
+
+            if (dlg.ShowDialog() == true)
+                TxtActionValue.Text = dlg.FileName;
+        }
+
+        private static bool IsAllowedScriptFile(string path)
+        {
+            string extension = Path.GetExtension(path).ToLowerInvariant();
+            return AllowedScriptExtensions.Contains(extension);
+        }
+
+        private void UpdateActionPlaceholderVisibility()
+        {
+            if (TxtActionPlaceholder == null || TxtActionValue == null)
+                return;
+
+            TxtActionPlaceholder.Visibility =
+                string.IsNullOrWhiteSpace(TxtActionPlaceholder.Text) || !string.IsNullOrEmpty(TxtActionValue.Text)
+                    ? Visibility.Collapsed
+                    : Visibility.Visible;
+        }
 
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
@@ -240,6 +302,21 @@ namespace SmartScreenDock
                 if (actionType != SmartScreenDock.ActionType.Hotkey && (string.IsNullOrWhiteSpace(TxtName.Text) || string.IsNullOrWhiteSpace(TxtActionValue.Text))) {
                     new DarkDialog("Заполните поля!") { Owner = this }.ShowDialog();
                     return;
+                }
+
+                if (actionType == SmartScreenDock.ActionType.ScriptFile)
+                {
+                    if (!File.Exists(TxtActionValue.Text))
+                    {
+                        new DarkDialog("Файл скрипта не найден.") { Owner = this }.ShowDialog();
+                        return;
+                    }
+
+                    if (!IsAllowedScriptFile(TxtActionValue.Text))
+                    {
+                        new DarkDialog("Поддерживаются только .bat, .cmd, .ps1 и .py.") { Owner = this }.ShowDialog();
+                        return;
+                    }
                 }
 
                 var newElement = new CustomElement {
