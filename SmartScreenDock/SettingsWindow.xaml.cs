@@ -22,8 +22,8 @@ namespace SmartScreenDock
 {
     public partial class SettingsWindow : DarkWindow
     {
-        private string _selectedIcon = "\uE710";
-        private string _selectedFont = "Segoe Fluent Icons";
+        private string _selectedIcon = "\ue871"; // dashboard
+        private string _selectedFont = FontHelper.MaterialKey;
         private string _selectedColor = "#E3E3E3";
         private static readonly BrushConverter _brushConverter = new();
         private readonly MainWindow _mainWindow;
@@ -35,8 +35,8 @@ namespace SmartScreenDock
             _mainWindow = main;
             _editingElement = el;
 
-            LoadIcons();
             LoadColors();
+
             _ = LoadChromeProfilesAsync().ContinueWith(
                 t => Logger.Log(t.Exception!.GetBaseException()),
                 TaskContinuationOptions.OnlyOnFaulted);
@@ -78,6 +78,7 @@ namespace SmartScreenDock
             ChkAlt.IsChecked = _editingElement.Alt;
             ChkWin.IsChecked = _editingElement.Win;
             SetComboValue(CmbBlock, _editingElement.BlockId.ToString());
+
             SetComboValue(CmbActionType, _editingElement.ActionType);
             SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
             SetComboValue(CmbKey, _editingElement.Key);
@@ -89,17 +90,6 @@ namespace SmartScreenDock
         {
             foreach (ComboBoxItem item in combo.Items) {
                 if (item.Tag?.ToString() == value) { combo.SelectedItem = item; return; }
-            }
-        }
-
-        private void LoadIcons()
-        {
-            string[] icons = { "\uE756", "\uE943", "\uE945", "\uEAF1", "\uE774", "\uE8C1", "\uE71B", "\uE8BD", "\uE8B7", "\uE70B", "\uE753", "\uE721", "\uE734", "\uEBE8", "\uE72C", "\uE715" };
-            GridIcons.Children.Clear();
-            foreach (var icon in icons) {
-                var btn = new Button { Content = icon, FontFamily = new FontFamily("Segoe Fluent Icons"), FontSize = 20, Width = 38, Height = 38, Background = Brushes.Transparent, Foreground = Brushes.White, BorderThickness = new Thickness(0), Cursor = System.Windows.Input.Cursors.Hand, Style = (Style)FindResource("IconButtonStyle") };
-                btn.Click += (s, e) => { _selectedIcon = icon; UpdatePreview(); };
-                GridIcons.Children.Add(btn);
             }
         }
 
@@ -198,7 +188,7 @@ namespace SmartScreenDock
                 return result;
             });
 
-            foreach (var (displayName, dir) in profileItems)
+            foreach (var (displayName, dir) in profileItems.OrderBy(p => p.displayName))
                 CmbChromeProfile.Items.Add(new ComboBoxItem { Content = displayName, Tag = dir });
             CmbChromeProfile.SelectedIndex = 0;
             if (_editingElement != null)

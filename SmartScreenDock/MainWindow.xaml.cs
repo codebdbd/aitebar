@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -169,18 +169,25 @@ namespace SmartScreenDock
 
         private IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (nCode >= 0 && wParam == (IntPtr)WM_LBUTTONDOWN && _shown && !_isAnimating)
+            try
             {
-                var hookStruct = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
-                double x = hookStruct.pt.X;
-                double y = hookStruct.pt.Y;
-
-                bool clickedOutside = x < _panelLeft || x > _panelRight || y < _panelTop || y > _panelBottom;
-
-                if (clickedOutside)
+                if (nCode >= 0 && wParam == (IntPtr)WM_LBUTTONDOWN && _shown && !_isAnimating)
                 {
-                    this.Dispatcher.InvokeAsync(async () => await HideDock());
+                    var hookStruct = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+                    double x = hookStruct.pt.X;
+                    double y = hookStruct.pt.Y;
+
+                    bool clickedOutside = x < _panelLeft || x > _panelRight || y < _panelTop || y > _panelBottom;
+
+                    if (clickedOutside)
+                    {
+                        this.Dispatcher.InvokeAsync(async () => await HideDock());
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
             }
             return CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }
@@ -226,16 +233,19 @@ namespace SmartScreenDock
             }
         }
 
+
         public async Task RefreshPanel() {
             var userUtils = Block1_Utils.Children.OfType<Button>().Where(b => b.ContextMenu != null).ToList();
             foreach (var btn in userUtils) Block1_Utils.Children.Remove(btn);
             Block2_AI.Children.Clear(); Block3_Web.Children.Clear(); Block4_Scripts.Children.Clear(); Block5_Other.Children.Clear();
 
             if (File.Exists(_configFile)) {
+                await _saveSemaphore.WaitAsync();
                 try {
                     string json = await File.ReadAllTextAsync(_configFile);
                     _elements = JsonSerializer.Deserialize<List<CustomElement>>(json) ?? new();
                 } catch (Exception ex) { Logger.Log(ex); _elements = new(); }
+                finally { _saveSemaphore.Release(); }
 
                 foreach (var el in _elements) {
                     var btn = new Button { 
@@ -411,14 +421,16 @@ namespace SmartScreenDock
                                 psi.ArgumentList.Add(el.ActionValue);
                             if (el.IsIncognito) psi.ArgumentList.Add("--incognito");
                             if (!string.IsNullOrEmpty(prof)) psi.ArgumentList.Add($"--profile-directory={Path.GetFileName(prof)}");
-                            var proc = Process.Start(psi);
-                            if (el.IsTopmost && proc != null) {
-                                for (int i = 0; i < 25; i++) {
-                                    await Task.Delay(200);
-                                    proc.Refresh();
-                                    if (proc.MainWindowHandle != IntPtr.Zero) {
-                                        SetWindowPos(proc.MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-                                        break;
+                            using (var proc = Process.Start(psi))
+                            {
+                                if (el.IsTopmost && proc != null) {
+                                    for (int i = 0; i < 25; i++) {
+                                        await Task.Delay(200);
+                                        proc.Refresh();
+                                        if (proc.MainWindowHandle != IntPtr.Zero) {
+                                            SetWindowPos(proc.MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -435,11 +447,10 @@ namespace SmartScreenDock
                             var confirm = new DarkDialog($"Будет выполнена команда:\n\n{el.ActionValue}\n\nПродолжить?", isConfirm: true);
                             confirm.Owner = Application.Current.MainWindow;
                             if (confirm.ShowDialog() != true) return;
-                            Process.Start(new ProcessStartInfo("cmd.exe", $"/c \"{el.ActionValue}\"")
-                            {
-                                CreateNoWindow = true,
-                                UseShellExecute = false
-                            });
+                            var psiCmd = new ProcessStartInfo("cmd.exe") { CreateNoWindow = true, UseShellExecute = false };
+                            psiCmd.ArgumentList.Add("/c");
+                            psiCmd.ArgumentList.Add(el.ActionValue);
+                            using (Process.Start(psiCmd)) { }
                             break;
                     }
                 }
@@ -464,11 +475,11 @@ namespace SmartScreenDock
         }
 
         private async void BtnScreenshotRegion_Click(object sender, RoutedEventArgs e) {
-            try { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true }); }
+            try { await HideDock(); using (Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true })) { } }
             catch (Exception ex) { Logger.Log(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
         }
         private async void BtnRecordVideo_Click(object sender, RoutedEventArgs e) {
-            try { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true }); }
+            try { await HideDock(); using (Process.Start(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true })) { } }
             catch (Exception ex) { Logger.Log(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
         }
         private async void BtnClipboard_Click(object sender, RoutedEventArgs e) {

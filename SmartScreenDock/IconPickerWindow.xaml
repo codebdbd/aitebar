@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:SmartScreenDock"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="Каталог иконок" Height="560" Width="540"
+        Title="Каталог иконок" Height="580" Width="560"
         WindowStartupLocation="CenterScreen" Background="#1E1E1E" Foreground="White"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
@@ -37,7 +37,7 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Height" Value="36"/>
-            <Setter Property="Padding" Value="16,0"/>
+            <Setter Property="Padding" Value="14,0"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
@@ -66,17 +66,23 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
+        <!-- Вкладки -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Background="#252525">
-            <Button x:Name="BtnTabSegoe" Content="Segoe Fluent Icons"
+            <Button x:Name="BtnTabMaterial" Content="Material Icons"
                     Margin="4,4,2,0"
                     Style="{StaticResource TabButtonStyle}"
-                    Click="BtnTabSegoe_Click"/>
-            <Button x:Name="BtnTabFontAwesome" Content="Font Awesome Brands"
+                    Click="BtnTabMaterial_Click"/>
+            <Button x:Name="BtnTabFluent" Content="Fluent System"
+                    Margin="2,4,2,0"
+                    Style="{StaticResource TabButtonStyle}"
+                    Click="BtnTabFluent_Click"/>
+            <Button x:Name="BtnTabBrands" Content="Brands"
                     Margin="2,4,4,0"
                     Style="{StaticResource TabButtonStyle}"
-                    Click="BtnTabFontAwesome_Click"/>
+                    Click="BtnTabBrands_Click"/>
         </StackPanel>
 
+        <!-- Строка поиска -->
         <Grid Grid.Row="1" Margin="10,8,10,4">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
@@ -92,7 +98,7 @@
 
         <TextBlock x:Name="TxtSearchHint" Grid.Row="2"
                    Margin="10,0,10,6" FontSize="11" Foreground="#666666"
-                   Text="Поиск по коду, например: E721"/>
+                   Text="Поиск по коду, например: E000"/>
 
         <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="10,0,10,10">
             <WrapPanel x:Name="IconPanel"/>
