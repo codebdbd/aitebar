@@ -47,14 +47,20 @@ namespace SmartScreenDock
             public IntPtr dwExtraInfo;
         }
 
-        // Win32 INPUT на x64 = 28 байт (4 type + 24 KEYBDINPUT с выравниванием IntPtr).
-        // Size = 28 задаётся явно, чтобы Marshal.SizeOf вернул правильное значение
-        // независимо от разрядности и не требовал поля-заглушки.
-        [StructLayout(LayoutKind.Sequential, Size = 28)]
+        // Win32 INPUT содержит union; для корректного marshaling нужен полный layout.
+        [StructLayout(LayoutKind.Sequential)]
         private struct INPUT
         {
             public uint type;
-            public KEYBDINPUT ki;
+            public INPUTUNION U;
+        }
+
+        [StructLayout(LayoutKind.Explicit)]
+        private struct INPUTUNION
+        {
+            [FieldOffset(0)] public MOUSEINPUT mi;
+            [FieldOffset(0)] public KEYBDINPUT ki;
+            [FieldOffset(0)] public HARDWAREINPUT hi;
         }
 
         [StructLayout(LayoutKind.Sequential)]
@@ -65,6 +71,25 @@ namespace SmartScreenDock
             public uint dwFlags;
             public uint time;
             public IntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct MOUSEINPUT
+        {
+            public int dx;
+            public int dy;
+            public uint mouseData;
+            public uint dwFlags;
+            public uint time;
+            public IntPtr dwExtraInfo;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct HARDWAREINPUT
+        {
+            public uint uMsg;
+            public ushort wParamL;
+            public ushort wParamH;
         }
 
         delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
@@ -359,8 +384,8 @@ namespace SmartScreenDock
             var inputs = new INPUT[keys.Length * 2];
             for (int i = 0; i < keys.Length; i++)
             {
-                inputs[i] = new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = keys[i] } };
-                inputs[keys.Length + i] = new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = keys[i], dwFlags = KEYEVENTF_KEYUP } };
+                inputs[i] = new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = keys[i] } } };
+                inputs[keys.Length + i] = new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = keys[i], dwFlags = KEYEVENTF_KEYUP } } };
             }
             SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>());
         }
@@ -397,14 +422,14 @@ namespace SmartScreenDock
 
                             var inputs = new List<INPUT>();
                             foreach (var vk in downKeys)
-                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = vk } });
+                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = vk } } });
                             if (mainVk != 0)
                             {
-                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = mainVk } });
-                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = mainVk, dwFlags = KEYEVENTF_KEYUP } });
+                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = mainVk } } });
+                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = mainVk, dwFlags = KEYEVENTF_KEYUP } } });
                             }
                             foreach (var vk in Enumerable.Reverse(downKeys))
-                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, ki = new KEYBDINPUT { wVk = vk, dwFlags = KEYEVENTF_KEYUP } });
+                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = vk, dwFlags = KEYEVENTF_KEYUP } } });
 
                             SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>());
                             break;
