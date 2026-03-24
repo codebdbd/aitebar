@@ -75,35 +75,35 @@
             <DropShadowEffect BlurRadius="16" Direction="270" ShadowDepth="4" Color="Black" Opacity="0.4"/>
         </Border.Effect>
         <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,2">
+            <Rectangle x:Name="Sep1" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" Visibility="Collapsed"/>
+            <WrapPanel x:Name="Block2_AI" Orientation="Horizontal"/>
+            
+            <Rectangle x:Name="Sep2" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" Visibility="Collapsed"/>
+            <WrapPanel x:Name="Block3_Web" Orientation="Horizontal"/>
+            
+            <Rectangle x:Name="Sep3" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" Visibility="Collapsed"/>
+            <WrapPanel x:Name="Block4_Scripts" Orientation="Horizontal"/>
+
+            <Rectangle x:Name="Sep4" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" Visibility="Collapsed"/>
+            <WrapPanel x:Name="Block5_Other" Orientation="Horizontal"/>
+
+            <Rectangle Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0"/>
             <WrapPanel x:Name="Block1_Utils" Orientation="Horizontal">
                 <Button Content="&#xEA7C;" ToolTip="Поиск в Google (буфер)" Click="BtnSearch_Click" Foreground="#E3E3E3"/>
-                <Button Content="&#xEA77;" ToolTip="Скриншот" Click="BtnScreenshotRegion_Click" Foreground="#E3E3E3"/>
+                <Button Content="&#xF68E;" ToolTip="Скриншот" Click="BtnScreenshotRegion_Click" Foreground="#E3E3E3"/>
                 <Button Content="&#xF535;" ToolTip="Запись видео" Click="BtnRecordVideo_Click" Foreground="#E3E3E3"/>
                 <Button Content="&#xF06C;" ToolTip="Калькулятор" Click="BtnCalc_Click" Foreground="#E3E3E3"/>
             </WrapPanel>
 
-            <Rectangle x:Name="Sep1" Width="1" Height="20" Fill="#40FFFFFF" Margin="6,0" Visibility="Collapsed"/>
-            <WrapPanel x:Name="Block2_AI" Orientation="Horizontal"/>
-            
-            <Rectangle x:Name="Sep2" Width="1" Height="20" Fill="#40FFFFFF" Margin="6,0" Visibility="Collapsed"/>
-            <WrapPanel x:Name="Block3_Web" Orientation="Horizontal"/>
-            
-            <Rectangle x:Name="Sep3" Width="1" Height="20" Fill="#40FFFFFF" Margin="6,0" Visibility="Collapsed"/>
-            <WrapPanel x:Name="Block4_Scripts" Orientation="Horizontal"/>
-
-            <Rectangle x:Name="Sep4" Width="1" Height="20" Fill="#40FFFFFF" Margin="6,0" Visibility="Collapsed"/>
-            <WrapPanel x:Name="Block5_Other" Orientation="Horizontal"/>
-
-            <Rectangle Width="1" Height="20" Fill="#40FFFFFF" Margin="6,0"/>
-
-            <Button Content="&#xE005;" ToolTip="Добавить кнопку" Click="BtnSettings_Click" Foreground="#FFD700"/>
-            <Rectangle Width="1" Height="20" Fill="#40FFFFFF" Margin="6,0"/>
-            <Button Content="&#xE4C2;" ToolTip="Скрыть панель" Click="BtnClose_Click" Foreground="#FF5722">
+            <Rectangle Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0"/>
+            <Button Content="&#xE005;" ToolTip="Добавить кнопку" Click="BtnSettings_Click" Foreground="#60CDFF"/>
+            <Rectangle Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0"/>
+            <Button Content="&#xF36A;" ToolTip="Скрыть панель" Click="BtnClose_Click" Foreground="#E81123">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                         <Style.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="#E3544C"/>
+                                <Setter Property="Foreground" Value="#F1707A"/>
                             </Trigger>
                         </Style.Triggers>
                     </Style>

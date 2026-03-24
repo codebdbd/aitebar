@@ -47,7 +47,7 @@ namespace SmartScreenDock
                 LoadElementData();
             } else {
                 UpdateActionUI();
-                CmbBlock.SelectedIndex = 2; 
+                CmbBlock.SelectedIndex = 1; 
             }
         }
 

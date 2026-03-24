@@ -142,11 +142,11 @@
 
             <TextBlock Text="Разместить в блоке:" Foreground="#AAA" Margin="0,0,0,5"/>
             <ComboBox x:Name="CmbBlock" Margin="0,0,0,15">
-                <ComboBoxItem Content="Блок 1: Утилиты" Tag="1"/>
                 <ComboBoxItem Content="Блок 2: Нейросети" Tag="2"/>
                 <ComboBoxItem Content="Блок 3: Сайты" Tag="3"/>
                 <ComboBoxItem Content="Блок 4: Скрипты" Tag="4"/>
                 <ComboBoxItem Content="Блок 5: Другое" Tag="5"/>
+                <ComboBoxItem Content="Блок 1: Утилиты" Tag="1"/>
             </ComboBox>
 
             <TextBlock Text="Тип ссылки:" Foreground="#AAA" Margin="0,0,0,5"/>
