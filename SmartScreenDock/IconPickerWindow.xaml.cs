@@ -156,6 +156,7 @@ namespace SmartScreenDock
             catch (Exception ex)
             {
                 Logger.Log(ex);
+                new DarkDialog($"Не удалось загрузить каталог иконок:\n{ex.Message}") { Owner = this }.ShowDialog();
             }
         }
 
