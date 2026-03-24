@@ -23,7 +23,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#444444"/>
+                                <Setter Property="Background" Value="#454545"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -37,19 +37,20 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Height" Value="36"/>
-            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="Padding" Value="16,0"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Bd" Background="{TemplateBinding Background}"
-                                BorderBrush="#4285F4" BorderThickness="0,0,0,2">
+                                BorderBrush="#4285F4" BorderThickness="0,0,0,2"
+                                Padding="{TemplateBinding Padding}">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#252525"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#454545"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -69,15 +70,15 @@
         <!-- Вкладки -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Background="#252525">
             <Button x:Name="BtnTabMaterial" Content="Material Icons"
-                    Margin="4,4,2,0"
+                    Margin="6,6,2,0"
                     Style="{StaticResource TabButtonStyle}"
                     Click="BtnTabMaterial_Click"/>
             <Button x:Name="BtnTabFluent" Content="Fluent System"
-                    Margin="2,4,2,0"
+                    Margin="2,6,2,0"
                     Style="{StaticResource TabButtonStyle}"
                     Click="BtnTabFluent_Click"/>
             <Button x:Name="BtnTabBrands" Content="Brands"
-                    Margin="2,4,4,0"
+                    Margin="2,6,6,0"
                     Style="{StaticResource TabButtonStyle}"
                     Click="BtnTabBrands_Click"/>
         </StackPanel>

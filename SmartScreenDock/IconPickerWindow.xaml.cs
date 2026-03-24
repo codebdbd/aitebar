@@ -184,9 +184,7 @@ namespace SmartScreenDock
             {
                 Content = tb,
                 Width = 46, Height = 46, Margin = new Thickness(2),
-                Style = btnStyle, ToolTip = tooltip,
-                Background = Brushes.Transparent,
-                BorderThickness = new Thickness(0), Cursor = Cursors.Hand
+                Style = btnStyle, ToolTip = tooltip
             };
             
             btn.Click += (s, e) =>

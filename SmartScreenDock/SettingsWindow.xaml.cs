@@ -58,6 +58,7 @@ namespace SmartScreenDock
             for (char c = 'A'; c <= 'Z'; c++) CmbKey.Items.Add(new ComboBoxItem { Content = c.ToString(), Tag = c.ToString() });
             for (int i = 0; i <= 9; i++) CmbKey.Items.Add(new ComboBoxItem { Content = i.ToString(), Tag = "D" + i });
             for (int i = 1; i <= 12; i++) CmbKey.Items.Add(new ComboBoxItem { Content = "F" + i, Tag = "F" + i });
+            CmbKey.Items.Add(new ComboBoxItem { Content = "PrntSc", Tag = "PrintScreen" });
             CmbKey.SelectedIndex = 0;
         }
 

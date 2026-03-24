@@ -137,7 +137,7 @@
         </Grid.ColumnDefinitions>
 
         <StackPanel Grid.Column="0" Margin="0,0,20,0">
-            <TextBlock Text="Название (подсказка):" Foreground="#AAA" Margin="0,0,0,5"/>
+            <TextBlock Text="Имя:" Foreground="#AAA" Margin="0,0,0,5"/>
             <TextBox x:Name="TxtName" Margin="0,0,0,15"/>
 
             <TextBlock Text="Разместить в блоке:" Foreground="#AAA" Margin="0,0,0,5"/>
@@ -149,7 +149,7 @@
                 <ComboBoxItem Content="Блок 5: Другое" Tag="5"/>
             </ComboBox>
 
-            <TextBlock Text="Тип действия:" Foreground="#AAA" Margin="0,0,0,5"/>
+            <TextBlock Text="Тип ссылки:" Foreground="#AAA" Margin="0,0,0,5"/>
             <ComboBox x:Name="CmbActionType" Margin="0,0,0,15" SelectedIndex="0" SelectionChanged="CmbActionType_SelectionChanged">
                 <ComboBoxItem Content="Сайт / Нейросеть" Tag="Web"/>
                 <ComboBoxItem Content="Программа (.exe)" Tag="Exe"/>
@@ -177,7 +177,7 @@
                         <CheckBox x:Name="ChkRotation" Content="Ротация профилей" Foreground="White" Margin="0,5"/>
                     </UniformGrid>
                     
-                    <TextBlock Text="Фиксированный профиль:" Foreground="#AAA" Margin="10,10,0,5"/>
+                    <TextBlock Text="Выбрать профиль" Foreground="#AAA" Margin="10,10,0,5"/>
                     <ComboBox x:Name="CmbChromeProfile" Margin="0,0,0,15"/>
                 </StackPanel>
             </StackPanel>
@@ -198,15 +198,15 @@
 
         <StackPanel Grid.Column="1">
             <TextBlock Text="Превью иконки:" Foreground="#AAA" Margin="0,0,0,5"/>
-            <Border Background="#252525" CornerRadius="8" BorderBrush="#444444" BorderThickness="1" Width="100" Height="100" HorizontalAlignment="Center" Margin="0,5,0,15">
-                <TextBlock x:Name="PreviewIcon" Text="&#xE871;" FontSize="48" Foreground="#E3E3E3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            <Border Background="#252525" CornerRadius="8" BorderBrush="#444444" BorderThickness="1" Width="85" Height="85" HorizontalAlignment="Center" Margin="0,5,0,20">
+                <TextBlock x:Name="PreviewIcon" Text="&#xE871;" FontSize="40" Foreground="#E3E3E3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
 
-            <Button Content="Выбрать иконку..." Style="{StaticResource ActionButtonStyle}" Background="#333333" Foreground="#E3E3E3" Height="36" FontSize="13" FontWeight="Normal" Margin="0,0,0,20" Click="BtnOpenCatalog_Click"/>
+            <Button Content="Выбрать иконку..." Style="{StaticResource ActionButtonStyle}" Background="#333333" Foreground="#E3E3E3" Height="36" FontSize="13" FontWeight="Normal" Margin="0,0,0,15" Click="BtnOpenCatalog_Click"/>
 
             <TextBlock Text="Выбор цвета:" Foreground="#AAA" Margin="0,0,0,5"/>
-            <UniformGrid x:Name="GridColors" Columns="5" Margin="0,0,0,15"/>
-            <Grid Margin="0,0,0,24">
+            <UniformGrid x:Name="GridColors" Columns="5" Margin="0,0,0,20"/>
+            <Grid Margin="0,0,0,19">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="*"/>

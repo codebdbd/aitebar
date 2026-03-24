@@ -106,6 +106,7 @@ namespace SmartScreenDock
         const int WM_LBUTTONDOWN = 0x0201;
 
         private DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
+        private DateTime? _hoverStartTime;
         private bool _shown = false, _isAnimating = false;
         private double _panelLeft, _panelTop, _panelRight, _panelBottom, _cachedDpi = 1.0;
         private static readonly BrushConverter _brushConverter = new();
@@ -245,7 +246,16 @@ namespace SmartScreenDock
                     if (GetCursorPos(ref pt)) {
                         double screenWidth = SystemParameters.PrimaryScreenWidth;
                         bool inActivationZone = pt.Y == 0 && pt.X > (screenWidth * 0.35) && pt.X < (screenWidth * 0.65);
-                        if (inActivationZone && !_shown) { _shown = true; Toggle(false); }
+                        if (inActivationZone && !_shown) {
+                            if (_hoverStartTime == null) _hoverStartTime = DateTime.Now;
+                            else if ((DateTime.Now - _hoverStartTime.Value).TotalMilliseconds >= 250) {
+                                _shown = true;
+                                _hoverStartTime = null;
+                                Toggle(false);
+                            }
+                        } else {
+                            _hoverStartTime = null;
+                        }
                     }
                 };
                 _timer.Start();
@@ -505,10 +515,6 @@ namespace SmartScreenDock
         }
         private async void BtnRecordVideo_Click(object sender, RoutedEventArgs e) {
             try { await HideDock(); using (Process.Start(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true })) { } }
-            catch (Exception ex) { Logger.Log(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
-        }
-        private async void BtnClipboard_Click(object sender, RoutedEventArgs e) {
-            try { await HideDock(); Press(VK_LWIN, 0x56); }
             catch (Exception ex) { Logger.Log(ex); new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog(); }
         }
         private async void BtnCalc_Click(object sender, RoutedEventArgs e)
