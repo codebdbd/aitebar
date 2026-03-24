@@ -229,12 +229,12 @@ namespace SmartScreenDock
                                 ActionHelpBox.Visibility = Visibility.Collapsed;
                                 break;
                             case SmartScreenDock.ActionType.Exe:
-                                TxtActionPlaceholder.Text = "calc.exe";
+                                TxtActionPlaceholder.Text = @"C:\Windows\System32\notepad.exe или C:\ProgramData\Microsoft\Windows\Start Menu\Programs\App.lnk";
                                 ActionHelpBox.Visibility = Visibility.Collapsed;
                                 break;
                             case SmartScreenDock.ActionType.Command:
                                 TxtActionPlaceholder.Text = "cmd";
-                                TxtActionHelp.Text = "Примеры:\ncmd, powershell, explorer, control, appwiz.cpl, ncpa.cpl, services.msc, taskmgr, regedit, msconfig\n\nPython-модуль:\ncd /d \"B:\\имя_проекта\" && py -m app.main";
+                                TxtActionHelp.Text = "Примеры:\ncmd, powershell, explorer, control, appwiz.cpl, ncpa.cpl, services.msc, taskmgr, regedit, msconfig\n\nPython-модуль (для систем, где установлен py):\ncd /d \"B:\\имя_проекта\" && py -m app.main";
                                 ActionHelpBox.Visibility = Visibility.Visible;
                                 break;
                             case SmartScreenDock.ActionType.ScriptFile:
@@ -255,6 +255,28 @@ namespace SmartScreenDock
 
         private void CmbActionType_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e) => UpdateActionUI();
         private void TxtActionValue_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => UpdateActionPlaceholderVisibility();
+
+        private static string? FindExecutableOnPath(string fileName)
+        {
+            string? pathValue = Environment.GetEnvironmentVariable("PATH");
+            if (string.IsNullOrWhiteSpace(pathValue))
+                return null;
+
+            foreach (string dir in pathValue.Split(';', StringSplitOptions.RemoveEmptyEntries))
+            {
+                try
+                {
+                    string candidate = Path.Combine(dir.Trim(), fileName);
+                    if (File.Exists(candidate))
+                        return candidate;
+                }
+                catch
+                {
+                }
+            }
+
+            return null;
+        }
         private void BtnBrowse_Click(object sender, RoutedEventArgs e)
         {
             string typeStr = ((ComboBoxItem)CmbActionType.SelectedItem).Tag?.ToString() ?? "Web";
@@ -262,11 +284,31 @@ namespace SmartScreenDock
             {
                 Filter = typeStr switch
                 {
-                    nameof(SmartScreenDock.ActionType.Exe) => "Программы (*.exe)|*.exe|Все файлы (*.*)|*.*",
+                    nameof(SmartScreenDock.ActionType.Exe) => "Программы (*.exe;*.lnk)|*.exe;*.lnk|Все файлы (*.*)|*.*",
                     nameof(SmartScreenDock.ActionType.ScriptFile) => "Скрипты (*.bat;*.cmd;*.ps1;*.py)|*.bat;*.cmd;*.ps1;*.py",
                     _ => "Все файлы (*.*)|*.*"
                 }
             };
+
+            if (typeStr == nameof(SmartScreenDock.ActionType.Exe))
+            {
+                if (!string.IsNullOrWhiteSpace(TxtActionValue.Text))
+                {
+                    string? existingDir = Path.GetDirectoryName(TxtActionValue.Text);
+                    if (!string.IsNullOrWhiteSpace(existingDir) && Directory.Exists(existingDir))
+                        dlg.InitialDirectory = existingDir;
+                }
+
+                if (string.IsNullOrWhiteSpace(dlg.InitialDirectory))
+                {
+                    string programFilesX64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                    string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+                    if (Directory.Exists(programFilesX64))
+                        dlg.InitialDirectory = programFilesX64;
+                    else if (Directory.Exists(programFilesX86))
+                        dlg.InitialDirectory = programFilesX86;
+                }
+            }
 
             if (dlg.ShowDialog() == true)
                 TxtActionValue.Text = dlg.FileName;
@@ -304,6 +346,12 @@ namespace SmartScreenDock
                     return;
                 }
 
+                if (actionType == SmartScreenDock.ActionType.Exe && !File.Exists(TxtActionValue.Text))
+                {
+                    new DarkDialog("Файл программы или ярлыка не найден.") { Owner = this }.ShowDialog();
+                    return;
+                }
+
                 if (actionType == SmartScreenDock.ActionType.ScriptFile)
                 {
                     if (!File.Exists(TxtActionValue.Text))
@@ -315,6 +363,13 @@ namespace SmartScreenDock
                     if (!IsAllowedScriptFile(TxtActionValue.Text))
                     {
                         new DarkDialog("Поддерживаются только .bat, .cmd, .ps1 и .py.") { Owner = this }.ShowDialog();
+                        return;
+                    }
+
+                    if (string.Equals(Path.GetExtension(TxtActionValue.Text), ".py", StringComparison.OrdinalIgnoreCase) &&
+                        FindExecutableOnPath("python.exe") == null)
+                    {
+                        new DarkDialog("Для запуска .py требуется установленный python.exe в PATH.") { Owner = this }.ShowDialog();
                         return;
                     }
                 }
