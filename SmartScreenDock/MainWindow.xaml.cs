@@ -382,6 +382,13 @@ namespace SmartScreenDock
         private void Toggle(bool hide) {
             _isAnimating = true;
             _timer.Stop();
+            if (!hide)
+            {
+                this.Topmost = false;
+                var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+                this.Topmost = true;
+            }
             double finalY = hide ? -this.ActualHeight : 0;
             var anim = new DoubleAnimation(finalY, TimeSpan.FromMilliseconds(200)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
             anim.Completed += (s, ev) => { this.BeginAnimation(TopProperty, null); this.Top = finalY; _isAnimating = false; _timer.Start(); UpdatePanelBounds(); };
