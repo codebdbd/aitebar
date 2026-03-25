@@ -22,7 +22,6 @@ namespace SmartScreenDock
                 Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
                 "Codebdbd",
                 "Aite Bar");
-            TxtDataPath.Text = _dataDirectory;
         }
 
         private static void OpenTarget(string target)

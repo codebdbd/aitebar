@@ -2,6 +2,7 @@ AiteBar
 Third-Party Notices
 
 This product uses third-party components and icon assets.
+Application license: Proprietary (All rights reserved)
 
 1. Fluent UI System Icons
    Copyright (c) Microsoft

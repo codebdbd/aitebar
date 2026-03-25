@@ -98,15 +98,13 @@
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Информация"/>
             <TextBlock Style="{StaticResource MutedTextStyle}" Text="Разработчик: Codebdbd"/>
             <TextBlock Style="{StaticResource MutedTextStyle}" Text="© 2026 Codebdbd"/>
+            <TextBlock Style="{StaticResource MutedTextStyle}" Text="Лицензия: Proprietary (All rights reserved)"/>
 
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Технологии"/>
             <TextBlock Style="{StaticResource MutedTextStyle}" Text=".NET 8"/>
             <TextBlock Style="{StaticResource MutedTextStyle}" Text="WPF"/>
 
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Данные приложения"/>
-            <Border Style="{StaticResource InfoBoxStyle}">
-                <TextBlock x:Name="TxtDataPath" Style="{StaticResource MutedTextStyle}"/>
-            </Border>
             <Button Content="Открыть папку данных" Style="{StaticResource LinkButtonStyle}" Click="BtnOpenDataFolder_Click"/>
 
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Ресурсы"/>
