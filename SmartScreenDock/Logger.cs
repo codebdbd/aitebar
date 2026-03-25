@@ -7,7 +7,7 @@ namespace SmartScreenDock
     {
         private static readonly string LogPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Codebdbd", "Aite Deck", "error.log"); // константы задаются в MainWindow; Logger намеренно самодостаточен
+            "Codebdbd", "Aite Bar", "error.log"); // константы задаются в MainWindow; Logger намеренно самодостаточен
         private const long MaxLogSizeBytes = 1 * 1024 * 1024;
         private static readonly object _lockObj = new();
 

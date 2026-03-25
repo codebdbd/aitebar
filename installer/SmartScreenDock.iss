@@ -1,4 +1,5 @@
-#define AppName "Aite Deck"
+#define AppName "Aite Bar"
+#define AppDisplayName "AiteBar (Smart Control Panel)"
 #define AppPublisher "Codebdbd"
 #define AppExeName "SmartScreenDock.exe"
 #define AppVersion "1.0.0"
@@ -6,16 +7,16 @@
 
 [Setup]
 AppId={{0B8E4B6C-6DB0-4E14-9DA1-68A7AAB95571}
-AppName={#AppName}
+AppName={#AppDisplayName}
 AppVersion={#AppVersion}
 AppPublisher={#AppPublisher}
 DefaultDirName={autopf}\{#AppName}
-DefaultGroupName={#AppName}
+DefaultGroupName={#AppDisplayName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=..\artifacts\installer
-OutputBaseFilename=AiteDeck-Setup
+OutputBaseFilename=AiteBar-Setup
 UninstallDisplayIcon={app}\{#AppExeName}
 Compression=lzma
 SolidCompression=yes
@@ -35,11 +36,12 @@ Name: "autostart"; Description: "Запускать при входе в Windows
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
+Name: "{group}\{#AppDisplayName}"; Filename: "{app}\{#AppExeName}"
+Name: "{autodesktop}\{#AppDisplayName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "{#AppName}"; ValueData: """{app}\{#AppExeName}"""; Flags: uninsdeletevalue; Tasks: autostart
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "Запустить {#AppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExeName}"; Description: "Запустить {#AppDisplayName}"; Flags: nowait postinstall skipifsilent
+

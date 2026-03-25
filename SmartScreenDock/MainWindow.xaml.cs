@@ -98,7 +98,7 @@ namespace SmartScreenDock
         private const uint INPUT_KEYBOARD = 1;
         private const uint KEYEVENTF_KEYUP = 0x0002;
         private const string AppCompany = "Codebdbd";
-        private const string AppName = "Aite Deck";
+        private const string AppName = "Aite Bar";
         static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
         const uint SWP_NOSIZE = 0x0001;
         const uint SWP_NOMOVE = 0x0002;
@@ -152,7 +152,7 @@ namespace SmartScreenDock
                 } else _notifyIcon.Icon = SystemIcons.Application;
             } catch (Exception ex) { Logger.Log(ex); _notifyIcon.Icon = SystemIcons.Application; }
 
-            _notifyIcon.Text = "SmartScreenDock";
+            _notifyIcon.Text = "AiteBar (Smart Control Panel)";
             _notifyIcon.Visible = true;
 
             var trayMenu = new System.Windows.Forms.ContextMenuStrip();
