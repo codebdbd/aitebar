@@ -1,5 +1,5 @@
 #define AppName "Aite Bar"
-#define AppDisplayName "AiteBar (Smart Control Panel)"
+#define AppDisplayName "AiteBar"
 #define AppPublisher "Codebdbd"
 #define AppExeName "AiteBar.exe"
 #define AppVersion "1.0.0"
@@ -44,5 +44,6 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "Запустить {#AppDisplayName}"; Flags: nowait postinstall skipifsilent
+
 
 

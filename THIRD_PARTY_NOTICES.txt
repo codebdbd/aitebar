@@ -1,4 +1,4 @@
-AiteBar (Smart Control Panel)
+AiteBar
 Third-Party Notices
 
 This product uses third-party components and icon assets.
@@ -30,3 +30,4 @@ This product uses third-party components and icon assets.
 This notice file is provided for informational purposes.
 Please review the upstream projects for the full and current license texts and any
 additional notice requirements that may apply to your distribution model.
+

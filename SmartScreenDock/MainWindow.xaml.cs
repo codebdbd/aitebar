@@ -152,7 +152,7 @@ namespace SmartScreenDock
                 } else _notifyIcon.Icon = SystemIcons.Application;
             } catch (Exception ex) { Logger.Log(ex); _notifyIcon.Icon = SystemIcons.Application; }
 
-            _notifyIcon.Text = "AiteBar (Smart Control Panel)";
+            _notifyIcon.Text = "AiteBar";
             _notifyIcon.Visible = true;
 
             var trayMenu = new System.Windows.Forms.ContextMenuStrip();
@@ -654,3 +654,4 @@ namespace SmartScreenDock
         protected override void OnClosed(EventArgs e) { _notifyIcon?.Dispose(); base.OnClosed(e); }
     }
 }
+
