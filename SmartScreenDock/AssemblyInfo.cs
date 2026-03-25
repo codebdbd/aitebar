@@ -1,4 +1,12 @@
 using System.Windows;
+using System.Reflection;
+
+[assembly: AssemblyTitle("AiteBar (Smart Control Panel)")]
+[assembly: AssemblyProduct("AiteBar (Smart Control Panel)")]
+[assembly: AssemblyCompany("Codebdbd")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyInformationalVersion("1.0.0")]
 
 [assembly:ThemeInfo(
     ResourceDictionaryLocation.None,            //where theme specific resource dictionaries are located
