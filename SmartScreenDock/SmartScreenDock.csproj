@@ -23,5 +23,12 @@
     <Resource Include="Resources\FluentSystemIcons-Regular.ttf" />
     <Resource Include="Resources\FluentSystemIcons.json" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\THIRD_PARTY_NOTICES.txt" Link="THIRD_PARTY_NOTICES.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
 </Project>
 
