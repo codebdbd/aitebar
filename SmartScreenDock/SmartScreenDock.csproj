@@ -16,6 +16,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="obj\**\*.cs" />
+    <Compile Remove="bin\**\*.cs" />
+    <Compile Remove="..\artifacts\obj\**\*.cs" />
     <Resource Include="Resources\app.ico" />
     <Resource Include="Resources\Font Awesome 7 Brands-Regular-400.otf" />
     <Resource Include="Resources\MaterialIcons-Regular.ttf" />

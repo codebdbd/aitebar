@@ -8,8 +8,9 @@ namespace SmartScreenDock
 {
     public partial class AboutWindow : DarkWindow
     {
-        private const string ProductUrl = "https://codebdbd.github.io/intro/en/products/aitebar/";
+        private const string ProductUrl = "https://codebdbd.github.io/products/aitebar";
         private const string RepositoryUrl = "https://github.com/codebdbd/aitebar";
+        private readonly string _dataDirectory;
 
         public AboutWindow()
         {
@@ -17,7 +18,11 @@ namespace SmartScreenDock
 
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             TxtVersion.Text = $"Версия {version?.Major}.{version?.Minor}.{version?.Build}";
-            TxtExePath.Text = Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName ?? "Недоступно";
+            _dataDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "Codebdbd",
+                "Aite Bar");
+            TxtDataPath.Text = _dataDirectory;
         }
 
         private static void OpenTarget(string target)
@@ -52,7 +57,19 @@ namespace SmartScreenDock
             OpenTarget(noticesPath);
         }
 
-        private void BtnOpenFolder_Click(object sender, RoutedEventArgs e)
+        private void BtnOpenDataFolder_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Directory.CreateDirectory(_dataDirectory);
+                OpenTarget(_dataDirectory);
+            } catch (Exception ex)
+            {
+                new DarkDialog($"Не удалось открыть папку данных.\n\n{ex.Message}") { Owner = this }.ShowDialog();
+            }
+        }
+
+        private void BtnOpenProgramFolder_Click(object sender, RoutedEventArgs e)
         {
             string? exeDir = Path.GetDirectoryName(Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName);
             if (string.IsNullOrWhiteSpace(exeDir) || !Directory.Exists(exeDir))

@@ -32,7 +32,7 @@
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Height" Value="34"/>
-            <Setter Property="Padding" Value="14,0"/>
+            <Setter Property="Padding" Value="18,0"/>
             <Setter Property="Margin" Value="0,0,10,10"/>
             <Setter Property="Background" Value="#4285F4"/>
             <Setter Property="Template">
@@ -51,18 +51,33 @@
             </Setter>
         </Style>
 
-        <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
-            <Setter Property="Background" Value="#333333"/>
-            <Setter Property="Foreground" Value="#E3E3E3"/>
-        </Style>
-
         <Style x:Key="InfoBoxStyle" TargetType="Border">
             <Setter Property="Background" Value="#252525"/>
             <Setter Property="BorderBrush" Value="#3A3A3A"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="6"/>
-            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Padding" Value="12,10"/>
             <Setter Property="Margin" Value="0,4,0,0"/>
+        </Style>
+
+        <Style x:Key="LinkButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="#7FB3FF"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0,0,16,6"/>
+            <Setter Property="HorizontalAlignment" Value="Left"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <TextBlock TextDecorations="Underline"
+                                   Text="{TemplateBinding Content}"
+                                   Foreground="{TemplateBinding Foreground}"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
     </Window.Resources>
 
@@ -88,30 +103,22 @@
             <TextBlock Style="{StaticResource MutedTextStyle}" Text=".NET 8"/>
             <TextBlock Style="{StaticResource MutedTextStyle}" Text="WPF"/>
 
-            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Иконки"/>
-            <TextBlock Style="{StaticResource MutedTextStyle}" Text="Fluent System Icons"/>
-            <TextBlock Style="{StaticResource MutedTextStyle}" Text="Material Icons"/>
-            <TextBlock Style="{StaticResource MutedTextStyle}" Text="Font Awesome Brands"/>
-
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Данные приложения"/>
             <Border Style="{StaticResource InfoBoxStyle}">
-                <TextBlock Text="AppData\Roaming\Codebdbd\Aite Bar" Style="{StaticResource MutedTextStyle}"/>
+                <TextBlock x:Name="TxtDataPath" Style="{StaticResource MutedTextStyle}"/>
             </Border>
+            <Button Content="Открыть папку данных" Style="{StaticResource LinkButtonStyle}" Click="BtnOpenDataFolder_Click"/>
 
-            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Исполняемый файл"/>
-            <Border Style="{StaticResource InfoBoxStyle}">
-                <TextBlock x:Name="TxtExePath" Style="{StaticResource MutedTextStyle}"/>
-            </Border>
+            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Ресурсы"/>
+            <WrapPanel>
+                <Button Content="Страница программы" Style="{StaticResource LinkButtonStyle}" Click="BtnWebsite_Click"/>
+                <Button Content="GitHub репозиторий" Style="{StaticResource LinkButtonStyle}" Click="BtnRepository_Click"/>
+                <Button Content="Лицензии" Style="{StaticResource LinkButtonStyle}" Click="BtnLicenses_Click"/>
+                <Button Content="Папка программы" Style="{StaticResource LinkButtonStyle}" Click="BtnOpenProgramFolder_Click"/>
+            </WrapPanel>
         </StackPanel>
 
-        <WrapPanel Grid.Row="1" Margin="0,20,0,0">
-            <Button Content="Страница программы" Style="{StaticResource PrimaryButtonStyle}" Click="BtnWebsite_Click"/>
-            <Button Content="GitHub репозиторий" Style="{StaticResource SecondaryButtonStyle}" Click="BtnRepository_Click"/>
-            <Button Content="Лицензии" Style="{StaticResource SecondaryButtonStyle}" Click="BtnLicenses_Click"/>
-            <Button Content="Открыть папку" Style="{StaticResource SecondaryButtonStyle}" Click="BtnOpenFolder_Click"/>
-        </WrapPanel>
-
-        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
             <Button Content="Закрыть" Width="90" Style="{StaticResource PrimaryButtonStyle}" Margin="0" Click="BtnClose_Click"/>
         </StackPanel>
     </Grid>
