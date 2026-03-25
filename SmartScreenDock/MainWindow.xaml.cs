@@ -160,7 +160,7 @@ namespace SmartScreenDock
             trayMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
             trayMenu.Items.Add("О программе", null, (s, e) => Dispatcher.Invoke(() => new AboutWindow { Owner = this }.ShowDialog()));
             trayMenu.Items.Add("Справка", null, (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/products/aitebar/guide.html"));
-            trayMenu.Items.Add("Поддержать автора", null, (s, e) => OpenUrl("https://github.com/codebdbd/intro/en/pages/donate.html"));
+            trayMenu.Items.Add("Поддержать автора", null, (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/pages/donate.html"));
             trayMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
             trayMenu.Items.Add("Закрыть и выйти", null, (s, e) => { _notifyIcon.Dispose(); Application.Current.Shutdown(); });
 
