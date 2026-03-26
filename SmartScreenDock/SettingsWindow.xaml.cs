@@ -23,7 +23,7 @@ namespace SmartScreenDock
     public partial class SettingsWindow : DarkWindow
     {
         private static readonly string[] AllowedScriptExtensions = [".bat", ".cmd", ".ps1", ".py"];
-        private string _selectedIcon = "\ue710";
+        private string _selectedIcon = "\uef0d";
         private string _selectedFont = FontHelper.FluentKey;
         private string _selectedColor = "#E3E3E3";
         private static readonly BrushConverter _brushConverter = new();
@@ -48,6 +48,7 @@ namespace SmartScreenDock
                 LoadElementData();
             } else {
                 UpdateActionUI();
+                UpdateNamePlaceholderVisibility();
                 CmbBlock.SelectedIndex = 0; 
             }
         }
@@ -86,6 +87,7 @@ namespace SmartScreenDock
             SetComboValue(CmbKey, _editingElement.Key);
             UpdatePreview();
             UpdateActionUI();
+            UpdateNamePlaceholderVisibility();
         }
 
         private void SetComboValue(ComboBox combo, string value)
@@ -254,6 +256,7 @@ namespace SmartScreenDock
         }
 
         private void CmbActionType_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e) => UpdateActionUI();
+        private void TxtName_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => UpdateNamePlaceholderVisibility();
         private void TxtActionValue_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e) => UpdateActionPlaceholderVisibility();
 
         private static string? FindExecutableOnPath(string fileName)
@@ -329,6 +332,16 @@ namespace SmartScreenDock
                 string.IsNullOrWhiteSpace(TxtActionPlaceholder.Text) || !string.IsNullOrEmpty(TxtActionValue.Text)
                     ? Visibility.Collapsed
                     : Visibility.Visible;
+        }
+
+        private void UpdateNamePlaceholderVisibility()
+        {
+            if (TxtNamePlaceholder == null || TxtName == null)
+                return;
+
+            TxtNamePlaceholder.Visibility = string.IsNullOrEmpty(TxtName.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
 
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
