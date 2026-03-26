@@ -600,9 +600,12 @@ namespace SmartScreenDock
                             var confirm = new DarkDialog($"Будет выполнена команда:\n\n{el.ActionValue}\n\nПродолжить?", isConfirm: true);
                             confirm.Owner = Application.Current.MainWindow;
                             if (confirm.ShowDialog() != true) return;
-                            var psiCmd = new ProcessStartInfo("cmd.exe") { CreateNoWindow = true, UseShellExecute = false };
-                            psiCmd.ArgumentList.Add("/c");
-                            psiCmd.ArgumentList.Add(el.ActionValue);
+                            var psiCmd = new ProcessStartInfo("cmd.exe")
+                            {
+                                CreateNoWindow = true,
+                                UseShellExecute = false,
+                                Arguments = $"/c {el.ActionValue}"
+                            };
                             using (Process.Start(psiCmd)) { }
                             break;
                     }
