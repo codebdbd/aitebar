@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
@@ -20,6 +21,7 @@ using Brushes = System.Windows.Media.Brushes;
 
 namespace SmartScreenDock
 {
+    [SupportedOSPlatform("windows6.1")]
     public partial class SettingsWindow : DarkWindow
     {
         private static readonly string[] AllowedScriptExtensions = [".bat", ".cmd", ".ps1", ".py"];

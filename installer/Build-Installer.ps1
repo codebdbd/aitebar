@@ -10,7 +10,6 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $projectPath = Join-Path $repoRoot "SmartScreenDock\SmartScreenDock.csproj"
 $publishDir = Join-Path $repoRoot "artifacts\publish\$Runtime"
 $installerDir = Join-Path $repoRoot "artifacts\installer"
-$intermediateDir = Join-Path $repoRoot "artifacts\obj\$Runtime"
 $issPath = Join-Path $PSScriptRoot "SmartScreenDock.iss"
 
 if (-not $SkipPublish) {
@@ -20,8 +19,6 @@ if (-not $SkipPublish) {
         --self-contained true `
         -p:PublishSingleFile=false `
         -p:PublishReadyToRun=false `
-        -p:BaseIntermediateOutputPath="$intermediateDir\\" `
-        -p:IntermediateOutputPath="$intermediateDir\\$Configuration\\net8.0-windows\\$Runtime\\" `
         -o $publishDir
 
     if ($LASTEXITCODE -ne 0) {

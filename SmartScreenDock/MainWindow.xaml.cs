@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +26,7 @@ using Brushes = System.Windows.Media.Brushes;
 
 namespace SmartScreenDock
 {
+    [SupportedOSPlatform("windows6.1")]
     public partial class MainWindow : Window
     {
         [DllImport("user32.dll")] internal static extern bool GetCursorPos(ref Win32Point pt);
