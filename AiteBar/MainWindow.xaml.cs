@@ -34,85 +34,6 @@ namespace AiteBar
     [SupportedOSPlatform("windows6.1")]
     public partial class MainWindow : Window
     {
-        [DllImport("user32.dll")] internal static extern bool GetCursorPos(ref Win32Point pt);
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern uint SendInput(uint nInputs, INPUT[] pInputs, int cbSize);
-        [DllImport("user32.dll")] static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
-        [DllImport("user32.dll")] static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
-        [DllImport("user32.dll")] static extern bool UnhookWindowsHookEx(IntPtr hhk);
-        [DllImport("user32.dll")] static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
-        [DllImport("kernel32.dll")] static extern IntPtr GetModuleHandle(string lpModuleName);
-        [DllImport("user32.dll")] private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
-        [DllImport("user32.dll")] private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-        
-        [StructLayout(LayoutKind.Sequential)] internal struct Win32Point { public int X; public int Y; }
-        [StructLayout(LayoutKind.Sequential)]
-        private struct MSLLHOOKSTRUCT
-        {
-            public Win32Point pt;
-            public uint mouseData;
-            public uint flags;
-            public uint time;
-            public IntPtr dwExtraInfo;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct INPUT
-        {
-            public uint type;
-            public INPUTUNION U;
-        }
-
-        [StructLayout(LayoutKind.Explicit)]
-        private struct INPUTUNION
-        {
-            [FieldOffset(0)] public MOUSEINPUT mi;
-            [FieldOffset(0)] public KEYBDINPUT ki;
-            [FieldOffset(0)] public HARDWAREINPUT hi;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct KEYBDINPUT
-        {
-            public ushort wVk;
-            public ushort wScan;
-            public uint dwFlags;
-            public uint time;
-            public IntPtr dwExtraInfo;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct MOUSEINPUT
-        {
-            public int dx;
-            public int dy;
-            public uint mouseData;
-            public uint dwFlags;
-            public uint time;
-            public IntPtr dwExtraInfo;
-        }
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct HARDWAREINPUT
-        {
-            public uint uMsg;
-            public ushort wParamL;
-            public ushort wParamH;
-        }
-
-        delegate IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam);
-
-        const byte VK_LWIN = 0x5B, VK_SHIFT = 0x10, VK_CONTROL = 0x11, VK_MENU = 0x12;
-        private const uint INPUT_KEYBOARD = 1;
-        private const uint KEYEVENTF_KEYUP = 0x0002;
-        private const string AppCompany = "Codebdbd";
-        private const string AppName = "Aite Bar";
-        static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
-        const uint SWP_NOSIZE = 0x0001;
-        const uint SWP_NOMOVE = 0x0002;
-        const int WH_MOUSE_LL = 14;
-        const int WM_LBUTTONDOWN = 0x0201;
-
         private DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
         private DateTime? _hoverStartTime;
         private bool _shown = false, _isAnimating = false;
@@ -124,7 +45,7 @@ namespace AiteBar
         private List<CustomElement> _elements = [];
         private AppSettings _appSettings = new();
         private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
-        private LowLevelMouseProc? _mouseProc;
+        private NativeMethods.LowLevelMouseProc? _mouseProc;
         private IntPtr _mouseHook = IntPtr.Zero;
 
         private Button? _draggedButton = null;
@@ -255,19 +176,19 @@ namespace AiteBar
             if (Enum.TryParse(typeof(Key), _appSettings.GlobalHotkeyKey, out var k))
             {
                 uint vk = (uint)KeyInterop.VirtualKeyFromKey((Key)k!);
-                RegisterHotKey(hwnd, HOTKEY_ID, modifiers, vk);
+                NativeMethods.RegisterHotKey(hwnd, HOTKEY_ID, modifiers, vk);
             }
         }
 
         private void UnregisterGlobalHotkey()
         {
             IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-            if (hwnd != IntPtr.Zero) UnregisterHotKey(hwnd, HOTKEY_ID);
+            if (hwnd != IntPtr.Zero) NativeMethods.UnregisterHotKey(hwnd, HOTKEY_ID);
         }
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            if (msg == WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
+            if (msg == NativeMethods.WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
             {
                 _shown = !_shown;
                 Toggle(!_shown);
@@ -344,7 +265,7 @@ namespace AiteBar
                 _mouseProc = MouseHookCallback;
                 using var curProcess = Process.GetCurrentProcess();
                 using var curModule = curProcess.MainModule ?? throw new InvalidOperationException("MainModule is null");
-                _mouseHook = SetWindowsHookEx(WH_MOUSE_LL, _mouseProc, GetModuleHandle(curModule.ModuleName!), 0);
+                _mouseHook = NativeMethods.SetWindowsHookEx(NativeMethods.WH_MOUSE_LL, _mouseProc, NativeMethods.GetModuleHandle(curModule.ModuleName!), 0);
             }
             catch (Exception ex) { Logger.Log(ex); }
         }
@@ -352,7 +273,7 @@ namespace AiteBar
         private void UninstallMouseHook()
         {
             if (_mouseHook == IntPtr.Zero) return;
-            UnhookWindowsHookEx(_mouseHook);
+            NativeMethods.UnhookWindowsHookEx(_mouseHook);
             _mouseHook = IntPtr.Zero;
         }
 
@@ -360,9 +281,9 @@ namespace AiteBar
         {
             try
             {
-                if (nCode >= 0 && wParam == (IntPtr)WM_LBUTTONDOWN && _shown && !_isAnimating)
+                if (nCode >= 0 && wParam == (IntPtr)NativeMethods.WM_LBUTTONDOWN && _shown && !_isAnimating)
                 {
-                    var hookStruct = Marshal.PtrToStructure<MSLLHOOKSTRUCT>(lParam);
+                    var hookStruct = Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
                     double x = hookStruct.pt.X, y = hookStruct.pt.Y;
                     if (x < _panelLeft || x > _panelRight || y < _panelTop || y > _panelBottom)
                     {
@@ -371,7 +292,7 @@ namespace AiteBar
                 }
             }
             catch (Exception ex) { Logger.Log(ex); }
-            return CallNextHookEx(_mouseHook, nCode, wParam, lParam);
+            return NativeMethods.CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }
 
         private void UpdatePanelBounds()
@@ -396,8 +317,8 @@ namespace AiteBar
                 RefreshPanel();
                 _timer.Tick += (s, ev) => {
                     if (_isAnimating) return;
-                    Win32Point pt = new();
-                    if (GetCursorPos(ref pt)) {
+                    NativeMethods.Win32Point pt = new();
+                    if (NativeMethods.GetCursorPos(ref pt)) {
                         var screens = Screen.AllScreens;
                         var screen = (_appSettings.MonitorIndex >= 0 && _appSettings.MonitorIndex < screens.Length) 
                             ? screens[_appSettings.MonitorIndex] 
@@ -714,7 +635,7 @@ namespace AiteBar
             if (!hide) { 
                 this.Topmost = false; 
                 var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-                SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); 
+                NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0, NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOMOVE); 
                 this.Topmost = true; 
             }
 
@@ -813,13 +734,13 @@ namespace AiteBar
                 if (Enum.TryParse<AiteBar.ActionType>(el.ActionType, out var actionType)) {
                     switch (actionType) {
                         case AiteBar.ActionType.Hotkey:
-                            var downKeys = new List<byte>(); if (el.Ctrl) downKeys.Add(VK_CONTROL); if (el.Shift) downKeys.Add(VK_SHIFT); if (el.Alt) downKeys.Add(VK_MENU); if (el.Win) downKeys.Add(VK_LWIN);
+                            var downKeys = new List<byte>(); if (el.Ctrl) downKeys.Add(NativeMethods.VK_CONTROL); if (el.Shift) downKeys.Add(NativeMethods.VK_SHIFT); if (el.Alt) downKeys.Add(NativeMethods.VK_MENU); if (el.Win) downKeys.Add(NativeMethods.VK_LWIN);
                             byte mainVk = 0; if (Enum.TryParse(typeof(Key), el.Key, out var k)) mainVk = (byte)KeyInterop.VirtualKeyFromKey((Key)k!);
-                            var inputs = new List<INPUT>(); foreach (var vk in downKeys) inputs.Add(new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = vk } } });
-                            if (mainVk != 0) { inputs.Add(new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = mainVk } } });
-                                inputs.Add(new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = mainVk, dwFlags = KEYEVENTF_KEYUP } } }); }
-                            foreach (var vk in Enumerable.Reverse(downKeys)) inputs.Add(new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = vk, dwFlags = KEYEVENTF_KEYUP } } });
-                            SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>()); break;
+                            var inputs = new List<NativeMethods.INPUT>(); foreach (var vk in downKeys) inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk } } });
+                            if (mainVk != 0) { inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk } } });
+                                inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } }); }
+                            foreach (var vk in Enumerable.Reverse(downKeys)) inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } });
+                            NativeMethods.SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<NativeMethods.INPUT>()); break;
                         case AiteBar.ActionType.Web:
                             string prof = el.UseRotation ? (BrowserHelper.AdvanceProfile(el.Browser, el.LastUsedProfile)) : el.ChromeProfile; el.LastUsedProfile = prof; await SaveConfig();
                             var psi = new ProcessStartInfo(BrowserHelper.GetExecutablePath(el.Browser)) { UseShellExecute = false };
@@ -839,7 +760,7 @@ namespace AiteBar
                                 else psi.ArgumentList.Add($"--profile-directory={Path.GetFileName(prof)}");
                             }
                             using (var proc = Process.Start(psi)) { if (proc != null && el.IsTopmost) { for (int i = 0; i < 25; i++) { await Task.Delay(200); proc.Refresh();
-                                        if (proc.MainWindowHandle != IntPtr.Zero) { SetWindowPos(proc.MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); break; } } } }
+                                        if (proc.MainWindowHandle != IntPtr.Zero) { NativeMethods.SetWindowPos(proc.MainWindowHandle, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0, NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOMOVE); break; } } } }
                             break;
                         case AiteBar.ActionType.Exe: Process.Start(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true }); break;
                         case AiteBar.ActionType.ScriptFile: await StartScriptFile(el.ActionValue); break;

@@ -194,15 +194,15 @@ namespace AiteBar
                     }
                     else if (line.StartsWith("Name=", StringComparison.OrdinalIgnoreCase))
                     {
-                        currentName = line.Substring(5).Trim();
+                        currentName = line[5..].Trim();
                     }
                     else if (line.StartsWith("Path=", StringComparison.OrdinalIgnoreCase))
                     {
-                        currentPath = line.Substring(5).Trim().Replace('/', '\\');
+                        currentPath = line[5..].Trim().Replace('/', '\\');
                     }
                     else if (line.StartsWith("IsRelative=", StringComparison.OrdinalIgnoreCase))
                     {
-                        isRelative = line.Substring(11).Trim() == "1";
+                        isRelative = line[11..].Trim() == "1";
                     }
                 }
 
