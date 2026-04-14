@@ -5,7 +5,7 @@
         Icon="pack://application:,,,/Resources/app.ico"
         Title="Настройки программы" Width="420" MaxHeight="650"
         SizeToContent="Height"
-        WindowStartupLocation="CenterOwner" Background="#1E1E1E" Foreground="White"
+        WindowStartupLocation="CenterOwner" Background="#252525" Foreground="White"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
     

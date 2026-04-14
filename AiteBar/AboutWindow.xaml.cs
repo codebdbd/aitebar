@@ -18,10 +18,7 @@ namespace AiteBar
 
             var version = Assembly.GetExecutingAssembly().GetName().Version;
             TxtVersion.Text = $"Версия {version?.Major}.{version?.Minor}.{version?.Build}";
-            _dataDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "Codebdbd",
-                "Aite Bar");
+            _dataDirectory = PathHelper.AppDataFolder;
         }
 
         private static void OpenTarget(string target)

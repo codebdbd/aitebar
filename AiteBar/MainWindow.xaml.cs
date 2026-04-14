@@ -157,10 +157,9 @@ namespace AiteBar
                 UpdatePanelBounds();
             };
             
-            string configDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), AppCompany, AppName);
-            if (!Directory.Exists(configDir)) Directory.CreateDirectory(configDir);
-            _configFile = Path.Combine(configDir, "custom_buttons.json");
-            _settingsFile = Path.Combine(configDir, "settings.json");
+            PathHelper.EnsureDirectories();
+            _configFile = PathHelper.ConfigFile;
+            _settingsFile = PathHelper.SettingsFile;
 
             InitTrayIcon();
 
@@ -568,10 +567,8 @@ namespace AiteBar
                 
                 var capturedElement = el;
                 btn.PreviewMouseDown += (s, e) => {
-                    if (Keyboard.IsKeyDown(Key.LeftCtrl) || Keyboard.IsKeyDown(Key.RightCtrl)) {
-                        _draggedButton = s as Button; _draggedElement = capturedElement;
-                        _dragStartPos = e.GetPosition(this); _isReordering = false;
-                    }
+                    _draggedButton = s as Button; _draggedElement = capturedElement;
+                    _dragStartPos = e.GetPosition(this); _isReordering = false;
                 };
                 btn.PreviewMouseMove += (s, e) => {
                     if (_draggedButton != null && _draggedElement != null) {
@@ -697,14 +694,6 @@ namespace AiteBar
             return result;
         }
 
-        private static string GetChromePath() {
-            var regVal = Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe", "", null) as string;
-            if (!string.IsNullOrEmpty(regVal) && File.Exists(regVal)) return regVal;
-            string[] paths = { @"C:\Program Files\Google\Chrome\Application\chrome.exe", @"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe", 
-                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Google\Chrome\Application\chrome.exe") };
-            foreach (var p in paths) if (File.Exists(p)) return p;
-            return "chrome.exe";
-        }
 
         private void Toggle(bool hide) {
             _isAnimating = true; _timer.Stop();
@@ -817,16 +806,6 @@ namespace AiteBar
             return Task.CompletedTask;
         }
 
-        private string AdvanceProfile(CustomElement el) {
-            string basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Google\Chrome\User Data");
-            if (!Directory.Exists(basePath)) return "";
-            var profiles = new List<string> { "Default" };
-            profiles.AddRange(Directory.GetDirectories(basePath, "Profile *").Select(p => Path.GetFileName(p)!));
-            profiles = profiles.OrderBy(p => p).ToList();
-            int idx = profiles.IndexOf(el.LastUsedProfile);
-            if (idx < 0) return profiles[0];
-            return profiles[(idx + 1) % profiles.Count];
-        }
 
         private async Task ExecuteCustomAction(CustomElement el) {
             try {
@@ -842,8 +821,8 @@ namespace AiteBar
                             foreach (var vk in Enumerable.Reverse(downKeys)) inputs.Add(new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = vk, dwFlags = KEYEVENTF_KEYUP } } });
                             SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>()); break;
                         case AiteBar.ActionType.Web:
-                            string prof = el.UseRotation ? (AdvanceProfile(el)) : el.ChromeProfile; el.LastUsedProfile = prof; await SaveConfig();
-                            var psi = new ProcessStartInfo(GetChromePath()) { UseShellExecute = false };
+                            string prof = el.UseRotation ? (ChromeHelper.AdvanceProfile(el.LastUsedProfile)) : el.ChromeProfile; el.LastUsedProfile = prof; await SaveConfig();
+                            var psi = new ProcessStartInfo(ChromeHelper.GetChromePath()) { UseShellExecute = false };
                             if (el.IsAppMode) psi.ArgumentList.Add($"--app={el.ActionValue}"); else psi.ArgumentList.Add(el.ActionValue);
                             if (el.IsIncognito) psi.ArgumentList.Add("--incognito"); if (!string.IsNullOrEmpty(prof)) psi.ArgumentList.Add($"--profile-directory={Path.GetFileName(prof)}");
                             using (var proc = Process.Start(psi)) { if (proc != null && el.IsTopmost) { for (int i = 0; i < 25; i++) { await Task.Delay(200); proc.Refresh();
@@ -862,7 +841,7 @@ namespace AiteBar
 
         private async void BtnSearch_Click(object sender, RoutedEventArgs e) {
             try { string t = Clipboard.ContainsText() ? Clipboard.GetText().Trim() : ""; if (string.IsNullOrEmpty(t)) return; await HideDock();
-                using (Process.Start(new ProcessStartInfo(GetChromePath()) { UseShellExecute = false, ArgumentList = { $"https://www.google.com/search?q={Uri.EscapeDataString(t)}" } })) { } } catch { }
+                using (Process.Start(new ProcessStartInfo(ChromeHelper.GetChromePath()) { UseShellExecute = false, ArgumentList = { $"https://www.google.com/search?q={Uri.EscapeDataString(t)}" } })) { } } catch { }
         }
         private async void BtnScreenshotRegion_Click(object sender, RoutedEventArgs e) { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true }); }
         private async void BtnRecordVideo_Click(object sender, RoutedEventArgs e) { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true }); }
@@ -880,11 +859,34 @@ namespace AiteBar
         private async void Border_Drop(object sender, DragEventArgs e) {
             try {
                 string? val = null; ActionType type = ActionType.Web;
-                if (e.Data.GetDataPresent(DataFormats.FileDrop)) { var f = (string[])e.Data.GetData(DataFormats.FileDrop); if (f?.Length > 0) { val = f[0]; string ext = Path.GetExtension(val).ToLower();
-                        if (ext == ".exe" || ext == ".lnk") type = ActionType.Exe; else if (new[] { ".bat", ".cmd", ".ps1", ".py" }.Contains(ext)) type = ActionType.ScriptFile; else type = ActionType.Exe; }
-                } else if (e.Data.GetDataPresent(DataFormats.UnicodeText)) val = ((string)e.Data.GetData(DataFormats.UnicodeText)).Trim();
-                if (!string.IsNullOrEmpty(val)) { await HideDock(); new SettingsWindow(this, new CustomElement { Name = Path.GetFileNameWithoutExtension(val), ActionValue = val, ActionType = type.ToString() }).ShowDialog(); }
-            } catch { }
+                if (e.Data.GetDataPresent(DataFormats.FileDrop)) { 
+                    var f = (string[])e.Data.GetData(DataFormats.FileDrop); 
+                    if (f?.Length > 0) { 
+                        val = f[0]; 
+                        string ext = Path.GetExtension(val).ToLower();
+                        if (ext == ".exe" || ext == ".lnk") type = ActionType.Exe; 
+                        else if (new[] { ".bat", ".cmd", ".ps1", ".py" }.Contains(ext)) type = ActionType.ScriptFile; 
+                        else type = ActionType.Exe; 
+                    }
+                } else if (e.Data.GetDataPresent(DataFormats.UnicodeText)) {
+                    val = ((string)e.Data.GetData(DataFormats.UnicodeText)).Trim();
+                }
+
+                if (!string.IsNullOrEmpty(val)) { 
+                    var newElement = new CustomElement { 
+                        Id = Guid.NewGuid().ToString(),
+                        Name = Path.GetFileNameWithoutExtension(val), 
+                        ActionValue = val, 
+                        ActionType = type.ToString(),
+                        BlockId = (int)DockBlock.Other // По умолчанию в "Другое"
+                    };
+                    
+                    // Мгновенное сохранение без открытия окна
+                    _elements.Add(newElement);
+                    await SaveConfig(); 
+                    RefreshPanel();
+                }
+            } catch (Exception ex) { Logger.Log(ex); }
         }
         protected override void OnClosed(EventArgs e) { _notifyIcon?.Dispose(); base.OnClosed(e); }
     }

@@ -102,7 +102,7 @@ namespace AiteBar
             UpdateNamePlaceholderVisibility();
         }
 
-        private void SetComboValue(ComboBox combo, string value)
+        private static void SetComboValue(ComboBox combo, string value)
         {
             foreach (ComboBoxItem item in combo.Items) {
                 if (item.Tag?.ToString() == value) { combo.SelectedItem = item; return; }
@@ -205,7 +205,7 @@ namespace AiteBar
 
         private void InitializeOrderEditor()
         {
-            _orderElements = _mainWindow.GetElementsSnapshot().ToList();
+            _orderElements = [.. _mainWindow.GetElementsSnapshot()];
             CaptureOrderBaseline(_orderElements);
             if (CmbOrderBlock.SelectedIndex < 0)
                 CmbOrderBlock.SelectedIndex = 0;
@@ -348,7 +348,7 @@ namespace AiteBar
                     return;
 
                 int blockId = int.Parse(blockItem.Tag?.ToString() ?? "4");
-                var latestSnapshot = _mainWindow.GetElementsSnapshot().ToList();
+                List<CustomElement> latestSnapshot = [.. _mainWindow.GetElementsSnapshot()];
                 string currentSignature = BuildBlockSignature(latestSnapshot, blockId);
                 if (_orderBaselineByBlock.TryGetValue(blockId, out string? baselineSignature) &&
                     !string.Equals(baselineSignature, currentSignature, StringComparison.Ordinal))
@@ -362,7 +362,7 @@ namespace AiteBar
 
                 var orderedIds = _orderElements.Where(x => x.BlockId == blockId).Select(x => x.Id).ToList();
                 await _mainWindow.SaveBlockOrder((DockBlock)blockId, orderedIds);
-                _orderElements = _mainWindow.GetElementsSnapshot().ToList();
+                _orderElements = [.. _mainWindow.GetElementsSnapshot()];
                 CaptureOrderBaseline(_orderElements);
                 RefreshOrderList();
                 SetOrderStatus("Порядок кнопок сохранен.");
@@ -382,58 +382,14 @@ namespace AiteBar
 
         private async Task LoadChromeProfilesAsync()
         {
-            string basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Google\Chrome\User Data");
             CmbChromeProfile.Items.Clear();
             CmbChromeProfile.Items.Add(new ComboBoxItem { Content = "Без профиля", Tag = "" });
-            if (!Directory.Exists(basePath)) return;
+            
+            var profileItems = await Task.Run(() => ChromeHelper.GetProfiles());
 
-            var profileItems = await Task.Run(() =>
-            {
-                var result = new List<(string displayName, string dirPath)>();
-                var profileDirs = Directory.GetDirectories(basePath, "Profile *").ToList();
-                profileDirs.Insert(0, Path.Combine(basePath, "Default"));
-
-                foreach (var dir in profileDirs)
-                {
-                    if (!Directory.Exists(dir)) continue;
-                    string prefFile = Path.Combine(dir, "Preferences");
-                    string displayName = Path.GetFileName(dir);
-
-                    if (File.Exists(prefFile))
-                    {
-                        try
-                        {
-                            using var stream = File.OpenRead(prefFile);
-                            using var doc = JsonDocument.Parse(stream);
-                            var root = doc.RootElement;
-
-                            if (root.TryGetProperty("account_info", out var accounts) &&
-                                accounts.ValueKind == JsonValueKind.Array &&
-                                accounts.GetArrayLength() > 0)
-                            {
-                                var first = accounts[0];
-                                if (first.TryGetProperty("email", out var emailProp) &&
-                                    !string.IsNullOrWhiteSpace(emailProp.GetString()))
-                                {
-                                    displayName = emailProp.GetString()!;
-                                }
-                            }
-                            else if (root.TryGetProperty("profile", out var profile) &&
-                                     profile.TryGetProperty("name", out var nameProp))
-                            {
-                                displayName = nameProp.GetString() ?? displayName;
-                            }
-                        }
-                        catch (Exception ex) { Logger.Log(ex); }
-                    }
-
-                    result.Add((displayName, dir));
-                }
-                return result;
-            });
-
-            foreach (var (displayName, dir) in profileItems.OrderBy(p => p.displayName))
-                CmbChromeProfile.Items.Add(new ComboBoxItem { Content = displayName, Tag = dir });
+            foreach (var profile in profileItems)
+                CmbChromeProfile.Items.Add(new ComboBoxItem { Content = profile.DisplayName, Tag = profile.ProfilePath });
+            
             CmbChromeProfile.SelectedIndex = 0;
             if (_editingElement != null)
                 SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
@@ -690,8 +646,7 @@ namespace AiteBar
 
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
-            var saveButton = sender as Button;
-            if (saveButton != null) saveButton.IsEnabled = false;
+            if (sender is Button saveButton) saveButton.IsEnabled = false;
             try
             {
                 var actionType = GetSelectedActionType();

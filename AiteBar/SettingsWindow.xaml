@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
         Title="Настройки кнопки" Width="920" SizeToContent="Height"
-        WindowStartupLocation="CenterScreen" Background="#1E1E1E" Foreground="White"
+        WindowStartupLocation="CenterScreen" Background="#252525" Foreground="White"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
     

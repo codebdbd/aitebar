@@ -21,7 +21,7 @@ namespace AiteBar
         public string SelectedFont { get; private set; } = FontHelper.FluentKey;
         public string SelectedImagePath { get; private set; } = "";
 
-        private readonly List<(Button btn, string searchKey)> _allButtons = new();
+        private readonly List<(Button btn, string searchKey)> _allButtons = [];
         private string _activeFont = FontHelper.FluentKey;
         private static Dictionary<int, string>? _fluentMap;
         private static Dictionary<int, string>? _materialMap;
@@ -29,42 +29,42 @@ namespace AiteBar
         // Маппинг для Font Awesome Brands из старого кода остаётся:
         private static readonly Dictionary<int, string[]> FontAwesomeNameAliases = new()
         {
-            [0xF099] = new[] { "twitter" },
-            [0xE61B] = new[] { "twitter", "x", "x-twitter" },
-            [0xF09A] = new[] { "facebook", "meta" },
-            [0xF09B] = new[] { "github" },
-            [0xF113] = new[] { "github-alt" },
-            [0xF296] = new[] { "gitlab" },
-            [0xF0E1] = new[] { "linkedin", "linkedin-in" },
-            [0xF16D] = new[] { "instagram" },
-            [0xF167] = new[] { "youtube" },
-            [0xF1A0] = new[] { "google" },
-            [0xF179] = new[] { "apple", "ios" },
-            [0xF17A] = new[] { "windows", "microsoft" },
-            [0xF232] = new[] { "whatsapp" },
-            [0xF2C6] = new[] { "telegram" },
-            [0xF3FE] = new[] { "telegram" },
-            [0xF392] = new[] { "discord" },
-            [0xF395] = new[] { "docker" },
-            [0xF375] = new[] { "aws", "amazon-web-services" },
-            [0xF3D3] = new[] { "node", "node-js" },
-            [0xF419] = new[] { "node" },
-            [0xF841] = new[] { "git", "git-alt" },
-            [0xF198] = new[] { "slack" },
-            [0xF3EF] = new[] { "slack" },
-            [0xF413] = new[] { "yandex" },
-            [0xF414] = new[] { "yandex-international" },
-            [0xF1E8] = new[] { "twitch" },
-            [0xF1A1] = new[] { "reddit" },
-            [0xF281] = new[] { "reddit-alien" },
-            [0xF1BC] = new[] { "spotify" },
-            [0xF189] = new[] { "vk", "vkontakte" },
-            [0xF263] = new[] { "odnoklassniki", "ok" },
-            [0xF799] = new[] { "figma" },
-            [0xE7D9] = new[] { "notion" },
-            [0xE671] = new[] { "bluesky" },
-            [0xE618] = new[] { "threads" },
-            [0xE07B] = new[] { "tiktok" }
+            [0xF099] = ["twitter"],
+            [0xE61B] = ["twitter", "x", "x-twitter"],
+            [0xF09A] = ["facebook", "meta"],
+            [0xF09B] = ["github"],
+            [0xF113] = ["github-alt"],
+            [0xF296] = ["gitlab"],
+            [0xF0E1] = ["linkedin", "linkedin-in"],
+            [0xF16D] = ["instagram"],
+            [0xF167] = ["youtube"],
+            [0xF1A0] = ["google"],
+            [0xF179] = ["apple", "ios"],
+            [0xF17A] = ["windows", "microsoft"],
+            [0xF232] = ["whatsapp"],
+            [0xF2C6] = ["telegram"],
+            [0xF3FE] = ["telegram"],
+            [0xF392] = ["discord"],
+            [0xF395] = ["docker"],
+            [0xF375] = ["aws", "amazon-web-services"],
+            [0xF3D3] = ["node", "node-js"],
+            [0xF419] = ["node"],
+            [0xF841] = ["git", "git-alt"],
+            [0xF198] = ["slack"],
+            [0xF3EF] = ["slack"],
+            [0xF413] = ["yandex"],
+            [0xF414] = ["yandex-international"],
+            [0xF1E8] = ["twitch"],
+            [0xF1A1] = ["reddit"],
+            [0xF281] = ["reddit-alien"],
+            [0xF1BC] = ["spotify"],
+            [0xF189] = ["vk", "vkontakte"],
+            [0xF263] = ["odnoklassniki", "ok"],
+            [0xF799] = ["figma"],
+            [0xE7D9] = ["notion"],
+            [0xE671] = ["bluesky"],
+            [0xE618] = ["threads"],
+            [0xE07B] = ["tiktok"]
         };
 
         public IconPickerWindow()
@@ -93,8 +93,8 @@ namespace AiteBar
             {
                 try
                 {
-                    string appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Codebdbd", "Aite Bar", "Icons");
-                    if (!Directory.Exists(appData)) Directory.CreateDirectory(appData);
+                    string appData = PathHelper.IconsFolder;
+                    PathHelper.EnsureDirectories();
                     
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(dlg.FileName);
                     string destPath = Path.Combine(appData, fileName);
@@ -158,7 +158,7 @@ namespace AiteBar
                 
                 var glyphMap = glyphTypeface.CharacterToGlyphMap;
                 var namedIcons = GetNamedIcons(fontName);
-                var codes = GetDisplayCodes(fontName, glyphMap, namedIcons);
+                var codes = GetDisplayCodes(glyphMap, namedIcons);
 
                 const int batchSize = 100;
                 for (int batch = 0; batch < codes.Length; batch += batchSize)
@@ -178,7 +178,7 @@ namespace AiteBar
                         string searchKey = BuildSearchKey(fontName, code, iconName);
                         string tooltip = iconName != null ? $"{iconName}  U+{code:X4}" : $"U+{code:X4}";
 
-                        var btn = CreateIconButton(btnStyle, symbol, fontFam, tooltip, searchKey, fontName);
+                        var btn = CreateIconButton(btnStyle, symbol, fontFam, tooltip, fontName);
                         IconPanel.Children.Add(btn);
                         _allButtons.Add((btn, searchKey));
                     }
@@ -194,22 +194,20 @@ namespace AiteBar
             }
         }
 
-        private static int[] GetDisplayCodes(string fontName, IDictionary<int, ushort> glyphMap, Dictionary<int, string>? namedIcons)
+        private static int[] GetDisplayCodes(IDictionary<int, ushort> glyphMap, Dictionary<int, string>? namedIcons)
         {
             if (namedIcons != null)
             {
-                return namedIcons.Keys
+                return [.. namedIcons.Keys
                     .Where(code => glyphMap.TryGetValue(code, out var glyphIndex) && glyphIndex != 0)
-                    .OrderBy(code => code)
-                    .ToArray();
+                    .OrderBy(code => code)];
             }
 
-            return glyphMap.Keys
+            return [.. glyphMap.Keys
                 .Where(code => glyphMap[code] != 0)
                 .Where(code => code >= 0xE000 && code <= 0x10FFFF)
                 .Where(code => code < 0xD800 || code > 0xDFFF)
-                .OrderBy(code => code)
-                .ToArray();
+                .OrderBy(code => code)];
         }
 
         private static Dictionary<int, string>? GetNamedIcons(string fontName) => fontName switch
@@ -221,7 +219,7 @@ namespace AiteBar
 
         private static string BuildSearchKey(string fontName, int code, string? iconName)
         {
-            var keyParts = new List<string> { $"{code:X4}".ToLowerInvariant() };
+            List<string> keyParts = [$"{code:X4}".ToLowerInvariant()];
             if (!string.IsNullOrWhiteSpace(iconName))
                 keyParts.Add(iconName.ToLowerInvariant());
             if (fontName == FontHelper.BrandsKey && FontAwesomeNameAliases.TryGetValue(code, out var aliases))
@@ -258,7 +256,7 @@ namespace AiteBar
             using var reader = new StreamReader(stream);
             _materialMap = reader
                 .ReadToEnd()
-                .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
                 .Select(line => line.Split(' ', StringSplitOptions.RemoveEmptyEntries))
                 .Where(parts => parts.Length == 2)
                 .GroupBy(parts => Convert.ToInt32(parts[1], 16))
@@ -285,7 +283,7 @@ namespace AiteBar
                 .Replace("_", " ");
 
         private Button CreateIconButton(Style btnStyle, string symbol, FontFamily fontFamily,
-            string tooltip, string searchKey, string fontSrcKey)
+            string tooltip, string fontSrcKey)
         {
             // TextBlock используется вместо просто Content = symbol,
             // чтобы корректно отображать символы > U+FFFF
