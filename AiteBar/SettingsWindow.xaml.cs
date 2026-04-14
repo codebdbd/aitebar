@@ -224,7 +224,7 @@ namespace AiteBar
                 return;
 
             int blockId = int.Parse(blockItem.Tag?.ToString() ?? "4");
-            var blockElements = _orderElements.Where(x => x.BlockId == blockId).ToList();
+            List<CustomElement> blockElements = [.. _orderElements.Where(x => x.BlockId == blockId)];
 
             LstOrderButtons.Items.Clear();
             foreach (var el in blockElements)
@@ -298,7 +298,7 @@ namespace AiteBar
             if (string.IsNullOrWhiteSpace(selectedId))
                 return;
 
-            var blockIds = _orderElements.Where(x => x.BlockId == blockId).Select(x => x.Id).ToList();
+            List<string> blockIds = [.. _orderElements.Where(x => x.BlockId == blockId).Select(x => x.Id)];
             int index = blockIds.FindIndex(x => x == selectedId);
             if (index < 0)
                 return;
@@ -313,7 +313,7 @@ namespace AiteBar
                 .Where(x => x.BlockId == blockId)
                 .ToDictionary(x => x.Id, x => x, StringComparer.Ordinal);
 
-            var reorderedBlock = blockIds.Select(id => byId[id]).ToList();
+            List<CustomElement> reorderedBlock = [.. blockIds.Select(id => byId[id])];
             var result = new List<CustomElement>(_orderElements.Count);
             bool inserted = false;
 
@@ -361,7 +361,7 @@ namespace AiteBar
                     return;
                 }
 
-                var orderedIds = _orderElements.Where(x => x.BlockId == blockId).Select(x => x.Id).ToList();
+                List<string> orderedIds = [.. _orderElements.Where(x => x.BlockId == blockId).Select(x => x.Id)];
                 await _mainWindow.SaveBlockOrder((DockBlock)blockId, orderedIds);
                 _orderElements = [.. _mainWindow.GetElementsSnapshot()];
                 CaptureOrderBaseline(_orderElements);

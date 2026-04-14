@@ -3,39 +3,72 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="Настройки кнопки" Width="920" SizeToContent="Height"
-        WindowStartupLocation="CenterScreen" Background="#252525" Foreground="White"
+        Title="Настройки" Width="850" Height="620"
+        WindowStartupLocation="CenterScreen" Background="#1A1A1C" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
     
     <Window.Resources>
-        <SolidColorBrush x:Key="{x:Static SystemColors.WindowBrushKey}" Color="#252525" />
-        <SolidColorBrush x:Key="{x:Static SystemColors.ControlBrushKey}" Color="#333333" />
-        <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#555555" />
-        
+        <SolidColorBrush x:Key="PanelBackground" Color="#252526"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#3E3E42"/>
+        <SolidColorBrush x:Key="AccentColor" Color="#007ACC"/>
+        <SolidColorBrush x:Key="MutedText" Color="#9BA1A6"/>
+
+        <!-- TabControl Style -->
+        <Style TargetType="TabControl">
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="0"/>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="Bd" Background="Transparent" BorderThickness="0,0,0,2" BorderBrush="Transparent" Margin="0,0,20,0" Padding="10,8">
+                            <ContentPresenter ContentSource="Header" TextElement.Foreground="{TemplateBinding Foreground}" TextElement.FontSize="14" TextElement.FontWeight="SemiBold"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsSelected" Value="False">
+                                <Setter Property="Foreground" Value="{StaticResource MutedText}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Cursor" Value="Hand"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style TargetType="ComboBoxItem">
-            <Setter Property="Background" Value="#333333"/>
+            <Setter Property="Background" Value="#333337"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="8,5"/>
+            <Setter Property="Padding" Value="10,6"/>
             <Style.Triggers>
                 <Trigger Property="IsHighlighted" Value="True">
-                    <Setter Property="Background" Value="#555555"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="#454549"/>
                 </Trigger>
                 <Trigger Property="IsSelected" Value="True">
-                    <Setter Property="Background" Value="#4285F4"/>
-                    <Setter Property="Foreground" Value="White"/>
+                    <Setter Property="Background" Value="{StaticResource AccentColor}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
 
         <Style TargetType="ComboBox">
-            <Setter Property="Background" Value="#333333"/>
+            <Setter Property="Background" Value="#2D2D30"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#555555"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
             <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="10,0"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
@@ -49,9 +82,9 @@
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
-                            <ContentPresenter x:Name="ContentSite" IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" Margin="10,0,30,0" VerticalAlignment="Center" HorizontalAlignment="Left" TextElement.Foreground="White"/>
-                            <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Slide">
-                                <Border Background="#252525" BorderThickness="1" BorderBrush="#555555" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="200">
+                            <ContentPresenter IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" Margin="10,0,30,0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                            <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
+                                <Border Background="#252526" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="300">
                                     <ScrollViewer SnapsToDevicePixels="True">
                                         <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
                                     </ScrollViewer>
@@ -64,11 +97,11 @@
         </Style>
 
         <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#333333"/>
+            <Setter Property="Background" Value="#2D2D30"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#555555"/>
-            <Setter Property="Padding" Value="8,0,8,0"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+            <Setter Property="Padding" Value="8,0"/>
             <Setter Property="Height" Value="32"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="Template">
@@ -82,12 +115,13 @@
             </Setter>
         </Style>
 
-        <Style x:Key="IconButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
+        <Style x:Key="ActionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource AccentColor}"/>
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="Padding" Value="15,0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -96,7 +130,11 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#444444"/>
+                                <Setter TargetName="Bd" Property="Background" Value="#1C97EA"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Background" Value="#3E3E42"/>
+                                <Setter Property="Foreground" Value="#717171"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -104,234 +142,210 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ActionButtonStyle" TargetType="Button">
-            <Setter Property="Background" Value="#4285F4"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="6">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <MultiTrigger>
-                                <MultiTrigger.Conditions>
-                                    <Condition Property="IsMouseOver" Value="True"/>
-                                    <Condition Property="IsEnabled" Value="True"/>
-                                </MultiTrigger.Conditions>
-                                <Setter Property="Background" Value="#5C9AFF"/>
-                            </MultiTrigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Background" Value="#2A2A2A"/>
-                                <Setter Property="Foreground" Value="#7D7D7D"/>
-                                <Setter Property="Cursor" Value="Arrow"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+        <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+            <Setter Property="Background" Value="#3E3E42"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#4E4E52"/>
+                </Trigger>
+            </Style.Triggers>
         </Style>
     </Window.Resources>
 
-    <Grid Margin="20" x:Name="RootContentGrid" Grid.IsSharedSizeScope="True">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="2*"/>
-            <ColumnDefinition Width="1.2*"/>
-            <ColumnDefinition Width="1.35*"/>
-        </Grid.ColumnDefinitions>
+    <Grid Margin="25">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <Grid Grid.Column="0" Margin="0,0,20,0" VerticalAlignment="Top">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-            </Grid.RowDefinitions>
+        <TabControl Grid.Row="1" Margin="0,10,0,0">
+            <!-- TAB 1: EDIT BUTTON -->
+            <TabItem Header="Параметры кнопки">
+                <Grid Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="300"/>
+                    </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Row="0">
-                <TextBlock Text="Укажите имя для кнопки (обязательно):" Foreground="#AAA" Margin="0,0,0,5"/>
-                <Grid Margin="0,0,0,15">
-                    <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged"/>
-                    <TextBlock x:Name="TxtNamePlaceholder" Margin="10,0,10,0" VerticalAlignment="Center" Foreground="#6F7782" IsHitTestVisible="False" Text="Например: Мой сайт, PowerShell, Скрипт" TextWrapping="NoWrap"/>
-                </Grid>
+                    <!-- LEFT: FORM -->
+                    <StackPanel Grid.Column="0" Margin="0,0,30,0">
+                        <TextBlock Text="Название кнопки" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                        <Grid Margin="0,0,0,15">
+                            <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged"/>
+                            <TextBlock x:Name="TxtNamePlaceholder" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="Например: ChatGPT, Terminal..."/>
+                        </Grid>
 
-                <TextBlock Text="В какой блок разместить кнопку?" Foreground="#AAA" Margin="0,0,0,5"/>
-                <ComboBox x:Name="CmbBlock" Margin="0,0,0,15">
-                    <ComboBoxItem Content="Блок 1: Нейросети" Tag="2"/>
-                    <ComboBoxItem Content="Блок 2: Сайты" Tag="3"/>
-                    <ComboBoxItem Content="Блок 3: Скрипты" Tag="4"/>
-                    <ComboBoxItem Content="Блок 4: Другое" Tag="5"/>
-                    <ComboBoxItem Content="Блок 5: Утилиты" Tag="1"/>
-                </ComboBox>
-
-                <TextBlock Text="Что будет делать кнопка?" Foreground="#AAA" Margin="0,0,0,5"/>
-                <ComboBox x:Name="CmbActionType" Margin="0,0,0,15" SelectedIndex="0" SelectionChanged="CmbActionType_SelectionChanged">
-                    <ComboBoxItem Content="Открывать URL сайта" Tag="Web"/>
-                    <ComboBoxItem Content="Запускать программу" Tag="Exe"/>
-                    <ComboBoxItem Content="Запускать скрипт (ps1, py)" Tag="ScriptFile"/>
-                    <ComboBoxItem Content="Запускать консольную команду" Tag="Command"/>
-                    <ComboBoxItem Content="Эмитировать нажатие клавиш" Tag="Hotkey"/>
-                </ComboBox>
-
-                <StackPanel x:Name="PanelStandardAction">
-                <TextBlock x:Name="LblActionValue" Text="Вставьте URL сайта (обязательно):" Foreground="#AAA" Margin="0,0,0,5"/>
-                    <Grid Margin="0,0,0,15">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="TxtActionValue" TextChanged="TxtActionValue_TextChanged"/>
-                        <TextBlock x:Name="TxtActionPlaceholder" Margin="10,0,10,0" VerticalAlignment="Center" Foreground="#6F7782" IsHitTestVisible="False" TextWrapping="NoWrap"/>
-                        <Button x:Name="BtnBrowse" Grid.Column="1" Width="100" Height="32" Margin="5,0,0,0" Click="BtnBrowse_Click" Visibility="Collapsed" Style="{StaticResource ActionButtonStyle}" Background="#444444" FontSize="12" FontWeight="Normal">
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE838;" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                                <TextBlock Text="Обзор..." VerticalAlignment="Center"/>
+                        <UniformGrid Columns="2" Margin="0,0,0,15">
+                            <StackPanel Margin="0,0,10,0">
+                                <TextBlock Text="Блок размещения" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                                <ComboBox x:Name="CmbBlock">
+                                    <ComboBoxItem Content="Нейросети" Tag="2"/>
+                                    <ComboBoxItem Content="Сайты" Tag="3"/>
+                                    <ComboBoxItem Content="Скрипты" Tag="4"/>
+                                    <ComboBoxItem Content="Утилиты" Tag="1"/>
+                                    <ComboBoxItem Content="Другое" Tag="5"/>
+                                </ComboBox>
                             </StackPanel>
-                        </Button>
-                    </Grid>
+                            <StackPanel Margin="10,0,0,0">
+                                <TextBlock Text="Тип действия" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                                <ComboBox x:Name="CmbActionType" SelectionChanged="CmbActionType_SelectionChanged">
+                                    <ComboBoxItem Content="Сайт (URL)" Tag="Web"/>
+                                    <ComboBoxItem Content="Программа (EXE)" Tag="Exe"/>
+                                    <ComboBoxItem Content="Скрипт (PS1, PY)" Tag="ScriptFile"/>
+                                    <ComboBoxItem Content="Команда CMD" Tag="Command"/>
+                                    <ComboBoxItem Content="Горячие клавиши" Tag="Hotkey"/>
+                                </ComboBox>
+                            </StackPanel>
+                        </UniformGrid>
 
-                    <Border x:Name="ActionHelpBox" Background="#252525" BorderBrush="#3A3A3A" BorderThickness="1" CornerRadius="6" Padding="10" Margin="0,0,0,15" Visibility="Collapsed">
-                        <TextBlock x:Name="TxtActionHelp" Foreground="#9FA7B3" FontSize="11" TextWrapping="Wrap"/>
+                        <!-- Action Value -->
+                        <StackPanel x:Name="PanelStandardAction">
+                            <TextBlock x:Name="LblActionValue" Text="URL или Путь" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TxtActionValue" TextChanged="TxtActionValue_TextChanged"/>
+                                <TextBlock x:Name="TxtActionPlaceholder" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False"/>
+                                <Button x:Name="BtnBrowse" Grid.Column="1" Width="80" Margin="5,0,0,0" Click="BtnBrowse_Click" Style="{StaticResource SecondaryButtonStyle}" Content="Обзор..."/>
+                            </Grid>
+
+                            <!-- Browser Settings -->
+                            <Border x:Name="PanelWebSettings" Background="{StaticResource PanelBackground}" CornerRadius="6" Padding="15" Margin="0,0,0,15" BorderThickness="1" BorderBrush="{StaticResource BorderColor}">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Margin="0,0,5,0">
+                                            <TextBlock Text="Браузер" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="11"/>
+                                            <ComboBox x:Name="CmbBrowser" SelectionChanged="CmbBrowser_SelectionChanged">
+                                                <ComboBoxItem Content="Chrome" Tag="Chrome"/>
+                                                <ComboBoxItem Content="Edge" Tag="Edge"/>
+                                                <ComboBoxItem Content="Brave" Tag="Brave"/>
+                                                <ComboBoxItem Content="Yandex" Tag="Yandex"/>
+                                                <ComboBoxItem Content="Firefox" Tag="Firefox"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                                            <TextBlock Text="Профиль" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="11"/>
+                                            <ComboBox x:Name="CmbChromeProfile"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <UniformGrid Columns="2">
+                                        <CheckBox x:Name="ChkAppMode" Content="App Mode" Foreground="White" Margin="0,3"/>
+                                        <CheckBox x:Name="ChkIncognito" Content="Incognito" Foreground="White" Margin="0,3"/>
+                                        <CheckBox x:Name="ChkTopmost" Content="Topmost" Foreground="White" Margin="0,3"/>
+                                        <CheckBox x:Name="ChkRotation" Content="Rotation" Foreground="White" Margin="0,3"/>
+                                    </UniformGrid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Hotkey Settings -->
+                        <StackPanel x:Name="PanelHotkeyAction" Visibility="Collapsed" Margin="0,0,0,15">
+                            <TextBlock Text="Комбинация клавиш" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <CheckBox x:Name="ChkCtrl" Content="Ctrl" Foreground="White" Margin="0,0,15,0"/>
+                                <CheckBox x:Name="ChkShift" Content="Shift" Foreground="White" Margin="0,0,15,0"/>
+                                <CheckBox x:Name="ChkAlt" Content="Alt" Foreground="White" Margin="0,0,15,0"/>
+                                <CheckBox x:Name="ChkWin" Content="Win" Foreground="White"/>
+                            </StackPanel>
+                            <ComboBox x:Name="CmbKey" Width="200" HorizontalAlignment="Left"/>
+                        </StackPanel>
+
+                        <Border x:Name="ActionHelpBox" Background="#2D2D30" Padding="10" CornerRadius="4" Visibility="Collapsed">
+                            <TextBlock x:Name="TxtActionHelp" Foreground="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap"/>
+                        </Border>
+                    </StackPanel>
+
+                    <!-- RIGHT: PREVIEW & COLORS -->
+                    <Border Grid.Column="1" Background="{StaticResource PanelBackground}" CornerRadius="8" Padding="20" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" VerticalAlignment="Top">
+                        <StackPanel x:Name="MiddleColumnGrid">
+                            <TextBlock Text="Предпросмотр" HorizontalAlignment="Center" Foreground="{StaticResource MutedText}" Margin="0,0,0,15" FontSize="12"/>
+                            
+                            <Border Background="#1A1A1C" Width="80" Height="80" CornerRadius="12" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" Margin="0,0,0,20">
+                                <Grid>
+                                    <TextBlock x:Name="PreviewIcon" Text="&#xEF0D;" FontSize="36" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Grid>
+                            </Border>
+
+                            <Button Style="{StaticResource SecondaryButtonStyle}" Content="Изменить иконку" Click="BtnOpenCatalog_Click" Margin="0,0,0,20"/>
+
+                            <TextBlock Text="Цвет иконки" Foreground="{StaticResource MutedText}" Margin="0,0,0,10" FontSize="12"/>
+                            <UniformGrid x:Name="GridColors" Columns="5" Margin="0,0,0,10"/>
+                            
+                            <Grid Margin="0,0,0,25">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="#" VerticalAlignment="Center" Foreground="{StaticResource MutedText}" Margin="0,0,5,0"/>
+                                <TextBox x:Name="TxtHexColor" Grid.Column="1" Height="28" FontSize="12"/>
+                            </Grid>
+
+                            <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="Сохранить изменения" Click="BtnSave_Click" Height="40" FontWeight="Bold"/>
+                        </StackPanel>
                     </Border>
+                </Grid>
+            </TabItem>
 
-                    <StackPanel x:Name="PanelWebSettings">
-                        <TextBlock Text="Браузер" Foreground="#AAA" Margin="10,0,0,5"/>
-                        <ComboBox x:Name="CmbBrowser" Margin="0,0,0,10" SelectionChanged="CmbBrowser_SelectionChanged">
-                            <ComboBoxItem Content="Google Chrome" Tag="Chrome"/>
-                            <ComboBoxItem Content="Microsoft Edge" Tag="Edge"/>
-                            <ComboBoxItem Content="Brave" Tag="Brave"/>
-                            <ComboBoxItem Content="Yandex Browser" Tag="Yandex"/>
-                            <ComboBoxItem Content="Opera" Tag="Opera"/>
-                            <ComboBoxItem Content="Opera GX" Tag="OperaGX"/>
-                            <ComboBoxItem Content="Vivaldi" Tag="Vivaldi"/>
-                            <ComboBoxItem Content="Firefox" Tag="Firefox"/>
+            <!-- TAB 2: ORDER MANAGEMENT -->
+            <TabItem Header="Управление порядком">
+                <Grid Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="200"/>
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Margin="0,0,20,0">
+                        <TextBlock Text="Выберите блок для сортировки" Foreground="{StaticResource MutedText}" Margin="0,0,0,10" FontSize="12"/>
+                        <ComboBox x:Name="CmbOrderBlock" SelectionChanged="CmbOrderBlock_SelectionChanged" Margin="0,0,0,15">
+                            <ComboBoxItem Content="Нейросети" Tag="2"/>
+                            <ComboBoxItem Content="Сайты" Tag="3"/>
+                            <ComboBoxItem Content="Скрипты" Tag="4"/>
+                            <ComboBoxItem Content="Утилиты" Tag="1"/>
+                            <ComboBoxItem Content="Другое" Tag="5"/>
                         </ComboBox>
 
-                        <UniformGrid Columns="2">
-                            <CheckBox x:Name="ChkAppMode" Content="Режим приложения" Foreground="White" Margin="0,5"/>
-                            <CheckBox x:Name="ChkIncognito" Content="Инкогнито" Foreground="White" Margin="0,5"/>
-                            <CheckBox x:Name="ChkTopmost" Content="Поверх всех окон" Foreground="White" Margin="0,5"/>
-                            <CheckBox x:Name="ChkRotation" Content="Ротация профилей" Foreground="White" Margin="0,5"/>
-                        </UniformGrid>
+                        <ListBox x:Name="LstOrderButtons" Height="320" Background="#1A1A1C" BorderBrush="{StaticResource BorderColor}" Foreground="White" SelectionChanged="LstOrderButtons_SelectionChanged">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Padding" Value="10,8"/>
+                                    <Setter Property="Margin" Value="0,1"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="ListBoxItem">
+                                                <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="4">
+                                                    <ContentPresenter/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsSelected" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="#3E3E42"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="Bd" Property="Background" Value="#2D2D30"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                        </ListBox>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Top" Margin="0,32,0,0">
+                        <Button x:Name="BtnMoveUp" Style="{StaticResource SecondaryButtonStyle}" Content="Выше" Click="BtnMoveUp_Click" Margin="0,0,0,10"/>
+                        <Button x:Name="BtnMoveDown" Style="{StaticResource SecondaryButtonStyle}" Content="Ниже" Click="BtnMoveDown_Click" Margin="0,0,0,20"/>
                         
-                        <TextBlock Text="Выбрать профиль" Foreground="#AAA" Margin="10,10,0,5"/>
-                        <ComboBox x:Name="CmbChromeProfile" Margin="0,0,0,15"/>
+                        <Button x:Name="BtnSaveOrder" Style="{StaticResource ActionButtonStyle}" Content="Применить" Click="BtnSaveOrder_Click" Margin="0,0,0,10"/>
+                        <TextBlock x:Name="TxtOrderStatus" Foreground="{StaticResource AccentColor}" FontSize="11" TextWrapping="Wrap" TextAlignment="Center"/>
                     </StackPanel>
-                </StackPanel>
-
-                <StackPanel x:Name="PanelHotkeyAction" Visibility="Collapsed">
-                <TextBlock Text="Настройте комбинацию (обязательно):" Foreground="#4285F4" FontWeight="SemiBold" Margin="0,0,0,10"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <CheckBox x:Name="ChkCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalContentAlignment="Center"/>
-                        <CheckBox x:Name="ChkShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalContentAlignment="Center"/>
-                        <CheckBox x:Name="ChkAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalContentAlignment="Center"/>
-                        <CheckBox x:Name="ChkWin" Content="Win" Foreground="White" VerticalContentAlignment="Center"/>
-                    </StackPanel>
-                    <TextBlock Text="Клавиша:" Foreground="#AAA" Margin="0,0,0,5" FontSize="11"/>
-                    <ComboBox x:Name="CmbKey" Margin="0,0,0,15"/>
-                </StackPanel>
-            </StackPanel>
-        </Grid>
-
-        <Grid x:Name="MiddleColumnGrid" Grid.Column="1" Margin="0,0,20,0" VerticalAlignment="Top">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <TextBlock Grid.Row="0" Text="Выберите иконку:" Foreground="#AAA" Margin="0,0,0,5"/>
-            <Border Grid.Row="1" Background="#252525" CornerRadius="8" BorderBrush="#444444" BorderThickness="1" Width="85" Height="85" HorizontalAlignment="Center" Margin="0,5,0,20">
-                <Grid>
-                    <TextBlock x:Name="PreviewIcon" Text="&#xEF0D;" FontSize="40" Foreground="#E3E3E3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </Grid>
-            </Border>
-
-            <Button Grid.Row="2" Style="{StaticResource ActionButtonStyle}" Background="#333333" Foreground="#E3E3E3" Height="36" FontSize="13" FontWeight="Normal" Margin="0,0,0,15" Click="BtnOpenCatalog_Click">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE721;" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Выберите иконку" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
-
-            <TextBlock Grid.Row="3" Text="Выбор цвета:" Foreground="#AAA" Margin="0,0,0,5"/>
-            <UniformGrid x:Name="GridColors" Grid.Row="4" Columns="5" Margin="0,0,0,20"/>
-            <Grid Grid.Row="5" Margin="0,0,0,19">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"/>
-                    <ColumnDefinition Width="*"/>
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="HEX:" Foreground="#AAA" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                <TextBox x:Name="TxtHexColor" Grid.Column="1" Text="#E3E3E3" TextChanged="TxtHexColor_TextChanged"/>
-            </Grid>
-
-            <Button x:Name="BtnSave" Grid.Row="6" Style="{StaticResource ActionButtonStyle}" Height="36" FontSize="13" Click="BtnSave_Click">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74E;" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Сохранить кнопку" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
-        </Grid>
-
-        <!-- CONTRACT: Right column height must always stay equal to MiddleColumnGrid height. -->
-        <Grid Grid.Column="2" VerticalAlignment="Top" Height="{Binding ElementName=MiddleColumnGrid, Path=ActualHeight}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-
-            <TextBlock Grid.Row="0" Text="Порядок кнопок:" Foreground="#AAA" Margin="0,0,0,5"/>
-            <ComboBox x:Name="CmbOrderBlock" Grid.Row="1" SelectionChanged="CmbOrderBlock_SelectionChanged" Margin="0,0,0,10">
-                <ComboBoxItem Content="Блок 1: Нейросети" Tag="2"/>
-                <ComboBoxItem Content="Блок 2: Сайты" Tag="3"/>
-                <ComboBoxItem Content="Блок 3: Скрипты" Tag="4"/>
-                <ComboBoxItem Content="Блок 4: Другое" Tag="5"/>
-                <ComboBoxItem Content="Блок 5: Утилиты" Tag="1"/>
-            </ComboBox>
-
-            <ListBox x:Name="LstOrderButtons" Grid.Row="2" Background="#1F1F1F" BorderBrush="#444444" Foreground="White" Margin="0,0,0,10" SelectionChanged="LstOrderButtons_SelectionChanged"/>
-
-            <UniformGrid Grid.Row="3" Columns="2" Margin="0,0,0,10">
-                <Button x:Name="BtnMoveUp" Style="{StaticResource ActionButtonStyle}" Background="#333333" Foreground="#E3E3E3" Height="36" FontSize="13" FontWeight="Normal" Margin="0,0,4,0" Click="BtnMoveUp_Click">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70E;" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Поднять" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-                <Button x:Name="BtnMoveDown" Style="{StaticResource ActionButtonStyle}" Background="#333333" Foreground="#E3E3E3" Height="36" FontSize="13" FontWeight="Normal" Margin="4,0,0,0" Click="BtnMoveDown_Click">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE70D;" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                        <TextBlock Text="Опустить" VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Button>
-            </UniformGrid>
-
-            <Button x:Name="BtnSaveOrder" Grid.Row="4" Style="{StaticResource ActionButtonStyle}" Background="#333333" Foreground="#E3E3E3" Height="36" FontSize="13" FontWeight="Normal" Click="BtnSaveOrder_Click">
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <TextBlock FontFamily="Segoe MDL2 Assets" Text="&#xE74E;" Margin="0,0,6,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="Сохранить порядок" VerticalAlignment="Center"/>
-                </StackPanel>
-            </Button>
-            <TextBlock x:Name="TxtOrderStatus"
-                       Grid.Row="5"
-                       Margin="2,8,2,0"
-                       Foreground="#9FA7B3"
-                       FontSize="11"
-                       TextWrapping="Wrap"
-                       Visibility="Collapsed"/>
-        </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </local:DarkWindow>

@@ -34,7 +34,7 @@ namespace AiteBar
     [SupportedOSPlatform("windows6.1")]
     public partial class MainWindow : Window
     {
-        private DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
+        private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
         private DateTime? _hoverStartTime;
         private bool _shown = false, _isAnimating = false;
         private double _panelLeft, _panelTop, _panelRight, _panelBottom, _cachedDpi = 1.0;
@@ -102,11 +102,11 @@ namespace AiteBar
 
                 if (_appSettings.Profiles.Count == 0)
                 {
-                    var legacyElements = new List<CustomElement>();
+                    List<CustomElement> legacyElements = [];
                     if (File.Exists(_configFile))
                     {
                         string json = await File.ReadAllTextAsync(_configFile);
-                        legacyElements = JsonSerializer.Deserialize<List<CustomElement>>(json) ?? new();
+                        legacyElements = JsonSerializer.Deserialize<List<CustomElement>>(json) ?? [];
                     }
 
                     var defaultProfile = new Profile { Name = "Основной", Elements = legacyElements };
@@ -128,7 +128,7 @@ namespace AiteBar
                 if (syncElements)
                 {
                     var activeProfile = _appSettings.Profiles.FirstOrDefault(p => p.Id == _appSettings.ActiveProfileId);
-                    if (activeProfile != null) activeProfile.Elements = _elements.ToList();
+                    if (activeProfile != null) activeProfile.Elements = [.. _elements];
                 }
 
                 string json = JsonSerializer.Serialize(_appSettings, _jsonOptions);
@@ -144,7 +144,7 @@ namespace AiteBar
             
             // 1. Сохраняем текущие кнопки в текущий профиль перед переключением
             var currentProfile = _appSettings.Profiles.FirstOrDefault(p => p.Id == _appSettings.ActiveProfileId);
-            if (currentProfile != null) currentProfile.Elements = _elements.ToList();
+            if (currentProfile != null) currentProfile.Elements = [.. _elements];
 
             int currentIndex = _appSettings.Profiles.FindIndex(p => p.Id == _appSettings.ActiveProfileId);
             int nextIndex = (currentIndex + 1) % _appSettings.Profiles.Count;
@@ -206,17 +206,18 @@ namespace AiteBar
 
         private void InitTrayIcon()
         {
-            _notifyIcon = new System.Windows.Forms.NotifyIcon();
+            _notifyIcon = new System.Windows.Forms.NotifyIcon
+            {
+                Text = "AiteBar",
+                Visible = true
+            };
             try {
                 var iconUri = new Uri("pack://application:,,,/Resources/app.ico");
                 var streamInfo = Application.GetResourceStream(iconUri);
                 if (streamInfo != null) {
-                    using (var stream = streamInfo.Stream) _notifyIcon.Icon = new Icon(stream);
+                    using var stream = streamInfo.Stream; _notifyIcon.Icon = new Icon(stream);
                 } else _notifyIcon.Icon = SystemIcons.Application;
             } catch (Exception ex) { Logger.Log(ex); _notifyIcon.Icon = SystemIcons.Application; }
-
-            _notifyIcon.Text = "AiteBar";
-            _notifyIcon.Visible = true;
 
             var trayMenu = new System.Windows.Forms.ContextMenuStrip();
             trayMenu.Items.Add("Открыть", null, (s, e) => { if (!_shown) { _shown = true; Toggle(false); } });
@@ -226,12 +227,14 @@ namespace AiteBar
             trayMenu.Opening += (s, e) => {
                 profileMenu.DropDownItems.Clear();
                 foreach (var profile in _appSettings.Profiles) {
-                    var item = new System.Windows.Forms.ToolStripMenuItem(profile.Name);
-                    item.Checked = (profile.Id == _appSettings.ActiveProfileId);
+                    var item = new System.Windows.Forms.ToolStripMenuItem(profile.Name)
+                    {
+                        Checked = (profile.Id == _appSettings.ActiveProfileId)
+                    };
                     item.Click += async (sender, ev) => {
                         // Сохраняем текущие кнопки перед переключением через трей
                         var curProf = _appSettings.Profiles.FirstOrDefault(p => p.Id == _appSettings.ActiveProfileId);
-                        if (curProf != null) curProf.Elements = _elements.ToList();
+                        if (curProf != null) curProf.Elements = [.. _elements];
 
                         _appSettings.ActiveProfileId = profile.Id;
                         await SaveAppSettings(_appSettings, syncElements: false);
@@ -414,7 +417,7 @@ namespace AiteBar
 
         public void RefreshPanel() {
             UpdateOrientation();
-            var userUtils = Block1_Utils.Children.OfType<Button>().Where(b => b.ContextMenu != null).ToList();
+            var userUtils = Block1_Utils.Children.OfType<Button>().Where(b => b.ContextMenu != null).ToArray();
             foreach (var btn in userUtils) Block1_Utils.Children.Remove(btn);
             Block2_AI.Children.Clear(); Block3_Web.Children.Clear(); Block4_Scripts.Children.Clear(); Block5_Other.Children.Clear();
 
@@ -425,7 +428,7 @@ namespace AiteBar
                 _appSettings.ActiveProfileId = currentProfile.Id;
             }
 
-            _elements = currentProfile?.Elements ?? new List<CustomElement>();
+            _elements = currentProfile?.Elements ?? [];
             _elements = NormalizeElements(_elements);
             
             BtnProfileSwitch.Foreground = _brushConverter.ConvertFromString(currentProfile?.IconColor ?? "#FFD700") as Brush;
@@ -563,7 +566,7 @@ namespace AiteBar
             await SaveConfig(); RefreshPanel();
         }
 
-        public IReadOnlyList<CustomElement> GetElementsSnapshot() => _elements.Select(CloneElement).ToList();
+        public IReadOnlyList<CustomElement> GetElementsSnapshot() => [.. _elements.Select(CloneElement)];
 
         public async Task SaveBlockOrder(DockBlock block, IReadOnlyList<string> orderedIds)
         {
@@ -670,7 +673,7 @@ namespace AiteBar
             var animY = new DoubleAnimation(finalY, TimeSpan.FromMilliseconds(200)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
             
             int completedCount = 0;
-            EventHandler onCompleted = (s, ev) => {
+            void onCompleted(object? s, EventArgs ev) {
                 completedCount++;
                 if (completedCount == 2) {
                     this.BeginAnimation(LeftProperty, null);
@@ -681,7 +684,7 @@ namespace AiteBar
                     _timer.Start(); 
                     UpdatePanelBounds();
                 }
-            };
+            }
 
             animX.Completed += onCompleted;
             animY.Completed += onCompleted;
@@ -715,15 +718,19 @@ namespace AiteBar
                     psiPs.ArgumentList.Add("-File"); psiPs.ArgumentList.Add(scriptPath); return psiPs;
                 case ".py":
                     string pythonExe = FindExecutableOnPath("python.exe"); if (!File.Exists(pythonExe)) throw new InvalidOperationException("Python не найден.");
-                    var psiPy = new ProcessStartInfo("cmd.exe") { UseShellExecute = false, WorkingDirectory = workingDirectory };
-                    psiPy.Arguments = $"/c \"\"{pythonExe}\" \"{scriptPath}\"\""; return psiPy;
+                    return new ProcessStartInfo("cmd.exe") 
+                    { 
+                        UseShellExecute = false, 
+                        WorkingDirectory = workingDirectory,
+                        Arguments = $"/c \"\"{pythonExe}\" \"{scriptPath}\"\"" 
+                    };
                 default: throw new InvalidOperationException("Неподдерживаемый скрипт.");
             }
         }
 
-        private Task StartScriptFile(string scriptPath) {
+        private static Task StartScriptFile(string scriptPath) {
             var psi = CreateScriptProcessStartInfo(scriptPath);
-            using var proc = Process.Start(psi); if (proc == null) throw new InvalidOperationException("Запуск не удался.");
+            using var proc = Process.Start(psi) ?? throw new InvalidOperationException("Запуск не удался.");
             return Task.CompletedTask;
         }
 
@@ -740,7 +747,7 @@ namespace AiteBar
                             if (mainVk != 0) { inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk } } });
                                 inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } }); }
                             foreach (var vk in Enumerable.Reverse(downKeys)) inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } });
-                            NativeMethods.SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<NativeMethods.INPUT>()); break;
+                            _ = NativeMethods.SendInput((uint)inputs.Count, [.. inputs], Marshal.SizeOf<NativeMethods.INPUT>()); break;
                         case AiteBar.ActionType.Web:
                             string prof = el.UseRotation ? (BrowserHelper.AdvanceProfile(el.Browser, el.LastUsedProfile)) : el.ChromeProfile; el.LastUsedProfile = prof; await SaveConfig();
                             var psi = new ProcessStartInfo(BrowserHelper.GetExecutablePath(el.Browser)) { UseShellExecute = false };
@@ -774,8 +781,16 @@ namespace AiteBar
         }
 
         private async void BtnSearch_Click(object sender, RoutedEventArgs e) {
-            try { string t = Clipboard.ContainsText() ? Clipboard.GetText().Trim() : ""; if (string.IsNullOrEmpty(t)) return; await HideDock();
-                using (Process.Start(new ProcessStartInfo(BrowserHelper.GetExecutablePath(BrowserType.Chrome)) { UseShellExecute = false, ArgumentList = { $"https://www.google.com/search?q={Uri.EscapeDataString(t)}" } })) { } } catch { }
+            try { 
+                string t = Clipboard.ContainsText() ? Clipboard.GetText().Trim() : ""; 
+                if (string.IsNullOrEmpty(t)) return; 
+                await HideDock();
+                using var proc = Process.Start(new ProcessStartInfo(BrowserHelper.GetExecutablePath(BrowserType.Chrome)) 
+                { 
+                    UseShellExecute = false, 
+                    ArgumentList = { $"https://www.google.com/search?q={Uri.EscapeDataString(t)}" } 
+                }) ?? throw new InvalidOperationException("Search failed");
+            } catch { }
         }
         private async void BtnScreenshotRegion_Click(object sender, RoutedEventArgs e) { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true }); }
         private async void BtnRecordVideo_Click(object sender, RoutedEventArgs e) { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true }); }
@@ -790,6 +805,8 @@ namespace AiteBar
             return parent is T p ? p : FindParent<T>(parent);
         }
         private void Border_DragOver(object sender, DragEventArgs e) { e.Effects = (e.Data.GetDataPresent(DataFormats.FileDrop) || e.Data.GetDataPresent(DataFormats.Text)) ? DragDropEffects.Link : DragDropEffects.None; e.Handled = true; }
+        private static readonly string[] ScriptExtensions = [".bat", ".cmd", ".ps1", ".py"];
+
         private async void Border_Drop(object sender, DragEventArgs e) {
             try {
                 string? val = null; ActionType type = ActionType.Web;
@@ -797,9 +814,8 @@ namespace AiteBar
                     var f = (string[])e.Data.GetData(DataFormats.FileDrop); 
                     if (f?.Length > 0) { 
                         val = f[0]; 
-                        string ext = Path.GetExtension(val).ToLower();
-                        if (ext == ".exe" || ext == ".lnk") type = ActionType.Exe; 
-                        else if (new[] { ".bat", ".cmd", ".ps1", ".py" }.Contains(ext)) type = ActionType.ScriptFile; 
+                        string ext = Path.GetExtension(val).ToLowerInvariant();
+                        if (ScriptExtensions.Contains(ext)) type = ActionType.ScriptFile; 
                         else type = ActionType.Exe; 
                     }
                 } else if (e.Data.GetDataPresent(DataFormats.UnicodeText)) {
