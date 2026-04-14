@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace SmartScreenDock {
+namespace AiteBar {
     public partial class DarkDialog : DarkWindow {
         public DarkDialog(string message, bool isConfirm = false) {
             InitializeComponent();

@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 
-namespace SmartScreenDock
+namespace AiteBar
 {
     public partial class AboutWindow : DarkWindow
     {

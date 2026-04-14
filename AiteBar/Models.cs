@@ -1,0 +1,79 @@
+using System;
+
+namespace AiteBar {
+    public enum DockBlock
+    {
+        Utils = 1,
+        AI = 2,
+        Web = 3,
+        Scripts = 4,
+        Other = 5
+    }
+
+    public enum ActionType
+    {
+        Web,
+        Hotkey,
+        Exe,
+        ScriptFile,
+        Command
+    }
+
+    public class CustomElement {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public int BlockId { get; set; } = 4;
+        public string Name { get; set; } = "";
+        public string Icon { get; set; } = "\uE710";
+        public string IconFont { get; set; } = FontHelper.FluentKey;
+        public string Color { get; set; } = "#E3E3E3";
+        public string ActionType { get; set; } = nameof(AiteBar.ActionType.Web);
+        public string ActionValue { get; set; } = "";
+        public string ChromeProfile { get; set; } = "";
+        
+        public bool IsAppMode { get; set; } = true;
+        public bool IsIncognito { get; set; } = false;
+        public bool UseRotation { get; set; } = false;
+        public bool IsTopmost { get; set; } = false;
+        public string LastUsedProfile { get; set; } = "";
+
+        public bool Alt { get; set; }
+        public bool Ctrl { get; set; }
+        public bool Shift { get; set; }
+        public bool Win { get; set; }
+        public string Key { get; set; } = "None";
+        public string ImagePath { get; set; } = "";
+    }
+
+    public enum DockEdge { Top, Bottom, Left, Right }
+
+    public class AppSettings {
+        public bool GlobalHotkeyCtrl { get; set; } = false;
+        public bool GlobalHotkeyAlt { get; set; } = false;
+        public bool GlobalHotkeyShift { get; set; } = false;
+        public bool GlobalHotkeyWin { get; set; } = true;
+        public string GlobalHotkeyKey { get; set; } = "Z";
+
+        public bool ShowPresetSearch { get; set; } = true;
+        public bool ShowPresetScreenshot { get; set; } = true;
+        public bool ShowPresetVideo { get; set; } = true;
+        public bool ShowPresetCalc { get; set; } = true;
+
+        public DockEdge Edge { get; set; } = DockEdge.Top;
+        public int MonitorIndex { get; set; } = 0; // 0 = Primary, 1, 2...
+        public double ActivationZoneSizePercent { get; set; } = 30; // % от ширины/высоты края
+        public int ActivationDelayMs { get; set; } = 250;
+
+        public List<Profile> Profiles { get; set; } = new();
+        public string ActiveProfileId { get; set; } = "";
+    }
+
+    public class Profile {
+        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string Name { get; set; } = "Основной";
+        public string Icon { get; set; } = "\uF36A"; 
+        public string IconFont { get; set; } = FontHelper.FluentKey;
+        public string IconColor { get; set; } = "#FFD700";
+        public string ImagePath { get; set; } = "";
+        public List<CustomElement> Elements { get; set; } = new();
+    }
+}

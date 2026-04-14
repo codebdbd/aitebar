@@ -13,12 +13,13 @@ using FontFamily = System.Windows.Media.FontFamily;
 using Brushes = System.Windows.Media.Brushes;
 using Cursors = System.Windows.Input.Cursors;
 
-namespace SmartScreenDock
+namespace AiteBar
 {
     public partial class IconPickerWindow : DarkWindow
     {
         public string SelectedIcon { get; private set; } = "";
         public string SelectedFont { get; private set; } = FontHelper.FluentKey;
+        public string SelectedImagePath { get; private set; } = "";
 
         private readonly List<(Button btn, string searchKey)> _allButtons = new();
         private string _activeFont = FontHelper.FluentKey;
@@ -81,6 +82,38 @@ namespace SmartScreenDock
         private void BtnTabBrands_Click(object sender, RoutedEventArgs e)
             => SetActiveTab(FontHelper.BrandsKey);
 
+        private void BtnTabCustom_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Изображения|*.png;*.jpg;*.jpeg;*.bmp;*.ico",
+                Title = "Выберите иконку"
+            };
+            if (dlg.ShowDialog() == true)
+            {
+                try
+                {
+                    string appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Codebdbd", "Aite Bar", "Icons");
+                    if (!Directory.Exists(appData)) Directory.CreateDirectory(appData);
+                    
+                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(dlg.FileName);
+                    string destPath = Path.Combine(appData, fileName);
+                    File.Copy(dlg.FileName, destPath);
+                    
+                    SelectedIcon = "";
+                    SelectedFont = "";
+                    SelectedImagePath = destPath;
+                    this.DialogResult = true;
+                    this.Close();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                    new DarkDialog("Ошибка при копировании файла.") { Owner = this }.ShowDialog();
+                }
+            }
+        }
+
         private void SetActiveTab(string fontName)
         {
             _activeFont = fontName;
@@ -92,6 +125,7 @@ namespace SmartScreenDock
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
             BtnTabBrands.Foreground   = fontName == FontHelper.BrandsKey
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
+            BtnTabCustom.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
 
             TxtSearchHint.Text = fontName switch
             {
@@ -276,7 +310,9 @@ namespace SmartScreenDock
             {
                 SelectedIcon = symbol;
                 SelectedFont = fontSrcKey;
+                SelectedImagePath = ""; // Сбрасываем путь к картинке, если выбрана шрифтовая иконка
                 this.DialogResult = true;
+                this.Close();
             };
             return btn;
         }

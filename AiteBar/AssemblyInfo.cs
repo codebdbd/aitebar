@@ -4,9 +4,9 @@ using System.Reflection;
 [assembly: AssemblyTitle("AiteBar")]
 [assembly: AssemblyProduct("AiteBar")]
 [assembly: AssemblyCompany("Codebdbd")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: AssemblyInformationalVersion("1.0.0")]
+[assembly: AssemblyVersion("1.2.0.0")]
+[assembly: AssemblyFileVersion("1.2.0.0")]
+[assembly: AssemblyInformationalVersion("1.2.0")]
 
 [assembly:ThemeInfo(
     ResourceDictionaryLocation.None,            //where theme specific resource dictionaries are located

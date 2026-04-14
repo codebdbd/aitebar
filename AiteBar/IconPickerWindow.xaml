@@ -1,7 +1,7 @@
-<local:DarkWindow x:Class="SmartScreenDock.IconPickerWindow"
+<local:DarkWindow x:Class="AiteBar.IconPickerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:SmartScreenDock"
+        xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
         Title="Каталог иконок" Height="580" Width="560"
         WindowStartupLocation="CenterScreen" Background="#1E1E1E" Foreground="White"
@@ -81,6 +81,10 @@
                     Margin="2,6,6,0"
                     Style="{StaticResource TabButtonStyle}"
                     Click="BtnTabBrands_Click"/>
+            <Button x:Name="BtnTabCustom" Content="Своя иконка"
+                    Margin="2,6,6,0"
+                    Style="{StaticResource TabButtonStyle}"
+                    Click="BtnTabCustom_Click" Foreground="#FFD700"/>
         </StackPanel>
 
         <!-- Строка поиска -->

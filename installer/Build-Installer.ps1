@@ -7,10 +7,10 @@ param(
 $ErrorActionPreference = "Stop"
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$projectPath = Join-Path $repoRoot "SmartScreenDock\SmartScreenDock.csproj"
+$projectPath = Join-Path $repoRoot "AiteBar\AiteBar.csproj"
 $publishDir = Join-Path $repoRoot "artifacts\publish\$Runtime"
 $installerDir = Join-Path $repoRoot "artifacts\installer"
-$issPath = Join-Path $PSScriptRoot "SmartScreenDock.iss"
+$issPath = Join-Path $PSScriptRoot "AiteBar.iss"
 
 if (-not $SkipPublish) {
     dotnet publish $projectPath `
@@ -32,7 +32,8 @@ if (-not (Test-Path $publishDir)) {
 
 $isccCandidates = @(
     "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
-    "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+    "$env:ProgramFiles\Inno Setup 6\ISCC.exe",
+    "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
 )
 
 $iscc = $isccCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
@@ -46,4 +47,8 @@ New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
 if ($LASTEXITCODE -ne 0) {
     throw "ISCC.exe failed with exit code $LASTEXITCODE"
 }
+
+# Cleanup temporary files left by Inno Setup
+Get-ChildItem -Path $installerDir -Filter "*.tmp" -Force | Remove-Item -Force -ErrorAction SilentlyContinue
+
 Write-Host "Installer created in $installerDir"

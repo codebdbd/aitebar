@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace SmartScreenDock
+namespace AiteBar
 {
     internal static class Logger
     {

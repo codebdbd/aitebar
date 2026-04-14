@@ -2,7 +2,7 @@ using System;
 using System.Windows.Media;
 using FontFamily = System.Windows.Media.FontFamily;
 
-namespace SmartScreenDock
+namespace AiteBar
 {
     internal static class FontHelper
     {

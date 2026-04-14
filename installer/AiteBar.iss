@@ -2,7 +2,7 @@
 #define AppDisplayName "AiteBar"
 #define AppPublisher "Codebdbd"
 #define AppExeName "AiteBar.exe"
-#define AppVersion "1.0.0"
+#define AppVersion "1.2.0"
 #define PublishDir "..\artifacts\publish\win-x64"
 
 [Setup]
@@ -18,12 +18,22 @@ PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=..\artifacts\installer
 OutputBaseFilename=AiteBar-Setup
 UninstallDisplayIcon={app}\{#AppExeName}
+DirExistsWarning=no
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-SetupIconFile=..\SmartScreenDock\Resources\app.ico
+SetupIconFile=..\AiteBar\Resources\app.ico
+AppMutex=AiteBar_Mutex_Unique_String_123
+CloseApplications=yes
+RestartApplications=yes
+
+[InstallDelete]
+Type: filesandordirs; Name: "{app}\*"
+
+[UninstallDelete]
+Type: filesandordirs; Name: "{app}"
 
 [Languages]
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"

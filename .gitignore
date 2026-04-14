@@ -9,7 +9,7 @@ artifacts/
 _installer_test/
 
 # Internal AI / Prompt files
-SmartScreenDock/codex_instructions_fixes_r5.md
-SmartScreenDock/codex_release_code_review_prompt.md
-SmartScreenDock/ui_parameters.md
+AiteBar/codex_instructions_fixes_r5.md
+AiteBar/codex_release_code_review_prompt.md
+AiteBar/ui_parameters.md
 *.zip

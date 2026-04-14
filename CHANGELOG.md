@@ -5,10 +5,17 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Изменено
+- Проведен полный рефакторинг структуры проекта: решение переименовано в `AiteBar.sln`, проект в `AiteBar.csproj`.
+- Пространство имен (namespace) изменено со `SmartScreenDock` на `AiteBar` во всем решении.
+- Удалены временные файлы сборки, папки `publish`, `artifacts` и пустые структуры каталогов.
+
 ## [1.0.0] - 2026-03-24
 
 ### Добавлено
-- Выпуск первой официальной релизной версии SmartScreenDock (v1.0.0).
+- Выпуск первой официальной релизной версии AiteBar (v1.0.0) (ранее SmartScreenDock).
 - Кроссплатформенный менеджер иконок и встроенные шрифты.
 - Поддержка Material Symbols и Fluent System Icons (не требуют установки на ОС).
 - Выбор и поиск брендовых иконок Font Awesome Brands.
