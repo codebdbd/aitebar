@@ -886,12 +886,18 @@ namespace AiteBar
                 }
 
                 if (!string.IsNullOrEmpty(val)) { 
+                    string? iconPath = null;
+                    if (type == ActionType.Exe || type == ActionType.ScriptFile) {
+                        iconPath = IconHelper.ExtractAndSaveIcon(val);
+                    }
+
                     var newElement = new CustomElement { 
                         Id = Guid.NewGuid().ToString(),
                         Name = Path.GetFileNameWithoutExtension(val), 
                         ActionValue = val, 
                         ActionType = type.ToString(),
-                        BlockId = (int)DockBlock.Other // По умолчанию в "Другое"
+                        BlockId = (int)DockBlock.Other, // По умолчанию в "Другое"
+                        ImagePath = iconPath ?? ""
                     };
                     
                     // Мгновенное сохранение без открытия окна

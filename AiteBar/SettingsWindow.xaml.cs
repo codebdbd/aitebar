@@ -536,7 +536,27 @@ namespace AiteBar
             }
 
             if (dlg.ShowDialog() == true)
+            {
                 TxtActionValue.Text = dlg.FileName;
+                
+                // Если имя пустое - подставляем имя файла
+                if (string.IsNullOrWhiteSpace(TxtName.Text))
+                {
+                    TxtName.Text = Path.GetFileNameWithoutExtension(dlg.FileName);
+                }
+
+                // Если иконка еще не выбрана (пустое изображение и дефолтный шрифт) - пытаемся извлечь
+                if (string.IsNullOrEmpty(_selectedImagePath) && (_selectedIcon == "\uEF0D" || string.IsNullOrEmpty(_selectedIcon)))
+                {
+                    string? extracted = IconHelper.ExtractAndSaveIcon(dlg.FileName);
+                    if (!string.IsNullOrEmpty(extracted))
+                    {
+                        _selectedImagePath = extracted;
+                        _selectedIcon = "";
+                        UpdatePreview();
+                    }
+                }
+            }
         }
 
         private static bool IsAllowedScriptFile(string path)
