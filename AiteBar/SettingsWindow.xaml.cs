@@ -46,7 +46,7 @@ namespace AiteBar
 
             LoadColors();
 
-            _ = LoadChromeProfilesAsync().ContinueWith(
+            _ = LoadProfilesAsync().ContinueWith(
                 t => Logger.Log(t.Exception!.GetBaseException()),
                 TaskContinuationOptions.OnlyOnFaulted);
             LoadKeyList();
@@ -94,6 +94,7 @@ namespace AiteBar
             ChkWin.IsChecked = _editingElement.Win;
             SetComboValue(CmbBlock, _editingElement.BlockId.ToString());
 
+            SetComboValue(CmbBrowser, _editingElement.Browser.ToString());
             SetComboValue(CmbActionType, _editingElement.ActionType);
             SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
             SetComboValue(CmbKey, _editingElement.Key);
@@ -380,18 +381,28 @@ namespace AiteBar
             }
         }
 
-        private async Task LoadChromeProfilesAsync()
+        private async void CmbBrowser_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            await LoadProfilesAsync();
+        }
+
+        private async Task LoadProfilesAsync()
+        {
+            if (CmbBrowser == null || CmbChromeProfile == null) return;
+
+            string browserStr = ((ComboBoxItem)CmbBrowser.SelectedItem)?.Tag?.ToString() ?? "Chrome";
+            if (!Enum.TryParse<BrowserType>(browserStr, out var browserType)) browserType = BrowserType.Chrome;
+
             CmbChromeProfile.Items.Clear();
             CmbChromeProfile.Items.Add(new ComboBoxItem { Content = "Без профиля", Tag = "" });
             
-            var profileItems = await Task.Run(() => ChromeHelper.GetProfiles());
+            var profileItems = await Task.Run(() => BrowserHelper.GetProfiles(browserType));
 
             foreach (var profile in profileItems)
                 CmbChromeProfile.Items.Add(new ComboBoxItem { Content = profile.DisplayName, Tag = profile.ProfilePath });
             
             CmbChromeProfile.SelectedIndex = 0;
-            if (_editingElement != null)
+            if (_editingElement != null && _editingElement.Browser == browserType)
                 SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
         }
 
@@ -652,6 +663,8 @@ namespace AiteBar
                 var actionType = GetSelectedActionType();
                 string typeStr = actionType.ToString();
                 string selectedKey = ((ComboBoxItem)CmbKey.SelectedItem)?.Tag?.ToString() ?? "None";
+                string browserStr = ((ComboBoxItem)CmbBrowser.SelectedItem)?.Tag?.ToString() ?? "Chrome";
+                if (!Enum.TryParse<BrowserType>(browserStr, out var browserType)) browserType = BrowserType.Chrome;
 
                 bool missingName = string.IsNullOrWhiteSpace(TxtName.Text);
                 bool missingActionValue = actionType != AiteBar.ActionType.Hotkey && string.IsNullOrWhiteSpace(TxtActionValue.Text);
@@ -708,6 +721,7 @@ namespace AiteBar
                     Id = _editingElement?.Id ?? Guid.NewGuid().ToString(),
                     Name = TxtName.Text,
                     BlockId = int.Parse(((ComboBoxItem)CmbBlock.SelectedItem).Tag?.ToString() ?? "4"),
+                    Browser = browserType,
                     ActionType = typeStr, ActionValue = actionType == AiteBar.ActionType.Hotkey ? "" : TxtActionValue.Text,
                     Icon = _selectedIcon, IconFont = _selectedFont, Color = _selectedColor, 
                     ImagePath = _selectedImagePath,

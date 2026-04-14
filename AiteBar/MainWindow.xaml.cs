@@ -821,10 +821,23 @@ namespace AiteBar
                             foreach (var vk in Enumerable.Reverse(downKeys)) inputs.Add(new INPUT { type = INPUT_KEYBOARD, U = new INPUTUNION { ki = new KEYBDINPUT { wVk = vk, dwFlags = KEYEVENTF_KEYUP } } });
                             SendInput((uint)inputs.Count, inputs.ToArray(), Marshal.SizeOf<INPUT>()); break;
                         case AiteBar.ActionType.Web:
-                            string prof = el.UseRotation ? (ChromeHelper.AdvanceProfile(el.LastUsedProfile)) : el.ChromeProfile; el.LastUsedProfile = prof; await SaveConfig();
-                            var psi = new ProcessStartInfo(ChromeHelper.GetChromePath()) { UseShellExecute = false };
+                            string prof = el.UseRotation ? (BrowserHelper.AdvanceProfile(el.Browser, el.LastUsedProfile)) : el.ChromeProfile; el.LastUsedProfile = prof; await SaveConfig();
+                            var psi = new ProcessStartInfo(BrowserHelper.GetExecutablePath(el.Browser)) { UseShellExecute = false };
                             if (el.IsAppMode) psi.ArgumentList.Add($"--app={el.ActionValue}"); else psi.ArgumentList.Add(el.ActionValue);
-                            if (el.IsIncognito) psi.ArgumentList.Add("--incognito"); if (!string.IsNullOrEmpty(prof)) psi.ArgumentList.Add($"--profile-directory={Path.GetFileName(prof)}");
+                            
+                            if (el.IsIncognito) 
+                            {
+                                if (el.Browser == BrowserType.Edge) psi.ArgumentList.Add("-inprivate");
+                                else if (el.Browser == BrowserType.Opera || el.Browser == BrowserType.OperaGX) psi.ArgumentList.Add("-private");
+                                else if (el.Browser == BrowserType.Firefox) psi.ArgumentList.Add("-private-window");
+                                else psi.ArgumentList.Add("--incognito");
+                            }
+
+                            if (!string.IsNullOrEmpty(prof)) 
+                            {
+                                if (el.Browser == BrowserType.Firefox) psi.ArgumentList.Add($"-P \"{Path.GetFileName(prof)}\"");
+                                else psi.ArgumentList.Add($"--profile-directory={Path.GetFileName(prof)}");
+                            }
                             using (var proc = Process.Start(psi)) { if (proc != null && el.IsTopmost) { for (int i = 0; i < 25; i++) { await Task.Delay(200); proc.Refresh();
                                         if (proc.MainWindowHandle != IntPtr.Zero) { SetWindowPos(proc.MainWindowHandle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE); break; } } } }
                             break;
@@ -841,7 +854,7 @@ namespace AiteBar
 
         private async void BtnSearch_Click(object sender, RoutedEventArgs e) {
             try { string t = Clipboard.ContainsText() ? Clipboard.GetText().Trim() : ""; if (string.IsNullOrEmpty(t)) return; await HideDock();
-                using (Process.Start(new ProcessStartInfo(ChromeHelper.GetChromePath()) { UseShellExecute = false, ArgumentList = { $"https://www.google.com/search?q={Uri.EscapeDataString(t)}" } })) { } } catch { }
+                using (Process.Start(new ProcessStartInfo(BrowserHelper.GetExecutablePath(BrowserType.Chrome)) { UseShellExecute = false, ArgumentList = { $"https://www.google.com/search?q={Uri.EscapeDataString(t)}" } })) { } } catch { }
         }
         private async void BtnScreenshotRegion_Click(object sender, RoutedEventArgs e) { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true }); }
         private async void BtnRecordVideo_Click(object sender, RoutedEventArgs e) { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true }); }

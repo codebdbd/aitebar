@@ -199,6 +199,18 @@
                     </Border>
 
                     <StackPanel x:Name="PanelWebSettings">
+                        <TextBlock Text="Браузер" Foreground="#AAA" Margin="10,0,0,5"/>
+                        <ComboBox x:Name="CmbBrowser" Margin="0,0,0,10" SelectionChanged="CmbBrowser_SelectionChanged">
+                            <ComboBoxItem Content="Google Chrome" Tag="Chrome"/>
+                            <ComboBoxItem Content="Microsoft Edge" Tag="Edge"/>
+                            <ComboBoxItem Content="Brave" Tag="Brave"/>
+                            <ComboBoxItem Content="Yandex Browser" Tag="Yandex"/>
+                            <ComboBoxItem Content="Opera" Tag="Opera"/>
+                            <ComboBoxItem Content="Opera GX" Tag="OperaGX"/>
+                            <ComboBoxItem Content="Vivaldi" Tag="Vivaldi"/>
+                            <ComboBoxItem Content="Firefox" Tag="Firefox"/>
+                        </ComboBox>
+
                         <UniformGrid Columns="2">
                             <CheckBox x:Name="ChkAppMode" Content="Режим приложения" Foreground="White" Margin="0,5"/>
                             <CheckBox x:Name="ChkIncognito" Content="Инкогнито" Foreground="White" Margin="0,5"/>

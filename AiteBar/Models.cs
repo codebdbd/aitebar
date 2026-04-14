@@ -10,6 +10,18 @@ namespace AiteBar {
         Other = 5
     }
 
+    public enum BrowserType
+    {
+        Chrome,
+        Edge,
+        Brave,
+        Yandex,
+        Opera,
+        OperaGX,
+        Vivaldi,
+        Firefox
+    }
+
     public enum ActionType
     {
         Web,
@@ -28,6 +40,7 @@ namespace AiteBar {
         public string Color { get; set; } = "#E3E3E3";
         public string ActionType { get; set; } = nameof(AiteBar.ActionType.Web);
         public string ActionValue { get; set; } = "";
+        public BrowserType Browser { get; set; } = BrowserType.Chrome;
         public string ChromeProfile { get; set; } = "";
         
         public bool IsAppMode { get; set; } = true;
