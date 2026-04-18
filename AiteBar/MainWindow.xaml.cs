@@ -18,6 +18,7 @@ using System.Windows.Forms;
 
 // Псевдонимы для устранения неоднозначности (WPF vs WinForms)
 using Button = System.Windows.Controls.Button;
+using Panel = System.Windows.Controls.Panel;
 using ContextMenu = System.Windows.Controls.ContextMenu;
 using MenuItem = System.Windows.Controls.MenuItem;
 using Application = System.Windows.Application;
@@ -52,6 +53,8 @@ namespace AiteBar
         private CustomElement? _draggedElement = null;
         private Point _dragStartPos;
         private bool _isReordering = false;
+        private int _draggedOriginalIndex;
+        private List<Button> _userButtons = [];
 
         private const int HOTKEY_ID = 9000;
         private const int WM_HOTKEY = 0x0312;
@@ -339,6 +342,7 @@ namespace AiteBar
         public void RefreshPanel() {
             UpdateOrientation();
             UserButtonsPanel.Children.Clear();
+            _userButtons.Clear();
 
             _elements = NormalizeElements(_appSettings.Elements);
             
@@ -355,7 +359,8 @@ namespace AiteBar
             foreach (var el in _elements) {
                 var btn = new Button { 
                     ToolTip = el.Name, 
-                    Foreground = (Brush)_brushConverter.ConvertFromString(el.Color ?? "#E3E3E3")!
+                    Foreground = (Brush)_brushConverter.ConvertFromString(el.Color ?? "#E3E3E3")!,
+                    RenderTransform = new TranslateTransform()
                 };
 
                 if (!string.IsNullOrEmpty(el.ImagePath) && System.IO.File.Exists(el.ImagePath))
@@ -369,38 +374,57 @@ namespace AiteBar
                 }
                 else { btn.Content = el.Icon; btn.FontFamily = FontHelper.Resolve(el.IconFont); }
 
-                btn.Click += async (s, e) => await ExecuteCustomAction(el);
+                btn.Click += async (s, e) => {
+                    if (!_isReordering) await ExecuteCustomAction(el);
+                };
                 
                 var capturedElement = el;
                 btn.PreviewMouseDown += (s, e) => {
-                    _draggedButton = s as Button; _draggedElement = capturedElement;
-                    _dragStartPos = e.GetPosition(this); _isReordering = false;
+                    if (e.ChangedButton != MouseButton.Left) return;
+                    _draggedButton = s as Button; 
+                    _draggedElement = capturedElement;
+                    _dragStartPos = e.GetPosition(this); 
+                    _isReordering = false;
+                    _draggedOriginalIndex = _userButtons.IndexOf(_draggedButton!);
+                    _draggedButton!.CaptureMouse();
                 };
+                
                 btn.PreviewMouseMove += (s, e) => {
-                    if (_draggedButton != null && _draggedElement != null) {
-                        Point currentPos = e.GetPosition(this);
-                        if (!_isReordering && (Math.Abs(currentPos.X - _dragStartPos.X) > 5 || Math.Abs(currentPos.Y - _dragStartPos.Y) > 5)) {
-                            _isReordering = true; _draggedButton.Opacity = 0.5;
-                        }
+                    if (_draggedButton == null || e.LeftButton != MouseButtonState.Pressed) return;
+                    
+                    Point currentPos = e.GetPosition(this);
+                    double deltaX = currentPos.X - _dragStartPos.X;
+                    double deltaY = currentPos.Y - _dragStartPos.Y;
+
+                    if (!_isReordering && (Math.Abs(deltaX) > 10 || Math.Abs(deltaY) > 10)) {
+                        _isReordering = true;
+                        _draggedButton.Opacity = 0.7;
+                        Panel.SetZIndex(_draggedButton, 100);
+                    }
+
+                    if (_isReordering) {
+                        bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
+                        var tt = (TranslateTransform)_draggedButton.RenderTransform;
+                        if (isVertical) tt.Y = deltaY; else tt.X = deltaX;
+
+                        UpdateReorderPositions(currentPos);
                     }
                 };
+
                 btn.PreviewMouseUp += async (s, e) => {
-                    if (_draggedButton != null && _isReordering) {
+                    if (_draggedButton == null) return;
+                    _draggedButton.ReleaseMouseCapture();
+
+                    if (_isReordering) {
                         _draggedButton.Opacity = 1.0;
-                        var hitTestResult = VisualTreeHelper.HitTest(this, e.GetPosition(this));
-                        if (hitTestResult?.VisualHit != null) {
-                            Button? targetButton = FindParent<Button>(hitTestResult.VisualHit);
-                            if (targetButton != null && targetButton != _draggedButton) {
-                                var targetElement = _elements.FirstOrDefault(x => x.Icon == (targetButton.Content as string) && x.Name == (targetButton.ToolTip as string));
-                                if (targetElement != null) {
-                                    int oldIdx = _elements.IndexOf(_draggedElement), newIdx = _elements.IndexOf(targetElement);
-                                    if (oldIdx != -1 && newIdx != -1) {
-                                        _elements.RemoveAt(oldIdx); _elements.Insert(newIdx, _draggedElement);
-                                        await SaveConfig(); RefreshPanel();
-                                    }
-                                }
-                            }
+                        int newIndex = CalculateTargetIndex(e.GetPosition(this));
+                        if (newIndex >= 0 && newIndex < _elements.Count && newIndex != _draggedOriginalIndex) {
+                            var element = _elements[_draggedOriginalIndex];
+                            _elements.RemoveAt(_draggedOriginalIndex);
+                            _elements.Insert(newIndex, element);
+                            await SaveConfig();
                         }
+                        RefreshPanel();
                     }
                     _draggedButton = null; _draggedElement = null; _isReordering = false;
                 };
@@ -419,6 +443,7 @@ namespace AiteBar
                 };
                 menu.Items.Add(editItem); menu.Items.Add(delItem); btn.ContextMenu = menu;
                 UserButtonsPanel.Children.Add(btn);
+                _userButtons.Add(btn);
             }
             
             // Разделители
@@ -426,6 +451,53 @@ namespace AiteBar
             SepControl.Visibility = (UserButtonsPanel.Children.Count > 0 || hasSystemUtils) ? Visibility.Visible : Visibility.Collapsed;
             
             UpdatePanelBounds();
+        }
+
+        private int CalculateTargetIndex(Point currentPos)
+        {
+            bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
+            for (int i = 0; i < _userButtons.Count; i++) {
+                if (_userButtons[i] == _draggedButton) continue;
+                var pos = _userButtons[i].TransformToAncestor(this).Transform(new Point(0, 0));
+                var size = new System.Windows.Size(_userButtons[i].ActualWidth, _userButtons[i].ActualHeight);
+                if (isVertical) {
+                    if (currentPos.Y < pos.Y + size.Height / 2) return i > _draggedOriginalIndex ? i - 1 : i;
+                } else {
+                    if (currentPos.X < pos.X + size.Width / 2) return i > _draggedOriginalIndex ? i - 1 : i;
+                }
+            }
+            return _userButtons.Count - 1;
+        }
+
+        private void UpdateReorderPositions(Point currentPos)
+         {
+             if (_userButtons.Count < 2) return;
+             int targetIndex = CalculateTargetIndex(currentPos);
+             bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
+             
+             // Берем размер кнопки + отступы (margin=4 с каждой стороны = 8)
+             double offset = isVertical ? _userButtons[0].ActualHeight + 8 : _userButtons[0].ActualWidth + 8;
+ 
+             for (int i = 0; i < _userButtons.Count; i++) {
+                if (_userButtons[i] == _draggedButton) continue;
+                
+                double targetOffset = 0;
+                if (_draggedOriginalIndex < targetIndex) {
+                    if (i > _draggedOriginalIndex && i <= targetIndex) targetOffset = -offset;
+                } else if (_draggedOriginalIndex > targetIndex) {
+                    if (i >= targetIndex && i < _draggedOriginalIndex) targetOffset = offset;
+                }
+
+                var tt = (TranslateTransform)_userButtons[i].RenderTransform;
+                double currentOffset = isVertical ? tt.Y : tt.X;
+
+                if (Math.Abs(currentOffset - targetOffset) > 0.1) {
+                    var anim = new DoubleAnimation(targetOffset, TimeSpan.FromMilliseconds(150)) {
+                        EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                    };
+                    tt.BeginAnimation(isVertical ? TranslateTransform.YProperty : TranslateTransform.XProperty, anim);
+                }
+            }
         }
 
         private async Task SaveConfig() { await SaveAppSettings(_appSettings); }

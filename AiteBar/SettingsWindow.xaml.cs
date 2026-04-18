@@ -34,8 +34,6 @@ namespace AiteBar
         private static readonly Brush _requiredErrorBorderBrush = _brushConverter.ConvertFromString("#E85A5A") as Brush ?? Brushes.OrangeRed;
         private readonly MainWindow _mainWindow;
         private readonly CustomElement? _editingElement = null;
-        private List<CustomElement> _orderElements = [];
-        private string _orderBaselineSignature = "";
         private bool _showRequiredValidation;
 
         public SettingsWindow(MainWindow main, CustomElement? el = null)
@@ -62,7 +60,6 @@ namespace AiteBar
                 UpdateNamePlaceholderVisibility();
             }
 
-            InitializeOrderEditor();
             UpdateSaveButtonState();
             UpdatePreview();
         }
@@ -211,143 +208,6 @@ namespace AiteBar
                  PreviewIcon.Foreground = _brushConverter.ConvertFromString(_selectedColor) as Brush ?? Brushes.White;
             }
         }
-
-        private void InitializeOrderEditor()
-        {
-            _orderElements = [.. _mainWindow.GetElementsSnapshot()];
-            _orderBaselineSignature = BuildSignature(_orderElements);
-            RefreshOrderList();
-        }
-
-        private void RefreshOrderList()
-        {
-            LstOrderButtons.Items.Clear();
-            foreach (var el in _orderElements)
-            {
-                var row = new StackPanel { Orientation = Orientation.Horizontal };
-                
-                if (!string.IsNullOrEmpty(el.ImagePath) && File.Exists(el.ImagePath))
-                {
-                    var bitmap = new BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(el.ImagePath);
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
-
-                    row.Children.Add(new Image
-                    {
-                        Source = bitmap,
-                        Width = 16, Height = 16,
-                        Margin = new Thickness(0, 0, 8, 0),
-                        VerticalAlignment = VerticalAlignment.Center
-                    });
-                }
-                else
-                {
-                    row.Children.Add(new TextBlock
-                    {
-                        Text = el.Icon,
-                        FontFamily = FontHelper.Resolve(el.IconFont),
-                        Margin = new Thickness(0, 0, 8, 0),
-                        VerticalAlignment = VerticalAlignment.Center
-                    });
-                }
-
-                row.Children.Add(new TextBlock
-                {
-                    Text = el.Name,
-                    VerticalAlignment = VerticalAlignment.Center
-                });
-
-                LstOrderButtons.Items.Add(new ListBoxItem { Content = row, Tag = el.Id });
-            }
-
-            if (LstOrderButtons.Items.Count > 0)
-                LstOrderButtons.SelectedIndex = 0;
-
-            UpdateOrderMoveButtonsState();
-        }
-
-        private void LstOrderButtons_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            UpdateOrderMoveButtonsState();
-        }
-
-        private void BtnMoveUp_Click(object sender, RoutedEventArgs e)
-        {
-            MoveSelectedOrderItem(-1);
-        }
-
-        private void BtnMoveDown_Click(object sender, RoutedEventArgs e)
-        {
-            MoveSelectedOrderItem(1);
-        }
-
-        private void MoveSelectedOrderItem(int direction)
-        {
-            if (LstOrderButtons.SelectedItem is not ListBoxItem selectedItem)
-                return;
-
-            string selectedId = selectedItem.Tag?.ToString() ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(selectedId))
-                return;
-
-            int index = _orderElements.FindIndex(x => x.Id == selectedId);
-            if (index < 0)
-                return;
-
-            int targetIndex = index + direction;
-            if (targetIndex < 0 || targetIndex >= _orderElements.Count)
-                return;
-
-            var element = _orderElements[index];
-            _orderElements.RemoveAt(index);
-            _orderElements.Insert(targetIndex, element);
-
-            RefreshOrderList();
-            LstOrderButtons.SelectedIndex = targetIndex;
-            UpdateOrderMoveButtonsState();
-        }
-
-        private async void BtnSaveOrder_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is Button button) button.IsEnabled = false;
-
-            try
-            {
-                List<CustomElement> latestSnapshot = [.. _mainWindow.GetElementsSnapshot()];
-                string currentSignature = BuildSignature(latestSnapshot);
-                if (!string.Equals(_orderBaselineSignature, currentSignature, StringComparison.Ordinal))
-                {
-                    _orderElements = latestSnapshot;
-                    _orderBaselineSignature = BuildSignature(_orderElements);
-                    RefreshOrderList();
-                    SetOrderStatus("Список изменился в другом окне. Обновлено, повторите действие.", isError: true);
-                    return;
-                }
-
-                var settings = _mainWindow.GetAppSettings();
-                settings.Elements = [.. _orderElements];
-                await _mainWindow.SaveAppSettings(settings);
-                _mainWindow.RefreshPanel();
-                _orderElements = [.. _mainWindow.GetElementsSnapshot()];
-                _orderBaselineSignature = BuildSignature(_orderElements);
-                RefreshOrderList();
-                SetOrderStatus("Порядок кнопок сохранен.");
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(ex);
-                SetOrderStatus("Ошибка сохранения порядка.", isError: true);
-                new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog();
-            }
-            finally
-            {
-                if (sender is Button b) b.IsEnabled = true;
-            }
-        }
-
-        private static string BuildSignature(IEnumerable<CustomElement> source) => string.Join("|", source.Select(x => x.Id));
 
         private async void CmbBrowser_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -589,35 +449,6 @@ namespace AiteBar
                 return;
 
             BtnSave.IsEnabled = HasRequiredFieldsFilled();
-        }
-
-        private void UpdateOrderMoveButtonsState()
-        {
-            if (BtnMoveUp == null || BtnMoveDown == null || LstOrderButtons == null)
-                return;
-
-            int count = LstOrderButtons.Items.Count;
-            int index = LstOrderButtons.SelectedIndex;
-            bool hasSelection = index >= 0 && index < count;
-
-            BtnMoveUp.IsEnabled = hasSelection && index > 0;
-            BtnMoveDown.IsEnabled = hasSelection && index < count - 1;
-        }
-
-
-
-        private void SetOrderStatus(string text, bool isError = false)
-        {
-            if (TxtOrderStatus == null)
-                return;
-
-            TxtOrderStatus.Text = text;
-            TxtOrderStatus.Visibility = string.IsNullOrWhiteSpace(text)
-                ? Visibility.Collapsed
-                : Visibility.Visible;
-            TxtOrderStatus.Foreground = isError
-                ? (_brushConverter.ConvertFromString("#E85A5A") as Brush ?? Brushes.OrangeRed)
-                : (_brushConverter.ConvertFromString("#9FA7B3") as Brush ?? Brushes.Gray);
         }
 
         private void UpdateNamePlaceholderVisibility()
