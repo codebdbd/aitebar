@@ -373,10 +373,6 @@ namespace AiteBar
                     btn.Content = new System.Windows.Controls.Image { Source = bitmap, Width = 24, Height = 24, Stretch = Stretch.Uniform };
                 }
                 else { btn.Content = el.Icon; btn.FontFamily = FontHelper.Resolve(el.IconFont); }
-
-                btn.Click += async (s, e) => {
-                    if (!_isReordering) await ExecuteCustomAction(el);
-                };
                 
                 var capturedElement = el;
                 btn.PreviewMouseDown += (s, e) => {
@@ -425,6 +421,9 @@ namespace AiteBar
                             await SaveConfig();
                         }
                         RefreshPanel();
+                    } else {
+                        // Если это был просто клик (не реордеринг), выполняем действие
+                        await ExecuteCustomAction(capturedElement);
                     }
                     _draggedButton = null; _draggedElement = null; _isReordering = false;
                 };

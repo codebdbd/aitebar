@@ -19,7 +19,8 @@ namespace AiteBar {
         Hotkey,
         Exe,
         ScriptFile,
-        Command
+        Command,
+        File
     }
 
     public class CustomElement {
@@ -33,7 +34,7 @@ namespace AiteBar {
         public BrowserType Browser { get; set; } = BrowserType.Chrome;
         public string ChromeProfile { get; set; } = "";
         
-        public bool IsAppMode { get; set; } = true;
+        public bool IsAppMode { get; set; } = false;
         public bool IsIncognito { get; set; } = false;
         public bool UseRotation { get; set; } = false;
         public bool IsTopmost { get; set; } = false;
