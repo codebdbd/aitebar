@@ -25,9 +25,9 @@ namespace AiteBar
     public partial class SettingsWindow : DarkWindow
     {
         private static readonly string[] AllowedScriptExtensions = [".bat", ".cmd", ".ps1", ".py"];
-        private string _selectedIcon = "\uef0d";
-        private string _selectedFont = FontHelper.FluentKey;
-        private string _selectedColor = "#E3E3E3";
+        private string _selectedIcon = "\uE8B9";
+        private string _selectedFont = "Segoe MDL2 Assets";
+        private string _selectedColor = "#FFFFFF";
         private string _selectedImagePath = "";
         private static readonly BrushConverter _brushConverter = new();
         private static readonly Brush _defaultInputBorderBrush = _brushConverter.ConvertFromString("#555555") as Brush ?? Brushes.Gray;
@@ -35,7 +35,7 @@ namespace AiteBar
         private readonly MainWindow _mainWindow;
         private readonly CustomElement? _editingElement = null;
         private List<CustomElement> _orderElements = [];
-        private readonly Dictionary<int, string> _orderBaselineByBlock = [];
+        private string _orderBaselineSignature = "";
         private bool _showRequiredValidation;
 
         public SettingsWindow(MainWindow main, CustomElement? el = null)
@@ -55,13 +55,16 @@ namespace AiteBar
                 this.Title = "Редактировать кнопку";
                 LoadElementData();
             } else {
+                SetComboValue(CmbActionType, nameof(ActionType.Web));
+                var defaultBrowser = BrowserHelper.GetSystemDefaultBrowser();
+                SetComboValue(CmbBrowser, defaultBrowser.ToString());
                 UpdateActionUI();
                 UpdateNamePlaceholderVisibility();
-                CmbBlock.SelectedIndex = 0; 
             }
 
             InitializeOrderEditor();
             UpdateSaveButtonState();
+            UpdatePreview();
         }
 
         private void LoadKeyList()
@@ -92,7 +95,6 @@ namespace AiteBar
             ChkShift.IsChecked = _editingElement.Shift;
             ChkAlt.IsChecked = _editingElement.Alt;
             ChkWin.IsChecked = _editingElement.Win;
-            SetComboValue(CmbBlock, _editingElement.BlockId.ToString());
 
             SetComboValue(CmbBrowser, _editingElement.Browser.ToString());
             SetComboValue(CmbActionType, _editingElement.ActionType);
@@ -114,31 +116,28 @@ namespace AiteBar
         {
             string[] colors =
             [
-                "#3ABEFF",
-                "#60A5FA",
-                "#6366F1",
-                "#8B5CF6",
-                "#A855F7",
-                "#22D3EE",
-                "#34D399",
-                "#A3E635",
-                "#F59E0B",
-                "#FB7185"
+                "#3ABEFF", "#60A5FA", "#6366F1", "#8B5CF6", "#A855F7",
+                "#22D3EE", "#34D399", "#A3E635", "#F59E0B", "#FB7185"
             ];
             GridColors.Children.Clear();
             foreach (var hex in colors)
             {
-                var btn = new Button
+                var border = new Border
                 {
                     Background = _brushConverter.ConvertFromString(hex) as Brush ?? Brushes.White,
-                    Width = 30,
-                    Height = 30,
-                    Margin = new Thickness(4),
-                    BorderThickness = new Thickness(0),
-                    Cursor = System.Windows.Input.Cursors.Hand
+                    Width = 32,
+                    Height = 32,
+                    Margin = new Thickness(5),
+                    CornerRadius = new CornerRadius(4),
+                    Cursor = System.Windows.Input.Cursors.Hand,
+                    ToolTip = hex
                 };
-                btn.Click += (s, e) => { _selectedColor = hex; TxtHexColor.Text = hex; UpdatePreview(); };
-                GridColors.Children.Add(btn);
+                border.MouseDown += (s, e) => { 
+                    _selectedColor = hex; 
+                    TxtHexColor.Text = hex; 
+                    UpdatePreview(); 
+                };
+                GridColors.Children.Add(border);
             }
         }
 
@@ -154,6 +153,11 @@ namespace AiteBar
             } catch (Exception ex) { Logger.Log(ex); }
         }
 
+        private void BorderPreview_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            BtnOpenCatalog_Click(this, new RoutedEventArgs());
+        }
+
         private void BtnOpenCatalog_Click(object sender, RoutedEventArgs e)
         {
             var picker = new IconPickerWindow { Owner = this };
@@ -166,68 +170,59 @@ namespace AiteBar
             }
         }
 
+        private void BtnSelectCustomIcon_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Изображения (*.png;*.jpg;*.jpeg;*.bmp;*.ico)|*.png;*.jpg;*.jpeg;*.bmp;*.ico|Все файлы (*.*)|*.*",
+                Title = "Выберите иконку"
+            };
+
+            if (dlg.ShowDialog() == true)
+            {
+                string? savedPath = IconHelper.SaveCustomIcon(dlg.FileName);
+                if (!string.IsNullOrEmpty(savedPath))
+                {
+                    _selectedImagePath = savedPath;
+                    _selectedIcon = ""; // Сбрасываем шрифтовую иконку
+                    UpdatePreview();
+                }
+            }
+        }
+
         private void UpdatePreview()
         {
-            if (PreviewIcon == null) return;
-
             if (!string.IsNullOrEmpty(_selectedImagePath) && File.Exists(_selectedImagePath))
             { 
                 PreviewIcon.Visibility = Visibility.Collapsed;
-                if (PreviewIcon.Parent is Grid parent)
+                PreviewImage.Visibility = Visibility.Visible;
+                try
                 { 
-                    var existingImage = parent.Children.OfType<Image>().FirstOrDefault();
-                    if (existingImage == null)
-                    { 
-                        existingImage = new Image { Width = 32, Height = 32, Stretch = Stretch.Uniform };
-                        parent.Children.Add(existingImage);
-                    }
-                    var bitmap = new BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(_selectedImagePath);
-                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
-                    existingImage.Source = bitmap;
-                    existingImage.Visibility = Visibility.Visible;
+                    PreviewImage.Source = new BitmapImage(new Uri(_selectedImagePath));
                 }
+                catch { }
             }
             else
-            {
+            { 
                 PreviewIcon.Visibility = Visibility.Visible;
-                PreviewIcon.Text = _selectedIcon;
-                PreviewIcon.FontFamily = FontHelper.Resolve(_selectedFont);
-                PreviewIcon.Foreground = _brushConverter.ConvertFromString(_selectedColor) as Brush ?? Brushes.White;
-                if (PreviewIcon.Parent is Grid parent)
-                { 
-                    var existingImage = parent.Children.OfType<Image>().FirstOrDefault();
-                    if (existingImage != null) existingImage.Visibility = Visibility.Collapsed;
-                }
+                 PreviewImage.Visibility = Visibility.Collapsed;
+                 PreviewIcon.Text = _selectedIcon;
+                 PreviewIcon.FontFamily = FontHelper.Resolve(_selectedFont);
+                 PreviewIcon.Foreground = _brushConverter.ConvertFromString(_selectedColor) as Brush ?? Brushes.White;
             }
         }
 
         private void InitializeOrderEditor()
         {
             _orderElements = [.. _mainWindow.GetElementsSnapshot()];
-            CaptureOrderBaseline(_orderElements);
-            if (CmbOrderBlock.SelectedIndex < 0)
-                CmbOrderBlock.SelectedIndex = 0;
-            RefreshOrderList();
-        }
-
-        private void CmbOrderBlock_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
+            _orderBaselineSignature = BuildSignature(_orderElements);
             RefreshOrderList();
         }
 
         private void RefreshOrderList()
         {
-            if (CmbOrderBlock.SelectedItem is not ComboBoxItem blockItem)
-                return;
-
-            int blockId = int.Parse(blockItem.Tag?.ToString() ?? "4");
-            List<CustomElement> blockElements = [.. _orderElements.Where(x => x.BlockId == blockId)];
-
             LstOrderButtons.Items.Clear();
-            foreach (var el in blockElements)
+            foreach (var el in _orderElements)
             {
                 var row = new StackPanel { Orientation = Orientation.Horizontal };
                 
@@ -290,48 +285,25 @@ namespace AiteBar
 
         private void MoveSelectedOrderItem(int direction)
         {
-            if (CmbOrderBlock.SelectedItem is not ComboBoxItem blockItem || LstOrderButtons.SelectedItem is not ListBoxItem selectedItem)
+            if (LstOrderButtons.SelectedItem is not ListBoxItem selectedItem)
                 return;
 
-            int blockId = int.Parse(blockItem.Tag?.ToString() ?? "4");
             string selectedId = selectedItem.Tag?.ToString() ?? string.Empty;
             if (string.IsNullOrWhiteSpace(selectedId))
                 return;
 
-            List<string> blockIds = [.. _orderElements.Where(x => x.BlockId == blockId).Select(x => x.Id)];
-            int index = blockIds.FindIndex(x => x == selectedId);
+            int index = _orderElements.FindIndex(x => x.Id == selectedId);
             if (index < 0)
                 return;
 
             int targetIndex = index + direction;
-            if (targetIndex < 0 || targetIndex >= blockIds.Count)
+            if (targetIndex < 0 || targetIndex >= _orderElements.Count)
                 return;
 
-            (blockIds[index], blockIds[targetIndex]) = (blockIds[targetIndex], blockIds[index]);
+            var element = _orderElements[index];
+            _orderElements.RemoveAt(index);
+            _orderElements.Insert(targetIndex, element);
 
-            var byId = _orderElements
-                .Where(x => x.BlockId == blockId)
-                .ToDictionary(x => x.Id, x => x, StringComparer.Ordinal);
-
-            List<CustomElement> reorderedBlock = [.. blockIds.Select(id => byId[id])];
-            var result = new List<CustomElement>(_orderElements.Count);
-            bool inserted = false;
-
-            foreach (var item in _orderElements)
-            {
-                if (item.BlockId == blockId)
-                {
-                    if (!inserted)
-                    {
-                        result.AddRange(reorderedBlock);
-                        inserted = true;
-                    }
-                    continue;
-                }
-                result.Add(item);
-            }
-
-            _orderElements = result;
             RefreshOrderList();
             LstOrderButtons.SelectedIndex = targetIndex;
             UpdateOrderMoveButtonsState();
@@ -339,34 +311,33 @@ namespace AiteBar
 
         private async void BtnSaveOrder_Click(object sender, RoutedEventArgs e)
         {
-            var button = sender as Button;
-            if (button != null)
-                button.IsEnabled = false;
+            if (sender is Button button) button.IsEnabled = false;
 
             try
             {
-                if (CmbOrderBlock.SelectedItem is not ComboBoxItem blockItem)
-                    return;
-
-                int blockId = int.Parse(blockItem.Tag?.ToString() ?? "4");
                 List<CustomElement> latestSnapshot = [.. _mainWindow.GetElementsSnapshot()];
-                string currentSignature = BuildBlockSignature(latestSnapshot, blockId);
-                if (_orderBaselineByBlock.TryGetValue(blockId, out string? baselineSignature) &&
-                    !string.Equals(baselineSignature, currentSignature, StringComparison.Ordinal))
+                string currentSignature = BuildSignature(latestSnapshot);
+                if (!string.Equals(_orderBaselineSignature, currentSignature, StringComparison.Ordinal))
                 {
                     _orderElements = latestSnapshot;
-                    CaptureOrderBaseline(_orderElements);
+                    _orderBaselineSignature = BuildSignature(_orderElements);
                     RefreshOrderList();
                     SetOrderStatus("Список изменился в другом окне. Обновлено, повторите действие.", isError: true);
                     return;
                 }
 
-                List<string> orderedIds = [.. _orderElements.Where(x => x.BlockId == blockId).Select(x => x.Id)];
-                await _mainWindow.SaveBlockOrder((DockBlock)blockId, orderedIds);
-                _orderElements = [.. _mainWindow.GetElementsSnapshot()];
-                CaptureOrderBaseline(_orderElements);
-                RefreshOrderList();
-                SetOrderStatus("Порядок кнопок сохранен.");
+                var settings = _mainWindow.GetAppSettings();
+                var activeProfile = settings.Profiles.FirstOrDefault(p => p.Id == settings.ActiveProfileId);
+                if (activeProfile != null)
+                {
+                    activeProfile.Elements = [.. _orderElements];
+                    await _mainWindow.SaveAppSettings(settings);
+                    _mainWindow.RefreshPanel();
+                    _orderElements = [.. _mainWindow.GetElementsSnapshot()];
+                    _orderBaselineSignature = BuildSignature(_orderElements);
+                    RefreshOrderList();
+                    SetOrderStatus("Порядок кнопок сохранен.");
+                }
             }
             catch (Exception ex)
             {
@@ -376,10 +347,11 @@ namespace AiteBar
             }
             finally
             {
-                if (button != null)
-                    button.IsEnabled = true;
+                if (sender is Button b) b.IsEnabled = true;
             }
         }
+
+        private static string BuildSignature(IEnumerable<CustomElement> source) => string.Join("|", source.Select(x => x.Id));
 
         private async void CmbBrowser_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
@@ -636,20 +608,7 @@ namespace AiteBar
             BtnMoveDown.IsEnabled = hasSelection && index < count - 1;
         }
 
-        private static string BuildBlockSignature(IEnumerable<CustomElement> source, int blockId)
-        {
-            return string.Join("|", source.Where(x => x.BlockId == blockId).Select(x => x.Id));
-        }
 
-        private void CaptureOrderBaseline(IEnumerable<CustomElement> source)
-        {
-            _orderBaselineByBlock.Clear();
-            _orderBaselineByBlock[(int)DockBlock.Utils] = BuildBlockSignature(source, (int)DockBlock.Utils);
-            _orderBaselineByBlock[(int)DockBlock.AI] = BuildBlockSignature(source, (int)DockBlock.AI);
-            _orderBaselineByBlock[(int)DockBlock.Web] = BuildBlockSignature(source, (int)DockBlock.Web);
-            _orderBaselineByBlock[(int)DockBlock.Scripts] = BuildBlockSignature(source, (int)DockBlock.Scripts);
-            _orderBaselineByBlock[(int)DockBlock.Other] = BuildBlockSignature(source, (int)DockBlock.Other);
-        }
 
         private void SetOrderStatus(string text, bool isError = false)
         {
@@ -740,7 +699,6 @@ namespace AiteBar
                 var newElement = new CustomElement {
                     Id = _editingElement?.Id ?? Guid.NewGuid().ToString(),
                     Name = TxtName.Text,
-                    BlockId = int.Parse(((ComboBoxItem)CmbBlock.SelectedItem).Tag?.ToString() ?? "4"),
                     Browser = browserType,
                     ActionType = typeStr, ActionValue = actionType == AiteBar.ActionType.Hotkey ? "" : TxtActionValue.Text,
                     Icon = _selectedIcon, IconFont = _selectedFont, Color = _selectedColor, 
@@ -753,6 +711,7 @@ namespace AiteBar
                 };
 
                 await _mainWindow.SaveElement(newElement, _editingElement?.Id);
+                this.DialogResult = true;
                 Close();
             }
             catch (Exception ex)
@@ -764,6 +723,12 @@ namespace AiteBar
             {
                 UpdateSaveButtonState();
             }
+        }
+
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = false;
+            Close();
         }
     }
 }

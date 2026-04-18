@@ -376,50 +376,25 @@ namespace AiteBar
             bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
             var orientation = isVertical ? System.Windows.Controls.Orientation.Vertical : System.Windows.Controls.Orientation.Horizontal;
 
-            // Корректировка минимальных размеров окна для предотвращения растягивания
-            if (isVertical)
-            {
-                this.MinWidth = 0;
-                this.MinHeight = 150;
-            }
-            else
-            {
-                this.MinWidth = 150;
-                this.MinHeight = 0;
-            }
+            if (isVertical) { this.MinWidth = 0; this.MinHeight = 150; }
+            else { this.MinWidth = 150; this.MinHeight = 0; }
 
             MainPanel.Orientation = orientation;
-            Block1_Utils.Orientation = orientation;
-            Block2_AI.Orientation = orientation;
-            Block3_Web.Orientation = orientation;
-            Block4_Scripts.Orientation = orientation;
-            Block5_Other.Orientation = orientation;
+            UserButtonsPanel.Orientation = orientation;
+            SystemUtilsPanel.Orientation = orientation;
             ControlBlock.Orientation = orientation;
 
-            // Обновление разделителей
-            var separators = new[] { Sep2, Sep3, Sep4, SepUtils, SepControl };
+            var separators = new[] { SepSystem, SepControl };
             foreach (var sep in separators)
             {
-                if (isVertical)
-                {
-                    sep.Width = 20;
-                    sep.Height = 1;
-                    sep.Margin = new Thickness(0, 6, 0, 6);
-                }
-                else
-                {
-                    sep.Width = 1;
-                    sep.Height = 20;
-                    sep.Margin = new Thickness(6, 0, 6, 0);
-                }
+                if (isVertical) { sep.Width = 20; sep.Height = 1; sep.Margin = new Thickness(0, 6, 0, 6); }
+                else { sep.Width = 1; sep.Height = 20; sep.Margin = new Thickness(6, 0, 6, 0); }
             }
         }
 
         public void RefreshPanel() {
             UpdateOrientation();
-            var userUtils = Block1_Utils.Children.OfType<Button>().Where(b => b.ContextMenu != null).ToArray();
-            foreach (var btn in userUtils) Block1_Utils.Children.Remove(btn);
-            Block2_AI.Children.Clear(); Block3_Web.Children.Clear(); Block4_Scripts.Children.Clear(); Block5_Other.Children.Clear();
+            UserButtonsPanel.Children.Clear();
 
             Profile? currentProfile = _appSettings.Profiles.FirstOrDefault(p => p.Id == _appSettings.ActiveProfileId);
             if (currentProfile == null && _appSettings.Profiles.Count > 0)
@@ -442,11 +417,7 @@ namespace AiteBar
                 bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
                 bitmap.EndInit();
 
-                BtnProfileSwitch.Content = new System.Windows.Controls.Image
-                {
-                    Source = bitmap,
-                    Width = 24, Height = 24, Stretch = Stretch.Uniform
-                };
+                BtnProfileSwitch.Content = new System.Windows.Controls.Image { Source = bitmap, Width = 24, Height = 24, Stretch = Stretch.Uniform };
             }
             else
             {
@@ -454,12 +425,17 @@ namespace AiteBar
                 BtnProfileSwitch.FontFamily = FontHelper.Resolve(currentProfile?.IconFont ?? FontHelper.FluentKey);
             }
 
-            // Управление видимостью предустановленных кнопок (только в первом профиле)
             bool isFirstProfile = _appSettings.Profiles.Count > 0 && _appSettings.Profiles[0].Id == _appSettings.ActiveProfileId;
             BtnSearch.Visibility = (isFirstProfile && _appSettings.ShowPresetSearch) ? Visibility.Visible : Visibility.Collapsed;
             BtnScreenshot.Visibility = (isFirstProfile && _appSettings.ShowPresetScreenshot) ? Visibility.Visible : Visibility.Collapsed;
             BtnRecord.Visibility = (isFirstProfile && _appSettings.ShowPresetVideo) ? Visibility.Visible : Visibility.Collapsed;
             BtnCalc.Visibility = (isFirstProfile && _appSettings.ShowPresetCalc) ? Visibility.Visible : Visibility.Collapsed;
+
+            // Видимость зоны системных утилит и разделителя
+            bool hasSystemUtils = BtnSearch.Visibility == Visibility.Visible || BtnScreenshot.Visibility == Visibility.Visible || 
+                                 BtnRecord.Visibility == Visibility.Visible || BtnCalc.Visibility == Visibility.Visible;
+            SystemUtilsPanel.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
+            SepSystem.Visibility = (UserButtonsPanel.Children.Count > 0 || _elements.Count > 0) && hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
 
             foreach (var el in _elements) {
                 var btn = new Button { 
@@ -474,18 +450,9 @@ namespace AiteBar
                     bitmap.UriSource = new Uri(el.ImagePath);
                     bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
                     bitmap.EndInit();
-
-                    btn.Content = new System.Windows.Controls.Image 
-                    { 
-                        Source = bitmap,
-                        Width = 24, Height = 24, Stretch = Stretch.Uniform 
-                    };
+                    btn.Content = new System.Windows.Controls.Image { Source = bitmap, Width = 24, Height = 24, Stretch = Stretch.Uniform };
                 }
-                else
-                {
-                    btn.Content = el.Icon;
-                    btn.FontFamily = FontHelper.Resolve(el.IconFont);
-                }
+                else { btn.Content = el.Icon; btn.FontFamily = FontHelper.Resolve(el.IconFont); }
 
                 btn.Click += async (s, e) => await ExecuteCustomAction(el);
                 
@@ -510,7 +477,7 @@ namespace AiteBar
                             Button? targetButton = FindParent<Button>(hitTestResult.VisualHit);
                             if (targetButton != null && targetButton != _draggedButton) {
                                 var targetElement = _elements.FirstOrDefault(x => x.Icon == (targetButton.Content as string) && x.Name == (targetButton.ToolTip as string));
-                                if (targetElement != null && targetElement.BlockId == _draggedElement!.BlockId) {
+                                if (targetElement != null) {
                                     int oldIdx = _elements.IndexOf(_draggedElement), newIdx = _elements.IndexOf(targetElement);
                                     if (oldIdx != -1 && newIdx != -1) {
                                         _elements.RemoveAt(oldIdx); _elements.Insert(newIdx, _draggedElement);
@@ -536,21 +503,10 @@ namespace AiteBar
                     }
                 };
                 menu.Items.Add(editItem); menu.Items.Add(delItem); btn.ContextMenu = menu;
-
-                switch ((DockBlock)el.BlockId) {
-                    case DockBlock.Utils: Block1_Utils.Children.Add(btn); break;
-                    case DockBlock.AI: Block2_AI.Children.Add(btn); break;
-                    case DockBlock.Web: Block3_Web.Children.Add(btn); break;
-                    case DockBlock.Scripts: Block4_Scripts.Children.Add(btn); break;
-                    case DockBlock.Other: Block5_Other.Children.Add(btn); break;
-                }
+                UserButtonsPanel.Children.Add(btn);
             }
-            bool hasAi = Block2_AI.Children.Count > 0, hasWeb = Block3_Web.Children.Count > 0,
-                 hasScripts = Block4_Scripts.Children.Count > 0, hasOther = Block5_Other.Children.Count > 0;
-            Sep2.Visibility = hasAi && hasWeb ? Visibility.Visible : Visibility.Collapsed;
-            Sep3.Visibility = (hasAi || hasWeb) && hasScripts ? Visibility.Visible : Visibility.Collapsed;
-            Sep4.Visibility = (hasAi || hasWeb || hasScripts) && hasOther ? Visibility.Visible : Visibility.Collapsed;
-            SepUtils.Visibility = (hasAi || hasWeb || hasScripts || hasOther) ? Visibility.Visible : Visibility.Collapsed;
+            
+            SepSystem.Visibility = (UserButtonsPanel.Children.Count > 0) && hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
             UpdatePanelBounds();
         }
 
@@ -568,26 +524,8 @@ namespace AiteBar
 
         public IReadOnlyList<CustomElement> GetElementsSnapshot() => [.. _elements.Select(CloneElement)];
 
-        public async Task SaveBlockOrder(DockBlock block, IReadOnlyList<string> orderedIds)
-        {
-            int blockId = (int)block;
-            var blockElements = _elements.Where(x => x.BlockId == blockId).ToList();
-            if (blockElements.Count == 0) return;
-            var byId = blockElements.ToDictionary(x => x.Id, x => x, StringComparer.Ordinal);
-            var reorderedBlockElements = orderedIds.Where(id => byId.ContainsKey(id)).Select(id => byId[id]).ToList();
-            var reordered = new List<CustomElement>();
-            bool blockInserted = false;
-            foreach (var element in _elements) {
-                if (element.BlockId == blockId) {
-                    if (!blockInserted) { reordered.AddRange(reorderedBlockElements); blockInserted = true; }
-                } else reordered.Add(element);
-            }
-            _elements = reordered;
-            await SaveConfig(); RefreshPanel();
-        }
-
         private static CustomElement CloneElement(CustomElement s) => new() {
-            Id = s.Id, BlockId = s.BlockId, Name = s.Name, Icon = s.Icon, IconFont = s.IconFont, Color = s.Color,
+            Id = s.Id, Name = s.Name, Icon = s.Icon, IconFont = s.IconFont, Color = s.Color,
             ImagePath = s.ImagePath,
             ActionType = s.ActionType, ActionValue = s.ActionValue, ChromeProfile = s.ChromeProfile,
             IsAppMode = s.IsAppMode, IsIncognito = s.IsIncognito, UseRotation = s.UseRotation,
@@ -603,7 +541,7 @@ namespace AiteBar
                 string id = string.IsNullOrWhiteSpace(item.Id) ? Guid.NewGuid().ToString() : item.Id;
                 if (!seen.Add(id)) continue;
                 result.Add(new CustomElement {
-                    Id = id, BlockId = item.BlockId is >= 1 and <= 5 ? item.BlockId : (int)DockBlock.Scripts,
+                    Id = id,
                     Name = item.Name ?? "", Icon = string.IsNullOrWhiteSpace(item.Icon) ? "\uE710" : item.Icon,
                     IconFont = string.IsNullOrWhiteSpace(item.IconFont) ? FontHelper.FluentKey : item.IconFont,
                     Color = string.IsNullOrWhiteSpace(item.Color) ? "#E3E3E3" : item.Color,
@@ -798,7 +736,6 @@ namespace AiteBar
         private async void BtnProfileSwitch_Click(object sender, RoutedEventArgs e) { await SwitchToNextProfile(); }
         private async void BtnSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new SettingsWindow(this).ShowDialog(); }
         private async void BtnAppSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new AppSettingsWindow(this).ShowDialog(); }
-        private async void BtnClose_Click(object sender, RoutedEventArgs e) { await HideDock(); }
         private static T? FindParent<T>(DependencyObject child) where T : DependencyObject {
             DependencyObject parent = VisualTreeHelper.GetParent(child);
             if (parent == null) return null;
@@ -824,16 +761,17 @@ namespace AiteBar
 
                 if (!string.IsNullOrEmpty(val)) { 
                     string? iconPath = null;
+                    bool isWeb = val.StartsWith("http", StringComparison.OrdinalIgnoreCase);
+
                     if (type == ActionType.Exe || type == ActionType.ScriptFile) {
                         iconPath = IconHelper.ExtractAndSaveIcon(val);
                     }
 
                     var newElement = new CustomElement { 
                         Id = Guid.NewGuid().ToString(),
-                        Name = Path.GetFileNameWithoutExtension(val), 
+                        Name = isWeb ? new Uri(val).Host : Path.GetFileNameWithoutExtension(val), 
                         ActionValue = val, 
                         ActionType = type.ToString(),
-                        BlockId = (int)DockBlock.Other, // По умолчанию в "Другое"
                         ImagePath = iconPath ?? ""
                     };
                     
@@ -841,6 +779,30 @@ namespace AiteBar
                     _elements.Add(newElement);
                     await SaveConfig(); 
                     RefreshPanel();
+
+                    // Асинхронная загрузка иконки для веб-ссылок
+                    if (isWeb && string.IsNullOrEmpty(iconPath))
+                    {
+                        _ = Task.Run(async () => {
+                            try
+                            {
+                                string? webIcon = await IconHelper.DownloadFaviconAsync(val);
+                                if (!string.IsNullOrEmpty(webIcon))
+                                {
+                                    await Dispatcher.InvokeAsync(async () => {
+                                        var el = _elements.FirstOrDefault(x => x.Id == newElement.Id);
+                                        if (el != null)
+                                        {
+                                            el.ImagePath = webIcon;
+                                            await SaveConfig();
+                                            RefreshPanel();
+                                        }
+                                    });
+                                }
+                            }
+                            catch { }
+                        });
+                    }
                 }
             } catch (Exception ex) { Logger.Log(ex); }
         }

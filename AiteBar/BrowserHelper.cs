@@ -102,6 +102,26 @@ namespace AiteBar
             };
         }
 
+        public static BrowserType GetSystemDefaultBrowser()
+        {
+            try
+            {
+                using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice");
+                var progId = key?.GetValue("ProgId")?.ToString();
+                if (progId == null) return BrowserType.Chrome;
+
+                if (progId.Contains("Chrome", StringComparison.OrdinalIgnoreCase)) return BrowserType.Chrome;
+                if (progId.Contains("MSEdge", StringComparison.OrdinalIgnoreCase)) return BrowserType.Edge;
+                if (progId.Contains("Firefox", StringComparison.OrdinalIgnoreCase)) return BrowserType.Firefox;
+                if (progId.Contains("Brave", StringComparison.OrdinalIgnoreCase)) return BrowserType.Brave;
+                if (progId.Contains("Yandex", StringComparison.OrdinalIgnoreCase)) return BrowserType.Yandex;
+                if (progId.Contains("Opera", StringComparison.OrdinalIgnoreCase)) return BrowserType.Opera;
+                if (progId.Contains("Vivaldi", StringComparison.OrdinalIgnoreCase)) return BrowserType.Vivaldi;
+            }
+            catch { }
+            return BrowserType.Chrome;
+        }
+
         public static List<BrowserProfileInfo> GetProfiles(BrowserType type)
         {
             string basePath = GetUserDataPath(type);

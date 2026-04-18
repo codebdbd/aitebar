@@ -30,7 +30,7 @@ namespace AiteBar
 
     public class ProfileIconConverter : IMultiValueConverter
     {
-        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object[] values, Type targetType, object parameter, System.Globalization.CultureInfo culture)
         {
             string icon = values[0]?.ToString() ?? "";
             string imagePath = values[2]?.ToString() ?? "";
@@ -41,7 +41,7 @@ namespace AiteBar
             }
             return icon;
         }
-        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) => throw new NotImplementedException();
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, System.Globalization.CultureInfo culture) => throw new NotImplementedException();
     }
 
     [SupportedOSPlatform("windows6.1")]
@@ -227,6 +227,11 @@ namespace AiteBar
                     _mainWindow.RefreshPanel();
                 }
             }
+        }
+
+        private void BtnCancel_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
         }
     }
 }

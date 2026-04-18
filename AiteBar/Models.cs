@@ -1,15 +1,6 @@
 using System;
 
 namespace AiteBar {
-    public enum DockBlock
-    {
-        Utils = 1,
-        AI = 2,
-        Web = 3,
-        Scripts = 4,
-        Other = 5
-    }
-
     public enum BrowserType
     {
         Chrome,
@@ -33,7 +24,6 @@ namespace AiteBar {
 
     public class CustomElement {
         public string Id { get; set; } = Guid.NewGuid().ToString();
-        public int BlockId { get; set; } = 4;
         public string Name { get; set; } = "";
         public string Icon { get; set; } = "\uE710";
         public string IconFont { get; set; } = FontHelper.FluentKey;

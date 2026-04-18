@@ -73,26 +73,24 @@
             TextOptions.TextFormattingMode="Ideal"
             AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop">
         <WrapPanel x:Name="MainPanel" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="4,2">
-            <WrapPanel x:Name="Block2_AI" Orientation="Horizontal"/>
+            <!-- Зона 1: Кнопки пользователя -->
+            <WrapPanel x:Name="UserButtonsPanel" Orientation="Horizontal"/>
             
-            <Rectangle x:Name="Sep2" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" Visibility="Collapsed"/>
-            <WrapPanel x:Name="Block3_Web" Orientation="Horizontal"/>
+            <!-- Разделитель -->
+            <Rectangle x:Name="SepSystem" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0"/>
             
-            <Rectangle x:Name="Sep3" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" Visibility="Collapsed"/>
-            <WrapPanel x:Name="Block4_Scripts" Orientation="Horizontal"/>
-
-            <Rectangle x:Name="Sep4" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" Visibility="Collapsed"/>
-            <WrapPanel x:Name="Block5_Other" Orientation="Horizontal"/>
-
-            <Rectangle x:Name="SepUtils" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" Visibility="Collapsed"/>
-            <WrapPanel x:Name="Block1_Utils" Orientation="Horizontal">
+            <!-- Зона 2: Системные утилиты -->
+            <WrapPanel x:Name="SystemUtilsPanel" Orientation="Horizontal">
                 <Button x:Name="BtnSearch" Content="&#xEA7C;" ToolTip="Поиск в Google (буфер)" Click="BtnSearch_Click" Foreground="#E3E3E3"/>
                 <Button x:Name="BtnScreenshot" Content="&#xF68E;" ToolTip="Скриншот" Click="BtnScreenshotRegion_Click" Foreground="#E3E3E3"/>
                 <Button x:Name="BtnRecord" Content="&#xF535;" ToolTip="Запись видео" Click="BtnRecordVideo_Click" Foreground="#E3E3E3"/>
                 <Button x:Name="BtnCalc" Content="&#xF06C;" ToolTip="Калькулятор" Click="BtnCalc_Click" Foreground="#E3E3E3"/>
             </WrapPanel>
 
+            <!-- Разделитель -->
             <Rectangle x:Name="SepControl" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0"/>
+            
+            <!-- Зона 3: Кнопки управления -->
             <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
                 <Button x:Name="BtnProfileSwitch" Content="P" ToolTip="Переключить профиль" Click="BtnProfileSwitch_Click" Foreground="#FFD700">
                     <Button.Style>
@@ -104,17 +102,6 @@
                 </Button>
                 <Button Content="&#xE005;" ToolTip="Добавить кнопку" Click="BtnSettings_Click" Foreground="#60CDFF"/>
                 <Button Content="&#xE713;" ToolTip="Настройки программы" Click="BtnAppSettings_Click" Foreground="#AAAAAA"/>
-                <Button Content="&#xF36A;" ToolTip="Скрыть панель" Click="BtnClose_Click" Foreground="#E81123">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                            <Style.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Foreground" Value="#F1707A"/>
-                                </Trigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
             </StackPanel>
         </WrapPanel>
     </Border>
