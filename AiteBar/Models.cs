@@ -19,8 +19,7 @@ namespace AiteBar {
         Hotkey,
         Exe,
         ScriptFile,
-        Command,
-        File
+        Command
     }
 
     public class CustomElement {
