@@ -3,7 +3,7 @@
 #define AppPublisher "Codebdbd"
 #define AppExeName "AiteBar.exe"
 #define AppVersion "1.2.0"
-#define PublishDir "..\artifacts\publish\win-x64"
+#define PublishDir "..\..\artifacts\publish\win-x64"
 
 [Setup]
 AppId={{0B8E4B6C-6DB0-4E14-9DA1-68A7AAB95571}
@@ -15,7 +15,7 @@ DefaultGroupName={#AppDisplayName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-OutputDir=..\artifacts\installer
+OutputDir=..\..\artifacts\installer
 OutputBaseFilename=AiteBar-Setup
 UninstallDisplayIcon={app}\{#AppExeName}
 DirExistsWarning=no
@@ -24,7 +24,7 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-SetupIconFile=..\AiteBar\Resources\app.ico
+SetupIconFile=..\Resources\app.ico
 AppMutex=AiteBar_Mutex_Unique_String_123
 CloseApplications=yes
 RestartApplications=yes

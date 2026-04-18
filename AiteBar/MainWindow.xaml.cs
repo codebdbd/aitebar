@@ -113,14 +113,16 @@ namespace AiteBar
 
         public async Task SaveAppSettings(AppSettings settings)
         {
-            _appSettings = settings;
-            try
-            {
+            await _saveSemaphore.WaitAsync();
+            try {
+                _appSettings = settings;
+                _appSettings.Elements = [.. _elements];
                 string json = JsonSerializer.Serialize(_appSettings, _jsonOptions);
                 await File.WriteAllTextAsync(_settingsFile, json);
                 RegisterGlobalHotkey();
             }
             catch (Exception ex) { Logger.Log(ex); }
+            finally { _saveSemaphore.Release(); }
         }
 
         public AppSettings GetAppSettings() => _appSettings;
@@ -345,16 +347,15 @@ namespace AiteBar
             BtnRecord.Visibility = _appSettings.ShowPresetVideo ? Visibility.Visible : Visibility.Collapsed;
             BtnCalc.Visibility = _appSettings.ShowPresetCalc ? Visibility.Visible : Visibility.Collapsed;
 
-            // Видимость зоны системных утилит и разделителя
+            // Видимость зоны системных утилит
             bool hasSystemUtils = BtnSearch.Visibility == Visibility.Visible || BtnScreenshot.Visibility == Visibility.Visible || 
                                  BtnRecord.Visibility == Visibility.Visible || BtnCalc.Visibility == Visibility.Visible;
             SystemUtilsPanel.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
-            SepSystem.Visibility = (UserButtonsPanel.Children.Count > 0 || _elements.Count > 0) && hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
 
             foreach (var el in _elements) {
                 var btn = new Button { 
                     ToolTip = el.Name, 
-                    Foreground = _brushConverter.ConvertFromString(el.Color) as System.Windows.Media.Brush ?? Brushes.White
+                    Foreground = (Brush)_brushConverter.ConvertFromString(el.Color ?? "#E3E3E3")!
                 };
 
                 if (!string.IsNullOrEmpty(el.ImagePath) && System.IO.File.Exists(el.ImagePath))
@@ -420,7 +421,10 @@ namespace AiteBar
                 UserButtonsPanel.Children.Add(btn);
             }
             
+            // Разделители
             SepSystem.Visibility = (UserButtonsPanel.Children.Count > 0) && hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
+            SepControl.Visibility = (UserButtonsPanel.Children.Count > 0 || hasSystemUtils) ? Visibility.Visible : Visibility.Collapsed;
+            
             UpdatePanelBounds();
         }
 
@@ -441,7 +445,7 @@ namespace AiteBar
         private static CustomElement CloneElement(CustomElement s) => new() {
             Id = s.Id, Name = s.Name, Icon = s.Icon, IconFont = s.IconFont, Color = s.Color,
             ImagePath = s.ImagePath,
-            ActionType = s.ActionType, ActionValue = s.ActionValue, ChromeProfile = s.ChromeProfile,
+            ActionType = s.ActionType, ActionValue = s.ActionValue, Browser = s.Browser, ChromeProfile = s.ChromeProfile,
             IsAppMode = s.IsAppMode, IsIncognito = s.IsIncognito, UseRotation = s.UseRotation,
             IsTopmost = s.IsTopmost, LastUsedProfile = s.LastUsedProfile,
             Alt = s.Alt, Ctrl = s.Ctrl, Shift = s.Shift, Win = s.Win, Key = s.Key
@@ -461,7 +465,7 @@ namespace AiteBar
                     Color = string.IsNullOrWhiteSpace(item.Color) ? "#E3E3E3" : item.Color,
                     ImagePath = item.ImagePath ?? "",
                     ActionType = Enum.TryParse<ActionType>(item.ActionType, out _) ? item.ActionType : nameof(ActionType.Web),
-                    ActionValue = item.ActionValue ?? "", ChromeProfile = item.ChromeProfile ?? "",
+                    ActionValue = item.ActionValue ?? "", Browser = item.Browser, ChromeProfile = item.ChromeProfile ?? "",
                     IsAppMode = item.IsAppMode, IsIncognito = item.IsIncognito, UseRotation = item.UseRotation,
                     IsTopmost = item.IsTopmost, LastUsedProfile = item.LastUsedProfile ?? "",
                     Alt = item.Alt, Ctrl = item.Ctrl, Shift = item.Shift, Win = item.Win, Key = item.Key ?? "None"
@@ -654,7 +658,7 @@ namespace AiteBar
             if (parent == null) return null;
             return parent is T p ? p : FindParent<T>(parent);
         }
-        private void Border_DragOver(object sender, DragEventArgs e) { e.Effects = (e.Data.GetDataPresent(DataFormats.FileDrop) || e.Data.GetDataPresent(DataFormats.Text)) ? DragDropEffects.Link : DragDropEffects.None; e.Handled = true; }
+        private void Border_DragOver(object sender, DragEventArgs e) { e.Effects = (e.Data.GetDataPresent(DataFormats.FileDrop) || e.Data.GetDataPresent(DataFormats.Text) || e.Data.GetDataPresent(DataFormats.UnicodeText)) ? DragDropEffects.Link : DragDropEffects.None; e.Handled = true; }
         private static readonly string[] ScriptExtensions = [".bat", ".cmd", ".ps1", ".py"];
 
         private async void Border_Drop(object sender, DragEventArgs e) {
@@ -665,16 +669,34 @@ namespace AiteBar
                     if (f?.Length > 0) { 
                         val = f[0]; 
                         string ext = Path.GetExtension(val).ToLowerInvariant();
-                        if (ScriptExtensions.Contains(ext)) type = ActionType.ScriptFile; 
-                        else type = ActionType.Exe; 
+                        if (ext == ".url") {
+                            try {
+                                var lines = File.ReadAllLines(val);
+                                var urlLine = lines.FirstOrDefault(l => l.StartsWith("URL=", StringComparison.OrdinalIgnoreCase));
+                                if (urlLine != null) {
+                                    val = urlLine[4..].Trim();
+                                    type = ActionType.Web;
+                                }
+                            } catch { }
+                        } else if (ScriptExtensions.Contains(ext)) {
+                            type = ActionType.ScriptFile;
+                        } else {
+                            type = ActionType.Exe;
+                        }
                     }
                 } else if (e.Data.GetDataPresent(DataFormats.UnicodeText)) {
                     val = ((string)e.Data.GetData(DataFormats.UnicodeText)).Trim();
+                } else if (e.Data.GetDataPresent(DataFormats.Text)) {
+                    val = ((string)e.Data.GetData(DataFormats.Text)).Trim();
                 }
 
                 if (!string.IsNullOrEmpty(val)) { 
                     string? iconPath = null;
-                    bool isWeb = val.StartsWith("http", StringComparison.OrdinalIgnoreCase);
+                    bool isWeb = val.StartsWith("http", StringComparison.OrdinalIgnoreCase) || val.StartsWith("www.", StringComparison.OrdinalIgnoreCase);
+                    
+                    if (isWeb && !val.StartsWith("http", StringComparison.OrdinalIgnoreCase)) {
+                        val = "https://" + val;
+                    }
 
                     if (type == ActionType.Exe || type == ActionType.ScriptFile) {
                         iconPath = IconHelper.ExtractAndSaveIcon(val);
@@ -682,10 +704,11 @@ namespace AiteBar
 
                     var newElement = new CustomElement { 
                         Id = Guid.NewGuid().ToString(),
-                        Name = isWeb ? new Uri(val).Host : Path.GetFileNameWithoutExtension(val), 
+                        Name = isWeb ? (Uri.TryCreate(val, UriKind.Absolute, out var uri) ? uri.Host : val) : Path.GetFileNameWithoutExtension(val), 
                         ActionValue = val, 
                         ActionType = type.ToString(),
-                        ImagePath = iconPath ?? ""
+                        ImagePath = iconPath ?? "",
+                        Browser = isWeb ? BrowserHelper.GetSystemDefaultBrowser() : BrowserType.Chrome
                     };
                     
                     // Мгновенное сохранение без открытия окна

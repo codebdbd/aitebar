@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
+$repoRoot = (Get-Item $PSScriptRoot).Parent.Parent.FullName
 $projectPath = Join-Path $repoRoot "AiteBar\AiteBar.csproj"
 $publishDir = Join-Path $repoRoot "artifacts\publish\$Runtime"
 $installerDir = Join-Path $repoRoot "artifacts\installer"
