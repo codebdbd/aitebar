@@ -1,0 +1,15 @@
+bin/
+obj/
+*.user
+.vs/
+*.rar
+*.7z
+publish/
+artifacts/
+_installer_test/
+
+# Internal AI / Prompt files
+AiteBar/codex_instructions_fixes_r5.md
+AiteBar/codex_release_code_review_prompt.md
+AiteBar/ui_parameters.md
+*.zip
