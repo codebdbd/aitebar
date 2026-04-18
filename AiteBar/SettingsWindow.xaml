@@ -181,11 +181,13 @@
                     <StackPanel Margin="0,0,10,0">
                         <TextBlock Text="Тип действия" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
                         <ComboBox x:Name="CmbActionType" SelectionChanged="CmbActionType_SelectionChanged">
-                            <ComboBoxItem Content="Открыть URL" Tag="Web"/>
-                            <ComboBoxItem Content="Запустить программу" Tag="Exe"/>
-                            <ComboBoxItem Content="Запустить скрипт" Tag="ScriptFile"/>
-                            <ComboBoxItem Content="Выполнить команду CMD" Tag="Command"/>
-                            <ComboBoxItem Content="Нажать горячие клавиши" Tag="Hotkey"/>
+                            <ComboBoxItem Content="Ссылка" Tag="Web"/>
+                            <ComboBoxItem Content="Программа" Tag="Program"/>
+                            <ComboBoxItem Content="Файл" Tag="File"/>
+                            <ComboBoxItem Content="Папка" Tag="Folder"/>
+                            <ComboBoxItem Content="Скрипт" Tag="ScriptFile"/>
+                            <ComboBoxItem Content="Команда" Tag="Command"/>
+                            <ComboBoxItem Content="Горячие клавиши" Tag="Hotkey"/>
                         </ComboBox>
                     </StackPanel>
                 </UniformGrid>

@@ -17,6 +17,9 @@ namespace AiteBar {
     {
         Web,
         Hotkey,
+        Program,
+        File,
+        Folder,
         Exe,
         ScriptFile,
         Command

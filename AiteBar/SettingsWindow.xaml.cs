@@ -24,7 +24,6 @@ namespace AiteBar
     [SupportedOSPlatform("windows6.1")]
     public partial class SettingsWindow : DarkWindow
     {
-        private static readonly string[] AllowedScriptExtensions = [".bat", ".cmd", ".ps1", ".py"];
         private string _selectedIcon = "\uE8B9";
         private string _selectedFont = "Segoe MDL2 Assets";
         private string _selectedColor = "#FFFFFF";
@@ -94,7 +93,7 @@ namespace AiteBar
             ChkWin.IsChecked = _editingElement.Win;
 
             SetComboValue(CmbBrowser, _editingElement.Browser.ToString());
-            SetComboValue(CmbActionType, _editingElement.ActionType);
+            SetComboValue(CmbActionType, ActionTargetHelper.NormalizeActionType(_editingElement.ActionType, _editingElement.ActionValue));
             SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
             SetComboValue(CmbKey, _editingElement.Key);
             UpdatePreview();
@@ -252,13 +251,18 @@ namespace AiteBar
                         PanelStandardAction.Visibility = Visibility.Visible;
                         PanelHotkeyAction.Visibility = Visibility.Collapsed;
                         PanelWebSettings.Visibility = actionType == AiteBar.ActionType.Web ? Visibility.Visible : Visibility.Collapsed;
-                        BtnBrowse.Visibility = (actionType == AiteBar.ActionType.Exe || actionType == AiteBar.ActionType.ScriptFile)
+                        BtnBrowse.Visibility = (actionType == AiteBar.ActionType.Program ||
+                                                actionType == AiteBar.ActionType.File ||
+                                                actionType == AiteBar.ActionType.Folder ||
+                                                actionType == AiteBar.ActionType.ScriptFile)
                             ? Visibility.Visible : Visibility.Collapsed;
                         LblActionValue.Text = actionType switch
                         {
                             AiteBar.ActionType.Web => "Вставьте URL сайта (обязательно):",
+                            AiteBar.ActionType.Program => "Укажите путь к программе или ярлыку (обязательно):",
+                            AiteBar.ActionType.File => "Укажите путь к файлу (обязательно):",
+                            AiteBar.ActionType.Folder => "Укажите путь к папке (обязательно):",
                             AiteBar.ActionType.Command => "Введите консольную команду (обязательно):",
-                            AiteBar.ActionType.Exe => "Укажите путь к файлу программы (обязательно):",
                             AiteBar.ActionType.ScriptFile => "Укажите путь к файлу скрипта (обязательно):",
                             _ => "Введите значение (обязательно):"
                         };
@@ -268,18 +272,33 @@ namespace AiteBar
                                 TxtActionPlaceholder.Text = "Вставьте URL сайта";
                                 ActionHelpBox.Visibility = Visibility.Collapsed;
                                 break;
+                            case AiteBar.ActionType.Program:
+                                TxtActionPlaceholder.Text = @"Укажите путь к .exe, .lnk или .appref-ms";
+                                TxtActionHelp.Text = "Для программ и ярлыков. Поддерживаются .exe, .lnk и .appref-ms.";
+                                ActionHelpBox.Visibility = Visibility.Visible;
+                                break;
+                            case AiteBar.ActionType.File:
+                                TxtActionPlaceholder.Text = @"Укажите путь к обычному файлу";
+                                TxtActionHelp.Text = "Для документов и других файлов, кроме скриптов. Скрипты используйте через тип \"Скрипт\".";
+                                ActionHelpBox.Visibility = Visibility.Visible;
+                                break;
+                            case AiteBar.ActionType.Folder:
+                                TxtActionPlaceholder.Text = @"Укажите путь к папке";
+                                TxtActionHelp.Text = "Открывает выбранную папку в Проводнике Windows.";
+                                ActionHelpBox.Visibility = Visibility.Visible;
+                                break;
                             case AiteBar.ActionType.Exe:
                                 TxtActionPlaceholder.Text = @"Укажите путь к файлу программы";
                                 ActionHelpBox.Visibility = Visibility.Collapsed;
                                 break;
                             case AiteBar.ActionType.Command:
                                 TxtActionPlaceholder.Text = "Введите консольную команду";
-                                TxtActionHelp.Text = "Примеры:\ncmd, powershell, explorer, control, appwiz.cpl, ncpa.cpl, services.msc, taskmgr, regedit, msconfig\n\nPython-модуль (для систем, где установлен py):\ncd /d \"B:\\имя_проекта\" && py -m app.main";
+                                TxtActionHelp.Text = "Для продвинутых пользователей.\nПримеры:\ncmd, powershell, explorer, control, appwiz.cpl, ncpa.cpl, services.msc, taskmgr, regedit, msconfig\n\nPython-модуль (для систем, где установлен py):\ncd /d \"B:\\имя_проекта\" && py -m app.main";
                                 ActionHelpBox.Visibility = Visibility.Visible;
                                 break;
                             case AiteBar.ActionType.ScriptFile:
                                 TxtActionPlaceholder.Text = "Укажите путь к файлу скрипта";
-                                TxtActionHelp.Text = "Поддерживаются .bat, .cmd, .ps1 и standalone .py.\nДля модульных Python-проектов используйте тип \"Консольная команда\".";
+                                TxtActionHelp.Text = "Для продвинутых пользователей.\nПоддерживаются .bat, .cmd, .ps1 и standalone .py.\nДля модульных Python-проектов используйте тип \"Команда\".";
                                 ActionHelpBox.Visibility = Visibility.Visible;
                                 break;
                             default:
@@ -337,13 +356,29 @@ namespace AiteBar
             {
                 Filter = typeStr switch
                 {
-                    nameof(AiteBar.ActionType.Exe) => "Программы (*.exe;*.lnk)|*.exe;*.lnk|Все файлы (*.*)|*.*",
+                    nameof(AiteBar.ActionType.Program) => "Программы (*.exe;*.lnk;*.appref-ms)|*.exe;*.lnk;*.appref-ms|Все файлы (*.*)|*.*",
+                    nameof(AiteBar.ActionType.File) => "Файлы|*.*",
                     nameof(AiteBar.ActionType.ScriptFile) => "Скрипты (*.bat;*.cmd;*.ps1;*.py)|*.bat;*.cmd;*.ps1;*.py",
                     _ => "Все файлы (*.*)|*.*"
                 }
             };
 
-            if (typeStr == nameof(AiteBar.ActionType.Exe))
+            if (typeStr == nameof(AiteBar.ActionType.Folder))
+            {
+                using var dlgFolder = new System.Windows.Forms.FolderBrowserDialog();
+                if (!string.IsNullOrWhiteSpace(TxtActionValue.Text) && Directory.Exists(TxtActionValue.Text))
+                    dlgFolder.SelectedPath = TxtActionValue.Text;
+
+                if (dlgFolder.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    TxtActionValue.Text = dlgFolder.SelectedPath;
+                    if (string.IsNullOrWhiteSpace(TxtName.Text))
+                        TxtName.Text = Path.GetFileName(dlgFolder.SelectedPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                }
+                return;
+            }
+
+            if (typeStr == nameof(AiteBar.ActionType.Program))
             {
                 if (!string.IsNullOrWhiteSpace(TxtActionValue.Text))
                 {
@@ -374,7 +409,9 @@ namespace AiteBar
                 }
 
                 // Если иконка еще не выбрана (пустое изображение и дефолтный шрифт) - пытаемся извлечь
-                if (string.IsNullOrEmpty(_selectedImagePath) && (_selectedIcon == "\uEF0D" || string.IsNullOrEmpty(_selectedIcon)))
+                if ((typeStr == nameof(AiteBar.ActionType.Program) || typeStr == nameof(AiteBar.ActionType.ScriptFile)) &&
+                    string.IsNullOrEmpty(_selectedImagePath) &&
+                    (_selectedIcon == "\uEF0D" || string.IsNullOrEmpty(_selectedIcon)))
                 {
                     string? extracted = IconHelper.ExtractAndSaveIcon(dlg.FileName);
                     if (!string.IsNullOrEmpty(extracted))
@@ -385,12 +422,6 @@ namespace AiteBar
                     }
                 }
             }
-        }
-
-        private static bool IsAllowedScriptFile(string path)
-        {
-            string extension = Path.GetExtension(path).ToLowerInvariant();
-            return AllowedScriptExtensions.Contains(extension);
         }
 
         private void UpdateActionPlaceholderVisibility()
@@ -486,6 +517,7 @@ namespace AiteBar
                         {
                             AiteBar.ActionType.Web => "URL",
                             AiteBar.ActionType.Command => "Команда",
+                            AiteBar.ActionType.Folder => "Путь к папке",
                             _ => "Путь к файлу"
                         });
                     }
@@ -495,10 +527,43 @@ namespace AiteBar
                 _showRequiredValidation = false;
                 UpdateRequiredFieldsVisuals();
 
-                if (actionType == AiteBar.ActionType.Exe && !File.Exists(TxtActionValue.Text))
+                if (actionType == AiteBar.ActionType.Program)
                 {
-                    new DarkDialog("Файл программы или ярлыка не найден.") { Owner = this }.ShowDialog();
-                    return;
+                    if (!File.Exists(TxtActionValue.Text))
+                    {
+                        new DarkDialog("Файл программы или ярлыка не найден.") { Owner = this }.ShowDialog();
+                        return;
+                    }
+
+                    if (!ActionTargetHelper.IsProgramPath(TxtActionValue.Text))
+                    {
+                        new DarkDialog("Для типа \"Программа\" поддерживаются только .exe, .lnk и .appref-ms.") { Owner = this }.ShowDialog();
+                        return;
+                    }
+                }
+
+                if (actionType == AiteBar.ActionType.File)
+                {
+                    if (!File.Exists(TxtActionValue.Text))
+                    {
+                        new DarkDialog("Файл не найден.") { Owner = this }.ShowDialog();
+                        return;
+                    }
+
+                    if (!ActionTargetHelper.IsRegularFilePath(TxtActionValue.Text))
+                    {
+                        new DarkDialog("Для типа \"Файл\" подходят обычные файлы, кроме программ и скриптов.") { Owner = this }.ShowDialog();
+                        return;
+                    }
+                }
+
+                if (actionType == AiteBar.ActionType.Folder)
+                {
+                    if (!Directory.Exists(TxtActionValue.Text))
+                    {
+                        new DarkDialog("Папка не найдена.") { Owner = this }.ShowDialog();
+                        return;
+                    }
                 }
 
                 if (actionType == AiteBar.ActionType.ScriptFile)
@@ -509,7 +574,7 @@ namespace AiteBar
                         return;
                     }
 
-                    if (!IsAllowedScriptFile(TxtActionValue.Text))
+                    if (!ActionTargetHelper.IsScriptPath(TxtActionValue.Text))
                     {
                         new DarkDialog("Поддерживаются только .bat, .cmd, .ps1 и .py.") { Owner = this }.ShowDialog();
                         return;

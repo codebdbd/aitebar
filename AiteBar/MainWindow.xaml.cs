@@ -535,7 +535,7 @@ namespace AiteBar
                     IconFont = string.IsNullOrWhiteSpace(item.IconFont) ? FontHelper.FluentKey : item.IconFont,
                     Color = string.IsNullOrWhiteSpace(item.Color) ? "#E3E3E3" : item.Color,
                     ImagePath = item.ImagePath ?? "",
-                    ActionType = Enum.TryParse<ActionType>(item.ActionType, out _) ? item.ActionType : nameof(ActionType.Web),
+                    ActionType = ActionTargetHelper.NormalizeActionType(item.ActionType ?? "", item.ActionValue ?? ""),
                     ActionValue = item.ActionValue ?? "", Browser = item.Browser, ChromeProfile = item.ChromeProfile ?? "",
                     IsAppMode = item.IsAppMode, IsIncognito = item.IsIncognito, UseRotation = item.UseRotation,
                     IsTopmost = item.IsTopmost, LastUsedProfile = item.LastUsedProfile ?? "",
@@ -696,7 +696,12 @@ namespace AiteBar
                             using (var proc = Process.Start(psi)) { if (proc != null && el.IsTopmost) { for (int i = 0; i < 25; i++) { await Task.Delay(200); proc.Refresh();
                                         if (proc.MainWindowHandle != IntPtr.Zero) { NativeMethods.SetWindowPos(proc.MainWindowHandle, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0, NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOMOVE); break; } } } }
                             break;
-                        case AiteBar.ActionType.Exe: Process.Start(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true }); break;
+                        case AiteBar.ActionType.Program:
+                        case AiteBar.ActionType.File:
+                        case AiteBar.ActionType.Folder:
+                        case AiteBar.ActionType.Exe:
+                            Process.Start(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true });
+                            break;
                         case AiteBar.ActionType.ScriptFile: await StartScriptFile(el.ActionValue); break;
                         case AiteBar.ActionType.Command:
                             var confirm = new DarkDialog($"Выполнить команду:\n{el.ActionValue}?", isConfirm: true) { Owner = Application.Current.MainWindow };
@@ -730,7 +735,6 @@ namespace AiteBar
             return parent is T p ? p : FindParent<T>(parent);
         }
         private void Border_DragOver(object sender, DragEventArgs e) { e.Effects = (e.Data.GetDataPresent(DataFormats.FileDrop) || e.Data.GetDataPresent(DataFormats.Text) || e.Data.GetDataPresent(DataFormats.UnicodeText)) ? DragDropEffects.Link : DragDropEffects.None; e.Handled = true; }
-        private static readonly string[] ScriptExtensions = [".bat", ".cmd", ".ps1", ".py"];
 
         private async void Border_Drop(object sender, DragEventArgs e) {
             try {
@@ -739,8 +743,11 @@ namespace AiteBar
                     var f = (string[])e.Data.GetData(DataFormats.FileDrop); 
                     if (f?.Length > 0) { 
                         val = f[0]; 
-                        string ext = Path.GetExtension(val).ToLowerInvariant();
-                        if (ext == ".url") {
+                        if (Directory.Exists(val)) {
+                            type = ActionType.Folder;
+                        } else {
+                            string ext = Path.GetExtension(val).ToLowerInvariant();
+                            if (ext == ".url") {
                             try {
                                 var lines = File.ReadAllLines(val);
                                 var urlLine = lines.FirstOrDefault(l => l.StartsWith("URL=", StringComparison.OrdinalIgnoreCase));
@@ -749,10 +756,13 @@ namespace AiteBar
                                     type = ActionType.Web;
                                 }
                             } catch { }
-                        } else if (ScriptExtensions.Contains(ext)) {
-                            type = ActionType.ScriptFile;
-                        } else {
-                            type = ActionType.Exe;
+                            } else if (ActionTargetHelper.IsScriptPath(val)) {
+                                type = ActionType.ScriptFile;
+                            } else if (ActionTargetHelper.IsProgramPath(val)) {
+                                type = ActionType.Program;
+                            } else if (File.Exists(val)) {
+                                type = ActionType.File;
+                            }
                         }
                     }
                 } else if (e.Data.GetDataPresent(DataFormats.UnicodeText)) {
@@ -769,7 +779,7 @@ namespace AiteBar
                         val = "https://" + val;
                     }
 
-                    if (type == ActionType.Exe || type == ActionType.ScriptFile) {
+                    if (type == ActionType.Program || type == ActionType.ScriptFile) {
                         iconPath = IconHelper.ExtractAndSaveIcon(val);
                     }
 
