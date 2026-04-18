@@ -36,9 +36,17 @@ namespace AiteBar
 
         public static string NormalizeActionType(string actionType, string actionValue)
         {
-            if (Enum.TryParse<ActionType>(actionType, out var parsed) && parsed != ActionType.Exe)
+            if (Enum.TryParse<ActionType>(actionType, out var parsed))
                 return parsed.ToString();
 
+            if (string.Equals(actionType, "Exe", StringComparison.OrdinalIgnoreCase))
+                return NormalizeLegacyExecutableType(actionValue);
+
+            return NormalizeLegacyExecutableType(actionValue);
+        }
+
+        private static string NormalizeLegacyExecutableType(string actionValue)
+        {
             if (Directory.Exists(actionValue))
                 return nameof(ActionType.Folder);
 

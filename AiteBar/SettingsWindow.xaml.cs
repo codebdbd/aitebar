@@ -287,10 +287,6 @@ namespace AiteBar
                                 TxtActionHelp.Text = "Открывает выбранную папку в Проводнике Windows.";
                                 ActionHelpBox.Visibility = Visibility.Visible;
                                 break;
-                            case AiteBar.ActionType.Exe:
-                                TxtActionPlaceholder.Text = @"Укажите путь к файлу программы";
-                                ActionHelpBox.Visibility = Visibility.Collapsed;
-                                break;
                             case AiteBar.ActionType.Command:
                                 TxtActionPlaceholder.Text = "Введите консольную команду";
                                 TxtActionHelp.Text = "Для продвинутых пользователей.\nПримеры:\ncmd, powershell, explorer, control, appwiz.cpl, ncpa.cpl, services.msc, taskmgr, regedit, msconfig\n\nPython-модуль (для систем, где установлен py):\ncd /d \"B:\\имя_проекта\" && py -m app.main";

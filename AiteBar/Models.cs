@@ -20,7 +20,6 @@ namespace AiteBar {
         Program,
         File,
         Folder,
-        Exe,
         ScriptFile,
         Command
     }

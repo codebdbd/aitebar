@@ -699,7 +699,6 @@ namespace AiteBar
                         case AiteBar.ActionType.Program:
                         case AiteBar.ActionType.File:
                         case AiteBar.ActionType.Folder:
-                        case AiteBar.ActionType.Exe:
                             Process.Start(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true });
                             break;
                         case AiteBar.ActionType.ScriptFile: await StartScriptFile(el.ActionValue); break;
@@ -734,41 +733,129 @@ namespace AiteBar
             if (parent == null) return null;
             return parent is T p ? p : FindParent<T>(parent);
         }
-        private void Border_DragOver(object sender, DragEventArgs e) { e.Effects = (e.Data.GetDataPresent(DataFormats.FileDrop) || e.Data.GetDataPresent(DataFormats.Text) || e.Data.GetDataPresent(DataFormats.UnicodeText)) ? DragDropEffects.Link : DragDropEffects.None; e.Handled = true; }
 
-        private async void Border_Drop(object sender, DragEventArgs e) {
-            try {
-                string? val = null; ActionType type = ActionType.Web;
-                if (e.Data.GetDataPresent(DataFormats.FileDrop)) { 
-                    var f = (string[])e.Data.GetData(DataFormats.FileDrop); 
-                    if (f?.Length > 0) { 
-                        val = f[0]; 
-                        if (Directory.Exists(val)) {
-                            type = ActionType.Folder;
-                        } else {
-                            string ext = Path.GetExtension(val).ToLowerInvariant();
-                            if (ext == ".url") {
-                            try {
-                                var lines = File.ReadAllLines(val);
-                                var urlLine = lines.FirstOrDefault(l => l.StartsWith("URL=", StringComparison.OrdinalIgnoreCase));
-                                if (urlLine != null) {
-                                    val = urlLine[4..].Trim();
-                                    type = ActionType.Web;
-                                }
-                            } catch { }
-                            } else if (ActionTargetHelper.IsScriptPath(val)) {
-                                type = ActionType.ScriptFile;
-                            } else if (ActionTargetHelper.IsProgramPath(val)) {
-                                type = ActionType.Program;
-                            } else if (File.Exists(val)) {
-                                type = ActionType.File;
+        private void Border_DragOver(object sender, DragEventArgs e)
+        {
+            e.Effects = CanAcceptDropData(e.Data) ? DragDropEffects.Link : DragDropEffects.None;
+            e.Handled = true;
+        }
+
+        private static bool CanAcceptDropData(System.Windows.IDataObject data)
+        {
+            return TryGetDropTarget(data, out _, out _, out _);
+        }
+
+        private static bool TryGetDropTarget(System.Windows.IDataObject data, out string? value, out ActionType type, out string? errorMessage)
+        {
+            value = null;
+            type = ActionType.Web;
+            errorMessage = null;
+
+            if (data.GetDataPresent(DataFormats.FileDrop))
+            {
+                var droppedItems = data.GetData(DataFormats.FileDrop) as string[];
+                if (droppedItems == null || droppedItems.Length == 0)
+                {
+                    errorMessage = "Не удалось прочитать перетаскиваемый объект.";
+                    return false;
+                }
+
+                if (droppedItems.Length > 1)
+                {
+                    errorMessage = "Можно перетаскивать только один объект за раз.";
+                    return false;
+                }
+
+                string candidate = droppedItems[0];
+                if (Directory.Exists(candidate))
+                {
+                    value = candidate;
+                    type = ActionType.Folder;
+                    return true;
+                }
+
+                if (!File.Exists(candidate))
+                {
+                    errorMessage = "Поддерживаются только существующие файлы и папки.";
+                    return false;
+                }
+
+                string extension = Path.GetExtension(candidate).ToLowerInvariant();
+                if (extension == ".url")
+                {
+                    try
+                    {
+                        var lines = File.ReadAllLines(candidate);
+                        var urlLine = lines.FirstOrDefault(line => line.StartsWith("URL=", StringComparison.OrdinalIgnoreCase));
+                        if (!string.IsNullOrWhiteSpace(urlLine))
+                        {
+                            string url = urlLine[4..].Trim();
+                            if (Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
+                                (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+                            {
+                                value = url;
+                                type = ActionType.Web;
+                                return true;
                             }
                         }
                     }
-                } else if (e.Data.GetDataPresent(DataFormats.UnicodeText)) {
-                    val = ((string)e.Data.GetData(DataFormats.UnicodeText)).Trim();
-                } else if (e.Data.GetDataPresent(DataFormats.Text)) {
-                    val = ((string)e.Data.GetData(DataFormats.Text)).Trim();
+                    catch
+                    {
+                    }
+
+                    errorMessage = "Поддерживаются только .url с http/https ссылкой.";
+                    return false;
+                }
+
+                if (ActionTargetHelper.IsScriptPath(candidate))
+                {
+                    value = candidate;
+                    type = ActionType.ScriptFile;
+                    return true;
+                }
+
+                if (ActionTargetHelper.IsProgramPath(candidate))
+                {
+                    value = candidate;
+                    type = ActionType.Program;
+                    return true;
+                }
+
+                value = candidate;
+                type = ActionType.File;
+                return true;
+            }
+
+            string? text = null;
+            if (data.GetDataPresent(DataFormats.UnicodeText))
+                text = (data.GetData(DataFormats.UnicodeText) as string)?.Trim();
+            else if (data.GetDataPresent(DataFormats.Text))
+                text = (data.GetData(DataFormats.Text) as string)?.Trim();
+
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                errorMessage = "Можно перетаскивать только файл, папку или http/https ссылку.";
+                return false;
+            }
+
+            if (Uri.TryCreate(text, UriKind.Absolute, out var textUri) &&
+                (textUri.Scheme == Uri.UriSchemeHttp || textUri.Scheme == Uri.UriSchemeHttps))
+            {
+                value = text;
+                type = ActionType.Web;
+                return true;
+            }
+
+            errorMessage = "Поддерживаются только файлы, папки, .url и прямые http/https ссылки.";
+            return false;
+        }
+
+        private async void Border_Drop(object sender, DragEventArgs e) {
+            try {
+                if (!TryGetDropTarget(e.Data, out string? val, out ActionType type, out string? errorMessage))
+                {
+                    new DarkDialog(errorMessage ?? "Этот объект нельзя добавить на панель.") { Owner = this }.ShowDialog();
+                    return;
                 }
 
                 if (!string.IsNullOrEmpty(val)) { 
