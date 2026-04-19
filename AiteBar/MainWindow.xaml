@@ -72,8 +72,7 @@
     <Border x:Name="RootBorder" Background="#252525" CornerRadius="8" BorderBrush="#444444" BorderThickness="1" Margin="3"
             TextOptions.TextFormattingMode="Ideal"
             AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel">
-        <Grid>
-            <DockPanel x:Name="MainPanel" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,1" LastChildFill="True">
+        <DockPanel x:Name="MainPanel" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,1" LastChildFill="False">
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Top">
                     <StackPanel x:Name="SystemUtilsPanel" Orientation="Horizontal">
                         <Button x:Name="BtnSearch" Content="&#xEA7C;" ToolTip="Поиск в Google (буфер)" Click="BtnSearch_Click" Foreground="#E3E3E3"/>
@@ -92,26 +91,7 @@
                 </StackPanel>
 
                 <WrapPanel x:Name="UserButtonsPanel" Orientation="Horizontal" ClipToBounds="True" VerticalAlignment="Top"/>
-            </DockPanel>
-
-            <Border x:Name="ContextIndicator"
-                    Visibility="Collapsed"
-                    Opacity="0"
-                    IsHitTestVisible="False"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Background="#DD111214"
-                    BorderBrush="#4A4A4A"
-                    BorderThickness="1"
-                    CornerRadius="6"
-                    Padding="12,6">
-                <TextBlock x:Name="ContextIndicatorText"
-                           Foreground="White"
-                           FontSize="13"
-                           FontWeight="SemiBold"
-                           Text="Контекст 1"/>
-            </Border>
-        </Grid>
+        </DockPanel>
     </Border>
 </Window>
 

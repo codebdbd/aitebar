@@ -73,20 +73,12 @@ namespace AiteBar
             this.Top = -2000; 
 
             this.SizeChanged += (s, e) => {
-                bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
-                var screen = GetTargetScreen();
-                var workArea = screen?.WorkingArea;
-                if (isVertical)
+                if (!IsLoaded || _isAnimating)
                 {
-                    this.Top = ((workArea?.Top ?? 0) / _cachedDpi) + (((workArea?.Height ?? SystemParameters.WorkArea.Height) / _cachedDpi) - this.ActualHeight) / 2;
-                    if (!_shown && !double.IsNaN(this.ActualWidth)) this.Left = -this.ActualWidth;
+                    return;
                 }
-                else
-                {
-                    this.Left = ((workArea?.Left ?? 0) / _cachedDpi) + (((workArea?.Width ?? SystemParameters.WorkArea.Width) / _cachedDpi) - this.ActualWidth) / 2;
-                    if (!_shown && !double.IsNaN(this.ActualHeight)) this.Top = -this.ActualHeight;
-                }
-                UpdatePanelBounds();
+
+                PositionWindowImmediately(_shown);
             };
             
             PathHelper.EnsureDirectories();
@@ -249,16 +241,6 @@ namespace AiteBar
             return wrapped < 0 ? wrapped + count : wrapped;
         }
 
-        private string GetActiveContextName()
-        {
-            return GetContextDisplayName(_appSettings.ActiveContextId);
-        }
-
-        private void ShowContextIndicator(string contextName)
-        {
-            return;
-        }
-
         private async Task SwitchActiveContextAsync(int direction)
         {
             if (_appSettings.Contexts.Count == 0)
@@ -281,7 +263,6 @@ namespace AiteBar
 
             _appSettings.ActiveContextId = nextContextId;
             RefreshPanel();
-            ShowContextIndicator(GetActiveContextName());
             await SaveConfig();
         }
 
@@ -307,7 +288,6 @@ namespace AiteBar
 
             _appSettings.ActiveContextId = nextContextId;
             RefreshPanel();
-            ShowContextIndicator(GetActiveContextName());
             _ = SaveConfig();
         }
 
@@ -326,7 +306,6 @@ namespace AiteBar
 
             _appSettings.ActiveContextId = nextContextId;
             RefreshPanel();
-            ShowContextIndicator(GetActiveContextName());
             _ = SaveConfig();
         }
 
@@ -367,7 +346,6 @@ namespace AiteBar
 
             _appSettings.ActiveContextId = contextId;
             RefreshPanel();
-            ShowContextIndicator(GetActiveContextName());
             _ = SaveConfig();
         }
 
@@ -435,7 +413,7 @@ namespace AiteBar
 
             double availableWidth = Math.Max(150, (workArea.Value.Width / _cachedDpi) - PanelScreenPadding);
             double availableHeight = Math.Max(150, (workArea.Value.Height / _cachedDpi) - PanelScreenPadding);
-            int visibleSystemButtonCount = ShouldShowSystemUtilsForContext() ? GetVisibleSystemButtonCount() : 0;
+            int visibleSystemButtonCount = GetVisibleSystemButtonCount();
             var metrics = PanelLayoutHelper.Calculate(
                 isVertical: isVertical,
                 availablePrimary: isVertical ? availableHeight : availableWidth,
@@ -681,11 +659,51 @@ namespace AiteBar
             catch (Exception ex) { Logger.Log(ex); }
         }
 
+        private Rect GetTargetWorkArea()
+        {
+            var screen = GetTargetScreen();
+            var workArea = screen?.WorkingArea ?? Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, (int)SystemParameters.WorkArea.Width, (int)SystemParameters.WorkArea.Height);
+            return new Rect(
+                workArea.Left / _cachedDpi,
+                workArea.Top / _cachedDpi,
+                workArea.Width / _cachedDpi,
+                workArea.Height / _cachedDpi);
+        }
+
+        private (double X, double Y) GetDockCoordinates(bool hide)
+        {
+            UpdateLayout();
+            var workArea = GetTargetWorkArea();
+            double width = Math.Max(0, ActualWidth);
+            double height = Math.Max(0, ActualHeight);
+            double centeredX = workArea.Left + Math.Max(0, (workArea.Width - width) / 2);
+            double centeredY = workArea.Top + Math.Max(0, (workArea.Height - height) / 2);
+
+            return _appSettings.Edge switch
+            {
+                DockEdge.Top => (centeredX, hide ? workArea.Top - height : workArea.Top),
+                DockEdge.Bottom => (centeredX, hide ? workArea.Bottom : workArea.Bottom - height),
+                DockEdge.Left => (hide ? workArea.Left - width : workArea.Left, centeredY),
+                DockEdge.Right => (hide ? workArea.Right : workArea.Right - width, centeredY),
+                _ => (workArea.Left, workArea.Top)
+            };
+        }
+
+        private void PositionWindowImmediately(bool shown)
+        {
+            var coordinates = GetDockCoordinates(hide: !shown);
+            Left = coordinates.X;
+            Top = coordinates.Y;
+            UpdatePanelBounds();
+        }
+
         private async void Window_Loaded(object sender, RoutedEventArgs e) {
             try
             {
                 await LoadSettings();
+                RegisterGlobalHotkey();
                 RefreshPanel();
+                PositionWindowImmediately(_shown);
                 _timer.Tick += (s, ev) => {
                     if (_isAnimating) return;
                     NativeMethods.Win32Point pt = new();
@@ -761,6 +779,7 @@ namespace AiteBar
             }
 
             ApplyPanelSizeConstraints();
+            PositionWindowImmediately(_shown);
         }
 
         public void RefreshPanel() {
@@ -1008,20 +1027,7 @@ namespace AiteBar
 
         private void Toggle(bool hide) {
             _isAnimating = true; _timer.Stop();
-            
-            var screens = Screen.AllScreens;
-            var screen = (_appSettings.MonitorIndex >= 0 && _appSettings.MonitorIndex < screens.Length) 
-                ? screens[_appSettings.MonitorIndex] 
-                : Screen.PrimaryScreen;
 
-            if (screen == null) return;
-
-            var bounds = screen.Bounds;
-            double screenLeft = bounds.Left / _cachedDpi;
-            double screenTop = bounds.Top / _cachedDpi;
-            double screenWidth = bounds.Width / _cachedDpi;
-            double screenHeight = bounds.Height / _cachedDpi;
-            
             if (!hide) { 
                 this.Topmost = false; 
                 var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
@@ -1029,32 +1035,13 @@ namespace AiteBar
                 this.Topmost = true; 
             }
 
-            double finalX = this.Left;
-            double finalY = this.Top;
+            var start = GetDockCoordinates(hide: !hide);
+            var finish = GetDockCoordinates(hide: hide);
+            this.Left = start.X;
+            this.Top = start.Y;
 
-            switch (_appSettings.Edge)
-            {
-                case DockEdge.Top:
-                    this.Left = screenLeft + (screenWidth - this.ActualWidth) / 2;
-                    finalX = this.Left;
-                    finalY = hide ? screenTop - this.ActualHeight : screenTop;
-                    break;
-                case DockEdge.Bottom:
-                    this.Left = screenLeft + (screenWidth - this.ActualWidth) / 2;
-                    finalX = this.Left;
-                    finalY = hide ? screenTop + screenHeight : screenTop + screenHeight - this.ActualHeight;
-                    break;
-                case DockEdge.Left:
-                    this.Top = screenTop + (screenHeight - this.ActualHeight) / 2;
-                    finalY = this.Top;
-                    finalX = hide ? screenLeft - this.ActualWidth : screenLeft;
-                    break;
-                case DockEdge.Right:
-                    this.Top = screenTop + (screenHeight - this.ActualHeight) / 2;
-                    finalY = this.Top;
-                    finalX = hide ? screenLeft + screenWidth : screenLeft + screenWidth - this.ActualWidth;
-                    break;
-            }
+            double finalX = finish.X;
+            double finalY = finish.Y;
 
             var animX = new DoubleAnimation(finalX, TimeSpan.FromMilliseconds(200)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
             var animY = new DoubleAnimation(finalY, TimeSpan.FromMilliseconds(200)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };

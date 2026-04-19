@@ -73,8 +73,6 @@ public static class PanelLayoutHelper
 
         double maxPanelPrimary = perContext.Max(layout => layout.PanelPrimary);
         double maxPanelCross = perContext.Max(layout => layout.PanelCross);
-        double maxFixedPrimary = perContext.Max(layout => layout.FixedPrimary);
-        double maxFixedCross = perContext.Max(layout => layout.FixedCross);
         var active = perContext[normalizedActiveIndex];
 
         return isVertical
@@ -82,8 +80,8 @@ public static class PanelLayoutHelper
                 IsVertical: true,
                 PanelWidth: maxPanelCross,
                 PanelHeight: maxPanelPrimary,
-                FixedWidth: maxFixedCross,
-                FixedHeight: maxFixedPrimary,
+                FixedWidth: active.FixedCross,
+                FixedHeight: active.FixedPrimary,
                 UserWidth: active.User.Cross,
                 UserHeight: active.User.Primary,
                 UserBands: active.User.Bands)
@@ -91,8 +89,8 @@ public static class PanelLayoutHelper
                 IsVertical: false,
                 PanelWidth: maxPanelPrimary,
                 PanelHeight: maxPanelCross,
-                FixedWidth: maxFixedPrimary,
-                FixedHeight: maxFixedCross,
+                FixedWidth: active.FixedPrimary,
+                FixedHeight: active.FixedCross,
                 UserWidth: active.User.Primary,
                 UserHeight: active.User.Cross,
                 UserBands: active.User.Bands);

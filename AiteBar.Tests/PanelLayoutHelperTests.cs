@@ -99,6 +99,25 @@ public sealed class PanelLayoutHelperTests
         Assert.Equal(352, metrics.UserWidth);
         Assert.Equal(44, metrics.UserHeight);
         Assert.Equal(1, metrics.UserBands);
-        Assert.Equal(238, metrics.FixedWidth);
+        Assert.Equal(53, metrics.FixedWidth);
+    }
+
+    [Fact]
+    public void Calculate_Horizontal_ReservesPrimaryContextUtilityWidthForOtherContexts()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: false,
+            availablePrimary: 600,
+            panelPercent: 100,
+            visibleSystemButtonCount: 4,
+            controlButtonCount: 1,
+            contextCounts: [1, 2, 0, 0],
+            activeContextIndex: 1);
+
+        Assert.Equal(290, metrics.PanelWidth);
+        Assert.Equal(52, metrics.PanelHeight);
+        Assert.Equal(88, metrics.UserWidth);
+        Assert.Equal(44, metrics.UserHeight);
+        Assert.Equal(53, metrics.FixedWidth);
     }
 }
