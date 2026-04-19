@@ -190,6 +190,10 @@
                             <ComboBoxItem Content="Горячие клавиши" Tag="Hotkey"/>
                         </ComboBox>
                     </StackPanel>
+                    <StackPanel Margin="10,0,0,0">
+                        <TextBlock Text="Контекст" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                        <ComboBox x:Name="CmbContext"/>
+                    </StackPanel>
                 </UniformGrid>
 
                 <!-- Action Value -->
@@ -300,10 +304,13 @@
             <!-- BOTTOM: BUTTONS -->
             <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,15,0,0">
                 <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0" Margin="0,0,0,15"/>
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <DockPanel LastChildFill="False">
+                    <Button x:Name="BtnOpenAppSettings" Style="{StaticResource SecondaryButtonStyle}" Content="Настройки программы" Click="BtnOpenAppSettings_Click" Height="40" Width="180" HorizontalAlignment="Left"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
                     <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButtonStyle}" Content="Отменить" Click="BtnCancel_Click" Height="40" Width="120" Margin="0,0,10,0"/>
                     <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="Сохранить" Click="BtnSave_Click" Height="40" Width="180" FontWeight="Bold"/>
-                </StackPanel>
+                    </StackPanel>
+                </DockPanel>
             </StackPanel>
         </Grid>
     </Grid>

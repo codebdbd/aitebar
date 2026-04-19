@@ -55,10 +55,18 @@ namespace AiteBar
         private bool _isReordering = false;
         private int _draggedOriginalIndex;
         private List<Button> _userButtons = [];
+        private List<CustomElement> _activeContextElements = [];
 
         private const int HOTKEY_ID = 9000;
+        private const int HOTKEY_CONTEXT_NEXT_ID = 9001;
+        private const int HOTKEY_CONTEXT_PREVIOUS_ID = 9002;
+        private const int HOTKEY_CONTEXT1_ID = 9011;
+        private const int HOTKEY_CONTEXT2_ID = 9012;
+        private const int HOTKEY_CONTEXT3_ID = 9013;
+        private const int HOTKEY_CONTEXT4_ID = 9014;
         private const int WM_HOTKEY = 0x0312;
-
+        private const double PanelScreenPadding = 20;
+        private const double ButtonPitch = PanelLayoutHelper.ButtonOuterSize;
         public MainWindow()
         {
             InitializeComponent();
@@ -66,16 +74,16 @@ namespace AiteBar
 
             this.SizeChanged += (s, e) => {
                 bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
+                var screen = GetTargetScreen();
+                var workArea = screen?.WorkingArea;
                 if (isVertical)
                 {
-                    this.MaxHeight = SystemParameters.WorkArea.Height - 20;
-                    this.Top = (SystemParameters.PrimaryScreenHeight - this.ActualHeight) / 2;
+                    this.Top = ((workArea?.Top ?? 0) / _cachedDpi) + (((workArea?.Height ?? SystemParameters.WorkArea.Height) / _cachedDpi) - this.ActualHeight) / 2;
                     if (!_shown && !double.IsNaN(this.ActualWidth)) this.Left = -this.ActualWidth;
                 }
                 else
                 {
-                    this.MaxWidth = SystemParameters.WorkArea.Width - 20;
-                    this.Left = (SystemParameters.PrimaryScreenWidth - this.ActualWidth) / 2;
+                    this.Left = ((workArea?.Left ?? 0) / _cachedDpi) + (((workArea?.Width ?? SystemParameters.WorkArea.Width) / _cachedDpi) - this.ActualWidth) / 2;
                     if (!_shown && !double.IsNaN(this.ActualHeight)) this.Top = -this.ActualHeight;
                 }
                 UpdatePanelBounds();
@@ -97,15 +105,27 @@ namespace AiteBar
         {
             try
             {
+                bool changed = false;
                 if (File.Exists(_settingsFile))
                 {
                     string json = await File.ReadAllTextAsync(_settingsFile);
                     _appSettings = JsonSerializer.Deserialize<AppSettings>(json) ?? new();
+                    changed = NormalizeAppState();
                 }
                 else if (File.Exists(_configFile))
                 {
                     string json = await File.ReadAllTextAsync(_configFile);
                     _appSettings.Elements = JsonSerializer.Deserialize<List<CustomElement>>(json) ?? [];
+                    changed = NormalizeAppState();
+                    await SaveAppSettings(_appSettings);
+                }
+                else
+                {
+                    changed = NormalizeAppState();
+                }
+
+                if (changed)
+                {
                     await SaveAppSettings(_appSettings);
                 }
             }
@@ -130,6 +150,329 @@ namespace AiteBar
 
         public AppSettings GetAppSettings() => _appSettings;
 
+        public IReadOnlyList<PanelContext> GetContextsSnapshot() =>
+            [.. _appSettings.Contexts.Select(context => new PanelContext { Id = context.Id, Name = context.Name })];
+
+        public string GetContextDisplayName(string contextId)
+        {
+            return _appSettings.Contexts.FirstOrDefault(context => string.Equals(context.Id, contextId, StringComparison.Ordinal))?.Name
+                ?? contextId;
+        }
+
+        private string GetPrimaryContextId()
+        {
+            return _appSettings.Contexts.FirstOrDefault()?.Id ?? ContextStateHelper.GetDefaultContextId(0);
+        }
+
+        private bool ShouldShowSystemUtilsForContext(string? contextId = null)
+        {
+            string targetContextId = string.IsNullOrWhiteSpace(contextId) ? _appSettings.ActiveContextId : contextId;
+            return string.Equals(targetContextId, GetPrimaryContextId(), StringComparison.Ordinal);
+        }
+
+        private bool NormalizeAppState()
+        {
+            bool changed = false;
+
+            var originalContexts = _appSettings.Contexts ?? [];
+            var normalizedContexts = ContextStateHelper.NormalizeContexts(originalContexts);
+            if (originalContexts.Count != normalizedContexts.Count ||
+                originalContexts.Zip(normalizedContexts, (left, right) => left.Id != right.Id || left.Name != right.Name).Any(hasDifference => hasDifference))
+            {
+                changed = true;
+            }
+            _appSettings.Contexts = normalizedContexts;
+
+            string normalizedActiveContextId = ContextStateHelper.NormalizeActiveContextId(_appSettings.ActiveContextId, _appSettings.Contexts);
+            if (!string.Equals(_appSettings.ActiveContextId, normalizedActiveContextId, StringComparison.Ordinal))
+            {
+                _appSettings.ActiveContextId = normalizedActiveContextId;
+                changed = true;
+            }
+
+            var normalizedElements = NormalizeElements(_appSettings.Elements, GetPrimaryContextId());
+            if (_appSettings.Elements.Count != normalizedElements.Count)
+            {
+                changed = true;
+            }
+            else
+            {
+                for (int i = 0; i < normalizedElements.Count; i++)
+                {
+                    if (!AreElementsEquivalent(_appSettings.Elements[i], normalizedElements[i]))
+                    {
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+
+            _elements = normalizedElements;
+            _appSettings.Elements = [.. normalizedElements];
+
+            return changed;
+        }
+
+        private static bool AreElementsEquivalent(CustomElement left, CustomElement right)
+        {
+            return left.Id == right.Id &&
+                   left.Name == right.Name &&
+                   left.Icon == right.Icon &&
+                   left.IconFont == right.IconFont &&
+                   left.Color == right.Color &&
+                   left.ActionType == right.ActionType &&
+                   left.ActionValue == right.ActionValue &&
+                   left.Browser == right.Browser &&
+                   left.ChromeProfile == right.ChromeProfile &&
+                   left.IsAppMode == right.IsAppMode &&
+                   left.IsIncognito == right.IsIncognito &&
+                   left.UseRotation == right.UseRotation &&
+                   left.IsTopmost == right.IsTopmost &&
+                   left.LastUsedProfile == right.LastUsedProfile &&
+                   left.Alt == right.Alt &&
+                   left.Ctrl == right.Ctrl &&
+                   left.Shift == right.Shift &&
+                   left.Win == right.Win &&
+                   left.Key == right.Key &&
+                   left.ImagePath == right.ImagePath &&
+                   left.ContextId == right.ContextId;
+        }
+
+        private static int WrapIndex(int index, int count)
+        {
+            if (count == 0)
+            {
+                return 0;
+            }
+
+            int wrapped = index % count;
+            return wrapped < 0 ? wrapped + count : wrapped;
+        }
+
+        private string GetActiveContextName()
+        {
+            return GetContextDisplayName(_appSettings.ActiveContextId);
+        }
+
+        private void ShowContextIndicator(string contextName)
+        {
+            return;
+        }
+
+        private async Task SwitchActiveContextAsync(int direction)
+        {
+            if (_appSettings.Contexts.Count == 0)
+            {
+                return;
+            }
+
+            int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
+            if (currentIndex < 0)
+            {
+                currentIndex = 0;
+            }
+
+            int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, _appSettings.Contexts.Count);
+            string nextContextId = _appSettings.Contexts[nextIndex].Id;
+            if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _appSettings.ActiveContextId = nextContextId;
+            RefreshPanel();
+            ShowContextIndicator(GetActiveContextName());
+            await SaveConfig();
+        }
+
+        private void ActivateContextRelative(int direction)
+        {
+            if (_appSettings.Contexts.Count == 0)
+            {
+                return;
+            }
+
+            int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
+            if (currentIndex < 0)
+            {
+                currentIndex = 0;
+            }
+
+            int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, _appSettings.Contexts.Count);
+            string nextContextId = _appSettings.Contexts[nextIndex].Id;
+            if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _appSettings.ActiveContextId = nextContextId;
+            RefreshPanel();
+            ShowContextIndicator(GetActiveContextName());
+            _ = SaveConfig();
+        }
+
+        private void ActivateContextByIndex(int index)
+        {
+            if (index < 0 || index >= _appSettings.Contexts.Count)
+            {
+                return;
+            }
+
+            string nextContextId = _appSettings.Contexts[index].Id;
+            if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _appSettings.ActiveContextId = nextContextId;
+            RefreshPanel();
+            ShowContextIndicator(GetActiveContextName());
+            _ = SaveConfig();
+        }
+
+        private void BuildPanelContextMenu()
+        {
+            var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
+
+            foreach (var context in _appSettings.Contexts)
+            {
+                var item = new MenuItem
+                {
+                    Header = context.Name,
+                    IsCheckable = true,
+                    IsChecked = string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal),
+                    Style = (Style)FindResource("DarkMenuItem")
+                };
+
+                string targetContextId = context.Id;
+                item.Click += (s, e) => ActivateContextById(targetContextId);
+                menu.Items.Add(item);
+            }
+
+            RootBorder.ContextMenu = menu;
+        }
+
+        private void ActivateContextById(string contextId)
+        {
+            if (string.IsNullOrWhiteSpace(contextId) || string.Equals(_appSettings.ActiveContextId, contextId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            int index = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, contextId, StringComparison.Ordinal));
+            if (index < 0)
+            {
+                return;
+            }
+
+            _appSettings.ActiveContextId = contextId;
+            RefreshPanel();
+            ShowContextIndicator(GetActiveContextName());
+            _ = SaveConfig();
+        }
+
+        private void ReorderActiveContextElements(int sourceIndex, int targetIndex)
+        {
+            if (sourceIndex < 0 || sourceIndex >= _activeContextElements.Count || targetIndex < 0 || targetIndex >= _activeContextElements.Count)
+            {
+                return;
+            }
+
+            var reordered = _activeContextElements.ToList();
+            var moved = reordered[sourceIndex];
+            reordered.RemoveAt(sourceIndex);
+            reordered.Insert(targetIndex, moved);
+
+            string activeContextId = _appSettings.ActiveContextId;
+            var queue = new Queue<CustomElement>(reordered);
+
+            for (int i = 0; i < _elements.Count; i++)
+            {
+                if (string.Equals(_elements[i].ContextId, activeContextId, StringComparison.Ordinal))
+                {
+                    _elements[i] = queue.Dequeue();
+                }
+            }
+        }
+
+        private Screen? GetTargetScreen()
+        {
+            var screens = Screen.AllScreens;
+            return (_appSettings.MonitorIndex >= 0 && _appSettings.MonitorIndex < screens.Length)
+                ? screens[_appSettings.MonitorIndex]
+                : Screen.PrimaryScreen;
+        }
+
+        private void ApplyPanelSizeConstraints()
+        {
+            bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
+            var screen = GetTargetScreen();
+            var workArea = screen?.WorkingArea;
+
+            RootBorder.MaxWidth = double.PositiveInfinity;
+            RootBorder.MaxHeight = double.PositiveInfinity;
+            RootBorder.MinWidth = 0;
+            RootBorder.MinHeight = 0;
+            MainPanel.MaxWidth = double.PositiveInfinity;
+            MainPanel.MaxHeight = double.PositiveInfinity;
+            MainPanel.Width = double.NaN;
+            MainPanel.Height = double.NaN;
+            FixedPanel.MaxWidth = double.PositiveInfinity;
+            FixedPanel.MaxHeight = double.PositiveInfinity;
+            FixedPanel.Width = double.NaN;
+            FixedPanel.Height = double.NaN;
+            UserButtonsPanel.MaxWidth = double.PositiveInfinity;
+            UserButtonsPanel.MaxHeight = double.PositiveInfinity;
+            UserButtonsPanel.MinWidth = 0;
+            UserButtonsPanel.MinHeight = 0;
+            UserButtonsPanel.Width = double.NaN;
+            UserButtonsPanel.Height = double.NaN;
+
+            if (workArea == null)
+            {
+                return;
+            }
+
+            double availableWidth = Math.Max(150, (workArea.Value.Width / _cachedDpi) - PanelScreenPadding);
+            double availableHeight = Math.Max(150, (workArea.Value.Height / _cachedDpi) - PanelScreenPadding);
+            int visibleSystemButtonCount = ShouldShowSystemUtilsForContext() ? GetVisibleSystemButtonCount() : 0;
+            var metrics = PanelLayoutHelper.Calculate(
+                isVertical: isVertical,
+                availablePrimary: isVertical ? availableHeight : availableWidth,
+                panelPercent: _appSettings.PanelSizePercent,
+                visibleSystemButtonCount: visibleSystemButtonCount,
+                controlButtonCount: 1,
+                contextCounts: _appSettings.Contexts.Select(context => _elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal))).ToList(),
+                activeContextIndex: Math.Max(0, _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal))),
+                systemContextIndex: 0);
+
+            RootBorder.MinWidth = metrics.PanelWidth;
+            RootBorder.MaxWidth = metrics.PanelWidth;
+            RootBorder.MinHeight = metrics.PanelHeight;
+            RootBorder.MaxHeight = metrics.PanelHeight;
+
+            MainPanel.Width = Math.Max(0, metrics.PanelWidth - PanelLayoutHelper.PanelChrome);
+            MainPanel.Height = Math.Max(0, metrics.PanelHeight - PanelLayoutHelper.PanelChrome);
+            FixedPanel.Width = metrics.FixedWidth;
+            FixedPanel.Height = metrics.FixedHeight;
+            UserButtonsPanel.Width = metrics.UserWidth;
+            UserButtonsPanel.Height = metrics.UserHeight;
+            UserButtonsPanel.MaxWidth = metrics.UserWidth;
+            UserButtonsPanel.MaxHeight = metrics.UserHeight;
+            UserButtonsPanel.MinWidth = metrics.UserWidth;
+            UserButtonsPanel.MinHeight = metrics.UserHeight;
+        }
+
+        private int GetVisibleSystemButtonCount()
+        {
+            int count = 0;
+            if (_appSettings.ShowPresetSearch) count++;
+            if (_appSettings.ShowPresetScreenshot) count++;
+            if (_appSettings.ShowPresetVideo) count++;
+            if (_appSettings.ShowPresetCalc) count++;
+            return count;
+        }
+
         private void RegisterGlobalHotkey()
         {
             UnregisterGlobalHotkey();
@@ -147,12 +490,60 @@ namespace AiteBar
                 uint vk = (uint)KeyInterop.VirtualKeyFromKey((Key)k!);
                 NativeMethods.RegisterHotKey(hwnd, HOTKEY_ID, modifiers, vk);
             }
+
+            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT_NEXT_ID, _appSettings.NextContextHotkey);
+            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT_PREVIOUS_ID, _appSettings.PreviousContextHotkey);
+            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT1_ID, _appSettings.Context1Hotkey);
+            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT2_ID, _appSettings.Context2Hotkey);
+            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT3_ID, _appSettings.Context3Hotkey);
+            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT4_ID, _appSettings.Context4Hotkey);
         }
 
         private void UnregisterGlobalHotkey()
         {
             IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-            if (hwnd != IntPtr.Zero) NativeMethods.UnregisterHotKey(hwnd, HOTKEY_ID);
+            if (hwnd == IntPtr.Zero)
+            {
+                return;
+            }
+
+            int[] hotkeyIds =
+            [
+                HOTKEY_ID,
+                HOTKEY_CONTEXT_NEXT_ID,
+                HOTKEY_CONTEXT_PREVIOUS_ID,
+                HOTKEY_CONTEXT1_ID,
+                HOTKEY_CONTEXT2_ID,
+                HOTKEY_CONTEXT3_ID,
+                HOTKEY_CONTEXT4_ID
+            ];
+
+            foreach (int hotkeyId in hotkeyIds)
+            {
+                NativeMethods.UnregisterHotKey(hwnd, hotkeyId);
+            }
+        }
+
+        private static bool RegisterHotkeyBinding(IntPtr hwnd, int hotkeyId, HotkeyBinding binding)
+        {
+            if (binding == null || string.IsNullOrWhiteSpace(binding.Key) || string.Equals(binding.Key, "None", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (!Enum.TryParse(typeof(Key), binding.Key, out var key))
+            {
+                return false;
+            }
+
+            uint modifiers = 0;
+            if (binding.Ctrl) modifiers |= 0x0002;
+            if (binding.Alt) modifiers |= 0x0001;
+            if (binding.Shift) modifiers |= 0x0004;
+            if (binding.Win) modifiers |= 0x0008;
+
+            uint vk = (uint)KeyInterop.VirtualKeyFromKey((Key)key!);
+            return NativeMethods.RegisterHotKey(hwnd, hotkeyId, modifiers, vk);
         }
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -162,6 +553,36 @@ namespace AiteBar
                 _shown = !_shown;
                 Toggle(!_shown);
                 handled = true;
+            }
+            else if (msg == NativeMethods.WM_HOTKEY)
+            {
+                switch (wParam.ToInt32())
+                {
+                    case HOTKEY_CONTEXT_NEXT_ID:
+                        ActivateContextRelative(1);
+                        handled = true;
+                        break;
+                    case HOTKEY_CONTEXT_PREVIOUS_ID:
+                        ActivateContextRelative(-1);
+                        handled = true;
+                        break;
+                    case HOTKEY_CONTEXT1_ID:
+                        ActivateContextByIndex(0);
+                        handled = true;
+                        break;
+                    case HOTKEY_CONTEXT2_ID:
+                        ActivateContextByIndex(1);
+                        handled = true;
+                        break;
+                    case HOTKEY_CONTEXT3_ID:
+                        ActivateContextByIndex(2);
+                        handled = true;
+                        break;
+                    case HOTKEY_CONTEXT4_ID:
+                        ActivateContextByIndex(3);
+                        handled = true;
+                        break;
+                }
             }
             return IntPtr.Zero;
         }
@@ -326,10 +747,11 @@ namespace AiteBar
             if (isVertical) { this.MinWidth = 0; this.MinHeight = 150; }
             else { this.MinWidth = 150; this.MinHeight = 0; }
 
-            MainPanel.Orientation = orientation;
+            FixedPanel.Orientation = orientation;
             UserButtonsPanel.Orientation = orientation;
             SystemUtilsPanel.Orientation = orientation;
             ControlBlock.Orientation = orientation;
+            System.Windows.Controls.DockPanel.SetDock(FixedPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
 
             var separators = new[] { SepSystem, SepControl };
             foreach (var sep in separators)
@@ -337,6 +759,8 @@ namespace AiteBar
                 if (isVertical) { sep.Width = 20; sep.Height = 1; sep.Margin = new Thickness(0, 6, 0, 6); }
                 else { sep.Width = 1; sep.Height = 20; sep.Margin = new Thickness(6, 0, 6, 0); }
             }
+
+            ApplyPanelSizeConstraints();
         }
 
         public void RefreshPanel() {
@@ -344,19 +768,25 @@ namespace AiteBar
             UserButtonsPanel.Children.Clear();
             _userButtons.Clear();
 
-            _elements = NormalizeElements(_appSettings.Elements);
+            NormalizeAppState();
+            BuildPanelContextMenu();
+            string activeContextId = _appSettings.ActiveContextId;
+            _activeContextElements = _elements
+                .Where(element => string.Equals(element.ContextId, activeContextId, StringComparison.Ordinal))
+                .ToList();
             
-            BtnSearch.Visibility = _appSettings.ShowPresetSearch ? Visibility.Visible : Visibility.Collapsed;
-            BtnScreenshot.Visibility = _appSettings.ShowPresetScreenshot ? Visibility.Visible : Visibility.Collapsed;
-            BtnRecord.Visibility = _appSettings.ShowPresetVideo ? Visibility.Visible : Visibility.Collapsed;
-            BtnCalc.Visibility = _appSettings.ShowPresetCalc ? Visibility.Visible : Visibility.Collapsed;
+            bool showSystemUtils = ShouldShowSystemUtilsForContext(activeContextId);
+            BtnSearch.Visibility = showSystemUtils && _appSettings.ShowPresetSearch ? Visibility.Visible : Visibility.Collapsed;
+            BtnScreenshot.Visibility = showSystemUtils && _appSettings.ShowPresetScreenshot ? Visibility.Visible : Visibility.Collapsed;
+            BtnRecord.Visibility = showSystemUtils && _appSettings.ShowPresetVideo ? Visibility.Visible : Visibility.Collapsed;
+            BtnCalc.Visibility = showSystemUtils && _appSettings.ShowPresetCalc ? Visibility.Visible : Visibility.Collapsed;
 
             // Видимость зоны системных утилит
             bool hasSystemUtils = BtnSearch.Visibility == Visibility.Visible || BtnScreenshot.Visibility == Visibility.Visible || 
                                  BtnRecord.Visibility == Visibility.Visible || BtnCalc.Visibility == Visibility.Visible;
             SystemUtilsPanel.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
 
-            foreach (var el in _elements) {
+            foreach (var el in _activeContextElements) {
                 var btn = new Button { 
                     ToolTip = el.Name, 
                     Foreground = (Brush)_brushConverter.ConvertFromString(el.Color ?? "#E3E3E3")!,
@@ -414,10 +844,8 @@ namespace AiteBar
                     if (_isReordering) {
                         _draggedButton.Opacity = 1.0;
                         int newIndex = CalculateTargetIndex(e.GetPosition(this));
-                        if (newIndex >= 0 && newIndex < _elements.Count && newIndex != _draggedOriginalIndex) {
-                            var element = _elements[_draggedOriginalIndex];
-                            _elements.RemoveAt(_draggedOriginalIndex);
-                            _elements.Insert(newIndex, element);
+                        if (newIndex >= 0 && newIndex < _activeContextElements.Count && newIndex != _draggedOriginalIndex) {
+                            ReorderActiveContextElements(_draggedOriginalIndex, newIndex);
                             await SaveConfig();
                         }
                         RefreshPanel();
@@ -440,7 +868,34 @@ namespace AiteBar
                         await SaveConfig(); RefreshPanel();
                     }
                 };
-                menu.Items.Add(editItem); menu.Items.Add(delItem); btn.ContextMenu = menu;
+
+                var moveItems = new List<MenuItem>();
+                foreach (var context in _appSettings.Contexts.Where(context => !string.Equals(context.Id, el.ContextId, StringComparison.Ordinal)))
+                {
+                    var moveTargetItem = new MenuItem { Header = $"Переместить в: {context.Name}", Style = (Style)FindResource("DarkMenuItem") };
+                    string targetContextId = context.Id;
+                    moveTargetItem.Click += async (s, e) =>
+                    {
+                        var elementToMove = _elements.FirstOrDefault(x => string.Equals(x.Id, capturedId, StringComparison.Ordinal));
+                        if (elementToMove == null)
+                        {
+                            return;
+                        }
+
+                        elementToMove.ContextId = targetContextId;
+                        await SaveConfig();
+                        RefreshPanel();
+                    };
+                    moveItems.Add(moveTargetItem);
+                }
+
+                menu.Items.Add(editItem);
+                foreach (var moveTargetItem in moveItems)
+                {
+                    menu.Items.Add(moveTargetItem);
+                }
+                menu.Items.Add(delItem);
+                btn.ContextMenu = menu;
                 UserButtonsPanel.Children.Add(btn);
                 _userButtons.Add(btn);
             }
@@ -474,8 +929,10 @@ namespace AiteBar
              int targetIndex = CalculateTargetIndex(currentPos);
              bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
              
-             // Берем размер кнопки + отступы (margin=4 с каждой стороны = 8)
-             double offset = isVertical ? _userButtons[0].ActualHeight + 8 : _userButtons[0].ActualWidth + 8;
+             var buttonMargin = _userButtons[0].Margin;
+             double offset = isVertical
+                 ? _userButtons[0].ActualHeight + buttonMargin.Top + buttonMargin.Bottom
+                 : _userButtons[0].ActualWidth + buttonMargin.Left + buttonMargin.Right;
  
              for (int i = 0; i < _userButtons.Count; i++) {
                 if (_userButtons[i] == _draggedButton) continue;
@@ -519,16 +976,18 @@ namespace AiteBar
             ActionType = s.ActionType, ActionValue = s.ActionValue, Browser = s.Browser, ChromeProfile = s.ChromeProfile,
             IsAppMode = s.IsAppMode, IsIncognito = s.IsIncognito, UseRotation = s.UseRotation,
             IsTopmost = s.IsTopmost, LastUsedProfile = s.LastUsedProfile,
-            Alt = s.Alt, Ctrl = s.Ctrl, Shift = s.Shift, Win = s.Win, Key = s.Key
+            Alt = s.Alt, Ctrl = s.Ctrl, Shift = s.Shift, Win = s.Win, Key = s.Key,
+            ContextId = s.ContextId
         };
 
-        private static List<CustomElement> NormalizeElements(IEnumerable<CustomElement> source)
+        private static List<CustomElement> NormalizeElements(IEnumerable<CustomElement> source, string defaultContextId)
         {
             var result = new List<CustomElement>(); var seen = new HashSet<string>(StringComparer.Ordinal);
             foreach (var item in source) {
                 if (item == null) continue;
                 string id = string.IsNullOrWhiteSpace(item.Id) ? Guid.NewGuid().ToString() : item.Id;
                 if (!seen.Add(id)) continue;
+                string contextId = string.IsNullOrWhiteSpace(item.ContextId) ? defaultContextId : item.ContextId;
                 result.Add(new CustomElement {
                     Id = id,
                     Name = item.Name ?? "", Icon = string.IsNullOrWhiteSpace(item.Icon) ? "\uE710" : item.Icon,
@@ -539,7 +998,8 @@ namespace AiteBar
                     ActionValue = item.ActionValue ?? "", Browser = item.Browser, ChromeProfile = item.ChromeProfile ?? "",
                     IsAppMode = item.IsAppMode, IsIncognito = item.IsIncognito, UseRotation = item.UseRotation,
                     IsTopmost = item.IsTopmost, LastUsedProfile = item.LastUsedProfile ?? "",
-                    Alt = item.Alt, Ctrl = item.Ctrl, Shift = item.Shift, Win = item.Win, Key = item.Key ?? "None"
+                    Alt = item.Alt, Ctrl = item.Ctrl, Shift = item.Shift, Win = item.Win, Key = item.Key ?? "None",
+                    ContextId = contextId
                 });
             }
             return result;
@@ -621,6 +1081,23 @@ namespace AiteBar
         }
 
         private async Task HideDock() { if (_shown) { _shown = false; Toggle(true); await Task.Delay(250); } }
+
+        private async void RootBorder_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            if (_isAnimating || !_shown)
+            {
+                return;
+            }
+
+            if (e.Delta == 0)
+            {
+                return;
+            }
+
+            e.Handled = true;
+            int direction = e.Delta > 0 ? -1 : 1;
+            await SwitchActiveContextAsync(direction);
+        }
 
         private static string FindExecutableOnPath(string fileName) {
             var pathValue = Environment.GetEnvironmentVariable("PATH"); if (string.IsNullOrWhiteSpace(pathValue)) return fileName;
@@ -876,7 +1353,8 @@ namespace AiteBar
                         ActionValue = val, 
                         ActionType = type.ToString(),
                         ImagePath = iconPath ?? "",
-                        Browser = isWeb ? BrowserHelper.GetSystemDefaultBrowser() : BrowserType.Chrome
+                        Browser = isWeb ? BrowserHelper.GetSystemDefaultBrowser() : BrowserType.Chrome,
+                        ContextId = _appSettings.ActiveContextId
                     };
                     
                     // Мгновенное сохранение без открытия окна

@@ -42,6 +42,7 @@ namespace AiteBar
             _editingElement = el;
 
             LoadColors();
+            LoadContexts();
 
             _ = LoadProfilesAsync().ContinueWith(
                 t => Logger.Log(t.Exception!.GetBaseException()),
@@ -74,6 +75,30 @@ namespace AiteBar
             CmbKey.SelectedIndex = 0;
         }
 
+        private void LoadContexts()
+        {
+            CmbContext.Items.Clear();
+            foreach (var context in _mainWindow.GetContextsSnapshot())
+            {
+                CmbContext.Items.Add(new ComboBoxItem { Content = context.Name, Tag = context.Id });
+            }
+
+            if (_editingElement != null)
+            {
+                SetComboValue(CmbContext, _editingElement.ContextId);
+            }
+
+            if (CmbContext.SelectedIndex < 0)
+            {
+                SetComboValue(CmbContext, _mainWindow.GetAppSettings().ActiveContextId);
+            }
+
+            if (CmbContext.SelectedIndex < 0 && CmbContext.Items.Count > 0)
+            {
+                CmbContext.SelectedIndex = 0;
+            }
+        }
+
         private void LoadElementData()
         {
             TxtName.Text = _editingElement!.Name;
@@ -94,6 +119,7 @@ namespace AiteBar
 
             SetComboValue(CmbBrowser, _editingElement.Browser.ToString());
             SetComboValue(CmbActionType, ActionTargetHelper.NormalizeActionType(_editingElement.ActionType, _editingElement.ActionValue));
+            SetComboValue(CmbContext, _editingElement.ContextId);
             SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
             SetComboValue(CmbKey, _editingElement.Key);
             UpdatePreview();
@@ -595,7 +621,8 @@ namespace AiteBar
                     IsAppMode = ChkAppMode.IsChecked ?? false, IsIncognito = ChkIncognito.IsChecked ?? false,
                     UseRotation = ChkRotation.IsChecked ?? false, IsTopmost = ChkTopmost.IsChecked ?? false,
                     LastUsedProfile = _editingElement?.LastUsedProfile ?? "",
-                    Ctrl = ChkCtrl.IsChecked ?? false, Shift = ChkShift.IsChecked ?? false, Alt = ChkAlt.IsChecked ?? false, Win = ChkWin.IsChecked ?? false, Key = selectedKey
+                    Ctrl = ChkCtrl.IsChecked ?? false, Shift = ChkShift.IsChecked ?? false, Alt = ChkAlt.IsChecked ?? false, Win = ChkWin.IsChecked ?? false, Key = selectedKey,
+                    ContextId = ((ComboBoxItem)CmbContext.SelectedItem)?.Tag?.ToString() ?? _mainWindow.GetAppSettings().ActiveContextId
                 };
 
                 await _mainWindow.SaveElement(newElement, _editingElement?.Id);
@@ -617,6 +644,11 @@ namespace AiteBar
         {
             this.DialogResult = false;
             Close();
+        }
+
+        private void BtnOpenAppSettings_Click(object sender, RoutedEventArgs e)
+        {
+            new AppSettingsWindow(_mainWindow) { Owner = this }.ShowDialog();
         }
     }
 }

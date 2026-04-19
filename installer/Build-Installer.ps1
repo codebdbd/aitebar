@@ -11,6 +11,12 @@ $projectPath = Join-Path $repoRoot "AiteBar\AiteBar.csproj"
 $publishDir = Join-Path $repoRoot "artifacts\publish\$Runtime"
 $installerDir = Join-Path $repoRoot "artifacts\installer"
 $issPath = Join-Path $PSScriptRoot "AiteBar.iss"
+$projectXml = [xml](Get-Content $projectPath)
+$appVersion = $projectXml.Project.PropertyGroup.Version | Select-Object -First 1
+
+if ([string]::IsNullOrWhiteSpace($appVersion)) {
+    throw "Version not found in $projectPath"
+}
 
 if (-not $SkipPublish) {
     dotnet publish $projectPath `
@@ -43,7 +49,7 @@ if (-not $iscc) {
 
 New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
 
-& $iscc "/Qp" $issPath
+& $iscc "/Qp" "/DAppVersion=$appVersion" $issPath
 if ($LASTEXITCODE -ne 0) {
     throw "ISCC.exe failed with exit code $LASTEXITCODE"
 }

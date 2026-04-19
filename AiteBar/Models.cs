@@ -1,6 +1,21 @@
 using System;
 
 namespace AiteBar {
+    public class PanelContext
+    {
+        public string Id { get; set; } = "context-1";
+        public string Name { get; set; } = "Контекст 1";
+    }
+
+    public class HotkeyBinding
+    {
+        public bool Ctrl { get; set; }
+        public bool Alt { get; set; }
+        public bool Shift { get; set; }
+        public bool Win { get; set; }
+        public string Key { get; set; } = "None";
+    }
+
     public enum BrowserType
     {
         Chrome,
@@ -47,6 +62,7 @@ namespace AiteBar {
         public bool Win { get; set; }
         public string Key { get; set; } = "None";
         public string ImagePath { get; set; } = "";
+        public string ContextId { get; set; } = "context-1";
     }
 
     public enum DockEdge { Top, Bottom, Left, Right }
@@ -66,7 +82,16 @@ namespace AiteBar {
         public DockEdge Edge { get; set; } = DockEdge.Top;
         public int MonitorIndex { get; set; } = 0; // 0 = Primary, 1, 2...
         public double ActivationZoneSizePercent { get; set; } = 30; // % от ширины/высоты края
+        public double PanelSizePercent { get; set; } = 80; // % от ширины/высоты экрана
         public int ActivationDelayMs { get; set; } = 250;
+        public List<PanelContext> Contexts { get; set; } = [];
+        public string ActiveContextId { get; set; } = "context-1";
+        public HotkeyBinding NextContextHotkey { get; set; } = new();
+        public HotkeyBinding PreviousContextHotkey { get; set; } = new();
+        public HotkeyBinding Context1Hotkey { get; set; } = new();
+        public HotkeyBinding Context2Hotkey { get; set; } = new();
+        public HotkeyBinding Context3Hotkey { get; set; } = new();
+        public HotkeyBinding Context4Hotkey { get; set; } = new();
 
         public List<CustomElement> Elements { get; set; } = new();
     }
