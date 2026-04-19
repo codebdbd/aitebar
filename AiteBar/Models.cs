@@ -53,6 +53,7 @@ namespace AiteBar {
         public bool IsAppMode { get; set; } = false;
         public bool IsIncognito { get; set; } = false;
         public bool UseRotation { get; set; } = false;
+        public bool OpenFullscreen { get; set; } = false;
         public bool IsTopmost { get; set; } = false;
         public string LastUsedProfile { get; set; } = "";
 

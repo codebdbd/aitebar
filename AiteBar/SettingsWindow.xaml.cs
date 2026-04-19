@@ -110,7 +110,7 @@ namespace AiteBar
             TxtHexColor.Text = _selectedColor;
             ChkAppMode.IsChecked = _editingElement.IsAppMode;
             ChkIncognito.IsChecked = _editingElement.IsIncognito;
-            ChkTopmost.IsChecked = _editingElement.IsTopmost;
+            ChkFullscreen.IsChecked = _editingElement.OpenFullscreen || _editingElement.IsTopmost;
             ChkRotation.IsChecked = _editingElement.UseRotation;
             ChkCtrl.IsChecked = _editingElement.Ctrl;
             ChkShift.IsChecked = _editingElement.Shift;
@@ -619,7 +619,7 @@ namespace AiteBar
                     ImagePath = _selectedImagePath,
                     ChromeProfile = ((ComboBoxItem)CmbChromeProfile.SelectedItem)?.Tag?.ToString() ?? "",
                     IsAppMode = ChkAppMode.IsChecked ?? false, IsIncognito = ChkIncognito.IsChecked ?? false,
-                    UseRotation = ChkRotation.IsChecked ?? false, IsTopmost = ChkTopmost.IsChecked ?? false,
+                    UseRotation = ChkRotation.IsChecked ?? false, OpenFullscreen = ChkFullscreen.IsChecked ?? false, IsTopmost = false,
                     LastUsedProfile = _editingElement?.LastUsedProfile ?? "",
                     Ctrl = ChkCtrl.IsChecked ?? false, Shift = ChkShift.IsChecked ?? false, Alt = ChkAlt.IsChecked ?? false, Win = ChkWin.IsChecked ?? false, Key = selectedKey,
                     ContextId = ((ComboBoxItem)CmbContext.SelectedItem)?.Tag?.ToString() ?? _mainWindow.GetAppSettings().ActiveContextId
@@ -648,7 +648,15 @@ namespace AiteBar
 
         private void BtnOpenAppSettings_Click(object sender, RoutedEventArgs e)
         {
+            string? selectedContextId = (CmbContext.SelectedItem as ComboBoxItem)?.Tag?.ToString();
             new AppSettingsWindow(_mainWindow) { Owner = this }.ShowDialog();
+            LoadContexts();
+            if (!string.IsNullOrWhiteSpace(selectedContextId))
+            {
+                SetComboValue(CmbContext, selectedContextId);
+            }
+            UpdateActionUI();
+            UpdateSaveButtonState();
         }
     }
 }

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="Настройки" Width="850" Height="620"
+        Title="Настройки" Width="850" Height="540"
         WindowStartupLocation="CenterScreen" Background="#1A1A1C" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
@@ -161,7 +161,7 @@
         <!-- EDIT BUTTON FORM -->
         <Grid Margin="0,10,0,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
@@ -233,10 +233,10 @@
                                 </StackPanel>
                             </Grid>
                             <UniformGrid Columns="2">
-                                <CheckBox x:Name="ChkAppMode" Content="Режим приложения" Foreground="White" Margin="0,3"/>
-                                <CheckBox x:Name="ChkIncognito" Content="Инкогнито" Foreground="White" Margin="0,3"/>
-                                <CheckBox x:Name="ChkTopmost" Content="Поверх всех окон" Foreground="White" Margin="0,3"/>
-                                <CheckBox x:Name="ChkRotation" Content="Ротация профилей" Foreground="White" Margin="0,3"/>
+                                <CheckBox x:Name="ChkAppMode" Content="В режиме приложений" Foreground="White" Margin="0,3"/>
+                                <CheckBox x:Name="ChkIncognito" Content="В режиме инкогнито" Foreground="White" Margin="0,3"/>
+                                <CheckBox x:Name="ChkFullscreen" Content="Открыть на весь экран" Foreground="White" Margin="0,3"/>
+                                <CheckBox x:Name="ChkRotation" Content="В режиме ротации" Foreground="White" Margin="0,3"/>
                             </UniformGrid>
                         </StackPanel>
                     </Border>

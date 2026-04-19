@@ -56,6 +56,7 @@ namespace AiteBar
         private int _draggedOriginalIndex;
         private List<Button> _userButtons = [];
         private List<CustomElement> _activeContextElements = [];
+        private int _pendingContextAnimationDirection;
 
         private const int HOTKEY_ID = 9000;
         private const int HOTKEY_CONTEXT_NEXT_ID = 9001;
@@ -219,6 +220,7 @@ namespace AiteBar
                    left.IsAppMode == right.IsAppMode &&
                    left.IsIncognito == right.IsIncognito &&
                    left.UseRotation == right.UseRotation &&
+                   left.OpenFullscreen == right.OpenFullscreen &&
                    left.IsTopmost == right.IsTopmost &&
                    left.LastUsedProfile == right.LastUsedProfile &&
                    left.Alt == right.Alt &&
@@ -262,6 +264,7 @@ namespace AiteBar
             }
 
             _appSettings.ActiveContextId = nextContextId;
+            _pendingContextAnimationDirection = Math.Sign(direction);
             RefreshPanel();
             await SaveConfig();
         }
@@ -287,6 +290,7 @@ namespace AiteBar
             }
 
             _appSettings.ActiveContextId = nextContextId;
+            _pendingContextAnimationDirection = Math.Sign(direction);
             RefreshPanel();
             _ = SaveConfig();
         }
@@ -298,6 +302,12 @@ namespace AiteBar
                 return;
             }
 
+            int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
+            if (currentIndex < 0)
+            {
+                currentIndex = 0;
+            }
+
             string nextContextId = _appSettings.Contexts[index].Id;
             if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal))
             {
@@ -305,6 +315,7 @@ namespace AiteBar
             }
 
             _appSettings.ActiveContextId = nextContextId;
+            _pendingContextAnimationDirection = index >= currentIndex ? 1 : -1;
             RefreshPanel();
             _ = SaveConfig();
         }
@@ -338,6 +349,12 @@ namespace AiteBar
                 return;
             }
 
+            int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
+            if (currentIndex < 0)
+            {
+                currentIndex = 0;
+            }
+
             int index = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, contextId, StringComparison.Ordinal));
             if (index < 0)
             {
@@ -345,6 +362,7 @@ namespace AiteBar
             }
 
             _appSettings.ActiveContextId = contextId;
+            _pendingContextAnimationDirection = index >= currentIndex ? 1 : -1;
             RefreshPanel();
             _ = SaveConfig();
         }
@@ -920,10 +938,58 @@ namespace AiteBar
             }
             
             // Разделители
-            SepSystem.Visibility = (UserButtonsPanel.Children.Count > 0) && hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
-            SepControl.Visibility = (UserButtonsPanel.Children.Count > 0 || hasSystemUtils) ? Visibility.Visible : Visibility.Collapsed;
+            SepSystem.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
+            SepControl.Visibility = UserButtonsPanel.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            AnimateContextTransitionIfNeeded();
             
             UpdatePanelBounds();
+        }
+
+        private void AnimateContextTransitionIfNeeded()
+        {
+            if (_pendingContextAnimationDirection == 0 || UserButtonsPanel.Children.Count == 0)
+            {
+                _pendingContextAnimationDirection = 0;
+                return;
+            }
+
+            int direction = _pendingContextAnimationDirection;
+            _pendingContextAnimationDirection = 0;
+            bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
+
+            if (UserButtonsPanel.RenderTransform is not TranslateTransform transform)
+            {
+                transform = new TranslateTransform();
+                UserButtonsPanel.RenderTransform = transform;
+            }
+
+            double initialOffset = direction * 8;
+            if (isVertical)
+            {
+                transform.X = 0;
+                transform.Y = initialOffset;
+            }
+            else
+            {
+                transform.X = initialOffset;
+                transform.Y = 0;
+            }
+
+            UserButtonsPanel.Opacity = 0.55;
+
+            var fadeAnimation = new DoubleAnimation(1, TimeSpan.FromMilliseconds(140))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            var slideAnimation = new DoubleAnimation(0, TimeSpan.FromMilliseconds(140))
+            {
+                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+            };
+
+            UserButtonsPanel.BeginAnimation(OpacityProperty, fadeAnimation);
+            transform.BeginAnimation(isVertical ? TranslateTransform.YProperty : TranslateTransform.XProperty, slideAnimation);
         }
 
         private int CalculateTargetIndex(Point currentPos)
@@ -993,7 +1059,7 @@ namespace AiteBar
             Id = s.Id, Name = s.Name, Icon = s.Icon, IconFont = s.IconFont, Color = s.Color,
             ImagePath = s.ImagePath,
             ActionType = s.ActionType, ActionValue = s.ActionValue, Browser = s.Browser, ChromeProfile = s.ChromeProfile,
-            IsAppMode = s.IsAppMode, IsIncognito = s.IsIncognito, UseRotation = s.UseRotation,
+            IsAppMode = s.IsAppMode, IsIncognito = s.IsIncognito, UseRotation = s.UseRotation, OpenFullscreen = s.OpenFullscreen,
             IsTopmost = s.IsTopmost, LastUsedProfile = s.LastUsedProfile,
             Alt = s.Alt, Ctrl = s.Ctrl, Shift = s.Shift, Win = s.Win, Key = s.Key,
             ContextId = s.ContextId
@@ -1015,7 +1081,7 @@ namespace AiteBar
                     ImagePath = item.ImagePath ?? "",
                     ActionType = ActionTargetHelper.NormalizeActionType(item.ActionType ?? "", item.ActionValue ?? ""),
                     ActionValue = item.ActionValue ?? "", Browser = item.Browser, ChromeProfile = item.ChromeProfile ?? "",
-                    IsAppMode = item.IsAppMode, IsIncognito = item.IsIncognito, UseRotation = item.UseRotation,
+                    IsAppMode = item.IsAppMode, IsIncognito = item.IsIncognito, UseRotation = item.UseRotation, OpenFullscreen = item.OpenFullscreen || item.IsTopmost,
                     IsTopmost = item.IsTopmost, LastUsedProfile = item.LastUsedProfile ?? "",
                     Alt = item.Alt, Ctrl = item.Ctrl, Shift = item.Shift, Win = item.Win, Key = item.Key ?? "None",
                     ContextId = contextId
@@ -1125,6 +1191,43 @@ namespace AiteBar
             return Task.CompletedTask;
         }
 
+        private static void SendVirtualKey(byte virtualKey)
+        {
+            NativeMethods.INPUT[] inputs =
+            [
+                new NativeMethods.INPUT
+                {
+                    type = NativeMethods.INPUT_KEYBOARD,
+                    U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = virtualKey } }
+                },
+                new NativeMethods.INPUT
+                {
+                    type = NativeMethods.INPUT_KEYBOARD,
+                    U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = virtualKey, dwFlags = NativeMethods.KEYEVENTF_KEYUP } }
+                }
+            ];
+
+            _ = NativeMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<NativeMethods.INPUT>());
+        }
+
+        private static async Task TryEnterFullscreenAsync(Process proc)
+        {
+            for (int i = 0; i < 25; i++)
+            {
+                await Task.Delay(200);
+                proc.Refresh();
+                if (proc.MainWindowHandle == IntPtr.Zero)
+                {
+                    continue;
+                }
+
+                NativeMethods.SetForegroundWindow(proc.MainWindowHandle);
+                await Task.Delay(100);
+                SendVirtualKey((byte)KeyInterop.VirtualKeyFromKey(Key.F11));
+                break;
+            }
+        }
+
 
         private async Task ExecuteCustomAction(CustomElement el) {
             try {
@@ -1157,8 +1260,13 @@ namespace AiteBar
                                 if (el.Browser == BrowserType.Firefox) psi.ArgumentList.Add($"-P \"{Path.GetFileName(prof)}\"");
                                 else psi.ArgumentList.Add($"--profile-directory={Path.GetFileName(prof)}");
                             }
-                            using (var proc = Process.Start(psi)) { if (proc != null && el.IsTopmost) { for (int i = 0; i < 25; i++) { await Task.Delay(200); proc.Refresh();
-                                        if (proc.MainWindowHandle != IntPtr.Zero) { NativeMethods.SetWindowPos(proc.MainWindowHandle, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0, NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOMOVE); break; } } } }
+                            using (var proc = Process.Start(psi))
+                            {
+                                if (proc != null && el.OpenFullscreen)
+                                {
+                                    await TryEnterFullscreenAsync(proc);
+                                }
+                            }
                             break;
                         case AiteBar.ActionType.Program:
                         case AiteBar.ActionType.File:

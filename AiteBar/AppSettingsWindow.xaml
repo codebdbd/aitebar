@@ -205,6 +205,18 @@
                     </StackPanel>
                 </Border>
 
+                <Border Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="БЫСТРЫЕ ИНСТРУМЕНТЫ" Foreground="{StaticResource MutedText}" FontWeight="Bold" FontSize="11" Margin="0,0,0,12"/>
+                        <UniformGrid Columns="2">
+                            <CheckBox x:Name="ChkShowPresetSearch" Content="Поиск"/>
+                            <CheckBox x:Name="ChkShowPresetScreenshot" Content="Скриншот"/>
+                            <CheckBox x:Name="ChkShowPresetVideo" Content="Видео"/>
+                            <CheckBox x:Name="ChkShowPresetCalc" Content="Калькулятор"/>
+                        </UniformGrid>
+                    </StackPanel>
+                </Border>
+
                 <TextBlock Text="Панель появляется по центру выбранного края. Размер зоны и размер панели считаются от активной оси экрана." Foreground="{StaticResource MutedText}" FontSize="10" TextWrapping="Wrap" Margin="4,0,8,0"/>
             </StackPanel>
 
@@ -325,18 +337,6 @@
                             </StackPanel>
                             <ComboBox x:Name="CmbContext4Key" Grid.Column="2" Height="28"/>
                         </Grid>
-                    </StackPanel>
-                </Border>
-
-                <Border Style="{StaticResource CardStyle}">
-                    <StackPanel>
-                        <TextBlock Text="БЫСТРЫЕ ИНСТРУМЕНТЫ" Foreground="{StaticResource MutedText}" FontWeight="Bold" FontSize="11" Margin="0,0,0,12"/>
-                        <UniformGrid Columns="2">
-                            <CheckBox x:Name="ChkShowPresetSearch" Content="Поиск"/>
-                            <CheckBox x:Name="ChkShowPresetScreenshot" Content="Скриншот"/>
-                            <CheckBox x:Name="ChkShowPresetVideo" Content="Видео"/>
-                            <CheckBox x:Name="ChkShowPresetCalc" Content="Калькулятор"/>
-                        </UniformGrid>
                     </StackPanel>
                 </Border>
 
