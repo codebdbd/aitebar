@@ -179,89 +179,7 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Margin="0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Text="Панель" Style="{StaticResource SectionTitleStyle}"/>
-
-                    <StackPanel Grid.Row="1">
-                        <TextBlock Text="Расположение" Style="{StaticResource FieldLabelStyle}"/>
-                        <local:EdgePickerControl x:Name="EdgePicker"
-                                                 Height="210"
-                                                 PanelPercent="80"
-                                                 ActivationPercent="30"
-                                                 Margin="0,0,0,10"/>
-                        <TextBlock Text="Перетащите панель к краю экрана или нажмите на сторону."
-                                   Foreground="{StaticResource MutedText}"
-                                   FontSize="10"
-                                   TextWrapping="Wrap"
-                                   Margin="2,0,2,0"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="2" Margin="0,0,0,14">
-                        <DockPanel Margin="0,0,0,6">
-                            <TextBlock Text="Размер панели" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
-                            <TextBlock x:Name="TxtPanelSize" DockPanel.Dock="Right" Foreground="White" FontSize="12"/>
-                        </DockPanel>
-                        <Slider x:Name="SldPanelSize" Minimum="20" Maximum="100" Value="80" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldPanelSize_ValueChanged"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="3" Margin="0,0,0,14">
-                        <DockPanel Margin="0,0,0,6">
-                            <TextBlock Text="Зона активации" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
-                            <TextBlock x:Name="TxtZoneSize" DockPanel.Dock="Right" Foreground="White" FontSize="12"/>
-                        </DockPanel>
-                        <Slider x:Name="SldZoneSize" Minimum="5" Maximum="100" Value="30" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldZoneSize_ValueChanged"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Row="4" Margin="0,0,0,14">
-                        <DockPanel Margin="0,0,0,6">
-                            <TextBlock Text="Задержка" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
-                            <TextBlock x:Name="TxtDelay" DockPanel.Dock="Right" Foreground="White" FontSize="12"/>
-                        </DockPanel>
-                        <Slider x:Name="SldDelay" Minimum="0" Maximum="2000" Value="250" TickFrequency="50" IsSnapToTickEnabled="True" ValueChanged="SldDelay_ValueChanged"/>
-                    </StackPanel>
-
-                    <Grid Grid.Row="5" Margin="0,0,0,14">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <StackPanel>
-                            <TextBlock Text="Монитор" Style="{StaticResource FieldLabelStyle}"/>
-                            <ComboBox x:Name="CmbMonitor"/>
-                        </StackPanel>
-                    </Grid>
-
-                    <StackPanel Grid.Row="6" Margin="0,0,0,12">
-                        <TextBlock Text="Быстрые инструменты" Style="{StaticResource FieldLabelStyle}"/>
-                        <UniformGrid Columns="2">
-                            <CheckBox x:Name="ChkShowPresetSearch" Content="Поиск"/>
-                            <CheckBox x:Name="ChkShowPresetScreenshot" Content="Скриншот"/>
-                            <CheckBox x:Name="ChkShowPresetVideo" Content="Видео"/>
-                            <CheckBox x:Name="ChkShowPresetCalc" Content="Калькулятор"/>
-                        </UniformGrid>
-                    </StackPanel>
-
-                    <TextBlock Grid.Row="7"
-                               Text="Для верхнего и нижнего края размер считается от ширины экрана, для левого и правого — от высоты."
-                               Foreground="{StaticResource MutedText}"
-                               FontSize="10"
-                               TextWrapping="Wrap"
-                               VerticalAlignment="Bottom"/>
-                </Grid>
-            </Border>
-
-            <Grid Grid.Column="2">
+            <Grid Grid.Column="0">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -269,12 +187,55 @@
 
                 <Border Grid.Row="0" Style="{StaticResource CardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Контексты" Style="{StaticResource SectionTitleStyle}"/>
-                        <TextBlock Text="Четыре набора кнопок внутри одной панели. Колесо мыши и горячие клавиши переключают содержимое панели."
-                                   Foreground="{StaticResource MutedText}"
-                                   FontSize="11"
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,14"/>
+                        <TextBlock Text="Общие параметры" Style="{StaticResource SectionTitleStyle}"/>
+
+                        <Grid Margin="0,0,0,14">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Позиция панели" Style="{StaticResource FieldLabelStyle}"/>
+                                <ComboBox x:Name="CmbEdge"/>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="Монитор" Style="{StaticResource FieldLabelStyle}"/>
+                                <ComboBox x:Name="CmbMonitor"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Margin="0,0,0,14">
+                            <DockPanel Margin="0,0,0,6">
+                                <TextBlock Text="Размер панели" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                <TextBlock x:Name="TxtPanelSize" DockPanel.Dock="Right" Foreground="White" FontSize="12"/>
+                            </DockPanel>
+                            <Slider x:Name="SldPanelSize" Minimum="20" Maximum="100" Value="80" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldPanelSize_ValueChanged"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,0,0,14">
+                            <DockPanel Margin="0,0,0,6">
+                                <TextBlock Text="Зона активации, %" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                <TextBlock x:Name="TxtZoneSize" DockPanel.Dock="Right" Foreground="White" FontSize="12"/>
+                            </DockPanel>
+                            <Slider x:Name="SldZoneSize" Minimum="5" Maximum="100" Value="30" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldZoneSize_ValueChanged"/>
+                        </StackPanel>
+
+                        <StackPanel>
+                            <DockPanel Margin="0,0,0,6">
+                                <TextBlock Text="Задержка появления, мс" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                <TextBlock x:Name="TxtDelay" DockPanel.Dock="Right" Foreground="White" FontSize="12"/>
+                            </DockPanel>
+                            <Slider x:Name="SldDelay" Minimum="0" Maximum="2000" Value="250" TickFrequency="50" IsSnapToTickEnabled="True" ValueChanged="SldDelay_ValueChanged"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Имена панелей" Style="{StaticResource SectionTitleStyle}"/>
 
                         <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
@@ -310,122 +271,102 @@
                         </Grid>
                     </StackPanel>
                 </Border>
+            </Grid>
 
-                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <Border Grid.Row="0" Style="{StaticResource CardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Управление" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBlock Text="Горячие клавиши" Style="{StaticResource SectionTitleStyle}"/>
 
-                        <TextBlock Text="Панель" Style="{StaticResource SubsectionTitleStyle}"/>
                         <Grid Margin="0,0,0,14">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="150"/>
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Горячая клавиша" Foreground="White" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <CheckBox x:Name="ChkCtrl" Content="Ctrl" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkShift" Content="Shift" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkAlt" Content="Alt" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkWin" Content="Win" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            </StackPanel>
+                            <TextBlock Text="Показать панель" Foreground="White" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="CmbShowPanelModifier" Grid.Column="1" Margin="0,0,12,0"/>
                             <ComboBox x:Name="CmbKey" Grid.Column="2"/>
+                        </Grid>
+
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="150"/>
+                                <ColumnDefinition Width="120"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="Общий модификатор" Foreground="White" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="CmbPanelModifier" Grid.Column="1"/>
                         </Grid>
 
                         <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0" Margin="0,0,0,14"/>
 
-                        <TextBlock Text="Контексты" Style="{StaticResource SubsectionTitleStyle}"/>
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="180"/>
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Следующий" Foreground="White" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <CheckBox x:Name="ChkNextContextCtrl" Content="Ctrl" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkNextContextShift" Content="Shift" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkNextContextAlt" Content="Alt" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkNextContextWin" Content="Win" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            </StackPanel>
-                            <ComboBox x:Name="CmbNextContextKey" Grid.Column="2"/>
+                            <TextBlock Text="Следующая панель" Foreground="White" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="CmbNextContextKey" Grid.Column="1"/>
                         </Grid>
                         <Grid Margin="0,0,0,14">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="180"/>
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Предыдущий" Foreground="White" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <CheckBox x:Name="ChkPrevContextCtrl" Content="Ctrl" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkPrevContextShift" Content="Shift" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkPrevContextAlt" Content="Alt" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkPrevContextWin" Content="Win" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            </StackPanel>
-                            <ComboBox x:Name="CmbPrevContextKey" Grid.Column="2"/>
+                            <TextBlock Text="Предыдущая панель" Foreground="White" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="CmbPrevContextKey" Grid.Column="1"/>
                         </Grid>
 
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="180"/>
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="LblContext1Hotkey" Text="Контекст 1" Foreground="White" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <CheckBox x:Name="ChkContext1Ctrl" Content="Ctrl" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext1Shift" Content="Shift" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext1Alt" Content="Alt" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext1Win" Content="Win" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            </StackPanel>
-                            <ComboBox x:Name="CmbContext1Key" Grid.Column="2"/>
+                            <TextBlock x:Name="LblContext1Hotkey" Text="Панель 1" Foreground="White" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="CmbContext1Key" Grid.Column="1"/>
                         </Grid>
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="180"/>
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="LblContext2Hotkey" Text="Контекст 2" Foreground="White" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <CheckBox x:Name="ChkContext2Ctrl" Content="Ctrl" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext2Shift" Content="Shift" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext2Alt" Content="Alt" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext2Win" Content="Win" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            </StackPanel>
-                            <ComboBox x:Name="CmbContext2Key" Grid.Column="2"/>
+                            <TextBlock x:Name="LblContext2Hotkey" Text="Панель 2" Foreground="White" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="CmbContext2Key" Grid.Column="1"/>
                         </Grid>
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="180"/>
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="LblContext3Hotkey" Text="Контекст 3" Foreground="White" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <CheckBox x:Name="ChkContext3Ctrl" Content="Ctrl" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext3Shift" Content="Shift" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext3Alt" Content="Alt" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext3Win" Content="Win" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            </StackPanel>
-                            <ComboBox x:Name="CmbContext3Key" Grid.Column="2"/>
+                            <TextBlock x:Name="LblContext3Hotkey" Text="Панель 3" Foreground="White" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="CmbContext3Key" Grid.Column="1"/>
                         </Grid>
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="180"/>
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="LblContext4Hotkey" Text="Контекст 4" Foreground="White" VerticalAlignment="Center"/>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                <CheckBox x:Name="ChkContext4Ctrl" Content="Ctrl" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext4Shift" Content="Shift" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext4Alt" Content="Alt" Style="{StaticResource CompactCheckBoxStyle}"/>
-                                <CheckBox x:Name="ChkContext4Win" Content="Win" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            </StackPanel>
-                            <ComboBox x:Name="CmbContext4Key" Grid.Column="2"/>
+                            <TextBlock x:Name="LblContext4Hotkey" Text="Панель 4" Foreground="White" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="CmbContext4Key" Grid.Column="1"/>
                         </Grid>
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Быстрые инструменты" Style="{StaticResource SectionTitleStyle}"/>
+                        <UniformGrid Columns="2">
+                            <CheckBox x:Name="ChkShowPresetSearch" Content="Поиск"/>
+                            <CheckBox x:Name="ChkShowPresetScreenshot" Content="Скриншот"/>
+                            <CheckBox x:Name="ChkShowPresetVideo" Content="Видео"/>
+                            <CheckBox x:Name="ChkShowPresetCalc" Content="Калькулятор"/>
+                        </UniformGrid>
                     </StackPanel>
                 </Border>
             </Grid>

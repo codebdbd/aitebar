@@ -13,9 +13,9 @@ public sealed class ContextStateHelperTests
 
         Assert.Equal(4, contexts.Count);
         Assert.Equal("context-1", contexts[0].Id);
-        Assert.Equal("Контекст 1", contexts[0].Name);
+        Assert.Equal("Панель 1", contexts[0].Name);
         Assert.Equal("context-4", contexts[3].Id);
-        Assert.Equal("Контекст 4", contexts[3].Name);
+        Assert.Equal("Панель 4", contexts[3].Name);
     }
 
     [Fact]

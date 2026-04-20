@@ -110,7 +110,7 @@ namespace AiteBar
             TxtHexColor.Text = _selectedColor;
             ChkAppMode.IsChecked = _editingElement.IsAppMode;
             ChkIncognito.IsChecked = _editingElement.IsIncognito;
-            ChkFullscreen.IsChecked = _editingElement.OpenFullscreen || _editingElement.IsTopmost;
+            ChkFullscreen.IsChecked = _editingElement.OpenFullscreen;
             ChkRotation.IsChecked = _editingElement.UseRotation;
             ChkCtrl.IsChecked = _editingElement.Ctrl;
             ChkShift.IsChecked = _editingElement.Shift;

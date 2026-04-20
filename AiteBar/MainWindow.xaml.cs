@@ -58,6 +58,7 @@ namespace AiteBar
         private bool _panelDragChanged = false;
         private DockEdge _dragStartEdge;
         private int _dragStartMonitorIndex;
+        private int _panelInteractionDepth;
         private List<Button> _userButtons = [];
         private List<CustomElement> _activeContextElements = [];
         private int _pendingContextAnimationDirection;
@@ -226,7 +227,6 @@ namespace AiteBar
                    left.IsIncognito == right.IsIncognito &&
                    left.UseRotation == right.UseRotation &&
                    left.OpenFullscreen == right.OpenFullscreen &&
-                   left.IsTopmost == right.IsTopmost &&
                    left.LastUsedProfile == right.LastUsedProfile &&
                    left.Alt == right.Alt &&
                    left.Ctrl == right.Ctrl &&
@@ -669,7 +669,7 @@ namespace AiteBar
         {
             try
             {
-                if (nCode >= 0 && wParam == (IntPtr)NativeMethods.WM_LBUTTONDOWN && _shown && !_isAnimating)
+                if (nCode >= 0 && wParam == (IntPtr)NativeMethods.WM_LBUTTONDOWN && _shown && !_isAnimating && !IsPanelInteractionActive)
                 {
                     var hookStruct = Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
                     double x = hookStruct.pt.X, y = hookStruct.pt.Y;
@@ -681,6 +681,24 @@ namespace AiteBar
             }
             catch (Exception ex) { Logger.Log(ex); }
             return NativeMethods.CallNextHookEx(_mouseHook, nCode, wParam, lParam);
+        }
+
+        private bool IsPanelInteractionActive => _panelInteractionDepth > 0;
+
+        private void BeginPanelInteraction()
+        {
+            _panelInteractionDepth++;
+            _hoverStartTime = null;
+        }
+
+        private void EndPanelInteraction()
+        {
+            if (_panelInteractionDepth > 0)
+            {
+                _panelInteractionDepth--;
+            }
+
+            _hoverStartTime = null;
         }
 
         private void UpdatePanelBounds()
@@ -933,15 +951,26 @@ namespace AiteBar
                 };
 
                 var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
+                menu.Opened += (s, e) => BeginPanelInteraction();
+                menu.Closed += (s, e) => EndPanelInteraction();
                 var editItem = new MenuItem { Header = "Редактировать", Style = (Style)FindResource("DarkMenuItem") };
                 editItem.Click += (s, e) => new SettingsWindow(this, el).ShowDialog();
                 var delItem = new MenuItem { Header = "Удалить", Style = (Style)FindResource("DarkMenuItem") };
                 var capturedId = el.Id; var capturedName = el.Name;
                 delItem.Click += async (s, e) => {
-                    var dlg = new DarkDialog($"Удалить '{capturedName}'?", isConfirm: true) { Owner = this };
-                    if (dlg.ShowDialog() == true) {
-                        _elements.RemoveAll(x => x.Id == capturedId);
-                        await SaveConfig(); RefreshPanel();
+                    BeginPanelInteraction();
+                    try
+                    {
+                        var dlg = new DarkDialog($"Удалить '{capturedName}'?", isConfirm: true) { Owner = this };
+                        if (dlg.ShowDialog() == true) {
+                            _elements.RemoveAll(x => x.Id == capturedId);
+                            await SaveConfig();
+                            RefreshPanel();
+                        }
+                    }
+                    finally
+                    {
+                        EndPanelInteraction();
                     }
                 };
 
@@ -1223,7 +1252,7 @@ namespace AiteBar
                     ImagePath = item.ImagePath ?? "",
                     ActionType = ActionTargetHelper.NormalizeActionType(item.ActionType ?? "", item.ActionValue ?? ""),
                     ActionValue = item.ActionValue ?? "", Browser = item.Browser, ChromeProfile = item.ChromeProfile ?? "",
-                    IsAppMode = item.IsAppMode, IsIncognito = item.IsIncognito, UseRotation = item.UseRotation, OpenFullscreen = item.OpenFullscreen || item.IsTopmost,
+                    IsAppMode = item.IsAppMode, IsIncognito = item.IsIncognito, UseRotation = item.UseRotation, OpenFullscreen = item.OpenFullscreen,
                     IsTopmost = item.IsTopmost, LastUsedProfile = item.LastUsedProfile ?? "",
                     Alt = item.Alt, Ctrl = item.Ctrl, Shift = item.Shift, Win = item.Win, Key = item.Key ?? "None",
                     ContextId = contextId

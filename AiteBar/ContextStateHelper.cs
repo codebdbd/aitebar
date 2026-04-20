@@ -7,7 +7,7 @@ namespace AiteBar
     internal static class ContextStateHelper
     {
         public const int FixedContextCount = 4;
-        public const string DefaultContextPrefix = "Контекст ";
+        public const string DefaultContextPrefix = "Панель ";
 
         public static string GetDefaultContextId(int index) => $"context-{index + 1}";
 

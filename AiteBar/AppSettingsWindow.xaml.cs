@@ -9,7 +9,6 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using Button = System.Windows.Controls.Button;
-using CheckBox = System.Windows.Controls.CheckBox;
 using ComboBox = System.Windows.Controls.ComboBox;
 using ListBox = System.Windows.Controls.ListBox;
 
@@ -40,8 +39,31 @@ namespace AiteBar
             _mainWindow = mainWindow;
             _settings = _mainWindow.GetAppSettings();
 
+            LoadModifierList(CmbShowPanelModifier);
+            LoadModifierList(CmbPanelModifier, includeMixed: true);
             LoadKeyList();
             LoadSettings();
+        }
+
+        private static void LoadModifierList(ComboBox combo, bool includeMixed = false)
+        {
+            combo.Items.Clear();
+            combo.Items.Add(new ComboBoxItem { Content = "Не назначено", Tag = "None" });
+            if (includeMixed)
+            {
+                combo.Items.Add(new ComboBoxItem { Content = "Смешанные", Tag = "Mixed" });
+            }
+            combo.Items.Add(new ComboBoxItem { Content = "Ctrl", Tag = "C" });
+            combo.Items.Add(new ComboBoxItem { Content = "Alt", Tag = "A" });
+            combo.Items.Add(new ComboBoxItem { Content = "Shift", Tag = "S" });
+            combo.Items.Add(new ComboBoxItem { Content = "Win", Tag = "W" });
+            combo.Items.Add(new ComboBoxItem { Content = "Ctrl + Alt", Tag = "CA" });
+            combo.Items.Add(new ComboBoxItem { Content = "Ctrl + Shift", Tag = "CS" });
+            combo.Items.Add(new ComboBoxItem { Content = "Alt + Shift", Tag = "AS" });
+            combo.Items.Add(new ComboBoxItem { Content = "Ctrl + Win", Tag = "CW" });
+            combo.Items.Add(new ComboBoxItem { Content = "Alt + Win", Tag = "AW" });
+            combo.Items.Add(new ComboBoxItem { Content = "Ctrl + Alt + Shift", Tag = "CAS" });
+            combo.SelectedIndex = 0;
         }
 
         private void LoadKeyList()
@@ -50,6 +72,9 @@ namespace AiteBar
             {
                 combo.Items.Clear();
                 combo.Items.Add(new ComboBoxItem { Content = "Не назначено", Tag = "None" });
+                combo.Items.Add(new ComboBoxItem { Content = "Space", Tag = "Space" });
+                combo.Items.Add(new ComboBoxItem { Content = "[", Tag = "Oem4" });
+                combo.Items.Add(new ComboBoxItem { Content = "]", Tag = "Oem6" });
                 for (char c = 'A'; c <= 'Z'; c++) combo.Items.Add(new ComboBoxItem { Content = c.ToString(), Tag = c.ToString() });
                 for (int i = 0; i <= 9; i++) combo.Items.Add(new ComboBoxItem { Content = i.ToString(), Tag = "D" + i });
                 for (int i = 1; i <= 12; i++) combo.Items.Add(new ComboBoxItem { Content = "F" + i, Tag = "F" + i });
@@ -68,59 +93,169 @@ namespace AiteBar
             yield return CmbContext4Key;
         }
 
-        private static void LoadHotkeyBinding(
-            HotkeyBinding binding,
-            CheckBox chkCtrl,
-            CheckBox chkShift,
-            CheckBox chkAlt,
-            CheckBox chkWin,
-            ComboBox cmbKey)
+        private static string GetModifierToken(bool ctrl, bool alt, bool shift, bool win)
         {
-            chkCtrl.IsChecked = binding.Ctrl;
-            chkShift.IsChecked = binding.Shift;
-            chkAlt.IsChecked = binding.Alt;
-            chkWin.IsChecked = binding.Win;
+            if (!ctrl && !alt && !shift && !win) return "None";
+            if (ctrl && !alt && !shift && !win) return "C";
+            if (!ctrl && alt && !shift && !win) return "A";
+            if (!ctrl && !alt && shift && !win) return "S";
+            if (!ctrl && !alt && !shift && win) return "W";
+            if (ctrl && alt && !shift && !win) return "CA";
+            if (ctrl && !alt && shift && !win) return "CS";
+            if (!ctrl && alt && shift && !win) return "AS";
+            if (ctrl && !alt && !shift && win) return "CW";
+            if (!ctrl && alt && !shift && win) return "AW";
+            if (ctrl && alt && shift && !win) return "CAS";
+            return "None";
+        }
 
-            foreach (ComboBoxItem item in cmbKey.Items)
+        private static void ApplyModifierToken(string? token, HotkeyBinding binding)
+        {
+            binding.Ctrl = false;
+            binding.Alt = false;
+            binding.Shift = false;
+            binding.Win = false;
+
+            switch (token)
             {
-                if (item.Tag?.ToString() == binding.Key)
+                case "C":
+                    binding.Ctrl = true;
+                    break;
+                case "A":
+                    binding.Alt = true;
+                    break;
+                case "S":
+                    binding.Shift = true;
+                    break;
+                case "W":
+                    binding.Win = true;
+                    break;
+                case "CA":
+                    binding.Ctrl = true;
+                    binding.Alt = true;
+                    break;
+                case "CS":
+                    binding.Ctrl = true;
+                    binding.Shift = true;
+                    break;
+                case "AS":
+                    binding.Alt = true;
+                    binding.Shift = true;
+                    break;
+                case "CW":
+                    binding.Ctrl = true;
+                    binding.Win = true;
+                    break;
+                case "AW":
+                    binding.Alt = true;
+                    binding.Win = true;
+                    break;
+                case "CAS":
+                    binding.Ctrl = true;
+                    binding.Alt = true;
+                    binding.Shift = true;
+                    break;
+            }
+        }
+
+        private static void SetModifierComboValue(ComboBox combo, string token)
+        {
+            foreach (ComboBoxItem item in combo.Items)
+            {
+                if (string.Equals(item.Tag?.ToString(), token, StringComparison.Ordinal))
                 {
-                    cmbKey.SelectedItem = item;
+                    combo.SelectedItem = item;
+                    return;
+                }
+            }
+
+            combo.SelectedIndex = 0;
+        }
+
+        private static void SetKeyComboValue(ComboBox combo, string? key)
+        {
+            foreach (ComboBoxItem item in combo.Items)
+            {
+                if (string.Equals(item.Tag?.ToString(), key, StringComparison.Ordinal))
+                {
+                    combo.SelectedItem = item;
                     break;
                 }
             }
 
-            if (cmbKey.SelectedIndex < 0)
+            if (combo.SelectedIndex < 0)
             {
-                cmbKey.SelectedIndex = 0;
+                combo.SelectedIndex = 0;
             }
         }
 
-        private static void SaveHotkeyBinding(
-            HotkeyBinding binding,
-            CheckBox chkCtrl,
-            CheckBox chkShift,
-            CheckBox chkAlt,
-            CheckBox chkWin,
-            ComboBox cmbKey)
+        private static void LoadHotkeyBinding(HotkeyBinding binding, ComboBox cmbModifier, ComboBox cmbKey)
         {
-            binding.Ctrl = chkCtrl.IsChecked ?? false;
-            binding.Shift = chkShift.IsChecked ?? false;
-            binding.Alt = chkAlt.IsChecked ?? false;
-            binding.Win = chkWin.IsChecked ?? false;
-            binding.Key = (cmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "None";
+            SetModifierComboValue(cmbModifier, GetModifierToken(binding.Ctrl, binding.Alt, binding.Shift, binding.Win));
+            SetKeyComboValue(cmbKey, binding.Key);
         }
 
-        private static HotkeyBinding BuildHotkeyBinding(
-            CheckBox chkCtrl,
-            CheckBox chkShift,
-            CheckBox chkAlt,
-            CheckBox chkWin,
-            ComboBox cmbKey)
+        private static HotkeyBinding BuildHotkeyBinding(ComboBox cmbModifier, ComboBox cmbKey)
         {
             var binding = new HotkeyBinding();
-            SaveHotkeyBinding(binding, chkCtrl, chkShift, chkAlt, chkWin, cmbKey);
+            ApplyModifierToken((cmbModifier.SelectedItem as ComboBoxItem)?.Tag?.ToString(), binding);
+            binding.Key = (cmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "None";
             return binding;
+        }
+
+        private static HotkeyBinding BuildPanelActionHotkey(ComboBox cmbSharedModifier, ComboBox cmbKey, HotkeyBinding existingBinding)
+        {
+            var binding = new HotkeyBinding
+            {
+                Ctrl = existingBinding.Ctrl,
+                Alt = existingBinding.Alt,
+                Shift = existingBinding.Shift,
+                Win = existingBinding.Win
+            };
+
+            binding.Key = (cmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "None";
+            if (string.Equals(binding.Key, "None", StringComparison.OrdinalIgnoreCase))
+            {
+                binding.Ctrl = false;
+                binding.Alt = false;
+                binding.Shift = false;
+                binding.Win = false;
+                return binding;
+            }
+
+            var modifierToken = (cmbSharedModifier.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+            if (!string.Equals(modifierToken, "Mixed", StringComparison.Ordinal))
+            {
+                ApplyModifierToken(modifierToken, binding);
+            }
+
+            return binding;
+        }
+
+        private string GetSharedPanelModifierToken()
+        {
+            var panelBindings = new[]
+            {
+                _settings.NextContextHotkey,
+                _settings.PreviousContextHotkey,
+                _settings.Context1Hotkey,
+                _settings.Context2Hotkey,
+                _settings.Context3Hotkey,
+                _settings.Context4Hotkey
+            };
+
+            var modifierTokens = panelBindings
+                .Where(HasAssignedKey)
+                .Select(binding => GetModifierToken(binding.Ctrl, binding.Alt, binding.Shift, binding.Win))
+                .Distinct(StringComparer.Ordinal)
+                .ToList();
+
+            if (modifierTokens.Count == 0)
+            {
+                return "None";
+            }
+
+            return modifierTokens.Count == 1 ? modifierTokens[0] : "Mixed";
         }
 
         private static string? GetHotkeyToken(HotkeyBinding binding)
@@ -133,6 +268,13 @@ namespace AiteBar
             return $"{(binding.Ctrl ? "C" : "-")}{(binding.Shift ? "S" : "-")}{(binding.Alt ? "A" : "-")}{(binding.Win ? "W" : "-")}:{binding.Key.ToUpperInvariant()}";
         }
 
+        private static bool HasAssignedKey(HotkeyBinding binding)
+        {
+            return binding != null
+                && !string.IsNullOrWhiteSpace(binding.Key)
+                && !string.Equals(binding.Key, "None", StringComparison.OrdinalIgnoreCase);
+        }
+
         private void UpdateContextHotkeyLabels()
         {
             if (LblContext1Hotkey == null)
@@ -140,10 +282,10 @@ namespace AiteBar
                 return;
             }
 
-            LblContext1Hotkey.Text = TxtContext1Name.Text.TrimOrDefault("Контекст 1");
-            LblContext2Hotkey.Text = TxtContext2Name.Text.TrimOrDefault("Контекст 2");
-            LblContext3Hotkey.Text = TxtContext3Name.Text.TrimOrDefault("Контекст 3");
-            LblContext4Hotkey.Text = TxtContext4Name.Text.TrimOrDefault("Контекст 4");
+            LblContext1Hotkey.Text = TxtContext1Name.Text.TrimOrDefault("Панель 1");
+            LblContext2Hotkey.Text = TxtContext2Name.Text.TrimOrDefault("Панель 2");
+            LblContext3Hotkey.Text = TxtContext3Name.Text.TrimOrDefault("Панель 3");
+            LblContext4Hotkey.Text = TxtContext4Name.Text.TrimOrDefault("Панель 4");
         }
 
         private bool ValidateHotkeyBindings(
@@ -157,13 +299,13 @@ namespace AiteBar
         {
             var registrations = new (string Name, HotkeyBinding Binding)[]
             {
-                ("Показ панели", globalBinding),
-                ("Следующий контекст", nextBinding),
-                ("Предыдущий контекст", previousBinding),
-                (TxtContext1Name.Text.TrimOrDefault("Контекст 1"), context1Binding),
-                (TxtContext2Name.Text.TrimOrDefault("Контекст 2"), context2Binding),
-                (TxtContext3Name.Text.TrimOrDefault("Контекст 3"), context3Binding),
-                (TxtContext4Name.Text.TrimOrDefault("Контекст 4"), context4Binding)
+                ("Показать панель", globalBinding),
+                ("Следующая панель", nextBinding),
+                ("Предыдущая панель", previousBinding),
+                (TxtContext1Name.Text.TrimOrDefault("Панель 1"), context1Binding),
+                (TxtContext2Name.Text.TrimOrDefault("Панель 2"), context2Binding),
+                (TxtContext3Name.Text.TrimOrDefault("Панель 3"), context3Binding),
+                (TxtContext4Name.Text.TrimOrDefault("Панель 4"), context4Binding)
             };
 
             var duplicates = registrations
@@ -189,37 +331,50 @@ namespace AiteBar
 
         private void LoadSettings()
         {
-            ChkCtrl.IsChecked = _settings.GlobalHotkeyCtrl;
-            ChkAlt.IsChecked = _settings.GlobalHotkeyAlt;
-            ChkShift.IsChecked = _settings.GlobalHotkeyShift;
-            ChkWin.IsChecked = _settings.GlobalHotkeyWin;
-
             ChkShowPresetSearch.IsChecked = _settings.ShowPresetSearch;
             ChkShowPresetScreenshot.IsChecked = _settings.ShowPresetScreenshot;
             ChkShowPresetVideo.IsChecked = _settings.ShowPresetVideo;
             ChkShowPresetCalc.IsChecked = _settings.ShowPresetCalc;
 
-            foreach (ComboBoxItem item in CmbKey.Items)
-            {
-                if (item.Tag?.ToString() == _settings.GlobalHotkeyKey)
+            LoadHotkeyBinding(
+                new HotkeyBinding
                 {
-                    CmbKey.SelectedItem = item;
+                    Ctrl = _settings.GlobalHotkeyCtrl,
+                    Alt = _settings.GlobalHotkeyAlt,
+                    Shift = _settings.GlobalHotkeyShift,
+                    Win = _settings.GlobalHotkeyWin,
+                    Key = _settings.GlobalHotkeyKey
+                },
+                CmbShowPanelModifier,
+                CmbKey);
+
+            SetModifierComboValue(CmbPanelModifier, GetSharedPanelModifierToken());
+            SetKeyComboValue(CmbNextContextKey, _settings.NextContextHotkey.Key);
+            SetKeyComboValue(CmbPrevContextKey, _settings.PreviousContextHotkey.Key);
+            SetKeyComboValue(CmbContext1Key, _settings.Context1Hotkey.Key);
+            SetKeyComboValue(CmbContext2Key, _settings.Context2Hotkey.Key);
+            SetKeyComboValue(CmbContext3Key, _settings.Context3Hotkey.Key);
+            SetKeyComboValue(CmbContext4Key, _settings.Context4Hotkey.Key);
+
+            CmbEdge.Items.Clear();
+            CmbEdge.Items.Add(new ComboBoxItem { Content = "Сверху", Tag = DockEdge.Top });
+            CmbEdge.Items.Add(new ComboBoxItem { Content = "Снизу", Tag = DockEdge.Bottom });
+            CmbEdge.Items.Add(new ComboBoxItem { Content = "Слева", Tag = DockEdge.Left });
+            CmbEdge.Items.Add(new ComboBoxItem { Content = "Справа", Tag = DockEdge.Right });
+
+            foreach (ComboBoxItem item in CmbEdge.Items)
+            {
+                if (item.Tag is DockEdge edge && edge == _settings.Edge)
+                {
+                    CmbEdge.SelectedItem = item;
                     break;
                 }
             }
-            if (CmbKey.SelectedIndex < 0) CmbKey.SelectedIndex = 0;
 
-            LoadHotkeyBinding(_settings.NextContextHotkey, ChkNextContextCtrl, ChkNextContextShift, ChkNextContextAlt, ChkNextContextWin, CmbNextContextKey);
-            LoadHotkeyBinding(_settings.PreviousContextHotkey, ChkPrevContextCtrl, ChkPrevContextShift, ChkPrevContextAlt, ChkPrevContextWin, CmbPrevContextKey);
-            LoadHotkeyBinding(_settings.Context1Hotkey, ChkContext1Ctrl, ChkContext1Shift, ChkContext1Alt, ChkContext1Win, CmbContext1Key);
-            LoadHotkeyBinding(_settings.Context2Hotkey, ChkContext2Ctrl, ChkContext2Shift, ChkContext2Alt, ChkContext2Win, CmbContext2Key);
-            LoadHotkeyBinding(_settings.Context3Hotkey, ChkContext3Ctrl, ChkContext3Shift, ChkContext3Alt, ChkContext3Win, CmbContext3Key);
-            LoadHotkeyBinding(_settings.Context4Hotkey, ChkContext4Ctrl, ChkContext4Shift, ChkContext4Alt, ChkContext4Win, CmbContext4Key);
-
-            // Умная зона активации
-            EdgePicker.SelectedEdge = _settings.Edge;
-            EdgePicker.PanelPercent = _settings.PanelSizePercent;
-            EdgePicker.ActivationPercent = _settings.ActivationZoneSizePercent;
+            if (CmbEdge.SelectedIndex < 0)
+            {
+                CmbEdge.SelectedIndex = 0;
+            }
 
             CmbMonitor.Items.Clear();
             var screens = System.Windows.Forms.Screen.AllScreens;
@@ -258,13 +413,11 @@ namespace AiteBar
         private void SldZoneSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (TxtZoneSize != null) TxtZoneSize.Text = $"{(int)e.NewValue}%";
-            if (EdgePicker != null) EdgePicker.ActivationPercent = e.NewValue;
         }
 
         private void SldPanelSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (TxtPanelSize != null) TxtPanelSize.Text = $"{(int)e.NewValue}%";
-            if (EdgePicker != null) EdgePicker.PanelPercent = e.NewValue;
         }
 
         private void SldDelay_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -279,13 +432,13 @@ namespace AiteBar
 
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
-            var globalBinding = BuildHotkeyBinding(ChkCtrl, ChkShift, ChkAlt, ChkWin, CmbKey);
-            var nextBinding = BuildHotkeyBinding(ChkNextContextCtrl, ChkNextContextShift, ChkNextContextAlt, ChkNextContextWin, CmbNextContextKey);
-            var previousBinding = BuildHotkeyBinding(ChkPrevContextCtrl, ChkPrevContextShift, ChkPrevContextAlt, ChkPrevContextWin, CmbPrevContextKey);
-            var context1Binding = BuildHotkeyBinding(ChkContext1Ctrl, ChkContext1Shift, ChkContext1Alt, ChkContext1Win, CmbContext1Key);
-            var context2Binding = BuildHotkeyBinding(ChkContext2Ctrl, ChkContext2Shift, ChkContext2Alt, ChkContext2Win, CmbContext2Key);
-            var context3Binding = BuildHotkeyBinding(ChkContext3Ctrl, ChkContext3Shift, ChkContext3Alt, ChkContext3Win, CmbContext3Key);
-            var context4Binding = BuildHotkeyBinding(ChkContext4Ctrl, ChkContext4Shift, ChkContext4Alt, ChkContext4Win, CmbContext4Key);
+            var globalBinding = BuildHotkeyBinding(CmbShowPanelModifier, CmbKey);
+            var nextBinding = BuildPanelActionHotkey(CmbPanelModifier, CmbNextContextKey, _settings.NextContextHotkey);
+            var previousBinding = BuildPanelActionHotkey(CmbPanelModifier, CmbPrevContextKey, _settings.PreviousContextHotkey);
+            var context1Binding = BuildPanelActionHotkey(CmbPanelModifier, CmbContext1Key, _settings.Context1Hotkey);
+            var context2Binding = BuildPanelActionHotkey(CmbPanelModifier, CmbContext2Key, _settings.Context2Hotkey);
+            var context3Binding = BuildPanelActionHotkey(CmbPanelModifier, CmbContext3Key, _settings.Context3Hotkey);
+            var context4Binding = BuildPanelActionHotkey(CmbPanelModifier, CmbContext4Key, _settings.Context4Hotkey);
 
             if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, context1Binding, context2Binding, context3Binding, context4Binding))
             {
@@ -310,8 +463,10 @@ namespace AiteBar
             _settings.ShowPresetVideo = ChkShowPresetVideo.IsChecked ?? false;
             _settings.ShowPresetCalc = ChkShowPresetCalc.IsChecked ?? false;
 
-            // Сохранение настроек активации
-            _settings.Edge = EdgePicker.SelectedEdge;
+            if (CmbEdge.SelectedItem is ComboBoxItem edgeItem && edgeItem.Tag is DockEdge edge)
+            {
+                _settings.Edge = edge;
+            }
             
             if (CmbMonitor.SelectedItem is ComboBoxItem monitorItem)
                 _settings.MonitorIndex = (int)(monitorItem.Tag ?? 0);
@@ -331,7 +486,7 @@ namespace AiteBar
             for (int i = 0; i < _settings.Contexts.Count && i < contextNames.Length; i++)
             {
                 _settings.Contexts[i].Name = string.IsNullOrWhiteSpace(contextNames[i])
-                    ? $"Контекст {i + 1}"
+                    ? $"Панель {i + 1}"
                     : contextNames[i].Trim();
             }
 

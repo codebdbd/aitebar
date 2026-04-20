@@ -4,7 +4,7 @@ namespace AiteBar {
     public class PanelContext
     {
         public string Id { get; set; } = "context-1";
-        public string Name { get; set; } = "Контекст 1";
+        public string Name { get; set; } = "Панель 1";
     }
 
     public class HotkeyBinding
