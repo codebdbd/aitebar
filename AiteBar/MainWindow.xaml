@@ -73,6 +73,25 @@
             TextOptions.TextFormattingMode="Ideal"
             AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel">
         <DockPanel x:Name="MainPanel" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,1" LastChildFill="False">
+                <Border x:Name="DragHandle"
+                        Width="14"
+                        Height="44"
+                        Margin="0,0,4,0"
+                        Background="Transparent"
+                        Cursor="SizeAll"
+                        DockPanel.Dock="Left"
+                        MouseLeftButtonDown="DragHandle_MouseLeftButtonDown"
+                        MouseMove="DragHandle_MouseMove"
+                        MouseLeftButtonUp="DragHandle_MouseLeftButtonUp">
+                    <Border x:Name="DragHandleGrip"
+                            Width="4"
+                            Height="18"
+                            Background="#35FFFFFF"
+                            CornerRadius="2"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"/>
+                </Border>
+
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Top">
                     <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
                         <Button Content="&#xE005;" ToolTip="Добавить кнопку" Click="BtnSettings_Click" Foreground="#60CDFF"/>

@@ -54,6 +54,10 @@ namespace AiteBar
         private Point _dragStartPos;
         private bool _isReordering = false;
         private int _draggedOriginalIndex;
+        private bool _isPanelDragging = false;
+        private bool _panelDragChanged = false;
+        private DockEdge _dragStartEdge;
+        private int _dragStartMonitorIndex;
         private List<Button> _userButtons = [];
         private List<CustomElement> _activeContextElements = [];
         private int _pendingContextAnimationDirection;
@@ -68,6 +72,7 @@ namespace AiteBar
         private const int WM_HOTKEY = 0x0312;
         private const double PanelScreenPadding = 20;
         private const double ButtonPitch = PanelLayoutHelper.ButtonOuterSize;
+        private const double DragHandleSpan = 18;
         public MainWindow()
         {
             InitializeComponent();
@@ -447,8 +452,24 @@ namespace AiteBar
             RootBorder.MinHeight = metrics.PanelHeight;
             RootBorder.MaxHeight = metrics.PanelHeight;
 
-            MainPanel.Width = Math.Max(0, metrics.PanelWidth - PanelLayoutHelper.PanelChrome);
-            MainPanel.Height = Math.Max(0, metrics.PanelHeight - PanelLayoutHelper.PanelChrome);
+            double contentWidth = Math.Max(0, metrics.PanelWidth - PanelLayoutHelper.PanelChrome);
+            double contentHeight = Math.Max(0, metrics.PanelHeight - PanelLayoutHelper.PanelChrome);
+
+            if (isVertical)
+            {
+                RootBorder.MinHeight += DragHandleSpan;
+                RootBorder.MaxHeight += DragHandleSpan;
+                contentHeight += DragHandleSpan;
+            }
+            else
+            {
+                RootBorder.MinWidth += DragHandleSpan;
+                RootBorder.MaxWidth += DragHandleSpan;
+                contentWidth += DragHandleSpan;
+            }
+
+            MainPanel.Width = contentWidth;
+            MainPanel.Height = contentHeight;
             FixedPanel.Width = metrics.FixedWidth;
             FixedPanel.Height = metrics.FixedHeight;
             UserButtonsPanel.Width = metrics.UserWidth;
@@ -723,7 +744,7 @@ namespace AiteBar
                 RefreshPanel();
                 PositionWindowImmediately(_shown);
                 _timer.Tick += (s, ev) => {
-                    if (_isAnimating) return;
+                    if (_isAnimating || _isPanelDragging) return;
                     NativeMethods.Win32Point pt = new();
                     if (NativeMethods.GetCursorPos(ref pt)) {
                         var screens = Screen.AllScreens;
@@ -783,11 +804,29 @@ namespace AiteBar
             if (isVertical) { this.MinWidth = 0; this.MinHeight = 150; }
             else { this.MinWidth = 150; this.MinHeight = 0; }
 
+            System.Windows.Controls.DockPanel.SetDock(DragHandle, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
             FixedPanel.Orientation = orientation;
             UserButtonsPanel.Orientation = orientation;
             SystemUtilsPanel.Orientation = orientation;
             ControlBlock.Orientation = orientation;
             System.Windows.Controls.DockPanel.SetDock(FixedPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
+
+            if (isVertical)
+            {
+                DragHandle.Width = ButtonPitch;
+                DragHandle.Height = 14;
+                DragHandle.Margin = new Thickness(0, 0, 0, 4);
+                DragHandleGrip.Width = 18;
+                DragHandleGrip.Height = 4;
+            }
+            else
+            {
+                DragHandle.Width = 14;
+                DragHandle.Height = ButtonPitch;
+                DragHandle.Margin = new Thickness(0, 0, 4, 0);
+                DragHandleGrip.Width = 4;
+                DragHandleGrip.Height = 18;
+            }
 
             var separators = new[] { SepSystem, SepControl };
             foreach (var sep in separators)
@@ -944,6 +983,109 @@ namespace AiteBar
             AnimateContextTransitionIfNeeded();
             
             UpdatePanelBounds();
+        }
+
+        private static DockEdge GetClosestDockEdge(System.Drawing.Rectangle workArea, int cursorX, int cursorY)
+        {
+            var distances = new Dictionary<DockEdge, int>
+            {
+                [DockEdge.Top] = Math.Abs(cursorY - workArea.Top),
+                [DockEdge.Bottom] = Math.Abs(workArea.Bottom - cursorY),
+                [DockEdge.Left] = Math.Abs(cursorX - workArea.Left),
+                [DockEdge.Right] = Math.Abs(workArea.Right - cursorX)
+            };
+
+            return distances.OrderBy(pair => pair.Value).First().Key;
+        }
+
+        private static int FindScreenIndex(Screen targetScreen)
+        {
+            var screens = Screen.AllScreens;
+            for (int index = 0; index < screens.Length; index++)
+            {
+                if (string.Equals(screens[index].DeviceName, targetScreen.DeviceName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return index;
+                }
+            }
+
+            return 0;
+        }
+
+        private void SetDragHandleActive(bool isActive)
+        {
+            DragHandleGrip.Background = isActive
+                ? (Brush)_brushConverter.ConvertFromString("#007ACC")!
+                : (Brush)_brushConverter.ConvertFromString("#35FFFFFF")!;
+        }
+
+        private void DragHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (!_shown)
+            {
+                return;
+            }
+
+            _isPanelDragging = true;
+            _panelDragChanged = false;
+            _dragStartEdge = _appSettings.Edge;
+            _dragStartMonitorIndex = _appSettings.MonitorIndex;
+            DragHandle.CaptureMouse();
+            SetDragHandleActive(true);
+            e.Handled = true;
+        }
+
+        private void DragHandle_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (!_isPanelDragging || e.LeftButton != MouseButtonState.Pressed)
+            {
+                return;
+            }
+
+            NativeMethods.Win32Point pt = new();
+            if (!NativeMethods.GetCursorPos(ref pt))
+            {
+                return;
+            }
+
+            var targetScreen = Screen.FromPoint(new System.Drawing.Point(pt.X, pt.Y));
+            int nextMonitorIndex = FindScreenIndex(targetScreen);
+            DockEdge nextEdge = GetClosestDockEdge(targetScreen.WorkingArea, pt.X, pt.Y);
+
+            if (_appSettings.MonitorIndex == nextMonitorIndex && _appSettings.Edge == nextEdge)
+            {
+                return;
+            }
+
+            _appSettings.MonitorIndex = nextMonitorIndex;
+            _appSettings.Edge = nextEdge;
+            _panelDragChanged = true;
+            UpdateOrientation();
+            PositionWindowImmediately(shown: true);
+        }
+
+        private async void DragHandle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (!_isPanelDragging)
+            {
+                return;
+            }
+
+            DragHandle.ReleaseMouseCapture();
+            _isPanelDragging = false;
+            SetDragHandleActive(false);
+
+            if (_panelDragChanged)
+            {
+                await SaveConfig();
+            }
+            else
+            {
+                _appSettings.Edge = _dragStartEdge;
+                _appSettings.MonitorIndex = _dragStartMonitorIndex;
+            }
+
+            e.Handled = true;
         }
 
         private void AnimateContextTransitionIfNeeded()

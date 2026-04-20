@@ -217,14 +217,9 @@ namespace AiteBar
             LoadHotkeyBinding(_settings.Context4Hotkey, ChkContext4Ctrl, ChkContext4Shift, ChkContext4Alt, ChkContext4Win, CmbContext4Key);
 
             // Умная зона активации
-            foreach (ComboBoxItem item in CmbEdge.Items)
-            {
-                if (item.Tag?.ToString() == _settings.Edge.ToString())
-                {
-                    CmbEdge.SelectedItem = item;
-                    break;
-                }
-            }
+            EdgePicker.SelectedEdge = _settings.Edge;
+            EdgePicker.PanelPercent = _settings.PanelSizePercent;
+            EdgePicker.ActivationPercent = _settings.ActivationZoneSizePercent;
 
             CmbMonitor.Items.Clear();
             var screens = System.Windows.Forms.Screen.AllScreens;
@@ -263,11 +258,13 @@ namespace AiteBar
         private void SldZoneSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (TxtZoneSize != null) TxtZoneSize.Text = $"{(int)e.NewValue}%";
+            if (EdgePicker != null) EdgePicker.ActivationPercent = e.NewValue;
         }
 
         private void SldPanelSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (TxtPanelSize != null) TxtPanelSize.Text = $"{(int)e.NewValue}%";
+            if (EdgePicker != null) EdgePicker.PanelPercent = e.NewValue;
         }
 
         private void SldDelay_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -314,8 +311,7 @@ namespace AiteBar
             _settings.ShowPresetCalc = ChkShowPresetCalc.IsChecked ?? false;
 
             // Сохранение настроек активации
-            if (CmbEdge.SelectedItem is ComboBoxItem edgeItem && Enum.TryParse<DockEdge>(edgeItem.Tag?.ToString(), out var edge))
-                _settings.Edge = edge;
+            _settings.Edge = EdgePicker.SelectedEdge;
             
             if (CmbMonitor.SelectedItem is ComboBoxItem monitorItem)
                 _settings.MonitorIndex = (int)(monitorItem.Tag ?? 0);
