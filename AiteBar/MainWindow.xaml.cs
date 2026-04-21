@@ -125,7 +125,7 @@ namespace AiteBar
             menu.Opened += (s, e) => _isElementContextMenuOpen = true;
             menu.Closed += (s, e) => _isElementContextMenuOpen = false;
 
-            menu.Items.Add(CreateElementMenuItem(FluentGlyph(62979), "Открепить от панели", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(62979), "Открепить от панели", async (s, e) =>
             {
                 await RunPanelInteractionAsync(async () =>
                 {
@@ -138,15 +138,18 @@ namespace AiteBar
             return menu;
         }
 
-        private MenuItem CreateElementMenuItem(string glyph, string text, RoutedEventHandler onClick, bool isDanger = false)
+        private MenuItem CreateMenuItem(string glyph, string text, RoutedEventHandler? onClick = null, bool isDanger = false, bool isActive = false)
         {
             var accentBrush = isDanger 
                 ? new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#FF5252"))
-                : new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#E3E3E3"));
+                : isActive
+                    ? (Brush)FindResource("AccentColor")
+                    : new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#E3E3E3"));
 
             var item = new MenuItem
             {
                 Header = text,
+                Style = (Style)FindResource("DarkMenuItem"),
                 Icon = new System.Windows.Controls.TextBlock
                 {
                     Text = glyph,
@@ -163,7 +166,11 @@ namespace AiteBar
                 item.Foreground = accentBrush;
             }
 
-            item.Click += onClick;
+            if (onClick != null)
+            {
+                item.Click += onClick;
+            }
+
             return item;
         }
 
@@ -242,27 +249,15 @@ namespace AiteBar
             foreach (var context in _appSettings.Contexts)
             {
                 bool isActive = string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal);
-                var item = new MenuItem
-                {
-                    Header = context.Name,
-                    Style = (Style)FindResource("DarkMenuItem")
-                };
-
-                if (isActive)
-                {
-                    item.Icon = new System.Windows.Controls.TextBlock
-                    {
-                        Text = FluentGlyph(62261), // Accept/Checkmark
-                        FontFamily = MenuIconFont,
-                        FontSize = 18,
-                        Foreground = new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#007ACC")),
-                        VerticalAlignment = VerticalAlignment.Center,
-                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center
-                    };
-                }
-
                 string targetContextId = context.Id;
-                item.Click += (s, e) => ActivateContextById(targetContextId);
+                
+                var item = CreateMenuItem(
+                    glyph: isActive ? FluentGlyph(62261) : string.Empty,
+                    text: context.Name,
+                    onClick: (s, e) => ActivateContextById(targetContextId),
+                    isActive: isActive
+                );
+
                 menu.Items.Add(item);
             }
 
@@ -275,24 +270,24 @@ namespace AiteBar
             menu.Opened += (s, e) => _isElementContextMenuOpen = true;
             menu.Closed += (s, e) => _isElementContextMenuOpen = false;
 
-            menu.Items.Add(CreateElementMenuItem(FluentGlyph(62034), "Редактировать", (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(62034), "Редактировать", (s, e) =>
             {
                 RunPanelInteraction(() => new SettingsWindow(this, element) { Owner = this }.ShowDialog());
             }));
 
-            menu.Items.Add(CreateElementMenuItem(FluentGlyph(62251), "Дублировать", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(62251), "Дублировать", async (s, e) =>
             {
                 await RunPanelInteractionAsync(() => DuplicateElementAsync(element));
             }));
 
-            menu.Items.Add(CreateElementMenuItem(FluentGlyph(63081), "Переименовать", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(63081), "Переименовать", async (s, e) =>
             {
                 await RunPanelInteractionAsync(() => RenameElementAsync(element));
             }));
 
             var moveTargets = _appSettings.Contexts
                 .Where(context => !string.Equals(context.Id, element.ContextId, StringComparison.Ordinal))
-                .Select(context => CreateElementMenuItem(FluentGlyph(61837), context.Name, async (s, e) =>
+                .Select(context => CreateMenuItem(FluentGlyph(61837), context.Name, async (s, e) =>
                 {
                     await RunPanelInteractionAsync(() => MoveElementToContextAsync(element.Id, context.Id));
                 }))
@@ -300,26 +295,11 @@ namespace AiteBar
 
             if (moveTargets.Count > 0)
             {
-                var moveMenu = new MenuItem
-                {
-                    Header = "Переместить",
-                    Icon = new System.Windows.Controls.TextBlock
-                    {
-                        Text = FluentGlyph(61837),
-                        FontFamily = MenuIconFont,
-                        FontSize = 18,
-                        Foreground = new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#E3E3E3")),
-                        VerticalAlignment = VerticalAlignment.Center,
-                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center
-                    },
-                    Style = (Style)FindResource("DarkMenuItem")
-                };
-
+                var moveMenu = CreateMenuItem(FluentGlyph(61837), "Переместить");
                 foreach (var moveTarget in moveTargets)
                 {
                     moveMenu.Items.Add(moveTarget);
                 }
-
                 menu.Items.Add(moveMenu);
             }
 
@@ -330,13 +310,13 @@ namespace AiteBar
 
             if (CanOpenElementLocation(element))
             {
-                menu.Items.Add(CreateElementMenuItem(FluentGlyph(59537), "Открыть расположение", async (s, e) =>
+                menu.Items.Add(CreateMenuItem(FluentGlyph(59537), "Открыть расположение", async (s, e) =>
                 {
                     await RunPanelInteractionAsync(() => OpenElementLocationAsync(element));
                 }));
             }
 
-            menu.Items.Add(CreateElementMenuItem(FluentGlyph(62284), "Удалить", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(62284), "Удалить", async (s, e) =>
             {
                 await RunPanelInteractionAsync(() => DeleteElementAsync(element));
             }, isDanger: true));
@@ -436,7 +416,7 @@ namespace AiteBar
                 return false;
             }
 
-            menuItem = CreateElementMenuItem(FluentGlyph(62153), caption, (s, e) =>
+            menuItem = CreateMenuItem(FluentGlyph(62153), caption, (s, e) =>
             {
                 try
                 {
@@ -843,12 +823,12 @@ namespace AiteBar
         {
             var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
 
-            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(61453), "Открыть", (s, e) => { if (!_shown) { _shown = true; Toggle(false); } }));
-            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(62135), "Настройки программы", (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
-            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(59718), "О программе", (s, e) => new AboutWindow { Owner = this }.ShowDialog()));
-            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(59613), "Справка", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/products/aitebar/guide.html")));
-            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(60049), "Поддержать автора", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/pages/donate.html")));
-            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(62284), "Закрыть и выйти", (s, e) => { _notifyIcon.Dispose(); Application.Current.Shutdown(); }));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(61453), "Открыть", (s, e) => { if (!_shown) { _shown = true; Toggle(false); } }));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(62135), "Настройки программы", (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(59718), "О программе", (s, e) => new AboutWindow { Owner = this }.ShowDialog()));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(59613), "Справка", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/products/aitebar/guide.html")));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(60049), "Поддержать автора", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/pages/donate.html")));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(62284), "Закрыть и выйти", (s, e) => { _notifyIcon.Dispose(); Application.Current.Shutdown(); }));
 
             // Для того чтобы ContextMenu закрывалось при клике мимо, 
             // его нужно привязать к невидимому элементу или использовать Placement.
@@ -858,26 +838,6 @@ namespace AiteBar
             // Важный хак для WPF ContextMenu в трее: фокус окна
             var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
             NativeMethods.SetForegroundWindow(hwnd);
-        }
-
-        private MenuItem CreateTrayMenuItem(string glyph, string text, RoutedEventHandler onClick)
-        {
-            var item = new MenuItem
-            {
-                Header = text,
-                Icon = new System.Windows.Controls.TextBlock
-                {
-                    Text = glyph,
-                    FontFamily = MenuIconFont,
-                    FontSize = 16,
-                    Foreground = new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#E3E3E3")),
-                    VerticalAlignment = VerticalAlignment.Center,
-                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center
-                },
-                Style = (Style)FindResource("DarkMenuItem")
-            };
-            item.Click += onClick;
-            return item;
         }
 
         private bool IsPanelInteractionActive => _isElementContextMenuOpen || _isBlockingPanelInteraction || _isPanelDragging;

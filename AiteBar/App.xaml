@@ -51,6 +51,7 @@
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="MinHeight" Value="34"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="MenuItem">
@@ -72,24 +73,26 @@
                                                   ContentSource="Icon"
                                                   HorizontalAlignment="Center"
                                                   VerticalAlignment="Center"
-                                                  Width="20" Height="20">
+                                                  Width="18" Height="18">
                                     <ContentPresenter.Resources>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="FontSize" Value="18"/>
+                                            <Setter Property="FontSize" Value="16"/>
+                                            <Setter Property="VerticalAlignment" Value="Center"/>
+                                            <Setter Property="HorizontalAlignment" Value="Center"/>
                                         </Style>
                                     </ContentPresenter.Resources>
                                 </ContentPresenter>
 
                                 <ContentPresenter Grid.Column="1"
                                                   ContentSource="Header"
-                                                  Margin="12,7,12,7"
+                                                  Margin="8,0,12,0"
                                                   RecognizesAccessKey="True"
                                                   VerticalAlignment="Center"/>
 
                                 <TextBlock x:Name="GestureText"
                                            Grid.Column="2"
                                            Text="{TemplateBinding InputGestureText}"
-                                           Margin="20,7,12,7"
+                                           Margin="20,0,12,0"
                                            Foreground="#8F959E"
                                            VerticalAlignment="Center"
                                            Visibility="Collapsed"/>
