@@ -21,6 +21,7 @@ using Button = System.Windows.Controls.Button;
 using Panel = System.Windows.Controls.Panel;
 using ContextMenu = System.Windows.Controls.ContextMenu;
 using MenuItem = System.Windows.Controls.MenuItem;
+using Separator = System.Windows.Controls.Separator;
 using Application = System.Windows.Application;
 using Clipboard = System.Windows.Clipboard;
 using Brush = System.Windows.Media.Brush;
@@ -29,6 +30,9 @@ using DragEventArgs = System.Windows.DragEventArgs;
 using DataFormats = System.Windows.DataFormats;
 using DragDropEffects = System.Windows.DragDropEffects;
 using Point = System.Windows.Point;
+using FontFamily = System.Windows.Media.FontFamily;
+using MediaColor = System.Windows.Media.Color;
+using MediaColorConverter = System.Windows.Media.ColorConverter;
 
 namespace AiteBar
 {
@@ -40,6 +44,8 @@ namespace AiteBar
         private bool _shown = false, _isAnimating = false;
         private double _panelLeft, _panelTop, _panelRight, _panelBottom, _cachedDpi = 1.0;
         private static readonly BrushConverter _brushConverter = new();
+        private static FontFamily? _menuIconFont;
+        private static FontFamily MenuIconFont => _menuIconFont ??= FontHelper.Resolve(FontHelper.FluentKey);
         private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
         private readonly string _configFile;
         private readonly string _settingsFile;
@@ -58,7 +64,8 @@ namespace AiteBar
         private bool _panelDragChanged = false;
         private DockEdge _dragStartEdge;
         private int _dragStartMonitorIndex;
-        private int _panelInteractionDepth;
+        private bool _isElementContextMenuOpen;
+        private bool _isBlockingPanelInteraction;
         private List<Button> _userButtons = [];
         private List<CustomElement> _activeContextElements = [];
         private int _pendingContextAnimationDirection;
@@ -98,6 +105,33 @@ namespace AiteBar
                 UninstallMouseHook();
                 UnregisterGlobalHotkey();
             };
+        }
+
+        private void AttachSystemUtilityContextMenus()
+        {
+            BtnSearch.ContextMenu = BuildSystemUtilityContextMenu("Поиск", () => _appSettings.ShowPresetSearch = false);
+            BtnScreenshot.ContextMenu = BuildSystemUtilityContextMenu("Скриншот", () => _appSettings.ShowPresetScreenshot = false);
+            BtnRecord.ContextMenu = BuildSystemUtilityContextMenu("Видео", () => _appSettings.ShowPresetVideo = false);
+            BtnCalc.ContextMenu = BuildSystemUtilityContextMenu("Калькулятор", () => _appSettings.ShowPresetCalc = false);
+        }
+
+        private ContextMenu BuildSystemUtilityContextMenu(string title, Action detachAction)
+        {
+            var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
+            menu.Opened += (s, e) => _isElementContextMenuOpen = true;
+            menu.Closed += (s, e) => _isElementContextMenuOpen = false;
+
+            menu.Items.Add(CreateElementMenuItem(FluentGlyph(62979), "Открепить от панели", async (s, e) =>
+            {
+                await RunPanelInteractionAsync(async () =>
+                {
+                    detachAction();
+                    await SaveConfig();
+                    RefreshPanel();
+                });
+            }));
+
+            return menu;
         }
 
         private async Task LoadSettings()
@@ -331,13 +365,25 @@ namespace AiteBar
 
             foreach (var context in _appSettings.Contexts)
             {
+                bool isActive = string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal);
                 var item = new MenuItem
                 {
                     Header = context.Name,
-                    IsCheckable = true,
-                    IsChecked = string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal),
                     Style = (Style)FindResource("DarkMenuItem")
                 };
+
+                if (isActive)
+                {
+                    item.Icon = new System.Windows.Controls.TextBlock
+                    {
+                        Text = FluentGlyph(62261), // Accept/Checkmark
+                        FontFamily = MenuIconFont,
+                        FontSize = 18,
+                        Foreground = new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#007ACC")),
+                        VerticalAlignment = VerticalAlignment.Center,
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+                    };
+                }
 
                 string targetContextId = context.Id;
                 item.Click += (s, e) => ActivateContextById(targetContextId);
@@ -345,6 +391,344 @@ namespace AiteBar
             }
 
             RootBorder.ContextMenu = menu;
+        }
+
+        private ContextMenu BuildElementContextMenu(CustomElement element)
+        {
+            var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
+            menu.Opened += (s, e) => _isElementContextMenuOpen = true;
+            menu.Closed += (s, e) => _isElementContextMenuOpen = false;
+
+            menu.Items.Add(CreateElementMenuItem(FluentGlyph(62034), "Редактировать", (s, e) =>
+            {
+                RunPanelInteraction(() => new SettingsWindow(this, element) { Owner = this }.ShowDialog());
+            }));
+
+            menu.Items.Add(CreateElementMenuItem(FluentGlyph(62251), "Дублировать", async (s, e) =>
+            {
+                await RunPanelInteractionAsync(() => DuplicateElementAsync(element));
+            }));
+
+            menu.Items.Add(CreateElementMenuItem(FluentGlyph(63081), "Переименовать", async (s, e) =>
+            {
+                await RunPanelInteractionAsync(() => RenameElementAsync(element));
+            }));
+
+            var moveTargets = _appSettings.Contexts
+                .Where(context => !string.Equals(context.Id, element.ContextId, StringComparison.Ordinal))
+                .Select(context => CreateElementMenuItem(FluentGlyph(61837), context.Name, async (s, e) =>
+                {
+                    await RunPanelInteractionAsync(() => MoveElementToContextAsync(element.Id, context.Id));
+                }))
+                .ToList();
+
+            if (moveTargets.Count > 0)
+            {
+                var moveMenu = new MenuItem
+                {
+                    Header = "Переместить",
+                    Icon = new System.Windows.Controls.TextBlock
+                    {
+                        Text = FluentGlyph(61837),
+                        FontFamily = MenuIconFont,
+                        FontSize = 18,
+                        Foreground = new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#E3E3E3")),
+                        VerticalAlignment = VerticalAlignment.Center,
+                        HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+                    },
+                    Style = (Style)FindResource("DarkMenuItem")
+                };
+
+                foreach (var moveTarget in moveTargets)
+                {
+                    moveMenu.Items.Add(moveTarget);
+                }
+
+                menu.Items.Add(moveMenu);
+            }
+
+            if (TryCreateCopyActionMenuItem(element, out var copyItem))
+            {
+                menu.Items.Add(copyItem);
+            }
+
+            if (CanOpenElementLocation(element))
+            {
+                menu.Items.Add(CreateElementMenuItem(FluentGlyph(59537), "Открыть расположение", async (s, e) =>
+                {
+                    await RunPanelInteractionAsync(() => OpenElementLocationAsync(element));
+                }));
+            }
+
+            menu.Items.Add(CreateElementMenuItem(FluentGlyph(62284), "Удалить", async (s, e) =>
+            {
+                await RunPanelInteractionAsync(() => DeleteElementAsync(element));
+            }, isDanger: true));
+
+            return menu;
+        }
+
+        private MenuItem CreateElementMenuItem(string glyph, string text, RoutedEventHandler onClick, bool isDanger = false)
+        {
+            var accentBrush = isDanger
+                ? new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#FF5252"))
+                : new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#E3E3E3"));
+
+            var item = new MenuItem
+            {
+                Header = text,
+                Icon = new System.Windows.Controls.TextBlock
+                {
+                    Text = glyph,
+                    FontFamily = MenuIconFont,
+                    FontSize = 18,
+                    Foreground = accentBrush,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+                },
+                Style = (Style)FindResource("DarkMenuItem")
+            };
+
+            if (isDanger)
+            {
+                item.Foreground = accentBrush;
+            }
+
+            item.Click += onClick;
+            return item;
+        }
+
+        private async Task DuplicateElementAsync(CustomElement source)
+        {
+            var duplicate = CloneElement(source);
+            duplicate.Id = Guid.NewGuid().ToString();
+            duplicate.Name = BuildDuplicateElementName(source.Name);
+            duplicate.LastUsedProfile = "";
+
+            int sourceIndex = _elements.FindIndex(x => string.Equals(x.Id, source.Id, StringComparison.Ordinal));
+            if (sourceIndex >= 0)
+            {
+                _elements.Insert(sourceIndex + 1, duplicate);
+            }
+            else
+            {
+                _elements.Add(duplicate);
+            }
+
+            await SaveConfig();
+            RefreshPanel();
+            new SettingsWindow(this, duplicate) { Owner = this }.ShowDialog();
+        }
+
+        private string BuildDuplicateElementName(string sourceName)
+        {
+            string baseName = string.IsNullOrWhiteSpace(sourceName) ? "Новая кнопка" : sourceName.Trim();
+            string firstCandidate = $"{baseName} (копия)";
+            if (_elements.All(x => !string.Equals(x.Name, firstCandidate, StringComparison.OrdinalIgnoreCase)))
+            {
+                return firstCandidate;
+            }
+
+            for (int index = 2; ; index++)
+            {
+                string candidate = $"{baseName} (копия {index})";
+                if (_elements.All(x => !string.Equals(x.Name, candidate, StringComparison.OrdinalIgnoreCase)))
+                {
+                    return candidate;
+                }
+            }
+        }
+
+        private async Task RenameElementAsync(CustomElement source)
+        {
+            var elementToRename = _elements.FirstOrDefault(x => string.Equals(x.Id, source.Id, StringComparison.Ordinal));
+            if (elementToRename == null)
+            {
+                return;
+            }
+
+            var dialog = new TextPromptDialog("Переименовать кнопку", "Новое имя", elementToRename.Name) { Owner = this };
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            string newName = dialog.Value.Trim();
+            if (string.Equals(elementToRename.Name, newName, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            elementToRename.Name = newName;
+            await SaveConfig();
+            RefreshPanel();
+        }
+
+        private async Task MoveElementToContextAsync(string elementId, string targetContextId)
+        {
+            var elementToMove = _elements.FirstOrDefault(x => string.Equals(x.Id, elementId, StringComparison.Ordinal));
+            if (elementToMove == null || string.Equals(elementToMove.ContextId, targetContextId, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            elementToMove.ContextId = targetContextId;
+            await SaveConfig();
+            RefreshPanel();
+        }
+
+        private async Task DeleteElementAsync(CustomElement source)
+        {
+            var elementToDelete = _elements.FirstOrDefault(x => string.Equals(x.Id, source.Id, StringComparison.Ordinal));
+            if (elementToDelete == null)
+            {
+                return;
+            }
+
+            var dialog = new DarkDialog($"Удалить '{elementToDelete.Name}'?", isConfirm: true) { Owner = this };
+            if (dialog.ShowDialog() != true)
+            {
+                return;
+            }
+
+            _elements.RemoveAll(x => string.Equals(x.Id, elementToDelete.Id, StringComparison.Ordinal));
+            await SaveConfig();
+            RefreshPanel();
+        }
+
+        private bool TryCreateCopyActionMenuItem(CustomElement element, out MenuItem menuItem)
+        {
+            menuItem = null!;
+
+            if (!TryGetCopyValue(element, out var caption, out var value))
+            {
+                return false;
+            }
+
+            menuItem = CreateElementMenuItem(FluentGlyph(62153), caption, (s, e) =>
+            {
+                try
+                {
+                    Clipboard.SetText(value);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+            });
+            return true;
+        }
+
+        private static bool TryGetCopyValue(CustomElement element, out string caption, out string value)
+        {
+            caption = string.Empty;
+            value = string.Empty;
+
+            if (string.IsNullOrWhiteSpace(element.ActionValue) ||
+                !Enum.TryParse<ActionType>(element.ActionType, out var actionType))
+            {
+                return false;
+            }
+
+            switch (actionType)
+            {
+                case ActionType.Web:
+                    caption = "Копировать URL";
+                    value = element.ActionValue;
+                    return true;
+                case ActionType.Program:
+                case ActionType.File:
+                case ActionType.Folder:
+                case ActionType.ScriptFile:
+                    caption = "Копировать путь";
+                    value = element.ActionValue;
+                    return true;
+                case ActionType.Command:
+                    caption = "Копировать команду";
+                    value = element.ActionValue;
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        private static string FluentGlyph(int codePoint) => char.ConvertFromUtf32(codePoint);
+
+        private static bool CanOpenElementLocation(CustomElement element)
+        {
+            if (!Enum.TryParse<ActionType>(element.ActionType, out var actionType))
+            {
+                return false;
+            }
+
+            return actionType is ActionType.Program or ActionType.File or ActionType.Folder or ActionType.ScriptFile;
+        }
+
+        private async Task OpenElementLocationAsync(CustomElement element)
+        {
+            try
+            {
+                if (!Enum.TryParse<ActionType>(element.ActionType, out var actionType))
+                {
+                    return;
+                }
+
+                string target = element.ActionValue;
+                if (string.IsNullOrWhiteSpace(target))
+                {
+                    return;
+                }
+
+                switch (actionType)
+                {
+                    case ActionType.Folder:
+                        if (Directory.Exists(target))
+                        {
+                            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{target}\"") { UseShellExecute = true });
+                        }
+                        break;
+
+                    case ActionType.Program:
+                    case ActionType.File:
+                    case ActionType.ScriptFile:
+                        if (File.Exists(target))
+                        {
+                            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{target}\"") { UseShellExecute = true });
+                        }
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                await Task.Yield();
+            }
+        }
+
+        private void RunPanelInteraction(Action action)
+        {
+            BeginBlockingPanelInteraction();
+            try
+            {
+                action();
+            }
+            finally
+            {
+                EndBlockingPanelInteraction();
+            }
+        }
+
+        private async Task RunPanelInteractionAsync(Func<Task> action)
+        {
+            BeginBlockingPanelInteraction();
+            try
+            {
+                await action();
+            }
+            finally
+            {
+                EndBlockingPanelInteraction();
+            }
         }
 
         private void ActivateContextById(string contextId)
@@ -626,23 +1010,55 @@ namespace AiteBar
                 } else _notifyIcon.Icon = SystemIcons.Application;
             } catch (Exception ex) { Logger.Log(ex); _notifyIcon.Icon = SystemIcons.Application; }
 
-            var trayMenu = new System.Windows.Forms.ContextMenuStrip();
-            trayMenu.Items.Add("Открыть", null, (s, e) => { if (!_shown) { _shown = true; Toggle(false); } });
-            
-            trayMenu.Items.Add("Настройки программы", null, (s, e) => Dispatcher.Invoke(() => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
-            trayMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-            trayMenu.Items.Add("О программе", null, (s, e) => Dispatcher.Invoke(() => new AboutWindow { Owner = this }.ShowDialog()));
-            trayMenu.Items.Add("Справка", null, (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/products/aitebar/guide.html"));
-            trayMenu.Items.Add("Поддержать автора", null, (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/pages/donate.html"));
-            trayMenu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
-            trayMenu.Items.Add("Закрыть и выйти", null, (s, e) => { _notifyIcon.Dispose(); Application.Current.Shutdown(); });
-
-            _notifyIcon.ContextMenuStrip = trayMenu;
             _notifyIcon.MouseClick += (s, e) => {
                 if (e.Button == System.Windows.Forms.MouseButtons.Left) {
                     if (!_shown) { _shown = true; Toggle(false); }
                 }
+                else if (e.Button == System.Windows.Forms.MouseButtons.Right) {
+                    ShowTrayContextMenu();
+                }
             };
+        }
+
+        private void ShowTrayContextMenu()
+        {
+            var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
+
+            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(61453), "Открыть", (s, e) => { if (!_shown) { _shown = true; Toggle(false); } }));
+            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(62135), "Настройки программы", (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
+            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(59718), "О программе", (s, e) => new AboutWindow { Owner = this }.ShowDialog()));
+            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(59613), "Справка", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/products/aitebar/guide.html")));
+            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(60049), "Поддержать автора", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/pages/donate.html")));
+            menu.Items.Add(CreateTrayMenuItem(FluentGlyph(62284), "Закрыть и выйти", (s, e) => { _notifyIcon.Dispose(); Application.Current.Shutdown(); }));
+
+            // Для того чтобы ContextMenu закрывалось при клике мимо, 
+            // его нужно привязать к невидимому элементу или использовать Placement.
+            menu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
+            menu.IsOpen = true;
+
+            // Важный хак для WPF ContextMenu в трее: фокус окна
+            var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+            NativeMethods.SetForegroundWindow(hwnd);
+        }
+
+        private MenuItem CreateTrayMenuItem(string glyph, string text, RoutedEventHandler onClick)
+        {
+            var item = new MenuItem
+            {
+                Header = text,
+                Icon = new System.Windows.Controls.TextBlock
+                {
+                    Text = glyph,
+                    FontFamily = MenuIconFont,
+                    FontSize = 16,
+                    Foreground = new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#E3E3E3")),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+                },
+                Style = (Style)FindResource("DarkMenuItem")
+            };
+            item.Click += onClick;
+            return item;
         }
 
         private void InstallMouseHook()
@@ -683,21 +1099,17 @@ namespace AiteBar
             return NativeMethods.CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }
 
-        private bool IsPanelInteractionActive => _panelInteractionDepth > 0;
+        private bool IsPanelInteractionActive => _isElementContextMenuOpen || _isBlockingPanelInteraction;
 
-        private void BeginPanelInteraction()
+        private void BeginBlockingPanelInteraction()
         {
-            _panelInteractionDepth++;
+            _isBlockingPanelInteraction = true;
             _hoverStartTime = null;
         }
 
-        private void EndPanelInteraction()
+        private void EndBlockingPanelInteraction()
         {
-            if (_panelInteractionDepth > 0)
-            {
-                _panelInteractionDepth--;
-            }
-
+            _isBlockingPanelInteraction = false;
             _hoverStartTime = null;
         }
 
@@ -716,47 +1128,83 @@ namespace AiteBar
             catch (Exception ex) { Logger.Log(ex); }
         }
 
-        private Rect GetTargetWorkArea()
+        private (Rect WorkArea, Rect Bounds) GetTargetScreenMetrics()
         {
             var screen = GetTargetScreen();
-            var workArea = screen?.WorkingArea ?? Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, (int)SystemParameters.WorkArea.Width, (int)SystemParameters.WorkArea.Height);
-            return new Rect(
-                workArea.Left / _cachedDpi,
-                workArea.Top / _cachedDpi,
-                workArea.Width / _cachedDpi,
-                workArea.Height / _cachedDpi);
+            
+            // Если экран не найден, используем PrimaryScreen. Если и его нет, используем системные параметры.
+            var primary = Screen.PrimaryScreen;
+            var drawingWorkArea = screen?.WorkingArea ?? primary?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight);
+            var drawingBounds = screen?.Bounds ?? primary?.Bounds ?? new System.Drawing.Rectangle(0, 0, (int)SystemParameters.PrimaryScreenWidth, (int)SystemParameters.PrimaryScreenHeight);
+
+            // Если мы упали в fallback через SystemParameters, то значения уже в DIP-ах, и делить на DPI не нужно.
+            // Если же мы взяли значения из Screen (System.Drawing), то они в пикселях и требуют деления.
+            bool isFromSystemParameters = (screen == null && primary == null);
+            double dpi = (isFromSystemParameters || _cachedDpi <= 0) ? 1.0 : _cachedDpi;
+
+            return (
+                new Rect(drawingWorkArea.Left / dpi, drawingWorkArea.Top / dpi, drawingWorkArea.Width / dpi, drawingWorkArea.Height / dpi),
+                new Rect(drawingBounds.Left / dpi, drawingBounds.Top / dpi, drawingBounds.Width / dpi, drawingBounds.Height / dpi)
+            );
         }
 
         private (double X, double Y) GetDockCoordinates(bool hide)
         {
-            UpdateLayout();
-            var workArea = GetTargetWorkArea();
-            double width = Math.Max(0, ActualWidth);
-            double height = Math.Max(0, ActualHeight);
+            var metrics = GetTargetScreenMetrics();
+            var workArea = metrics.WorkArea;
+            var bounds = metrics.Bounds;
+
+            // Используем DesiredSize если ActualWidth еще не рассчитан (0)
+            double width = ActualWidth > 0 ? ActualWidth : (RootBorder?.DesiredSize.Width ?? 0);
+            double height = ActualHeight > 0 ? ActualHeight : (RootBorder?.DesiredSize.Height ?? 0);
+            
+            // Если все еще 0, пробуем запустить Measure
+            if ((width == 0 || height == 0) && RootBorder != null)
+            {
+                RootBorder.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+                width = RootBorder.DesiredSize.Width;
+                height = RootBorder.DesiredSize.Height;
+            }
+
+            // Защита от нулевых размеров
+            if (width == 0) width = 200;
+            if (height == 0) height = 50;
+
             double centeredX = workArea.Left + Math.Max(0, (workArea.Width - width) / 2);
             double centeredY = workArea.Top + Math.Max(0, (workArea.Height - height) / 2);
 
             return _appSettings.Edge switch
             {
-                DockEdge.Top => (centeredX, hide ? workArea.Top - height : workArea.Top),
-                DockEdge.Bottom => (centeredX, hide ? workArea.Bottom : workArea.Bottom - height),
-                DockEdge.Left => (hide ? workArea.Left - width : workArea.Left, centeredY),
-                DockEdge.Right => (hide ? workArea.Right : workArea.Right - width, centeredY),
+                DockEdge.Top => (centeredX, hide ? bounds.Top - height : workArea.Top),
+                DockEdge.Bottom => (centeredX, hide ? bounds.Bottom : workArea.Bottom - height),
+                DockEdge.Left => (hide ? bounds.Left - width : workArea.Left, centeredY),
+                DockEdge.Right => (hide ? bounds.Right : workArea.Right - width, centeredY),
                 _ => (workArea.Left, workArea.Top)
             };
         }
 
+        private bool _isPositioning = false;
         private void PositionWindowImmediately(bool shown)
         {
-            var coordinates = GetDockCoordinates(hide: !shown);
-            Left = coordinates.X;
-            Top = coordinates.Y;
-            UpdatePanelBounds();
+            if (_isPositioning) return;
+            _isPositioning = true;
+            try
+            {
+                var coordinates = GetDockCoordinates(hide: !shown);
+                Left = coordinates.X;
+                Top = coordinates.Y;
+                UpdatePanelBounds();
+            }
+            finally
+            {
+                _isPositioning = false;
+            }
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e) {
             try
             {
+                AttachSystemUtilityContextMenus();
                 await LoadSettings();
                 RegisterGlobalHotkey();
                 RefreshPanel();
@@ -950,57 +1398,7 @@ namespace AiteBar
                     _draggedButton = null; _draggedElement = null; _isReordering = false;
                 };
 
-                var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
-                menu.Opened += (s, e) => BeginPanelInteraction();
-                menu.Closed += (s, e) => EndPanelInteraction();
-                var editItem = new MenuItem { Header = "Редактировать", Style = (Style)FindResource("DarkMenuItem") };
-                editItem.Click += (s, e) => new SettingsWindow(this, el).ShowDialog();
-                var delItem = new MenuItem { Header = "Удалить", Style = (Style)FindResource("DarkMenuItem") };
-                var capturedId = el.Id; var capturedName = el.Name;
-                delItem.Click += async (s, e) => {
-                    BeginPanelInteraction();
-                    try
-                    {
-                        var dlg = new DarkDialog($"Удалить '{capturedName}'?", isConfirm: true) { Owner = this };
-                        if (dlg.ShowDialog() == true) {
-                            _elements.RemoveAll(x => x.Id == capturedId);
-                            await SaveConfig();
-                            RefreshPanel();
-                        }
-                    }
-                    finally
-                    {
-                        EndPanelInteraction();
-                    }
-                };
-
-                var moveItems = new List<MenuItem>();
-                foreach (var context in _appSettings.Contexts.Where(context => !string.Equals(context.Id, el.ContextId, StringComparison.Ordinal)))
-                {
-                    var moveTargetItem = new MenuItem { Header = $"Переместить в: {context.Name}", Style = (Style)FindResource("DarkMenuItem") };
-                    string targetContextId = context.Id;
-                    moveTargetItem.Click += async (s, e) =>
-                    {
-                        var elementToMove = _elements.FirstOrDefault(x => string.Equals(x.Id, capturedId, StringComparison.Ordinal));
-                        if (elementToMove == null)
-                        {
-                            return;
-                        }
-
-                        elementToMove.ContextId = targetContextId;
-                        await SaveConfig();
-                        RefreshPanel();
-                    };
-                    moveItems.Add(moveTargetItem);
-                }
-
-                menu.Items.Add(editItem);
-                foreach (var moveTargetItem in moveItems)
-                {
-                    menu.Items.Add(moveTargetItem);
-                }
-                menu.Items.Add(delItem);
-                btn.ContextMenu = menu;
+                btn.ContextMenu = BuildElementContextMenu(el);
                 UserButtonsPanel.Children.Add(btn);
                 _userButtons.Add(btn);
             }

@@ -1,10 +1,150 @@
 <Application x:Class="AiteBar.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="clr-namespace:System;assembly=mscorlib"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <FontFamily x:Key="FontAwesomeBrands">
             pack://application:,,,/Resources/#Font Awesome 7 Brands Regular
         </FontFamily>
+
+        <!-- Глобальные стили меню для всего приложения -->
+        <Style x:Key="DarkContextMenu" TargetType="ContextMenu">
+            <Setter Property="Background" Value="#1E1E1E"/>
+            <Setter Property="BorderBrush" Value="#3E3E42"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="#E3E3E3"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Padding" Value="2,2"/>
+            <Setter Property="OverridesDefaultStyle" Value="True"/>
+            <Setter Property="Grid.IsSharedSizeScope" Value="True"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ContextMenu">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                SnapsToDevicePixels="True">
+                            <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" Margin="0,2"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DarkMenuItem" TargetType="MenuItem">
+            <Setter Property="Foreground" Value="#E3E3E3"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="MenuItem">
+                        <Grid x:Name="Root" SnapsToDevicePixels="True">
+                            <Border x:Name="Bg" 
+                                    Background="{TemplateBinding Background}" 
+                                    CornerRadius="6" 
+                                    Margin="4,1"/>
+                            
+                            <Grid Margin="4,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="32" SharedSizeGroup="IconColumn"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto" SharedSizeGroup="GestureColumn"/>
+                                    <ColumnDefinition Width="20" SharedSizeGroup="ArrowColumn"/>
+                                </Grid.ColumnDefinitions>
+
+                                <ContentPresenter x:Name="Icon"
+                                                  ContentSource="Icon"
+                                                  HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  Width="20" Height="20">
+                                    <ContentPresenter.Resources>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="FontSize" Value="18"/>
+                                        </Style>
+                                    </ContentPresenter.Resources>
+                                </ContentPresenter>
+
+                                <ContentPresenter Grid.Column="1"
+                                                  ContentSource="Header"
+                                                  Margin="12,7,12,7"
+                                                  RecognizesAccessKey="True"
+                                                  VerticalAlignment="Center"/>
+
+                                <TextBlock x:Name="GestureText"
+                                           Grid.Column="2"
+                                           Text="{TemplateBinding InputGestureText}"
+                                           Margin="20,7,12,7"
+                                           Foreground="#8F959E"
+                                           VerticalAlignment="Center"
+                                           Visibility="Collapsed"/>
+
+                                <TextBlock x:Name="Arrow"
+                                           Grid.Column="3"
+                                           Text="&#xE76C;"
+                                           FontFamily="Segoe MDL2 Assets"
+                                           FontSize="11"
+                                           Foreground="#8F959E"
+                                           VerticalAlignment="Center"
+                                           HorizontalAlignment="Center"
+                                           Visibility="Collapsed"/>
+                            </Grid>
+
+                            <Popup x:Name="PART_Popup"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}"
+                                   Placement="Right"
+                                   PopupAnimation="Fade"
+                                   VerticalOffset="-4">
+                                <Border Background="#1E1E1E"
+                                        BorderBrush="#3E3E42"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Padding="2,2"
+                                        SnapsToDevicePixels="True">
+                                    <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" Margin="0,2"/>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsHighlighted" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#3D3D40"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                            <Trigger Property="IsSubmenuOpen" Value="True">
+                                <Setter TargetName="Bg" Property="Background" Value="#3D3D40"/>
+                            </Trigger>
+                            <Trigger Property="HasItems" Value="True">
+                                <Setter TargetName="Arrow" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                            <DataTrigger Binding="{Binding InputGestureText, RelativeSource={RelativeSource Self}}" Value="{x:Null}">
+                                <Setter TargetName="GestureText" Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding InputGestureText, RelativeSource={RelativeSource Self}}" Value="">
+                                <Setter TargetName="GestureText" Property="Visibility" Value="Collapsed"/>
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding InputGestureText, RelativeSource={RelativeSource Self}, Converter={x:Null}}" Value="False">
+                                <Setter TargetName="GestureText" Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#555555"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Применяем стили автоматически ко всем меню в приложении, включая TextBox -->
+        <Style TargetType="ContextMenu" BasedOn="{StaticResource DarkContextMenu}"/>
+        <Style TargetType="MenuItem" BasedOn="{StaticResource DarkMenuItem}"/>
+        
+        <Style TargetType="TextBox">
+            <Setter Property="ContextMenu" Value="{StaticResource DarkContextMenu}"/>
+        </Style>
+        
     </Application.Resources>
 </Application>

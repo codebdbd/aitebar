@@ -22,7 +22,7 @@ public sealed class ReleaseVersionTests
         string? assemblyInfoVersion = FindQuotedValue(assemblyInfoPath, "AssemblyInformationalVersion");
         string? installerVersion = FindQuotedValue(issPath, "#define AppVersion");
 
-        Assert.Equal("1.4.0", projectVersion);
+        Assert.Equal("1.6.1", projectVersion);
         Assert.Equal(projectVersion, assemblyInfoVersion);
         Assert.Equal(projectVersion, installerVersion);
     }

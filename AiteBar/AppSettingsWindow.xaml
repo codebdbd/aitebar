@@ -16,6 +16,10 @@
         <SolidColorBrush x:Key="BorderColor" Color="#3E3E42"/>
         <SolidColorBrush x:Key="AccentColor" Color="#007ACC"/>
         <SolidColorBrush x:Key="MutedText" Color="#9BA1A6"/>
+        <SolidColorBrush x:Key="PanelBadge1" Color="#2563EB"/>
+        <SolidColorBrush x:Key="PanelBadge2" Color="#059669"/>
+        <SolidColorBrush x:Key="PanelBadge3" Color="#D97706"/>
+        <SolidColorBrush x:Key="PanelBadge4" Color="#7C3AED"/>
 
         <Style TargetType="ComboBoxItem">
             <Setter Property="Background" Value="#333337"/>
@@ -242,7 +246,9 @@
                                 <ColumnDefinition Width="30"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="1" Foreground="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                            <Border Width="20" Height="20" CornerRadius="10" Background="{StaticResource PanelBadge1}" VerticalAlignment="Center">
+                                <TextBlock Text="1" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                            </Border>
                             <TextBox x:Name="TxtContext1Name" Grid.Column="1" TextChanged="ContextName_TextChanged"/>
                         </Grid>
                         <Grid Margin="0,0,0,10">
@@ -250,7 +256,9 @@
                                 <ColumnDefinition Width="30"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="2" Foreground="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                            <Border Width="20" Height="20" CornerRadius="10" Background="{StaticResource PanelBadge2}" VerticalAlignment="Center">
+                                <TextBlock Text="2" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                            </Border>
                             <TextBox x:Name="TxtContext2Name" Grid.Column="1" TextChanged="ContextName_TextChanged"/>
                         </Grid>
                         <Grid Margin="0,0,0,10">
@@ -258,7 +266,9 @@
                                 <ColumnDefinition Width="30"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="3" Foreground="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                            <Border Width="20" Height="20" CornerRadius="10" Background="{StaticResource PanelBadge3}" VerticalAlignment="Center">
+                                <TextBlock Text="3" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                            </Border>
                             <TextBox x:Name="TxtContext3Name" Grid.Column="1" TextChanged="ContextName_TextChanged"/>
                         </Grid>
                         <Grid>
@@ -266,7 +276,9 @@
                                 <ColumnDefinition Width="30"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="4" Foreground="{StaticResource MutedText}" VerticalAlignment="Center"/>
+                            <Border Width="20" Height="20" CornerRadius="10" Background="{StaticResource PanelBadge4}" VerticalAlignment="Center">
+                                <TextBlock Text="4" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
+                            </Border>
                             <TextBox x:Name="TxtContext4Name" Grid.Column="1" TextChanged="ContextName_TextChanged"/>
                         </Grid>
                     </StackPanel>
