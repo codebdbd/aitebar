@@ -134,6 +134,35 @@ namespace AiteBar
             return menu;
         }
 
+        private MenuItem CreateElementMenuItem(string glyph, string text, RoutedEventHandler onClick, bool isDanger = false)
+        {
+            var accentBrush = isDanger 
+                ? new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#FF5252"))
+                : new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#E3E3E3"));
+
+            var item = new MenuItem
+            {
+                Header = text,
+                Icon = new System.Windows.Controls.TextBlock
+                {
+                    Text = glyph,
+                    FontFamily = MenuIconFont,
+                    FontSize = 18,
+                    Foreground = accentBrush,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+                }
+            };
+
+            if (isDanger)
+            {
+                item.Foreground = accentBrush;
+            }
+
+            item.Click += onClick;
+            return item;
+        }
+
         private async Task LoadSettings()
         {
             try
@@ -466,36 +495,6 @@ namespace AiteBar
             }, isDanger: true));
 
             return menu;
-        }
-
-        private MenuItem CreateElementMenuItem(string glyph, string text, RoutedEventHandler onClick, bool isDanger = false)
-        {
-            var accentBrush = isDanger
-                ? new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#FF5252"))
-                : new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#E3E3E3"));
-
-            var item = new MenuItem
-            {
-                Header = text,
-                Icon = new System.Windows.Controls.TextBlock
-                {
-                    Text = glyph,
-                    FontFamily = MenuIconFont,
-                    FontSize = 18,
-                    Foreground = accentBrush,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center
-                },
-                Style = (Style)FindResource("DarkMenuItem")
-            };
-
-            if (isDanger)
-            {
-                item.Foreground = accentBrush;
-            }
-
-            item.Click += onClick;
-            return item;
         }
 
         private async Task DuplicateElementAsync(CustomElement source)
@@ -1020,6 +1019,24 @@ namespace AiteBar
             };
         }
 
+        private Button CreatePanelButton(string content, string tooltip, RoutedEventHandler onClick, Brush? foreground = null)
+        {
+            var btn = new Button
+            {
+                Content = content,
+                ToolTip = tooltip,
+                Style = (Style)FindResource("PanelButtonStyle")
+            };
+            
+            if (foreground != null)
+            {
+                btn.Foreground = foreground;
+            }
+            
+            btn.Click += onClick;
+            return btn;
+        }
+
         private void ShowTrayContextMenu()
         {
             var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
@@ -1099,7 +1116,7 @@ namespace AiteBar
             return NativeMethods.CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }
 
-        private bool IsPanelInteractionActive => _isElementContextMenuOpen || _isBlockingPanelInteraction;
+        private bool IsPanelInteractionActive => _isElementContextMenuOpen || _isBlockingPanelInteraction || _isPanelDragging;
 
         private void BeginBlockingPanelInteraction()
         {
@@ -1154,21 +1171,26 @@ namespace AiteBar
             var workArea = metrics.WorkArea;
             var bounds = metrics.Bounds;
 
-            // Используем DesiredSize если ActualWidth еще не рассчитан (0)
-            double width = ActualWidth > 0 ? ActualWidth : (RootBorder?.DesiredSize.Width ?? 0);
-            double height = ActualHeight > 0 ? ActualHeight : (RootBorder?.DesiredSize.Height ?? 0);
+            // Используем заданные ограничения RootBorder вместо ActualWidth/ActualHeight, 
+            // так как Actual-свойства могут быть устаревшими во время смены ориентации (SizeToContent срабатывает не мгновенно).
+            double width = (RootBorder != null && RootBorder.MinWidth > 0) 
+                ? RootBorder.MinWidth + RootBorder.Margin.Left + RootBorder.Margin.Right 
+                : ActualWidth;
+            double height = (RootBorder != null && RootBorder.MinHeight > 0) 
+                ? RootBorder.MinHeight + RootBorder.Margin.Top + RootBorder.Margin.Bottom 
+                : ActualHeight;
             
             // Если все еще 0, пробуем запустить Measure
-            if ((width == 0 || height == 0) && RootBorder != null)
+            if ((width <= 0 || height <= 0) && RootBorder != null)
             {
                 RootBorder.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
-                width = RootBorder.DesiredSize.Width;
-                height = RootBorder.DesiredSize.Height;
+                width = RootBorder.DesiredSize.Width + RootBorder.Margin.Left + RootBorder.Margin.Right;
+                height = RootBorder.DesiredSize.Height + RootBorder.Margin.Top + RootBorder.Margin.Bottom;
             }
 
             // Защита от нулевых размеров
-            if (width == 0) width = 200;
-            if (height == 0) height = 50;
+            if (width <= 0) width = 200;
+            if (height <= 0) height = 50;
 
             double centeredX = workArea.Left + Math.Max(0, (workArea.Width - width) / 2);
             double centeredY = workArea.Top + Math.Max(0, (workArea.Height - height) / 2);
@@ -1329,11 +1351,11 @@ namespace AiteBar
             SystemUtilsPanel.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
 
             foreach (var el in _activeContextElements) {
-                var btn = new Button { 
-                    ToolTip = el.Name, 
-                    Foreground = (Brush)_brushConverter.ConvertFromString(el.Color ?? "#E3E3E3")!,
-                    RenderTransform = new TranslateTransform()
-                };
+                var btn = CreatePanelButton(string.Empty, el.Name, async (s, e) => {
+                    // Обработка клика перенесена в PreviewMouseUp для поддержки реордеринга
+                }, (Brush)_brushConverter.ConvertFromString(el.Color ?? "#E3E3E3")!);
+                
+                btn.RenderTransform = new TranslateTransform();
 
                 if (!string.IsNullOrEmpty(el.ImagePath) && System.IO.File.Exists(el.ImagePath))
                 {
@@ -1344,7 +1366,10 @@ namespace AiteBar
                     bitmap.EndInit();
                     btn.Content = new System.Windows.Controls.Image { Source = bitmap, Width = 24, Height = 24, Stretch = Stretch.Uniform };
                 }
-                else { btn.Content = el.Icon; btn.FontFamily = FontHelper.Resolve(el.IconFont); }
+                else { 
+                    btn.Content = el.Icon; 
+                    btn.FontFamily = FontHelper.Resolve(el.IconFont); 
+                }
                 
                 var capturedElement = el;
                 btn.PreviewMouseDown += (s, e) => {
@@ -1412,7 +1437,7 @@ namespace AiteBar
             UpdatePanelBounds();
         }
 
-        private static DockEdge GetClosestDockEdge(System.Drawing.Rectangle workArea, int cursorX, int cursorY)
+        private static DockEdge GetClosestDockEdge(System.Drawing.Rectangle workArea, int cursorX, int cursorY, DockEdge currentEdge)
         {
             var distances = new Dictionary<DockEdge, int>
             {
@@ -1421,6 +1446,10 @@ namespace AiteBar
                 [DockEdge.Left] = Math.Abs(cursorX - workArea.Left),
                 [DockEdge.Right] = Math.Abs(workArea.Right - cursorX)
             };
+
+            // Применяем небольшой гистерезис (смещение), чтобы панель не "прыгала" 
+            // слишком легко между краями при движении рядом с углами.
+            distances[currentEdge] -= 60;
 
             return distances.OrderBy(pair => pair.Value).First().Key;
         }
@@ -1448,11 +1477,6 @@ namespace AiteBar
 
         private void DragHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (!_shown)
-            {
-                return;
-            }
-
             _isPanelDragging = true;
             _panelDragChanged = false;
             _dragStartEdge = _appSettings.Edge;
@@ -1460,6 +1484,28 @@ namespace AiteBar
             DragHandle.CaptureMouse();
             SetDragHandleActive(true);
             e.Handled = true;
+        }
+
+        private void DragHandle_LostMouseCapture(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            if (!_isPanelDragging)
+            {
+                return;
+            }
+
+            _isPanelDragging = false;
+            SetDragHandleActive(false);
+
+            if (_panelDragChanged)
+            {
+                _ = SaveConfig();
+            }
+            else
+            {
+                _appSettings.Edge = _dragStartEdge;
+                _appSettings.MonitorIndex = _dragStartMonitorIndex;
+                UpdateOrientation();
+            }
         }
 
         private void DragHandle_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
@@ -1477,7 +1523,7 @@ namespace AiteBar
 
             var targetScreen = Screen.FromPoint(new System.Drawing.Point(pt.X, pt.Y));
             int nextMonitorIndex = FindScreenIndex(targetScreen);
-            DockEdge nextEdge = GetClosestDockEdge(targetScreen.WorkingArea, pt.X, pt.Y);
+            DockEdge nextEdge = GetClosestDockEdge(targetScreen.WorkingArea, pt.X, pt.Y, _appSettings.Edge);
 
             if (_appSettings.MonitorIndex == nextMonitorIndex && _appSettings.Edge == nextEdge)
             {
@@ -1488,7 +1534,7 @@ namespace AiteBar
             _appSettings.Edge = nextEdge;
             _panelDragChanged = true;
             UpdateOrientation();
-            PositionWindowImmediately(shown: true);
+            // PositionWindowImmediately(shown: true); // Удалено, так как UpdateOrientation уже вызывает PositionWindowImmediately
         }
 
         private async void DragHandle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
