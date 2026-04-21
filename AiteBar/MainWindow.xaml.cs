@@ -150,14 +150,17 @@ namespace AiteBar
             {
                 Header = text,
                 Style = (Style)FindResource("DarkMenuItem"),
+                Padding = new Thickness(0),
                 Icon = new System.Windows.Controls.TextBlock
                 {
                     Text = glyph,
                     FontFamily = MenuIconFont,
-                    FontSize = 18,
+                    FontSize = 16,
                     Foreground = accentBrush,
                     VerticalAlignment = VerticalAlignment.Center,
-                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                    Padding = new Thickness(0),
+                    Margin = new Thickness(0)
                 }
             };
 
@@ -252,7 +255,7 @@ namespace AiteBar
                 string targetContextId = context.Id;
                 
                 var item = CreateMenuItem(
-                    glyph: isActive ? FluentGlyph(62261) : string.Empty,
+                    glyph: string.IsNullOrEmpty(context.IconGlyph) ? "\uE8B7" : context.IconGlyph,
                     text: context.Name,
                     onClick: (s, e) => ActivateContextById(targetContextId),
                     isActive: isActive

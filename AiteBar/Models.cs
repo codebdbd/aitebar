@@ -5,6 +5,7 @@ namespace AiteBar {
     {
         public string Id { get; set; } = "context-1";
         public string Name { get; set; } = "Панель 1";
+        public string IconGlyph { get; set; } = "\uE8B7"; // Fluent "Folder" по умолчанию
     }
 
     public class HotkeyBinding
