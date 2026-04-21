@@ -46,14 +46,15 @@ namespace AiteBar
         private static readonly BrushConverter _brushConverter = new();
         private static FontFamily? _menuIconFont;
         private static FontFamily MenuIconFont => _menuIconFont ??= FontHelper.Resolve(FontHelper.FluentKey);
-        private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
-        private readonly string _configFile;
-        private readonly string _settingsFile;
-        private List<CustomElement> _elements = [];
-        private AppSettings _appSettings = new();
+
+        private readonly AppSettingsService _settingsService = new();
+        private readonly ActionService _actionService;
+        private NativeIntegrationService? _nativeService;
+
+        private AppSettings _appSettings => _settingsService.Settings;
+        private List<CustomElement> _elements => (List<CustomElement>)_settingsService.Elements;
+
         private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
-        private NativeMethods.LowLevelMouseProc? _mouseProc;
-        private IntPtr _mouseHook = IntPtr.Zero;
 
         private Button? _draggedButton = null;
         private CustomElement? _draggedElement = null;
@@ -81,9 +82,11 @@ namespace AiteBar
         private const double PanelScreenPadding = 20;
         private const double ButtonPitch = PanelLayoutHelper.ButtonOuterSize;
         private const double DragHandleSpan = 18;
+
         public MainWindow()
         {
             InitializeComponent();
+            _actionService = new ActionService(_settingsService);
             this.Top = -2000; 
 
             this.SizeChanged += (s, e) => {
@@ -96,16 +99,17 @@ namespace AiteBar
             };
             
             PathHelper.EnsureDirectories();
-            _configFile = PathHelper.ConfigFile;
-            _settingsFile = PathHelper.SettingsFile;
-
             InitTrayIcon();
 
             Application.Current.Exit += (_, _) => {
-                UninstallMouseHook();
+                _nativeService?.Dispose();
                 UnregisterGlobalHotkey();
             };
         }
+
+        public AppSettings GetAppSettings() => _settingsService.Settings;
+        public AppSettingsService GetSettingsService() => _settingsService;
+        public ActionService GetActionService() => _actionService;
 
         private void AttachSystemUtilityContextMenus()
         {
@@ -126,7 +130,7 @@ namespace AiteBar
                 await RunPanelInteractionAsync(async () =>
                 {
                     detachAction();
-                    await SaveConfig();
+                    await _settingsService.SaveAsync();
                     RefreshPanel();
                 });
             }));
@@ -163,229 +167,72 @@ namespace AiteBar
             return item;
         }
 
-        private async Task LoadSettings()
-        {
-            try
-            {
-                bool changed = false;
-                if (File.Exists(_settingsFile))
-                {
-                    string json = await File.ReadAllTextAsync(_settingsFile);
-                    _appSettings = JsonSerializer.Deserialize<AppSettings>(json) ?? new();
-                    changed = NormalizeAppState();
-                }
-                else if (File.Exists(_configFile))
-                {
-                    string json = await File.ReadAllTextAsync(_configFile);
-                    _appSettings.Elements = JsonSerializer.Deserialize<List<CustomElement>>(json) ?? [];
-                    changed = NormalizeAppState();
-                    await SaveAppSettings(_appSettings);
-                }
-                else
-                {
-                    changed = NormalizeAppState();
-                }
-
-                if (changed)
-                {
-                    await SaveAppSettings(_appSettings);
-                }
-            }
-            catch (Exception ex) { Logger.Log(ex); }
-        }
-
-        private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
-
         public async Task SaveAppSettings(AppSettings settings)
         {
-            await _saveSemaphore.WaitAsync();
-            try {
-                _appSettings = settings;
-                _appSettings.Elements = [.. _elements];
-                string json = JsonSerializer.Serialize(_appSettings, _jsonOptions);
-                await File.WriteAllTextAsync(_settingsFile, json);
-                RegisterGlobalHotkey();
-            }
-            catch (Exception ex) { Logger.Log(ex); }
-            finally { _saveSemaphore.Release(); }
+            await _settingsService.SaveAsync();
+            RegisterGlobalHotkey();
         }
 
-        public AppSettings GetAppSettings() => _appSettings;
+        public IReadOnlyList<PanelContext> GetContextsSnapshot() => _settingsService.GetContextsSnapshot();
 
-        public IReadOnlyList<PanelContext> GetContextsSnapshot() =>
-            [.. _appSettings.Contexts.Select(context => new PanelContext { Id = context.Id, Name = context.Name })];
+        public string GetContextDisplayName(string contextId) => _settingsService.GetContextDisplayName(contextId);
 
-        public string GetContextDisplayName(string contextId)
-        {
-            return _appSettings.Contexts.FirstOrDefault(context => string.Equals(context.Id, contextId, StringComparison.Ordinal))?.Name
-                ?? contextId;
-        }
-
-        private string GetPrimaryContextId()
-        {
-            return _appSettings.Contexts.FirstOrDefault()?.Id ?? ContextStateHelper.GetDefaultContextId(0);
-        }
+        private string GetPrimaryContextId() => _settingsService.GetPrimaryContextId();
 
         private bool ShouldShowSystemUtilsForContext(string? contextId = null)
         {
             string targetContextId = string.IsNullOrWhiteSpace(contextId) ? _appSettings.ActiveContextId : contextId;
-            return string.Equals(targetContextId, GetPrimaryContextId(), StringComparison.Ordinal);
-        }
-
-        private bool NormalizeAppState()
-        {
-            bool changed = false;
-
-            var originalContexts = _appSettings.Contexts ?? [];
-            var normalizedContexts = ContextStateHelper.NormalizeContexts(originalContexts);
-            if (originalContexts.Count != normalizedContexts.Count ||
-                originalContexts.Zip(normalizedContexts, (left, right) => left.Id != right.Id || left.Name != right.Name).Any(hasDifference => hasDifference))
-            {
-                changed = true;
-            }
-            _appSettings.Contexts = normalizedContexts;
-
-            string normalizedActiveContextId = ContextStateHelper.NormalizeActiveContextId(_appSettings.ActiveContextId, _appSettings.Contexts);
-            if (!string.Equals(_appSettings.ActiveContextId, normalizedActiveContextId, StringComparison.Ordinal))
-            {
-                _appSettings.ActiveContextId = normalizedActiveContextId;
-                changed = true;
-            }
-
-            var normalizedElements = NormalizeElements(_appSettings.Elements, GetPrimaryContextId());
-            if (_appSettings.Elements.Count != normalizedElements.Count)
-            {
-                changed = true;
-            }
-            else
-            {
-                for (int i = 0; i < normalizedElements.Count; i++)
-                {
-                    if (!AreElementsEquivalent(_appSettings.Elements[i], normalizedElements[i]))
-                    {
-                        changed = true;
-                        break;
-                    }
-                }
-            }
-
-            _elements = normalizedElements;
-            _appSettings.Elements = [.. normalizedElements];
-
-            return changed;
-        }
-
-        private static bool AreElementsEquivalent(CustomElement left, CustomElement right)
-        {
-            return left.Id == right.Id &&
-                   left.Name == right.Name &&
-                   left.Icon == right.Icon &&
-                   left.IconFont == right.IconFont &&
-                   left.Color == right.Color &&
-                   left.ActionType == right.ActionType &&
-                   left.ActionValue == right.ActionValue &&
-                   left.Browser == right.Browser &&
-                   left.ChromeProfile == right.ChromeProfile &&
-                   left.IsAppMode == right.IsAppMode &&
-                   left.IsIncognito == right.IsIncognito &&
-                   left.UseRotation == right.UseRotation &&
-                   left.OpenFullscreen == right.OpenFullscreen &&
-                   left.LastUsedProfile == right.LastUsedProfile &&
-                   left.Alt == right.Alt &&
-                   left.Ctrl == right.Ctrl &&
-                   left.Shift == right.Shift &&
-                   left.Win == right.Win &&
-                   left.Key == right.Key &&
-                   left.ImagePath == right.ImagePath &&
-                   left.ContextId == right.ContextId;
-        }
-
-        private static int WrapIndex(int index, int count)
-        {
-            if (count == 0)
-            {
-                return 0;
-            }
-
-            int wrapped = index % count;
-            return wrapped < 0 ? wrapped + count : wrapped;
+            return string.Equals(targetContextId, GetPrimaryContextId(), System.StringComparison.Ordinal);
         }
 
         private async Task SwitchActiveContextAsync(int direction)
         {
-            if (_appSettings.Contexts.Count == 0)
-            {
-                return;
-            }
+            if (_appSettings.Contexts.Count == 0) return;
 
             int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
-            if (currentIndex < 0)
-            {
-                currentIndex = 0;
-            }
+            if (currentIndex < 0) currentIndex = 0;
 
             int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, _appSettings.Contexts.Count);
             string nextContextId = _appSettings.Contexts[nextIndex].Id;
-            if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal))
-            {
-                return;
-            }
+            if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal)) return;
 
             _appSettings.ActiveContextId = nextContextId;
             _pendingContextAnimationDirection = Math.Sign(direction);
             RefreshPanel();
-            await SaveConfig();
+            await _settingsService.SaveAsync();
         }
 
         private void ActivateContextRelative(int direction)
         {
-            if (_appSettings.Contexts.Count == 0)
-            {
-                return;
-            }
+            if (_appSettings.Contexts.Count == 0) return;
 
             int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
-            if (currentIndex < 0)
-            {
-                currentIndex = 0;
-            }
+            if (currentIndex < 0) currentIndex = 0;
 
             int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, _appSettings.Contexts.Count);
             string nextContextId = _appSettings.Contexts[nextIndex].Id;
-            if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal))
-            {
-                return;
-            }
+            if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal)) return;
 
             _appSettings.ActiveContextId = nextContextId;
             _pendingContextAnimationDirection = Math.Sign(direction);
             RefreshPanel();
-            _ = SaveConfig();
+            _ = _settingsService.SaveAsync();
         }
 
         private void ActivateContextByIndex(int index)
         {
-            if (index < 0 || index >= _appSettings.Contexts.Count)
-            {
-                return;
-            }
+            if (index < 0 || index >= _appSettings.Contexts.Count) return;
 
             int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
-            if (currentIndex < 0)
-            {
-                currentIndex = 0;
-            }
+            if (currentIndex < 0) currentIndex = 0;
 
             string nextContextId = _appSettings.Contexts[index].Id;
-            if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal))
-            {
-                return;
-            }
+            if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal)) return;
 
             _appSettings.ActiveContextId = nextContextId;
             _pendingContextAnimationDirection = index >= currentIndex ? 1 : -1;
             RefreshPanel();
-            _ = SaveConfig();
+            _ = _settingsService.SaveAsync();
         }
 
         private void BuildPanelContextMenu()
@@ -499,22 +346,16 @@ namespace AiteBar
 
         private async Task DuplicateElementAsync(CustomElement source)
         {
-            var duplicate = CloneElement(source);
+            var duplicate = _settingsService.CloneElement(source);
             duplicate.Id = Guid.NewGuid().ToString();
             duplicate.Name = BuildDuplicateElementName(source.Name);
             duplicate.LastUsedProfile = "";
 
             int sourceIndex = _elements.FindIndex(x => string.Equals(x.Id, source.Id, StringComparison.Ordinal));
-            if (sourceIndex >= 0)
-            {
-                _elements.Insert(sourceIndex + 1, duplicate);
-            }
-            else
-            {
-                _elements.Add(duplicate);
-            }
+            if (sourceIndex >= 0) _elements.Insert(sourceIndex + 1, duplicate);
+            else _elements.Add(duplicate);
 
-            await SaveConfig();
+            await _settingsService.SaveAsync();
             RefreshPanel();
             new SettingsWindow(this, duplicate) { Owner = this }.ShowDialog();
         }
@@ -523,28 +364,19 @@ namespace AiteBar
         {
             string baseName = string.IsNullOrWhiteSpace(sourceName) ? "Новая кнопка" : sourceName.Trim();
             string firstCandidate = $"{baseName} (копия)";
-            if (_elements.All(x => !string.Equals(x.Name, firstCandidate, StringComparison.OrdinalIgnoreCase)))
-            {
-                return firstCandidate;
-            }
+            if (_elements.All(x => !string.Equals(x.Name, firstCandidate, StringComparison.OrdinalIgnoreCase))) return firstCandidate;
 
             for (int index = 2; ; index++)
             {
                 string candidate = $"{baseName} (копия {index})";
-                if (_elements.All(x => !string.Equals(x.Name, candidate, StringComparison.OrdinalIgnoreCase)))
-                {
-                    return candidate;
-                }
+                if (_elements.All(x => !string.Equals(x.Name, candidate, StringComparison.OrdinalIgnoreCase))) return candidate;
             }
         }
 
         private async Task RenameElementAsync(CustomElement source)
         {
             var elementToRename = _elements.FirstOrDefault(x => string.Equals(x.Id, source.Id, StringComparison.Ordinal));
-            if (elementToRename == null)
-            {
-                return;
-            }
+            if (elementToRename == null) return;
 
             var dialog = new TextPromptDialog("Переименовать кнопку", "Новое имя", elementToRename.Name) { Owner = this };
             if (dialog.ShowDialog() != true)
@@ -559,7 +391,7 @@ namespace AiteBar
             }
 
             elementToRename.Name = newName;
-            await SaveConfig();
+            await _settingsService.SaveAsync();
             RefreshPanel();
         }
 
@@ -572,7 +404,7 @@ namespace AiteBar
             }
 
             elementToMove.ContextId = targetContextId;
-            await SaveConfig();
+            await _settingsService.SaveAsync();
             RefreshPanel();
         }
 
@@ -591,7 +423,7 @@ namespace AiteBar
             }
 
             _elements.RemoveAll(x => string.Equals(x.Id, elementToDelete.Id, StringComparison.Ordinal));
-            await SaveConfig();
+            await _settingsService.SaveAsync();
             RefreshPanel();
         }
 
@@ -738,45 +570,15 @@ namespace AiteBar
             }
 
             int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
-            if (currentIndex < 0)
-            {
-                currentIndex = 0;
-            }
+            if (currentIndex < 0) currentIndex = 0;
 
             int index = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, contextId, StringComparison.Ordinal));
-            if (index < 0)
-            {
-                return;
-            }
+            if (index < 0) return;
 
             _appSettings.ActiveContextId = contextId;
             _pendingContextAnimationDirection = index >= currentIndex ? 1 : -1;
             RefreshPanel();
-            _ = SaveConfig();
-        }
-
-        private void ReorderActiveContextElements(int sourceIndex, int targetIndex)
-        {
-            if (sourceIndex < 0 || sourceIndex >= _activeContextElements.Count || targetIndex < 0 || targetIndex >= _activeContextElements.Count)
-            {
-                return;
-            }
-
-            var reordered = _activeContextElements.ToList();
-            var moved = reordered[sourceIndex];
-            reordered.RemoveAt(sourceIndex);
-            reordered.Insert(targetIndex, moved);
-
-            string activeContextId = _appSettings.ActiveContextId;
-            var queue = new Queue<CustomElement>(reordered);
-
-            for (int i = 0; i < _elements.Count; i++)
-            {
-                if (string.Equals(_elements[i].ContextId, activeContextId, StringComparison.Ordinal))
-                {
-                    _elements[i] = queue.Dequeue();
-                }
-            }
+            _ = _settingsService.SaveAsync();
         }
 
         private Screen? GetTargetScreen()
@@ -1078,44 +880,6 @@ namespace AiteBar
             return item;
         }
 
-        private void InstallMouseHook()
-        {
-            try
-            {
-                if (_mouseHook != IntPtr.Zero) return;
-                _mouseProc = MouseHookCallback;
-                using var curProcess = Process.GetCurrentProcess();
-                using var curModule = curProcess.MainModule ?? throw new InvalidOperationException("MainModule is null");
-                _mouseHook = NativeMethods.SetWindowsHookEx(NativeMethods.WH_MOUSE_LL, _mouseProc, NativeMethods.GetModuleHandle(curModule.ModuleName!), 0);
-            }
-            catch (Exception ex) { Logger.Log(ex); }
-        }
-
-        private void UninstallMouseHook()
-        {
-            if (_mouseHook == IntPtr.Zero) return;
-            NativeMethods.UnhookWindowsHookEx(_mouseHook);
-            _mouseHook = IntPtr.Zero;
-        }
-
-        private IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
-        {
-            try
-            {
-                if (nCode >= 0 && wParam == (IntPtr)NativeMethods.WM_LBUTTONDOWN && _shown && !_isAnimating && !IsPanelInteractionActive)
-                {
-                    var hookStruct = Marshal.PtrToStructure<NativeMethods.MSLLHOOKSTRUCT>(lParam);
-                    double x = hookStruct.pt.X, y = hookStruct.pt.Y;
-                    if (x < _panelLeft || x > _panelRight || y < _panelTop || y > _panelBottom)
-                    {
-                        this.Dispatcher.InvokeAsync(async () => await HideDock());
-                    }
-                }
-            }
-            catch (Exception ex) { Logger.Log(ex); }
-            return NativeMethods.CallNextHookEx(_mouseHook, nCode, wParam, lParam);
-        }
-
         private bool IsPanelInteractionActive => _isElementContextMenuOpen || _isBlockingPanelInteraction || _isPanelDragging;
 
         private void BeginBlockingPanelInteraction()
@@ -1227,7 +991,20 @@ namespace AiteBar
             try
             {
                 AttachSystemUtilityContextMenus();
-                await LoadSettings();
+                await _settingsService.LoadAsync();
+
+                IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                _nativeService = new NativeIntegrationService(hwnd);
+                _nativeService.MouseDownOutside += (x, y) => {
+                    if (_shown && !_isAnimating && !IsPanelInteractionActive)
+                    {
+                        if (x < _panelLeft || x > _panelRight || y < _panelTop || y > _panelBottom)
+                        {
+                            this.Dispatcher.InvokeAsync(async () => await HideDock());
+                        }
+                    }
+                };
+
                 RegisterGlobalHotkey();
                 RefreshPanel();
                 PositionWindowImmediately(_shown);
@@ -1279,7 +1056,7 @@ namespace AiteBar
                     }
                 };
                 _timer.Start();
-                InstallMouseHook();
+                _nativeService.InstallMouseHook();
             }
             catch (Exception ex) { Logger.Log(ex); }
         }
@@ -1287,7 +1064,8 @@ namespace AiteBar
         private void UpdateOrientation()
         {
             bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
-            var orientation = isVertical ? System.Windows.Controls.Orientation.Vertical : System.Windows.Controls.Orientation.Horizontal;
+            var orientation = System.Windows.Controls.Orientation.Horizontal;
+            if (isVertical) orientation = System.Windows.Controls.Orientation.Vertical;
 
             if (isVertical) { this.MinWidth = 0; this.MinHeight = 150; }
             else { this.MinWidth = 150; this.MinHeight = 0; }
@@ -1332,7 +1110,7 @@ namespace AiteBar
             UserButtonsPanel.Children.Clear();
             _userButtons.Clear();
 
-            NormalizeAppState();
+            _settingsService.NormalizeAppState();
             BuildPanelContextMenu();
             string activeContextId = _appSettings.ActiveContextId;
             _activeContextElements = _elements
@@ -1412,13 +1190,13 @@ namespace AiteBar
                         _draggedButton.Opacity = 1.0;
                         int newIndex = CalculateTargetIndex(e.GetPosition(this));
                         if (newIndex >= 0 && newIndex < _activeContextElements.Count && newIndex != _draggedOriginalIndex) {
-                            ReorderActiveContextElements(_draggedOriginalIndex, newIndex);
-                            await SaveConfig();
+                            _settingsService.ReorderElements(_draggedOriginalIndex, newIndex, _appSettings.ActiveContextId);
+                            await _settingsService.SaveAsync();
                         }
                         RefreshPanel();
                     } else {
                         // Если это был просто клик (не реордеринг), выполняем действие
-                        await ExecuteCustomAction(capturedElement);
+                        await _actionService.ExecuteCustomActionAsync(capturedElement, HideDock);
                     }
                     _draggedButton = null; _draggedElement = null; _isReordering = false;
                 };
@@ -1498,7 +1276,7 @@ namespace AiteBar
 
             if (_panelDragChanged)
             {
-                _ = SaveConfig();
+                _ = _settingsService.SaveAsync();
             }
             else
             {
@@ -1550,7 +1328,7 @@ namespace AiteBar
 
             if (_panelDragChanged)
             {
-                await SaveConfig();
+                await _settingsService.SaveAsync();
             }
             else
             {
@@ -1656,55 +1434,13 @@ namespace AiteBar
             }
         }
 
-        private async Task SaveConfig() { await SaveAppSettings(_appSettings); }
-
         public async Task SaveElement(CustomElement updated, string? removeId = null)
         {
-            if (removeId != null && !string.Equals(removeId, updated.Id, StringComparison.Ordinal))
-                _elements.RemoveAll(x => x.Id == removeId);
-            var existing = _elements.FirstOrDefault(x => x.Id == updated.Id);
-            if (existing != null) _elements[_elements.IndexOf(existing)] = updated;
-            else _elements.Add(updated);
-            await SaveConfig(); RefreshPanel();
+            await _settingsService.SaveElementAsync(updated, removeId);
+            RefreshPanel();
         }
 
-        public IReadOnlyList<CustomElement> GetElementsSnapshot() => [.. _elements.Select(CloneElement)];
-
-        private static CustomElement CloneElement(CustomElement s) => new() {
-            Id = s.Id, Name = s.Name, Icon = s.Icon, IconFont = s.IconFont, Color = s.Color,
-            ImagePath = s.ImagePath,
-            ActionType = s.ActionType, ActionValue = s.ActionValue, Browser = s.Browser, ChromeProfile = s.ChromeProfile,
-            IsAppMode = s.IsAppMode, IsIncognito = s.IsIncognito, UseRotation = s.UseRotation, OpenFullscreen = s.OpenFullscreen,
-            IsTopmost = s.IsTopmost, LastUsedProfile = s.LastUsedProfile,
-            Alt = s.Alt, Ctrl = s.Ctrl, Shift = s.Shift, Win = s.Win, Key = s.Key,
-            ContextId = s.ContextId
-        };
-
-        private static List<CustomElement> NormalizeElements(IEnumerable<CustomElement> source, string defaultContextId)
-        {
-            var result = new List<CustomElement>(); var seen = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var item in source) {
-                if (item == null) continue;
-                string id = string.IsNullOrWhiteSpace(item.Id) ? Guid.NewGuid().ToString() : item.Id;
-                if (!seen.Add(id)) continue;
-                string contextId = string.IsNullOrWhiteSpace(item.ContextId) ? defaultContextId : item.ContextId;
-                result.Add(new CustomElement {
-                    Id = id,
-                    Name = item.Name ?? "", Icon = string.IsNullOrWhiteSpace(item.Icon) ? "\uE710" : item.Icon,
-                    IconFont = string.IsNullOrWhiteSpace(item.IconFont) ? FontHelper.FluentKey : item.IconFont,
-                    Color = string.IsNullOrWhiteSpace(item.Color) ? "#E3E3E3" : item.Color,
-                    ImagePath = item.ImagePath ?? "",
-                    ActionType = ActionTargetHelper.NormalizeActionType(item.ActionType ?? "", item.ActionValue ?? ""),
-                    ActionValue = item.ActionValue ?? "", Browser = item.Browser, ChromeProfile = item.ChromeProfile ?? "",
-                    IsAppMode = item.IsAppMode, IsIncognito = item.IsIncognito, UseRotation = item.UseRotation, OpenFullscreen = item.OpenFullscreen,
-                    IsTopmost = item.IsTopmost, LastUsedProfile = item.LastUsedProfile ?? "",
-                    Alt = item.Alt, Ctrl = item.Ctrl, Shift = item.Shift, Win = item.Win, Key = item.Key ?? "None",
-                    ContextId = contextId
-                });
-            }
-            return result;
-        }
-
+        public IReadOnlyList<CustomElement> GetElementsSnapshot() => _settingsService.Elements.Select(_settingsService.CloneElement).ToList();
 
         private void Toggle(bool hide) {
             _isAnimating = true; _timer.Stop();
@@ -1752,169 +1488,27 @@ namespace AiteBar
 
         private async void RootBorder_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
-            if (_isAnimating || !_shown)
-            {
-                return;
-            }
-
-            if (e.Delta == 0)
-            {
-                return;
-            }
+            if (_isAnimating || !_shown) return;
+            if (e.Delta == 0) return;
 
             e.Handled = true;
             int direction = e.Delta > 0 ? -1 : 1;
             await SwitchActiveContextAsync(direction);
         }
 
-        private static string FindExecutableOnPath(string fileName) {
-            var pathValue = Environment.GetEnvironmentVariable("PATH"); if (string.IsNullOrWhiteSpace(pathValue)) return fileName;
-            foreach (var dir in pathValue.Split(';', StringSplitOptions.RemoveEmptyEntries)) {
-                try { var candidate = Path.Combine(dir.Trim(), fileName); if (File.Exists(candidate)) return candidate; } catch { }
-            }
-            return fileName;
-        }
-
-        private static ProcessStartInfo CreateScriptProcessStartInfo(string scriptPath) {
-            string workingDirectory = Path.GetDirectoryName(scriptPath) ?? Environment.CurrentDirectory;
-            string extension = Path.GetExtension(scriptPath).ToLowerInvariant();
-            switch (extension) {
-                case ".bat": case ".cmd":
-                    var psi = new ProcessStartInfo("cmd.exe") { UseShellExecute = false, WorkingDirectory = workingDirectory };
-                    psi.ArgumentList.Add("/c"); psi.ArgumentList.Add(scriptPath); return psi;
-                case ".ps1":
-                    string shell = FindExecutableOnPath("pwsh.exe"); if (!File.Exists(shell)) shell = FindExecutableOnPath("powershell.exe");
-                    var psiPs = new ProcessStartInfo(shell) { UseShellExecute = false, WorkingDirectory = workingDirectory };
-                    psiPs.ArgumentList.Add("-NoProfile"); if (Path.GetFileName(shell).Equals("powershell.exe", StringComparison.OrdinalIgnoreCase)) {
-                        psiPs.ArgumentList.Add("-ExecutionPolicy"); psiPs.ArgumentList.Add("Bypass"); }
-                    psiPs.ArgumentList.Add("-File"); psiPs.ArgumentList.Add(scriptPath); return psiPs;
-                case ".py":
-                    string pythonExe = FindExecutableOnPath("python.exe"); if (!File.Exists(pythonExe)) throw new InvalidOperationException("Python не найден.");
-                    return new ProcessStartInfo("cmd.exe") 
-                    { 
-                        UseShellExecute = false, 
-                        WorkingDirectory = workingDirectory,
-                        Arguments = $"/c \"\"{pythonExe}\" \"{scriptPath}\"\"" 
-                    };
-                default: throw new InvalidOperationException("Неподдерживаемый скрипт.");
-            }
-        }
-
-        private static Task StartScriptFile(string scriptPath) {
-            var psi = CreateScriptProcessStartInfo(scriptPath);
-            using var proc = Process.Start(psi) ?? throw new InvalidOperationException("Запуск не удался.");
-            return Task.CompletedTask;
-        }
-
-        private static void SendVirtualKey(byte virtualKey)
-        {
-            NativeMethods.INPUT[] inputs =
-            [
-                new NativeMethods.INPUT
-                {
-                    type = NativeMethods.INPUT_KEYBOARD,
-                    U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = virtualKey } }
-                },
-                new NativeMethods.INPUT
-                {
-                    type = NativeMethods.INPUT_KEYBOARD,
-                    U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = virtualKey, dwFlags = NativeMethods.KEYEVENTF_KEYUP } }
-                }
-            ];
-
-            _ = NativeMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<NativeMethods.INPUT>());
-        }
-
-        private static async Task TryEnterFullscreenAsync(Process proc)
-        {
-            for (int i = 0; i < 25; i++)
-            {
-                await Task.Delay(200);
-                proc.Refresh();
-                if (proc.MainWindowHandle == IntPtr.Zero)
-                {
-                    continue;
-                }
-
-                NativeMethods.SetForegroundWindow(proc.MainWindowHandle);
-                await Task.Delay(100);
-                SendVirtualKey((byte)KeyInterop.VirtualKeyFromKey(Key.F11));
-                break;
-            }
-        }
-
-
-        private async Task ExecuteCustomAction(CustomElement el) {
-            try {
-                await HideDock();
-                if (Enum.TryParse<AiteBar.ActionType>(el.ActionType, out var actionType)) {
-                    switch (actionType) {
-                        case AiteBar.ActionType.Hotkey:
-                            var downKeys = new List<byte>(); if (el.Ctrl) downKeys.Add(NativeMethods.VK_CONTROL); if (el.Shift) downKeys.Add(NativeMethods.VK_SHIFT); if (el.Alt) downKeys.Add(NativeMethods.VK_MENU); if (el.Win) downKeys.Add(NativeMethods.VK_LWIN);
-                            byte mainVk = 0; if (Enum.TryParse(typeof(Key), el.Key, out var k)) mainVk = (byte)KeyInterop.VirtualKeyFromKey((Key)k!);
-                            var inputs = new List<NativeMethods.INPUT>(); foreach (var vk in downKeys) inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk } } });
-                            if (mainVk != 0) { inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk } } });
-                                inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } }); }
-                            foreach (var vk in Enumerable.Reverse(downKeys)) inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } });
-                            _ = NativeMethods.SendInput((uint)inputs.Count, [.. inputs], Marshal.SizeOf<NativeMethods.INPUT>()); break;
-                        case AiteBar.ActionType.Web:
-                            string prof = el.UseRotation ? (BrowserHelper.AdvanceProfile(el.Browser, el.LastUsedProfile)) : el.ChromeProfile; el.LastUsedProfile = prof; await SaveConfig();
-                            var psi = new ProcessStartInfo(BrowserHelper.GetExecutablePath(el.Browser)) { UseShellExecute = false };
-                            if (el.IsAppMode) psi.ArgumentList.Add($"--app={el.ActionValue}"); else psi.ArgumentList.Add(el.ActionValue);
-                            
-                            if (el.IsIncognito) 
-                            {
-                                if (el.Browser == BrowserType.Edge) psi.ArgumentList.Add("-inprivate");
-                                else if (el.Browser == BrowserType.Opera || el.Browser == BrowserType.OperaGX) psi.ArgumentList.Add("-private");
-                                else if (el.Browser == BrowserType.Firefox) psi.ArgumentList.Add("-private-window");
-                                else psi.ArgumentList.Add("--incognito");
-                            }
-
-                            if (!string.IsNullOrEmpty(prof)) 
-                            {
-                                if (el.Browser == BrowserType.Firefox) psi.ArgumentList.Add($"-P \"{Path.GetFileName(prof)}\"");
-                                else psi.ArgumentList.Add($"--profile-directory={Path.GetFileName(prof)}");
-                            }
-                            using (var proc = Process.Start(psi))
-                            {
-                                if (proc != null && el.OpenFullscreen)
-                                {
-                                    await TryEnterFullscreenAsync(proc);
-                                }
-                            }
-                            break;
-                        case AiteBar.ActionType.Program:
-                        case AiteBar.ActionType.File:
-                        case AiteBar.ActionType.Folder:
-                            Process.Start(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true });
-                            break;
-                        case AiteBar.ActionType.ScriptFile: await StartScriptFile(el.ActionValue); break;
-                        case AiteBar.ActionType.Command:
-                            var confirm = new DarkDialog($"Выполнить команду:\n{el.ActionValue}?", isConfirm: true) { Owner = Application.Current.MainWindow };
-                            if (confirm.ShowDialog() == true) Process.Start(new ProcessStartInfo("cmd.exe") { CreateNoWindow = true, UseShellExecute = false, Arguments = $"/c {el.ActionValue}" });
-                            break;
-                    }
-                }
-            } catch (Exception ex) { Logger.Log(ex); }
-        }
-
         private async void BtnSearch_Click(object sender, RoutedEventArgs e) {
             try { 
                 string t = Clipboard.ContainsText() ? Clipboard.GetText().Trim() : ""; 
                 if (string.IsNullOrEmpty(t)) return; 
-                await HideDock();
-                using var proc = Process.Start(new ProcessStartInfo(BrowserHelper.GetExecutablePath(BrowserType.Chrome)) 
-                { 
-                    UseShellExecute = false, 
-                    ArgumentList = { $"https://www.google.com/search?q={Uri.EscapeDataString(t)}" } 
-                }) ?? throw new InvalidOperationException("Search failed");
+                await _actionService.StartSearchAsync(t, HideDock);
             } catch { }
         }
-        private async void BtnScreenshotRegion_Click(object sender, RoutedEventArgs e) { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true }); }
-        private async void BtnRecordVideo_Click(object sender, RoutedEventArgs e) { await HideDock(); Process.Start(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true }); }
-        private async void BtnCalc_Click(object sender, RoutedEventArgs e) { await HideDock(); Process.Start("calc.exe"); }
+        private async void BtnScreenshotRegion_Click(object sender, RoutedEventArgs e) { await _actionService.StartScreenshotAsync(HideDock); }
+        private async void BtnRecordVideo_Click(object sender, RoutedEventArgs e) { await _actionService.StartRecordVideoAsync(HideDock); }
+        private async void BtnCalc_Click(object sender, RoutedEventArgs e) { await _actionService.StartCalculatorAsync(HideDock); }
         private async void BtnSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new SettingsWindow(this).ShowDialog(); }
         private async void BtnAppSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new AppSettingsWindow(this).ShowDialog(); }
+        
         private static T? FindParent<T>(DependencyObject child) where T : DependencyObject {
             DependencyObject parent = VisualTreeHelper.GetParent(child);
             if (parent == null) return null;
@@ -1986,9 +1580,7 @@ namespace AiteBar
                             }
                         }
                     }
-                    catch
-                    {
-                    }
+                    catch { }
 
                     errorMessage = "Поддерживаются только .url с http/https ссылкой.";
                     return false;
@@ -2049,13 +1641,9 @@ namespace AiteBar
                     string? iconPath = null;
                     bool isWeb = val.StartsWith("http", StringComparison.OrdinalIgnoreCase) || val.StartsWith("www.", StringComparison.OrdinalIgnoreCase);
                     
-                    if (isWeb && !val.StartsWith("http", StringComparison.OrdinalIgnoreCase)) {
-                        val = "https://" + val;
-                    }
+                    if (isWeb && !val.StartsWith("http", StringComparison.OrdinalIgnoreCase)) val = "https://" + val;
 
-                    if (type == ActionType.Program || type == ActionType.ScriptFile) {
-                        iconPath = IconHelper.ExtractAndSaveIcon(val);
-                    }
+                    if (type == ActionType.Program || type == ActionType.ScriptFile) iconPath = IconHelper.ExtractAndSaveIcon(val);
 
                     var newElement = new CustomElement { 
                         Id = Guid.NewGuid().ToString(),
@@ -2067,12 +1655,10 @@ namespace AiteBar
                         ContextId = _appSettings.ActiveContextId
                     };
                     
-                    // Мгновенное сохранение без открытия окна
                     _elements.Add(newElement);
-                    await SaveConfig(); 
+                    await _settingsService.SaveAsync(); 
                     RefreshPanel();
 
-                    // Асинхронная загрузка иконки для веб-ссылок
                     if (isWeb && string.IsNullOrEmpty(iconPath))
                     {
                         _ = Task.Run(async () => {
@@ -2086,7 +1672,7 @@ namespace AiteBar
                                         if (el != null)
                                         {
                                             el.ImagePath = webIcon;
-                                            await SaveConfig();
+                                            await _settingsService.SaveAsync();
                                             RefreshPanel();
                                         }
                                     });
@@ -2098,6 +1684,8 @@ namespace AiteBar
                 }
             } catch (Exception ex) { Logger.Log(ex); }
         }
-        protected override void OnClosed(EventArgs e) { _notifyIcon?.Dispose(); base.OnClosed(e); }
+        protected override void OnClosed(EventArgs e) { _nativeService?.Dispose(); _notifyIcon?.Dispose(); base.OnClosed(e); }
     }
 }
+
+
