@@ -1039,6 +1039,9 @@ namespace AiteBar
             SystemUtilsPanel.Orientation = orientation;
             ControlBlock.Orientation = orientation;
             System.Windows.Controls.DockPanel.SetDock(FixedPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
+            System.Windows.Controls.DockPanel.SetDock(UserButtonsPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
+            FixedPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
+            UserButtonsPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
 
             if (isVertical)
             {
