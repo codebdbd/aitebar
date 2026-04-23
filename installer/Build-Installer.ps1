@@ -19,6 +19,12 @@ if ([string]::IsNullOrWhiteSpace($appVersion)) {
 }
 
 if (-not $SkipPublish) {
+    if (Test-Path $publishDir) {
+        Remove-Item -LiteralPath $publishDir -Recurse -Force
+    }
+
+    New-Item -ItemType Directory -Force -Path $publishDir | Out-Null
+
     dotnet publish $projectPath `
         -c $Configuration `
         -r $Runtime `

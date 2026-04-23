@@ -70,6 +70,9 @@ namespace AiteBar
         private List<Button> _userButtons = [];
         private List<CustomElement> _activeContextElements = [];
         private int _pendingContextAnimationDirection;
+        private bool _startupInfrastructureInitialized;
+        private bool _deferredStartupCompleted;
+        private int _panelRefreshVersion;
 
         private const int HOTKEY_ID = 9000;
         private const int HOTKEY_CONTEXT_NEXT_ID = 9001;
@@ -954,74 +957,105 @@ namespace AiteBar
             try
             {
                 AttachSystemUtilityContextMenus();
-                await _settingsService.LoadAsync();
+                EnsureStartupInfrastructure();
+                RefreshPanel();
+                PositionWindowImmediately(_shown);
+                await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                _ = CompleteDeferredStartupAsync();
+            }
+            catch (Exception ex) { Logger.Log(ex); }
+        }
 
-                IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-                _nativeService = new NativeIntegrationService(hwnd);
-                _nativeService.MouseDownOutside += (x, y) => {
-                    if (_shown && !_isAnimating && !IsPanelInteractionActive)
+        private void EnsureStartupInfrastructure()
+        {
+            if (_startupInfrastructureInitialized)
+            {
+                return;
+            }
+
+            IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+            _nativeService = new NativeIntegrationService(hwnd);
+            _nativeService.MouseDownOutside += (x, y) => {
+                if (_shown && !_isAnimating && !IsPanelInteractionActive)
+                {
+                    if (x < _panelLeft || x > _panelRight || y < _panelTop || y > _panelBottom)
                     {
-                        if (x < _panelLeft || x > _panelRight || y < _panelTop || y > _panelBottom)
-                        {
-                            this.Dispatcher.InvokeAsync(async () => await HideDock());
-                        }
+                        this.Dispatcher.InvokeAsync(async () => await HideDock());
                     }
-                };
+                }
+            };
 
+            _timer.Tick += (s, ev) => {
+                if (_isAnimating || _isPanelDragging) return;
+                NativeMethods.Win32Point pt = new();
+                if (NativeMethods.GetCursorPos(ref pt)) {
+                    var screens = Screen.AllScreens;
+                    var screen = (_appSettings.MonitorIndex >= 0 && _appSettings.MonitorIndex < screens.Length) 
+                        ? screens[_appSettings.MonitorIndex] 
+                        : Screen.PrimaryScreen;
+                    
+                    if (screen == null) return;
+
+                    var bounds = screen.Bounds;
+                    double screenLeft = bounds.Left;
+                    double screenTop = bounds.Top;
+                    double screenWidth = bounds.Width;
+                    double screenHeight = bounds.Height;
+                    
+                    double zoneSizePercent = _appSettings.ActivationZoneSizePercent / 100.0;
+                    int delayMs = _appSettings.ActivationDelayMs;
+                    
+                    bool inActivationZone = false;
+                    
+                    switch (_appSettings.Edge)
+                    {
+                        case DockEdge.Top:
+                            inActivationZone = pt.Y == screenTop && pt.X > (screenLeft + screenWidth * (0.5 - zoneSizePercent/2)) && pt.X < (screenLeft + screenWidth * (0.5 + zoneSizePercent/2));
+                            break;
+                        case DockEdge.Bottom:
+                            inActivationZone = pt.Y >= screenTop + screenHeight - 1 && pt.X > (screenLeft + screenWidth * (0.5 - zoneSizePercent/2)) && pt.X < (screenLeft + screenWidth * (0.5 + zoneSizePercent/2));
+                            break;
+                        case DockEdge.Left:
+                            inActivationZone = pt.X == screenLeft && pt.Y > (screenTop + screenHeight * (0.5 - zoneSizePercent/2)) && pt.Y < (screenTop + screenHeight * (0.5 + zoneSizePercent/2));
+                            break;
+                        case DockEdge.Right:
+                            inActivationZone = pt.X >= screenLeft + screenWidth - 1 && pt.Y > (screenTop + screenHeight * (0.5 - zoneSizePercent/2)) && pt.Y < (screenTop + screenHeight * (0.5 + zoneSizePercent/2));
+                            break;
+                    }
+
+                    if (inActivationZone && !_shown) {
+                        if (_hoverStartTime == null) _hoverStartTime = DateTime.Now;
+                        else if ((DateTime.Now - _hoverStartTime.Value).TotalMilliseconds >= delayMs) {
+                            _shown = true; _hoverStartTime = null; Toggle(false);
+                        }
+                    } else _hoverStartTime = null;
+                }
+            };
+
+            _timer.Start();
+            _nativeService.InstallMouseHook();
+            _startupInfrastructureInitialized = true;
+        }
+
+        private async Task CompleteDeferredStartupAsync()
+        {
+            if (_deferredStartupCompleted)
+            {
+                return;
+            }
+
+            try
+            {
+                await Task.Run(async () => await _settingsService.LoadAsync());
+                _deferredStartupCompleted = true;
                 RegisterGlobalHotkey();
                 RefreshPanel();
                 PositionWindowImmediately(_shown);
-                _timer.Tick += (s, ev) => {
-                    if (_isAnimating || _isPanelDragging) return;
-                    NativeMethods.Win32Point pt = new();
-                    if (NativeMethods.GetCursorPos(ref pt)) {
-                        var screens = Screen.AllScreens;
-                        var screen = (_appSettings.MonitorIndex >= 0 && _appSettings.MonitorIndex < screens.Length) 
-                            ? screens[_appSettings.MonitorIndex] 
-                            : Screen.PrimaryScreen;
-                        
-                        if (screen == null) return;
-
-                        var bounds = screen.Bounds;
-                        double screenLeft = bounds.Left;
-                        double screenTop = bounds.Top;
-                        double screenWidth = bounds.Width;
-                        double screenHeight = bounds.Height;
-                        
-                        // Параметры из настроек
-                        double zoneSizePercent = _appSettings.ActivationZoneSizePercent / 100.0;
-                        int delayMs = _appSettings.ActivationDelayMs;
-                        
-                        bool inActivationZone = false;
-                        
-                        switch (_appSettings.Edge)
-                        {
-                            case DockEdge.Top:
-                                inActivationZone = pt.Y == screenTop && pt.X > (screenLeft + screenWidth * (0.5 - zoneSizePercent/2)) && pt.X < (screenLeft + screenWidth * (0.5 + zoneSizePercent/2));
-                                break;
-                            case DockEdge.Bottom:
-                                inActivationZone = pt.Y >= screenTop + screenHeight - 1 && pt.X > (screenLeft + screenWidth * (0.5 - zoneSizePercent/2)) && pt.X < (screenLeft + screenWidth * (0.5 + zoneSizePercent/2));
-                                break;
-                            case DockEdge.Left:
-                                inActivationZone = pt.X == screenLeft && pt.Y > (screenTop + screenHeight * (0.5 - zoneSizePercent/2)) && pt.Y < (screenTop + screenHeight * (0.5 + zoneSizePercent/2));
-                                break;
-                            case DockEdge.Right:
-                                inActivationZone = pt.X >= screenLeft + screenWidth - 1 && pt.Y > (screenTop + screenHeight * (0.5 - zoneSizePercent/2)) && pt.Y < (screenTop + screenHeight * (0.5 + zoneSizePercent/2));
-                                break;
-                        }
-
-                        if (inActivationZone && !_shown) {
-                            if (_hoverStartTime == null) _hoverStartTime = DateTime.Now;
-                            else if ((DateTime.Now - _hoverStartTime.Value).TotalMilliseconds >= delayMs) {
-                                _shown = true; _hoverStartTime = null; Toggle(false);
-                            }
-                        } else _hoverStartTime = null;
-                    }
-                };
-                _timer.Start();
-                _nativeService.InstallMouseHook();
             }
-            catch (Exception ex) { Logger.Log(ex); }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
         }
 
         private void UpdateOrientation()
@@ -1072,6 +1106,7 @@ namespace AiteBar
         }
 
         public void RefreshPanel() {
+            int panelVersion = unchecked(++_panelRefreshVersion);
             UpdateOrientation();
             UserButtonsPanel.Children.Clear();
             _userButtons.Clear();
@@ -1100,21 +1135,15 @@ namespace AiteBar
                 }, (Brush)_brushConverter.ConvertFromString(el.Color ?? "#E3E3E3")!);
                 
                 btn.RenderTransform = new TranslateTransform();
+                btn.Tag = el.Id;
 
+                btn.Content = el.Icon; 
+                btn.FontFamily = FontHelper.Resolve(el.IconFont);
                 if (!string.IsNullOrEmpty(el.ImagePath) && System.IO.File.Exists(el.ImagePath))
                 {
-                    var bitmap = new System.Windows.Media.Imaging.BitmapImage();
-                    bitmap.BeginInit();
-                    bitmap.UriSource = new Uri(el.ImagePath);
-                    bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
-                    bitmap.EndInit();
-                    btn.Content = new System.Windows.Controls.Image { Source = bitmap, Width = 24, Height = 24, Stretch = Stretch.Uniform };
+                    _ = LoadButtonImageAsync(btn, el.Id, el.ImagePath, panelVersion);
                 }
-                else { 
-                    btn.Content = el.Icon; 
-                    btn.FontFamily = FontHelper.Resolve(el.IconFont); 
-                }
-                
+                 
                 var capturedElement = el;
                 btn.PreviewMouseDown += (s, e) => {
                     if (e.ChangedButton != MouseButton.Left) return;
@@ -1167,7 +1196,10 @@ namespace AiteBar
                     _draggedButton = null; _draggedElement = null; _isReordering = false;
                 };
 
-                btn.ContextMenu = BuildElementContextMenu(el);
+                btn.MouseRightButtonUp += (s, e) =>
+                {
+                    btn.ContextMenu ??= BuildElementContextMenu(capturedElement);
+                };
                 UserButtonsPanel.Children.Add(btn);
                 _userButtons.Add(btn);
             }
@@ -1179,6 +1211,46 @@ namespace AiteBar
             AnimateContextTransitionIfNeeded();
             
             UpdatePanelBounds();
+        }
+
+        private async Task LoadButtonImageAsync(Button button, string elementId, string imagePath, int panelVersion)
+        {
+            try
+            {
+                byte[] imageBytes = await File.ReadAllBytesAsync(imagePath).ConfigureAwait(false);
+                using var stream = new MemoryStream(imageBytes);
+                var bitmap = new System.Windows.Media.Imaging.BitmapImage();
+                bitmap.BeginInit();
+                bitmap.StreamSource = stream;
+                bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    if (panelVersion != _panelRefreshVersion)
+                    {
+                        return;
+                    }
+
+                    if (!string.Equals(button.Tag as string, elementId, StringComparison.Ordinal))
+                    {
+                        return;
+                    }
+
+                    button.Content = new System.Windows.Controls.Image
+                    {
+                        Source = bitmap,
+                        Width = 24,
+                        Height = 24,
+                        Stretch = Stretch.Uniform
+                    };
+                });
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
         }
 
         private static DockEdge GetClosestDockEdge(System.Drawing.Rectangle workArea, int cursorX, int cursorY, DockEdge currentEdge)

@@ -9,6 +9,11 @@
         Topmost="True">
     
     <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="SettingsWindowResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
         <!-- TabControl Style -->
         <Style TargetType="TabControl">
             <Setter Property="Background" Value="Transparent"/>
@@ -40,6 +45,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Grid Margin="16">

@@ -36,13 +36,13 @@
         </Style>
 
         <Style x:Key="PanelButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-            <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
             <Setter Property="FontSize" Value="24"/>
             <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
         </Style>
     </Window.Resources>
 
-    <Border x:Name="RootBorder" Background="{DynamicResource PanelBackground}" CornerRadius="8" BorderBrush="{DynamicResource BorderColor}" BorderThickness="1" Margin="3"
+    <Border x:Name="RootBorder" Background="{StaticResource PanelBackground}" CornerRadius="8" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Margin="3"
             TextOptions.TextFormattingMode="Ideal"
             AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel">
         <DockPanel x:Name="MainPanel" HorizontalAlignment="Left" VerticalAlignment="Center" LastChildFill="False" Margin="2">
@@ -69,16 +69,16 @@
 
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
-                        <Button Content="&#xE005;" ToolTip="Добавить кнопку" Click="BtnSettings_Click" Foreground="{DynamicResource AccentColor}"/>
+                        <Button Content="&#xE005;" ToolTip="Добавить кнопку" Click="BtnSettings_Click" Foreground="{StaticResource AccentColor}"/>
                     </StackPanel>
 
                     <Rectangle x:Name="SepSystem" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" VerticalAlignment="Center"/>
 
                     <StackPanel x:Name="SystemUtilsPanel" Orientation="Horizontal">
-                        <Button x:Name="BtnSearch" Content="&#xEA7C;" ToolTip="Поиск в Google (буфер)" Click="BtnSearch_Click" Foreground="{DynamicResource PrimaryText}"/>
-                        <Button x:Name="BtnScreenshot" Content="&#xF68E;" ToolTip="Скриншот" Click="BtnScreenshotRegion_Click" Foreground="{DynamicResource PrimaryText}"/>
-                        <Button x:Name="BtnRecord" Content="&#xF535;" ToolTip="Запись видео" Click="BtnRecordVideo_Click" Foreground="{DynamicResource PrimaryText}"/>
-                        <Button x:Name="BtnCalc" Content="&#xF06C;" ToolTip="Калькулятор" Click="BtnCalc_Click" Foreground="{DynamicResource PrimaryText}"/>
+                        <Button x:Name="BtnSearch" Content="&#xEA7C;" ToolTip="Поиск в Google (буфер)" Click="BtnSearch_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnScreenshot" Content="&#xF68E;" ToolTip="Скриншот" Click="BtnScreenshotRegion_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnRecord" Content="&#xF535;" ToolTip="Запись видео" Click="BtnRecordVideo_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnCalc" Content="&#xF06C;" ToolTip="Калькулятор" Click="BtnCalc_Click" Foreground="{StaticResource PrimaryText}"/>
                     </StackPanel>
 
                     <Rectangle x:Name="SepControl" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" VerticalAlignment="Center"/>

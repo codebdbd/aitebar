@@ -9,13 +9,19 @@
         Topmost="True">
 
     <Window.Resources>
-        <local:FontNameConverter x:Key="FontNameConverter"/>
-        <local:ColorBrushConverter x:Key="ColorBrushConverter"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="SettingsWindowResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
-        <SolidColorBrush x:Key="PanelBadge1" Color="#2563EB"/>
-        <SolidColorBrush x:Key="PanelBadge2" Color="#059669"/>
-        <SolidColorBrush x:Key="PanelBadge3" Color="#D97706"/>
-        <SolidColorBrush x:Key="PanelBadge4" Color="#7C3AED"/>
+            <local:FontNameConverter x:Key="FontNameConverter"/>
+            <local:ColorBrushConverter x:Key="ColorBrushConverter"/>
+
+            <SolidColorBrush x:Key="PanelBadge1" Color="#2563EB"/>
+            <SolidColorBrush x:Key="PanelBadge2" Color="#059669"/>
+            <SolidColorBrush x:Key="PanelBadge3" Color="#D97706"/>
+            <SolidColorBrush x:Key="PanelBadge4" Color="#7C3AED"/>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Grid Margin="16">
