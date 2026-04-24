@@ -49,6 +49,7 @@ namespace AiteBar
 
         private readonly AppSettingsService _settingsService = new();
         private readonly ActionService _actionService;
+        private readonly PanelPackageService _panelPackageService;
         private NativeIntegrationService? _nativeService;
 
         private AppSettings _appSettings => _settingsService.Settings;
@@ -90,6 +91,7 @@ namespace AiteBar
         {
             InitializeComponent();
             _actionService = new ActionService(_settingsService);
+            _panelPackageService = new PanelPackageService(_settingsService);
             this.Top = -2000; 
 
             this.SizeChanged += (s, e) => {
@@ -266,6 +268,15 @@ namespace AiteBar
 
                 menu.Items.Add(item);
             }
+
+            menu.Items.Add(CreateMenuItem(FluentGlyph(61564), "Импорт в текущую панель...", async (s, e) =>
+            {
+                await RunPanelInteractionAsync(ImportIntoCurrentPanelAsync);
+            }));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(61563), "Экспорт текущей панели...", async (s, e) =>
+            {
+                await RunPanelInteractionAsync(ExportCurrentPanelAsync);
+            }));
 
             RootBorder.ContextMenu = menu;
         }
@@ -831,6 +842,14 @@ namespace AiteBar
 
             menu.Items.Add(CreateMenuItem(FluentGlyph(61453), "Открыть", (s, e) => { if (!_shown) { _shown = true; Toggle(false); } }));
             menu.Items.Add(CreateMenuItem(FluentGlyph(62135), "Настройки программы", (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(61564), "Импорт панели...", async (s, e) =>
+            {
+                await RunPanelInteractionAsync(ImportIntoCurrentPanelAsync);
+            }));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(61563), "Экспорт текущей панели...", async (s, e) =>
+            {
+                await RunPanelInteractionAsync(ExportCurrentPanelAsync);
+            }));
             menu.Items.Add(CreateMenuItem(FluentGlyph(59718), "О программе", (s, e) => new AboutWindow { Owner = this }.ShowDialog()));
             menu.Items.Add(CreateMenuItem(FluentGlyph(59613), "Справка", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/products/aitebar/guide.html")));
             menu.Items.Add(CreateMenuItem(FluentGlyph(60049), "Поддержать автора", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/pages/donate.html")));
@@ -873,6 +892,94 @@ namespace AiteBar
         private static void OpenUrl(string url) {
             try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
             catch (Exception ex) { Logger.Log(ex); }
+        }
+
+        private async Task ExportCurrentPanelAsync()
+        {
+            try
+            {
+                var activeContext = _appSettings.Contexts.FirstOrDefault(context =>
+                    string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
+
+                var dialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Экспорт текущей панели",
+                    Filter = "AiteBar Panel (*.aitebarpanel)|*.aitebarpanel",
+                    DefaultExt = PanelPackageService.PackageExtension,
+                    AddExtension = true,
+                    OverwritePrompt = true,
+                    FileName = BuildPanelPackageFileName(activeContext?.Name ?? "Панель")
+                };
+
+                if (dialog.ShowDialog(this) != true)
+                {
+                    return;
+                }
+
+                PanelExportResult result = await _panelPackageService.ExportCurrentPanelAsync(dialog.FileName);
+                new DarkDialog($"Экспортировано кнопок: {result.ExportedCount}", false) { Owner = this }.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                new DarkDialog($"Не удалось экспортировать панель.\n{ex.Message}", false) { Owner = this }.ShowDialog();
+            }
+        }
+
+        private async Task ImportIntoCurrentPanelAsync()
+        {
+            try
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    Title = "Импорт панели",
+                    Filter = "AiteBar Panel (*.aitebarpanel)|*.aitebarpanel",
+                    DefaultExt = PanelPackageService.PackageExtension,
+                    CheckFileExists = true,
+                    Multiselect = false
+                };
+
+                if (dialog.ShowDialog(this) != true)
+                {
+                    return;
+                }
+
+                PanelImportPreview preview = await _panelPackageService.ReadImportPreviewAsync(dialog.FileName);
+                string targetPanelName = GetContextDisplayName(_appSettings.ActiveContextId);
+                var confirm = new DarkDialog(
+                    $"Импортировать {preview.ElementCount} кнопок в текущую панель \"{targetPanelName}\"?\n\nОтмена импорта после применения в этой версии не поддерживается.",
+                    isConfirm: true)
+                {
+                    Owner = this
+                };
+
+                if (confirm.ShowDialog() != true)
+                {
+                    return;
+                }
+
+                PanelImportResult result = await _panelPackageService.ImportIntoCurrentPanelAsync(dialog.FileName);
+                RefreshPanel();
+                new DarkDialog($"Импортировано кнопок: {result.ImportedCount}", false) { Owner = this }.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                new DarkDialog($"Не удалось импортировать панель.\n{ex.Message}", false) { Owner = this }.ShowDialog();
+            }
+        }
+
+        private static string BuildPanelPackageFileName(string panelName)
+        {
+            string sanitized = string.Concat(panelName.Select(ch =>
+                Path.GetInvalidFileNameChars().Contains(ch) ? '_' : ch)).Trim();
+
+            if (string.IsNullOrWhiteSpace(sanitized))
+            {
+                sanitized = "Panel";
+            }
+
+            return sanitized + PanelPackageService.PackageExtension;
         }
 
         private (Rect WorkArea, Rect Bounds) GetTargetScreenMetrics()
@@ -1130,7 +1237,7 @@ namespace AiteBar
             SystemUtilsPanel.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
 
             foreach (var el in _activeContextElements) {
-                var btn = CreatePanelButton(string.Empty, el.Name, async (s, e) => {
+                var btn = CreatePanelButton(string.Empty, el.Name, (s, e) => {
                     // Обработка клика перенесена в PreviewMouseUp для поддержки реордеринга
                 }, (Brush)_brushConverter.ConvertFromString(el.Color ?? "#E3E3E3")!);
                 

@@ -7,6 +7,7 @@ obj/
 publish/
 artifacts/
 _installer_test/
+startup_log.txt
 
 # Internal AI / Prompt files
 AiteBar/codex_instructions_fixes_r5.md

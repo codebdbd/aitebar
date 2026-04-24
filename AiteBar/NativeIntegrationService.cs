@@ -1,11 +1,11 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Windows.Input;
-using System.Windows.Interop;
+using System.Runtime.Versioning;
 
 namespace AiteBar
 {
+    [SupportedOSPlatform("windows6.1")]
     public class NativeIntegrationService : IDisposable
     {
         private NativeMethods.LowLevelMouseProc? _mouseProc;
@@ -13,7 +13,6 @@ namespace AiteBar
         private IntPtr _windowHandle;
 
         public event Action<int, int>? MouseDownOutside;
-        public event Action<int>? HotkeyPressed;
 
         public NativeIntegrationService(IntPtr windowHandle)
         {

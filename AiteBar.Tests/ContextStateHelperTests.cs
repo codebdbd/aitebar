@@ -32,6 +32,23 @@ public sealed class ContextStateHelperTests
         Assert.Equal("context-1", activeContextId);
     }
 
+    [Fact]
+    public void NormalizeContexts_PreservesIconGlyph()
+    {
+        List<PanelContext> contexts =
+        [
+            new() { Id = "context-1", Name = "Контекст 1", IconGlyph = "\uE123" },
+            new() { Id = "context-2", Name = "Контекст 2", IconGlyph = "\uE456" }
+        ];
+
+        List<PanelContext> normalized = ContextStateHelper.NormalizeContexts(contexts);
+
+        Assert.Equal("\uE123", normalized[0].IconGlyph);
+        Assert.Equal("\uE456", normalized[1].IconGlyph);
+        Assert.Equal("\uE8B7", normalized[2].IconGlyph);
+        Assert.Equal("\uE8B7", normalized[3].IconGlyph);
+    }
+
     [Theory]
     [InlineData(4, 4, 0)]
     [InlineData(-1, 4, 3)]

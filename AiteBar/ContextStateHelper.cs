@@ -33,7 +33,8 @@ namespace AiteBar
                 normalized.Add(new PanelContext
                 {
                     Id = id,
-                    Name = string.IsNullOrWhiteSpace(name) ? GetDefaultContextName(i) : name
+                    Name = string.IsNullOrWhiteSpace(name) ? GetDefaultContextName(i) : name,
+                    IconGlyph = string.IsNullOrWhiteSpace(existing?.IconGlyph) ? "\uE8B7" : existing.IconGlyph
                 });
             }
 

@@ -27,6 +27,15 @@ public sealed class ReleaseVersionTests
         Assert.Equal(projectVersion, installerVersion);
     }
 
+    [Fact]
+    public void ReleaseLayout_DoesNotContainLegacyNestedInstallerCopies()
+    {
+        string repoRoot = FindRepoRoot();
+
+        Assert.False(File.Exists(Path.Combine(repoRoot, "AiteBar", "installer", "AiteBar.iss")));
+        Assert.False(File.Exists(Path.Combine(repoRoot, "AiteBar", "installer", "Build-Installer.ps1")));
+    }
+
     private static string FindRepoRoot()
     {
         string? current = AppContext.BaseDirectory;

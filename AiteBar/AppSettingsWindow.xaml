@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="Настройки программы" Width="900" Height="720"
+        Title="Настройки программы" Width="900" Height="700"
         WindowStartupLocation="CenterOwner" Background="#1A1A1C" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
@@ -24,16 +24,16 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid Margin="16">
+    <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,4,0,0">
+        <Grid Grid.Row="0" Margin="0,2,0,0">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="340"/>
-                <ColumnDefinition Width="18"/>
+                <ColumnDefinition Width="14"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
@@ -46,8 +46,13 @@
                 <Border Grid.Row="0" Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <TextBlock Text="Общие параметры" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBlock Text="Настройте положение панели и её поведение при появлении."
+                                   Foreground="{StaticResource MutedText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,8"/>
 
-                        <Grid Margin="0,0,0,14">
+                        <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="12"/>
@@ -65,7 +70,7 @@
                             </StackPanel>
                         </Grid>
 
-                        <StackPanel Margin="0,0,0,14">
+                        <StackPanel Margin="0,0,0,12">
                             <DockPanel Margin="0,0,0,6">
                                 <TextBlock Text="Размер панели" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
                                 <TextBlock x:Name="TxtPanelSize" DockPanel.Dock="Right" Foreground="White" FontSize="12"/>
@@ -73,9 +78,10 @@
                             <Slider x:Name="SldPanelSize" Minimum="20" Maximum="100" Value="80" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldPanelSize_ValueChanged"/>
                         </StackPanel>
 
-                        <StackPanel Margin="0,0,0,14">
+                        <StackPanel Margin="0,0,0,12">
                             <DockPanel Margin="0,0,0,6">
-                                <TextBlock Text="Зона активации, %" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                <TextBlock Text="Зона активации, %" Style="{StaticResource FieldLabelStyle}" Margin="0"
+                                           ToolTip="Размер области у края экрана, при наведении на которую панель появляется."/>
                                 <TextBlock x:Name="TxtZoneSize" DockPanel.Dock="Right" Foreground="White" FontSize="12"/>
                             </DockPanel>
                             <Slider x:Name="SldZoneSize" Minimum="5" Maximum="100" Value="30" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldZoneSize_ValueChanged"/>
@@ -93,9 +99,15 @@
 
                 <Border Grid.Row="1" Style="{StaticResource CardStyle}">
                     <StackPanel>
-                        <TextBlock Text="Имена панелей" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBlock Text="Имена панелей" Style="{StaticResource SectionTitleStyle}"
+                                   ToolTip="Эти названия используются в меню панели и в настройках кнопок."/>
+                        <TextBlock Text="Эти названия используются в меню панели и при выборе панели для кнопок."
+                                   Foreground="{StaticResource MutedText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,8"/>
 
-                        <Grid Margin="0,0,0,10">
+                        <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="30"/>
                                 <ColumnDefinition Width="*"/>
@@ -105,7 +117,7 @@
                             </Border>
                             <TextBox x:Name="TxtContext1Name" Grid.Column="1" TextChanged="ContextName_TextChanged"/>
                         </Grid>
-                        <Grid Margin="0,0,0,10">
+                        <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="30"/>
                                 <ColumnDefinition Width="*"/>
@@ -115,7 +127,7 @@
                             </Border>
                             <TextBox x:Name="TxtContext2Name" Grid.Column="1" TextChanged="ContextName_TextChanged"/>
                         </Grid>
-                        <Grid Margin="0,0,0,10">
+                        <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="30"/>
                                 <ColumnDefinition Width="*"/>
@@ -148,8 +160,13 @@
                 <Border Grid.Row="0" Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <TextBlock Text="Горячие клавиши" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBlock Text="Назначьте сочетания для показа панели и переключения между панелями."
+                                   Foreground="{StaticResource MutedText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,8"/>
 
-                        <Grid Margin="0,0,0,14">
+                        <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="180"/>
                                 <ColumnDefinition Width="150"/>
@@ -160,17 +177,18 @@
                             <ComboBox x:Name="CmbKey" Grid.Column="2"/>
                         </Grid>
 
-                        <Grid Margin="0,0,0,16">
+                        <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="180"/>
                                 <ColumnDefinition Width="150"/>
                                 <ColumnDefinition Width="120"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Общий модификатор" Foreground="White" VerticalAlignment="Center"/>
+                            <TextBlock Text="Общий модификатор" Foreground="White" VerticalAlignment="Center"
+                                       ToolTip="Применяется ко всем горячим клавишам переключения панелей."/>
                             <ComboBox x:Name="CmbPanelModifier" Grid.Column="1"/>
                         </Grid>
 
-                        <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0" Margin="0,0,0,14"/>
+                        <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0" Margin="0,0,0,12"/>
 
                         <Grid Margin="0,0,0,8">
                             <Grid.ColumnDefinitions>
@@ -180,7 +198,7 @@
                             <TextBlock Text="Следующая панель" Foreground="White" VerticalAlignment="Center"/>
                             <ComboBox x:Name="CmbNextContextKey" Grid.Column="1"/>
                         </Grid>
-                        <Grid Margin="0,0,0,14">
+                        <Grid Margin="0,0,0,10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="180"/>
                                 <ColumnDefinition Width="120"/>
@@ -227,18 +245,23 @@
                 <Border Grid.Row="1" Style="{StaticResource CardStyle}">
                     <StackPanel>
                         <TextBlock Text="Быстрые инструменты" Style="{StaticResource SectionTitleStyle}"/>
+                        <TextBlock Text="Включите встроенные кнопки, которые будут отображаться на основной панели."
+                                   Foreground="{StaticResource MutedText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,8"/>
                         <UniformGrid Columns="2">
-                            <CheckBox x:Name="ChkShowPresetSearch" Content="Поиск"/>
-                            <CheckBox x:Name="ChkShowPresetScreenshot" Content="Скриншот"/>
-                            <CheckBox x:Name="ChkShowPresetVideo" Content="Видео"/>
-                            <CheckBox x:Name="ChkShowPresetCalc" Content="Калькулятор"/>
+                            <CheckBox x:Name="ChkShowPresetSearch" Content="Поиск" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetScreenshot" Content="Скриншот" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetVideo" Content="Видео" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetCalc" Content="Калькулятор" Style="{StaticResource CompactCheckBoxStyle}"/>
                         </UniformGrid>
                     </StackPanel>
                 </Border>
             </Grid>
         </Grid>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
             <Button Content="Отмена" Style="{StaticResource SecondaryButtonStyle}" Click="BtnCancel_Click" Height="40" Width="130" Margin="0,0,10,0" FontWeight="SemiBold"/>
             <Button Content="Сохранить" Style="{StaticResource ActionButtonStyle}" Click="BtnSave_Click" Height="40" Width="180" FontWeight="Bold"/>
         </StackPanel>

@@ -4,12 +4,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
 namespace AiteBar
 {
+    [SupportedOSPlatform("windows6.1")]
     public class ActionService
     {
         private readonly AppSettingsService _settingsService;
@@ -92,6 +94,16 @@ namespace AiteBar
             el.LastUsedProfile = prof;
             await _settingsService.SaveAsync();
 
+            var psi = BuildWebActionProcessStartInfo(el, prof);
+            using var proc = Process.Start(psi);
+            if (proc != null && el.OpenFullscreen)
+            {
+                await TryEnterFullscreenAsync(proc);
+            }
+        }
+
+        internal static ProcessStartInfo BuildWebActionProcessStartInfo(CustomElement el, string profilePathOrName)
+        {
             var psi = new ProcessStartInfo(BrowserHelper.GetExecutablePath(el.Browser)) { UseShellExecute = false };
             if (el.IsAppMode) psi.ArgumentList.Add($"--app={el.ActionValue}"); else psi.ArgumentList.Add(el.ActionValue);
 
@@ -103,17 +115,20 @@ namespace AiteBar
                 else psi.ArgumentList.Add("--incognito");
             }
 
-            if (!string.IsNullOrEmpty(prof))
+            if (!string.IsNullOrEmpty(profilePathOrName))
             {
-                if (el.Browser == BrowserType.Firefox) psi.ArgumentList.Add($"-P \"{Path.GetFileName(prof)}\"");
-                else psi.ArgumentList.Add($"--profile-directory={Path.GetFileName(prof)}");
+                if (el.Browser == BrowserType.Firefox)
+                {
+                    psi.ArgumentList.Add("-P");
+                    psi.ArgumentList.Add(Path.GetFileName(profilePathOrName));
+                }
+                else
+                {
+                    psi.ArgumentList.Add($"--profile-directory={Path.GetFileName(profilePathOrName)}");
+                }
             }
 
-            using var proc = Process.Start(psi);
-            if (proc != null && el.OpenFullscreen)
-            {
-                await TryEnterFullscreenAsync(proc);
-            }
+            return psi;
         }
 
         private void ExecuteCommand(string command)
@@ -168,7 +183,7 @@ namespace AiteBar
             await Task.CompletedTask;
         }
 
-        private static ProcessStartInfo CreateScriptProcessStartInfo(string scriptPath)
+        internal static ProcessStartInfo CreateScriptProcessStartInfo(string scriptPath)
         {
             string workingDirectory = Path.GetDirectoryName(scriptPath) ?? Environment.CurrentDirectory;
             string extension = Path.GetExtension(scriptPath).ToLowerInvariant();

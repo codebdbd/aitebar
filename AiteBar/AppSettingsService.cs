@@ -20,10 +20,10 @@ namespace AiteBar
 
         public event EventHandler? SettingsChanged;
 
-        public AppSettingsService()
+        public AppSettingsService(string? configFile = null, string? settingsFile = null)
         {
-            _configFile = PathHelper.ConfigFile;
-            _settingsFile = PathHelper.SettingsFile;
+            _configFile = string.IsNullOrWhiteSpace(configFile) ? PathHelper.ConfigFile : configFile;
+            _settingsFile = string.IsNullOrWhiteSpace(settingsFile) ? PathHelper.SettingsFile : settingsFile;
         }
 
         public AppSettings Settings => _appSettings;
@@ -233,6 +233,12 @@ namespace AiteBar
         public async Task DeleteElementAsync(string id)
         {
             _elements.RemoveAll(x => x.Id == id);
+            await SaveAsync();
+        }
+
+        internal async Task AddElementsAsync(IEnumerable<CustomElement> elements)
+        {
+            _elements.AddRange(elements);
             await SaveAsync();
         }
 
