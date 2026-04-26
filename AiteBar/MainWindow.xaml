@@ -5,6 +5,8 @@
         SizeToContent="WidthAndHeight" MinWidth="150"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
         Loaded="Window_Loaded" SourceInitialized="Window_SourceInitialized" Left="0" Top="-2000">
     
     <Window.Resources>
@@ -43,6 +45,7 @@
     </Window.Resources>
 
     <Border x:Name="RootBorder" Background="{StaticResource PanelBackground}" CornerRadius="8" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Margin="3"
+            SnapsToDevicePixels="True"
             TextOptions.TextFormattingMode="Ideal"
             AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel">
         <DockPanel x:Name="MainPanel" HorizontalAlignment="Left" VerticalAlignment="Center" LastChildFill="False" Margin="2">

@@ -74,6 +74,7 @@ namespace AiteBar
         private bool _startupInfrastructureInitialized;
         private bool _deferredStartupCompleted;
         private int _panelRefreshVersion;
+        private readonly Dictionary<string, CachedButtonImage> _buttonImageCache = new(StringComparer.OrdinalIgnoreCase);
 
         private const int HOTKEY_ID = 9000;
         private const int HOTKEY_CONTEXT_NEXT_ID = 9001;
@@ -1244,12 +1245,7 @@ namespace AiteBar
                 btn.RenderTransform = new TranslateTransform();
                 btn.Tag = el.Id;
 
-                btn.Content = el.Icon; 
-                btn.FontFamily = FontHelper.Resolve(el.IconFont);
-                if (!string.IsNullOrEmpty(el.ImagePath) && System.IO.File.Exists(el.ImagePath))
-                {
-                    _ = LoadButtonImageAsync(btn, el.Id, el.ImagePath, panelVersion);
-                }
+                ApplyButtonIcon(btn, el, panelVersion);
                  
                 var capturedElement = el;
                 btn.PreviewMouseDown += (s, e) => {
@@ -1320,7 +1316,36 @@ namespace AiteBar
             UpdatePanelBounds();
         }
 
-        private async Task LoadButtonImageAsync(Button button, string elementId, string imagePath, int panelVersion)
+        private void ApplyButtonIcon(Button button, CustomElement element, int panelVersion)
+        {
+            if (!string.IsNullOrWhiteSpace(element.ImagePath) && System.IO.File.Exists(element.ImagePath))
+            {
+                DateTime lastWriteUtc = File.GetLastWriteTimeUtc(element.ImagePath);
+                if (_buttonImageCache.TryGetValue(element.ImagePath, out var cached) &&
+                    cached.LastWriteUtc == lastWriteUtc)
+                {
+                    button.Content = CreateButtonImage(cached.Source);
+                    return;
+                }
+
+                // Avoid flashing the fallback glyph while custom icons are being decoded.
+                button.Content = null;
+                _ = LoadButtonImageAsync(button, element.Id, element.ImagePath, lastWriteUtc, element.Icon, element.IconFont, panelVersion);
+                return;
+            }
+
+            button.Content = element.Icon;
+            button.FontFamily = FontHelper.Resolve(element.IconFont);
+        }
+
+        private async Task LoadButtonImageAsync(
+            Button button,
+            string elementId,
+            string imagePath,
+            DateTime lastWriteUtc,
+            string fallbackIcon,
+            string fallbackFont,
+            int panelVersion)
         {
             try
             {
@@ -1345,20 +1370,36 @@ namespace AiteBar
                         return;
                     }
 
-                    button.Content = new System.Windows.Controls.Image
-                    {
-                        Source = bitmap,
-                        Width = 24,
-                        Height = 24,
-                        Stretch = Stretch.Uniform
-                    };
+                    _buttonImageCache[imagePath] = new CachedButtonImage(bitmap, lastWriteUtc);
+                    button.Content = CreateButtonImage(bitmap);
                 });
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
+                await Dispatcher.InvokeAsync(() =>
+                {
+                    if (panelVersion != _panelRefreshVersion ||
+                        !string.Equals(button.Tag as string, elementId, StringComparison.Ordinal))
+                    {
+                        return;
+                    }
+
+                    button.Content = fallbackIcon;
+                    button.FontFamily = FontHelper.Resolve(fallbackFont);
+                });
             }
         }
+
+        private static System.Windows.Controls.Image CreateButtonImage(System.Windows.Media.Imaging.BitmapSource source) => new()
+        {
+            Source = source,
+            Width = 24,
+            Height = 24,
+            Stretch = Stretch.Uniform
+        };
+
+        private sealed record CachedButtonImage(System.Windows.Media.Imaging.BitmapSource Source, DateTime LastWriteUtc);
 
         private static DockEdge GetClosestDockEdge(System.Drawing.Rectangle workArea, int cursorX, int cursorY, DockEdge currentEdge)
         {
@@ -1398,12 +1439,27 @@ namespace AiteBar
                 : (Brush)_brushConverter.ConvertFromString("#35FFFFFF")!;
         }
 
+        private void SetPanelDragRenderingActive(bool isActive)
+        {
+            if (isActive)
+            {
+                BeginAnimation(LeftProperty, null);
+                BeginAnimation(TopProperty, null);
+                _isAnimating = false;
+                RootBorder.CacheMode ??= new BitmapCache();
+                return;
+            }
+
+            RootBorder.CacheMode = null;
+        }
+
         private void DragHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             _isPanelDragging = true;
             _panelDragChanged = false;
             _dragStartEdge = _appSettings.Edge;
             _dragStartMonitorIndex = _appSettings.MonitorIndex;
+            SetPanelDragRenderingActive(true);
             DragHandle.CaptureMouse();
             SetDragHandleActive(true);
             e.Handled = true;
@@ -1418,6 +1474,7 @@ namespace AiteBar
 
             _isPanelDragging = false;
             SetDragHandleActive(false);
+            SetPanelDragRenderingActive(false);
 
             if (_panelDragChanged)
             {
@@ -1470,6 +1527,7 @@ namespace AiteBar
             DragHandle.ReleaseMouseCapture();
             _isPanelDragging = false;
             SetDragHandleActive(false);
+            SetPanelDragRenderingActive(false);
 
             if (_panelDragChanged)
             {
