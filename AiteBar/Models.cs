@@ -80,6 +80,8 @@ namespace AiteBar {
         public bool ShowPresetScreenshot { get; set; } = true;
         public bool ShowPresetVideo { get; set; } = true;
         public bool ShowPresetCalc { get; set; } = true;
+        public bool ShowPresetExplorer { get; set; } = true;
+        public bool ShowPresetDownloads { get; set; } = true;
 
         public DockEdge Edge { get; set; } = DockEdge.Top;
         public int MonitorIndex { get; set; } = 0; // 0 = Primary, 1, 2...

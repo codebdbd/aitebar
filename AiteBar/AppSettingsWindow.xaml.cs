@@ -335,6 +335,8 @@ namespace AiteBar
             ChkShowPresetScreenshot.IsChecked = _settings.ShowPresetScreenshot;
             ChkShowPresetVideo.IsChecked = _settings.ShowPresetVideo;
             ChkShowPresetCalc.IsChecked = _settings.ShowPresetCalc;
+            ChkShowPresetExplorer.IsChecked = _settings.ShowPresetExplorer;
+            ChkShowPresetDownloads.IsChecked = _settings.ShowPresetDownloads;
 
             LoadHotkeyBinding(
                 new HotkeyBinding
@@ -462,6 +464,8 @@ namespace AiteBar
             _settings.ShowPresetScreenshot = ChkShowPresetScreenshot.IsChecked ?? false;
             _settings.ShowPresetVideo = ChkShowPresetVideo.IsChecked ?? false;
             _settings.ShowPresetCalc = ChkShowPresetCalc.IsChecked ?? false;
+            _settings.ShowPresetExplorer = ChkShowPresetExplorer.IsChecked ?? false;
+            _settings.ShowPresetDownloads = ChkShowPresetDownloads.IsChecked ?? false;
 
             if (CmbEdge.SelectedItem is ComboBoxItem edgeItem && edgeItem.Tag is DockEdge edge)
             {

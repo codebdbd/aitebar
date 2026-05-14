@@ -123,6 +123,8 @@ namespace AiteBar
             BtnScreenshot.ContextMenu = BuildSystemUtilityContextMenu("Скриншот", () => _appSettings.ShowPresetScreenshot = false);
             BtnRecord.ContextMenu = BuildSystemUtilityContextMenu("Видео", () => _appSettings.ShowPresetVideo = false);
             BtnCalc.ContextMenu = BuildSystemUtilityContextMenu("Калькулятор", () => _appSettings.ShowPresetCalc = false);
+            BtnExplorer.ContextMenu = BuildSystemUtilityContextMenu("Проводник", () => _appSettings.ShowPresetExplorer = false);
+            BtnDownloads.ContextMenu = BuildSystemUtilityContextMenu("Загрузки", () => _appSettings.ShowPresetDownloads = false);
         }
 
         private ContextMenu BuildSystemUtilityContextMenu(string title, Action detachAction)
@@ -670,6 +672,8 @@ namespace AiteBar
             if (_appSettings.ShowPresetScreenshot) count++;
             if (_appSettings.ShowPresetVideo) count++;
             if (_appSettings.ShowPresetCalc) count++;
+            if (_appSettings.ShowPresetExplorer) count++;
+            if (_appSettings.ShowPresetDownloads) count++;
             return count;
         }
 
@@ -750,8 +754,7 @@ namespace AiteBar
         {
             if (msg == NativeMethods.WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
             {
-                _shown = !_shown;
-                Toggle(!_shown);
+                ToggleDock();
                 handled = true;
             }
             else if (msg == NativeMethods.WM_HOTKEY)
@@ -811,7 +814,7 @@ namespace AiteBar
 
             _notifyIcon.MouseClick += (s, e) => {
                 if (e.Button == System.Windows.Forms.MouseButtons.Left) {
-                    if (!_shown) { _shown = true; Toggle(false); }
+                    ToggleDock();
                 }
                 else if (e.Button == System.Windows.Forms.MouseButtons.Right) {
                     ShowTrayContextMenu();
@@ -841,7 +844,7 @@ namespace AiteBar
         {
             var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(61453), "Открыть", (s, e) => { if (!_shown) { _shown = true; Toggle(false); } }));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(61453), "Открыть", (s, e) => ShowDock()));
             menu.Items.Add(CreateMenuItem(FluentGlyph(62135), "Настройки программы", (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
             menu.Items.Add(CreateMenuItem(FluentGlyph(61564), "Импорт панели...", async (s, e) =>
             {
@@ -1215,27 +1218,18 @@ namespace AiteBar
 
         public void RefreshPanel() {
             int panelVersion = unchecked(++_panelRefreshVersion);
+            _settingsService.NormalizeAppState();
+            BuildPanelContextMenu();
+            string activeContextId = _appSettings.ActiveContextId;
+            bool hasSystemUtils = ApplySystemUtilityVisibility(activeContextId);
+
             UpdateOrientation();
             UserButtonsPanel.Children.Clear();
             _userButtons.Clear();
 
-            _settingsService.NormalizeAppState();
-            BuildPanelContextMenu();
-            string activeContextId = _appSettings.ActiveContextId;
             _activeContextElements = _elements
                 .Where(element => string.Equals(element.ContextId, activeContextId, StringComparison.Ordinal))
                 .ToList();
-            
-            bool showSystemUtils = ShouldShowSystemUtilsForContext(activeContextId);
-            BtnSearch.Visibility = showSystemUtils && _appSettings.ShowPresetSearch ? Visibility.Visible : Visibility.Collapsed;
-            BtnScreenshot.Visibility = showSystemUtils && _appSettings.ShowPresetScreenshot ? Visibility.Visible : Visibility.Collapsed;
-            BtnRecord.Visibility = showSystemUtils && _appSettings.ShowPresetVideo ? Visibility.Visible : Visibility.Collapsed;
-            BtnCalc.Visibility = showSystemUtils && _appSettings.ShowPresetCalc ? Visibility.Visible : Visibility.Collapsed;
-
-            // Видимость зоны системных утилит
-            bool hasSystemUtils = BtnSearch.Visibility == Visibility.Visible || BtnScreenshot.Visibility == Visibility.Visible || 
-                                 BtnRecord.Visibility == Visibility.Visible || BtnCalc.Visibility == Visibility.Visible;
-            SystemUtilsPanel.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
 
             foreach (var el in _activeContextElements) {
                 var btn = CreatePanelButton(string.Empty, el.Name, (s, e) => {
@@ -1314,6 +1308,26 @@ namespace AiteBar
             AnimateContextTransitionIfNeeded();
             
             UpdatePanelBounds();
+        }
+
+        private bool ApplySystemUtilityVisibility(string activeContextId)
+        {
+            bool showSystemUtils = ShouldShowSystemUtilsForContext(activeContextId);
+            BtnSearch.Visibility = showSystemUtils && _appSettings.ShowPresetSearch ? Visibility.Visible : Visibility.Collapsed;
+            BtnScreenshot.Visibility = showSystemUtils && _appSettings.ShowPresetScreenshot ? Visibility.Visible : Visibility.Collapsed;
+            BtnRecord.Visibility = showSystemUtils && _appSettings.ShowPresetVideo ? Visibility.Visible : Visibility.Collapsed;
+            BtnCalc.Visibility = showSystemUtils && _appSettings.ShowPresetCalc ? Visibility.Visible : Visibility.Collapsed;
+            BtnExplorer.Visibility = showSystemUtils && _appSettings.ShowPresetExplorer ? Visibility.Visible : Visibility.Collapsed;
+            BtnDownloads.Visibility = showSystemUtils && _appSettings.ShowPresetDownloads ? Visibility.Visible : Visibility.Collapsed;
+
+            bool hasSystemUtils = BtnSearch.Visibility == Visibility.Visible ||
+                                  BtnScreenshot.Visibility == Visibility.Visible ||
+                                  BtnRecord.Visibility == Visibility.Visible ||
+                                  BtnCalc.Visibility == Visibility.Visible ||
+                                  BtnExplorer.Visibility == Visibility.Visible ||
+                                  BtnDownloads.Visibility == Visibility.Visible;
+            SystemUtilsPanel.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
+            return hasSystemUtils;
         }
 
         private void ApplyButtonIcon(Button button, CustomElement element, int panelVersion)
@@ -1645,6 +1659,35 @@ namespace AiteBar
 
         public IReadOnlyList<CustomElement> GetElementsSnapshot() => _settingsService.Elements.Select(_settingsService.CloneElement).ToList();
 
+        private void ShowDock()
+        {
+            if (_shown || _isAnimating)
+            {
+                return;
+            }
+
+            _shown = true;
+            _hoverStartTime = null;
+            Toggle(false);
+        }
+
+        private void ToggleDock()
+        {
+            if (_isAnimating)
+            {
+                return;
+            }
+
+            if (_shown)
+            {
+                _ = HideDock();
+            }
+            else
+            {
+                ShowDock();
+            }
+        }
+
         private void Toggle(bool hide) {
             _isAnimating = true; _timer.Stop();
 
@@ -1687,7 +1730,18 @@ namespace AiteBar
             this.BeginAnimation(TopProperty, animY);
         }
 
-        private async Task HideDock() { if (_shown) { _shown = false; Toggle(true); await Task.Delay(250); } }
+        private async Task HideDock()
+        {
+            if (!_shown || _isAnimating)
+            {
+                return;
+            }
+
+            _shown = false;
+            _hoverStartTime = null;
+            Toggle(true);
+            await Task.Delay(250);
+        }
 
         private async void RootBorder_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
@@ -1709,6 +1763,8 @@ namespace AiteBar
         private async void BtnScreenshotRegion_Click(object sender, RoutedEventArgs e) { await _actionService.StartScreenshotAsync(HideDock); }
         private async void BtnRecordVideo_Click(object sender, RoutedEventArgs e) { await _actionService.StartRecordVideoAsync(HideDock); }
         private async void BtnCalc_Click(object sender, RoutedEventArgs e) { await _actionService.StartCalculatorAsync(HideDock); }
+        private async void BtnExplorer_Click(object sender, RoutedEventArgs e) { await _actionService.StartExplorerAsync(HideDock); }
+        private async void BtnDownloads_Click(object sender, RoutedEventArgs e) { await _actionService.StartDownloadsAsync(HideDock); }
         private async void BtnSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new SettingsWindow(this).ShowDialog(); }
         private async void BtnAppSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new AppSettingsWindow(this).ShowDialog(); }
         

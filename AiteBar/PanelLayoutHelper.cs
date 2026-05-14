@@ -34,7 +34,9 @@ public static class PanelLayoutHelper
         int systemContextIndex = 0)
     {
         double normalizedPercent = Math.Clamp(panelPercent, 20, 100) / 100.0;
-        double maxPrimary = Math.Max(ButtonOuterSize, availablePrimary * normalizedPercent);
+        double maxPrimary = isVertical
+            ? Math.Max(ButtonOuterSize, availablePrimary)
+            : Math.Max(ButtonOuterSize, availablePrimary * normalizedPercent);
 
         List<int> counts = contextCounts.Select(count => Math.Max(0, count)).DefaultIfEmpty(0).ToList();
         int normalizedActiveIndex = counts.Count == 0 ? 0 : Math.Clamp(activeContextIndex, 0, counts.Count - 1);

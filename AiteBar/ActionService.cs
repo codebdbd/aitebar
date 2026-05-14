@@ -176,6 +176,23 @@ namespace AiteBar
             Process.Start("calc.exe");
         }
 
+        public async Task StartExplorerAsync(Func<Task>? onBeforeExecute = null)
+        {
+            if (onBeforeExecute != null) await onBeforeExecute();
+            Process.Start(BuildShellLaunchProcessStartInfo("explorer.exe"));
+        }
+
+        public async Task StartDownloadsAsync(Func<Task>? onBeforeExecute = null)
+        {
+            if (onBeforeExecute != null) await onBeforeExecute();
+            Process.Start(BuildShellLaunchProcessStartInfo("shell:Downloads"));
+        }
+
+        internal static ProcessStartInfo BuildShellLaunchProcessStartInfo(string target) => new(target)
+        {
+            UseShellExecute = true
+        };
+
         private static async Task StartScriptFileAsync(string scriptPath)
         {
             var psi = CreateScriptProcessStartInfo(scriptPath);

@@ -255,6 +255,8 @@
                             <CheckBox x:Name="ChkShowPresetScreenshot" Content="Скриншот" Style="{StaticResource CompactCheckBoxStyle}"/>
                             <CheckBox x:Name="ChkShowPresetVideo" Content="Видео" Style="{StaticResource CompactCheckBoxStyle}"/>
                             <CheckBox x:Name="ChkShowPresetCalc" Content="Калькулятор" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetExplorer" Content="Проводник" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetDownloads" Content="Загрузки" Style="{StaticResource CompactCheckBoxStyle}"/>
                         </UniformGrid>
                     </StackPanel>
                 </Border>

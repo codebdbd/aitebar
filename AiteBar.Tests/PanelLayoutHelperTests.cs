@@ -64,6 +64,25 @@ public sealed class PanelLayoutHelperTests
     }
 
     [Fact]
+    public void Calculate_Vertical_UsesAvailableHeightBeforeAddingSecondColumn()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 800,
+            panelPercent: 40,
+            visibleSystemButtonCount: 0,
+            controlButtonCount: 1,
+            contextCounts: [12],
+            activeContextIndex: 0);
+
+        Assert.Equal(52, metrics.PanelWidth);
+        Assert.Equal(589, metrics.PanelHeight);
+        Assert.Equal(44, metrics.UserWidth);
+        Assert.Equal(528, metrics.UserHeight);
+        Assert.Equal(1, metrics.UserBands);
+    }
+
+    [Fact]
     public void Calculate_NoUserButtons_UsesOnlyFixedBlock()
     {
         var metrics = PanelLayoutHelper.Calculate(

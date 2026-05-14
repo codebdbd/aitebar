@@ -82,6 +82,8 @@
                         <Button x:Name="BtnScreenshot" Content="&#xF68E;" ToolTip="Скриншот" Click="BtnScreenshotRegion_Click" Foreground="{StaticResource PrimaryText}"/>
                         <Button x:Name="BtnRecord" Content="&#xF535;" ToolTip="Запись видео" Click="BtnRecordVideo_Click" Foreground="{StaticResource PrimaryText}"/>
                         <Button x:Name="BtnCalc" Content="&#xF06C;" ToolTip="Калькулятор" Click="BtnCalc_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnExplorer" Content="&#xF42F;" ToolTip="Проводник" Click="BtnExplorer_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnDownloads" Content="&#xF151;" ToolTip="Загрузки" Click="BtnDownloads_Click" Foreground="{StaticResource PrimaryText}"/>
                     </StackPanel>
 
                     <Rectangle x:Name="SepControl" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" VerticalAlignment="Center"/>

@@ -27,4 +27,15 @@ public sealed class ActionServiceTests
         Assert.Contains("Work Profile", args);
         Assert.DoesNotContain("-P \"Work Profile\"", args);
     }
+
+    [Theory]
+    [InlineData("explorer.exe")]
+    [InlineData("shell:Downloads")]
+    public void BuildShellLaunchProcessStartInfo_UsesWindowsShell(string target)
+    {
+        var psi = ActionService.BuildShellLaunchProcessStartInfo(target);
+
+        Assert.Equal(target, psi.FileName);
+        Assert.True(psi.UseShellExecute);
+    }
 }
