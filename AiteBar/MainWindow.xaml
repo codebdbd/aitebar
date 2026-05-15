@@ -44,10 +44,11 @@
         </Style>
     </Window.Resources>
 
-    <Border x:Name="RootBorder" Background="{StaticResource PanelBackground}" CornerRadius="8" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Margin="3"
+    <Border x:Name="RootBorder" Background="{StaticResource BorderColor}" CornerRadius="8" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Margin="3"
             SnapsToDevicePixels="True"
             TextOptions.TextFormattingMode="Ideal"
             AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel">
+        <Border Background="{StaticResource PanelBackground}" CornerRadius="7" SnapsToDevicePixels="True">
         <DockPanel x:Name="MainPanel" HorizontalAlignment="Left" VerticalAlignment="Center" LastChildFill="False" Margin="2">
                 <Border x:Name="DragHandle"
                         Width="14"
@@ -91,5 +92,6 @@
 
                 <WrapPanel x:Name="UserButtonsPanel" Orientation="Horizontal" ClipToBounds="True" VerticalAlignment="Center"/>
         </DockPanel>
+        </Border>
     </Border>
 </Window>

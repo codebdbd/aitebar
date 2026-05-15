@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("AiteBar.Tests")]
 [assembly: AssemblyTitle("AiteBar")]
 [assembly: AssemblyProduct("AiteBar")]
-[assembly: AssemblyCompany("Codebd")]
+[assembly: AssemblyCompany("Codebdbd")]
 [assembly: AssemblyVersion("1.6.1.0")]
 [assembly: AssemblyFileVersion("1.6.1.0")]
 [assembly: AssemblyInformationalVersion("1.6.1")]

@@ -47,6 +47,26 @@ namespace AiteBar
         private static FontFamily? _menuIconFont;
         private static FontFamily MenuIconFont => _menuIconFont ??= FontHelper.Resolve(FontHelper.FluentKey);
 
+        private static class MenuIcons
+        {
+            public const int Panel = 59567; // ic_fluent_panel_left_16_regular
+            public const int Settings = 63144; // ic_fluent_settings_16_regular
+            public const int Import = 58591; // ic_fluent_document_arrow_down_16_regular
+            public const int Export = 62465; // ic_fluent_document_arrow_up_16_regular
+            public const int Info = 62626; // ic_fluent_info_16_regular
+            public const int Help = 63036; // ic_fluent_question_circle_16_regular
+            public const int Donate = 59035; // ic_fluent_gift_16_regular
+            public const int Exit = 58724; // ic_fluent_door_arrow_left_16_regular
+            public const int Unpin = 59781; // ic_fluent_pin_off_16_regular
+            public const int Edit = 62428; // ic_fluent_edit_16_regular
+            public const int Copy = 62250; // ic_fluent_copy_16_regular
+            public const int Rename = 63080; // ic_fluent_rename_16_regular
+            public const int Move = 61837; // ic_fluent_arrow_swap_20_regular
+            public const int OpenFolder = 59536; // ic_fluent_open_folder_16_regular
+            public const int Clipboard = 58178; // ic_fluent_clipboard_16_regular
+            public const int Delete = 58491; // ic_fluent_delete_16_regular
+        }
+
         private readonly AppSettingsService _settingsService = new();
         private readonly ActionService _actionService;
         private readonly PanelPackageService _panelPackageService;
@@ -133,7 +153,7 @@ namespace AiteBar
             menu.Opened += (s, e) => _isElementContextMenuOpen = true;
             menu.Closed += (s, e) => _isElementContextMenuOpen = false;
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(62979), "Открепить от панели", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Unpin), "Открепить от панели", async (s, e) =>
             {
                 await RunPanelInteractionAsync(async () =>
                 {
@@ -154,22 +174,33 @@ namespace AiteBar
                     ? (Brush)FindResource("AccentColor")
                     : new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#E3E3E3"));
 
+            var icon = new System.Windows.Controls.TextBlock
+            {
+                Text = glyph,
+                FontFamily = MenuIconFont,
+                FontSize = 16,
+                Foreground = accentBrush,
+                VerticalAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                TextAlignment = TextAlignment.Center,
+                Width = 16,
+                Height = 16,
+                LineHeight = 16,
+                LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
+                Padding = new Thickness(0),
+                Margin = new Thickness(0),
+                SnapsToDevicePixels = true,
+                UseLayoutRounding = true
+            };
+            TextOptions.SetTextFormattingMode(icon, TextFormattingMode.Display);
+            TextOptions.SetTextRenderingMode(icon, TextRenderingMode.ClearType);
+
             var item = new MenuItem
             {
                 Header = text,
                 Style = (Style)FindResource("DarkMenuItem"),
                 Padding = new Thickness(0),
-                Icon = new System.Windows.Controls.TextBlock
-                {
-                    Text = glyph,
-                    FontFamily = MenuIconFont,
-                    FontSize = 16,
-                    Foreground = accentBrush,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                    Padding = new Thickness(0),
-                    Margin = new Thickness(0)
-                }
+                Icon = icon
             };
 
             if (isDanger)
@@ -272,11 +303,11 @@ namespace AiteBar
                 menu.Items.Add(item);
             }
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(61564), "Импорт в текущую панель...", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Import), "Импорт в текущую панель...", async (s, e) =>
             {
                 await RunPanelInteractionAsync(ImportIntoCurrentPanelAsync);
             }));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(61563), "Экспорт текущей панели...", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Export), "Экспорт текущей панели...", async (s, e) =>
             {
                 await RunPanelInteractionAsync(ExportCurrentPanelAsync);
             }));
@@ -290,24 +321,24 @@ namespace AiteBar
             menu.Opened += (s, e) => _isElementContextMenuOpen = true;
             menu.Closed += (s, e) => _isElementContextMenuOpen = false;
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(62034), "Редактировать", (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Edit), "Редактировать", (s, e) =>
             {
                 RunPanelInteraction(() => new SettingsWindow(this, element) { Owner = this }.ShowDialog());
             }));
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(62251), "Дублировать", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Copy), "Дублировать", async (s, e) =>
             {
                 await RunPanelInteractionAsync(() => DuplicateElementAsync(element));
             }));
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(63081), "Переименовать", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Rename), "Переименовать", async (s, e) =>
             {
                 await RunPanelInteractionAsync(() => RenameElementAsync(element));
             }));
 
             var moveTargets = _appSettings.Contexts
                 .Where(context => !string.Equals(context.Id, element.ContextId, StringComparison.Ordinal))
-                .Select(context => CreateMenuItem(FluentGlyph(61837), context.Name, async (s, e) =>
+                .Select(context => CreateMenuItem(FluentGlyph(MenuIcons.Move), context.Name, async (s, e) =>
                 {
                     await RunPanelInteractionAsync(() => MoveElementToContextAsync(element.Id, context.Id));
                 }))
@@ -315,7 +346,7 @@ namespace AiteBar
 
             if (moveTargets.Count > 0)
             {
-                var moveMenu = CreateMenuItem(FluentGlyph(61837), "Переместить");
+                var moveMenu = CreateMenuItem(FluentGlyph(MenuIcons.Move), "Переместить");
                 foreach (var moveTarget in moveTargets)
                 {
                     moveMenu.Items.Add(moveTarget);
@@ -330,13 +361,13 @@ namespace AiteBar
 
             if (CanOpenElementLocation(element))
             {
-                menu.Items.Add(CreateMenuItem(FluentGlyph(59537), "Открыть расположение", async (s, e) =>
+                menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.OpenFolder), "Открыть расположение", async (s, e) =>
                 {
                     await RunPanelInteractionAsync(() => OpenElementLocationAsync(element));
                 }));
             }
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(62284), "Удалить", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Delete), "Удалить", async (s, e) =>
             {
                 await RunPanelInteractionAsync(() => DeleteElementAsync(element));
             }, isDanger: true));
@@ -436,7 +467,7 @@ namespace AiteBar
                 return false;
             }
 
-            menuItem = CreateMenuItem(FluentGlyph(62153), caption, (s, e) =>
+            menuItem = CreateMenuItem(FluentGlyph(MenuIcons.Clipboard), caption, (s, e) =>
             {
                 try
                 {
@@ -844,20 +875,20 @@ namespace AiteBar
         {
             var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(61453), "Открыть", (s, e) => ShowDock()));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(62135), "Настройки программы", (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(61564), "Импорт панели...", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Panel), "Открыть", (s, e) => ShowDock()));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Settings), "Настройки программы", (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Import), "Импорт панели...", async (s, e) =>
             {
                 await RunPanelInteractionAsync(ImportIntoCurrentPanelAsync);
             }));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(61563), "Экспорт текущей панели...", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Export), "Экспорт текущей панели...", async (s, e) =>
             {
                 await RunPanelInteractionAsync(ExportCurrentPanelAsync);
             }));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(59718), "О программе", (s, e) => new AboutWindow { Owner = this }.ShowDialog()));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(59613), "Справка", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/products/aitebar/guide.html")));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(60049), "Поддержать автора", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/pages/donate.html")));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(62284), "Закрыть и выйти", (s, e) => { _notifyIcon.Dispose(); Application.Current.Shutdown(); }));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Info), "О программе", (s, e) => new AboutWindow { Owner = this }.ShowDialog()));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Help), "Справка", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/products/aitebar/guide.html")));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Donate), "Поддержать автора", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/pages/donate.html")));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Exit), "Закрыть и выйти", (s, e) => { _notifyIcon.Dispose(); Application.Current.Shutdown(); }));
 
             // Для того чтобы ContextMenu закрывалось при клике мимо, 
             // его нужно привязать к невидимому элементу или использовать Placement.
@@ -1753,18 +1784,33 @@ namespace AiteBar
             await SwitchActiveContextAsync(direction);
         }
 
-        private async void BtnSearch_Click(object sender, RoutedEventArgs e) {
-            try { 
-                string t = Clipboard.ContainsText() ? Clipboard.GetText().Trim() : ""; 
-                if (string.IsNullOrEmpty(t)) return; 
-                await _actionService.StartSearchAsync(t, HideDock);
-            } catch { }
+        private async Task RunPresetActionAsync(Func<Task> action)
+        {
+            try
+            {
+                await action();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                new DarkDialog($"Не удалось выполнить действие:\n{ex.Message}") { Owner = this }.ShowDialog();
+            }
         }
-        private async void BtnScreenshotRegion_Click(object sender, RoutedEventArgs e) { await _actionService.StartScreenshotAsync(HideDock); }
-        private async void BtnRecordVideo_Click(object sender, RoutedEventArgs e) { await _actionService.StartRecordVideoAsync(HideDock); }
-        private async void BtnCalc_Click(object sender, RoutedEventArgs e) { await _actionService.StartCalculatorAsync(HideDock); }
-        private async void BtnExplorer_Click(object sender, RoutedEventArgs e) { await _actionService.StartExplorerAsync(HideDock); }
-        private async void BtnDownloads_Click(object sender, RoutedEventArgs e) { await _actionService.StartDownloadsAsync(HideDock); }
+
+        private async void BtnSearch_Click(object sender, RoutedEventArgs e)
+        {
+            await RunPresetActionAsync(async () =>
+            {
+                string t = Clipboard.ContainsText() ? Clipboard.GetText().Trim() : "";
+                if (string.IsNullOrEmpty(t)) return;
+                await _actionService.StartSearchAsync(t, HideDock);
+            });
+        }
+        private async void BtnScreenshotRegion_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartScreenshotAsync(HideDock)); }
+        private async void BtnRecordVideo_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartRecordVideoAsync(HideDock)); }
+        private async void BtnCalc_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartCalculatorAsync(HideDock)); }
+        private async void BtnExplorer_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartExplorerAsync(HideDock)); }
+        private async void BtnDownloads_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartDownloadsAsync(HideDock)); }
         private async void BtnSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new SettingsWindow(this).ShowDialog(); }
         private async void BtnAppSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new AppSettingsWindow(this).ShowDialog(); }
         
