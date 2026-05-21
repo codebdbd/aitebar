@@ -6,6 +6,7 @@ namespace AiteBar {
         public string Id { get; set; } = "context-1";
         public string Name { get; set; } = "Панель 1";
         public string IconGlyph { get; set; } = "\uE8B7"; // Fluent "Folder" по умолчанию
+        public bool IsEnabled { get; set; } = true;
     }
 
     public class HotkeyBinding
@@ -71,10 +72,10 @@ namespace AiteBar {
 
     public class AppSettings {
         public bool GlobalHotkeyCtrl { get; set; } = false;
-        public bool GlobalHotkeyAlt { get; set; } = false;
+        public bool GlobalHotkeyAlt { get; set; } = true;
         public bool GlobalHotkeyShift { get; set; } = false;
-        public bool GlobalHotkeyWin { get; set; } = true;
-        public string GlobalHotkeyKey { get; set; } = "Z";
+        public bool GlobalHotkeyWin { get; set; } = false;
+        public string GlobalHotkeyKey { get; set; } = "D4";
 
         public bool ShowPresetSearch { get; set; } = true;
         public bool ShowPresetScreenshot { get; set; } = true;
@@ -82,16 +83,21 @@ namespace AiteBar {
         public bool ShowPresetCalc { get; set; } = true;
         public bool ShowPresetExplorer { get; set; } = true;
         public bool ShowPresetDownloads { get; set; } = true;
+        public bool ShowPresetColorPicker { get; set; } = false;
+        public bool ShowPresetQuickNote { get; set; } = false;
+        public string QuickNoteThemeId { get; set; } = "dark";
 
         public DockEdge Edge { get; set; } = DockEdge.Top;
         public int MonitorIndex { get; set; } = 0; // 0 = Primary, 1, 2...
         public double ActivationZoneSizePercent { get; set; } = 30; // % от ширины/высоты края
         public double PanelSizePercent { get; set; } = 80; // % от ширины/высоты экрана
         public int ActivationDelayMs { get; set; } = 250;
+        public string UiCulture { get; set; } = "auto";
         public List<PanelContext> Contexts { get; set; } = [];
         public string ActiveContextId { get; set; } = "context-1";
         public HotkeyBinding NextContextHotkey { get; set; } = new();
         public HotkeyBinding PreviousContextHotkey { get; set; } = new();
+        public HotkeyBinding AddButtonHotkey { get; set; } = new();
         public HotkeyBinding Context1Hotkey { get; set; } = new();
         public HotkeyBinding Context2Hotkey { get; set; } = new();
         public HotkeyBinding Context3Hotkey { get; set; } = new();

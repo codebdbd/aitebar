@@ -61,7 +61,7 @@ namespace AiteBar
             public const int Edit = 62428; // ic_fluent_edit_16_regular
             public const int Copy = 62250; // ic_fluent_copy_16_regular
             public const int Rename = 63080; // ic_fluent_rename_16_regular
-            public const int Move = 61837; // ic_fluent_arrow_swap_20_regular
+            public const int Move = 57579; // ic_fluent_arrow_right_16_regular
             public const int OpenFolder = 59536; // ic_fluent_open_folder_16_regular
             public const int Clipboard = 58178; // ic_fluent_clipboard_16_regular
             public const int Delete = 58491; // ic_fluent_delete_16_regular
@@ -94,19 +94,20 @@ namespace AiteBar
         private bool _startupInfrastructureInitialized;
         private bool _deferredStartupCompleted;
         private int _panelRefreshVersion;
+        private int _contextWheelDelta;
+        private DateTime _lastContextWheelSwitchUtc = DateTime.MinValue;
         private readonly Dictionary<string, CachedButtonImage> _buttonImageCache = new(StringComparer.OrdinalIgnoreCase);
 
         private const int HOTKEY_ID = 9000;
         private const int HOTKEY_CONTEXT_NEXT_ID = 9001;
         private const int HOTKEY_CONTEXT_PREVIOUS_ID = 9002;
-        private const int HOTKEY_CONTEXT1_ID = 9011;
-        private const int HOTKEY_CONTEXT2_ID = 9012;
-        private const int HOTKEY_CONTEXT3_ID = 9013;
-        private const int HOTKEY_CONTEXT4_ID = 9014;
+        private const int HOTKEY_ADD_BUTTON_ID = 9003;
         private const int WM_HOTKEY = 0x0312;
         private const double PanelScreenPadding = 20;
         private const double ButtonPitch = PanelLayoutHelper.ButtonOuterSize;
         private const double DragHandleSpan = 18;
+        private const int WheelDeltaPerContextSwitch = 120;
+        private static readonly TimeSpan ContextWheelSwitchCooldown = TimeSpan.FromMilliseconds(220);
 
         public MainWindow()
         {
@@ -137,14 +138,35 @@ namespace AiteBar
         public AppSettingsService GetSettingsService() => _settingsService;
         public ActionService GetActionService() => _actionService;
 
+        public void ApplyLocalizedText()
+        {
+            if (ControlBlock.Children.OfType<Button>().FirstOrDefault() is { } addButton)
+            {
+                addButton.ToolTip = LocalizationService.Get("Main_AddButtonTooltip");
+            }
+
+            BtnSearch.ToolTip = LocalizationService.Get("Main_SearchTooltip");
+            BtnScreenshot.ToolTip = LocalizationService.Get("Main_ScreenshotTooltip");
+            BtnRecord.ToolTip = LocalizationService.Get("Main_RecordTooltip");
+            BtnCalc.ToolTip = LocalizationService.Get("Main_CalcTooltip");
+            BtnExplorer.ToolTip = LocalizationService.Get("Main_ExplorerTooltip");
+            BtnDownloads.ToolTip = LocalizationService.Get("Main_DownloadsTooltip");
+            BtnColorPicker.ToolTip = LocalizationService.Get("Main_ColorPickerTooltip");
+            BtnQuickNote.ToolTip = LocalizationService.Get("Main_QuickNoteTooltip");
+            AttachSystemUtilityContextMenus();
+            BuildPanelContextMenu();
+        }
+
         private void AttachSystemUtilityContextMenus()
         {
-            BtnSearch.ContextMenu = BuildSystemUtilityContextMenu("Поиск", () => _appSettings.ShowPresetSearch = false);
-            BtnScreenshot.ContextMenu = BuildSystemUtilityContextMenu("Скриншот", () => _appSettings.ShowPresetScreenshot = false);
-            BtnRecord.ContextMenu = BuildSystemUtilityContextMenu("Видео", () => _appSettings.ShowPresetVideo = false);
-            BtnCalc.ContextMenu = BuildSystemUtilityContextMenu("Калькулятор", () => _appSettings.ShowPresetCalc = false);
-            BtnExplorer.ContextMenu = BuildSystemUtilityContextMenu("Проводник", () => _appSettings.ShowPresetExplorer = false);
-            BtnDownloads.ContextMenu = BuildSystemUtilityContextMenu("Загрузки", () => _appSettings.ShowPresetDownloads = false);
+            BtnSearch.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Search"), () => _appSettings.ShowPresetSearch = false);
+            BtnScreenshot.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Screenshot"), () => _appSettings.ShowPresetScreenshot = false);
+            BtnRecord.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Video"), () => _appSettings.ShowPresetVideo = false);
+            BtnCalc.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Calculator"), () => _appSettings.ShowPresetCalc = false);
+            BtnExplorer.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Explorer"), () => _appSettings.ShowPresetExplorer = false);
+            BtnDownloads.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Downloads"), () => _appSettings.ShowPresetDownloads = false);
+            BtnColorPicker.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_ColorPicker"), () => _appSettings.ShowPresetColorPicker = false);
+            BtnQuickNote.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_QuickNote"), () => _appSettings.ShowPresetQuickNote = false);
         }
 
         private ContextMenu BuildSystemUtilityContextMenu(string title, Action detachAction)
@@ -153,7 +175,7 @@ namespace AiteBar
             menu.Opened += (s, e) => _isElementContextMenuOpen = true;
             menu.Closed += (s, e) => _isElementContextMenuOpen = false;
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Unpin), "Открепить от панели", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Unpin), LocalizationService.Get("Menu_Unpin"), async (s, e) =>
             {
                 await RunPanelInteractionAsync(async () =>
                 {
@@ -216,13 +238,16 @@ namespace AiteBar
             return item;
         }
 
-        public async Task SaveAppSettings(AppSettings settings)
+        public async Task<IReadOnlyList<string>> SaveAppSettings(AppSettings settings)
         {
+            _settingsService.NormalizeAppState();
             await _settingsService.SaveAsync();
-            RegisterGlobalHotkey();
+            return RegisterGlobalHotkey();
         }
 
         public IReadOnlyList<PanelContext> GetContextsSnapshot() => _settingsService.GetContextsSnapshot();
+
+        public IReadOnlyList<PanelContext> GetAllContextsSnapshot() => _settingsService.GetAllContextsSnapshot();
 
         public string GetContextDisplayName(string contextId) => _settingsService.GetContextDisplayName(contextId);
 
@@ -236,13 +261,14 @@ namespace AiteBar
 
         private async Task SwitchActiveContextAsync(int direction)
         {
-            if (_appSettings.Contexts.Count == 0) return;
+            var enabledContexts = ContextStateHelper.GetEnabledContexts(_appSettings.Contexts);
+            if (enabledContexts.Count == 0) return;
 
-            int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
+            int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
             if (currentIndex < 0) currentIndex = 0;
 
-            int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, _appSettings.Contexts.Count);
-            string nextContextId = _appSettings.Contexts[nextIndex].Id;
+            int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, enabledContexts.Count);
+            string nextContextId = enabledContexts[nextIndex].Id;
             if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal)) return;
 
             _appSettings.ActiveContextId = nextContextId;
@@ -253,13 +279,14 @@ namespace AiteBar
 
         private void ActivateContextRelative(int direction)
         {
-            if (_appSettings.Contexts.Count == 0) return;
+            var enabledContexts = ContextStateHelper.GetEnabledContexts(_appSettings.Contexts);
+            if (enabledContexts.Count == 0) return;
 
-            int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
+            int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
             if (currentIndex < 0) currentIndex = 0;
 
-            int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, _appSettings.Contexts.Count);
-            string nextContextId = _appSettings.Contexts[nextIndex].Id;
+            int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, enabledContexts.Count);
+            string nextContextId = enabledContexts[nextIndex].Id;
             if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal)) return;
 
             _appSettings.ActiveContextId = nextContextId;
@@ -270,12 +297,13 @@ namespace AiteBar
 
         private void ActivateContextByIndex(int index)
         {
-            if (index < 0 || index >= _appSettings.Contexts.Count) return;
+            var enabledContexts = ContextStateHelper.GetEnabledContexts(_appSettings.Contexts);
+            if (index < 0 || index >= enabledContexts.Count) return;
 
-            int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
+            int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
             if (currentIndex < 0) currentIndex = 0;
 
-            string nextContextId = _appSettings.Contexts[index].Id;
+            string nextContextId = enabledContexts[index].Id;
             if (string.Equals(_appSettings.ActiveContextId, nextContextId, StringComparison.Ordinal)) return;
 
             _appSettings.ActiveContextId = nextContextId;
@@ -288,7 +316,7 @@ namespace AiteBar
         {
             var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
 
-            foreach (var context in _appSettings.Contexts)
+            foreach (var context in ContextStateHelper.GetEnabledContexts(_appSettings.Contexts))
             {
                 bool isActive = string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal);
                 string targetContextId = context.Id;
@@ -303,11 +331,11 @@ namespace AiteBar
                 menu.Items.Add(item);
             }
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Import), "Импорт в текущую панель...", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Import), LocalizationService.Get("Menu_ImportCurrentPanel"), async (s, e) =>
             {
                 await RunPanelInteractionAsync(ImportIntoCurrentPanelAsync);
             }));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Export), "Экспорт текущей панели...", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Export), LocalizationService.Get("Menu_ExportCurrentPanel"), async (s, e) =>
             {
                 await RunPanelInteractionAsync(ExportCurrentPanelAsync);
             }));
@@ -321,22 +349,23 @@ namespace AiteBar
             menu.Opened += (s, e) => _isElementContextMenuOpen = true;
             menu.Closed += (s, e) => _isElementContextMenuOpen = false;
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Edit), "Редактировать", (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Edit), LocalizationService.Get("Menu_Edit"), (s, e) =>
             {
                 RunPanelInteraction(() => new SettingsWindow(this, element) { Owner = this }.ShowDialog());
             }));
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Copy), "Дублировать", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Copy), LocalizationService.Get("Menu_Duplicate"), async (s, e) =>
             {
                 await RunPanelInteractionAsync(() => DuplicateElementAsync(element));
             }));
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Rename), "Переименовать", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Rename), LocalizationService.Get("Menu_Rename"), async (s, e) =>
             {
                 await RunPanelInteractionAsync(() => RenameElementAsync(element));
             }));
 
             var moveTargets = _appSettings.Contexts
+                .Where(context => context.IsEnabled)
                 .Where(context => !string.Equals(context.Id, element.ContextId, StringComparison.Ordinal))
                 .Select(context => CreateMenuItem(FluentGlyph(MenuIcons.Move), context.Name, async (s, e) =>
                 {
@@ -346,7 +375,7 @@ namespace AiteBar
 
             if (moveTargets.Count > 0)
             {
-                var moveMenu = CreateMenuItem(FluentGlyph(MenuIcons.Move), "Переместить");
+                var moveMenu = CreateMenuItem(FluentGlyph(MenuIcons.Move), LocalizationService.Get("Menu_Move"));
                 foreach (var moveTarget in moveTargets)
                 {
                     moveMenu.Items.Add(moveTarget);
@@ -361,13 +390,13 @@ namespace AiteBar
 
             if (CanOpenElementLocation(element))
             {
-                menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.OpenFolder), "Открыть расположение", async (s, e) =>
+                menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.OpenFolder), LocalizationService.Get("Menu_OpenLocation"), async (s, e) =>
                 {
                     await RunPanelInteractionAsync(() => OpenElementLocationAsync(element));
                 }));
             }
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Delete), "Удалить", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Delete), LocalizationService.Get("Menu_Delete"), async (s, e) =>
             {
                 await RunPanelInteractionAsync(() => DeleteElementAsync(element));
             }, isDanger: true));
@@ -393,13 +422,13 @@ namespace AiteBar
 
         private string BuildDuplicateElementName(string sourceName)
         {
-            string baseName = string.IsNullOrWhiteSpace(sourceName) ? "Новая кнопка" : sourceName.Trim();
-            string firstCandidate = $"{baseName} (копия)";
+            string baseName = string.IsNullOrWhiteSpace(sourceName) ? LocalizationService.Get("Element_NewButton") : sourceName.Trim();
+            string firstCandidate = $"{baseName} ({LocalizationService.Get("Element_CopySuffix")})";
             if (_elements.All(x => !string.Equals(x.Name, firstCandidate, StringComparison.OrdinalIgnoreCase))) return firstCandidate;
 
             for (int index = 2; ; index++)
             {
-                string candidate = $"{baseName} (копия {index})";
+                string candidate = $"{baseName} ({LocalizationService.Format("Element_CopySuffixFormat", index)})";
                 if (_elements.All(x => !string.Equals(x.Name, candidate, StringComparison.OrdinalIgnoreCase))) return candidate;
             }
         }
@@ -409,7 +438,7 @@ namespace AiteBar
             var elementToRename = _elements.FirstOrDefault(x => string.Equals(x.Id, source.Id, StringComparison.Ordinal));
             if (elementToRename == null) return;
 
-            var dialog = new TextPromptDialog("Переименовать кнопку", "Новое имя", elementToRename.Name) { Owner = this };
+            var dialog = new TextPromptDialog(LocalizationService.Get("Prompt_RenameButtonTitle"), LocalizationService.Get("Prompt_NewName"), elementToRename.Name) { Owner = this };
             if (dialog.ShowDialog() != true)
             {
                 return;
@@ -447,7 +476,7 @@ namespace AiteBar
                 return;
             }
 
-            var dialog = new DarkDialog($"Удалить '{elementToDelete.Name}'?", isConfirm: true) { Owner = this };
+            var dialog = new DarkDialog(LocalizationService.Format("DeleteButtonConfirm", elementToDelete.Name), isConfirm: true) { Owner = this };
             if (dialog.ShowDialog() != true)
             {
                 return;
@@ -495,18 +524,18 @@ namespace AiteBar
             switch (actionType)
             {
                 case ActionType.Web:
-                    caption = "Копировать URL";
+                    caption = LocalizationService.Get("Menu_CopyUrl");
                     value = element.ActionValue;
                     return true;
                 case ActionType.Program:
                 case ActionType.File:
                 case ActionType.Folder:
                 case ActionType.ScriptFile:
-                    caption = "Копировать путь";
+                    caption = LocalizationService.Get("Menu_CopyPath");
                     value = element.ActionValue;
                     return true;
                 case ActionType.Command:
-                    caption = "Копировать команду";
+                    caption = LocalizationService.Get("Menu_CopyCommand");
                     value = element.ActionValue;
                     return true;
                 default:
@@ -600,10 +629,16 @@ namespace AiteBar
                 return;
             }
 
-            int currentIndex = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
+            var enabledContexts = ContextStateHelper.GetEnabledContexts(_appSettings.Contexts);
+            if (!enabledContexts.Any(context => string.Equals(context.Id, contextId, StringComparison.Ordinal)))
+            {
+                return;
+            }
+
+            int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal));
             if (currentIndex < 0) currentIndex = 0;
 
-            int index = _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, contextId, StringComparison.Ordinal));
+            int index = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, contextId, StringComparison.Ordinal));
             if (index < 0) return;
 
             _appSettings.ActiveContextId = contextId;
@@ -659,8 +694,9 @@ namespace AiteBar
                 panelPercent: _appSettings.PanelSizePercent,
                 visibleSystemButtonCount: visibleSystemButtonCount,
                 controlButtonCount: 1,
-                contextCounts: _appSettings.Contexts.Select(context => _elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal))).ToList(),
-                activeContextIndex: Math.Max(0, _appSettings.Contexts.FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal))),
+                contextCounts: ContextStateHelper.GetEnabledContexts(_appSettings.Contexts)
+                    .Select(context => _elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal))).ToList(),
+                activeContextIndex: Math.Max(0, ContextStateHelper.GetEnabledContexts(_appSettings.Contexts).ToList().FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal))),
                 systemContextIndex: 0);
 
             RootBorder.MinWidth = metrics.PanelWidth;
@@ -705,33 +741,53 @@ namespace AiteBar
             if (_appSettings.ShowPresetCalc) count++;
             if (_appSettings.ShowPresetExplorer) count++;
             if (_appSettings.ShowPresetDownloads) count++;
+            if (_appSettings.ShowPresetColorPicker) count++;
+            if (_appSettings.ShowPresetQuickNote) count++;
             return count;
         }
 
-        private void RegisterGlobalHotkey()
+        private IReadOnlyList<string> RegisterGlobalHotkey()
         {
+            var failedHotkeys = new List<string>();
             UnregisterGlobalHotkey();
             IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-            if (hwnd == IntPtr.Zero) return;
+            if (hwnd == IntPtr.Zero) return failedHotkeys;
 
-            uint modifiers = 0;
-            if (_appSettings.GlobalHotkeyCtrl) modifiers |= 0x0002;
-            if (_appSettings.GlobalHotkeyAlt) modifiers |= 0x0001;
-            if (_appSettings.GlobalHotkeyShift) modifiers |= 0x0004;
-            if (_appSettings.GlobalHotkeyWin) modifiers |= 0x0008;
-
-            if (Enum.TryParse(typeof(Key), _appSettings.GlobalHotkeyKey, out var k))
+            var showPanelBinding = new HotkeyBinding
             {
-                uint vk = (uint)KeyInterop.VirtualKeyFromKey((Key)k!);
-                NativeMethods.RegisterHotKey(hwnd, HOTKEY_ID, modifiers, vk);
-            }
+                Ctrl = _appSettings.GlobalHotkeyCtrl,
+                Alt = _appSettings.GlobalHotkeyAlt,
+                Shift = _appSettings.GlobalHotkeyShift,
+                Win = _appSettings.GlobalHotkeyWin,
+                Key = _appSettings.GlobalHotkeyKey
+            };
 
-            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT_NEXT_ID, _appSettings.NextContextHotkey);
-            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT_PREVIOUS_ID, _appSettings.PreviousContextHotkey);
-            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT1_ID, _appSettings.Context1Hotkey);
-            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT2_ID, _appSettings.Context2Hotkey);
-            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT3_ID, _appSettings.Context3Hotkey);
-            RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT4_ID, _appSettings.Context4Hotkey);
+            AddFailedHotkey(
+                failedHotkeys,
+                LocalizationService.Get("AppSettingsWindow_ShowPanel"),
+                RegisterHotkeyBinding(hwnd, HOTKEY_ID, showPanelBinding));
+            AddFailedHotkey(
+                failedHotkeys,
+                LocalizationService.Get("AppSettingsWindow_NextPanel"),
+                RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT_NEXT_ID, _appSettings.NextContextHotkey));
+            AddFailedHotkey(
+                failedHotkeys,
+                LocalizationService.Get("AppSettingsWindow_PreviousPanel"),
+                RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT_PREVIOUS_ID, _appSettings.PreviousContextHotkey));
+            AddFailedHotkey(
+                failedHotkeys,
+                LocalizationService.Get("AppSettingsWindow_AddButton"),
+                RegisterHotkeyBinding(hwnd, HOTKEY_ADD_BUTTON_ID, _appSettings.AddButtonHotkey));
+
+            return failedHotkeys;
+        }
+
+        private static void AddFailedHotkey(List<string> failedHotkeys, string name, bool success)
+        {
+            if (!success)
+            {
+                failedHotkeys.Add(name);
+            }
         }
 
         private void UnregisterGlobalHotkey()
@@ -747,10 +803,11 @@ namespace AiteBar
                 HOTKEY_ID,
                 HOTKEY_CONTEXT_NEXT_ID,
                 HOTKEY_CONTEXT_PREVIOUS_ID,
-                HOTKEY_CONTEXT1_ID,
-                HOTKEY_CONTEXT2_ID,
-                HOTKEY_CONTEXT3_ID,
-                HOTKEY_CONTEXT4_ID
+                HOTKEY_ADD_BUTTON_ID,
+                9011,
+                9012,
+                9013,
+                9014
             ];
 
             foreach (int hotkeyId in hotkeyIds)
@@ -800,20 +857,8 @@ namespace AiteBar
                         ActivateContextRelative(-1);
                         handled = true;
                         break;
-                    case HOTKEY_CONTEXT1_ID:
-                        ActivateContextByIndex(0);
-                        handled = true;
-                        break;
-                    case HOTKEY_CONTEXT2_ID:
-                        ActivateContextByIndex(1);
-                        handled = true;
-                        break;
-                    case HOTKEY_CONTEXT3_ID:
-                        ActivateContextByIndex(2);
-                        handled = true;
-                        break;
-                    case HOTKEY_CONTEXT4_ID:
-                        ActivateContextByIndex(3);
+                    case HOTKEY_ADD_BUTTON_ID:
+                        _ = OpenAddButtonWindowAsync();
                         handled = true;
                         break;
                 }
@@ -875,20 +920,20 @@ namespace AiteBar
         {
             var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Panel), "Открыть", (s, e) => ShowDock()));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Settings), "Настройки программы", (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Import), "Импорт панели...", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Panel), LocalizationService.Get("Menu_Open"), (s, e) => ShowDock()));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Settings), LocalizationService.Get("Menu_ProgramSettings"), (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Import), LocalizationService.Get("Menu_ImportPanel"), async (s, e) =>
             {
                 await RunPanelInteractionAsync(ImportIntoCurrentPanelAsync);
             }));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Export), "Экспорт текущей панели...", async (s, e) =>
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Export), LocalizationService.Get("Menu_ExportCurrentPanel"), async (s, e) =>
             {
                 await RunPanelInteractionAsync(ExportCurrentPanelAsync);
             }));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Info), "О программе", (s, e) => new AboutWindow { Owner = this }.ShowDialog()));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Help), "Справка", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/products/aitebar/guide.html")));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Donate), "Поддержать автора", (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/pages/donate.html")));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Exit), "Закрыть и выйти", (s, e) => { _notifyIcon.Dispose(); Application.Current.Shutdown(); }));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Info), LocalizationService.Get("Menu_About"), (s, e) => new AboutWindow { Owner = this }.ShowDialog()));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Help), LocalizationService.Get("Menu_Help"), (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/products/aitebar/guide.html")));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Donate), LocalizationService.Get("Menu_Donate"), (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/pages/donate.html")));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Exit), LocalizationService.Get("Menu_Exit"), (s, e) => { _notifyIcon.Dispose(); Application.Current.Shutdown(); }));
 
             // Для того чтобы ContextMenu закрывалось при клике мимо, 
             // его нужно привязать к невидимому элементу или использовать Placement.
@@ -938,12 +983,12 @@ namespace AiteBar
 
                 var dialog = new Microsoft.Win32.SaveFileDialog
                 {
-                    Title = "Экспорт текущей панели",
-                    Filter = "AiteBar Panel (*.aitebarpanel)|*.aitebarpanel",
+                    Title = LocalizationService.Get("Export_Title"),
+                    Filter = LocalizationService.Get("Export_Filter"),
                     DefaultExt = PanelPackageService.PackageExtension,
                     AddExtension = true,
                     OverwritePrompt = true,
-                    FileName = BuildPanelPackageFileName(activeContext?.Name ?? "Панель")
+                    FileName = BuildPanelPackageFileName(activeContext?.Name ?? LocalizationService.Format("Panel_DefaultNameFormat", 1))
                 };
 
                 if (dialog.ShowDialog(this) != true)
@@ -952,12 +997,12 @@ namespace AiteBar
                 }
 
                 PanelExportResult result = await _panelPackageService.ExportCurrentPanelAsync(dialog.FileName);
-                new DarkDialog($"Экспортировано кнопок: {result.ExportedCount}", false) { Owner = this }.ShowDialog();
+                new DarkDialog(LocalizationService.Format("Export_Success", result.ExportedCount), false) { Owner = this }.ShowDialog();
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                new DarkDialog($"Не удалось экспортировать панель.\n{ex.Message}", false) { Owner = this }.ShowDialog();
+                new DarkDialog(LocalizationService.Format("Export_Failed", ex.Message), false) { Owner = this }.ShowDialog();
             }
         }
 
@@ -967,8 +1012,8 @@ namespace AiteBar
             {
                 var dialog = new Microsoft.Win32.OpenFileDialog
                 {
-                    Title = "Импорт панели",
-                    Filter = "AiteBar Panel (*.aitebarpanel)|*.aitebarpanel",
+                    Title = LocalizationService.Get("Import_Title"),
+                    Filter = LocalizationService.Get("Export_Filter"),
                     DefaultExt = PanelPackageService.PackageExtension,
                     CheckFileExists = true,
                     Multiselect = false
@@ -982,7 +1027,7 @@ namespace AiteBar
                 PanelImportPreview preview = await _panelPackageService.ReadImportPreviewAsync(dialog.FileName);
                 string targetPanelName = GetContextDisplayName(_appSettings.ActiveContextId);
                 var confirm = new DarkDialog(
-                    $"Импортировать {preview.ElementCount} кнопок в текущую панель \"{targetPanelName}\"?\n\nОтмена импорта после применения в этой версии не поддерживается.",
+                    LocalizationService.Format("Import_Confirm", preview.ElementCount, targetPanelName),
                     isConfirm: true)
                 {
                     Owner = this
@@ -995,12 +1040,12 @@ namespace AiteBar
 
                 PanelImportResult result = await _panelPackageService.ImportIntoCurrentPanelAsync(dialog.FileName);
                 RefreshPanel();
-                new DarkDialog($"Импортировано кнопок: {result.ImportedCount}", false) { Owner = this }.ShowDialog();
+                new DarkDialog(LocalizationService.Format("Import_Success", result.ImportedCount), false) { Owner = this }.ShowDialog();
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                new DarkDialog($"Не удалось импортировать панель.\n{ex.Message}", false) { Owner = this }.ShowDialog();
+                new DarkDialog(LocalizationService.Format("Import_Failed", ex.Message), false) { Owner = this }.ShowDialog();
             }
         }
 
@@ -1098,7 +1143,7 @@ namespace AiteBar
         private async void Window_Loaded(object sender, RoutedEventArgs e) {
             try
             {
-                AttachSystemUtilityContextMenus();
+                ApplyLocalizedText();
                 EnsureStartupInfrastructure();
                 RefreshPanel();
                 PositionWindowImmediately(_shown);
@@ -1144,26 +1189,16 @@ namespace AiteBar
                     double screenWidth = bounds.Width;
                     double screenHeight = bounds.Height;
                     
-                    double zoneSizePercent = _appSettings.ActivationZoneSizePercent / 100.0;
                     int delayMs = _appSettings.ActivationDelayMs;
-                    
-                    bool inActivationZone = false;
-                    
-                    switch (_appSettings.Edge)
-                    {
-                        case DockEdge.Top:
-                            inActivationZone = pt.Y == screenTop && pt.X > (screenLeft + screenWidth * (0.5 - zoneSizePercent/2)) && pt.X < (screenLeft + screenWidth * (0.5 + zoneSizePercent/2));
-                            break;
-                        case DockEdge.Bottom:
-                            inActivationZone = pt.Y >= screenTop + screenHeight - 1 && pt.X > (screenLeft + screenWidth * (0.5 - zoneSizePercent/2)) && pt.X < (screenLeft + screenWidth * (0.5 + zoneSizePercent/2));
-                            break;
-                        case DockEdge.Left:
-                            inActivationZone = pt.X == screenLeft && pt.Y > (screenTop + screenHeight * (0.5 - zoneSizePercent/2)) && pt.Y < (screenTop + screenHeight * (0.5 + zoneSizePercent/2));
-                            break;
-                        case DockEdge.Right:
-                            inActivationZone = pt.X >= screenLeft + screenWidth - 1 && pt.Y > (screenTop + screenHeight * (0.5 - zoneSizePercent/2)) && pt.Y < (screenTop + screenHeight * (0.5 + zoneSizePercent/2));
-                            break;
-                    }
+                    bool inActivationZone = ActivationZoneHelper.IsInActivationZone(
+                        _appSettings.Edge,
+                        screenLeft,
+                        screenTop,
+                        screenWidth,
+                        screenHeight,
+                        _appSettings.ActivationZoneSizePercent,
+                        pt.X,
+                        pt.Y);
 
                     if (inActivationZone && !_shown) {
                         if (_hoverStartTime == null) _hoverStartTime = DateTime.Now;
@@ -1189,7 +1224,9 @@ namespace AiteBar
             try
             {
                 await Task.Run(async () => await _settingsService.LoadAsync());
+                LocalizationService.ApplyCulture(_appSettings.UiCulture);
                 _deferredStartupCompleted = true;
+                ApplyLocalizedText();
                 RegisterGlobalHotkey();
                 RefreshPanel();
                 PositionWindowImmediately(_shown);
@@ -1319,7 +1356,11 @@ namespace AiteBar
                         RefreshPanel();
                     } else {
                         // Если это был просто клик (не реордеринг), выполняем действие
-                        await _actionService.ExecuteCustomActionAsync(capturedElement, HideDock);
+                        var result = await _actionService.ExecuteCustomActionAsync(capturedElement, HideDock);
+                        if (!result.Success)
+                        {
+                            new DarkDialog(LocalizationService.Format("Action_Failed", result.ErrorMessage)) { Owner = this }.ShowDialog();
+                        }
                     }
                     _draggedButton = null; _draggedElement = null; _isReordering = false;
                 };
@@ -1350,13 +1391,17 @@ namespace AiteBar
             BtnCalc.Visibility = showSystemUtils && _appSettings.ShowPresetCalc ? Visibility.Visible : Visibility.Collapsed;
             BtnExplorer.Visibility = showSystemUtils && _appSettings.ShowPresetExplorer ? Visibility.Visible : Visibility.Collapsed;
             BtnDownloads.Visibility = showSystemUtils && _appSettings.ShowPresetDownloads ? Visibility.Visible : Visibility.Collapsed;
+            BtnColorPicker.Visibility = showSystemUtils && _appSettings.ShowPresetColorPicker ? Visibility.Visible : Visibility.Collapsed;
+            BtnQuickNote.Visibility = showSystemUtils && _appSettings.ShowPresetQuickNote ? Visibility.Visible : Visibility.Collapsed;
 
             bool hasSystemUtils = BtnSearch.Visibility == Visibility.Visible ||
                                   BtnScreenshot.Visibility == Visibility.Visible ||
                                   BtnRecord.Visibility == Visibility.Visible ||
                                   BtnCalc.Visibility == Visibility.Visible ||
                                   BtnExplorer.Visibility == Visibility.Visible ||
-                                  BtnDownloads.Visibility == Visibility.Visible;
+                                  BtnDownloads.Visibility == Visibility.Visible ||
+                                  BtnColorPicker.Visibility == Visibility.Visible ||
+                                  BtnQuickNote.Visibility == Visibility.Visible;
             SystemUtilsPanel.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
             return hasSystemUtils;
         }
@@ -1780,7 +1825,26 @@ namespace AiteBar
             if (e.Delta == 0) return;
 
             e.Handled = true;
-            int direction = e.Delta > 0 ? -1 : 1;
+            DateTime now = DateTime.UtcNow;
+            if (now - _lastContextWheelSwitchUtc < ContextWheelSwitchCooldown)
+            {
+                return;
+            }
+
+            if (_contextWheelDelta != 0 && Math.Sign(_contextWheelDelta) != Math.Sign(e.Delta))
+            {
+                _contextWheelDelta = 0;
+            }
+
+            _contextWheelDelta += e.Delta;
+            if (Math.Abs(_contextWheelDelta) < WheelDeltaPerContextSwitch)
+            {
+                return;
+            }
+
+            int direction = _contextWheelDelta > 0 ? -1 : 1;
+            _contextWheelDelta = 0;
+            _lastContextWheelSwitchUtc = now;
             await SwitchActiveContextAsync(direction);
         }
 
@@ -1793,7 +1857,7 @@ namespace AiteBar
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                new DarkDialog($"Не удалось выполнить действие:\n{ex.Message}") { Owner = this }.ShowDialog();
+                new DarkDialog(LocalizationService.Format("Action_Failed", ex.Message)) { Owner = this }.ShowDialog();
             }
         }
 
@@ -1811,7 +1875,15 @@ namespace AiteBar
         private async void BtnCalc_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartCalculatorAsync(HideDock)); }
         private async void BtnExplorer_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartExplorerAsync(HideDock)); }
         private async void BtnDownloads_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartDownloadsAsync(HideDock)); }
-        private async void BtnSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new SettingsWindow(this).ShowDialog(); }
+        private async void BtnColorPicker_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartColorPickerAsync(HideDock)); }
+        private async void BtnQuickNote_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartQuickNoteAsync(HideDock)); }
+        private async Task OpenAddButtonWindowAsync()
+        {
+            await HideDock();
+            new SettingsWindow(this).ShowDialog();
+        }
+
+        private async void BtnSettings_Click(object sender, RoutedEventArgs e) { await OpenAddButtonWindowAsync(); }
         private async void BtnAppSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new AppSettingsWindow(this).ShowDialog(); }
         
         private static T? FindParent<T>(DependencyObject child) where T : DependencyObject {
@@ -1842,13 +1914,13 @@ namespace AiteBar
                 var droppedItems = data.GetData(DataFormats.FileDrop) as string[];
                 if (droppedItems == null || droppedItems.Length == 0)
                 {
-                    errorMessage = "Не удалось прочитать перетаскиваемый объект.";
+                    errorMessage = LocalizationService.Get("Drop_ReadFailed");
                     return false;
                 }
 
                 if (droppedItems.Length > 1)
                 {
-                    errorMessage = "Можно перетаскивать только один объект за раз.";
+                    errorMessage = LocalizationService.Get("Drop_OnlyOne");
                     return false;
                 }
 
@@ -1862,7 +1934,7 @@ namespace AiteBar
 
                 if (!File.Exists(candidate))
                 {
-                    errorMessage = "Поддерживаются только существующие файлы и папки.";
+                    errorMessage = LocalizationService.Get("Drop_ExistingFilesFoldersOnly");
                     return false;
                 }
 
@@ -1887,7 +1959,7 @@ namespace AiteBar
                     }
                     catch { }
 
-                    errorMessage = "Поддерживаются только .url с http/https ссылкой.";
+                    errorMessage = LocalizationService.Get("Drop_UrlShortcutOnly");
                     return false;
                 }
 
@@ -1918,7 +1990,7 @@ namespace AiteBar
 
             if (string.IsNullOrWhiteSpace(text))
             {
-                errorMessage = "Можно перетаскивать только файл, папку или http/https ссылку.";
+                errorMessage = LocalizationService.Get("Drop_FileFolderOrUrlOnly");
                 return false;
             }
 
@@ -1930,7 +2002,7 @@ namespace AiteBar
                 return true;
             }
 
-            errorMessage = "Поддерживаются только файлы, папки, .url и прямые http/https ссылки.";
+            errorMessage = LocalizationService.Get("Drop_SupportedTargets");
             return false;
         }
 
@@ -1938,7 +2010,7 @@ namespace AiteBar
             try {
                 if (!TryGetDropTarget(e.Data, out string? val, out ActionType type, out string? errorMessage))
                 {
-                    new DarkDialog(errorMessage ?? "Этот объект нельзя добавить на панель.") { Owner = this }.ShowDialog();
+                    new DarkDialog(errorMessage ?? LocalizationService.Get("Drop_NotSupported")) { Owner = this }.ShowDialog();
                     return;
                 }
 

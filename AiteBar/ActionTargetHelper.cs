@@ -61,5 +61,30 @@ namespace AiteBar
 
             return nameof(ActionType.Program);
         }
+
+        public static bool TryNormalizeWebUrl(string value, out string normalized)
+        {
+            normalized = "";
+            if (string.IsNullOrWhiteSpace(value))
+                return false;
+
+            string candidate = value.Trim();
+            if (!candidate.Contains("://", StringComparison.Ordinal))
+            {
+                candidate = "https://" + candidate;
+            }
+
+            if (!Uri.TryCreate(candidate, UriKind.Absolute, out var uri))
+                return false;
+
+            if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(uri.Host) || !uri.Host.Contains('.', StringComparison.Ordinal))
+                return false;
+
+            normalized = uri.ToString();
+            return true;
+        }
     }
 }

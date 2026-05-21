@@ -8,13 +8,18 @@ namespace AiteBar {
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            LocalizationService.ApplyCulture(LocalizationService.AutoCulture);
             const string mutexName = "AiteBar_Mutex_Unique_String_123";
             _mutex = new Mutex(true, mutexName, out bool createdNew);
 
             if (!createdNew)
             {
                 // Приложение уже запущено
-                System.Windows.MessageBox.Show("AiteBar уже запущен.", "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
+                System.Windows.MessageBox.Show(
+                    LocalizationService.Get("App_AlreadyRunning"),
+                    LocalizationService.Get("Common_Info"),
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
                 System.Windows.Application.Current.Shutdown();
                 return;
             }

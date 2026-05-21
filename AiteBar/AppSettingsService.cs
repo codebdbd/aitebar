@@ -87,10 +87,31 @@ namespace AiteBar
         {
             bool changed = false;
 
+            if (UsesPreviousDefaultShowHotkey(_appSettings))
+            {
+                _appSettings.GlobalHotkeyCtrl = false;
+                _appSettings.GlobalHotkeyAlt = true;
+                _appSettings.GlobalHotkeyShift = false;
+                _appSettings.GlobalHotkeyWin = false;
+                _appSettings.GlobalHotkeyKey = "D4";
+                changed = true;
+            }
+
+            string normalizedUiCulture = LocalizationService.NormalizeCultureName(_appSettings.UiCulture);
+            if (!string.Equals(_appSettings.UiCulture, normalizedUiCulture, StringComparison.Ordinal))
+            {
+                _appSettings.UiCulture = normalizedUiCulture;
+                changed = true;
+            }
+
             var originalContexts = _appSettings.Contexts ?? [];
             var normalizedContexts = ContextStateHelper.NormalizeContexts(originalContexts);
             if (originalContexts.Count != normalizedContexts.Count ||
-                originalContexts.Zip(normalizedContexts, (left, right) => left.Id != right.Id || left.Name != right.Name).Any(hasDifference => hasDifference))
+                originalContexts.Zip(normalizedContexts, (left, right) =>
+                    left.Id != right.Id ||
+                    left.Name != right.Name ||
+                    left.IconGlyph != right.IconGlyph ||
+                    left.IsEnabled != right.IsEnabled).Any(hasDifference => hasDifference))
             {
                 changed = true;
             }
@@ -124,6 +145,23 @@ namespace AiteBar
             _appSettings.Elements = [.. normalizedElements];
 
             return changed;
+        }
+
+        private static bool UsesPreviousDefaultShowHotkey(AppSettings settings)
+        {
+            bool usesWinZ = !settings.GlobalHotkeyCtrl
+                && !settings.GlobalHotkeyAlt
+                && !settings.GlobalHotkeyShift
+                && settings.GlobalHotkeyWin
+                && string.Equals(settings.GlobalHotkeyKey, "Z", StringComparison.OrdinalIgnoreCase);
+
+            bool usesCtrlAltZ = settings.GlobalHotkeyCtrl
+                && settings.GlobalHotkeyAlt
+                && !settings.GlobalHotkeyShift
+                && !settings.GlobalHotkeyWin
+                && string.Equals(settings.GlobalHotkeyKey, "Z", StringComparison.OrdinalIgnoreCase);
+
+            return usesWinZ || usesCtrlAltZ;
         }
 
         private static List<CustomElement> NormalizeElements(IEnumerable<CustomElement> source, string defaultContextId)
@@ -181,7 +219,21 @@ namespace AiteBar
         }
 
         public IReadOnlyList<PanelContext> GetContextsSnapshot() =>
-            [.. _appSettings.Contexts.Select(context => new PanelContext { Id = context.Id, Name = context.Name })];
+            [.. GetEnabledContextsSnapshot()];
+
+        public IReadOnlyList<PanelContext> GetAllContextsSnapshot() =>
+            [.. _appSettings.Contexts.Select(CloneContext)];
+
+        public IReadOnlyList<PanelContext> GetEnabledContextsSnapshot() =>
+            [.. ContextStateHelper.GetEnabledContexts(_appSettings.Contexts).Select(CloneContext)];
+
+        private static PanelContext CloneContext(PanelContext context) => new()
+        {
+            Id = context.Id,
+            Name = context.Name,
+            IconGlyph = context.IconGlyph,
+            IsEnabled = context.IsEnabled
+        };
 
         public async Task SaveElementAsync(CustomElement updated, string? removeId = null)
         {

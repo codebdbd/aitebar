@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="О программе"
+        Title="{local:Loc ResourceKey=About_Title}"
         Width="540"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -93,31 +93,31 @@
             <TextBlock x:Name="TxtVersion" Style="{StaticResource MutedTextStyle}" Margin="0,0,0,14"/>
 
             <TextBlock Style="{StaticResource MutedTextStyle}"
-                       Text="Скрытая панель быстрого доступа для Windows. Позволяет запускать сайты, приложения, скрипты, команды и горячие клавиши из настраиваемых блоков."/>
+                       Text="{local:Loc ResourceKey=About_Description}"/>
 
-            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Информация"/>
-            <TextBlock Style="{StaticResource MutedTextStyle}" Text="Разработчик: Codebdbd"/>
+            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{local:Loc ResourceKey=About_Info}"/>
+            <TextBlock Style="{StaticResource MutedTextStyle}" Text="{local:Loc ResourceKey=About_Developer}"/>
             <TextBlock Style="{StaticResource MutedTextStyle}" Text="© 2026 Codebdbd"/>
-            <TextBlock Style="{StaticResource MutedTextStyle}" Text="Лицензия: Proprietary (All rights reserved)"/>
+            <TextBlock Style="{StaticResource MutedTextStyle}" Text="{local:Loc ResourceKey=About_License}"/>
 
-            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Технологии"/>
+            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{local:Loc ResourceKey=About_Technologies}"/>
             <TextBlock Style="{StaticResource MutedTextStyle}" Text=".NET 8"/>
             <TextBlock Style="{StaticResource MutedTextStyle}" Text="WPF"/>
 
-            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Данные приложения"/>
-            <Button Content="Открыть папку данных" Style="{StaticResource LinkButtonStyle}" Click="BtnOpenDataFolder_Click"/>
+            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{local:Loc ResourceKey=About_AppData}"/>
+            <Button Content="{local:Loc ResourceKey=About_OpenDataFolder}" Style="{StaticResource LinkButtonStyle}" Click="BtnOpenDataFolder_Click"/>
 
-            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="Ресурсы"/>
+            <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{local:Loc ResourceKey=About_Resources}"/>
             <WrapPanel>
-                <Button Content="Страница программы" Style="{StaticResource LinkButtonStyle}" Click="BtnWebsite_Click"/>
-                <Button Content="GitHub репозиторий" Style="{StaticResource LinkButtonStyle}" Click="BtnRepository_Click"/>
-                <Button Content="Лицензии" Style="{StaticResource LinkButtonStyle}" Click="BtnLicenses_Click"/>
-                <Button Content="Папка программы" Style="{StaticResource LinkButtonStyle}" Click="BtnOpenProgramFolder_Click"/>
+                <Button Content="{local:Loc ResourceKey=About_Website}" Style="{StaticResource LinkButtonStyle}" Click="BtnWebsite_Click"/>
+                <Button Content="{local:Loc ResourceKey=About_Repository}" Style="{StaticResource LinkButtonStyle}" Click="BtnRepository_Click"/>
+                <Button Content="{local:Loc ResourceKey=About_Licenses}" Style="{StaticResource LinkButtonStyle}" Click="BtnLicenses_Click"/>
+                <Button Content="{local:Loc ResourceKey=About_ProgramFolder}" Style="{StaticResource LinkButtonStyle}" Click="BtnOpenProgramFolder_Click"/>
             </WrapPanel>
         </StackPanel>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-            <Button Content="Закрыть" Width="90" Style="{StaticResource PrimaryButtonStyle}" Margin="0" Click="BtnClose_Click"/>
+            <Button Content="{local:Loc ResourceKey=Common_Close}" Width="90" Style="{StaticResource PrimaryButtonStyle}" Margin="0" Click="BtnClose_Click"/>
         </StackPanel>
     </Grid>
 </local:DarkWindow>

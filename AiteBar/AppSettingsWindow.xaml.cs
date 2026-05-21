@@ -9,8 +9,10 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using Button = System.Windows.Controls.Button;
+using CheckBox = System.Windows.Controls.CheckBox;
 using ComboBox = System.Windows.Controls.ComboBox;
 using ListBox = System.Windows.Controls.ListBox;
+using TextBox = System.Windows.Controls.TextBox;
 
 namespace AiteBar
 {
@@ -32,6 +34,8 @@ namespace AiteBar
     {
         private readonly MainWindow _mainWindow;
         private readonly AppSettings _settings;
+        private readonly List<(CheckBox EnabledCheckBox, TextBox NameTextBox)> _contextRows = [];
+        private bool _isLoadingSettings;
 
         public AppSettingsWindow(MainWindow mainWindow)
         {
@@ -39,19 +43,35 @@ namespace AiteBar
             _mainWindow = mainWindow;
             _settings = _mainWindow.GetAppSettings();
 
+            _isLoadingSettings = true;
+            LoadLanguageList();
             LoadModifierList(CmbShowPanelModifier);
-            LoadModifierList(CmbPanelModifier, includeMixed: true);
+            LoadModifierList(CmbNextContextModifier);
+            LoadModifierList(CmbPrevContextModifier);
+            LoadModifierList(CmbAddButtonModifier);
             LoadKeyList();
             LoadSettings();
+            _isLoadingSettings = false;
+        }
+
+        private void LoadLanguageList()
+        {
+            CmbLanguage.Items.Clear();
+            CmbLanguage.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("AppSettingsWindow_LanguageAuto"), Tag = LocalizationService.AutoCulture });
+            CmbLanguage.Items.Add(new ComboBoxItem { Content = "English", Tag = "en" });
+            CmbLanguage.Items.Add(new ComboBoxItem { Content = "Deutsch", Tag = "de" });
+            CmbLanguage.Items.Add(new ComboBoxItem { Content = "Українська", Tag = "uk" });
+            CmbLanguage.Items.Add(new ComboBoxItem { Content = "Русский", Tag = "ru" });
+            CmbLanguage.SelectedIndex = 0;
         }
 
         private static void LoadModifierList(ComboBox combo, bool includeMixed = false)
         {
             combo.Items.Clear();
-            combo.Items.Add(new ComboBoxItem { Content = "Не назначено", Tag = "None" });
+            combo.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Common_NotAssigned"), Tag = "None" });
             if (includeMixed)
             {
-                combo.Items.Add(new ComboBoxItem { Content = "Смешанные", Tag = "Mixed" });
+                combo.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Common_Mixed"), Tag = "Mixed" });
             }
             combo.Items.Add(new ComboBoxItem { Content = "Ctrl", Tag = "C" });
             combo.Items.Add(new ComboBoxItem { Content = "Alt", Tag = "A" });
@@ -71,7 +91,7 @@ namespace AiteBar
             foreach (var combo in GetHotkeyCombos())
             {
                 combo.Items.Clear();
-                combo.Items.Add(new ComboBoxItem { Content = "Не назначено", Tag = "None" });
+                combo.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Common_NotAssigned"), Tag = "None" });
                 combo.Items.Add(new ComboBoxItem { Content = "Space", Tag = "Space" });
                 combo.Items.Add(new ComboBoxItem { Content = "[", Tag = "Oem4" });
                 combo.Items.Add(new ComboBoxItem { Content = "]", Tag = "Oem6" });
@@ -87,10 +107,7 @@ namespace AiteBar
             yield return CmbKey;
             yield return CmbNextContextKey;
             yield return CmbPrevContextKey;
-            yield return CmbContext1Key;
-            yield return CmbContext2Key;
-            yield return CmbContext3Key;
-            yield return CmbContext4Key;
+            yield return CmbAddButtonKey;
         }
 
         private static string GetModifierToken(bool ctrl, bool alt, bool shift, bool win)
@@ -189,6 +206,122 @@ namespace AiteBar
             }
         }
 
+        private static void SetComboValue(ComboBox combo, string? value)
+        {
+            foreach (ComboBoxItem item in combo.Items)
+            {
+                if (string.Equals(item.Tag?.ToString(), value, StringComparison.Ordinal))
+                {
+                    combo.SelectedItem = item;
+                    return;
+                }
+            }
+
+            if (combo.SelectedIndex < 0)
+            {
+                combo.SelectedIndex = 0;
+            }
+        }
+
+        private static string? GetComboTag(ComboBox combo) =>
+            (combo.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+
+        private void ReloadLocalizedChoiceLists()
+        {
+            string language = GetComboTag(CmbLanguage) ?? LocalizationService.AutoCulture;
+            string showPanelModifier = GetComboTag(CmbShowPanelModifier) ?? "None";
+            string nextContextModifier = GetComboTag(CmbNextContextModifier) ?? "None";
+            string previousContextModifier = GetComboTag(CmbPrevContextModifier) ?? "None";
+            string addButtonModifier = GetComboTag(CmbAddButtonModifier) ?? "None";
+            string showPanelKey = GetComboTag(CmbKey) ?? "None";
+            string nextContextKey = GetComboTag(CmbNextContextKey) ?? "None";
+            string previousContextKey = GetComboTag(CmbPrevContextKey) ?? "None";
+            string addButtonKey = GetComboTag(CmbAddButtonKey) ?? "None";
+            object? edgeTag = (CmbEdge.SelectedItem as ComboBoxItem)?.Tag;
+            object? monitorTag = (CmbMonitor.SelectedItem as ComboBoxItem)?.Tag;
+
+            _isLoadingSettings = true;
+            try
+            {
+                LoadLanguageList();
+                SetComboValue(CmbLanguage, language);
+
+                LoadModifierList(CmbShowPanelModifier);
+                LoadModifierList(CmbNextContextModifier);
+                LoadModifierList(CmbPrevContextModifier);
+                LoadModifierList(CmbAddButtonModifier);
+                SetModifierComboValue(CmbShowPanelModifier, showPanelModifier);
+                SetModifierComboValue(CmbNextContextModifier, nextContextModifier);
+                SetModifierComboValue(CmbPrevContextModifier, previousContextModifier);
+                SetModifierComboValue(CmbAddButtonModifier, addButtonModifier);
+
+                LoadKeyList();
+                SetKeyComboValue(CmbKey, showPanelKey);
+                SetKeyComboValue(CmbNextContextKey, nextContextKey);
+                SetKeyComboValue(CmbPrevContextKey, previousContextKey);
+                SetKeyComboValue(CmbAddButtonKey, addButtonKey);
+
+                ReloadEdgeList(edgeTag);
+                ReloadMonitorList(monitorTag);
+            }
+            finally
+            {
+                _isLoadingSettings = false;
+            }
+
+        }
+
+        private void ReloadEdgeList(object? selectedEdge)
+        {
+            CmbEdge.Items.Clear();
+            CmbEdge.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Dock_Top"), Tag = DockEdge.Top });
+            CmbEdge.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Dock_Bottom"), Tag = DockEdge.Bottom });
+            CmbEdge.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Dock_Left"), Tag = DockEdge.Left });
+            CmbEdge.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Dock_Right"), Tag = DockEdge.Right });
+
+            foreach (ComboBoxItem item in CmbEdge.Items)
+            {
+                if (Equals(item.Tag, selectedEdge))
+                {
+                    CmbEdge.SelectedItem = item;
+                    break;
+                }
+            }
+
+            if (CmbEdge.SelectedIndex < 0)
+            {
+                CmbEdge.SelectedIndex = 0;
+            }
+        }
+
+        private void ReloadMonitorList(object? selectedMonitor)
+        {
+            CmbMonitor.Items.Clear();
+            var screens = System.Windows.Forms.Screen.AllScreens;
+            for (int i = 0; i < screens.Length; i++)
+            {
+                CmbMonitor.Items.Add(new ComboBoxItem
+                {
+                    Content = LocalizationService.Format("Monitor_Format", i + 1, screens[i].Primary ? LocalizationService.Get("Monitor_PrimarySuffix") : string.Empty),
+                    Tag = i
+                });
+            }
+
+            foreach (ComboBoxItem item in CmbMonitor.Items)
+            {
+                if (Equals(item.Tag, selectedMonitor))
+                {
+                    CmbMonitor.SelectedItem = item;
+                    break;
+                }
+            }
+
+            if (CmbMonitor.SelectedIndex < 0)
+            {
+                CmbMonitor.SelectedIndex = CmbMonitor.Items.Count > 0 ? 0 : -1;
+            }
+        }
+
         private static void LoadHotkeyBinding(HotkeyBinding binding, ComboBox cmbModifier, ComboBox cmbKey)
         {
             SetModifierComboValue(cmbModifier, GetModifierToken(binding.Ctrl, binding.Alt, binding.Shift, binding.Win));
@@ -201,61 +334,6 @@ namespace AiteBar
             ApplyModifierToken((cmbModifier.SelectedItem as ComboBoxItem)?.Tag?.ToString(), binding);
             binding.Key = (cmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "None";
             return binding;
-        }
-
-        private static HotkeyBinding BuildPanelActionHotkey(ComboBox cmbSharedModifier, ComboBox cmbKey, HotkeyBinding existingBinding)
-        {
-            var binding = new HotkeyBinding
-            {
-                Ctrl = existingBinding.Ctrl,
-                Alt = existingBinding.Alt,
-                Shift = existingBinding.Shift,
-                Win = existingBinding.Win
-            };
-
-            binding.Key = (cmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "None";
-            if (string.Equals(binding.Key, "None", StringComparison.OrdinalIgnoreCase))
-            {
-                binding.Ctrl = false;
-                binding.Alt = false;
-                binding.Shift = false;
-                binding.Win = false;
-                return binding;
-            }
-
-            var modifierToken = (cmbSharedModifier.SelectedItem as ComboBoxItem)?.Tag?.ToString();
-            if (!string.Equals(modifierToken, "Mixed", StringComparison.Ordinal))
-            {
-                ApplyModifierToken(modifierToken, binding);
-            }
-
-            return binding;
-        }
-
-        private string GetSharedPanelModifierToken()
-        {
-            var panelBindings = new[]
-            {
-                _settings.NextContextHotkey,
-                _settings.PreviousContextHotkey,
-                _settings.Context1Hotkey,
-                _settings.Context2Hotkey,
-                _settings.Context3Hotkey,
-                _settings.Context4Hotkey
-            };
-
-            var modifierTokens = panelBindings
-                .Where(HasAssignedKey)
-                .Select(binding => GetModifierToken(binding.Ctrl, binding.Alt, binding.Shift, binding.Win))
-                .Distinct(StringComparer.Ordinal)
-                .ToList();
-
-            if (modifierTokens.Count == 0)
-            {
-                return "None";
-            }
-
-            return modifierTokens.Count == 1 ? modifierTokens[0] : "Mixed";
         }
 
         private static string? GetHotkeyToken(HotkeyBinding binding)
@@ -275,37 +353,18 @@ namespace AiteBar
                 && !string.Equals(binding.Key, "None", StringComparison.OrdinalIgnoreCase);
         }
 
-        private void UpdateContextHotkeyLabels()
-        {
-            if (LblContext1Hotkey == null)
-            {
-                return;
-            }
-
-            LblContext1Hotkey.Text = TxtContext1Name.Text.TrimOrDefault("Панель 1");
-            LblContext2Hotkey.Text = TxtContext2Name.Text.TrimOrDefault("Панель 2");
-            LblContext3Hotkey.Text = TxtContext3Name.Text.TrimOrDefault("Панель 3");
-            LblContext4Hotkey.Text = TxtContext4Name.Text.TrimOrDefault("Панель 4");
-        }
-
         private bool ValidateHotkeyBindings(
             HotkeyBinding globalBinding,
             HotkeyBinding nextBinding,
             HotkeyBinding previousBinding,
-            HotkeyBinding context1Binding,
-            HotkeyBinding context2Binding,
-            HotkeyBinding context3Binding,
-            HotkeyBinding context4Binding)
+            HotkeyBinding addButtonBinding)
         {
             var registrations = new (string Name, HotkeyBinding Binding)[]
             {
-                ("Показать панель", globalBinding),
-                ("Следующая панель", nextBinding),
-                ("Предыдущая панель", previousBinding),
-                (TxtContext1Name.Text.TrimOrDefault("Панель 1"), context1Binding),
-                (TxtContext2Name.Text.TrimOrDefault("Панель 2"), context2Binding),
-                (TxtContext3Name.Text.TrimOrDefault("Панель 3"), context3Binding),
-                (TxtContext4Name.Text.TrimOrDefault("Панель 4"), context4Binding)
+                (LocalizationService.Get("AppSettingsWindow_ShowPanel"), globalBinding),
+                (LocalizationService.Get("AppSettingsWindow_NextPanel"), nextBinding),
+                (LocalizationService.Get("AppSettingsWindow_PreviousPanel"), previousBinding),
+                (LocalizationService.Get("AppSettingsWindow_AddButton"), addButtonBinding)
             };
 
             var duplicates = registrations
@@ -322,7 +381,7 @@ namespace AiteBar
             }
 
             new DarkDialog(
-                $"Обнаружены конфликтующие горячие клавиши:\n{string.Join("\n", duplicates)}\n\nНазначьте разные сочетания.")
+                LocalizationService.Format("HotkeyConflictMessage", string.Join("\n", duplicates)))
             {
                 Owner = this
             }.ShowDialog();
@@ -337,6 +396,9 @@ namespace AiteBar
             ChkShowPresetCalc.IsChecked = _settings.ShowPresetCalc;
             ChkShowPresetExplorer.IsChecked = _settings.ShowPresetExplorer;
             ChkShowPresetDownloads.IsChecked = _settings.ShowPresetDownloads;
+            ChkShowPresetColorPicker.IsChecked = _settings.ShowPresetColorPicker;
+            ChkShowPresetQuickNote.IsChecked = _settings.ShowPresetQuickNote;
+            SetComboValue(CmbLanguage, LocalizationService.NormalizeCultureName(_settings.UiCulture));
 
             LoadHotkeyBinding(
                 new HotkeyBinding
@@ -350,48 +412,12 @@ namespace AiteBar
                 CmbShowPanelModifier,
                 CmbKey);
 
-            SetModifierComboValue(CmbPanelModifier, GetSharedPanelModifierToken());
-            SetKeyComboValue(CmbNextContextKey, _settings.NextContextHotkey.Key);
-            SetKeyComboValue(CmbPrevContextKey, _settings.PreviousContextHotkey.Key);
-            SetKeyComboValue(CmbContext1Key, _settings.Context1Hotkey.Key);
-            SetKeyComboValue(CmbContext2Key, _settings.Context2Hotkey.Key);
-            SetKeyComboValue(CmbContext3Key, _settings.Context3Hotkey.Key);
-            SetKeyComboValue(CmbContext4Key, _settings.Context4Hotkey.Key);
+            LoadHotkeyBinding(_settings.NextContextHotkey, CmbNextContextModifier, CmbNextContextKey);
+            LoadHotkeyBinding(_settings.PreviousContextHotkey, CmbPrevContextModifier, CmbPrevContextKey);
+            LoadHotkeyBinding(_settings.AddButtonHotkey, CmbAddButtonModifier, CmbAddButtonKey);
 
-            CmbEdge.Items.Clear();
-            CmbEdge.Items.Add(new ComboBoxItem { Content = "Сверху", Tag = DockEdge.Top });
-            CmbEdge.Items.Add(new ComboBoxItem { Content = "Снизу", Tag = DockEdge.Bottom });
-            CmbEdge.Items.Add(new ComboBoxItem { Content = "Слева", Tag = DockEdge.Left });
-            CmbEdge.Items.Add(new ComboBoxItem { Content = "Справа", Tag = DockEdge.Right });
-
-            foreach (ComboBoxItem item in CmbEdge.Items)
-            {
-                if (item.Tag is DockEdge edge && edge == _settings.Edge)
-                {
-                    CmbEdge.SelectedItem = item;
-                    break;
-                }
-            }
-
-            if (CmbEdge.SelectedIndex < 0)
-            {
-                CmbEdge.SelectedIndex = 0;
-            }
-
-            CmbMonitor.Items.Clear();
-            var screens = System.Windows.Forms.Screen.AllScreens;
-            for (int i = 0; i < screens.Length; i++)
-            {
-                CmbMonitor.Items.Add(new ComboBoxItem 
-                { 
-                    Content = $"Монитор {i + 1}{(screens[i].Primary ? " (Осн.)" : "")}", 
-                    Tag = i 
-                });
-            }
-            if (_settings.MonitorIndex >= 0 && _settings.MonitorIndex < screens.Length)
-                CmbMonitor.SelectedIndex = _settings.MonitorIndex;
-            else
-                CmbMonitor.SelectedIndex = 0;
+            ReloadEdgeList(_settings.Edge);
+            ReloadMonitorList(_settings.MonitorIndex);
 
             SldZoneSize.Value = _settings.ActivationZoneSizePercent;
             TxtZoneSize.Text = $"{(int)SldZoneSize.Value}%";
@@ -400,16 +426,80 @@ namespace AiteBar
             SldDelay.Value = _settings.ActivationDelayMs;
             TxtDelay.Text = $"{(int)SldDelay.Value}";
 
-            var contexts = _mainWindow.GetContextsSnapshot();
-            if (contexts.Count >= 4)
-            {
-                TxtContext1Name.Text = contexts[0].Name;
-                TxtContext2Name.Text = contexts[1].Name;
-                TxtContext3Name.Text = contexts[2].Name;
-                TxtContext4Name.Text = contexts[3].Name;
-            }
+            BuildContextRows(_mainWindow.GetAllContextsSnapshot());
+        }
 
-            UpdateContextHotkeyLabels();
+        private void BuildContextRows(IReadOnlyList<PanelContext> contexts)
+        {
+            PanelContextsList.Children.Clear();
+            _contextRows.Clear();
+
+            for (int i = 0; i < contexts.Count; i++)
+            {
+                PanelContext context = contexts[i];
+                var row = new Grid { Height = 26, Margin = new Thickness(0, 0, 0, 4) };
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(34) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(96) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+                var badge = new Border
+                {
+                    Width = 22,
+                    Height = 22,
+                    CornerRadius = new CornerRadius(11),
+                    Background = GetPanelBadgeBrush(i),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                badge.Child = new TextBlock
+                {
+                    Text = (i + 1).ToString(CultureInfo.InvariantCulture),
+                    Foreground = System.Windows.Media.Brushes.White,
+                    FontSize = 11,
+                    FontWeight = FontWeights.SemiBold,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                    VerticalAlignment = System.Windows.VerticalAlignment.Center,
+                    TextAlignment = System.Windows.TextAlignment.Center
+                };
+                Grid.SetColumn(badge, 0);
+                row.Children.Add(badge);
+
+                var enabledCheckBox = new CheckBox
+                {
+                    IsChecked = context.IsEnabled,
+                    IsEnabled = i != 0,
+                    Margin = new Thickness(0),
+                    Padding = new Thickness(0),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    ToolTip = i == 0 ? LocalizationService.Get("AppSettingsWindow_PrimaryPanelAlwaysEnabled") : null
+                };
+                Grid.SetColumn(enabledCheckBox, 1);
+                row.Children.Add(enabledCheckBox);
+
+                var nameTextBox = new TextBox { Text = context.Name, Height = 26 };
+                Grid.SetColumn(nameTextBox, 2);
+                row.Children.Add(nameTextBox);
+
+                PanelContextsList.Children.Add(row);
+                _contextRows.Add((enabledCheckBox, nameTextBox));
+            }
+        }
+
+        private System.Windows.Media.Brush GetPanelBadgeBrush(int index)
+        {
+            string[] colors =
+            [
+                "#2563EB",
+                "#059669",
+                "#D97706",
+                "#7C3AED",
+                "#0891B2",
+                "#BE123C",
+                "#4D7C0F",
+                "#6D28D9"
+            ];
+
+            var converter = new System.Windows.Media.BrushConverter();
+            return (System.Windows.Media.Brush)(converter.ConvertFromString(colors[index % colors.Length]) ?? System.Windows.Media.Brushes.DimGray);
         }
 
         private void SldZoneSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -427,22 +517,28 @@ namespace AiteBar
             if (TxtDelay != null) TxtDelay.Text = $"{(int)e.NewValue}";
         }
 
-        private void ContextName_TextChanged(object sender, TextChangedEventArgs e)
+        private void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            UpdateContextHotkeyLabels();
+            if (_isLoadingSettings)
+            {
+                return;
+            }
+
+            string selectedCulture = (CmbLanguage.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? LocalizationService.AutoCulture;
+            LocalizationService.ApplyCulture(selectedCulture);
+            _settings.UiCulture = selectedCulture;
+            ReloadLocalizedChoiceLists();
+            _mainWindow.ApplyLocalizedText();
         }
 
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             var globalBinding = BuildHotkeyBinding(CmbShowPanelModifier, CmbKey);
-            var nextBinding = BuildPanelActionHotkey(CmbPanelModifier, CmbNextContextKey, _settings.NextContextHotkey);
-            var previousBinding = BuildPanelActionHotkey(CmbPanelModifier, CmbPrevContextKey, _settings.PreviousContextHotkey);
-            var context1Binding = BuildPanelActionHotkey(CmbPanelModifier, CmbContext1Key, _settings.Context1Hotkey);
-            var context2Binding = BuildPanelActionHotkey(CmbPanelModifier, CmbContext2Key, _settings.Context2Hotkey);
-            var context3Binding = BuildPanelActionHotkey(CmbPanelModifier, CmbContext3Key, _settings.Context3Hotkey);
-            var context4Binding = BuildPanelActionHotkey(CmbPanelModifier, CmbContext4Key, _settings.Context4Hotkey);
+            var nextBinding = BuildHotkeyBinding(CmbNextContextModifier, CmbNextContextKey);
+            var previousBinding = BuildHotkeyBinding(CmbPrevContextModifier, CmbPrevContextKey);
+            var addButtonBinding = BuildHotkeyBinding(CmbAddButtonModifier, CmbAddButtonKey);
 
-            if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, context1Binding, context2Binding, context3Binding, context4Binding))
+            if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding))
             {
                 return;
             }
@@ -455,10 +551,7 @@ namespace AiteBar
 
             _settings.NextContextHotkey = nextBinding;
             _settings.PreviousContextHotkey = previousBinding;
-            _settings.Context1Hotkey = context1Binding;
-            _settings.Context2Hotkey = context2Binding;
-            _settings.Context3Hotkey = context3Binding;
-            _settings.Context4Hotkey = context4Binding;
+            _settings.AddButtonHotkey = addButtonBinding;
 
             _settings.ShowPresetSearch = ChkShowPresetSearch.IsChecked ?? false;
             _settings.ShowPresetScreenshot = ChkShowPresetScreenshot.IsChecked ?? false;
@@ -466,6 +559,9 @@ namespace AiteBar
             _settings.ShowPresetCalc = ChkShowPresetCalc.IsChecked ?? false;
             _settings.ShowPresetExplorer = ChkShowPresetExplorer.IsChecked ?? false;
             _settings.ShowPresetDownloads = ChkShowPresetDownloads.IsChecked ?? false;
+            _settings.ShowPresetColorPicker = ChkShowPresetColorPicker.IsChecked ?? false;
+            _settings.ShowPresetQuickNote = ChkShowPresetQuickNote.IsChecked ?? false;
+            _settings.UiCulture = (CmbLanguage.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? LocalizationService.AutoCulture;
 
             if (CmbEdge.SelectedItem is ComboBoxItem edgeItem && edgeItem.Tag is DockEdge edge)
             {
@@ -479,23 +575,28 @@ namespace AiteBar
             _settings.PanelSizePercent = SldPanelSize.Value;
             _settings.ActivationDelayMs = (int)SldDelay.Value;
 
-            var contextNames = new[]
+            for (int i = 0; i < _settings.Contexts.Count && i < _contextRows.Count; i++)
             {
-                TxtContext1Name.Text,
-                TxtContext2Name.Text,
-                TxtContext3Name.Text,
-                TxtContext4Name.Text
-            };
-
-            for (int i = 0; i < _settings.Contexts.Count && i < contextNames.Length; i++)
-            {
-                _settings.Contexts[i].Name = string.IsNullOrWhiteSpace(contextNames[i])
-                    ? $"Панель {i + 1}"
-                    : contextNames[i].Trim();
+                string contextName = _contextRows[i].NameTextBox.Text;
+                _settings.Contexts[i].Name = string.IsNullOrWhiteSpace(contextName)
+                    ? LocalizationService.Format("Panel_DefaultNameFormat", i + 1)
+                    : contextName.Trim();
+                _settings.Contexts[i].IsEnabled = i == 0 || (_contextRows[i].EnabledCheckBox.IsChecked ?? false);
             }
 
-            await _mainWindow.SaveAppSettings(_settings);
+            IReadOnlyList<string> failedHotkeys = await _mainWindow.SaveAppSettings(_settings);
+            LocalizationService.ApplyCulture(_settings.UiCulture);
+            _mainWindow.ApplyLocalizedText();
             _mainWindow.RefreshPanel();
+
+            if (failedHotkeys.Count > 0)
+            {
+                new DarkDialog(LocalizationService.Format("HotkeyRegistrationFailed", string.Join("\n", failedHotkeys)))
+                {
+                    Owner = this
+                }.ShowDialog();
+            }
+
             this.Close();
         }
 

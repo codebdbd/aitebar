@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="Настройки программы" Width="900" Height="700"
+        Title="{local:Loc ResourceKey=AppSettingsWindow_Title}" Width="720" Height="480"
         WindowStartupLocation="CenterOwner" Background="#1A1A1C" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
@@ -21,6 +21,37 @@
             <SolidColorBrush x:Key="PanelBadge2" Color="#059669"/>
             <SolidColorBrush x:Key="PanelBadge3" Color="#D97706"/>
             <SolidColorBrush x:Key="PanelBadge4" Color="#7C3AED"/>
+
+            <Style TargetType="TabControl">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="0"/>
+            </Style>
+
+            <Style TargetType="TabItem">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TabItem">
+                            <Border x:Name="Bd" Background="Transparent" BorderThickness="0,0,0,2" BorderBrush="Transparent" Margin="0,0,18,0" Padding="8,8">
+                                <ContentPresenter ContentSource="Header" TextElement.Foreground="{TemplateBinding Foreground}" TextElement.FontSize="13" TextElement.FontWeight="SemiBold"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="False">
+                                    <Setter Property="Foreground" Value="{DynamicResource MutedText}"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -30,242 +61,172 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,2,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="340"/>
-                <ColumnDefinition Width="14"/>
-                <ColumnDefinition Width="*"/>
-            </Grid.ColumnDefinitions>
-
-            <Grid Grid.Column="0">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <Border Grid.Row="0" Style="{StaticResource CardStyle}">
+        <TabControl Grid.Row="0">
+            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_General}">
+                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0">
                     <StackPanel>
-                        <TextBlock Text="Общие параметры" Style="{StaticResource SectionTitleStyle}"/>
-                        <TextBlock Text="Настройте положение панели и её поведение при появлении."
+                        <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_GeneralHint}"
                                    Foreground="{StaticResource MutedText}"
                                    FontSize="11"
                                    TextWrapping="Wrap"
-                                   Margin="0,0,0,8"/>
+                                   Margin="0,0,0,14"/>
+
+                        <StackPanel Margin="0,0,0,12">
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Language}" Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox x:Name="CmbLanguage" SelectionChanged="CmbLanguage_SelectionChanged"/>
+                        </StackPanel>
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="12"/>
+                                <ColumnDefinition Width="14"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
                             <StackPanel Grid.Column="0">
-                                <TextBlock Text="Позиция панели" Style="{StaticResource FieldLabelStyle}"/>
+                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Edge}" Style="{StaticResource FieldLabelStyle}"/>
                                 <ComboBox x:Name="CmbEdge"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
-                                <TextBlock Text="Монитор" Style="{StaticResource FieldLabelStyle}"/>
+                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Monitor}" Style="{StaticResource FieldLabelStyle}"/>
                                 <ComboBox x:Name="CmbMonitor"/>
                             </StackPanel>
                         </Grid>
 
                         <StackPanel Margin="0,0,0,12">
-                            <DockPanel Margin="0,0,0,6">
-                                <TextBlock Text="Размер панели" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
-                                <TextBlock x:Name="TxtPanelSize" DockPanel.Dock="Right" Foreground="White" FontSize="12"/>
+                            <DockPanel Margin="0,0,0,3">
+                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PanelSize}" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                <TextBlock x:Name="TxtPanelSize" DockPanel.Dock="Right" Foreground="White" FontSize="12" Margin="8,0,0,0"/>
                             </DockPanel>
                             <Slider x:Name="SldPanelSize" Minimum="20" Maximum="100" Value="80" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldPanelSize_ValueChanged"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,0,12">
-                            <DockPanel Margin="0,0,0,6">
-                                <TextBlock Text="Зона активации, %" Style="{StaticResource FieldLabelStyle}" Margin="0"
-                                           ToolTip="Размер области у края экрана, при наведении на которую панель появляется."/>
-                                <TextBlock x:Name="TxtZoneSize" DockPanel.Dock="Right" Foreground="White" FontSize="12"/>
+                            <DockPanel Margin="0,0,0,3">
+                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ActivationZone}" Style="{StaticResource FieldLabelStyle}" Margin="0"
+                                           ToolTip="{local:Loc ResourceKey=AppSettingsWindow_ActivationZoneTooltip}"/>
+                                <TextBlock x:Name="TxtZoneSize" DockPanel.Dock="Right" Foreground="White" FontSize="12" Margin="8,0,0,0"/>
                             </DockPanel>
                             <Slider x:Name="SldZoneSize" Minimum="5" Maximum="100" Value="30" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldZoneSize_ValueChanged"/>
                         </StackPanel>
 
                         <StackPanel>
-                            <DockPanel Margin="0,0,0,6">
-                                <TextBlock Text="Задержка появления, мс" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
-                                <TextBlock x:Name="TxtDelay" DockPanel.Dock="Right" Foreground="White" FontSize="12"/>
+                            <DockPanel Margin="0,0,0,3">
+                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Delay}" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                                <TextBlock x:Name="TxtDelay" DockPanel.Dock="Right" Foreground="White" FontSize="12" Margin="8,0,0,0"/>
                             </DockPanel>
                             <Slider x:Name="SldDelay" Minimum="0" Maximum="2000" Value="250" TickFrequency="50" IsSnapToTickEnabled="True" ValueChanged="SldDelay_ValueChanged"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
+            </TabItem>
 
-                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_ContextNames}">
+                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0">
                     <StackPanel>
-                        <TextBlock Text="Имена панелей" Style="{StaticResource SectionTitleStyle}"
-                                   ToolTip="Эти названия используются в меню панели и в настройках кнопок."/>
-                        <TextBlock Text="Эти названия используются в меню панели и при выборе панели для кнопок."
+                        <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ContextNamesHint}"
                                    Foreground="{StaticResource MutedText}"
                                    FontSize="11"
                                    TextWrapping="Wrap"
                                    Margin="0,0,0,8"/>
 
-                        <Grid Margin="0,0,0,8">
+                        <Grid Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="30"/>
+                                <ColumnDefinition Width="34"/>
+                                <ColumnDefinition Width="96"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Border Width="20" Height="20" CornerRadius="10" Background="{StaticResource PanelBadge1}" VerticalAlignment="Center">
-                                <TextBlock Text="1" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                            </Border>
-                            <TextBox x:Name="TxtContext1Name" Grid.Column="1" TextChanged="ContextName_TextChanged"/>
+                            <TextBlock Grid.Column="1" Text="{local:Loc ResourceKey=AppSettingsWindow_PanelEnabled}" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                            <TextBlock Grid.Column="2" Text="{local:Loc ResourceKey=SettingsWindow_ButtonName}" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
                         </Grid>
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="30"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="20" Height="20" CornerRadius="10" Background="{StaticResource PanelBadge2}" VerticalAlignment="Center">
-                                <TextBlock Text="2" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                            </Border>
-                            <TextBox x:Name="TxtContext2Name" Grid.Column="1" TextChanged="ContextName_TextChanged"/>
-                        </Grid>
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="30"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="20" Height="20" CornerRadius="10" Background="{StaticResource PanelBadge3}" VerticalAlignment="Center">
-                                <TextBlock Text="3" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                            </Border>
-                            <TextBox x:Name="TxtContext3Name" Grid.Column="1" TextChanged="ContextName_TextChanged"/>
-                        </Grid>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="30"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Border Width="20" Height="20" CornerRadius="10" Background="{StaticResource PanelBadge4}" VerticalAlignment="Center">
-                                <TextBlock Text="4" Foreground="White" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center"/>
-                            </Border>
-                            <TextBox x:Name="TxtContext4Name" Grid.Column="1" TextChanged="ContextName_TextChanged"/>
-                        </Grid>
+                        <StackPanel x:Name="PanelContextsList"/>
                     </StackPanel>
                 </Border>
-            </Grid>
+            </TabItem>
 
-            <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
-
-                <Border Grid.Row="0" Style="{StaticResource CardStyle}">
+            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_Hotkeys}">
+                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0">
                     <StackPanel>
-                        <TextBlock Text="Горячие клавиши" Style="{StaticResource SectionTitleStyle}"/>
-                        <TextBlock Text="Назначьте сочетания для показа панели и переключения между панелями."
+                        <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_HotkeysHint}"
                                    Foreground="{StaticResource MutedText}"
                                    FontSize="11"
                                    TextWrapping="Wrap"
-                                   Margin="0,0,0,8"/>
+                                   Margin="0,0,0,14"/>
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="210"/>
                                 <ColumnDefinition Width="180"/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="130"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Показать панель" Foreground="White" VerticalAlignment="Center"/>
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ShowPanel}" Foreground="White" VerticalAlignment="Center"/>
                             <ComboBox x:Name="CmbShowPanelModifier" Grid.Column="1" Margin="0,0,12,0"/>
                             <ComboBox x:Name="CmbKey" Grid.Column="2"/>
                         </Grid>
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="210"/>
                                 <ColumnDefinition Width="180"/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="130"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Общий модификатор" Foreground="White" VerticalAlignment="Center"
-                                       ToolTip="Применяется ко всем горячим клавишам переключения панелей."/>
-                            <ComboBox x:Name="CmbPanelModifier" Grid.Column="1"/>
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_NextPanel}" Foreground="White" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="CmbNextContextModifier" Grid.Column="1" Margin="0,0,12,0"/>
+                            <ComboBox x:Name="CmbNextContextKey" Grid.Column="2"/>
                         </Grid>
 
-                        <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0" Margin="0,0,0,12"/>
-
-                        <Grid Margin="0,0,0,8">
+                        <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="210"/>
                                 <ColumnDefinition Width="180"/>
-                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="130"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Следующая панель" Foreground="White" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="CmbNextContextKey" Grid.Column="1"/>
-                        </Grid>
-                        <Grid Margin="0,0,0,10">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="180"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Предыдущая панель" Foreground="White" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="CmbPrevContextKey" Grid.Column="1"/>
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PreviousPanel}" Foreground="White" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="CmbPrevContextModifier" Grid.Column="1" Margin="0,0,12,0"/>
+                            <ComboBox x:Name="CmbPrevContextKey" Grid.Column="2"/>
                         </Grid>
 
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="180"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="LblContext1Hotkey" Text="Панель 1" Foreground="White" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="CmbContext1Key" Grid.Column="1"/>
-                        </Grid>
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="180"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="LblContext2Hotkey" Text="Панель 2" Foreground="White" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="CmbContext2Key" Grid.Column="1"/>
-                        </Grid>
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="180"/>
-                                <ColumnDefinition Width="120"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="LblContext3Hotkey" Text="Панель 3" Foreground="White" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="CmbContext3Key" Grid.Column="1"/>
-                        </Grid>
                         <Grid>
                             <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="210"/>
                                 <ColumnDefinition Width="180"/>
-                                <ColumnDefinition Width="120"/>
+                                <ColumnDefinition Width="130"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="LblContext4Hotkey" Text="Панель 4" Foreground="White" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="CmbContext4Key" Grid.Column="1"/>
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_AddButton}" Foreground="White" VerticalAlignment="Center"/>
+                            <ComboBox x:Name="CmbAddButtonModifier" Grid.Column="1" Margin="0,0,12,0"/>
+                            <ComboBox x:Name="CmbAddButtonKey" Grid.Column="2"/>
                         </Grid>
                     </StackPanel>
                 </Border>
+            </TabItem>
 
-                <Border Grid.Row="1" Style="{StaticResource CardStyle}">
+            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_QuickTools}">
+                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0">
                     <StackPanel>
-                        <TextBlock Text="Быстрые инструменты" Style="{StaticResource SectionTitleStyle}"/>
-                        <TextBlock Text="Включите встроенные кнопки, которые будут отображаться на основной панели."
+                        <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_QuickToolsHint}"
                                    Foreground="{StaticResource MutedText}"
                                    FontSize="11"
                                    TextWrapping="Wrap"
-                                   Margin="0,0,0,8"/>
+                                   Margin="0,0,0,14"/>
                         <UniformGrid Columns="2">
-                            <CheckBox x:Name="ChkShowPresetSearch" Content="Поиск" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetScreenshot" Content="Скриншот" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetVideo" Content="Видео" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetCalc" Content="Калькулятор" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetExplorer" Content="Проводник" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetDownloads" Content="Загрузки" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetSearch" Content="{local:Loc ResourceKey=Tool_Search}" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetScreenshot" Content="{local:Loc ResourceKey=Tool_Screenshot}" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetVideo" Content="{local:Loc ResourceKey=Tool_Video}" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetCalc" Content="{local:Loc ResourceKey=Tool_Calculator}" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetExplorer" Content="{local:Loc ResourceKey=Tool_Explorer}" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetDownloads" Content="{local:Loc ResourceKey=Tool_Downloads}" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetColorPicker" Content="{local:Loc ResourceKey=Tool_ColorPicker}" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetQuickNote" Content="{local:Loc ResourceKey=Tool_QuickNote}" Style="{StaticResource CompactCheckBoxStyle}"/>
                         </UniformGrid>
                     </StackPanel>
                 </Border>
-            </Grid>
-        </Grid>
+            </TabItem>
+        </TabControl>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-            <Button Content="Отмена" Style="{StaticResource SecondaryButtonStyle}" Click="BtnCancel_Click" Height="40" Width="130" Margin="0,0,10,0" FontWeight="SemiBold"/>
-            <Button Content="Сохранить" Style="{StaticResource ActionButtonStyle}" Click="BtnSave_Click" Height="40" Width="180" FontWeight="Bold"/>
+            <Button Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource SecondaryButtonStyle}" Click="BtnCancel_Click" Height="36" Width="130" Margin="0,0,10,0" FontWeight="SemiBold"/>
+            <Button Content="{local:Loc ResourceKey=Common_Save}" Style="{StaticResource ActionButtonStyle}" Click="BtnSave_Click" Height="36" Width="180" FontWeight="Bold"/>
         </StackPanel>
     </Grid>
 </local:DarkWindow>

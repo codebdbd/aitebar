@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="App_AlreadyRunning" xml:space="preserve"><value>AiteBar is already running.</value></data>
+  <data name="Common_Info" xml:space="preserve"><value>Information</value></data>
+  <data name="Common_Warning" xml:space="preserve"><value>Warning</value></data>
+  <data name="Common_Confirmation" xml:space="preserve"><value>Confirmation</value></data>
+  <data name="Common_Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="Common_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Common_Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Common_Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Common_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="Common_Browse" xml:space="preserve"><value>Browse...</value></data>
+  <data name="Common_NotAssigned" xml:space="preserve"><value>Not assigned</value></data>
+  <data name="Common_Mixed" xml:space="preserve"><value>Mixed</value></data>
+  <data name="Panel_DefaultNameFormat" xml:space="preserve"><value>Panel {0}</value></data>
+  <data name="Action_Web" xml:space="preserve"><value>Link</value></data>
+  <data name="Action_Program" xml:space="preserve"><value>Program</value></data>
+  <data name="Action_File" xml:space="preserve"><value>File</value></data>
+  <data name="Action_Folder" xml:space="preserve"><value>Folder</value></data>
+  <data name="Action_ScriptFile" xml:space="preserve"><value>Script</value></data>
+  <data name="Action_Command" xml:space="preserve"><value>Command</value></data>
+  <data name="Action_Hotkey" xml:space="preserve"><value>Hotkeys</value></data>
+  <data name="SettingsWindow_Title" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsWindow_EditTitle" xml:space="preserve"><value>Edit button</value></data>
+  <data name="SettingsWindow_ButtonName" xml:space="preserve"><value>Button name</value></data>
+  <data name="SettingsWindow_ButtonNamePlaceholder" xml:space="preserve"><value>Example: ChatGPT, Terminal...</value></data>
+  <data name="SettingsWindow_ActionType" xml:space="preserve"><value>Action type</value></data>
+  <data name="SettingsWindow_Panel" xml:space="preserve"><value>Panel</value></data>
+  <data name="SettingsWindow_UrlOrPath" xml:space="preserve"><value>URL or path</value></data>
+  <data name="SettingsWindow_Browser" xml:space="preserve"><value>Browser</value></data>
+  <data name="SettingsWindow_Profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="SettingsWindow_NoProfile" xml:space="preserve"><value>No profile</value></data>
+  <data name="SettingsWindow_AppMode" xml:space="preserve"><value>App mode</value></data>
+  <data name="SettingsWindow_Incognito" xml:space="preserve"><value>Incognito mode</value></data>
+  <data name="SettingsWindow_Fullscreen" xml:space="preserve"><value>Open fullscreen</value></data>
+  <data name="SettingsWindow_Rotation" xml:space="preserve"><value>Rotation mode</value></data>
+  <data name="SettingsWindow_HotkeyCombination" xml:space="preserve"><value>Key combination</value></data>
+  <data name="SettingsWindow_IconPicker" xml:space="preserve"><value>Icon selection</value></data>
+  <data name="SettingsWindow_ChooseFromLibrary" xml:space="preserve"><value>Choose from library</value></data>
+  <data name="SettingsWindow_CustomIcon" xml:space="preserve"><value>Custom icon</value></data>
+  <data name="SettingsWindow_IconColor" xml:space="preserve"><value>Icon color</value></data>
+  <data name="SettingsWindow_HexCode" xml:space="preserve"><value>HEX code</value></data>
+  <data name="SettingsWindow_HexPlaceholder" xml:space="preserve"><value>Example: #FFFFFF</value></data>
+  <data name="SettingsWindow_AppSettings" xml:space="preserve"><value>Program settings</value></data>
+  <data name="SettingsWindow_SelectKey" xml:space="preserve"><value>Choose a key...</value></data>
+  <data name="SettingsWindow_SelectIconTitle" xml:space="preserve"><value>Choose icon</value></data>
+  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Images (*.png;*.jpg;*.jpeg;*.bmp;*.ico)|*.png;*.jpg;*.jpeg;*.bmp;*.ico|All files (*.*)|*.*</value></data>
+  <data name="SettingsWindow_RequiredWeb" xml:space="preserve"><value>Paste website URL (required):</value></data>
+  <data name="SettingsWindow_RequiredProgram" xml:space="preserve"><value>Specify program or shortcut path (required):</value></data>
+  <data name="SettingsWindow_RequiredFile" xml:space="preserve"><value>Specify file path (required):</value></data>
+  <data name="SettingsWindow_RequiredFolder" xml:space="preserve"><value>Specify folder path (required):</value></data>
+  <data name="SettingsWindow_RequiredCommand" xml:space="preserve"><value>Enter console command (required):</value></data>
+  <data name="SettingsWindow_RequiredScript" xml:space="preserve"><value>Specify script file path (required):</value></data>
+  <data name="SettingsWindow_RequiredValue" xml:space="preserve"><value>Enter value (required):</value></data>
+  <data name="SettingsWindow_PlaceholderUrl" xml:space="preserve"><value>Paste website URL</value></data>
+  <data name="SettingsWindow_PlaceholderProgram" xml:space="preserve"><value>Specify path to .exe, .lnk, or .appref-ms</value></data>
+  <data name="SettingsWindow_HelpProgram" xml:space="preserve"><value>For programs and shortcuts. Supports .exe, .lnk, and .appref-ms.</value></data>
+  <data name="SettingsWindow_PlaceholderFile" xml:space="preserve"><value>Specify path to a regular file</value></data>
+  <data name="SettingsWindow_HelpFile" xml:space="preserve"><value>For documents and other files except scripts. Use the "Script" type for scripts.</value></data>
+  <data name="SettingsWindow_PlaceholderFolder" xml:space="preserve"><value>Specify folder path</value></data>
+  <data name="SettingsWindow_HelpFolder" xml:space="preserve"><value>Opens the selected folder in Windows Explorer.</value></data>
+  <data name="SettingsWindow_PlaceholderCommand" xml:space="preserve"><value>Enter console command</value></data>
+  <data name="SettingsWindow_HelpCommand" xml:space="preserve"><value>For advanced users.
+Examples:
+cmd, powershell, explorer, control, appwiz.cpl, ncpa.cpl, services.msc, taskmgr, regedit, msconfig
+
+Python module (for systems with py installed):
+cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
+  <data name="SettingsWindow_PlaceholderScript" xml:space="preserve"><value>Specify script file path</value></data>
+  <data name="SettingsWindow_HelpScript" xml:space="preserve"><value>For advanced users.
+Supports .bat, .cmd, .ps1, and standalone .py.
+For modular Python projects use the "Command" type.</value></data>
+  <data name="SettingsWindow_ProgramFilter" xml:space="preserve"><value>Programs (*.exe;*.lnk;*.appref-ms)|*.exe;*.lnk;*.appref-ms|All files (*.*)|*.*</value></data>
+  <data name="SettingsWindow_FileFilter" xml:space="preserve"><value>Files|*.*</value></data>
+  <data name="SettingsWindow_ScriptFilter" xml:space="preserve"><value>Scripts (*.bat;*.cmd;*.ps1;*.py)|*.bat;*.cmd;*.ps1;*.py</value></data>
+  <data name="SettingsWindow_AllFilesFilter" xml:space="preserve"><value>All files (*.*)|*.*</value></data>
+  <data name="SettingsWindow_FieldName" xml:space="preserve"><value>Name</value></data>
+  <data name="SettingsWindow_FieldCommand" xml:space="preserve"><value>Command</value></data>
+  <data name="SettingsWindow_FieldFolderPath" xml:space="preserve"><value>Folder path</value></data>
+  <data name="SettingsWindow_FieldFilePath" xml:space="preserve"><value>File path</value></data>
+  <data name="SettingsWindow_RequiredFields" xml:space="preserve"><value>Fill required fields: {0}.</value></data>
+  <data name="SettingsWindow_ProgramNotFound" xml:space="preserve"><value>Program file or shortcut was not found.</value></data>
+  <data name="SettingsWindow_InvalidProgram" xml:space="preserve"><value>The "Program" type supports only .exe, .lnk, and .appref-ms.</value></data>
+  <data name="SettingsWindow_FileNotFound" xml:space="preserve"><value>File was not found.</value></data>
+  <data name="SettingsWindow_InvalidFile" xml:space="preserve"><value>The "File" type accepts regular files except programs and scripts.</value></data>
+  <data name="SettingsWindow_InvalidUrl" xml:space="preserve"><value>Enter a valid http or https website address.</value></data>
+  <data name="SettingsWindow_FolderNotFound" xml:space="preserve"><value>Folder was not found.</value></data>
+  <data name="SettingsWindow_ScriptNotFound" xml:space="preserve"><value>Script file was not found.</value></data>
+  <data name="SettingsWindow_InvalidScript" xml:space="preserve"><value>Only .bat, .cmd, .ps1, and .py are supported.</value></data>
+  <data name="SettingsWindow_PythonNotFound" xml:space="preserve"><value>Running .py files requires python.exe in PATH.</value></data>
+  <data name="SettingsWindow_ErrorFormat" xml:space="preserve"><value>Error:
+{0}</value></data>
+  <data name="AppSettingsWindow_Title" xml:space="preserve"><value>Program settings</value></data>
+  <data name="AppSettingsWindow_General" xml:space="preserve"><value>General settings</value></data>
+  <data name="AppSettingsWindow_GeneralHint" xml:space="preserve"><value>Configure panel position and appearance behavior.</value></data>
+  <data name="AppSettingsWindow_Language" xml:space="preserve"><value>Language</value></data>
+  <data name="AppSettingsWindow_LanguageAuto" xml:space="preserve"><value>Auto (Windows)</value></data>
+  <data name="AppSettingsWindow_Edge" xml:space="preserve"><value>Panel position</value></data>
+  <data name="AppSettingsWindow_Monitor" xml:space="preserve"><value>Monitor</value></data>
+  <data name="AppSettingsWindow_PanelSize" xml:space="preserve"><value>Panel size</value></data>
+  <data name="AppSettingsWindow_ActivationZone" xml:space="preserve"><value>Activation zone, %</value></data>
+  <data name="AppSettingsWindow_ActivationZoneTooltip" xml:space="preserve"><value>Size of the area at the screen edge that shows the panel on hover.</value></data>
+  <data name="AppSettingsWindow_Delay" xml:space="preserve"><value>Appearance delay, ms</value></data>
+  <data name="AppSettingsWindow_ContextNames" xml:space="preserve"><value>Panel names</value></data>
+  <data name="AppSettingsWindow_ContextNamesTooltip" xml:space="preserve"><value>These names are used in the panel menu and button settings.</value></data>
+  <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>These names are used in the panel menu and when choosing a panel for buttons.</value></data>
+  <data name="AppSettingsWindow_PanelEnabled" xml:space="preserve"><value>Enabled</value></data>
+  <data name="AppSettingsWindow_PrimaryPanelAlwaysEnabled" xml:space="preserve"><value>The first panel is always enabled.</value></data>
+  <data name="AppSettingsWindow_Hotkeys" xml:space="preserve"><value>Hotkeys</value></data>
+  <data name="AppSettingsWindow_HotkeysHint" xml:space="preserve"><value>Assign shortcuts for showing the panel, switching between panels, and adding a button.</value></data>
+  <data name="AppSettingsWindow_ShowPanel" xml:space="preserve"><value>Show panel</value></data>
+  <data name="AppSettingsWindow_NextPanel" xml:space="preserve"><value>Next panel</value></data>
+  <data name="AppSettingsWindow_PreviousPanel" xml:space="preserve"><value>Previous panel</value></data>
+  <data name="AppSettingsWindow_AddButton" xml:space="preserve"><value>Add button</value></data>
+  <data name="AppSettingsWindow_QuickTools" xml:space="preserve"><value>Quick tools</value></data>
+  <data name="AppSettingsWindow_QuickToolsHint" xml:space="preserve"><value>Enable built-in buttons shown on the main panel.</value></data>
+  <data name="Tool_Search" xml:space="preserve"><value>Search</value></data>
+  <data name="Tool_Screenshot" xml:space="preserve"><value>Screenshot</value></data>
+  <data name="Tool_Video" xml:space="preserve"><value>Video</value></data>
+  <data name="Tool_Calculator" xml:space="preserve"><value>Calculator</value></data>
+  <data name="Tool_Explorer" xml:space="preserve"><value>Explorer</value></data>
+  <data name="Tool_Downloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="Tool_ColorPicker" xml:space="preserve"><value>Color picker</value></data>
+  <data name="Tool_QuickNote" xml:space="preserve"><value>Quick note</value></data>
+  <data name="Dock_Top" xml:space="preserve"><value>Top</value></data>
+  <data name="Dock_Bottom" xml:space="preserve"><value>Bottom</value></data>
+  <data name="Dock_Left" xml:space="preserve"><value>Left</value></data>
+  <data name="Dock_Right" xml:space="preserve"><value>Right</value></data>
+  <data name="Monitor_Format" xml:space="preserve"><value>Monitor {0}{1}</value></data>
+  <data name="Monitor_PrimarySuffix" xml:space="preserve"><value> (Primary)</value></data>
+  <data name="HotkeyConflictMessage" xml:space="preserve"><value>Conflicting hotkeys were found:
+{0}
+
+Assign different shortcuts.</value></data>
+  <data name="HotkeyRegistrationFailed" xml:space="preserve"><value>These hotkeys could not be registered and will not work until changed:
+{0}
+
+Choose combinations that are not used by Windows or another app.</value></data>
+  <data name="Main_AddButtonTooltip" xml:space="preserve"><value>Add button</value></data>
+  <data name="Main_SearchTooltip" xml:space="preserve"><value>Google search (clipboard)</value></data>
+  <data name="Main_ScreenshotTooltip" xml:space="preserve"><value>Screenshot</value></data>
+  <data name="Main_RecordTooltip" xml:space="preserve"><value>Video recording</value></data>
+  <data name="Main_CalcTooltip" xml:space="preserve"><value>Calculator</value></data>
+  <data name="Main_ExplorerTooltip" xml:space="preserve"><value>Explorer</value></data>
+  <data name="Main_DownloadsTooltip" xml:space="preserve"><value>Downloads</value></data>
+  <data name="Main_ColorPickerTooltip" xml:space="preserve"><value>Pick color from screen</value></data>
+  <data name="Main_QuickNoteTooltip" xml:space="preserve"><value>Quick note</value></data>
+  <data name="ColorPicker_Instruction" xml:space="preserve"><value>Click anywhere to copy the color. Esc cancels.</value></data>
+  <data name="ColorPicker_Copied" xml:space="preserve"><value>Copied color: {0}</value></data>
+  <data name="QuickNote_Title" xml:space="preserve"><value>Quick Note</value></data>
+  <data name="QuickNote_Placeholder" xml:space="preserve"><value>Paste text, links, commands...</value></data>
+  <data name="QuickNote_SavedInitial" xml:space="preserve"><value>Saved</value></data>
+  <data name="QuickNote_Saving" xml:space="preserve"><value>Saving...</value></data>
+  <data name="QuickNote_SaveFailed" xml:space="preserve"><value>Save failed</value></data>
+  <data name="QuickNote_LoadFailed" xml:space="preserve"><value>Could not load note</value></data>
+  <data name="QuickNote_OpenFailed" xml:space="preserve"><value>Could not open</value></data>
+  <data name="QuickNote_ConflictCopySaved" xml:space="preserve"><value>External changes detected. Saved a conflict copy.</value></data>
+  <data name="QuickNote_SavedAt" xml:space="preserve"><value>Saved {0}</value></data>
+  <data name="QuickNote_OpenFile" xml:space="preserve"><value>Open note file</value></data>
+  <data name="QuickNote_Clear" xml:space="preserve"><value>Clear note</value></data>
+  <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Clear the quick note?</value></data>
+  <data name="QuickNote_Stats" xml:space="preserve"><value>{0} chars - {1} lines</value></data>
+  <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.md</value></data>
+  <data name="QuickNote_Menu" xml:space="preserve"><value>Note menu</value></data>
+  <data name="QuickNote_Theme" xml:space="preserve"><value>Note color</value></data>
+  <data name="QuickNote_Cut" xml:space="preserve"><value>Cut</value></data>
+  <data name="QuickNote_Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="QuickNote_Paste" xml:space="preserve"><value>Paste</value></data>
+  <data name="QuickNote_SelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="QuickNote_Bold" xml:space="preserve"><value>Bold</value></data>
+  <data name="QuickNote_Italic" xml:space="preserve"><value>Italic</value></data>
+  <data name="QuickNote_Underline" xml:space="preserve"><value>Underline</value></data>
+  <data name="QuickNote_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="QuickNote_BulletList" xml:space="preserve"><value>Bullet list</value></data>
+  <data name="QuickNote_NumberedList" xml:space="preserve"><value>Numbered list</value></data>
+  <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Clear formatting</value></data>
+  <data name="Menu_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="Menu_ProgramSettings" xml:space="preserve"><value>Program settings</value></data>
+  <data name="Menu_ImportPanel" xml:space="preserve"><value>Import panel...</value></data>
+  <data name="Menu_ImportCurrentPanel" xml:space="preserve"><value>Import into current panel...</value></data>
+  <data name="Menu_ExportCurrentPanel" xml:space="preserve"><value>Export current panel...</value></data>
+  <data name="Menu_About" xml:space="preserve"><value>About</value></data>
+  <data name="Menu_Help" xml:space="preserve"><value>Help</value></data>
+  <data name="Menu_Donate" xml:space="preserve"><value>Support the author</value></data>
+  <data name="Menu_Exit" xml:space="preserve"><value>Close and exit</value></data>
+  <data name="Menu_Unpin" xml:space="preserve"><value>Unpin from panel</value></data>
+  <data name="Menu_Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Menu_Duplicate" xml:space="preserve"><value>Duplicate</value></data>
+  <data name="Menu_Rename" xml:space="preserve"><value>Rename</value></data>
+  <data name="Menu_Move" xml:space="preserve"><value>Move</value></data>
+  <data name="Menu_OpenLocation" xml:space="preserve"><value>Open location</value></data>
+  <data name="Menu_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="Menu_CopyUrl" xml:space="preserve"><value>Copy URL</value></data>
+  <data name="Menu_CopyPath" xml:space="preserve"><value>Copy path</value></data>
+  <data name="Menu_CopyCommand" xml:space="preserve"><value>Copy command</value></data>
+  <data name="Element_NewButton" xml:space="preserve"><value>New button</value></data>
+  <data name="Element_CopySuffix" xml:space="preserve"><value>copy</value></data>
+  <data name="Element_CopySuffixFormat" xml:space="preserve"><value>copy {0}</value></data>
+  <data name="Prompt_RenameButtonTitle" xml:space="preserve"><value>Rename button</value></data>
+  <data name="Prompt_NewName" xml:space="preserve"><value>New name</value></data>
+  <data name="Prompt_DefaultTitle" xml:space="preserve"><value>Rename</value></data>
+  <data name="Prompt_DefaultLabel" xml:space="preserve"><value>Enter value</value></data>
+  <data name="DeleteButtonConfirm" xml:space="preserve"><value>Delete '{0}'?</value></data>
+  <data name="Export_Title" xml:space="preserve"><value>Export current panel</value></data>
+  <data name="Export_Filter" xml:space="preserve"><value>AiteBar Panel (*.aitebarpanel)|*.aitebarpanel</value></data>
+  <data name="Export_Success" xml:space="preserve"><value>Exported buttons: {0}</value></data>
+  <data name="Export_Failed" xml:space="preserve"><value>Could not export panel.
+{0}</value></data>
+  <data name="Import_Title" xml:space="preserve"><value>Import panel</value></data>
+  <data name="Import_Confirm" xml:space="preserve"><value>Import {0} buttons into the current panel "{1}"?
+
+Import rollback is not supported in this version.</value></data>
+  <data name="Import_Success" xml:space="preserve"><value>Imported buttons: {0}</value></data>
+  <data name="Import_Failed" xml:space="preserve"><value>Could not import panel.
+{0}</value></data>
+  <data name="Action_Failed" xml:space="preserve"><value>Could not run action:
+{0}</value></data>
+  <data name="Drop_NotSupported" xml:space="preserve"><value>This object cannot be added to the panel.</value></data>
+  <data name="Drop_ReadFailed" xml:space="preserve"><value>Could not read the dragged object.</value></data>
+  <data name="Drop_OnlyOne" xml:space="preserve"><value>Only one object can be dragged at a time.</value></data>
+  <data name="Drop_ExistingFilesFoldersOnly" xml:space="preserve"><value>Only existing files and folders are supported.</value></data>
+  <data name="Drop_UrlShortcutOnly" xml:space="preserve"><value>Only .url files with http/https links are supported.</value></data>
+  <data name="Drop_FileFolderOrUrlOnly" xml:space="preserve"><value>Only a file, folder, or http/https link can be dragged.</value></data>
+  <data name="Drop_SupportedTargets" xml:space="preserve"><value>Only files, folders, .url files, and direct http/https links are supported.</value></data>
+  <data name="Action_ConfirmCommand" xml:space="preserve"><value>Run command:
+{0}?</value></data>
+  <data name="Action_SearchFailed" xml:space="preserve"><value>Search failed</value></data>
+  <data name="Action_LaunchFailed" xml:space="preserve"><value>Launch failed.</value></data>
+  <data name="Action_PythonNotFound" xml:space="preserve"><value>Python was not found.</value></data>
+  <data name="Action_UnsupportedScript" xml:space="preserve"><value>Unsupported script.</value></data>
+  <data name="About_Title" xml:space="preserve"><value>About</value></data>
+  <data name="About_VersionFormat" xml:space="preserve"><value>Version {0}.{1}.{2}</value></data>
+  <data name="About_Description" xml:space="preserve"><value>Hidden quick access panel for Windows. Lets you launch websites, apps, scripts, commands, and hotkeys from customizable blocks.</value></data>
+  <data name="About_Info" xml:space="preserve"><value>Information</value></data>
+  <data name="About_Developer" xml:space="preserve"><value>Developer: Codebdbd</value></data>
+  <data name="About_License" xml:space="preserve"><value>License: Proprietary (All rights reserved)</value></data>
+  <data name="About_Technologies" xml:space="preserve"><value>Technologies</value></data>
+  <data name="About_AppData" xml:space="preserve"><value>Application data</value></data>
+  <data name="About_OpenDataFolder" xml:space="preserve"><value>Open data folder</value></data>
+  <data name="About_Resources" xml:space="preserve"><value>Resources</value></data>
+  <data name="About_Website" xml:space="preserve"><value>Program page</value></data>
+  <data name="About_Repository" xml:space="preserve"><value>GitHub repository</value></data>
+  <data name="About_Licenses" xml:space="preserve"><value>Licenses</value></data>
+  <data name="About_ProgramFolder" xml:space="preserve"><value>Program folder</value></data>
+  <data name="About_NoticesMissing" xml:space="preserve"><value>THIRD_PARTY_NOTICES.txt was not found.</value></data>
+  <data name="About_OpenDataFolderFailed" xml:space="preserve"><value>Could not open data folder.
+
+{0}</value></data>
+  <data name="About_ProgramFolderUnknown" xml:space="preserve"><value>Could not determine program folder.</value></data>
+  <data name="IconPicker_Title" xml:space="preserve"><value>Icon catalog</value></data>
+  <data name="IconPicker_CustomIcon" xml:space="preserve"><value>Custom icon</value></data>
+  <data name="IconPicker_SearchCodeHint" xml:space="preserve"><value>Search by code, for example: E000</value></data>
+  <data name="IconPicker_SearchBrandsHint" xml:space="preserve"><value>Search by brand name (github, twitter) or code</value></data>
+  <data name="IconPicker_SearchIconsHint" xml:space="preserve"><value>Search by icon name (add, home, search) or code</value></data>
+  <data name="IconPicker_ImageFilter" xml:space="preserve"><value>Images|*.png;*.jpg;*.jpeg;*.bmp;*.ico</value></data>
+  <data name="IconPicker_CopyFailed" xml:space="preserve"><value>Error copying file.</value></data>
+  <data name="IconPicker_LoadFailed" xml:space="preserve"><value>Could not load icon catalog:
+{0}</value></data>
+</root>

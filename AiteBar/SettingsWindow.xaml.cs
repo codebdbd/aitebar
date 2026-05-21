@@ -50,7 +50,7 @@ namespace AiteBar
             LoadKeyList();
 
             if (_editingElement != null) {
-                this.Title = "Редактировать кнопку";
+                this.Title = LocalizationService.Get("SettingsWindow_EditTitle");
                 LoadElementData();
             } else {
                 SetComboValue(CmbActionType, nameof(ActionType.Web));
@@ -67,7 +67,7 @@ namespace AiteBar
         private void LoadKeyList()
         {
             CmbKey.Items.Clear();
-            CmbKey.Items.Add(new ComboBoxItem { Content = "Выберите клавишу...", Tag = "None" });
+            CmbKey.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("SettingsWindow_SelectKey"), Tag = "None" });
             for (char c = 'A'; c <= 'Z'; c++) CmbKey.Items.Add(new ComboBoxItem { Content = c.ToString(), Tag = c.ToString() });
             for (int i = 0; i <= 9; i++) CmbKey.Items.Add(new ComboBoxItem { Content = i.ToString(), Tag = "D" + i });
             for (int i = 1; i <= 12; i++) CmbKey.Items.Add(new ComboBoxItem { Content = "F" + i, Tag = "F" + i });
@@ -196,8 +196,8 @@ namespace AiteBar
         {
             var dlg = new Microsoft.Win32.OpenFileDialog
             {
-                Filter = "Изображения (*.png;*.jpg;*.jpeg;*.bmp;*.ico)|*.png;*.jpg;*.jpeg;*.bmp;*.ico|Все файлы (*.*)|*.*",
-                Title = "Выберите иконку"
+                Filter = LocalizationService.Get("SettingsWindow_ImageFilter"),
+                Title = LocalizationService.Get("SettingsWindow_SelectIconTitle")
             };
 
             if (dlg.ShowDialog() == true)
@@ -247,7 +247,7 @@ namespace AiteBar
             if (!Enum.TryParse<BrowserType>(browserStr, out var browserType)) browserType = BrowserType.Chrome;
 
             CmbChromeProfile.Items.Clear();
-            CmbChromeProfile.Items.Add(new ComboBoxItem { Content = "Без профиля", Tag = "" });
+            CmbChromeProfile.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("SettingsWindow_NoProfile"), Tag = "" });
             
             var profileItems = await Task.Run(() => BrowserHelper.GetProfiles(browserType));
 
@@ -284,43 +284,43 @@ namespace AiteBar
                             ? Visibility.Visible : Visibility.Collapsed;
                         LblActionValue.Text = actionType switch
                         {
-                            AiteBar.ActionType.Web => "Вставьте URL сайта (обязательно):",
-                            AiteBar.ActionType.Program => "Укажите путь к программе или ярлыку (обязательно):",
-                            AiteBar.ActionType.File => "Укажите путь к файлу (обязательно):",
-                            AiteBar.ActionType.Folder => "Укажите путь к папке (обязательно):",
-                            AiteBar.ActionType.Command => "Введите консольную команду (обязательно):",
-                            AiteBar.ActionType.ScriptFile => "Укажите путь к файлу скрипта (обязательно):",
-                            _ => "Введите значение (обязательно):"
+                            AiteBar.ActionType.Web => LocalizationService.Get("SettingsWindow_RequiredWeb"),
+                            AiteBar.ActionType.Program => LocalizationService.Get("SettingsWindow_RequiredProgram"),
+                            AiteBar.ActionType.File => LocalizationService.Get("SettingsWindow_RequiredFile"),
+                            AiteBar.ActionType.Folder => LocalizationService.Get("SettingsWindow_RequiredFolder"),
+                            AiteBar.ActionType.Command => LocalizationService.Get("SettingsWindow_RequiredCommand"),
+                            AiteBar.ActionType.ScriptFile => LocalizationService.Get("SettingsWindow_RequiredScript"),
+                            _ => LocalizationService.Get("SettingsWindow_RequiredValue")
                         };
                         switch (actionType)
                         {
                             case AiteBar.ActionType.Web:
-                                TxtActionPlaceholder.Text = "Вставьте URL сайта";
+                                TxtActionPlaceholder.Text = LocalizationService.Get("SettingsWindow_PlaceholderUrl");
                                 ActionHelpBox.Visibility = Visibility.Collapsed;
                                 break;
                             case AiteBar.ActionType.Program:
-                                TxtActionPlaceholder.Text = @"Укажите путь к .exe, .lnk или .appref-ms";
-                                TxtActionHelp.Text = "Для программ и ярлыков. Поддерживаются .exe, .lnk и .appref-ms.";
+                                TxtActionPlaceholder.Text = LocalizationService.Get("SettingsWindow_PlaceholderProgram");
+                                TxtActionHelp.Text = LocalizationService.Get("SettingsWindow_HelpProgram");
                                 ActionHelpBox.Visibility = Visibility.Visible;
                                 break;
                             case AiteBar.ActionType.File:
-                                TxtActionPlaceholder.Text = @"Укажите путь к обычному файлу";
-                                TxtActionHelp.Text = "Для документов и других файлов, кроме скриптов. Скрипты используйте через тип \"Скрипт\".";
+                                TxtActionPlaceholder.Text = LocalizationService.Get("SettingsWindow_PlaceholderFile");
+                                TxtActionHelp.Text = LocalizationService.Get("SettingsWindow_HelpFile");
                                 ActionHelpBox.Visibility = Visibility.Visible;
                                 break;
                             case AiteBar.ActionType.Folder:
-                                TxtActionPlaceholder.Text = @"Укажите путь к папке";
-                                TxtActionHelp.Text = "Открывает выбранную папку в Проводнике Windows.";
+                                TxtActionPlaceholder.Text = LocalizationService.Get("SettingsWindow_PlaceholderFolder");
+                                TxtActionHelp.Text = LocalizationService.Get("SettingsWindow_HelpFolder");
                                 ActionHelpBox.Visibility = Visibility.Visible;
                                 break;
                             case AiteBar.ActionType.Command:
-                                TxtActionPlaceholder.Text = "Введите консольную команду";
-                                TxtActionHelp.Text = "Для продвинутых пользователей.\nПримеры:\ncmd, powershell, explorer, control, appwiz.cpl, ncpa.cpl, services.msc, taskmgr, regedit, msconfig\n\nPython-модуль (для систем, где установлен py):\ncd /d \"B:\\имя_проекта\" && py -m app.main";
+                                TxtActionPlaceholder.Text = LocalizationService.Get("SettingsWindow_PlaceholderCommand");
+                                TxtActionHelp.Text = LocalizationService.Get("SettingsWindow_HelpCommand");
                                 ActionHelpBox.Visibility = Visibility.Visible;
                                 break;
                             case AiteBar.ActionType.ScriptFile:
-                                TxtActionPlaceholder.Text = "Укажите путь к файлу скрипта";
-                                TxtActionHelp.Text = "Для продвинутых пользователей.\nПоддерживаются .bat, .cmd, .ps1 и standalone .py.\nДля модульных Python-проектов используйте тип \"Команда\".";
+                                TxtActionPlaceholder.Text = LocalizationService.Get("SettingsWindow_PlaceholderScript");
+                                TxtActionHelp.Text = LocalizationService.Get("SettingsWindow_HelpScript");
                                 ActionHelpBox.Visibility = Visibility.Visible;
                                 break;
                             default:
@@ -378,10 +378,10 @@ namespace AiteBar
             {
                 Filter = typeStr switch
                 {
-                    nameof(AiteBar.ActionType.Program) => "Программы (*.exe;*.lnk;*.appref-ms)|*.exe;*.lnk;*.appref-ms|Все файлы (*.*)|*.*",
-                    nameof(AiteBar.ActionType.File) => "Файлы|*.*",
-                    nameof(AiteBar.ActionType.ScriptFile) => "Скрипты (*.bat;*.cmd;*.ps1;*.py)|*.bat;*.cmd;*.ps1;*.py",
-                    _ => "Все файлы (*.*)|*.*"
+                    nameof(AiteBar.ActionType.Program) => LocalizationService.Get("SettingsWindow_ProgramFilter"),
+                    nameof(AiteBar.ActionType.File) => LocalizationService.Get("SettingsWindow_FileFilter"),
+                    nameof(AiteBar.ActionType.ScriptFile) => LocalizationService.Get("SettingsWindow_ScriptFilter"),
+                    _ => LocalizationService.Get("SettingsWindow_AllFilesFilter")
                 }
             };
 
@@ -532,18 +532,18 @@ namespace AiteBar
                     _showRequiredValidation = true;
                     UpdateRequiredFieldsVisuals();
                     var requiredFields = new List<string>();
-                    if (missingName) requiredFields.Add("Имя");
+                    if (missingName) requiredFields.Add(LocalizationService.Get("SettingsWindow_FieldName"));
                     if (missingActionValue)
                     {
                         requiredFields.Add(actionType switch
                         {
                             AiteBar.ActionType.Web => "URL",
-                            AiteBar.ActionType.Command => "Команда",
-                            AiteBar.ActionType.Folder => "Путь к папке",
-                            _ => "Путь к файлу"
+                            AiteBar.ActionType.Command => LocalizationService.Get("SettingsWindow_FieldCommand"),
+                            AiteBar.ActionType.Folder => LocalizationService.Get("SettingsWindow_FieldFolderPath"),
+                            _ => LocalizationService.Get("SettingsWindow_FieldFilePath")
                         });
                     }
-                    new DarkDialog($"Заполните обязательные поля: {string.Join(", ", requiredFields)}.") { Owner = this }.ShowDialog();
+                    new DarkDialog(LocalizationService.Format("SettingsWindow_RequiredFields", string.Join(", ", requiredFields))) { Owner = this }.ShowDialog();
                     return;
                 }
                 _showRequiredValidation = false;
@@ -553,13 +553,13 @@ namespace AiteBar
                 {
                     if (!File.Exists(TxtActionValue.Text))
                     {
-                        new DarkDialog("Файл программы или ярлыка не найден.") { Owner = this }.ShowDialog();
+                        new DarkDialog(LocalizationService.Get("SettingsWindow_ProgramNotFound")) { Owner = this }.ShowDialog();
                         return;
                     }
 
                     if (!ActionTargetHelper.IsProgramPath(TxtActionValue.Text))
                     {
-                        new DarkDialog("Для типа \"Программа\" поддерживаются только .exe, .lnk и .appref-ms.") { Owner = this }.ShowDialog();
+                        new DarkDialog(LocalizationService.Get("SettingsWindow_InvalidProgram")) { Owner = this }.ShowDialog();
                         return;
                     }
                 }
@@ -568,13 +568,13 @@ namespace AiteBar
                 {
                     if (!File.Exists(TxtActionValue.Text))
                     {
-                        new DarkDialog("Файл не найден.") { Owner = this }.ShowDialog();
+                        new DarkDialog(LocalizationService.Get("SettingsWindow_FileNotFound")) { Owner = this }.ShowDialog();
                         return;
                     }
 
                     if (!ActionTargetHelper.IsRegularFilePath(TxtActionValue.Text))
                     {
-                        new DarkDialog("Для типа \"Файл\" подходят обычные файлы, кроме программ и скриптов.") { Owner = this }.ShowDialog();
+                        new DarkDialog(LocalizationService.Get("SettingsWindow_InvalidFile")) { Owner = this }.ShowDialog();
                         return;
                     }
                 }
@@ -583,7 +583,7 @@ namespace AiteBar
                 {
                     if (!Directory.Exists(TxtActionValue.Text))
                     {
-                        new DarkDialog("Папка не найдена.") { Owner = this }.ShowDialog();
+                        new DarkDialog(LocalizationService.Get("SettingsWindow_FolderNotFound")) { Owner = this }.ShowDialog();
                         return;
                     }
                 }
@@ -592,20 +592,30 @@ namespace AiteBar
                 {
                     if (!File.Exists(TxtActionValue.Text))
                     {
-                        new DarkDialog("Файл скрипта не найден.") { Owner = this }.ShowDialog();
+                        new DarkDialog(LocalizationService.Get("SettingsWindow_ScriptNotFound")) { Owner = this }.ShowDialog();
                         return;
                     }
 
                     if (!ActionTargetHelper.IsScriptPath(TxtActionValue.Text))
                     {
-                        new DarkDialog("Поддерживаются только .bat, .cmd, .ps1 и .py.") { Owner = this }.ShowDialog();
+                        new DarkDialog(LocalizationService.Get("SettingsWindow_InvalidScript")) { Owner = this }.ShowDialog();
                         return;
                     }
 
                     if (string.Equals(Path.GetExtension(TxtActionValue.Text), ".py", StringComparison.OrdinalIgnoreCase) &&
                         FindExecutableOnPath("python.exe") == null)
                     {
-                        new DarkDialog("Для запуска .py требуется установленный python.exe в PATH.") { Owner = this }.ShowDialog();
+                        new DarkDialog(LocalizationService.Get("SettingsWindow_PythonNotFound")) { Owner = this }.ShowDialog();
+                        return;
+                    }
+                }
+
+                string actionValue = actionType == AiteBar.ActionType.Hotkey ? "" : TxtActionValue.Text.Trim();
+                if (actionType == AiteBar.ActionType.Web)
+                {
+                    if (!ActionTargetHelper.TryNormalizeWebUrl(actionValue, out actionValue))
+                    {
+                        new DarkDialog(LocalizationService.Get("SettingsWindow_InvalidUrl")) { Owner = this }.ShowDialog();
                         return;
                     }
                 }
@@ -614,7 +624,7 @@ namespace AiteBar
                     Id = _editingElement?.Id ?? Guid.NewGuid().ToString(),
                     Name = TxtName.Text,
                     Browser = browserType,
-                    ActionType = typeStr, ActionValue = actionType == AiteBar.ActionType.Hotkey ? "" : TxtActionValue.Text,
+                    ActionType = typeStr, ActionValue = actionValue,
                     Icon = _selectedIcon, IconFont = _selectedFont, Color = _selectedColor, 
                     ImagePath = _selectedImagePath,
                     ChromeProfile = ((ComboBoxItem)CmbChromeProfile.SelectedItem)?.Tag?.ToString() ?? "",
@@ -632,7 +642,7 @@ namespace AiteBar
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                new DarkDialog($"Ошибка:\n{ex.Message}") { Owner = this }.ShowDialog();
+                new DarkDialog(LocalizationService.Format("SettingsWindow_ErrorFormat", ex.Message)) { Owner = this }.ShowDialog();
             }
             finally
             {

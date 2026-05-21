@@ -86,8 +86,8 @@ namespace AiteBar
         {
             var dlg = new Microsoft.Win32.OpenFileDialog
             {
-                Filter = "Изображения|*.png;*.jpg;*.jpeg;*.bmp;*.ico",
-                Title = "Выберите иконку"
+                Filter = LocalizationService.Get("IconPicker_ImageFilter"),
+                Title = LocalizationService.Get("SettingsWindow_SelectIconTitle")
             };
             if (dlg.ShowDialog() == true)
             {
@@ -109,7 +109,7 @@ namespace AiteBar
                 catch (Exception ex)
                 {
                     Logger.Log(ex);
-                    new DarkDialog("Ошибка при копировании файла.") { Owner = this }.ShowDialog();
+                    new DarkDialog(LocalizationService.Get("IconPicker_CopyFailed")) { Owner = this }.ShowDialog();
                 }
             }
         }
@@ -129,10 +129,10 @@ namespace AiteBar
 
             TxtSearchHint.Text = fontName switch
             {
-                FontHelper.BrandsKey   => "Поиск по имени бренда (github, twitter) или коду",
-                FontHelper.FluentKey   => "Поиск по имени иконки (add, home, search) или коду",
-                FontHelper.MaterialKey => "Поиск по имени иконки (add, home, search) или коду",
-                _ => "Поиск по коду"
+                FontHelper.BrandsKey   => LocalizationService.Get("IconPicker_SearchBrandsHint"),
+                FontHelper.FluentKey   => LocalizationService.Get("IconPicker_SearchIconsHint"),
+                FontHelper.MaterialKey => LocalizationService.Get("IconPicker_SearchIconsHint"),
+                _ => LocalizationService.Get("IconPicker_SearchCodeHint")
             };
 
             LoadIcons(fontName);
@@ -190,7 +190,7 @@ namespace AiteBar
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                new DarkDialog($"Не удалось загрузить каталог иконок:\n{ex.Message}") { Owner = this }.ShowDialog();
+                new DarkDialog(LocalizationService.Format("IconPicker_LoadFailed", ex.Message)) { Owner = this }.ShowDialog();
             }
         }
 

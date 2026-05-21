@@ -73,18 +73,20 @@
 
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
-                        <Button Content="&#xE005;" ToolTip="Добавить кнопку" Click="BtnSettings_Click" Foreground="{StaticResource AccentColor}"/>
+                        <Button Content="&#xE005;" Click="BtnSettings_Click" Foreground="{StaticResource AccentColor}"/>
                     </StackPanel>
 
                     <Rectangle x:Name="SepSystem" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" VerticalAlignment="Center"/>
 
                     <StackPanel x:Name="SystemUtilsPanel" Orientation="Horizontal">
-                        <Button x:Name="BtnSearch" Content="&#xEA7C;" ToolTip="Поиск в Google (буфер)" Click="BtnSearch_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnScreenshot" Content="&#xF68E;" ToolTip="Скриншот" Click="BtnScreenshotRegion_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnRecord" Content="&#xF535;" ToolTip="Запись видео" Click="BtnRecordVideo_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnCalc" Content="&#xF06C;" ToolTip="Калькулятор" Click="BtnCalc_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnExplorer" Content="&#xF42F;" ToolTip="Проводник" Click="BtnExplorer_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnDownloads" Content="&#xF151;" ToolTip="Загрузки" Click="BtnDownloads_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnSearch" Content="&#xEA7C;" Click="BtnSearch_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnScreenshot" Content="&#xF68E;" Click="BtnScreenshotRegion_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnRecord" Content="&#xF535;" Click="BtnRecordVideo_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnCalc" Content="&#xF06C;" Click="BtnCalc_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnExplorer" Content="&#xF42F;" Click="BtnExplorer_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnDownloads" Content="&#xF151;" Click="BtnDownloads_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnColorPicker" Content="&#xF2F6;" Click="BtnColorPicker_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnQuickNote" Content="&#xF56F;" Click="BtnQuickNote_Click" Foreground="{StaticResource PrimaryText}"/>
                     </StackPanel>
 
                     <Rectangle x:Name="SepControl" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" VerticalAlignment="Center"/>

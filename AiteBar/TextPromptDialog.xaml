@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="Переименовать" Width="420" SizeToContent="Height"
+        Title="{local:Loc ResourceKey=Prompt_DefaultTitle}" Width="420" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" Background="#1E1E1E" Foreground="White"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
@@ -17,6 +17,7 @@
             <Setter Property="Padding" Value="8,0"/>
             <Setter Property="Height" Value="32"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
+            <Setter Property="ContextMenu" Value="{StaticResource TextEditingContextMenu}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TextBox">
@@ -64,12 +65,12 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="TxtLabel" Grid.Row="0" Text="Введите значение" Margin="0,0,0,10" Foreground="#BDBDBD"/>
+        <TextBlock x:Name="TxtLabel" Grid.Row="0" Text="{local:Loc ResourceKey=Prompt_DefaultLabel}" Margin="0,0,0,10" Foreground="#BDBDBD"/>
         <TextBox x:Name="TxtValue" Grid.Row="1" TextChanged="TxtValue_TextChanged"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
-            <Button x:Name="BtnCancel" Content="Отмена" Background="#333333" Style="{StaticResource DialogBtnStyle}" Click="BtnCancel_Click"/>
-            <Button x:Name="BtnSave" Content="Сохранить" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnSave_Click"/>
+            <Button x:Name="BtnCancel" Content="{local:Loc ResourceKey=Common_Cancel}" Background="#333333" Style="{StaticResource DialogBtnStyle}" Click="BtnCancel_Click"/>
+            <Button x:Name="BtnSave" Content="{local:Loc ResourceKey=Common_Save}" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnSave_Click"/>
         </StackPanel>
     </Grid>
 </local:DarkWindow>

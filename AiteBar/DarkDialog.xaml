@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="Внимание" Width="380" SizeToContent="Height"
+        Title="{local:Loc ResourceKey=Common_Warning}" Width="380" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" Background="#1E1E1E" Foreground="White"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
@@ -39,12 +39,12 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="TxtMessage" Text="Сообщение" TextWrapping="Wrap" FontSize="14" Margin="0,0,0,25"/>
+        <TextBlock x:Name="TxtMessage" Text="" TextWrapping="Wrap" FontSize="14" Margin="0,0,0,25"/>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="BtnYes" Content="Да" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnYes_Click" Visibility="Collapsed"/>
-            <Button x:Name="BtnNo" Content="Отмена" Background="#333333" Style="{StaticResource DialogBtnStyle}" Click="BtnNo_Click" Visibility="Collapsed"/>
-            <Button x:Name="BtnOk" Content="ОК" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnOk_Click" Visibility="Collapsed"/>
+            <Button x:Name="BtnYes" Content="{local:Loc ResourceKey=Common_Yes}" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnYes_Click" Visibility="Collapsed"/>
+            <Button x:Name="BtnNo" Content="{local:Loc ResourceKey=Common_Cancel}" Background="#333333" Style="{StaticResource DialogBtnStyle}" Click="BtnNo_Click" Visibility="Collapsed"/>
+            <Button x:Name="BtnOk" Content="{local:Loc ResourceKey=Common_OK}" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnOk_Click" Visibility="Collapsed"/>
         </StackPanel>
     </Grid>
 </local:DarkWindow>

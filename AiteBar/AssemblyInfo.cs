@@ -1,8 +1,10 @@
 using System.Windows;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Resources;
 
 [assembly: InternalsVisibleTo("AiteBar.Tests")]
+[assembly: NeutralResourcesLanguage("en")]
 [assembly: AssemblyTitle("AiteBar")]
 [assembly: AssemblyProduct("AiteBar")]
 [assembly: AssemblyCompany("Codebdbd")]

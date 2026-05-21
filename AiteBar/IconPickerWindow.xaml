@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="Каталог иконок" Height="580" Width="560"
+        Title="{local:Loc ResourceKey=IconPicker_Title}" Height="580" Width="560"
         WindowStartupLocation="CenterScreen" Background="#1E1E1E" Foreground="White"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
@@ -81,7 +81,7 @@
                     Margin="2,6,6,0"
                     Style="{StaticResource TabButtonStyle}"
                     Click="BtnTabBrands_Click"/>
-            <Button x:Name="BtnTabCustom" Content="Своя иконка"
+            <Button x:Name="BtnTabCustom" Content="{local:Loc ResourceKey=IconPicker_CustomIcon}"
                     Margin="2,6,6,0"
                     Style="{StaticResource TabButtonStyle}"
                     Click="BtnTabCustom_Click" Foreground="#FFD700"/>
@@ -103,7 +103,7 @@
 
         <TextBlock x:Name="TxtSearchHint" Grid.Row="2"
                    Margin="10,0,10,6" FontSize="11" Foreground="#666666"
-                   Text="Поиск по коду, например: E000"/>
+                   Text="{local:Loc ResourceKey=IconPicker_SearchCodeHint}"/>
 
         <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" Margin="10,0,10,10">
             <WrapPanel x:Name="IconPanel"/>

@@ -6,12 +6,12 @@ namespace AiteBar
 {
     internal static class ContextStateHelper
     {
-        public const int FixedContextCount = 4;
-        public const string DefaultContextPrefix = "Панель ";
+        public const int FixedContextCount = 8;
+        public const string DefaultContextPrefix = "Panel ";
 
         public static string GetDefaultContextId(int index) => $"context-{index + 1}";
 
-        public static string GetDefaultContextName(int index) => $"{DefaultContextPrefix}{index + 1}";
+        public static string GetDefaultContextName(int index) => LocalizationService.Format("Panel_DefaultNameFormat", index + 1);
 
         public static List<PanelContext> NormalizeContexts(IReadOnlyList<PanelContext>? source)
         {
@@ -34,7 +34,8 @@ namespace AiteBar
                 {
                     Id = id,
                     Name = string.IsNullOrWhiteSpace(name) ? GetDefaultContextName(i) : name,
-                    IconGlyph = string.IsNullOrWhiteSpace(existing?.IconGlyph) ? "\uE8B7" : existing.IconGlyph
+                    IconGlyph = string.IsNullOrWhiteSpace(existing?.IconGlyph) ? "\uE8B7" : existing.IconGlyph,
+                    IsEnabled = i == 0 || (existing?.IsEnabled ?? false)
                 });
             }
 
@@ -43,14 +44,36 @@ namespace AiteBar
 
         public static string NormalizeActiveContextId(string? activeContextId, IReadOnlyList<PanelContext> contexts)
         {
-            if (contexts.Count == 0)
+            var enabledContexts = GetEnabledContexts(contexts);
+            if (enabledContexts.Count == 0)
             {
                 return GetDefaultContextId(0);
             }
 
-            return contexts.Any(context => string.Equals(context.Id, activeContextId, StringComparison.Ordinal))
+            return enabledContexts.Any(context => string.Equals(context.Id, activeContextId, StringComparison.Ordinal))
                 ? activeContextId!
-                : contexts[0].Id;
+                : enabledContexts[0].Id;
+        }
+
+        public static IReadOnlyList<PanelContext> GetEnabledContexts(IReadOnlyList<PanelContext> contexts) =>
+            contexts.Where(context => context.IsEnabled).ToList();
+
+        public static string? GetRelativeEnabledContextId(string activeContextId, IReadOnlyList<PanelContext> contexts, int direction)
+        {
+            var enabledContexts = GetEnabledContexts(contexts);
+            if (enabledContexts.Count == 0)
+            {
+                return null;
+            }
+
+            int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, activeContextId, StringComparison.Ordinal));
+            if (currentIndex < 0)
+            {
+                currentIndex = 0;
+            }
+
+            int nextIndex = WrapIndex(currentIndex + direction, enabledContexts.Count);
+            return enabledContexts[nextIndex].Id;
         }
 
         public static int WrapIndex(int index, int count)

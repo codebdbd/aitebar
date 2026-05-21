@@ -17,7 +17,7 @@ namespace AiteBar
             InitializeComponent();
 
             var version = Assembly.GetExecutingAssembly().GetName().Version;
-            TxtVersion.Text = $"Версия {version?.Major}.{version?.Minor}.{version?.Build}";
+            TxtVersion.Text = LocalizationService.Format("About_VersionFormat", version?.Major, version?.Minor, version?.Build);
             _dataDirectory = PathHelper.AppDataFolder;
         }
 
@@ -46,7 +46,7 @@ namespace AiteBar
 
             if (!File.Exists(noticesPath))
             {
-                new DarkDialog("Файл THIRD_PARTY_NOTICES.txt не найден.") { Owner = this }.ShowDialog();
+                new DarkDialog(LocalizationService.Get("About_NoticesMissing")) { Owner = this }.ShowDialog();
                 return;
             }
 
@@ -61,7 +61,7 @@ namespace AiteBar
                 OpenTarget(_dataDirectory);
             } catch (Exception ex)
             {
-                new DarkDialog($"Не удалось открыть папку данных.\n\n{ex.Message}") { Owner = this }.ShowDialog();
+                new DarkDialog(LocalizationService.Format("About_OpenDataFolderFailed", ex.Message)) { Owner = this }.ShowDialog();
             }
         }
 
@@ -70,7 +70,7 @@ namespace AiteBar
             string? exeDir = Path.GetDirectoryName(Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName);
             if (string.IsNullOrWhiteSpace(exeDir) || !Directory.Exists(exeDir))
             {
-                new DarkDialog("Не удалось определить папку программы.") { Owner = this }.ShowDialog();
+                new DarkDialog(LocalizationService.Get("About_ProgramFolderUnknown")) { Owner = this }.ShowDialog();
                 return;
             }
 

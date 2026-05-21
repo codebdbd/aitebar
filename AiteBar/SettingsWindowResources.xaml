@@ -10,9 +10,9 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
         <Setter Property="Padding" Value="8,0"/>
-        <Setter Property="Height" Value="32"/>
+        <Setter Property="Height" Value="30"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="ContextMenu" Value="{StaticResource DarkContextMenu}"/>
+        <Setter Property="ContextMenu" Value="{StaticResource TextEditingContextMenu}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
@@ -44,7 +44,7 @@
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
-        <Setter Property="Height" Value="32"/>
+        <Setter Property="Height" Value="30"/>
         <Setter Property="Padding" Value="10,0"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">

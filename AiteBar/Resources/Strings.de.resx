@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?><root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader><resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Common_Cancel" xml:space="preserve"><value>Abbrechen</value></data><data name="Common_Save" xml:space="preserve"><value>Speichern</value></data><data name="Common_Close" xml:space="preserve"><value>Schließen</value></data><data name="Common_Yes" xml:space="preserve"><value>Ja</value></data><data name="Common_Warning" xml:space="preserve"><value>Warnung</value></data><data name="Common_Confirmation" xml:space="preserve"><value>Bestätigung</value></data><data name="Common_NotAssigned" xml:space="preserve"><value>Nicht zugewiesen</value></data><data name="Common_Mixed" xml:space="preserve"><value>Gemischt</value></data><data name="Common_Browse" xml:space="preserve"><value>Durchsuchen...</value></data><data name="App_AlreadyRunning" xml:space="preserve"><value>AiteBar wird bereits ausgeführt.</value></data><data name="Panel_DefaultNameFormat" xml:space="preserve"><value>Leiste {0}</value></data>
+  <data name="Action_Web" xml:space="preserve"><value>Link</value></data><data name="Action_Program" xml:space="preserve"><value>Programm</value></data><data name="Action_File" xml:space="preserve"><value>Datei</value></data><data name="Action_Folder" xml:space="preserve"><value>Ordner</value></data><data name="Action_ScriptFile" xml:space="preserve"><value>Skript</value></data><data name="Action_Command" xml:space="preserve"><value>Befehl</value></data><data name="Action_Hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
+  <data name="SettingsWindow_Title" xml:space="preserve"><value>Einstellungen</value></data><data name="SettingsWindow_EditTitle" xml:space="preserve"><value>Schaltfläche bearbeiten</value></data><data name="SettingsWindow_ButtonName" xml:space="preserve"><value>Schaltflächenname</value></data><data name="SettingsWindow_ActionType" xml:space="preserve"><value>Aktionstyp</value></data><data name="SettingsWindow_Panel" xml:space="preserve"><value>Leiste</value></data><data name="SettingsWindow_Browser" xml:space="preserve"><value>Browser</value></data><data name="SettingsWindow_Profile" xml:space="preserve"><value>Profil</value></data><data name="SettingsWindow_NoProfile" xml:space="preserve"><value>Kein Profil</value></data><data name="SettingsWindow_IconPicker" xml:space="preserve"><value>Symbolauswahl</value></data><data name="SettingsWindow_CustomIcon" xml:space="preserve"><value>Eigenes Symbol</value></data><data name="SettingsWindow_AppSettings" xml:space="preserve"><value>Programmeinstellungen</value></data>
+  <data name="AppSettingsWindow_Title" xml:space="preserve"><value>Programmeinstellungen</value></data><data name="AppSettingsWindow_Language" xml:space="preserve"><value>Sprache</value></data><data name="AppSettingsWindow_LanguageAuto" xml:space="preserve"><value>Automatisch (Windows)</value></data><data name="AppSettingsWindow_General" xml:space="preserve"><value>Allgemeine Einstellungen</value></data><data name="AppSettingsWindow_Edge" xml:space="preserve"><value>Leistenposition</value></data><data name="AppSettingsWindow_Monitor" xml:space="preserve"><value>Monitor</value></data><data name="AppSettingsWindow_ContextNames" xml:space="preserve"><value>Leistennamen</value></data><data name="AppSettingsWindow_Hotkeys" xml:space="preserve"><value>Tastenkürzel</value></data><data name="AppSettingsWindow_QuickTools" xml:space="preserve"><value>Schnellwerkzeuge</value></data>
+  <data name="Tool_Search" xml:space="preserve"><value>Suche</value></data><data name="Tool_Screenshot" xml:space="preserve"><value>Screenshot</value></data><data name="Tool_Video" xml:space="preserve"><value>Video</value></data><data name="Tool_Calculator" xml:space="preserve"><value>Rechner</value></data><data name="Tool_Explorer" xml:space="preserve"><value>Explorer</value></data><data name="Tool_Downloads" xml:space="preserve"><value>Downloads</value></data><data name="Tool_ColorPicker" xml:space="preserve"><value>Farbpipette</value></data><data name="Tool_QuickNote" xml:space="preserve"><value>Schnellnotiz</value></data>
+  <data name="Dock_Top" xml:space="preserve"><value>Oben</value></data><data name="Dock_Bottom" xml:space="preserve"><value>Unten</value></data><data name="Dock_Left" xml:space="preserve"><value>Links</value></data><data name="Dock_Right" xml:space="preserve"><value>Rechts</value></data>
+  <data name="Menu_Open" xml:space="preserve"><value>Öffnen</value></data><data name="Menu_ProgramSettings" xml:space="preserve"><value>Programmeinstellungen</value></data><data name="Menu_About" xml:space="preserve"><value>Über</value></data><data name="Menu_Delete" xml:space="preserve"><value>Löschen</value></data><data name="About_Title" xml:space="preserve"><value>Über</value></data><data name="IconPicker_Title" xml:space="preserve"><value>Symbolkatalog</value></data>
+  <data name="Common_Info" xml:space="preserve"><value>Information</value></data>
+  <data name="Common_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="SettingsWindow_ButtonNamePlaceholder" xml:space="preserve"><value>Zum Beispiel: ChatGPT, Terminal...</value></data>
+  <data name="SettingsWindow_UrlOrPath" xml:space="preserve"><value>URL oder Pfad</value></data>
+  <data name="SettingsWindow_AppMode" xml:space="preserve"><value>App-Modus</value></data>
+  <data name="SettingsWindow_Incognito" xml:space="preserve"><value>Inkognito-Modus</value></data>
+  <data name="SettingsWindow_Fullscreen" xml:space="preserve"><value>Im Vollbild öffnen</value></data>
+  <data name="SettingsWindow_Rotation" xml:space="preserve"><value>Rotationsmodus</value></data>
+  <data name="SettingsWindow_HotkeyCombination" xml:space="preserve"><value>Tastenkombination</value></data>
+  <data name="SettingsWindow_ChooseFromLibrary" xml:space="preserve"><value>Aus Bibliothek wählen</value></data>
+  <data name="SettingsWindow_IconColor" xml:space="preserve"><value>Symbolfarbe</value></data>
+  <data name="SettingsWindow_HexCode" xml:space="preserve"><value>HEX-Code</value></data>
+  <data name="SettingsWindow_HexPlaceholder" xml:space="preserve"><value>Beispiel: #FFFFFF</value></data>
+  <data name="AppSettingsWindow_GeneralHint" xml:space="preserve"><value>Position und Anzeigeverhalten der Leiste konfigurieren.</value></data>
+  <data name="AppSettingsWindow_PanelSize" xml:space="preserve"><value>Leistengröße</value></data>
+  <data name="AppSettingsWindow_ActivationZone" xml:space="preserve"><value>Aktivierungszone, %</value></data>
+  <data name="AppSettingsWindow_ActivationZoneTooltip" xml:space="preserve"><value>Größe des Bereichs am Bildschirmrand, der die Leiste beim Zeigen öffnet.</value></data>
+  <data name="AppSettingsWindow_Delay" xml:space="preserve"><value>Einblendverzögerung, ms</value></data>
+  <data name="AppSettingsWindow_ContextNamesTooltip" xml:space="preserve"><value>Diese Namen werden im Leistenmenü und in den Schaltflächeneinstellungen verwendet.</value></data>
+  <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>Diese Namen werden im Leistenmenü und bei der Auswahl einer Leiste für Schaltflächen verwendet.</value></data>
+  <data name="AppSettingsWindow_PanelEnabled" xml:space="preserve"><value>Aktiv</value></data>
+  <data name="AppSettingsWindow_PrimaryPanelAlwaysEnabled" xml:space="preserve"><value>Die erste Leiste ist immer aktiv.</value></data>
+  <data name="AppSettingsWindow_HotkeysHint" xml:space="preserve"><value>Tastenkürzel zum Anzeigen der Leiste, zum Wechseln zwischen Leisten und zum Hinzufügen einer Schaltfläche festlegen.</value></data>
+  <data name="AppSettingsWindow_ShowPanel" xml:space="preserve"><value>Leiste anzeigen</value></data>
+  <data name="AppSettingsWindow_NextPanel" xml:space="preserve"><value>Nächste Leiste</value></data>
+  <data name="AppSettingsWindow_PreviousPanel" xml:space="preserve"><value>Vorherige Leiste</value></data>
+  <data name="AppSettingsWindow_AddButton" xml:space="preserve"><value>Schaltfläche hinzufügen</value></data>
+  <data name="AppSettingsWindow_QuickToolsHint" xml:space="preserve"><value>Integrierte Schaltflächen aktivieren, die auf der Hauptleiste angezeigt werden.</value></data>
+  <data name="Monitor_Format" xml:space="preserve"><value>Monitor {0}{1}</value></data>
+  <data name="Monitor_PrimarySuffix" xml:space="preserve"><value> (Primär)</value></data>
+  <data name="Main_AddButtonTooltip" xml:space="preserve"><value>Schaltfläche hinzufügen</value></data>
+  <data name="Main_SearchTooltip" xml:space="preserve"><value>Google-Suche (Zwischenablage)</value></data>
+  <data name="Main_ScreenshotTooltip" xml:space="preserve"><value>Screenshot</value></data>
+  <data name="Main_RecordTooltip" xml:space="preserve"><value>Videoaufnahme</value></data>
+  <data name="Main_CalcTooltip" xml:space="preserve"><value>Rechner</value></data>
+  <data name="Main_ExplorerTooltip" xml:space="preserve"><value>Explorer</value></data>
+  <data name="Main_DownloadsTooltip" xml:space="preserve"><value>Downloads</value></data>
+  <data name="Menu_ImportPanel" xml:space="preserve"><value>Leiste importieren...</value></data>
+  <data name="Menu_ImportCurrentPanel" xml:space="preserve"><value>In aktuelle Leiste importieren...</value></data>
+  <data name="Menu_ExportCurrentPanel" xml:space="preserve"><value>Aktuelle Leiste exportieren...</value></data>
+  <data name="Menu_Help" xml:space="preserve"><value>Hilfe</value></data>
+  <data name="Menu_Donate" xml:space="preserve"><value>Autor unterstützen</value></data>
+  <data name="Menu_Exit" xml:space="preserve"><value>Schließen und beenden</value></data>
+  <data name="Menu_Unpin" xml:space="preserve"><value>Von Leiste lösen</value></data>
+  <data name="Menu_Edit" xml:space="preserve"><value>Bearbeiten</value></data>
+  <data name="Menu_Duplicate" xml:space="preserve"><value>Duplizieren</value></data>
+  <data name="Menu_Rename" xml:space="preserve"><value>Umbenennen</value></data>
+  <data name="Menu_Move" xml:space="preserve"><value>Verschieben</value></data>
+  <data name="Menu_OpenLocation" xml:space="preserve"><value>Speicherort öffnen</value></data>
+  <data name="Menu_CopyUrl" xml:space="preserve"><value>URL kopieren</value></data>
+  <data name="Menu_CopyPath" xml:space="preserve"><value>Pfad kopieren</value></data>
+  <data name="Menu_CopyCommand" xml:space="preserve"><value>Befehl kopieren</value></data>
+  <data name="Element_NewButton" xml:space="preserve"><value>Neue Schaltfläche</value></data>
+  <data name="Element_CopySuffix" xml:space="preserve"><value>Kopie</value></data>
+  <data name="Element_CopySuffixFormat" xml:space="preserve"><value>Kopie {0}</value></data>
+  <data name="Prompt_RenameButtonTitle" xml:space="preserve"><value>Schaltfläche umbenennen</value></data>
+  <data name="Prompt_NewName" xml:space="preserve"><value>Neuer Name</value></data>
+  <data name="Prompt_DefaultTitle" xml:space="preserve"><value>Umbenennen</value></data>
+  <data name="Prompt_DefaultLabel" xml:space="preserve"><value>Wert eingeben</value></data>
+  <data name="DeleteButtonConfirm" xml:space="preserve"><value>'{0}' löschen?</value></data>
+  <data name="Export_Title" xml:space="preserve"><value>Aktuelle Leiste exportieren</value></data>
+  <data name="Export_Filter" xml:space="preserve"><value>AiteBar-Leiste (*.aitebarpanel)|*.aitebarpanel</value></data>
+  <data name="Export_Success" xml:space="preserve"><value>Exportierte Schaltflächen: {0}</value></data>
+  <data name="Import_Title" xml:space="preserve"><value>Leiste importieren</value></data>
+  <data name="Import_Success" xml:space="preserve"><value>Importierte Schaltflächen: {0}</value></data>
+  <data name="Action_Failed" xml:space="preserve"><value>Aktion konnte nicht ausgeführt werden:
+{0}</value></data>
+  <data name="SettingsWindow_InvalidUrl" xml:space="preserve"><value>Geben Sie eine gültige http- oder https-Webadresse ein.</value></data>
+  <data name="HotkeyRegistrationFailed" xml:space="preserve"><value>Diese Tastenkürzel konnten nicht registriert werden und funktionieren erst nach einer Änderung:
+{0}
+
+Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwendet werden.</value></data>
+  <data name="Main_QuickNoteTooltip" xml:space="preserve"><value>Schnellnotiz</value></data>
+  <data name="QuickNote_Title" xml:space="preserve"><value>Schnellnotiz</value></data>
+  <data name="QuickNote_Placeholder" xml:space="preserve"><value>Text, Links, Befehle einfügen...</value></data>
+  <data name="QuickNote_SavedInitial" xml:space="preserve"><value>Gespeichert</value></data>
+  <data name="QuickNote_Saving" xml:space="preserve"><value>Speichern...</value></data>
+  <data name="QuickNote_SaveFailed" xml:space="preserve"><value>Speichern fehlgeschlagen</value></data>
+  <data name="QuickNote_LoadFailed" xml:space="preserve"><value>Notiz konnte nicht geladen werden</value></data>
+  <data name="QuickNote_OpenFailed" xml:space="preserve"><value>Öffnen fehlgeschlagen</value></data>
+  <data name="QuickNote_ConflictCopySaved" xml:space="preserve"><value>Externe Änderungen erkannt. Konfliktkopie gespeichert.</value></data>
+  <data name="QuickNote_SavedAt" xml:space="preserve"><value>Gespeichert {0}</value></data>
+  <data name="QuickNote_OpenFile" xml:space="preserve"><value>Notizdatei öffnen</value></data>
+  <data name="QuickNote_Clear" xml:space="preserve"><value>Notiz leeren</value></data>
+  <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Schnellnotiz leeren?</value></data>
+  <data name="QuickNote_Stats" xml:space="preserve"><value>{0} Zeichen - {1} Zeilen</value></data>
+  <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.md</value></data>
+  <data name="QuickNote_Menu" xml:space="preserve"><value>Notizmenü</value></data>
+  <data name="QuickNote_Theme" xml:space="preserve"><value>Notizfarbe</value></data>
+  <data name="QuickNote_Cut" xml:space="preserve"><value>Ausschneiden</value></data>
+  <data name="QuickNote_Copy" xml:space="preserve"><value>Kopieren</value></data>
+  <data name="QuickNote_Paste" xml:space="preserve"><value>Einfügen</value></data>
+  <data name="QuickNote_SelectAll" xml:space="preserve"><value>Alles auswählen</value></data>
+  <data name="QuickNote_Bold" xml:space="preserve"><value>Fett</value></data>
+  <data name="QuickNote_Italic" xml:space="preserve"><value>Kursiv</value></data>
+  <data name="QuickNote_Underline" xml:space="preserve"><value>Unterstreichen</value></data>
+  <data name="QuickNote_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="QuickNote_BulletList" xml:space="preserve"><value>Aufzählung</value></data>
+  <data name="QuickNote_NumberedList" xml:space="preserve"><value>Nummerierte Liste</value></data>
+  <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Formatierung löschen</value></data>
+</root>

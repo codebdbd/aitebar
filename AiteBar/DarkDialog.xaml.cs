@@ -7,7 +7,7 @@ namespace AiteBar {
             TxtMessage.Text = message;
 
             if (isConfirm) {
-                this.Title = "Подтверждение";
+                this.Title = LocalizationService.Get("Common_Confirmation");
                 BtnYes.Visibility = Visibility.Visible;
                 BtnNo.Visibility = Visibility.Visible;
             } else {

@@ -15,13 +15,14 @@ namespace AiteBar
     public class ActionService
     {
         private readonly AppSettingsService _settingsService;
+        private QuickNoteWindow? _quickNoteWindow;
 
         public ActionService(AppSettingsService settingsService)
         {
             _settingsService = settingsService;
         }
 
-        public async Task ExecuteCustomActionAsync(CustomElement el, Func<Task>? onBeforeExecute = null)
+        public async Task<ActionExecutionResult> ExecuteCustomActionAsync(CustomElement el, Func<Task>? onBeforeExecute = null)
         {
             try
             {
@@ -53,10 +54,13 @@ namespace AiteBar
                             break;
                     }
                 }
+
+                return ActionExecutionResult.Ok;
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
+                return ActionExecutionResult.Failed(ex.Message);
             }
         }
 
@@ -133,7 +137,7 @@ namespace AiteBar
 
         private void ExecuteCommand(string command)
         {
-            var confirm = new DarkDialog($"Выполнить команду:\n{command}?", isConfirm: true) { Owner = System.Windows.Application.Current.MainWindow };
+            var confirm = new DarkDialog(LocalizationService.Format("Action_ConfirmCommand", command), isConfirm: true) { Owner = System.Windows.Application.Current.MainWindow };
             if (confirm.ShowDialog() == true)
             {
                 Process.Start(new ProcessStartInfo("cmd.exe")
@@ -188,6 +192,33 @@ namespace AiteBar
             Process.Start(BuildShellLaunchProcessStartInfo("shell:Downloads"));
         }
 
+        public async Task StartColorPickerAsync(Func<Task>? onBeforeExecute = null)
+        {
+            if (onBeforeExecute != null) await onBeforeExecute();
+            await Task.Delay(120);
+            new ScreenColorPickerWindow { Owner = System.Windows.Application.Current.MainWindow }.ShowDialog();
+        }
+
+        public async Task StartQuickNoteAsync(Func<Task>? onBeforeExecute = null)
+        {
+            Task beforeExecuteTask = onBeforeExecute?.Invoke() ?? Task.CompletedTask;
+
+            if (_quickNoteWindow is { IsVisible: true })
+            {
+                _quickNoteWindow.Activate();
+                await beforeExecuteTask;
+                return;
+            }
+
+            _quickNoteWindow = new QuickNoteWindow(new QuickNoteService(), _settingsService)
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+            _quickNoteWindow.Closed += (_, _) => _quickNoteWindow = null;
+            _quickNoteWindow.ShowSliding(_settingsService.Settings);
+            await beforeExecuteTask;
+        }
+
         internal static ProcessStartInfo BuildShellLaunchProcessStartInfo(string target) => new(target)
         {
             UseShellExecute = true
@@ -196,7 +227,7 @@ namespace AiteBar
         private static async Task StartScriptFileAsync(string scriptPath)
         {
             var psi = CreateScriptProcessStartInfo(scriptPath);
-            using var proc = Process.Start(psi) ?? throw new InvalidOperationException("Запуск не удался.");
+            using var proc = Process.Start(psi) ?? throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
             await Task.CompletedTask;
         }
 
@@ -219,14 +250,14 @@ namespace AiteBar
                     }
                     psiPs.ArgumentList.Add("-File"); psiPs.ArgumentList.Add(scriptPath); return psiPs;
                 case ".py":
-                    string pythonExe = FindExecutableOnPath("python.exe"); if (!File.Exists(pythonExe)) throw new InvalidOperationException("Python не найден.");
+                    string pythonExe = FindExecutableOnPath("python.exe"); if (!File.Exists(pythonExe)) throw new InvalidOperationException(LocalizationService.Get("Action_PythonNotFound"));
                     return new ProcessStartInfo("cmd.exe")
                     {
                         UseShellExecute = false,
                         WorkingDirectory = workingDirectory,
                         Arguments = $"/c \"\"{pythonExe}\" \"{scriptPath}\"\""
                     };
-                default: throw new InvalidOperationException("Неподдерживаемый скрипт.");
+                default: throw new InvalidOperationException(LocalizationService.Get("Action_UnsupportedScript"));
             }
         }
 

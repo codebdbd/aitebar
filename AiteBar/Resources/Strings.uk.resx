@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?><root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader><resheader name="version"><value>2.0</value></resheader><resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader><resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Common_Cancel" xml:space="preserve"><value>Скасувати</value></data><data name="Common_Save" xml:space="preserve"><value>Зберегти</value></data><data name="Common_Close" xml:space="preserve"><value>Закрити</value></data><data name="Common_Yes" xml:space="preserve"><value>Так</value></data><data name="Common_Warning" xml:space="preserve"><value>Увага</value></data><data name="Common_Confirmation" xml:space="preserve"><value>Підтвердження</value></data><data name="Common_NotAssigned" xml:space="preserve"><value>Не призначено</value></data><data name="Common_Mixed" xml:space="preserve"><value>Змішані</value></data><data name="Common_Browse" xml:space="preserve"><value>Огляд...</value></data><data name="App_AlreadyRunning" xml:space="preserve"><value>AiteBar вже запущено.</value></data><data name="Panel_DefaultNameFormat" xml:space="preserve"><value>Панель {0}</value></data>
+  <data name="Action_Web" xml:space="preserve"><value>Посилання</value></data><data name="Action_Program" xml:space="preserve"><value>Програма</value></data><data name="Action_File" xml:space="preserve"><value>Файл</value></data><data name="Action_Folder" xml:space="preserve"><value>Папка</value></data><data name="Action_ScriptFile" xml:space="preserve"><value>Скрипт</value></data><data name="Action_Command" xml:space="preserve"><value>Команда</value></data><data name="Action_Hotkey" xml:space="preserve"><value>Гарячі клавіші</value></data>
+  <data name="SettingsWindow_Title" xml:space="preserve"><value>Налаштування</value></data><data name="SettingsWindow_EditTitle" xml:space="preserve"><value>Редагувати кнопку</value></data><data name="SettingsWindow_ButtonName" xml:space="preserve"><value>Назва кнопки</value></data><data name="SettingsWindow_ActionType" xml:space="preserve"><value>Тип дії</value></data><data name="SettingsWindow_Panel" xml:space="preserve"><value>Панель</value></data><data name="SettingsWindow_Browser" xml:space="preserve"><value>Браузер</value></data><data name="SettingsWindow_Profile" xml:space="preserve"><value>Профіль</value></data><data name="SettingsWindow_NoProfile" xml:space="preserve"><value>Без профілю</value></data><data name="SettingsWindow_IconPicker" xml:space="preserve"><value>Вибір іконки</value></data><data name="SettingsWindow_CustomIcon" xml:space="preserve"><value>Своя іконка</value></data><data name="SettingsWindow_AppSettings" xml:space="preserve"><value>Налаштування програми</value></data>
+  <data name="AppSettingsWindow_Title" xml:space="preserve"><value>Налаштування програми</value></data><data name="AppSettingsWindow_Language" xml:space="preserve"><value>Мова</value></data><data name="AppSettingsWindow_LanguageAuto" xml:space="preserve"><value>Авто (Windows)</value></data><data name="AppSettingsWindow_General" xml:space="preserve"><value>Загальні параметри</value></data><data name="AppSettingsWindow_Edge" xml:space="preserve"><value>Позиція панелі</value></data><data name="AppSettingsWindow_Monitor" xml:space="preserve"><value>Монітор</value></data><data name="AppSettingsWindow_ContextNames" xml:space="preserve"><value>Назви панелей</value></data><data name="AppSettingsWindow_PanelEnabled" xml:space="preserve"><value>Увімкнена</value></data><data name="AppSettingsWindow_PrimaryPanelAlwaysEnabled" xml:space="preserve"><value>Перша панель завжди увімкнена.</value></data><data name="AppSettingsWindow_Hotkeys" xml:space="preserve"><value>Гарячі клавіші</value></data><data name="AppSettingsWindow_QuickTools" xml:space="preserve"><value>Швидкі інструменти</value></data>
+  <data name="Tool_Search" xml:space="preserve"><value>Пошук</value></data><data name="Tool_Screenshot" xml:space="preserve"><value>Знімок екрана</value></data><data name="Tool_Video" xml:space="preserve"><value>Відео</value></data><data name="Tool_Calculator" xml:space="preserve"><value>Калькулятор</value></data><data name="Tool_Explorer" xml:space="preserve"><value>Провідник</value></data><data name="Tool_Downloads" xml:space="preserve"><value>Завантаження</value></data><data name="Tool_ColorPicker" xml:space="preserve"><value>Піпетка</value></data><data name="Tool_QuickNote" xml:space="preserve"><value>Швидка нотатка</value></data>
+  <data name="Dock_Top" xml:space="preserve"><value>Зверху</value></data><data name="Dock_Bottom" xml:space="preserve"><value>Знизу</value></data><data name="Dock_Left" xml:space="preserve"><value>Ліворуч</value></data><data name="Dock_Right" xml:space="preserve"><value>Праворуч</value></data>
+  <data name="Menu_Open" xml:space="preserve"><value>Відкрити</value></data><data name="Menu_ProgramSettings" xml:space="preserve"><value>Налаштування програми</value></data><data name="Menu_About" xml:space="preserve"><value>Про програму</value></data><data name="Menu_Delete" xml:space="preserve"><value>Видалити</value></data><data name="About_Title" xml:space="preserve"><value>Про програму</value></data><data name="IconPicker_Title" xml:space="preserve"><value>Каталог іконок</value></data>
+  <data name="AppSettingsWindow_HotkeysHint" xml:space="preserve"><value>Призначте комбінації для показу панелі, перемикання між панелями та додавання кнопки.</value></data>
+  <data name="AppSettingsWindow_ShowPanel" xml:space="preserve"><value>Показати панель</value></data>
+  <data name="AppSettingsWindow_NextPanel" xml:space="preserve"><value>Наступна панель</value></data>
+  <data name="AppSettingsWindow_PreviousPanel" xml:space="preserve"><value>Попередня панель</value></data>
+  <data name="AppSettingsWindow_AddButton" xml:space="preserve"><value>Додати кнопку</value></data>
+  <data name="SettingsWindow_InvalidUrl" xml:space="preserve"><value>Введіть коректну адресу сайту http або https.</value></data>
+  <data name="HotkeyRegistrationFailed" xml:space="preserve"><value>Ці гарячі клавіші не вдалося зареєструвати, і вони не працюватимуть до зміни:
+{0}
+
+Виберіть комбінації, які не використовуються Windows або іншою програмою.</value></data>
+  <data name="Main_QuickNoteTooltip" xml:space="preserve"><value>Швидка нотатка</value></data>
+  <data name="QuickNote_Title" xml:space="preserve"><value>Швидка нотатка</value></data>
+  <data name="QuickNote_Placeholder" xml:space="preserve"><value>Вставте текст, посилання, команди...</value></data>
+  <data name="QuickNote_SavedInitial" xml:space="preserve"><value>Збережено</value></data>
+  <data name="QuickNote_Saving" xml:space="preserve"><value>Збереження...</value></data>
+  <data name="QuickNote_SaveFailed" xml:space="preserve"><value>Помилка збереження</value></data>
+  <data name="QuickNote_LoadFailed" xml:space="preserve"><value>Не вдалося завантажити нотатку</value></data>
+  <data name="QuickNote_OpenFailed" xml:space="preserve"><value>Не вдалося відкрити</value></data>
+  <data name="QuickNote_ConflictCopySaved" xml:space="preserve"><value>Виявлено зовнішні зміни. Збережено конфліктну копію.</value></data>
+  <data name="QuickNote_SavedAt" xml:space="preserve"><value>Збережено {0}</value></data>
+  <data name="QuickNote_OpenFile" xml:space="preserve"><value>Відкрити файл нотатки</value></data>
+  <data name="QuickNote_Clear" xml:space="preserve"><value>Очистити нотатку</value></data>
+  <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Очистити швидку нотатку?</value></data>
+  <data name="QuickNote_Stats" xml:space="preserve"><value>{0} символів - {1} рядків</value></data>
+  <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.md</value></data>
+  <data name="QuickNote_Menu" xml:space="preserve"><value>Меню нотатки</value></data>
+  <data name="QuickNote_Theme" xml:space="preserve"><value>Колір нотатки</value></data>
+  <data name="QuickNote_Cut" xml:space="preserve"><value>Вирізати</value></data>
+  <data name="QuickNote_Copy" xml:space="preserve"><value>Копіювати</value></data>
+  <data name="QuickNote_Paste" xml:space="preserve"><value>Вставити</value></data>
+  <data name="QuickNote_SelectAll" xml:space="preserve"><value>Виділити все</value></data>
+  <data name="QuickNote_Bold" xml:space="preserve"><value>Жирний</value></data>
+  <data name="QuickNote_Italic" xml:space="preserve"><value>Курсив</value></data>
+  <data name="QuickNote_Underline" xml:space="preserve"><value>Підкреслити</value></data>
+  <data name="QuickNote_Code" xml:space="preserve"><value>Код</value></data>
+  <data name="QuickNote_BulletList" xml:space="preserve"><value>Маркований список</value></data>
+  <data name="QuickNote_NumberedList" xml:space="preserve"><value>Нумерований список</value></data>
+  <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Очистити форматування</value></data>
+</root>
