@@ -15,6 +15,9 @@ internal sealed class PanelPackageService
     internal const string PackageExtension = ".aitebarpanel";
     private const int CurrentFormatVersion = 1;
     private const string ManifestEntryName = "manifest.json";
+    internal const long MaxPackageFileBytes = 25 * 1024 * 1024;
+    internal const long MaxManifestBytes = 2 * 1024 * 1024;
+    internal const long MaxPackageEntryBytes = 10 * 1024 * 1024;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -202,15 +205,19 @@ internal sealed class PanelPackageService
             throw new FileNotFoundException("Файл пакета не найден.", packagePath);
         }
 
+        EnsurePackageFileSize(packagePath);
         string tempRoot = CreateTempDirectory();
         try
         {
+            ValidateArchiveEntrySizes(packagePath);
             ZipFile.ExtractToDirectory(packagePath, tempRoot);
             string manifestPath = Path.Combine(tempRoot, ManifestEntryName);
             if (!File.Exists(manifestPath))
             {
                 throw new InvalidDataException("В пакете отсутствует manifest.json.");
             }
+
+            EnsureFileSize(manifestPath, MaxManifestBytes, "manifest.json");
 
             await using FileStream manifestStream = File.OpenRead(manifestPath);
             PanelPackageManifest manifest = await JsonSerializer.DeserializeAsync<PanelPackageManifest>(manifestStream, JsonOptions, cancellationToken)
@@ -222,6 +229,30 @@ internal sealed class PanelPackageService
         finally
         {
             TryDeleteDirectory(tempRoot);
+        }
+    }
+
+    private static void EnsurePackageFileSize(string packagePath) =>
+        EnsureFileSize(packagePath, MaxPackageFileBytes, "package");
+
+    private static void EnsureFileSize(string path, long maxBytes, string label)
+    {
+        long length = new FileInfo(path).Length;
+        if (length > maxBytes)
+        {
+            throw new InvalidDataException($"Слишком большой файл {label}: {length} bytes.");
+        }
+    }
+
+    private static void ValidateArchiveEntrySizes(string packagePath)
+    {
+        using ZipArchive archive = ZipFile.OpenRead(packagePath);
+        foreach (ZipArchiveEntry entry in archive.Entries)
+        {
+            if (entry.Length > MaxPackageEntryBytes)
+            {
+                throw new InvalidDataException($"Слишком большой файл в пакете: {entry.FullName}.");
+            }
         }
     }
 
@@ -286,8 +317,9 @@ internal sealed class PanelPackageService
                 Directory.Delete(path, recursive: true);
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Logger.Log(ex);
         }
     }
 

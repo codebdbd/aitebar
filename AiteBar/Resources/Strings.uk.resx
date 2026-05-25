@@ -45,4 +45,14 @@
   <data name="QuickNote_BulletList" xml:space="preserve"><value>Маркований список</value></data>
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Нумерований список</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Очистити форматування</value></data>
+  <data name="SettingsWindow_RotationProfilesButton" xml:space="preserve"><value>Профілі...</value></data>
+  <data name="SettingsWindow_RotationProfilesAll" xml:space="preserve"><value>Профілі ротації: усі профілі</value></data>
+  <data name="SettingsWindow_RotationProfilesNoneAvailable" xml:space="preserve"><value>Профілі ротації: вибрані профілі недоступні</value></data>
+  <data name="RotationProfiles_Title" xml:space="preserve"><value>Профілі ротації</value></data>
+  <data name="RotationProfiles_Profiles" xml:space="preserve"><value>Профілі, що беруть участь у ротації</value></data>
+  <data name="RotationProfiles_DefaultHint" xml:space="preserve"><value>Залиште вибраними всі, щоб ротувати всі профілі.</value></data>
+  <data name="RotationProfiles_SearchPlaceholder" xml:space="preserve"><value>Пошук профілів</value></data>
+  <data name="RotationProfiles_SelectedFormat" xml:space="preserve"><value>{0} з {1}</value></data>
+  <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Вибрати всі</value></data>
+  <data name="RotationProfiles_Clear" xml:space="preserve"><value>Зняти виділення</value></data>
 </root>

@@ -16,6 +16,9 @@ namespace AiteBar
     {
         private readonly AppSettingsService _settingsService;
         private QuickNoteWindow? _quickNoteWindow;
+        private const int FullscreenActivationAttempts = 25;
+        private const int FullscreenWindowPollDelayMs = 200;
+        private const int FullscreenForegroundDelayMs = 100;
 
         public ActionService(AppSettingsService settingsService)
         {
@@ -94,7 +97,7 @@ namespace AiteBar
 
         private async Task ExecuteWebActionAsync(CustomElement el)
         {
-            string prof = el.UseRotation ? (BrowserHelper.AdvanceProfile(el.Browser, el.LastUsedProfile)) : el.ChromeProfile;
+            string prof = el.UseRotation ? AdvanceRotationProfile(el) : el.ChromeProfile;
             el.LastUsedProfile = prof;
             await _settingsService.SaveAsync();
 
@@ -104,6 +107,12 @@ namespace AiteBar
             {
                 await TryEnterFullscreenAsync(proc);
             }
+        }
+
+        private static string AdvanceRotationProfile(CustomElement el)
+        {
+            var profiles = BrowserHelper.GetProfiles(el.Browser);
+            return ProfileRotationHelper.AdvanceProfile(profiles, el.RotationProfilePaths, el.LastUsedProfile);
         }
 
         internal static ProcessStartInfo BuildWebActionProcessStartInfo(CustomElement el, string profilePathOrName)
@@ -226,6 +235,12 @@ namespace AiteBar
 
         private static async Task StartScriptFileAsync(string scriptPath)
         {
+            var confirm = new DarkDialog(LocalizationService.Format("Action_ConfirmScript", scriptPath), isConfirm: true) { Owner = System.Windows.Application.Current.MainWindow };
+            if (confirm.ShowDialog() != true)
+            {
+                return;
+            }
+
             var psi = CreateScriptProcessStartInfo(scriptPath);
             using var proc = Process.Start(psi) ?? throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
             await Task.CompletedTask;
@@ -251,12 +266,9 @@ namespace AiteBar
                     psiPs.ArgumentList.Add("-File"); psiPs.ArgumentList.Add(scriptPath); return psiPs;
                 case ".py":
                     string pythonExe = FindExecutableOnPath("python.exe"); if (!File.Exists(pythonExe)) throw new InvalidOperationException(LocalizationService.Get("Action_PythonNotFound"));
-                    return new ProcessStartInfo("cmd.exe")
-                    {
-                        UseShellExecute = false,
-                        WorkingDirectory = workingDirectory,
-                        Arguments = $"/c \"\"{pythonExe}\" \"{scriptPath}\"\""
-                    };
+                    var psiPy = new ProcessStartInfo(pythonExe) { UseShellExecute = false, WorkingDirectory = workingDirectory };
+                    psiPy.ArgumentList.Add(scriptPath);
+                    return psiPy;
                 default: throw new InvalidOperationException(LocalizationService.Get("Action_UnsupportedScript"));
             }
         }
@@ -266,21 +278,22 @@ namespace AiteBar
             var pathValue = Environment.GetEnvironmentVariable("PATH"); if (string.IsNullOrWhiteSpace(pathValue)) return fileName;
             foreach (var dir in pathValue.Split(';', StringSplitOptions.RemoveEmptyEntries))
             {
-                try { var candidate = Path.Combine(dir.Trim(), fileName); if (File.Exists(candidate)) return candidate; } catch { }
+                try { var candidate = Path.Combine(dir.Trim(), fileName); if (File.Exists(candidate)) return candidate; }
+                catch (Exception ex) { Logger.Log(ex); }
             }
             return fileName;
         }
 
         private static async Task TryEnterFullscreenAsync(Process proc)
         {
-            for (int i = 0; i < 25; i++)
+            for (int i = 0; i < FullscreenActivationAttempts; i++)
             {
-                await Task.Delay(200);
+                await Task.Delay(FullscreenWindowPollDelayMs);
                 proc.Refresh();
                 if (proc.MainWindowHandle == IntPtr.Zero) continue;
 
                 NativeMethods.SetForegroundWindow(proc.MainWindowHandle);
-                await Task.Delay(100);
+                await Task.Delay(FullscreenForegroundDelayMs);
                 SendVirtualKey((byte)KeyInterop.VirtualKeyFromKey(Key.F11));
                 break;
             }

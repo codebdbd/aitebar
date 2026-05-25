@@ -59,7 +59,7 @@
                                             <Style TargetType="Border">
                                                 <Setter Property="CornerRadius" Value="4"/>
                                                 <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
+                                                    <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
                                                         <Setter Property="CornerRadius" Value="4,4,0,0"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
@@ -70,9 +70,14 @@
                                 </ControlTemplate>
                             </ToggleButton.Template>
                         </ToggleButton>
-                        <ContentPresenter IsHitTestVisible="False" Content="{TemplateBinding SelectionBoxItem}" Margin="10,0,30,0" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                        <TextBlock IsHitTestVisible="False"
+                                   Text="{TemplateBinding SelectionBoxItem}"
+                                   Foreground="{TemplateBinding Foreground}"
+                                   Margin="10,0,30,0"
+                                   VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis"/>
                         <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
-                            <Border Background="{StaticResource PanelBackground}" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="300">
+                            <Border Background="{StaticResource PanelBackground}" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" CornerRadius="0,0,4,4" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="300">
                                 <ScrollViewer SnapsToDevicePixels="True">
                                     <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
                                 </ScrollViewer>

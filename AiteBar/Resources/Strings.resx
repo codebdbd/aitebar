@@ -226,8 +226,14 @@ Import rollback is not supported in this version.</value></data>
   <data name="Drop_UrlShortcutOnly" xml:space="preserve"><value>Only .url files with http/https links are supported.</value></data>
   <data name="Drop_FileFolderOrUrlOnly" xml:space="preserve"><value>Only a file, folder, or http/https link can be dragged.</value></data>
   <data name="Drop_SupportedTargets" xml:space="preserve"><value>Only files, folders, .url files, and direct http/https links are supported.</value></data>
-  <data name="Action_ConfirmCommand" xml:space="preserve"><value>Run command:
-{0}?</value></data>
+  <data name="Action_ConfirmCommand" xml:space="preserve"><value>Run this command only if you trust it. It can change files and system settings:
+{0}
+
+Continue?</value></data>
+  <data name="Action_ConfirmScript" xml:space="preserve"><value>Run this script only if you trust it. It can change files and system settings:
+{0}
+
+Continue?</value></data>
   <data name="Action_SearchFailed" xml:space="preserve"><value>Search failed</value></data>
   <data name="Action_LaunchFailed" xml:space="preserve"><value>Launch failed.</value></data>
   <data name="Action_PythonNotFound" xml:space="preserve"><value>Python was not found.</value></data>
@@ -260,4 +266,14 @@ Import rollback is not supported in this version.</value></data>
   <data name="IconPicker_CopyFailed" xml:space="preserve"><value>Error copying file.</value></data>
   <data name="IconPicker_LoadFailed" xml:space="preserve"><value>Could not load icon catalog:
 {0}</value></data>
+  <data name="SettingsWindow_RotationProfilesButton" xml:space="preserve"><value>Profiles...</value></data>
+  <data name="SettingsWindow_RotationProfilesAll" xml:space="preserve"><value>Rotation profiles: all profiles</value></data>
+  <data name="SettingsWindow_RotationProfilesNoneAvailable" xml:space="preserve"><value>Rotation profiles: selected profiles are not available</value></data>
+  <data name="RotationProfiles_Title" xml:space="preserve"><value>Rotation profiles</value></data>
+  <data name="RotationProfiles_Profiles" xml:space="preserve"><value>Profiles participating in rotation</value></data>
+  <data name="RotationProfiles_DefaultHint" xml:space="preserve"><value>Leave all selected to rotate through every profile.</value></data>
+  <data name="RotationProfiles_SearchPlaceholder" xml:space="preserve"><value>Search profiles</value></data>
+  <data name="RotationProfiles_SelectedFormat" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="RotationProfiles_Clear" xml:space="preserve"><value>Clear selection</value></data>
 </root>

@@ -73,7 +73,7 @@ namespace AiteBar
         private NativeIntegrationService? _nativeService;
 
         private AppSettings _appSettings => _settingsService.Settings;
-        private List<CustomElement> _elements => (List<CustomElement>)_settingsService.Elements;
+        private IReadOnlyList<CustomElement> _elements => _settingsService.Elements;
 
         private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
 
@@ -140,10 +140,8 @@ namespace AiteBar
 
         public void ApplyLocalizedText()
         {
-            if (ControlBlock.Children.OfType<Button>().FirstOrDefault() is { } addButton)
-            {
-                addButton.ToolTip = LocalizationService.Get("Main_AddButtonTooltip");
-            }
+            BtnAdd.ToolTip = LocalizationService.Get("Main_AddButtonTooltip");
+            BtnAppSettings.ToolTip = LocalizationService.Get("Menu_ProgramSettings");
 
             BtnSearch.ToolTip = LocalizationService.Get("Main_SearchTooltip");
             BtnScreenshot.ToolTip = LocalizationService.Get("Main_ScreenshotTooltip");
@@ -411,11 +409,7 @@ namespace AiteBar
             duplicate.Name = BuildDuplicateElementName(source.Name);
             duplicate.LastUsedProfile = "";
 
-            int sourceIndex = _elements.FindIndex(x => string.Equals(x.Id, source.Id, StringComparison.Ordinal));
-            if (sourceIndex >= 0) _elements.Insert(sourceIndex + 1, duplicate);
-            else _elements.Add(duplicate);
-
-            await _settingsService.SaveAsync();
+            await _settingsService.InsertElementAfterAsync(source.Id, duplicate);
             RefreshPanel();
             new SettingsWindow(this, duplicate) { Owner = this }.ShowDialog();
         }
@@ -450,8 +444,7 @@ namespace AiteBar
                 return;
             }
 
-            elementToRename.Name = newName;
-            await _settingsService.SaveAsync();
+            await _settingsService.UpdateElementAsync(elementToRename.Id, element => element.Name = newName);
             RefreshPanel();
         }
 
@@ -463,8 +456,7 @@ namespace AiteBar
                 return;
             }
 
-            elementToMove.ContextId = targetContextId;
-            await _settingsService.SaveAsync();
+            await _settingsService.UpdateElementAsync(elementToMove.Id, element => element.ContextId = targetContextId);
             RefreshPanel();
         }
 
@@ -482,8 +474,7 @@ namespace AiteBar
                 return;
             }
 
-            _elements.RemoveAll(x => string.Equals(x.Id, elementToDelete.Id, StringComparison.Ordinal));
-            await _settingsService.SaveAsync();
+            await _settingsService.DeleteElementAsync(elementToDelete.Id);
             RefreshPanel();
         }
 
@@ -673,6 +664,10 @@ namespace AiteBar
             FixedPanel.MaxHeight = double.PositiveInfinity;
             FixedPanel.Width = double.NaN;
             FixedPanel.Height = double.NaN;
+            AppSettingsBlock.MaxWidth = double.PositiveInfinity;
+            AppSettingsBlock.MaxHeight = double.PositiveInfinity;
+            AppSettingsBlock.Width = double.NaN;
+            AppSettingsBlock.Height = double.NaN;
             UserButtonsPanel.MaxWidth = double.PositiveInfinity;
             UserButtonsPanel.MaxHeight = double.PositiveInfinity;
             UserButtonsPanel.MinWidth = 0;
@@ -697,7 +692,8 @@ namespace AiteBar
                 contextCounts: ContextStateHelper.GetEnabledContexts(_appSettings.Contexts)
                     .Select(context => _elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal))).ToList(),
                 activeContextIndex: Math.Max(0, ContextStateHelper.GetEnabledContexts(_appSettings.Contexts).ToList().FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal))),
-                systemContextIndex: 0);
+                systemContextIndex: 0,
+                trailingControlButtonCount: 1);
 
             RootBorder.MinWidth = metrics.PanelWidth;
             RootBorder.MaxWidth = metrics.PanelWidth;
@@ -724,6 +720,8 @@ namespace AiteBar
             MainPanel.Height = contentHeight;
             FixedPanel.Width = metrics.FixedWidth;
             FixedPanel.Height = metrics.FixedHeight;
+            AppSettingsBlock.Width = metrics.TrailingWidth;
+            AppSettingsBlock.Height = metrics.TrailingHeight;
             UserButtonsPanel.Width = metrics.UserWidth;
             UserButtonsPanel.Height = metrics.UserHeight;
             UserButtonsPanel.MaxWidth = metrics.UserWidth;
@@ -1248,13 +1246,17 @@ namespace AiteBar
 
             System.Windows.Controls.DockPanel.SetDock(DragHandle, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
             FixedPanel.Orientation = orientation;
+            AppSettingsBlock.Orientation = orientation;
             UserButtonsPanel.Orientation = orientation;
             SystemUtilsPanel.Orientation = orientation;
             ControlBlock.Orientation = orientation;
             System.Windows.Controls.DockPanel.SetDock(FixedPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
             System.Windows.Controls.DockPanel.SetDock(UserButtonsPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
+            System.Windows.Controls.DockPanel.SetDock(AppSettingsBlock, isVertical ? System.Windows.Controls.Dock.Bottom : System.Windows.Controls.Dock.Right);
             FixedPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
             UserButtonsPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
+            AppSettingsBlock.VerticalAlignment = isVertical ? VerticalAlignment.Bottom : VerticalAlignment.Center;
+            AppSettingsBlock.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Right;
 
             if (isVertical)
             {
@@ -1273,7 +1275,7 @@ namespace AiteBar
                 DragHandleGrip.Height = 18;
             }
 
-            var separators = new[] { SepSystem, SepControl };
+            var separators = new[] { SepSystem, SepControl, SepAppSettings };
             foreach (var sep in separators)
             {
                 if (isVertical) { sep.Width = 20; sep.Height = 1; sep.Margin = new Thickness(0, 6, 0, 6); }
@@ -1376,6 +1378,7 @@ namespace AiteBar
             // Разделители
             SepSystem.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
             SepControl.Visibility = UserButtonsPanel.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            SepAppSettings.Visibility = UserButtonsPanel.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
             AnimateContextTransitionIfNeeded();
             
@@ -1883,7 +1886,7 @@ namespace AiteBar
             new SettingsWindow(this).ShowDialog();
         }
 
-        private async void BtnSettings_Click(object sender, RoutedEventArgs e) { await OpenAddButtonWindowAsync(); }
+        private async void BtnAdd_Click(object sender, RoutedEventArgs e) { await OpenAddButtonWindowAsync(); }
         private async void BtnAppSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new AppSettingsWindow(this).ShowDialog(); }
         
         private static T? FindParent<T>(DependencyObject child) where T : DependencyObject {
@@ -1957,7 +1960,7 @@ namespace AiteBar
                             }
                         }
                     }
-                    catch { }
+                    catch (Exception ex) { Logger.Log(ex); }
 
                     errorMessage = LocalizationService.Get("Drop_UrlShortcutOnly");
                     return false;
@@ -2032,8 +2035,7 @@ namespace AiteBar
                         ContextId = _appSettings.ActiveContextId
                     };
                     
-                    _elements.Add(newElement);
-                    await _settingsService.SaveAsync(); 
+                    await _settingsService.SaveElementAsync(newElement);
                     RefreshPanel();
 
                     if (isWeb && string.IsNullOrEmpty(iconPath))
@@ -2048,14 +2050,13 @@ namespace AiteBar
                                         var el = _elements.FirstOrDefault(x => x.Id == newElement.Id);
                                         if (el != null)
                                         {
-                                            el.ImagePath = webIcon;
-                                            await _settingsService.SaveAsync();
+                                            await _settingsService.UpdateElementAsync(el.Id, element => element.ImagePath = webIcon);
                                             RefreshPanel();
                                         }
                                     });
                                 }
                             }
-                            catch { }
+                            catch (Exception ex) { Logger.Log(ex); }
                         });
                     }
                 }

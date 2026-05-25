@@ -75,6 +75,46 @@ public sealed class PanelPackageServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ExportImportCurrentPanel_PreservesRotationProfilePaths()
+    {
+        using TestEnvironment source = CreateEnvironment("source");
+        string[] rotationProfilePaths =
+        [
+            @"C:\Users\User\AppData\Local\Google\Chrome\User Data\Profile 1",
+            @"C:\Users\User\AppData\Local\Google\Chrome\User Data\Profile 2"
+        ];
+
+        await source.SettingsService.AddElementsAsync([
+            new CustomElement
+            {
+                Name = "Rotating Browser",
+                ActionType = nameof(ActionType.Web),
+                ActionValue = "https://example.com",
+                ContextId = source.ActiveContextId,
+                UseRotation = true,
+                RotationProfilePaths = [.. rotationProfilePaths]
+            }
+        ]);
+
+        string packagePath = Path.Combine(_root, "rotation-profiles.aitebarpanel");
+        await source.PackageService.ExportCurrentPanelAsync(packagePath);
+
+        using ZipArchive archive = ZipFile.OpenRead(packagePath);
+        using Stream manifestStream = archive.GetEntry("manifest.json")!.Open();
+        PanelPackageManifest manifest = await JsonSerializer.DeserializeAsync<PanelPackageManifest>(manifestStream)
+            ?? throw new InvalidOperationException("Manifest was not deserialized.");
+
+        PanelPackageElement exported = Assert.Single(manifest.Elements);
+        Assert.Equal(rotationProfilePaths, exported.RotationProfilePaths);
+
+        using TestEnvironment target = CreateEnvironment("target", activeContextId: "context-2");
+        await target.PackageService.ImportIntoCurrentPanelAsync(packagePath);
+
+        CustomElement imported = Assert.Single(target.SettingsService.Elements);
+        Assert.Equal(rotationProfilePaths, imported.RotationProfilePaths);
+    }
+
+    [Fact]
     public async Task ImportIntoCurrentPanel_FileIcon_CopiesIconToLocalStore()
     {
         using TestEnvironment source = CreateEnvironment("source");
@@ -185,6 +225,19 @@ public sealed class PanelPackageServiceTests : IDisposable
         };
 
         CreatePackage(packagePath, manifest);
+
+        await Assert.ThrowsAsync<InvalidDataException>(() => env.PackageService.ReadImportPreviewAsync(packagePath));
+    }
+
+    [Fact]
+    public async Task ReadImportPreviewAsync_OversizedPackage_ThrowsBeforeExtracting()
+    {
+        using TestEnvironment env = CreateEnvironment();
+        string packagePath = Path.Combine(_root, "oversized.aitebarpanel");
+        using (FileStream stream = File.Create(packagePath))
+        {
+            stream.SetLength(PanelPackageService.MaxPackageFileBytes + 1);
+        }
 
         await Assert.ThrowsAsync<InvalidDataException>(() => env.PackageService.ReadImportPreviewAsync(packagePath));
     }

@@ -63,7 +63,7 @@
 
         <TabControl Grid.Row="0">
             <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_General}">
-                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0">
+                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
                     <StackPanel>
                         <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_GeneralHint}"
                                    Foreground="{StaticResource MutedText}"
@@ -123,7 +123,7 @@
             </TabItem>
 
             <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_ContextNames}">
-                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0">
+                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
                     <StackPanel>
                         <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ContextNamesHint}"
                                    Foreground="{StaticResource MutedText}"
@@ -134,10 +134,10 @@
                         <Grid Margin="0,0,0,6">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="34"/>
-                                <ColumnDefinition Width="96"/>
+                                <ColumnDefinition Width="42"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="1" Text="{local:Loc ResourceKey=AppSettingsWindow_PanelEnabled}" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
+                            <TextBlock Grid.Column="1" Text="{local:Loc ResourceKey=AppSettingsWindow_PanelEnabled}" Style="{StaticResource FieldLabelStyle}" Margin="0" FontSize="10" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
                             <TextBlock Grid.Column="2" Text="{local:Loc ResourceKey=SettingsWindow_ButtonName}" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
                         </Grid>
                         <StackPanel x:Name="PanelContextsList"/>
@@ -146,7 +146,7 @@
             </TabItem>
 
             <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_Hotkeys}">
-                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0">
+                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
                     <StackPanel>
                         <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_HotkeysHint}"
                                    Foreground="{StaticResource MutedText}"
@@ -156,8 +156,8 @@
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="210"/>
-                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="170"/>
+                                <ColumnDefinition Width="150"/>
                                 <ColumnDefinition Width="130"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ShowPanel}" Foreground="White" VerticalAlignment="Center"/>
@@ -167,8 +167,8 @@
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="210"/>
-                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="170"/>
+                                <ColumnDefinition Width="150"/>
                                 <ColumnDefinition Width="130"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_NextPanel}" Foreground="White" VerticalAlignment="Center"/>
@@ -178,8 +178,8 @@
 
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="210"/>
-                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="170"/>
+                                <ColumnDefinition Width="150"/>
                                 <ColumnDefinition Width="130"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PreviousPanel}" Foreground="White" VerticalAlignment="Center"/>
@@ -189,8 +189,8 @@
 
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="210"/>
-                                <ColumnDefinition Width="180"/>
+                                <ColumnDefinition Width="170"/>
+                                <ColumnDefinition Width="150"/>
                                 <ColumnDefinition Width="130"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_AddButton}" Foreground="White" VerticalAlignment="Center"/>
@@ -202,7 +202,7 @@
             </TabItem>
 
             <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_QuickTools}">
-                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0">
+                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
                     <StackPanel>
                         <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_QuickToolsHint}"
                                    Foreground="{StaticResource MutedText}"

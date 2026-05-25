@@ -1,4 +1,7 @@
+using System;
+using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using AiteBar;
 using Xunit;
 
@@ -125,5 +128,37 @@ public sealed class AppSettingsServiceTests
         Assert.Single(settingsService.Elements);
         Assert.Equal("context-2", settingsService.Elements[0].ContextId);
         Assert.Equal("context-1", settingsService.Settings.ActiveContextId);
+    }
+
+    [Fact]
+    public async Task LoadAsync_OversizedSettingsFile_IsNotApplied()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string settingsPath = Path.Combine(root, "settings.json");
+        string configPath = Path.Combine(root, "custom_buttons.json");
+
+        try
+        {
+            using (FileStream stream = File.Create(settingsPath))
+            {
+                stream.SetLength(AppSettingsService.MaxSettingsFileBytes + 1);
+            }
+
+            var service = new AppSettingsService(configPath, settingsPath);
+            await service.LoadAsync();
+
+            Assert.Empty(service.Elements);
+        }
+        finally
+        {
+            try
+            {
+                Directory.Delete(root, recursive: true);
+            }
+            catch
+            {
+            }
+        }
     }
 }

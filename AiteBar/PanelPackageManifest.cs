@@ -60,6 +60,9 @@ internal sealed class PanelPackageElement
     [JsonPropertyName("chromeProfile")]
     public string ChromeProfile { get; set; } = "";
 
+    [JsonPropertyName("rotationProfilePaths")]
+    public List<string> RotationProfilePaths { get; set; } = [];
+
     [JsonPropertyName("isAppMode")]
     public bool IsAppMode { get; set; }
 

@@ -51,6 +51,7 @@ namespace AiteBar {
         public string ActionValue { get; set; } = "";
         public BrowserType Browser { get; set; } = BrowserType.Chrome;
         public string ChromeProfile { get; set; } = "";
+        public List<string> RotationProfilePaths { get; set; } = [];
         
         public bool IsAppMode { get; set; } = false;
         public bool IsIncognito { get; set; } = false;

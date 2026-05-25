@@ -11,7 +11,9 @@ namespace AiteBar
     {
         public string DisplayName { get; set; } = "";
         public string ProfilePath { get; set; } = "";
+        public string LaunchProfileName { get; set; } = "";
         public string ProfileName => Path.GetFileName(ProfilePath);
+        public string LaunchName => string.IsNullOrWhiteSpace(LaunchProfileName) ? ProfileName : LaunchProfileName;
     }
 
     [SupportedOSPlatform("windows")]
@@ -206,7 +208,7 @@ namespace AiteBar
                         if (!string.IsNullOrEmpty(currentName) && !string.IsNullOrEmpty(currentPath))
                         {
                             string fullPath = isRelative ? Path.Combine(basePath, currentPath) : currentPath;
-                            result.Add(new BrowserProfileInfo { DisplayName = currentName, ProfilePath = fullPath });
+                            result.Add(new BrowserProfileInfo { DisplayName = currentName, ProfilePath = fullPath, LaunchProfileName = currentName });
                         }
                         currentName = null;
                         currentPath = null;
@@ -230,7 +232,7 @@ namespace AiteBar
                 if (!string.IsNullOrEmpty(currentName) && !string.IsNullOrEmpty(currentPath))
                 {
                     string fullPath = isRelative ? Path.Combine(basePath, currentPath) : currentPath;
-                    result.Add(new BrowserProfileInfo { DisplayName = currentName, ProfilePath = fullPath });
+                    result.Add(new BrowserProfileInfo { DisplayName = currentName, ProfilePath = fullPath, LaunchProfileName = currentName });
                 }
             }
             catch (Exception ex) { Logger.Log(ex); }
@@ -243,9 +245,12 @@ namespace AiteBar
             var profiles = GetProfiles(type);
             if (profiles.Count == 0) return "";
 
-            int idx = profiles.FindIndex(p => p.ProfileName == lastUsedProfile || p.ProfilePath == lastUsedProfile);
-            if (idx < 0) return profiles[0].ProfileName;
-            return profiles[(idx + 1) % profiles.Count].ProfileName;
+            int idx = profiles.FindIndex(p =>
+                string.Equals(p.LaunchName, lastUsedProfile, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(p.ProfileName, lastUsedProfile, StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(p.ProfilePath, lastUsedProfile, StringComparison.OrdinalIgnoreCase));
+            if (idx < 0) return profiles[0].LaunchName;
+            return profiles[(idx + 1) % profiles.Count].LaunchName;
         }
     }
 }

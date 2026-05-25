@@ -73,26 +73,31 @@
 
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
-                        <Button Content="&#xE005;" Click="BtnSettings_Click" Foreground="{StaticResource AccentColor}"/>
+                        <Button x:Name="BtnAdd" Content="&#xE005;" Click="BtnAdd_Click" Foreground="{StaticResource AccentColor}"/>
                     </StackPanel>
 
                     <Rectangle x:Name="SepSystem" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" VerticalAlignment="Center"/>
 
                     <StackPanel x:Name="SystemUtilsPanel" Orientation="Horizontal">
-                        <Button x:Name="BtnSearch" Content="&#xEA7C;" Click="BtnSearch_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnScreenshot" Content="&#xF68E;" Click="BtnScreenshotRegion_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnRecord" Content="&#xF535;" Click="BtnRecordVideo_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnCalc" Content="&#xF06C;" Click="BtnCalc_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnExplorer" Content="&#xF42F;" Click="BtnExplorer_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnDownloads" Content="&#xF151;" Click="BtnDownloads_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnColorPicker" Content="&#xF2F6;" Click="BtnColorPicker_Click" Foreground="{StaticResource PrimaryText}"/>
-                        <Button x:Name="BtnQuickNote" Content="&#xF56F;" Click="BtnQuickNote_Click" Foreground="{StaticResource PrimaryText}"/>
+                        <Button x:Name="BtnSearch" Content="&#xEA7C;" Click="BtnSearch_Click" Foreground="#3ABEFF"/>
+                        <Button x:Name="BtnScreenshot" Content="&#xF68E;" Click="BtnScreenshotRegion_Click" Foreground="#60A5FA"/>
+                        <Button x:Name="BtnRecord" Content="&#xF535;" Click="BtnRecordVideo_Click" Foreground="#FB7185"/>
+                        <Button x:Name="BtnCalc" Content="&#xF06C;" Click="BtnCalc_Click" Foreground="#A3E635"/>
+                        <Button x:Name="BtnExplorer" Content="&#xF42F;" Click="BtnExplorer_Click" Foreground="#F59E0B"/>
+                        <Button x:Name="BtnDownloads" Content="&#xF151;" Click="BtnDownloads_Click" Foreground="#34D399"/>
+                        <Button x:Name="BtnColorPicker" Content="&#xF2F6;" Click="BtnColorPicker_Click" Foreground="#A855F7"/>
+                        <Button x:Name="BtnQuickNote" Content="&#xF56F;" Click="BtnQuickNote_Click" Foreground="#22D3EE"/>
                     </StackPanel>
 
                     <Rectangle x:Name="SepControl" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <WrapPanel x:Name="UserButtonsPanel" Orientation="Horizontal" ClipToBounds="True" VerticalAlignment="Center"/>
+
+                <StackPanel x:Name="AppSettingsBlock" Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
+                    <Rectangle x:Name="SepAppSettings" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" VerticalAlignment="Center"/>
+                    <Button x:Name="BtnAppSettings" Content="&#xF6A8;" Click="BtnAppSettings_Click" Foreground="{StaticResource AccentColor}"/>
+                </StackPanel>
         </DockPanel>
         </Border>
     </Border>

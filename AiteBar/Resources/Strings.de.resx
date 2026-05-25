@@ -107,4 +107,14 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="QuickNote_BulletList" xml:space="preserve"><value>Aufzählung</value></data>
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Nummerierte Liste</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Formatierung löschen</value></data>
+  <data name="SettingsWindow_RotationProfilesButton" xml:space="preserve"><value>Profile...</value></data>
+  <data name="SettingsWindow_RotationProfilesAll" xml:space="preserve"><value>Rotationsprofile: alle Profile</value></data>
+  <data name="SettingsWindow_RotationProfilesNoneAvailable" xml:space="preserve"><value>Rotationsprofile: ausgewählte Profile sind nicht verfügbar</value></data>
+  <data name="RotationProfiles_Title" xml:space="preserve"><value>Rotationsprofile</value></data>
+  <data name="RotationProfiles_Profiles" xml:space="preserve"><value>Profile in der Rotation</value></data>
+  <data name="RotationProfiles_DefaultHint" xml:space="preserve"><value>Lassen Sie alle ausgewählt, um alle Profile zu rotieren.</value></data>
+  <data name="RotationProfiles_SearchPlaceholder" xml:space="preserve"><value>Profile suchen</value></data>
+  <data name="RotationProfiles_SelectedFormat" xml:space="preserve"><value>{0} von {1}</value></data>
+  <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
+  <data name="RotationProfiles_Clear" xml:space="preserve"><value>Auswahl aufheben</value></data>
 </root>

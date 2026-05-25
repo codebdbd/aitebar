@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using System.Linq;
 using AiteBar;
 using Xunit;
@@ -37,5 +39,42 @@ public sealed class ActionServiceTests
 
         Assert.Equal(target, psi.FileName);
         Assert.True(psi.UseShellExecute);
+    }
+
+    [Fact]
+    public void CreateScriptProcessStartInfo_PythonScript_UsesArgumentListWithoutCmdShell()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string pythonExe = Path.Combine(tempRoot, "python.exe");
+        string scriptPath = Path.Combine(tempRoot, "script & whoami.py");
+        string? originalPath = Environment.GetEnvironmentVariable("PATH");
+
+        try
+        {
+            File.WriteAllText(pythonExe, "");
+            Environment.SetEnvironmentVariable("PATH", tempRoot + ";" + originalPath);
+
+            var psi = ActionService.CreateScriptProcessStartInfo(scriptPath);
+            string[] args = psi.ArgumentList.ToArray();
+
+            Assert.Equal(pythonExe, psi.FileName);
+            Assert.False(psi.UseShellExecute);
+            Assert.Equal(tempRoot, psi.WorkingDirectory);
+            Assert.Equal([scriptPath], args);
+            Assert.True(string.IsNullOrEmpty(psi.Arguments));
+            Assert.False(string.Equals("cmd.exe", psi.FileName, StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PATH", originalPath);
+            try
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+            catch
+            {
+            }
+        }
     }
 }

@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="{local:Loc ResourceKey=SettingsWindow_Title}" Width="850" Height="500"
+        Title="{local:Loc ResourceKey=SettingsWindow_Title}" Width="880" Height="500"
         WindowStartupLocation="CenterScreen" Background="#1A1A1C" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
@@ -52,7 +52,7 @@
         <!-- EDIT BUTTON FORM -->
         <Grid Margin="0,10,0,0">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
@@ -60,146 +60,169 @@
                 <ColumnDefinition Width="300"/>
             </Grid.ColumnDefinitions>
 
-            <!-- LEFT: FORM -->
-            <StackPanel Grid.Column="0" Grid.Row="0" Margin="0,0,30,0">
-                <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_ButtonName}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
-                <Grid Margin="0,0,0,15">
-                    <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged"/>
-                    <TextBlock x:Name="TxtNamePlaceholder" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_ButtonNamePlaceholder}"/>
-                </Grid>
+            <Grid Grid.Row="0" Grid.ColumnSpan="2">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="300"/>
+                    </Grid.ColumnDefinitions>
 
-                <UniformGrid Columns="2" Margin="0,0,0,15">
-                    <StackPanel Margin="0,0,10,0">
-                        <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_ActionType}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
-                        <ComboBox x:Name="CmbActionType" SelectionChanged="CmbActionType_SelectionChanged">
-                            <ComboBoxItem Content="{local:Loc ResourceKey=Action_Web}" Tag="Web"/>
-                            <ComboBoxItem Content="{local:Loc ResourceKey=Action_Program}" Tag="Program"/>
-                            <ComboBoxItem Content="{local:Loc ResourceKey=Action_File}" Tag="File"/>
-                            <ComboBoxItem Content="{local:Loc ResourceKey=Action_Folder}" Tag="Folder"/>
-                            <ComboBoxItem Content="{local:Loc ResourceKey=Action_ScriptFile}" Tag="ScriptFile"/>
-                            <ComboBoxItem Content="{local:Loc ResourceKey=Action_Command}" Tag="Command"/>
-                            <ComboBoxItem Content="{local:Loc ResourceKey=Action_Hotkey}" Tag="Hotkey"/>
-                        </ComboBox>
-                    </StackPanel>
-                    <StackPanel Margin="10,0,0,0">
-                        <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Panel}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
-                        <ComboBox x:Name="CmbContext"/>
-                    </StackPanel>
-                </UniformGrid>
+                    <!-- LEFT: FORM -->
+                    <StackPanel Grid.Column="0" Margin="0,0,30,0">
+                        <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_ButtonName}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                        <Grid Margin="0,0,0,15">
+                            <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged"/>
+                            <TextBlock x:Name="TxtNamePlaceholder" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_ButtonNamePlaceholder}"/>
+                        </Grid>
 
-                <!-- Action Value -->
-                <StackPanel x:Name="PanelStandardAction">
-                    <TextBlock x:Name="LblActionValue" Text="{local:Loc ResourceKey=SettingsWindow_UrlOrPath}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
-                    <Grid Margin="0,0,0,15">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox x:Name="TxtActionValue" TextChanged="TxtActionValue_TextChanged"/>
-                        <TextBlock x:Name="TxtActionPlaceholder" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False"/>
-                        <Button x:Name="BtnBrowse" Grid.Column="1" Width="80" Margin="5,0,0,0" Click="BtnBrowse_Click" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Browse}"/>
-                    </Grid>
+                        <UniformGrid Columns="2" Margin="0,0,0,15">
+                            <StackPanel Margin="0,0,10,0">
+                                <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_ActionType}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                                <ComboBox x:Name="CmbActionType" SelectionChanged="CmbActionType_SelectionChanged">
+                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_Web}" Tag="Web"/>
+                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_Program}" Tag="Program"/>
+                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_File}" Tag="File"/>
+                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_Folder}" Tag="Folder"/>
+                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_ScriptFile}" Tag="ScriptFile"/>
+                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_Command}" Tag="Command"/>
+                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_Hotkey}" Tag="Hotkey"/>
+                                </ComboBox>
+                            </StackPanel>
+                            <StackPanel Margin="10,0,0,0">
+                                <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Panel}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                                <ComboBox x:Name="CmbContext"/>
+                            </StackPanel>
+                        </UniformGrid>
 
-                    <!-- Browser Settings -->
-                    <Border x:Name="PanelWebSettings" Background="{StaticResource PanelBackground}" CornerRadius="6" Padding="15" Margin="0,0,0,15" BorderThickness="1" BorderBrush="{StaticResource BorderColor}">
-                        <StackPanel>
-                            <Grid Margin="0,0,0,10">
+                        <!-- Action Value -->
+                        <StackPanel x:Name="PanelStandardAction">
+                            <TextBlock x:Name="LblActionValue" Text="{local:Loc ResourceKey=SettingsWindow_UrlOrPath}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                            <Grid Margin="0,0,0,15">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <StackPanel Margin="0,0,5,0">
-                                    <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Browser}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="11"/>
-                                    <ComboBox x:Name="CmbBrowser" SelectionChanged="CmbBrowser_SelectionChanged">
-                                        <ComboBoxItem Content="Chrome" Tag="Chrome"/>
-                                        <ComboBoxItem Content="Edge" Tag="Edge"/>
-                                        <ComboBoxItem Content="Brave" Tag="Brave"/>
-                                        <ComboBoxItem Content="Yandex" Tag="Yandex"/>
-                                        <ComboBoxItem Content="Firefox" Tag="Firefox"/>
-                                    </ComboBox>
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Margin="5,0,0,0">
-                                    <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Profile}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="11"/>
-                                    <ComboBox x:Name="CmbChromeProfile"/>
-                                </StackPanel>
+                                <TextBox x:Name="TxtActionValue" TextChanged="TxtActionValue_TextChanged"/>
+                                <TextBlock x:Name="TxtActionPlaceholder" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False"/>
+                                <Button x:Name="BtnBrowse" Grid.Column="1" Width="80" Margin="5,0,0,0" Click="BtnBrowse_Click" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Browse}"/>
                             </Grid>
-                            <UniformGrid Columns="2">
-                                <CheckBox x:Name="ChkAppMode" Content="{local:Loc ResourceKey=SettingsWindow_AppMode}" Foreground="White" Margin="0,3"/>
-                                <CheckBox x:Name="ChkIncognito" Content="{local:Loc ResourceKey=SettingsWindow_Incognito}" Foreground="White" Margin="0,3"/>
-                                <CheckBox x:Name="ChkFullscreen" Content="{local:Loc ResourceKey=SettingsWindow_Fullscreen}" Foreground="White" Margin="0,3"/>
-                                <CheckBox x:Name="ChkRotation" Content="{local:Loc ResourceKey=SettingsWindow_Rotation}" Foreground="White" Margin="0,3"/>
-                            </UniformGrid>
-                        </StackPanel>
-                    </Border>
-                </StackPanel>
 
-                <!-- Hotkey Settings -->
-                <StackPanel x:Name="PanelHotkeyAction" Visibility="Collapsed" Margin="0,0,0,15">
-                    <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_HotkeyCombination}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                        <CheckBox x:Name="ChkCtrl" Content="Ctrl" Foreground="White" Margin="0,0,15,0"/>
-                        <CheckBox x:Name="ChkShift" Content="Shift" Foreground="White" Margin="0,0,15,0"/>
-                        <CheckBox x:Name="ChkAlt" Content="Alt" Foreground="White" Margin="0,0,15,0"/>
-                        <CheckBox x:Name="ChkWin" Content="Win" Foreground="White"/>
-                    </StackPanel>
-                    <ComboBox x:Name="CmbKey" Width="200" HorizontalAlignment="Left"/>
-                </StackPanel>
-
-                <Border x:Name="ActionHelpBox" Background="#2D2D30" Padding="10" CornerRadius="4" Visibility="Collapsed">
-                    <TextBlock x:Name="TxtActionHelp" Foreground="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap"/>
-                </Border>
-            </StackPanel>
-
-            <!-- RIGHT: PREVIEW & COLORS -->
-            <StackPanel Grid.Column="1" Grid.Row="0">
-                <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_IconPicker}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
-                <Border Background="{StaticResource PanelBackground}" CornerRadius="8" Padding="20" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" VerticalAlignment="Top">
-                    <StackPanel x:Name="MiddleColumnGrid">
-                        <!-- Icon Preview and Source Buttons -->
-                        <Grid Margin="0,0,0,20">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            
-                            <Border x:Name="BorderPreview" Grid.Column="0" Background="#1A1A1C" Width="80" Height="80" CornerRadius="12" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" Cursor="Hand" MouseLeftButtonDown="BorderPreview_MouseLeftButtonDown">
-                                <Grid>
-                                    <TextBlock x:Name="PreviewIcon" Text="&#xE8B9;" FontFamily="Segoe MDL2 Assets" FontSize="36" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    <Image x:Name="PreviewImage" Width="64" Height="64" Stretch="Uniform" Visibility="Collapsed"/>
-                                </Grid>
+                            <!-- Browser Settings -->
+                            <Border x:Name="PanelWebSettings" Background="{StaticResource PanelBackground}" CornerRadius="6" Padding="15" Margin="0,0,0,15" BorderThickness="1" BorderBrush="{StaticResource BorderColor}">
+                                <StackPanel>
+                                    <Grid Margin="0,0,0,10">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <StackPanel Margin="0,0,5,0">
+                                            <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Browser}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="11"/>
+                                            <ComboBox x:Name="CmbBrowser" SelectionChanged="CmbBrowser_SelectionChanged">
+                                                <ComboBoxItem Content="Chrome" Tag="Chrome"/>
+                                                <ComboBoxItem Content="Edge" Tag="Edge"/>
+                                                <ComboBoxItem Content="Brave" Tag="Brave"/>
+                                                <ComboBoxItem Content="Yandex" Tag="Yandex"/>
+                                                <ComboBoxItem Content="Firefox" Tag="Firefox"/>
+                                            </ComboBox>
+                                        </StackPanel>
+                                        <StackPanel Grid.Column="1" Margin="5,0,0,0">
+                                            <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Profile}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="11"/>
+                                            <ComboBox x:Name="CmbChromeProfile"/>
+                                        </StackPanel>
+                                    </Grid>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto"/>
+                                            <RowDefinition Height="Auto"/>
+                                        </Grid.RowDefinitions>
+                                        <CheckBox x:Name="ChkAppMode" Grid.Row="0" Grid.Column="0" Content="{local:Loc ResourceKey=SettingsWindow_AppMode}" Foreground="White" Margin="0,3"/>
+                                        <CheckBox x:Name="ChkIncognito" Grid.Row="0" Grid.Column="1" Content="{local:Loc ResourceKey=SettingsWindow_Incognito}" Foreground="White" Margin="5,3,0,3"/>
+                                        <CheckBox x:Name="ChkFullscreen" Grid.Row="1" Grid.Column="0" Content="{local:Loc ResourceKey=SettingsWindow_Fullscreen}" Foreground="White" Margin="0,3"/>
+                                        <Grid Grid.Row="1" Grid.Column="1" Margin="5,3,0,3">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <CheckBox x:Name="ChkRotation" Content="{local:Loc ResourceKey=SettingsWindow_Rotation}" Foreground="White" Checked="ChkRotation_Changed" Unchecked="ChkRotation_Changed" VerticalAlignment="Center"/>
+                                            <Button x:Name="BtnRotationProfiles" Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_RotationProfilesButton}" Click="BtnRotationProfiles_Click" Height="24" MinWidth="90" Margin="10,0,0,0"/>
+                                        </Grid>
+                                    </Grid>
+                                </StackPanel>
                             </Border>
+                        </StackPanel>
 
-                            <StackPanel Grid.Column="1" Margin="15,0,0,0" VerticalAlignment="Center">
-                                <Button x:Name="BtnOpenCatalog" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_ChooseFromLibrary}" Click="BtnOpenCatalog_Click" Margin="0,0,0,10"/>
-                                <Button x:Name="BtnSelectCustomIcon" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_CustomIcon}" Click="BtnSelectCustomIcon_Click"/>
+                        <!-- Hotkey Settings -->
+                        <StackPanel x:Name="PanelHotkeyAction" Visibility="Collapsed" Margin="0,0,0,15">
+                            <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_HotkeyCombination}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <CheckBox x:Name="ChkCtrl" Content="Ctrl" Foreground="White" Margin="0,0,15,0"/>
+                                <CheckBox x:Name="ChkShift" Content="Shift" Foreground="White" Margin="0,0,15,0"/>
+                                <CheckBox x:Name="ChkAlt" Content="Alt" Foreground="White" Margin="0,0,15,0"/>
+                                <CheckBox x:Name="ChkWin" Content="Win" Foreground="White"/>
                             </StackPanel>
-                        </Grid>
+                            <ComboBox x:Name="CmbKey" Width="200" HorizontalAlignment="Left"/>
+                        </StackPanel>
 
-                        <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_IconColor}" Foreground="{StaticResource MutedText}" Margin="0,0,0,10" FontSize="12"/>
-                        <UniformGrid x:Name="GridColors" Columns="5" Margin="0,0,0,15"/>
-                        
-                        <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_HexCode}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="11"/>
-                        <Grid Margin="0,0,0,5">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="#" VerticalAlignment="Center" Foreground="{StaticResource MutedText}" Margin="0,0,5,0"/>
-                            <TextBox x:Name="TxtHexColor" Grid.Column="1" Height="28" FontSize="12" TextChanged="TxtHexColor_TextChanged"/>
-                            <TextBlock x:Name="TxtHexPlaceholder" Grid.Column="1" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_HexPlaceholder}" Visibility="Collapsed"/>
-                        </Grid>
+                        <Border x:Name="ActionHelpBox" Background="#2D2D30" Padding="10" CornerRadius="4" Visibility="Collapsed">
+                            <TextBlock x:Name="TxtActionHelp" Foreground="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap"/>
+                        </Border>
                     </StackPanel>
-                </Border>
-            </StackPanel>
+
+                    <!-- RIGHT: PREVIEW & COLORS -->
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_IconPicker}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                        <Border Background="{StaticResource PanelBackground}" CornerRadius="8" Padding="20" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" VerticalAlignment="Top">
+                            <StackPanel x:Name="MiddleColumnGrid">
+                                <!-- Icon Preview and Source Buttons -->
+                                <Grid Margin="0,0,0,20">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                            
+                                    <Border x:Name="BorderPreview" Grid.Column="0" Background="#1A1A1C" Width="80" Height="80" CornerRadius="12" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" Cursor="Hand" MouseLeftButtonDown="BorderPreview_MouseLeftButtonDown">
+                                        <Grid>
+                                            <TextBlock x:Name="PreviewIcon" Text="&#xE8B9;" FontFamily="Segoe MDL2 Assets" FontSize="36" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <Image x:Name="PreviewImage" Width="64" Height="64" Stretch="Uniform" Visibility="Collapsed"/>
+                                        </Grid>
+                                    </Border>
+
+                                    <StackPanel Grid.Column="1" Margin="15,0,0,0" VerticalAlignment="Center">
+                                        <Button x:Name="BtnOpenCatalog" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_ChooseFromLibrary}" Click="BtnOpenCatalog_Click" Margin="0,0,0,10"/>
+                                        <Button x:Name="BtnSelectCustomIcon" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_CustomIcon}" Click="BtnSelectCustomIcon_Click"/>
+                                    </StackPanel>
+                                </Grid>
+
+                                <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_IconColor}" Foreground="{StaticResource MutedText}" Margin="0,0,0,10" FontSize="12"/>
+                                <UniformGrid x:Name="GridColors" Columns="5" Margin="0,0,0,15"/>
+                        
+                                <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_HexCode}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="11"/>
+                                <Grid Margin="0,0,0,5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="#" VerticalAlignment="Center" Foreground="{StaticResource MutedText}" Margin="0,0,5,0"/>
+                                    <TextBox x:Name="TxtHexColor" Grid.Column="1" Height="28" FontSize="12" TextChanged="TxtHexColor_TextChanged"/>
+                                    <TextBlock x:Name="TxtHexPlaceholder" Grid.Column="1" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_HexPlaceholder}" Visibility="Collapsed"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Grid>
+            </Grid>
 
             <!-- BOTTOM: BUTTONS -->
             <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,15,0,0">
                 <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0" Margin="0,0,0,15"/>
                 <DockPanel LastChildFill="False">
-                    <Button x:Name="BtnOpenAppSettings" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_AppSettings}" Click="BtnOpenAppSettings_Click" Height="40" Width="180" HorizontalAlignment="Left"/>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
                     <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Height="40" Width="120" Margin="0,0,10,0"/>
-                    <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Height="40" Width="180" FontWeight="Bold"/>
+                    <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Height="40" Width="160" FontWeight="Bold"/>
                     </StackPanel>
                 </DockPanel>
             </StackPanel>

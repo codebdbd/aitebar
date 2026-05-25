@@ -19,6 +19,8 @@ public static class PanelLayoutHelper
         double PanelHeight,
         double FixedWidth,
         double FixedHeight,
+        double TrailingWidth,
+        double TrailingHeight,
         double UserWidth,
         double UserHeight,
         int UserBands);
@@ -31,7 +33,8 @@ public static class PanelLayoutHelper
         int controlButtonCount,
         IReadOnlyList<int> contextCounts,
         int activeContextIndex,
-        int systemContextIndex = 0)
+        int systemContextIndex = 0,
+        int trailingControlButtonCount = 0)
     {
         double normalizedPercent = Math.Clamp(panelPercent, 20, 100) / 100.0;
         double maxPrimary = isVertical
@@ -42,12 +45,13 @@ public static class PanelLayoutHelper
         int normalizedActiveIndex = counts.Count == 0 ? 0 : Math.Clamp(activeContextIndex, 0, counts.Count - 1);
         int normalizedSystemIndex = counts.Count == 0 ? 0 : Math.Clamp(systemContextIndex, 0, counts.Count - 1);
 
-        List<(double FixedPrimary, double FixedCross, UserLayout User, double PanelPrimary, double PanelCross)> perContext = [];
+        List<(double FixedPrimary, double FixedCross, UserLayout Trailing, UserLayout User, double PanelPrimary, double PanelCross)> perContext = [];
         for (int index = 0; index < counts.Count; index++)
         {
             int count = counts[index];
             int systemCount = index == normalizedSystemIndex ? Math.Max(0, visibleSystemButtonCount) : 0;
             int controlsCount = Math.Max(0, controlButtonCount);
+            int trailingControlsCount = Math.Max(0, trailingControlButtonCount);
             bool hasUserButtons = count > 0;
 
             int fixedSeparatorCount = 0;
@@ -61,16 +65,19 @@ public static class PanelLayoutHelper
                 fixedSeparatorCount++;
             }
 
+            int trailingSeparatorCount = hasUserButtons && trailingControlsCount > 0 ? 1 : 0;
             double fixedPrimary = ((systemCount + controlsCount) * ButtonOuterSize) + (fixedSeparatorCount * SeparatorSize);
+            double trailingPrimary = (trailingControlsCount * ButtonOuterSize) + (trailingSeparatorCount * SeparatorSize);
             double userPrimaryLimit = hasUserButtons
-                ? Math.Max(ButtonOuterSize, maxPrimary - fixedPrimary - PanelChrome)
+                ? Math.Max(ButtonOuterSize, maxPrimary - fixedPrimary - trailingPrimary - PanelChrome)
                 : 0;
             UserLayout userLayout = CalculateUserLayout(count, userPrimaryLimit);
             double fixedCross = (systemCount > 0 || controlsCount > 0) ? ButtonOuterSize : 0;
-            double panelPrimary = Math.Max(ButtonOuterSize + PanelChrome, fixedPrimary + userLayout.Primary + PanelChrome);
-            double panelCross = Math.Max(ButtonOuterSize + PanelChrome, Math.Max(fixedCross, userLayout.Cross) + PanelChrome);
+            double trailingCross = trailingControlsCount > 0 ? ButtonOuterSize : 0;
+            double panelPrimary = Math.Max(ButtonOuterSize + PanelChrome, fixedPrimary + userLayout.Primary + trailingPrimary + PanelChrome);
+            double panelCross = Math.Max(ButtonOuterSize + PanelChrome, Math.Max(Math.Max(fixedCross, trailingCross), userLayout.Cross) + PanelChrome);
 
-            perContext.Add((fixedPrimary, fixedCross, userLayout, panelPrimary, panelCross));
+            perContext.Add((fixedPrimary, fixedCross, new UserLayout(trailingPrimary, trailingCross, 0), userLayout, panelPrimary, panelCross));
         }
 
         double maxPanelPrimary = perContext.Max(layout => layout.PanelPrimary);
@@ -84,6 +91,8 @@ public static class PanelLayoutHelper
                 PanelHeight: maxPanelPrimary,
                 FixedWidth: active.FixedCross,
                 FixedHeight: active.FixedPrimary,
+                TrailingWidth: active.Trailing.Cross,
+                TrailingHeight: active.Trailing.Primary,
                 UserWidth: active.User.Cross,
                 UserHeight: active.User.Primary,
                 UserBands: active.User.Bands)
@@ -93,6 +102,8 @@ public static class PanelLayoutHelper
                 PanelHeight: maxPanelCross,
                 FixedWidth: active.FixedPrimary,
                 FixedHeight: active.FixedCross,
+                TrailingWidth: active.Trailing.Primary,
+                TrailingHeight: active.Trailing.Cross,
                 UserWidth: active.User.Primary,
                 UserHeight: active.User.Cross,
                 UserBands: active.User.Bands);

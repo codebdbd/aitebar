@@ -14,6 +14,8 @@ namespace AiteBar
         private readonly string _configFile;
         private readonly string _settingsFile;
         private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
+        private readonly object _stateLock = new();
+        internal const long MaxSettingsFileBytes = 2 * 1024 * 1024;
         
         private AppSettings _appSettings = new();
         private List<CustomElement> _elements = new();
@@ -27,7 +29,16 @@ namespace AiteBar
         }
 
         public AppSettings Settings => _appSettings;
-        public IReadOnlyList<CustomElement> Elements => _elements;
+        public IReadOnlyList<CustomElement> Elements
+        {
+            get
+            {
+                lock (_stateLock)
+                {
+                    return [.. _elements];
+                }
+            }
+        }
 
         public async Task LoadAsync()
         {
@@ -36,12 +47,14 @@ namespace AiteBar
                 bool changed = false;
                 if (File.Exists(_settingsFile))
                 {
+                    EnsureFileSizeWithinLimit(_settingsFile, MaxSettingsFileBytes);
                     string json = await File.ReadAllTextAsync(_settingsFile);
                     _appSettings = JsonSerializer.Deserialize<AppSettings>(json) ?? new();
                     changed = NormalizeAppState();
                 }
                 else if (File.Exists(_configFile))
                 {
+                    EnsureFileSizeWithinLimit(_configFile, MaxSettingsFileBytes);
                     string json = await File.ReadAllTextAsync(_configFile);
                     _appSettings.Elements = JsonSerializer.Deserialize<List<CustomElement>>(json) ?? [];
                     changed = NormalizeAppState();
@@ -68,7 +81,11 @@ namespace AiteBar
             await _saveSemaphore.WaitAsync();
             try
             {
-                _appSettings.Elements = [.. _elements];
+                lock (_stateLock)
+                {
+                    _appSettings.Elements = [.. _elements];
+                }
+
                 string json = JsonSerializer.Serialize(_appSettings, _jsonOptions);
                 await File.WriteAllTextAsync(_settingsFile, json);
                 SettingsChanged?.Invoke(this, EventArgs.Empty);
@@ -141,10 +158,22 @@ namespace AiteBar
                 }
             }
 
-            _elements = normalizedElements;
-            _appSettings.Elements = [.. normalizedElements];
+            lock (_stateLock)
+            {
+                _elements = normalizedElements;
+                _appSettings.Elements = [.. normalizedElements];
+            }
 
             return changed;
+        }
+
+        private static void EnsureFileSizeWithinLimit(string path, long maxBytes)
+        {
+            long length = new FileInfo(path).Length;
+            if (length > maxBytes)
+            {
+                throw new InvalidDataException($"Файл слишком большой: {length} bytes.");
+            }
         }
 
         private static bool UsesPreviousDefaultShowHotkey(AppSettings settings)
@@ -177,6 +206,7 @@ namespace AiteBar
                 string contextId = string.IsNullOrWhiteSpace(item.ContextId) ? defaultContextId : item.ContextId;
                 item.Id = id;
                 item.ContextId = contextId;
+                item.RotationProfilePaths ??= [];
                 result.Add(item);
             }
             return result;
@@ -193,6 +223,7 @@ namespace AiteBar
                    left.ActionValue == right.ActionValue &&
                    left.Browser == right.Browser &&
                    left.ChromeProfile == right.ChromeProfile &&
+                   (left.RotationProfilePaths ?? []).SequenceEqual(right.RotationProfilePaths ?? []) &&
                    left.IsAppMode == right.IsAppMode &&
                    left.IsIncognito == right.IsIncognito &&
                    left.UseRotation == right.UseRotation &&
@@ -237,19 +268,22 @@ namespace AiteBar
 
         public async Task SaveElementAsync(CustomElement updated, string? removeId = null)
         {
-            if (removeId != null && !string.Equals(removeId, updated.Id, StringComparison.Ordinal))
+            lock (_stateLock)
             {
-                _elements.RemoveAll(x => x.Id == removeId);
-            }
+                if (removeId != null && !string.Equals(removeId, updated.Id, StringComparison.Ordinal))
+                {
+                    _elements.RemoveAll(x => x.Id == removeId);
+                }
 
-            var existing = _elements.FirstOrDefault(x => x.Id == updated.Id);
-            if (existing != null)
-            {
-                _elements[_elements.IndexOf(existing)] = updated;
-            }
-            else
-            {
-                _elements.Add(updated);
+                var existing = _elements.FirstOrDefault(x => x.Id == updated.Id);
+                if (existing != null)
+                {
+                    _elements[_elements.IndexOf(existing)] = updated;
+                }
+                else
+                {
+                    _elements.Add(updated);
+                }
             }
 
             await SaveAsync();
@@ -257,40 +291,65 @@ namespace AiteBar
 
         public void ReorderElements(int oldIndex, int newIndex, string contextId)
         {
-            var contextElements = _elements.Where(e => e.ContextId == contextId).ToList();
-            if (oldIndex < 0 || oldIndex >= contextElements.Count || newIndex < 0 || newIndex >= contextElements.Count)
-                return;
+            lock (_stateLock)
+            {
+                var contextElements = _elements.Where(e => e.ContextId == contextId).ToList();
+                if (oldIndex < 0 || oldIndex >= contextElements.Count || newIndex < 0 || newIndex >= contextElements.Count)
+                    return;
 
-            var item = contextElements[oldIndex];
-            
-            // Находим реальные индексы в общем списке
-            int realOldIndex = _elements.IndexOf(item);
-            _elements.RemoveAt(realOldIndex);
-            
-            // Находим реальный индекс вставки
-            var targetItem = contextElements[newIndex];
-            int realNewIndex = _elements.IndexOf(targetItem);
-            
-            // Если мы перемещали элемент "вперед" (индекс увеличивался), то после удаления старого элемента 
-            // реальный индекс вставки может сместиться. Но так как мы ищем по targetItem, всё должно быть ок.
-            // Если oldIndex < newIndex, вставляем ПОСЛЕ targetItem, иначе ДО.
-            if (oldIndex < newIndex) realNewIndex++;
-            
-            if (realNewIndex < 0) realNewIndex = 0;
-            if (realNewIndex > _elements.Count) realNewIndex = _elements.Count;
+                var item = contextElements[oldIndex];
+                int realOldIndex = _elements.IndexOf(item);
+                _elements.RemoveAt(realOldIndex);
+                var targetItem = contextElements[newIndex];
+                int realNewIndex = _elements.IndexOf(targetItem);
+                if (oldIndex < newIndex) realNewIndex++;
+                realNewIndex = Math.Clamp(realNewIndex, 0, _elements.Count);
 
-            _elements.Insert(realNewIndex, item);
+                _elements.Insert(realNewIndex, item);
+            }
         }
 
         public async Task DeleteElementAsync(string id)
         {
-            _elements.RemoveAll(x => x.Id == id);
+            lock (_stateLock)
+            {
+                _elements.RemoveAll(x => x.Id == id);
+            }
+
             await SaveAsync();
         }
 
         internal async Task AddElementsAsync(IEnumerable<CustomElement> elements)
         {
-            _elements.AddRange(elements);
+            lock (_stateLock)
+            {
+                _elements.AddRange(elements);
+            }
+
+            await SaveAsync();
+        }
+
+        public async Task InsertElementAfterAsync(string sourceId, CustomElement element)
+        {
+            lock (_stateLock)
+            {
+                int sourceIndex = _elements.FindIndex(x => string.Equals(x.Id, sourceId, StringComparison.Ordinal));
+                if (sourceIndex >= 0) _elements.Insert(sourceIndex + 1, element);
+                else _elements.Add(element);
+            }
+
+            await SaveAsync();
+        }
+
+        public async Task UpdateElementAsync(string id, Action<CustomElement> update)
+        {
+            lock (_stateLock)
+            {
+                var element = _elements.FirstOrDefault(x => string.Equals(x.Id, id, StringComparison.Ordinal));
+                if (element == null) return;
+                update(element);
+            }
+
             await SaveAsync();
         }
 
@@ -306,6 +365,7 @@ namespace AiteBar
             ActionValue = s.ActionValue,
             Browser = s.Browser,
             ChromeProfile = s.ChromeProfile,
+            RotationProfilePaths = [.. (s.RotationProfilePaths ?? [])],
             IsAppMode = s.IsAppMode,
             IsIncognito = s.IsIncognito,
             UseRotation = s.UseRotation,

@@ -439,7 +439,7 @@ namespace AiteBar
                 PanelContext context = contexts[i];
                 var row = new Grid { Height = 26, Margin = new Thickness(0, 0, 0, 4) };
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(34) });
-                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(96) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(42) });
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
 
                 var badge = new Border
@@ -469,6 +469,7 @@ namespace AiteBar
                     IsEnabled = i != 0,
                     Margin = new Thickness(0),
                     Padding = new Thickness(0),
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
                     ToolTip = i == 0 ? LocalizationService.Get("AppSettingsWindow_PrimaryPanelAlwaysEnabled") : null
                 };

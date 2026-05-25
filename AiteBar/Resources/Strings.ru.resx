@@ -27,4 +27,14 @@
   <data name="Drop_UrlShortcutOnly" xml:space="preserve"><value>Поддерживаются только .url с http/https ссылкой.</value></data>
   <data name="Drop_FileFolderOrUrlOnly" xml:space="preserve"><value>Можно перетаскивать только файл, папку или http/https ссылку.</value></data>
   <data name="Drop_SupportedTargets" xml:space="preserve"><value>Поддерживаются только файлы, папки, .url и прямые http/https ссылки.</value></data>
+  <data name="SettingsWindow_RotationProfilesButton" xml:space="preserve"><value>Профили...</value></data>
+  <data name="SettingsWindow_RotationProfilesAll" xml:space="preserve"><value>Профили ротации: все профили</value></data>
+  <data name="SettingsWindow_RotationProfilesNoneAvailable" xml:space="preserve"><value>Профили ротации: выбранные профили недоступны</value></data>
+  <data name="RotationProfiles_Title" xml:space="preserve"><value>Профили ротации</value></data>
+  <data name="RotationProfiles_Profiles" xml:space="preserve"><value>Профили, участвующие в ротации</value></data>
+  <data name="RotationProfiles_DefaultHint" xml:space="preserve"><value>Оставьте выбранными все, чтобы ротировать по всем профилям.</value></data>
+  <data name="RotationProfiles_SearchPlaceholder" xml:space="preserve"><value>Поиск профилей</value></data>
+  <data name="RotationProfiles_SelectedFormat" xml:space="preserve"><value>{0} из {1}</value></data>
+  <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Выбрать все</value></data>
+  <data name="RotationProfiles_Clear" xml:space="preserve"><value>Снять выделение</value></data>
 </root>

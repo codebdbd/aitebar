@@ -34,6 +34,9 @@ namespace AiteBar
         private readonly MainWindow _mainWindow;
         private readonly CustomElement? _editingElement = null;
         private bool _showRequiredValidation;
+        private List<BrowserProfileInfo> _availableProfiles = [];
+        private List<string> _rotationProfilePaths = [];
+        private int _profileLoadVersion;
 
         public SettingsWindow(MainWindow main, CustomElement? el = null)
         {
@@ -112,6 +115,7 @@ namespace AiteBar
             ChkIncognito.IsChecked = _editingElement.IsIncognito;
             ChkFullscreen.IsChecked = _editingElement.OpenFullscreen;
             ChkRotation.IsChecked = _editingElement.UseRotation;
+            _rotationProfilePaths = [.. _editingElement.RotationProfilePaths];
             ChkCtrl.IsChecked = _editingElement.Ctrl;
             ChkShift.IsChecked = _editingElement.Shift;
             ChkAlt.IsChecked = _editingElement.Alt;
@@ -122,8 +126,10 @@ namespace AiteBar
             SetComboValue(CmbContext, _editingElement.ContextId);
             SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
             SetComboValue(CmbKey, _editingElement.Key);
+
             UpdatePreview();
             UpdateActionUI();
+            UpdateRotationProfilesUi();
             UpdateNamePlaceholderVisibility();
         }
 
@@ -222,7 +228,7 @@ namespace AiteBar
                 { 
                     PreviewImage.Source = new BitmapImage(new Uri(_selectedImagePath));
                 }
-                catch { }
+                catch (Exception ex) { Logger.Log(ex); }
             }
             else
             { 
@@ -236,6 +242,11 @@ namespace AiteBar
 
         private async void CmbBrowser_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_editingElement == null || !IsSelectedBrowser(_editingElement.Browser))
+            {
+                _rotationProfilePaths = [];
+            }
+
             await LoadProfilesAsync();
         }
 
@@ -245,11 +256,18 @@ namespace AiteBar
 
             string browserStr = ((ComboBoxItem)CmbBrowser.SelectedItem)?.Tag?.ToString() ?? "Chrome";
             if (!Enum.TryParse<BrowserType>(browserStr, out var browserType)) browserType = BrowserType.Chrome;
+            int loadVersion = ++_profileLoadVersion;
 
             CmbChromeProfile.Items.Clear();
             CmbChromeProfile.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("SettingsWindow_NoProfile"), Tag = "" });
             
             var profileItems = await Task.Run(() => BrowserHelper.GetProfiles(browserType));
+            if (loadVersion != _profileLoadVersion || !IsSelectedBrowser(browserType))
+            {
+                return;
+            }
+
+            _availableProfiles = profileItems;
 
             foreach (var profile in profileItems)
                 CmbChromeProfile.Items.Add(new ComboBoxItem { Content = profile.DisplayName, Tag = profile.ProfilePath });
@@ -257,6 +275,44 @@ namespace AiteBar
             CmbChromeProfile.SelectedIndex = 0;
             if (_editingElement != null && _editingElement.Browser == browserType)
                 SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
+
+            UpdateRotationProfilesUi();
+        }
+
+        private bool IsSelectedBrowser(BrowserType browserType)
+        {
+            string browserStr = ((ComboBoxItem)CmbBrowser.SelectedItem)?.Tag?.ToString() ?? "Chrome";
+            return Enum.TryParse<BrowserType>(browserStr, out var selectedBrowser) && selectedBrowser == browserType;
+        }
+
+        private void ChkRotation_Changed(object sender, RoutedEventArgs e)
+        {
+            UpdateRotationProfilesUi();
+        }
+
+        private void BtnRotationProfiles_Click(object sender, RoutedEventArgs e) => OpenRotationProfileSelection();
+
+        private void OpenRotationProfileSelection()
+        {
+            var dialog = new RotationProfileSelectionWindow(_availableProfiles, _rotationProfilePaths)
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() == true)
+            {
+                _rotationProfilePaths = dialog.SelectedProfilePaths;
+                UpdateRotationProfilesUi();
+            }
+        }
+
+        private void UpdateRotationProfilesUi()
+        {
+            if (BtnRotationProfiles != null)
+            {
+                BtnRotationProfiles.IsEnabled = ChkRotation?.IsChecked == true;
+            }
+
         }
 
         private void UpdateActionUI()
@@ -334,6 +390,7 @@ namespace AiteBar
             }
             UpdateRequiredFieldsVisuals();
             UpdateSaveButtonState();
+            UpdateRotationProfilesUi();
         }
 
         private void CmbActionType_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateActionUI();
@@ -628,6 +685,7 @@ namespace AiteBar
                     Icon = _selectedIcon, IconFont = _selectedFont, Color = _selectedColor, 
                     ImagePath = _selectedImagePath,
                     ChromeProfile = ((ComboBoxItem)CmbChromeProfile.SelectedItem)?.Tag?.ToString() ?? "",
+                    RotationProfilePaths = [.. _rotationProfilePaths],
                     IsAppMode = ChkAppMode.IsChecked ?? false, IsIncognito = ChkIncognito.IsChecked ?? false,
                     UseRotation = ChkRotation.IsChecked ?? false, OpenFullscreen = ChkFullscreen.IsChecked ?? false, IsTopmost = false,
                     LastUsedProfile = _editingElement?.LastUsedProfile ?? "",
@@ -656,17 +714,5 @@ namespace AiteBar
             Close();
         }
 
-        private void BtnOpenAppSettings_Click(object sender, RoutedEventArgs e)
-        {
-            string? selectedContextId = (CmbContext.SelectedItem as ComboBoxItem)?.Tag?.ToString();
-            new AppSettingsWindow(_mainWindow) { Owner = this }.ShowDialog();
-            LoadContexts();
-            if (!string.IsNullOrWhiteSpace(selectedContextId))
-            {
-                SetComboValue(CmbContext, selectedContextId);
-            }
-            UpdateActionUI();
-            UpdateSaveButtonState();
-        }
     }
 }

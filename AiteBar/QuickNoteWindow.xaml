@@ -123,7 +123,7 @@
     <Grid>
         <Border Margin="8" CornerRadius="14" Background="#202124" BorderBrush="#3A3B40" BorderThickness="1">
             <Border.Effect>
-                <DropShadowEffect Color="#000000" BlurRadius="30" ShadowDepth="0" Opacity="0.34"/>
+                <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="3" Direction="270" Opacity="0.14"/>
             </Border.Effect>
 
             <Grid>

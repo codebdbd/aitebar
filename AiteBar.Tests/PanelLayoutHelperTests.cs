@@ -139,4 +139,60 @@ public sealed class PanelLayoutHelperTests
         Assert.Equal(44, metrics.UserHeight);
         Assert.Equal(53, metrics.FixedWidth);
     }
+
+    [Fact]
+    public void Calculate_Horizontal_ReservesTrailingSettingsButton()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: false,
+            availablePrimary: 600,
+            panelPercent: 100,
+            visibleSystemButtonCount: 0,
+            controlButtonCount: 1,
+            contextCounts: [4],
+            activeContextIndex: 0,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(53, metrics.FixedWidth);
+        Assert.Equal(53, metrics.TrailingWidth);
+        Assert.Equal(176, metrics.UserWidth);
+        Assert.Equal(290, metrics.PanelWidth);
+    }
+
+    [Fact]
+    public void Calculate_Horizontal_KeepsTrailingSettingsButtonWhenPanelIsEmpty()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: false,
+            availablePrimary: 600,
+            panelPercent: 100,
+            visibleSystemButtonCount: 0,
+            controlButtonCount: 1,
+            contextCounts: [0],
+            activeContextIndex: 0,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(44, metrics.TrailingWidth);
+        Assert.Equal(0, metrics.UserWidth);
+        Assert.Equal(96, metrics.PanelWidth);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_ReservesTrailingSettingsButtonAtBottom()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 600,
+            panelPercent: 100,
+            visibleSystemButtonCount: 0,
+            controlButtonCount: 1,
+            contextCounts: [4],
+            activeContextIndex: 0,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(53, metrics.FixedHeight);
+        Assert.Equal(53, metrics.TrailingHeight);
+        Assert.Equal(176, metrics.UserHeight);
+        Assert.Equal(290, metrics.PanelHeight);
+    }
 }
