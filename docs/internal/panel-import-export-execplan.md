@@ -15,7 +15,7 @@ After this change, a user can export the active AiteBar panel into one portable 
 - [x] (2026-04-24 10:32Z) Implemented package DTOs, mapping helpers, and the core export/import service.
 - [x] (2026-04-24 10:54Z) Added unit tests for empty panels, built-in icons, file icons, context reassignment, ID regeneration, and invalid manifests.
 - [x] (2026-04-24 11:07Z) Wired import/export into the RootBorder context menu and tray menu.
-- [x] (2026-04-24 11:15Z) Updated user-facing documentation in `README.md` and `USER_MANUAL.md`.
+- [x] (2026-04-24 11:15Z) Updated user-facing documentation in `README.md` and `docs/user-manual.md`.
 - [x] (2026-04-24 11:22Z) Ran `dotnet build .\AiteBar.sln -c Release -p:UseSharedCompilation=false`; build passed with 0 warnings and 0 errors.
 - [x] (2026-04-24 11:22Z) Ran `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release`; full suite passed 28/28 including the 6 new package tests.
 - [x] (2026-04-24 11:23Z) Ran `.\installer\Build-Installer.ps1`; rebuilt `artifacts\installer\AiteBar-Setup.exe`.
@@ -58,7 +58,7 @@ The package format uses a transport model that is intentionally separate from `C
 
 ## Plan of Work
 
-Add three new source files to `AiteBar`: one file for DTOs, one for mapping helpers, and one for the import/export service. Extend `AppSettingsService` with a method that appends a prepared list of imported elements and saves once. Add tests that exercise export and import end to end using temporary package files and temporary icon stores. Then modify `MainWindow.xaml.cs` to instantiate the service, add the two menu items to the RootBorder context menu and the tray menu, and route both entry points through common import/export methods that use `OpenFileDialog`, `SaveFileDialog`, preview, and confirm dialogs. Finish by documenting the feature in `README.md` and `USER_MANUAL.md`.
+Add three new source files to `AiteBar`: one file for DTOs, one for mapping helpers, and one for the import/export service. Extend `AppSettingsService` with a method that appends a prepared list of imported elements and saves once. Add tests that exercise export and import end to end using temporary package files and temporary icon stores. Then modify `MainWindow.xaml.cs` to instantiate the service, add the two menu items to the RootBorder context menu and the tray menu, and route both entry points through common import/export methods that use `OpenFileDialog`, `SaveFileDialog`, preview, and confirm dialogs. Finish by documenting the feature in `README.md` and `docs/user-manual.md`.
 
 ## Concrete Steps
 
@@ -68,7 +68,7 @@ Work from the repository root `D:\01_Codebdbd\01_projects\aitebar`.
 2. Extend `AiteBar/AppSettingsService.cs` with one append-and-save method for imported elements.
 3. Create `AiteBar.Tests/PanelPackageServiceTests.cs`.
 4. Update `AiteBar/MainWindow.xaml.cs` to add the menu items and handlers.
-5. Update `README.md` and `USER_MANUAL.md`.
+5. Update `README.md` and `docs/user-manual.md`.
 6. Run:
 
    dotnet build .\AiteBar.sln -c Release

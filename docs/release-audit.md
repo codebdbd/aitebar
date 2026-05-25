@@ -134,7 +134,7 @@ private static void TryDeleteDirectory(string path)
 **Описание**: Многие публичные методы не имеют XML-документации.
 **Последствия**: Усложнение работы с кодом для новых разработчиков.
 **Место возникновения**: Различные файлы
-**Решение**: Проект является desktop-приложением без публикуемого SDK/API surface; XML documentation не включена как релизный gate. Поддерживающая документация вынесена в `ARCHITECTURE.md`, `FUNCTIONS.md`, `USER_MANUAL.md` и этот audit report.
+**Решение**: Проект является desktop-приложением без публикуемого SDK/API surface; XML documentation не включена как релизный gate. Поддерживающая документация вынесена в `docs/architecture.md`, `docs/functions.md`, `docs/user-manual.md` и этот audit report.
 
 ## 8. Security Audit
 

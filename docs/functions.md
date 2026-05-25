@@ -1758,7 +1758,7 @@ HEX-цвет `#RRGGBB` или `#AARRGGBB`.
 
 ### Подтверждение в коде
 
-`AiteBar/MainWindow.xaml.cs`, `AiteBar/PanelPackageService.cs`, `AiteBar/PanelPackageMapper.cs`, `AiteBar/PanelPackageManifest.cs`, `USER_MANUAL.md`.
+`AiteBar/MainWindow.xaml.cs`, `AiteBar/PanelPackageService.cs`, `AiteBar/PanelPackageMapper.cs`, `AiteBar/PanelPackageManifest.cs`, `docs/user-manual.md`.
 
 ## Экспорт текущей панели
 

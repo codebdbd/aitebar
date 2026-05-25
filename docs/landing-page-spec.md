@@ -1097,7 +1097,7 @@ Centered content:
 CTA behavior:
 
 - Primary leads to download.
-- Secondary leads to `USER_MANUAL.md` or docs page if hosted.
+- Secondary leads to `docs/user-manual.md` or docs page if hosted.
 
 ### Button states
 
