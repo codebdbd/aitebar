@@ -49,14 +49,14 @@ namespace AiteBar
 
         private static class MenuIcons
         {
-            public const int Panel = 59567; // ic_fluent_panel_left_16_regular
+            public const int Open = 62849; // ic_fluent_open_16_regular
             public const int Settings = 63144; // ic_fluent_settings_16_regular
             public const int Import = 58591; // ic_fluent_document_arrow_down_16_regular
             public const int Export = 62465; // ic_fluent_document_arrow_up_16_regular
             public const int Info = 62626; // ic_fluent_info_16_regular
             public const int Help = 63036; // ic_fluent_question_circle_16_regular
             public const int Donate = 59035; // ic_fluent_gift_16_regular
-            public const int Exit = 58724; // ic_fluent_door_arrow_left_16_regular
+            public const int Exit = 985317; // ic_fluent_arrow_exit_16_regular
             public const int Unpin = 59781; // ic_fluent_pin_off_16_regular
             public const int Edit = 62428; // ic_fluent_edit_16_regular
             public const int Copy = 62250; // ic_fluent_copy_16_regular
@@ -79,6 +79,8 @@ namespace AiteBar
 
         private Button? _draggedButton = null;
         private CustomElement? _draggedElement = null;
+        private const string ProductPageUrl = "https://suvorov.pp.ua/aitebar/";
+        private const string DonatePageUrl = "https://suvorov.pp.ua/donate/";
         private Point _dragStartPos;
         private bool _isReordering = false;
         private int _draggedOriginalIndex;
@@ -918,19 +920,10 @@ namespace AiteBar
         {
             var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
 
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Panel), LocalizationService.Get("Menu_Open"), (s, e) => ShowDock()));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Open), LocalizationService.Get("Menu_Open"), (s, e) => ShowDock()));
             menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Settings), LocalizationService.Get("Menu_ProgramSettings"), (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Import), LocalizationService.Get("Menu_ImportPanel"), async (s, e) =>
-            {
-                await RunPanelInteractionAsync(ImportIntoCurrentPanelAsync);
-            }));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Export), LocalizationService.Get("Menu_ExportCurrentPanel"), async (s, e) =>
-            {
-                await RunPanelInteractionAsync(ExportCurrentPanelAsync);
-            }));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Info), LocalizationService.Get("Menu_About"), (s, e) => new AboutWindow { Owner = this }.ShowDialog()));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Help), LocalizationService.Get("Menu_Help"), (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/products/aitebar/guide.html")));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Donate), LocalizationService.Get("Menu_Donate"), (s, e) => OpenUrl("https://codebdbd.github.io/intro/en/pages/donate.html")));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Info), LocalizationService.Get("Menu_About"), (s, e) => OpenUrl(ProductPageUrl)));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Donate), LocalizationService.Get("Menu_Donate"), (s, e) => OpenUrl(DonatePageUrl)));
             menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Exit), LocalizationService.Get("Menu_Exit"), (s, e) => { _notifyIcon.Dispose(); Application.Current.Shutdown(); }));
 
             // Для того чтобы ContextMenu закрывалось при клике мимо, 
