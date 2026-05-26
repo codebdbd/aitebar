@@ -8,8 +8,8 @@
         <ResourceDictionary>
             <!-- Colors -->
         <SolidColorBrush x:Key="WindowBackground" Color="#1A1A1C"/>
-        <SolidColorBrush x:Key="PanelBackground" Color="#252526"/>
-        <SolidColorBrush x:Key="BorderColor" Color="#3E3E42"/>
+        <SolidColorBrush x:Key="PanelBackground" Color="#101418"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#16202A"/>
         <SolidColorBrush x:Key="AccentColor" Color="#007ACC"/>
         <SolidColorBrush x:Key="MutedText" Color="#9BA1A6"/>
         <SolidColorBrush x:Key="PrimaryText" Color="#E3E3E3"/>
@@ -289,13 +289,13 @@
 
         <!-- ToolTip Style - Windows 11 Dark Theme -->
         <Style TargetType="ToolTip">
-            <Setter Property="Background" Value="#2D2D30"/>
-            <Setter Property="BorderBrush" Value="#414141"/>
+            <Setter Property="Background" Value="#202328"/>
+            <Setter Property="BorderBrush" Value="#3A4148"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="#E3E3E3"/>
-            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Foreground" Value="#E7EAEE"/>
+            <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Padding" Value="9,6"/>
             <Setter Property="Margin" Value="8"/>
             <Setter Property="HasDropShadow" Value="True"/>
             <Setter Property="Placement" Value="Mouse"/>
@@ -307,9 +307,15 @@
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6"
+                                CornerRadius="3"
                                 Padding="{TemplateBinding Padding}"
                                 SnapsToDevicePixels="True">
+                            <Border.Effect>
+                                <DropShadowEffect Color="#000000"
+                                                  BlurRadius="8"
+                                                  ShadowDepth="1"
+                                                  Opacity="0.35"/>
+                            </Border.Effect>
                             <ContentPresenter HorizontalAlignment="Left"
                                               VerticalAlignment="Center"
                                               TextOptions.TextFormattingMode="Display"/>

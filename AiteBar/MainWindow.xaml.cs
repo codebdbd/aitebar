@@ -22,6 +22,7 @@ using Panel = System.Windows.Controls.Panel;
 using ContextMenu = System.Windows.Controls.ContextMenu;
 using MenuItem = System.Windows.Controls.MenuItem;
 using Separator = System.Windows.Controls.Separator;
+using ToolTipService = System.Windows.Controls.ToolTipService;
 using Application = System.Windows.Application;
 using Clipboard = System.Windows.Clipboard;
 using Brush = System.Windows.Media.Brush;
@@ -33,6 +34,7 @@ using Point = System.Windows.Point;
 using FontFamily = System.Windows.Media.FontFamily;
 using MediaColor = System.Windows.Media.Color;
 using MediaColorConverter = System.Windows.Media.ColorConverter;
+using PlacementMode = System.Windows.Controls.Primitives.PlacementMode;
 
 namespace AiteBar
 {
@@ -81,6 +83,7 @@ namespace AiteBar
         private CustomElement? _draggedElement = null;
         private const string ProductPageUrl = "https://suvorov.pp.ua/aitebar/";
         private const string DonatePageUrl = "https://suvorov.pp.ua/donate/";
+        private const double TopPanelVisibleOffset = 20;
         private Point _dragStartPos;
         private bool _isReordering = false;
         private int _draggedOriginalIndex;
@@ -1105,7 +1108,7 @@ namespace AiteBar
 
             return _appSettings.Edge switch
             {
-                DockEdge.Top => (centeredX, hide ? bounds.Top - height : workArea.Top),
+                DockEdge.Top => (centeredX, hide ? bounds.Top - height : workArea.Top + TopPanelVisibleOffset),
                 DockEdge.Bottom => (centeredX, hide ? bounds.Bottom : workArea.Bottom - height),
                 DockEdge.Left => (hide ? bounds.Left - width : workArea.Left, centeredY),
                 DockEdge.Right => (hide ? bounds.Right : workArea.Right - width, centeredY),
@@ -1271,11 +1274,12 @@ namespace AiteBar
             var separators = new[] { SepSystem, SepControl, SepAppSettings };
             foreach (var sep in separators)
             {
-                if (isVertical) { sep.Width = 20; sep.Height = 1; sep.Margin = new Thickness(0, 6, 0, 6); }
-                else { sep.Width = 1; sep.Height = 20; sep.Margin = new Thickness(6, 0, 6, 0); }
+                if (isVertical) { sep.Width = 20; sep.Height = 1; sep.Margin = new Thickness(0, 4, 0, 4); }
+                else { sep.Width = 1; sep.Height = 20; sep.Margin = new Thickness(4, 0, 4, 0); }
             }
 
             ApplyPanelSizeConstraints();
+            ApplyPanelToolTipPlacement();
             PositionWindowImmediately(_shown);
         }
 
@@ -1374,9 +1378,61 @@ namespace AiteBar
             SepAppSettings.Visibility = UserButtonsPanel.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
 
             AnimateContextTransitionIfNeeded();
+            ApplyPanelToolTipPlacement();
             
             UpdatePanelBounds();
         }
+
+        private void ApplyPanelToolTipPlacement()
+        {
+            var placement = GetPanelToolTipPlacement(_appSettings.Edge);
+            var horizontalOffset = _appSettings.Edge switch
+            {
+                DockEdge.Left => 8,
+                DockEdge.Right => -8,
+                _ => 0
+            };
+            var verticalOffset = _appSettings.Edge switch
+            {
+                DockEdge.Top => 8,
+                DockEdge.Bottom => -8,
+                _ => 0
+            };
+
+            foreach (var button in EnumeratePanelButtons())
+            {
+                ToolTipService.SetPlacement(button, placement);
+                ToolTipService.SetHorizontalOffset(button, horizontalOffset);
+                ToolTipService.SetVerticalOffset(button, verticalOffset);
+            }
+        }
+
+        private IEnumerable<Button> EnumeratePanelButtons()
+        {
+            yield return BtnAdd;
+            yield return BtnSearch;
+            yield return BtnScreenshot;
+            yield return BtnRecord;
+            yield return BtnCalc;
+            yield return BtnExplorer;
+            yield return BtnDownloads;
+            yield return BtnColorPicker;
+            yield return BtnQuickNote;
+            yield return BtnAppSettings;
+
+            foreach (var button in _userButtons)
+            {
+                yield return button;
+            }
+        }
+
+        private static PlacementMode GetPanelToolTipPlacement(DockEdge edge) => edge switch
+        {
+            DockEdge.Bottom => PlacementMode.Top,
+            DockEdge.Left => PlacementMode.Right,
+            DockEdge.Right => PlacementMode.Left,
+            _ => PlacementMode.Bottom
+        };
 
         private bool ApplySystemUtilityVisibility(string activeContextId)
         {
@@ -1521,8 +1577,8 @@ namespace AiteBar
         private void SetDragHandleActive(bool isActive)
         {
             DragHandleGrip.Background = isActive
-                ? (Brush)_brushConverter.ConvertFromString("#007ACC")!
-                : (Brush)_brushConverter.ConvertFromString("#35FFFFFF")!;
+                ? (Brush)_brushConverter.ConvertFromString("#64C7FF")!
+                : (Brush)_brushConverter.ConvertFromString("#2A9CFF")!;
         }
 
         private void SetPanelDragRenderingActive(bool isActive)

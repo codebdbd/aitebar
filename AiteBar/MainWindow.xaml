@@ -44,10 +44,13 @@
         </Style>
     </Window.Resources>
 
-    <Border x:Name="RootBorder" Background="{StaticResource BorderColor}" CornerRadius="8" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" Margin="3"
+    <Border x:Name="RootBorder" Background="{StaticResource BorderColor}" CornerRadius="8" BorderBrush="#332A9CFF" BorderThickness="0.7" Margin="3"
             SnapsToDevicePixels="True"
             TextOptions.TextFormattingMode="Ideal"
             AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel">
+        <Border.Effect>
+            <DropShadowEffect Color="#2A9CFF" BlurRadius="6" ShadowDepth="0" Opacity="0.18"/>
+        </Border.Effect>
         <Border Background="{StaticResource PanelBackground}" CornerRadius="7" SnapsToDevicePixels="True">
         <DockPanel x:Name="MainPanel" HorizontalAlignment="Left" VerticalAlignment="Center" LastChildFill="False" Margin="2">
                 <Border x:Name="DragHandle"
@@ -64,7 +67,7 @@
                     <Border x:Name="DragHandleGrip"
                             Width="4"
                             Height="18"
-                            Background="#35FFFFFF"
+                            Background="#2A9CFF"
                             CornerRadius="2"
                             HorizontalAlignment="Center"
                             VerticalAlignment="Center"
@@ -73,10 +76,10 @@
 
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
-                        <Button x:Name="BtnAdd" Content="&#xE005;" Click="BtnAdd_Click" Foreground="{StaticResource AccentColor}"/>
+                        <Button x:Name="BtnAdd" Content="&#xE005;" Click="BtnAdd_Click" Foreground="#2A9CFF"/>
                     </StackPanel>
 
-                    <Rectangle x:Name="SepSystem" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" VerticalAlignment="Center"/>
+                    <Rectangle x:Name="SepSystem" Width="1" Height="20" Fill="#332A9CFF" Margin="4,0" VerticalAlignment="Center"/>
 
                     <StackPanel x:Name="SystemUtilsPanel" Orientation="Horizontal">
                         <Button x:Name="BtnSearch" Content="&#xEA7C;" Click="BtnSearch_Click" Foreground="#3ABEFF"/>
@@ -89,14 +92,14 @@
                         <Button x:Name="BtnQuickNote" Content="&#xF56F;" Click="BtnQuickNote_Click" Foreground="#22D3EE"/>
                     </StackPanel>
 
-                    <Rectangle x:Name="SepControl" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" VerticalAlignment="Center"/>
+                    <Rectangle x:Name="SepControl" Width="1" Height="20" Fill="#332A9CFF" Margin="4,0" VerticalAlignment="Center"/>
                 </StackPanel>
 
                 <WrapPanel x:Name="UserButtonsPanel" Orientation="Horizontal" ClipToBounds="True" VerticalAlignment="Center"/>
 
                 <StackPanel x:Name="AppSettingsBlock" Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
-                    <Rectangle x:Name="SepAppSettings" Width="1" Height="20" Fill="#20FFFFFF" Margin="6,0" VerticalAlignment="Center"/>
-                    <Button x:Name="BtnAppSettings" Content="&#xF6A8;" Click="BtnAppSettings_Click" Foreground="{StaticResource AccentColor}"/>
+                    <Rectangle x:Name="SepAppSettings" Width="1" Height="20" Fill="#332A9CFF" Margin="4,0" VerticalAlignment="Center"/>
+                    <Button x:Name="BtnAppSettings" Content="&#xF6A8;" Click="BtnAppSettings_Click" Foreground="#2A9CFF"/>
                 </StackPanel>
         </DockPanel>
         </Border>
