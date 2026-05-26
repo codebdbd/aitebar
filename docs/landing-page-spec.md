@@ -4,7 +4,7 @@
 
 ### Назначение программы
 
-AiteBar - локальная desktop-утилита для Windows, которая добавляет скрываемую панель быстрого доступа у выбранного края экрана. Панель появляется по наведению курсора на активную зону, через tray или горячую клавишу и позволяет запускать пользовательские действия.
+AiteBar - локальная desktop-утилита для Windows, которая превращает выбранный край экрана в персональный Workflow Hub. Панель появляется по наведению курсора на активную зону, через tray или горячую клавишу и позволяет запускать готовые пользовательские действия и рабочие сценарии.
 
 Поддержанные действия:
 
@@ -42,7 +42,7 @@ AiteBar - локальная desktop-утилита для Windows, котора
 - фрилансеры с несколькими клиентскими workflow;
 - пользователи с несколькими браузерными профилями;
 - люди, которые часто запускают локальные скрипты и служебные команды;
-- пользователи, которым нужен быстрый launcher без визуального шума.
+- пользователи, которым нужен личный command center без визуального шума.
 
 ### Конкурентные преимущества
 
@@ -130,13 +130,25 @@ AiteBar - локальная desktop-утилита для Windows, котора
 
 ## 3. УТП
 
+### Позиционирование
+
+Основное позиционирование: **AiteBar - Your Personal Command Center for Windows**.
+
+Допустимые формулировки для тестов:
+
+- **Workflow Hub for Windows Power Users**.
+- **Personal Command Center**.
+- **Turn the edge of your screen into a workflow hub**.
+
+Слово "launcher" не использовать как основную категорию продукта. Оно автоматически ставит AiteBar в один ряд с PowerToys Run, Flow Launcher, Keypirinha и Wox, где критерий выбора - скорость поиска и запуска приложений. AiteBar должен объясняться как система организации готовых действий, web-инструментов, браузерных профилей, скриптов и рабочих контекстов; скрываемая edge-панель - это способ доступа к этой системе.
+
 ### Основное УТП
 
-AiteBar превращает край экрана Windows в персональную панель действий: сайты, AI-сервисы, браузерные профили, файлы, скрипты, команды и быстрые инструменты всегда рядом, но не занимают место на экране.
+AiteBar превращает край экрана Windows в персональный Workflow Hub: сайты, AI-сервисы, браузерные профили, файлы, скрипты, команды и быстрые инструменты всегда рядом, но не занимают место на экране.
 
 ### Короткая формула
 
-Скрываемый launcher для Windows power users, которым нужны web-инструменты, браузерные профили, скрипты и быстрые действия в одном месте.
+Workflow Hub for Windows power users: скрываемый command center для web-инструментов, браузерных профилей, скриптов и повторяемых рабочих действий.
 
 ### Обещание продукта
 
@@ -148,7 +160,7 @@ AiteBar превращает край экрана Windows в персональ
 
 | Экран | Цель | Сообщение | Эмоциональный эффект | Ключевое действие |
 |---|---|---|---|---|
-| 1. Hero | Мгновенно объяснить продукт | Край экрана становится командной панелью | "Это сделано для моего workflow" | Скачать или посмотреть возможности |
+| 1. Hero | Мгновенно объяснить продукт | Край экрана становится workflow hub | "Это сделано для моего workflow" | Скачать или посмотреть возможности |
 | 2. Проблема | Показать знакомый хаос | Инструменты разбросаны по Windows | Узнавание боли | Скролл к решению |
 | 3. Решение | Показать центральную идею | Все действия собраны в скрываемой панели | Облегчение и интерес | Смотреть возможности |
 | 4. Возможности | Доказать функциональность | Панели, web-профили, скрипты, инструменты | Уверенность | Выбрать релевантные фичи |
@@ -171,11 +183,11 @@ AiteBar превращает край экрана Windows в персональ
 
 ### Контент
 
-**Badge:** Windows launcher for power users
+**Badge:** Workflow Hub for Windows Power Users
 
-**H1:** Твой край экрана стал командной панелью
+**H1:** Преврати край экрана в workflow hub
 
-**Subtitle:** AiteBar - скрываемая панель быстрого доступа для Windows. Запускай AI-сервисы, сайты, браузерные профили, приложения, папки, скрипты и системные инструменты из одного компактного места.
+**Subtitle:** AiteBar - персональный command center для Windows. Собери AI-сервисы, рабочие сайты, браузерные профили, проекты, папки, скрипты и системные инструменты в одном компактном месте.
 
 **Microcopy:** Наведи курсор на край экрана. Выбери действие. Продолжай работать без поиска по desktop, taskbar и закладкам.
 
@@ -224,7 +236,7 @@ Mobile:
 AI prompt:
 
 ```text
-Dark modern Windows desktop interface mockup, a slim hidden edge launcher panel appearing from the right side of the screen, compact square icon buttons, blue accent color #007ACC, minimal WPF-style dark UI, no brand logos, no readable copyrighted app names, clean tech product landing page hero visual, sharp UI screenshot style, high contrast but muted, 16:10 composition
+Dark modern Windows desktop interface mockup, a slim hidden edge workflow hub panel appearing from the right side of the screen, compact square icon buttons, blue accent color #007ACC, minimal WPF-style dark UI, no brand logos, no readable copyrighted app names, clean tech product landing page hero visual, sharp UI screenshot style, high contrast but muted, 16:10 composition
 ```
 
 ---
@@ -644,7 +656,7 @@ Mobile:
 ### Контент
 
 1. **AiteBar - это launcher?**  
-   Да, но не классический launcher. Это скрываемая панель у края экрана с фокусом на быстрые действия, web-инструменты, браузерные профили, скрипты и панели-контексты.
+   Скорее нет. AiteBar может запускать приложения, сайты, папки и команды, но позиционируется не как поисковый launcher. Это Workflow Hub: скрываемая панель у края экрана для готовых действий, web-инструментов, браузерных профилей, скриптов и панелей-контекстов.
 
 2. **Какие версии Windows поддерживаются?**  
    В README указаны Windows 10 и Windows 11.
@@ -768,23 +780,23 @@ Minimal dark closing CTA background for a Windows utility landing page, subtle s
 
 ### Главный заголовок
 
-Твой край экрана стал командной панелью
+Преврати край экрана в workflow hub
 
 ### Главный подзаголовок
 
-AiteBar - скрываемая панель быстрого доступа для Windows. Запускай AI-сервисы, сайты, браузерные профили, приложения, папки, скрипты и системные инструменты из одного компактного места.
+AiteBar - персональный command center для Windows. Собери AI-сервисы, рабочие сайты, браузерные профили, проекты, папки, скрипты и системные инструменты в одном компактном месте.
 
 ### Короткое описание
 
-AiteBar - скрываемая панель Windows для быстрого запуска сайтов, профилей браузера, приложений, файлов, скриптов и команд.
+AiteBar - персональный Workflow Hub для Windows: сайты, браузерные профили, приложения, файлы, скрипты и команды у края экрана.
 
 ### Среднее описание
 
-AiteBar превращает край экрана Windows в персональную панель быстрых действий. Запускайте сайты в нужном браузере и профиле, открывайте приложения, файлы, папки, скрипты, команды и системные инструменты. Разделяйте workflow по панелям, используйте hotkeys, tray-меню, drag-and-drop и импорт/экспорт готовых наборов.
+AiteBar превращает край экрана Windows в персональный Workflow Hub. Запускайте сайты в нужном браузере и профиле, открывайте приложения, файлы, папки, скрипты, команды и системные инструменты. Разделяйте рабочие контексты по панелям, используйте hotkeys, tray-меню, drag-and-drop и импорт/экспорт готовых наборов.
 
 ### Полное описание
 
-AiteBar - локальная desktop-утилита для Windows, которая добавляет скрываемую панель быстрого доступа у выбранного края экрана. Она появляется по наведению мыши, через tray или горячую клавишу и позволяет запускать пользовательские действия без поиска по рабочему столу, закладкам и меню "Пуск".
+AiteBar - локальная desktop-утилита для Windows, которая превращает выбранный край экрана в персональный command center. Она появляется по наведению мыши, через tray или горячую клавишу и позволяет запускать готовые действия без поиска по рабочему столу, закладкам и меню "Пуск".
 
 Пользователь может создавать кнопки для web-ссылок, программ, файлов, папок, скриптов, команд и сочетаний клавиш. Для web-действий доступны выбор браузера, профиль, app mode, incognito, fullscreen и ротация профилей. Это удобно для AI-сервисов, рабочих кабинетов, dev-инструментов и любых сайтов, которые нужно открывать в конкретном окружении.
 
@@ -797,7 +809,7 @@ AiteBar поддерживает до 8 панелей, drag-and-drop, импо�
 ### Hero visual
 
 ```text
-Dark modern Windows desktop interface mockup, a slim hidden edge launcher panel appearing from the right side of the screen, compact square icon buttons, blue accent color #007ACC, minimal WPF-style dark UI, no brand logos, no readable copyrighted app names, clean tech product landing page hero visual, sharp UI screenshot style, high contrast but muted, 16:10 composition
+Dark modern Windows desktop interface mockup, a slim hidden edge workflow hub panel appearing from the right side of the screen, compact square icon buttons, blue accent color #007ACC, minimal WPF-style dark UI, no brand logos, no readable copyrighted app names, clean tech product landing page hero visual, sharp UI screenshot style, high contrast but muted, 16:10 composition
 ```
 
 ### Problem visual
@@ -936,8 +948,8 @@ Behavior:
 <section id="hero" class="hero">
   <div class="container hero__grid">
     <div class="hero__content">
-      <div class="badge">Windows launcher for power users</div>
-      <h1>Твой край экрана стал командной панелью</h1>
+      <div class="badge">Workflow Hub for Windows Power Users</div>
+      <h1>Преврати край экрана в workflow hub</h1>
       <p class="lead">...</p>
       <p class="microcopy">...</p>
       <div class="actions">
@@ -1128,23 +1140,23 @@ Secondary:
 
 ### SEO Title
 
-AiteBar - скрываемая панель быстрого доступа для Windows
+AiteBar - Workflow Hub for Windows Power Users
 
 ### SEO Description
 
-AiteBar - локальный Windows launcher у края экрана: сайты, браузерные профили, приложения, файлы, папки, скрипты, команды, hotkeys и быстрые инструменты.
+AiteBar - персональный Workflow Hub у края экрана Windows: сайты, браузерные профили, приложения, файлы, папки, скрипты, команды, hotkeys и быстрые инструменты.
 
 ### Meta Keywords
 
-AiteBar, Windows launcher, панель быстрого доступа, edge panel, hotkeys, браузерные профили, запуск скриптов, Windows automation, быстрые инструменты, app mode, incognito, локальный launcher
+AiteBar, Workflow Hub, Command Center for Windows, Personal Command Center, edge panel, hotkeys, браузерные профили, запуск скриптов, Windows automation, быстрые инструменты, app mode, incognito
 
 ### Open Graph Title
 
-AiteBar - твой край экрана стал командной панелью
+AiteBar - Workflow Hub for Windows Power Users
 
 ### Open Graph Description
 
-Соберите свои сайты, AI-сервисы, браузерные профили, приложения, скрипты и команды в скрываемую панель быстрого доступа для Windows.
+Соберите свои сайты, AI-сервисы, браузерные профили, приложения, скрипты и команды в персональный Workflow Hub для Windows.
 
 ### Open Graph Image
 
@@ -1156,7 +1168,7 @@ AiteBar - твой край экрана стал командной панел�
 
 ### H1
 
-Твой край экрана стал командной панелью
+Преврати край экрана в workflow hub
 
 ### Recommended schema
 
