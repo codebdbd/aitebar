@@ -181,6 +181,7 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="Menu_Open" xml:space="preserve"><value>Open</value></data>
   <data name="Menu_ProgramSettings" xml:space="preserve"><value>Program settings</value></data>
   <data name="Menu_ImportPanel" xml:space="preserve"><value>Import panel...</value></data>
+  <data name="Menu_Panels" xml:space="preserve"><value>Panels</value></data>
   <data name="Menu_ImportCurrentPanel" xml:space="preserve"><value>Import into current panel...</value></data>
   <data name="Menu_ExportCurrentPanel" xml:space="preserve"><value>Export current panel...</value></data>
   <data name="Menu_About" xml:space="preserve"><value>About</value></data>

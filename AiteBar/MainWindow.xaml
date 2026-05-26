@@ -81,7 +81,7 @@
 
                     <Rectangle x:Name="SepSystem" Width="1" Height="20" Fill="#332A9CFF" Margin="4,0" VerticalAlignment="Center"/>
 
-                    <StackPanel x:Name="SystemUtilsPanel" Orientation="Horizontal">
+                    <WrapPanel x:Name="SystemUtilsPanel" Orientation="Horizontal">
                         <Button x:Name="BtnSearch" Content="&#xEA7C;" Click="BtnSearch_Click" Foreground="#3ABEFF"/>
                         <Button x:Name="BtnScreenshot" Content="&#xF68E;" Click="BtnScreenshotRegion_Click" Foreground="#60A5FA"/>
                         <Button x:Name="BtnRecord" Content="&#xF535;" Click="BtnRecordVideo_Click" Foreground="#FB7185"/>
@@ -90,7 +90,7 @@
                         <Button x:Name="BtnDownloads" Content="&#xF151;" Click="BtnDownloads_Click" Foreground="#34D399"/>
                         <Button x:Name="BtnColorPicker" Content="&#xF2F6;" Click="BtnColorPicker_Click" Foreground="#A855F7"/>
                         <Button x:Name="BtnQuickNote" Content="&#xF56F;" Click="BtnQuickNote_Click" Foreground="#22D3EE"/>
-                    </StackPanel>
+                    </WrapPanel>
 
                     <Rectangle x:Name="SepControl" Width="1" Height="20" Fill="#332A9CFF" Margin="4,0" VerticalAlignment="Center"/>
                 </StackPanel>

@@ -45,6 +45,7 @@
   <data name="Main_ExplorerTooltip" xml:space="preserve"><value>Explorer</value></data>
   <data name="Main_DownloadsTooltip" xml:space="preserve"><value>Downloads</value></data>
   <data name="Menu_ImportPanel" xml:space="preserve"><value>Leiste importieren...</value></data>
+  <data name="Menu_Panels" xml:space="preserve"><value>Leisten</value></data>
   <data name="Menu_ImportCurrentPanel" xml:space="preserve"><value>In aktuelle Leiste importieren...</value></data>
   <data name="Menu_ExportCurrentPanel" xml:space="preserve"><value>Aktuelle Leiste exportieren...</value></data>
   <data name="Menu_Help" xml:space="preserve"><value>Hilfe</value></data>

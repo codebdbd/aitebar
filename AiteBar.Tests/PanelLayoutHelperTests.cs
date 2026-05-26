@@ -64,12 +64,12 @@ public sealed class PanelLayoutHelperTests
     }
 
     [Fact]
-    public void Calculate_Vertical_UsesAvailableHeightBeforeAddingSecondColumn()
+    public void Calculate_Vertical_UsesOneUserColumnWhenButtonsFit()
     {
         var metrics = PanelLayoutHelper.Calculate(
             isVertical: true,
             availablePrimary: 800,
-            panelPercent: 40,
+            panelPercent: 100,
             visibleSystemButtonCount: 0,
             controlButtonCount: 1,
             contextCounts: [12],
@@ -80,6 +80,116 @@ public sealed class PanelLayoutHelperTests
         Assert.Equal(44, metrics.UserWidth);
         Assert.Equal(528, metrics.UserHeight);
         Assert.Equal(1, metrics.UserBands);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_AddsSecondUserColumnOnlyOnOverflow()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 800,
+            panelPercent: 40,
+            visibleSystemButtonCount: 0,
+            controlButtonCount: 1,
+            contextCounts: [12],
+            activeContextIndex: 0);
+
+        Assert.Equal(96, metrics.PanelWidth);
+        Assert.Equal(281, metrics.PanelHeight);
+        Assert.Equal(88, metrics.UserWidth);
+        Assert.Equal(220, metrics.UserHeight);
+        Assert.Equal(2, metrics.UserBands);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_UsesActiveContextWidth()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 800,
+            panelPercent: 40,
+            visibleSystemButtonCount: 0,
+            controlButtonCount: 1,
+            contextCounts: [12, 4],
+            activeContextIndex: 1);
+
+        Assert.Equal(52, metrics.PanelWidth);
+        Assert.Equal(44, metrics.UserWidth);
+        Assert.Equal(1, metrics.UserBands);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_UsesOneSystemColumnWhenButtonsFit()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 800,
+            panelPercent: 100,
+            visibleSystemButtonCount: 8,
+            controlButtonCount: 1,
+            contextCounts: [0],
+            activeContextIndex: 0);
+
+        Assert.Equal(52, metrics.PanelWidth);
+        Assert.Equal(413, metrics.PanelHeight);
+        Assert.Equal(44, metrics.FixedWidth);
+        Assert.Equal(405, metrics.FixedHeight);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_WrapsSystemButtonsIntoTwoColumnsOnOverflow()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 250,
+            panelPercent: 100,
+            visibleSystemButtonCount: 8,
+            controlButtonCount: 1,
+            contextCounts: [0],
+            activeContextIndex: 0);
+
+        Assert.Equal(96, metrics.PanelWidth);
+        Assert.Equal(237, metrics.PanelHeight);
+        Assert.Equal(88, metrics.FixedWidth);
+        Assert.Equal(229, metrics.FixedHeight);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_WrapsSystemButtonsWhenUserButtonsOverflow()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 800,
+            panelPercent: 70,
+            visibleSystemButtonCount: 8,
+            controlButtonCount: 1,
+            contextCounts: [12],
+            activeContextIndex: 0);
+
+        Assert.Equal(96, metrics.PanelWidth);
+        Assert.Equal(88, metrics.FixedWidth);
+        Assert.Equal(238, metrics.FixedHeight);
+        Assert.Equal(88, metrics.UserWidth);
+        Assert.Equal(264, metrics.UserHeight);
+        Assert.Equal(2, metrics.UserBands);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_AlignsUserButtonsWhenSystemButtonsOverflow()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 800,
+            panelPercent: 60,
+            visibleSystemButtonCount: 8,
+            controlButtonCount: 1,
+            contextCounts: [10],
+            activeContextIndex: 0);
+
+        Assert.Equal(96, metrics.PanelWidth);
+        Assert.Equal(88, metrics.FixedWidth);
+        Assert.Equal(88, metrics.UserWidth);
+        Assert.Equal(2, metrics.UserBands);
     }
 
     [Fact]

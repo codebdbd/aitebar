@@ -37,9 +37,7 @@ public static class PanelLayoutHelper
         int trailingControlButtonCount = 0)
     {
         double normalizedPercent = Math.Clamp(panelPercent, 20, 100) / 100.0;
-        double maxPrimary = isVertical
-            ? Math.Max(ButtonOuterSize, availablePrimary)
-            : Math.Max(ButtonOuterSize, availablePrimary * normalizedPercent);
+        double maxPrimary = Math.Max(ButtonOuterSize, availablePrimary * normalizedPercent);
 
         List<int> counts = contextCounts.Select(count => Math.Max(0, count)).DefaultIfEmpty(0).ToList();
         int normalizedActiveIndex = counts.Count == 0 ? 0 : Math.Clamp(activeContextIndex, 0, counts.Count - 1);
@@ -66,16 +64,37 @@ public static class PanelLayoutHelper
             }
 
             int trailingSeparatorCount = hasUserButtons && trailingControlsCount > 0 ? 1 : 0;
-            double fixedPrimary = ((systemCount + controlsCount) * ButtonOuterSize) + (fixedSeparatorCount * SeparatorSize);
+            UserLayout fixedLayout = isVertical
+                ? CalculateFixedVerticalLayout(systemCount, controlsCount, fixedSeparatorCount, balanceRows: false)
+                : new UserLayout(
+                    ((systemCount + controlsCount) * ButtonOuterSize) + (fixedSeparatorCount * SeparatorSize),
+                    (systemCount > 0 || controlsCount > 0) ? ButtonOuterSize : 0,
+                    (systemCount > 0 || controlsCount > 0) ? 1 : 0);
+            double fixedPrimary = fixedLayout.Primary;
             double trailingPrimary = (trailingControlsCount * ButtonOuterSize) + (trailingSeparatorCount * SeparatorSize);
             double userPrimaryLimit = hasUserButtons
                 ? Math.Max(ButtonOuterSize, maxPrimary - fixedPrimary - trailingPrimary - PanelChrome)
                 : 0;
             UserLayout userLayout = CalculateUserLayout(count, userPrimaryLimit);
-            double fixedCross = (systemCount > 0 || controlsCount > 0) ? ButtonOuterSize : 0;
+            double fixedCross = fixedLayout.Cross;
             double trailingCross = trailingControlsCount > 0 ? ButtonOuterSize : 0;
             double panelPrimary = Math.Max(ButtonOuterSize + PanelChrome, fixedPrimary + userLayout.Primary + trailingPrimary + PanelChrome);
             double panelCross = Math.Max(ButtonOuterSize + PanelChrome, Math.Max(Math.Max(fixedCross, trailingCross), userLayout.Cross) + PanelChrome);
+
+            if (isVertical && systemCount > 1 && (userLayout.Bands > 1 || panelPrimary > maxPrimary))
+            {
+                fixedLayout = CalculateFixedVerticalLayout(systemCount, controlsCount, fixedSeparatorCount, balanceRows: true);
+                fixedPrimary = fixedLayout.Primary;
+                userPrimaryLimit = hasUserButtons
+                    ? Math.Max(ButtonOuterSize, maxPrimary - fixedPrimary - trailingPrimary - PanelChrome)
+                    : 0;
+                userLayout = fixedLayout.Bands > 1
+                    ? CalculateForcedBandUserLayout(count, userPrimaryLimit, fixedLayout.Bands)
+                    : CalculateUserLayout(count, userPrimaryLimit);
+                fixedCross = fixedLayout.Cross;
+                panelPrimary = Math.Max(ButtonOuterSize + PanelChrome, fixedPrimary + userLayout.Primary + trailingPrimary + PanelChrome);
+                panelCross = Math.Max(ButtonOuterSize + PanelChrome, Math.Max(Math.Max(fixedCross, trailingCross), userLayout.Cross) + PanelChrome);
+            }
 
             perContext.Add((fixedPrimary, fixedCross, new UserLayout(trailingPrimary, trailingCross, 0), userLayout, panelPrimary, panelCross));
         }
@@ -87,7 +106,7 @@ public static class PanelLayoutHelper
         return isVertical
             ? new PanelLayoutMetrics(
                 IsVertical: true,
-                PanelWidth: maxPanelCross,
+                PanelWidth: active.PanelCross,
                 PanelHeight: maxPanelPrimary,
                 FixedWidth: active.FixedCross,
                 FixedHeight: active.FixedPrimary,
@@ -126,5 +145,57 @@ public static class PanelLayoutHelper
         double cross = bands * ButtonOuterSize;
 
         return new UserLayout(primary, cross, bands);
+    }
+
+    private static UserLayout CalculateFixedVerticalLayout(int systemCount, int controlsCount, int separatorCount, bool balanceRows)
+    {
+        UserLayout controls = balanceRows ? CalculateBalancedRows(controlsCount) : CalculateSingleColumnRows(controlsCount);
+        UserLayout system = balanceRows ? CalculateBalancedRows(systemCount) : CalculateSingleColumnRows(systemCount);
+
+        double primary = controls.Primary + system.Primary + (separatorCount * SeparatorSize);
+        double cross = Math.Max(controls.Cross, system.Cross);
+        int bands = Math.Max(controls.Bands, system.Bands);
+
+        return new UserLayout(primary, cross, bands);
+    }
+
+    private static UserLayout CalculateBalancedRows(int buttonCount)
+    {
+        int normalizedCount = Math.Max(0, buttonCount);
+        if (normalizedCount == 0)
+        {
+            return new UserLayout(0, 0, 0);
+        }
+
+        int bands = Math.Min(MaxUserBands, normalizedCount);
+        int rows = (int)Math.Ceiling(normalizedCount / (double)bands);
+
+        return new UserLayout(rows * ButtonOuterSize, bands * ButtonOuterSize, bands);
+    }
+
+    private static UserLayout CalculateForcedBandUserLayout(int buttonCount, double userPrimaryLimit, int requestedBands)
+    {
+        int normalizedCount = Math.Max(0, buttonCount);
+        if (normalizedCount == 0 || userPrimaryLimit <= 0)
+        {
+            return new UserLayout(0, 0, 0);
+        }
+
+        int bands = Math.Min(MaxUserBands, Math.Min(Math.Max(1, requestedBands), normalizedCount));
+        int maxItemsPerBand = Math.Max(1, (int)Math.Floor(userPrimaryLimit / ButtonOuterSize));
+        int itemsPerBand = Math.Min(maxItemsPerBand, (int)Math.Ceiling(normalizedCount / (double)bands));
+
+        return new UserLayout(
+            Math.Min(userPrimaryLimit, itemsPerBand * ButtonOuterSize),
+            bands * ButtonOuterSize,
+            bands);
+    }
+
+    private static UserLayout CalculateSingleColumnRows(int buttonCount)
+    {
+        int normalizedCount = Math.Max(0, buttonCount);
+        return normalizedCount == 0
+            ? new UserLayout(0, 0, 0)
+            : new UserLayout(normalizedCount * ButtonOuterSize, ButtonOuterSize, 1);
     }
 }

@@ -64,6 +64,7 @@ namespace AiteBar
             public const int Copy = 62250; // ic_fluent_copy_16_regular
             public const int Rename = 63080; // ic_fluent_rename_16_regular
             public const int Move = 57579; // ic_fluent_arrow_right_16_regular
+            public const int Panels = 59567; // ic_fluent_panel_left_16_regular
             public const int OpenFolder = 59536; // ic_fluent_open_folder_16_regular
             public const int Clipboard = 58178; // ic_fluent_clipboard_16_regular
             public const int Delete = 58491; // ic_fluent_delete_16_regular
@@ -83,7 +84,7 @@ namespace AiteBar
         private CustomElement? _draggedElement = null;
         private const string ProductPageUrl = "https://suvorov.pp.ua/aitebar/";
         private const string DonatePageUrl = "https://suvorov.pp.ua/donate/";
-        private const double TopPanelVisibleOffset = 20;
+        private const double TopPanelVisibleOffset = 12;
         private Point _dragStartPos;
         private bool _isReordering = false;
         private int _draggedOriginalIndex;
@@ -318,6 +319,7 @@ namespace AiteBar
         private void BuildPanelContextMenu()
         {
             var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
+            var panelsMenu = CreateMenuItem(FluentGlyph(MenuIcons.Panels), LocalizationService.Get("Menu_Panels"));
 
             foreach (var context in ContextStateHelper.GetEnabledContexts(_appSettings.Contexts))
             {
@@ -331,9 +333,10 @@ namespace AiteBar
                     isActive: isActive
                 );
 
-                menu.Items.Add(item);
+                panelsMenu.Items.Add(item);
             }
 
+            menu.Items.Add(panelsMenu);
             menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Import), LocalizationService.Get("Menu_ImportCurrentPanel"), async (s, e) =>
             {
                 await RunPanelInteractionAsync(ImportIntoCurrentPanelAsync);
@@ -669,6 +672,10 @@ namespace AiteBar
             FixedPanel.MaxHeight = double.PositiveInfinity;
             FixedPanel.Width = double.NaN;
             FixedPanel.Height = double.NaN;
+            ControlBlock.Width = double.NaN;
+            ControlBlock.Height = double.NaN;
+            SystemUtilsPanel.Width = double.NaN;
+            SystemUtilsPanel.Height = double.NaN;
             AppSettingsBlock.MaxWidth = double.PositiveInfinity;
             AppSettingsBlock.MaxHeight = double.PositiveInfinity;
             AppSettingsBlock.Width = double.NaN;
@@ -727,6 +734,11 @@ namespace AiteBar
             FixedPanel.Height = metrics.FixedHeight;
             AppSettingsBlock.Width = metrics.TrailingWidth;
             AppSettingsBlock.Height = metrics.TrailingHeight;
+            if (isVertical && visibleSystemButtonCount > 1)
+            {
+                SystemUtilsPanel.Width = Math.Min(metrics.FixedWidth, PanelLayoutHelper.ButtonOuterSize * PanelLayoutHelper.MaxUserBands);
+            }
+
             UserButtonsPanel.Width = metrics.UserWidth;
             UserButtonsPanel.Height = metrics.UserHeight;
             UserButtonsPanel.MaxWidth = metrics.UserWidth;
@@ -1243,8 +1255,8 @@ namespace AiteBar
             System.Windows.Controls.DockPanel.SetDock(DragHandle, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
             FixedPanel.Orientation = orientation;
             AppSettingsBlock.Orientation = orientation;
-            UserButtonsPanel.Orientation = orientation;
-            SystemUtilsPanel.Orientation = orientation;
+            UserButtonsPanel.Orientation = System.Windows.Controls.Orientation.Horizontal;
+            SystemUtilsPanel.Orientation = System.Windows.Controls.Orientation.Horizontal;
             ControlBlock.Orientation = orientation;
             System.Windows.Controls.DockPanel.SetDock(FixedPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
             System.Windows.Controls.DockPanel.SetDock(UserButtonsPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
@@ -1252,6 +1264,7 @@ namespace AiteBar
             FixedPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
             UserButtonsPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
             AppSettingsBlock.VerticalAlignment = isVertical ? VerticalAlignment.Bottom : VerticalAlignment.Center;
+            ControlBlock.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Left;
             AppSettingsBlock.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Right;
 
             if (isVertical)
@@ -2072,7 +2085,8 @@ namespace AiteBar
                     
                     if (isWeb && !val.StartsWith("http", StringComparison.OrdinalIgnoreCase)) val = "https://" + val;
 
-                    if (type == ActionType.Program || type == ActionType.ScriptFile) iconPath = IconHelper.ExtractAndSaveIcon(val);
+                    if (type == ActionType.Program || type == ActionType.ScriptFile || type == ActionType.File)
+                        iconPath = IconHelper.ExtractAndSaveIcon(val);
 
                     var newElement = new CustomElement { 
                         Id = Guid.NewGuid().ToString(),

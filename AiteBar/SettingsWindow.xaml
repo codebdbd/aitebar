@@ -108,7 +108,7 @@
                             </Grid>
 
                             <!-- Browser Settings -->
-                            <Border x:Name="PanelWebSettings" Background="{StaticResource PanelBackground}" CornerRadius="6" Padding="15" Margin="0,0,0,15" BorderThickness="1" BorderBrush="{StaticResource BorderColor}">
+                            <Border x:Name="PanelWebSettings" Background="Transparent" CornerRadius="6" Padding="15" Margin="0,0,0,15" BorderThickness="1" BorderBrush="#3A3A3E">
                                 <StackPanel>
                                     <Grid Margin="0,0,0,10">
                                         <Grid.ColumnDefinitions>
@@ -175,7 +175,7 @@
                     <!-- RIGHT: PREVIEW & COLORS -->
                     <StackPanel Grid.Column="1">
                         <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_IconPicker}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
-                        <Border Background="{StaticResource PanelBackground}" CornerRadius="8" Padding="20" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" VerticalAlignment="Top">
+                        <Border Background="Transparent" CornerRadius="8" Padding="20" BorderThickness="1" BorderBrush="#3A3A3E" VerticalAlignment="Top">
                             <StackPanel x:Name="MiddleColumnGrid">
                                 <!-- Icon Preview and Source Buttons -->
                                 <Grid Margin="0,0,0,20">
@@ -184,7 +184,7 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                             
-                                    <Border x:Name="BorderPreview" Grid.Column="0" Background="#1A1A1C" Width="80" Height="80" CornerRadius="12" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" Cursor="Hand" MouseLeftButtonDown="BorderPreview_MouseLeftButtonDown">
+                                    <Border x:Name="BorderPreview" Grid.Column="0" Background="#1A1A1C" Width="80" Height="80" CornerRadius="12" BorderThickness="1" BorderBrush="#3A3A3E" Cursor="Hand" MouseLeftButtonDown="BorderPreview_MouseLeftButtonDown">
                                         <Grid>
                                             <TextBlock x:Name="PreviewIcon" Text="&#xE8B9;" FontFamily="Segoe MDL2 Assets" FontSize="36" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <Image x:Name="PreviewImage" Width="64" Height="64" Stretch="Uniform" Visibility="Collapsed"/>
@@ -218,7 +218,7 @@
 
             <!-- BOTTOM: BUTTONS -->
             <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Margin="0,15,0,0">
-                <Border BorderBrush="{StaticResource BorderColor}" BorderThickness="0,1,0,0" Margin="0,0,0,15"/>
+                <Border BorderBrush="#3A3A3E" BorderThickness="0,1,0,0" Margin="0,0,0,15"/>
                 <DockPanel LastChildFill="False">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
                     <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Height="40" Width="120" Margin="0,0,10,0"/>

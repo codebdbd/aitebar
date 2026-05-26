@@ -4,11 +4,15 @@
         <ResourceDictionary Source="SettingsResources.xaml"/>
     </ResourceDictionary.MergedDictionaries>
 
+    <SolidColorBrush x:Key="SettingsControlBackground" Color="#2D2D30"/>
+    <SolidColorBrush x:Key="SettingsControlBorder" Color="#3A3A3E"/>
+    <SolidColorBrush x:Key="SettingsControlHover" Color="#3A3A3E"/>
+
     <Style TargetType="TextBox">
-        <Setter Property="Background" Value="#2D2D30"/>
+        <Setter Property="Background" Value="{StaticResource SettingsControlBackground}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource SettingsControlBorder}"/>
         <Setter Property="Padding" Value="8,0"/>
         <Setter Property="Height" Value="30"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -25,25 +29,25 @@
     </Style>
 
     <Style TargetType="ComboBoxItem">
-        <Setter Property="Background" Value="#333337"/>
+        <Setter Property="Background" Value="{StaticResource SettingsControlBackground}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="10,6"/>
         <Style.Triggers>
             <Trigger Property="IsHighlighted" Value="True">
-                <Setter Property="Background" Value="#454549"/>
+                <Setter Property="Background" Value="{StaticResource SettingsControlHover}"/>
             </Trigger>
             <Trigger Property="IsSelected" Value="True">
-                <Setter Property="Background" Value="{StaticResource AccentColor}"/>
+                <Setter Property="Background" Value="{StaticResource SettingsControlHover}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
 
     <Style TargetType="ComboBox">
-        <Setter Property="Background" Value="#2D2D30"/>
+        <Setter Property="Background" Value="{StaticResource SettingsControlBackground}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="BorderBrush" Value="{StaticResource BorderColor}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource SettingsControlBorder}"/>
         <Setter Property="Height" Value="30"/>
         <Setter Property="Padding" Value="10,0"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -77,7 +81,7 @@
                                    VerticalAlignment="Center"
                                    TextTrimming="CharacterEllipsis"/>
                         <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
-                            <Border Background="{StaticResource PanelBackground}" BorderThickness="1" BorderBrush="{StaticResource BorderColor}" CornerRadius="0,0,4,4" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="300">
+                            <Border Background="{StaticResource SettingsControlBackground}" BorderThickness="1" BorderBrush="{StaticResource SettingsControlBorder}" CornerRadius="0,0,4,4" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="300">
                                 <ScrollViewer SnapsToDevicePixels="True">
                                     <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
                                 </ScrollViewer>
