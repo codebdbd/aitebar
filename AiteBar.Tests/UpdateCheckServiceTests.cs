@@ -39,4 +39,25 @@ public sealed class UpdateCheckServiceTests
 
         Assert.Equal(expected, UpdateCheckService.IsNewerVersion(latest, current));
     }
+
+    [Theory]
+    [InlineData("https://github.com/codebdbd/aitebar/releases")]
+    [InlineData("https://github.com/codebdbd/aitebar/releases/tag/v1.7.0")]
+    [InlineData("https://github.com/codebdbd/aitebar/releases/download/v1.7.0/AiteBarSetup.exe")]
+    public void IsTrustedGitHubReleaseUrl_AcceptsRepositoryUrls(string url)
+    {
+        Assert.True(UpdateCheckService.IsTrustedGitHubReleaseUrl(url));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("not-a-url")]
+    [InlineData("http://github.com/codebdbd/aitebar/releases")]
+    [InlineData("https://github.com/other/aitebar/releases")]
+    [InlineData("https://github.com/codebdbd/other/releases")]
+    [InlineData("https://example.com/codebdbd/aitebar/releases")]
+    public void IsTrustedGitHubReleaseUrl_RejectsUnexpectedUrls(string url)
+    {
+        Assert.False(UpdateCheckService.IsTrustedGitHubReleaseUrl(url));
+    }
 }

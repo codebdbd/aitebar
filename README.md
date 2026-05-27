@@ -38,10 +38,11 @@ AiteBar — это удобная скрытая панель быстрого �
 ## Release quality
 - CI: GitHub Actions workflow `.github/workflows/build-test.yml` собирает `Release`, запускает тесты и сохраняет coverage artifact на каждый push/PR в `master` и `main`.
 - Static analysis: `.github/workflows/codeql.yml` запускает CodeQL security-and-quality анализ для C#.
+- Dependency updates: `.github/dependabot.yml` проверяет NuGet и GitHub Actions зависимости раз в неделю.
 - Release: тег `vX.Y.Z` должен совпадать с `<Version>` в `AiteBar/AiteBar.csproj`; `.github/workflows/release.yml` собирает installer и прикладывает `artifacts/installer/*.exe` к GitHub Release.
 - Release guardrails: release workflow требует секцию `## [X.Y.Z]` в `CHANGELOG.md` и ровно один непустой installer artifact.
 - Crash reporting: Sentry включается только если задана переменная окружения `AITEBAR_SENTRY_DSN` или `SENTRY_DSN`. Без DSN приложение работает без телеметрии.
-- Updates: встроенная проверка обновлений читает latest release из `https://github.com/codebdbd/aitebar/releases` и предлагает открыть страницу релиза, если найден installer новее текущей версии.
+- Updates: встроенная проверка обновлений читает latest release из `https://github.com/codebdbd/aitebar/releases`, проверяет GitHub URL перед открытием и предлагает открыть страницу релиза, если найден installer новее текущей версии. Автоматическая установка не выполняется.
 
 ## Требования
 - ОС: Windows 10 / Windows 11

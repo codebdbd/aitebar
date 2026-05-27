@@ -22,6 +22,9 @@ public sealed record UpdateCheckResult(
 public sealed class UpdateCheckService
 {
     private const string LatestReleaseApiUrl = "https://api.github.com/repos/codebdbd/aitebar/releases/latest";
+    private const string ReleasesFallbackUrl = "https://github.com/codebdbd/aitebar/releases";
+    private const string GitHubHost = "github.com";
+    private const string RepositoryPathPrefix = "/codebdbd/aitebar/";
     private static readonly Uri LatestReleaseUri = new(LatestReleaseApiUrl);
     private readonly HttpClient _httpClient;
 
@@ -44,32 +47,49 @@ public sealed class UpdateCheckService
             using var response = await _httpClient.GetAsync(LatestReleaseUri, cancellationToken);
             if (!response.IsSuccessStatusCode)
             {
-                return new UpdateCheckResult(false, current, null, null, null, $"GitHub returned {(int)response.StatusCode} {response.ReasonPhrase}.");
+                return new UpdateCheckResult(false, current, null, null, null, LocalizationService.Format("Update_GitHubUnavailable", (int)response.StatusCode));
             }
 
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             var release = await JsonSerializer.DeserializeAsync<GitHubRelease>(stream, cancellationToken: cancellationToken);
+            string? releasePageUrl = GetTrustedGitHubUrl(release?.HtmlUrl);
             if (release == null || !TryParseReleaseVersion(release.TagName, out Version latest))
             {
-                return new UpdateCheckResult(false, current, null, release?.HtmlUrl, null, LocalizationService.Get("Update_InvalidRelease"));
+                return new UpdateCheckResult(false, current, null, releasePageUrl, null, LocalizationService.Get("Update_InvalidRelease"));
             }
 
             string? installerUrl = release.Assets?
                 .FirstOrDefault(asset => asset.BrowserDownloadUrl?.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) == true)
                 ?.BrowserDownloadUrl;
+            installerUrl = GetTrustedGitHubUrl(installerUrl);
+
+            if (releasePageUrl == null)
+            {
+                return new UpdateCheckResult(false, current, latest, null, installerUrl, LocalizationService.Get("Update_InvalidReleaseUrl"));
+            }
 
             return new UpdateCheckResult(
                 IsNewerVersion(latest, current),
                 current,
                 latest,
-                release.HtmlUrl,
+                releasePageUrl,
                 installerUrl,
                 null);
         }
-        catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException)
+        catch (HttpRequestException ex)
         {
             TelemetryService.CaptureException(ex, "update_check");
-            return new UpdateCheckResult(false, current, null, null, null, ex.Message);
+            return new UpdateCheckResult(false, current, null, null, null, LocalizationService.Get("Update_NetworkUnavailable"));
+        }
+        catch (TaskCanceledException ex)
+        {
+            TelemetryService.CaptureException(ex, "update_check");
+            return new UpdateCheckResult(false, current, null, null, null, LocalizationService.Get("Update_Timeout"));
+        }
+        catch (JsonException ex)
+        {
+            TelemetryService.CaptureException(ex, "update_check");
+            return new UpdateCheckResult(false, current, null, null, null, LocalizationService.Get("Update_InvalidResponse"));
         }
     }
 
@@ -135,8 +155,36 @@ public sealed class UpdateCheckService
 
     public void OpenReleasePage(UpdateCheckResult result)
     {
-        string target = result.ReleasePageUrl ?? "https://github.com/codebdbd/aitebar/releases";
+        string target = GetTrustedGitHubUrl(result.ReleasePageUrl) ?? ReleasesFallbackUrl;
         Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
+    }
+
+    internal static bool IsTrustedGitHubReleaseUrl(string? url)
+    {
+        return GetTrustedGitHubUrl(url) != null;
+    }
+
+    private static string? GetTrustedGitHubUrl(string? url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out Uri? uri))
+        {
+            return null;
+        }
+
+        if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+            !string.Equals(uri.Host, GitHubHost, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        string path = uri.AbsolutePath;
+        if (!path.StartsWith(RepositoryPathPrefix, StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(path.TrimEnd('/'), RepositoryPathPrefix.TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        return uri.ToString();
     }
 
     private static HttpClient CreateHttpClient()
