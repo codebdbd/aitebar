@@ -37,7 +37,11 @@ jobs:
       - name: Build Release
         run: dotnet build .\AiteBar.sln -c Release --no-restore
 
-      - name: Test with coverage
+      - name: Run tests
+        run: dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --no-build
+
+      - name: Collect coverage
+        continue-on-error: true
         run: >
           dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj
           -c Release
