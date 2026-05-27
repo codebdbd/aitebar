@@ -36,7 +36,7 @@ AiteBar — это удобная скрытая панель быстрого �
 - [Предрелизный аудит](docs/release-audit.md)
 
 ## Release quality
-- CI: GitHub Actions workflow `.github/workflows/build-test.yml` собирает `Release`, запускает тесты и сохраняет coverage artifact на каждый push/PR в `master` и `main`.
+- CI: GitHub Actions workflow `.github/workflows/build-test.yml` собирает `Release`, запускает тесты, публикует coverage summary и сохраняет coverage artifact на каждый push/PR в `master` и `main`.
 - Static analysis: `.github/workflows/codeql.yml` запускает CodeQL security-and-quality анализ для C#.
 - Dependency updates: `.github/dependabot.yml` проверяет NuGet и GitHub Actions зависимости раз в неделю.
 - Release: тег `vX.Y.Z` должен совпадать с `<Version>` в `AiteBar/AiteBar.csproj`; `.github/workflows/release.yml` собирает installer и прикладывает `artifacts/installer/*.exe` к GitHub Release.

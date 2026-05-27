@@ -150,11 +150,11 @@ artifacts\installer
 
 - ✅ **Архитектура**: 8/10 — четкое разделение на слои, SOLID принципы соблюдаются
 - ✅ **Безопасность**: 8/10 — проведен pre-release audit, все HIGH issues исправлены
-- ✅ **Тестирование**: 7/10 — 73 unit-теста, но отсутствуют интеграционные тесты
+- ✅ **Тестирование**: 7/10 — 99 unit-тестов, coverage summary/artifact и baseline threshold в CI
 - ✅ **Документация**: 7/10 — README, CHANGELOG, USER_MANUAL, но нет API docs
-- ⚠️ **CI/CD**: 3/10 — GitHub Actions отсутствуют, все ручное
-- ⚠️ **Мониторинг**: 2/10 — нет crash reporting, нет телеметрии
-- ⚠️ **Обновления**: 1/10 — нет встроенного механизма обновления
+- ⚠️ **CI/CD**: 6/10 — GitHub Actions build/test, release workflow и CodeQL добавлены; нужен staging/dry-run proof
+- ⚠️ **Мониторинг**: 3/10 — Sentry SDK интегрирован dev/support-only через env vars
+- ⚠️ **Обновления**: 5/10 — GitHub Releases check-and-open с URL validation; auto-install не реализован до signing
 
 **Итог**: Готов к production (7/10), но отстает от стандартов 2026 года в автоматизации.
 
@@ -162,23 +162,21 @@ artifacts\installer
 
 Подробный анализ находится в папке `docs/`:
 - [RELEASE-2026-SUMMARY.md](docs/RELEASE-2026-SUMMARY.md) — краткая summary таблица (начните отсюда)
-- [release-best-practices-2026-audit.md](docs/release-best-practices-2026-audit.md) — полный анализ со всеми рекомендациями
-- [EXEC-ADD-CICD-SENTRY.md](docs/EXEC-ADD-CICD-SENTRY.md) — практический план для внедрения GitHub Actions и Sentry (Приоритет-1)
+- [RELEASE-HARDENING-CHANGE-PLAN.md](docs/RELEASE-HARDENING-CHANGE-PLAN.md) — актуальные release-hardening follow-ups
 
 ### 🔴 Приоритет-1 действия (Q3 2026)
 
-1. **Добавить GitHub Actions workflow** — 1 день
-   - `.github/workflows/build-test.yml` (сборка и тесты на каждый push)
-   - `.github/workflows/release.yml` (автоматический релиз по git tag)
-   
-2. **Интегрировать Sentry** — 1 день
-   - SDK в AiteBar.csproj
-   - Инициализация в App.xaml.cs
-   - Обработка ошибок в ActionService
-   
-3. **Документировать новый процесс релиза** — 1 день
-   - Обновить README с инструкциями по релизу
-   - Удалить ручные шаги
+1. **Проверить release workflow dry-run/staging запуском** — 1-2 часа
+   - `workflow_dispatch` dry-run без GitHub Release
+   - проверка installer artifact, `release_notes.md` и `SHA256SUMS.txt`
+
+2. **Подготовить code signing certificate** — отложено до появления бюджета
+   - после покупки настроить GitHub Secrets `WINDOWS_SIGNING_CERT_BASE64` и `WINDOWS_SIGNING_CERT_PASSWORD`
+   - проверить подпись на staging/dry-run release
+
+3. **Повышать coverage постепенно**
+   - baseline threshold уже включен в CI
+   - повышать порог только после добавления тестов для non-UI логики
 
 ### 🟡 Приоритет-2 действия (Q4 2026)
 

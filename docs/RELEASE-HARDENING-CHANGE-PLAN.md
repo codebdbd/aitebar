@@ -1,11 +1,11 @@
 # AiteBar Release Hardening Change Plan
 
 **Date**: 2026-05-27  
-**Scope**: Practical release-quality changes after `RELEASE-2026-UPDATED-ANALYSIS.md` review.
+**Scope**: Practical release-quality changes after the 2026 release-readiness review.
 
 ## P0: Before the next public release
 
-1. ~~Correct `docs/RELEASE-2026-UPDATED-ANALYSIS.md`~~ ✅ COMPLETED
+1. ~~Correct the 2026 release analysis~~ ✅ COMPLETED
    - ~~Reduce over-optimistic scores from "done" to evidence-based partial status.~~ ✅ Done
    - ~~Fix the incorrect statement that CodeQL is missing; `.github/workflows/codeql.yml` already exists.~~ ✅ Done
    - ~~Remove `AITEBAR_SENTRY_DSN in GitHub Actions` from blocker status because desktop runtime telemetry is not enabled by CI secrets alone.~~ ✅ Done
@@ -13,7 +13,7 @@
    - ~~Add code signing as the main release blocker for a Windows desktop installer.~~ ✅ Done
 
 2. Add code signing for the installer
-   - [ ] Select a code signing certificate.
+   - [ ] Select and purchase a code signing certificate. DEFERRED until budget is available.
    - [x] Add conditional signing support after Inno Setup builds the installer.
    - [x] Verify the signature in CI when signing secrets are configured.
    - [x] Update the release checklist and README.
@@ -21,62 +21,62 @@
 3. Prove the release workflow with a staging tag
    - [x] Add a manual dry-run path to the release workflow.
    - [ ] Run the release workflow on a non-production test tag or dry-run path.
-   - Verify installer generation, release notes extraction, and release asset upload.
-   - Record the result in release documentation.
+   - [ ] Verify installer generation, release notes extraction, and release asset upload.
+   - [ ] Record the result in release documentation.
 
 4. Decide the Sentry production model
    - [x] Keep telemetry as dev/support-only through environment variables.
    - [x] Document that production installer does not enable crash reporting by default.
-   - [ ] Revisit production telemetry only with privacy documentation and a user-facing opt-in or opt-out setting.
+   - [ ] Revisit production telemetry only with privacy documentation and a user-facing opt-in or opt-out setting. DEFERRED unless production telemetry becomes a product requirement.
 
 5. Harden update checking
-   - Validate GitHub release and installer URLs before opening or displaying them.
-   - Allow only HTTPS URLs under `github.com/codebdbd/aitebar` or `github.com/codebdbd/aitebar/releases`.
-   - Replace raw exception messages with user-oriented offline/API failure messages.
-   - Add tests for URL validation and failure classification.
-   - Do not implement automatic install until code signing is in place.
+   - [x] Validate GitHub release and installer URLs before opening or displaying them.
+   - [x] Allow only HTTPS URLs under `github.com/codebdbd/aitebar` or `github.com/codebdbd/aitebar/releases`.
+   - [x] Replace raw exception messages with user-oriented offline/API failure messages.
+   - [x] Add tests for URL validation and failure classification.
+   - [x] Do not implement automatic install until code signing is in place.
 
 ## P1: Next quality increment
 
 6. Add Dependabot
-   - Track NuGet dependencies.
-   - Track GitHub Actions dependencies.
+   - [x] Track NuGet dependencies.
+   - [x] Track GitHub Actions dependencies.
 
 7. Replace coverage cosmetics with a coverage policy
-   - Publish coverage summary in CI.
-   - Define a threshold for testable non-UI logic.
-   - Avoid artificial whole-WPF coverage goals that do not reduce real risk.
+   - [x] Publish coverage summary in CI.
+   - [x] Define a baseline line coverage threshold in CI.
+   - [x] Avoid artificial whole-WPF coverage goals that do not reduce real risk.
 
 8. Harden the release workflow
    - [x] Log the Inno Setup version.
    - [x] Validate installer artifact version metadata.
    - [x] Add release asset checksums.
-   - Configure artifact retention.
+   - [x] Configure artifact retention.
 
 9. Update user-facing documentation
-   - Document "Check for updates".
-   - State that update checking opens the GitHub release page and does not auto-install.
-   - Add privacy/telemetry documentation if Sentry is enabled for production builds.
+   - [x] Document "Check for updates".
+   - [x] State that update checking opens the GitHub release page and does not auto-install.
+   - [x] Add privacy/telemetry documentation for the current dev/support-only Sentry model.
 
 ## P2: Architecture work without a high-risk rewrite
 
 10. Refactor `MainWindow` only through scoped increments
-    - Panel layout calculation.
-    - Tray and hotkeys.
-    - Context switching.
-    - Drag-and-drop edge switching.
-    - Icon and image loading.
+    - [ ] Panel layout calculation.
+    - [ ] Tray and hotkeys.
+    - [ ] Context switching.
+    - [ ] Drag-and-drop edge switching.
+    - [ ] Icon and image loading.
 
 11. Add service interfaces before adding a DI container
-    - Update checking.
-    - Telemetry.
-    - Process/browser launching.
-    - Filesystem/package operations.
+    - [ ] Update checking.
+    - [ ] Telemetry.
+    - [ ] Process/browser launching.
+    - [ ] Filesystem/package operations.
 
 12. Add a full auto-updater only after signing
-    - Start with signed manual installer downloads.
-    - Then consider secure download.
-    - Only then consider assisted or silent install.
+    - [ ] Start with signed manual installer downloads.
+    - [ ] Then consider secure download.
+    - [ ] Only then consider assisted or silent install.
 
 ## Execution order
 
@@ -85,4 +85,5 @@
 3. Harden update-check URL validation and failure UX.
 4. Update tests and user documentation.
 5. Run Release build and tests.
-6. Leave certificate procurement, optional production telemetry, and staging release proof as explicit external follow-ups.
+6. Add CI coverage summary and baseline threshold.
+7. Leave certificate procurement, optional production telemetry, staging release proof, and P2 architecture work as explicit follow-ups. Code signing certificate purchase is intentionally deferred until budget is available.

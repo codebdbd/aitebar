@@ -5,10 +5,10 @@
 | Метрика | Оценка | Статус | Комментарий |
 |---------|--------|--------|------------|
 | **Готовность к production** | 7/10 | ⚠️ PARTIAL | Инфраструктура добавлена, но operational readiness не доказана |
-| **Соответствие best practices 2026** | 7/10 | ⚠️ PARTIAL | CI/CD, CodeQL, Sentry SDK и update check добавлены; остаются signing, operational proof и coverage policy |
+| **Соответствие best practices 2026** | 7/10 | ⚠️ PARTIAL | CI/CD, CodeQL, Sentry SDK, update check и coverage policy добавлены; остаются signing и operational proof |
 | **Безопасность** | 8/10 | ✅ GOOD | Аудит проведен, HIGH issues исправлены |
 | **Архитектура** | 8/10 | ✅ GOOD | Четкое разделение на слои, SOLID принципы |
-| **Тестирование** | 7/10 | ⚠️ GOOD | 90 unit-тестов, coverage собирается как artifact, но нет published summary/threshold |
+| **Тестирование** | 7/10 | ⚠️ GOOD | 99 unit-тестов, coverage summary/artifact и baseline threshold в CI |
 | **Документация** | 8/10 | ✅ GOOD | README, CHANGELOG, USER_MANUAL, docs/ |
 | **CI/CD** | 6/10 | ⚠️ PARTIAL | GitHub Actions build/test, release, CodeQL добавлены; operational readiness не доказана |
 | **Мониторинг** | 3/10 | ⚠️ PARTIAL | Sentry SDK интегрирован (dev/support-only через env vars), production monitoring не operational |
@@ -35,7 +35,7 @@
 |---|------|-----------|-------|---------|
 | 7 | Подготовить code signing certificate | ⭐⭐⭐ | 1-3 дн | Доверие Windows/SmartScreen |
 | 8 | Проверить release workflow staging/dry-run | ⭐⭐ | 1-2 ч | Operational readiness |
-| 9 | Добавить coverage summary/threshold policy | ⭐⭐ | 1 день | Видимость, качество кода |
+| 9 | Добавить coverage summary/threshold policy | ⭐⭐ | 1 день | ✅ Реализовано |
 
 ### 🟢 ЖЕЛАТЕЛЬНЫЕ (планировать на Q4-2027)
 
@@ -80,7 +80,7 @@
 ## ✅ Чеклист для v1.6.1 (текущий релиз)
 
 - [x] Версия синхронизирована (1.6.1)
-- [x] 73 теста проходят ✅
+- [x] 99 тестов проходят ✅
 - [x] Security audit проведен ✅
 - [x] Нет HIGH/CRITICAL issues ✅
 - [x] CHANGELOG обновлен ✅
@@ -99,9 +99,9 @@
 - [x] Интегрировать Sentry SDK
 - [x] Создать UpdateCheckService с URL validation
 - [x] Настроить Dependabot
-- [ ] Подготовить code signing certificate и GitHub Secrets
+- [ ] Подготовить code signing certificate и GitHub Secrets (отложено до появления бюджета)
 - [ ] Проверить release workflow staging/dry-run запуском в GitHub Actions
-- [ ] Добавить coverage summary/threshold policy
+- [x] Добавить coverage summary/threshold policy
 - [ ] Документировать новый процесс релиза после staging proof
 
 ---
@@ -112,13 +112,13 @@
 |---------|----------|----------------|
 | Версия | 1.6.1 | - |
 | .NET version | 8.0 LTS | ✅ Current LTS |
-| Unit Tests | 90 | ✅ Good (целевая: 75% coverage) |
+| Unit Tests | 99 | ✅ Good |
 | Production Build | Release | ✅ OK |
 | Platforms | Windows only | ✅ OK (специфичная для продукта) |
 | Локализация | 4 языка (ru, en, de, uk) | ✅ Good |
 | Документация | README, USER_MANUAL, CHANGELOG | ⚠️ Missing: API docs |
 | GitHub Actions | build-test.yml, release.yml, codeql.yml | ⚠️ Infrastructure added, operational readiness not proven |
-| Code Coverage Reports | XPlat Code Coverage в CI (artifact) | ⚠️ No published summary/threshold |
+| Code Coverage Reports | XPlat Code Coverage в CI (summary + artifact, baseline threshold 20%) | ✅ Baseline policy |
 | Crash Reporting | Sentry SDK (dev/support-only через env vars) | ⚠️ SDK integrated, production monitoring not operational |
 | Auto-Update | GitHub Releases check-and-open с URL validation | ⚠️ Implemented, no auto-install (requires signing) |
 | Code Signing | Conditional CI signing path | ❌ Blocker (certificate needed) |
@@ -157,9 +157,9 @@ Q3 2026 (Release hardening)
 ├─ CodeQL/static analysis [infrastructure added] ✅
 ├─ Dependabot [configured] ✅
 ├─ UpdateCheckService with URL validation [implemented] ✅
-├─ Code signing certificate [blocker] 🔴
+├─ Code signing certificate [deferred until budget] 🔴
 ├─ Release workflow staging proof [blocker] 🔴
-└─ Coverage summary/threshold policy [important] 🟡
+└─ Coverage summary/threshold policy [implemented] ✅
 
 Q4 2026 (Important improvements)
 ├─ Повышение test coverage до 75% [3-5 дней] 🟡
@@ -178,8 +178,7 @@ Q4 2026 (Important improvements)
 
 | Тип | Ссылка | Описание |
 |-----|--------|---------|
-| Детальный анализ | [release-best-practices-2026-audit.md](release-best-practices-2026-audit.md) | Полный анализ со рекомендациями |
-| Практический план | [EXEC-ADD-CICD-SENTRY.md](EXEC-ADD-CICD-SENTRY.md) | ExecPlan для реализации CI/CD и Sentry |
+| Hardening plan | [RELEASE-HARDENING-CHANGE-PLAN.md](RELEASE-HARDENING-CHANGE-PLAN.md) | Актуальный план оставшихся release-hardening follow-ups |
 | Pre-release audit | [release-audit.md](release-audit.md) | Результаты security audit |
 | Архитектура | [architecture.md](architecture.md) | Техническая архитектура системы |
 | Пользовательское руководство | [../USER_MANUAL.md](../USER_MANUAL.md) | Документация для конечных пользователей |
@@ -217,4 +216,4 @@ Q4 2026 (Important improvements)
 
 ---
 
-**Контакт**: Вопросы по анализу — см. [release-best-practices-2026-audit.md](release-best-practices-2026-audit.md)
+**Контакт**: Вопросы по текущему release-hardening статусу — см. [RELEASE-HARDENING-CHANGE-PLAN.md](RELEASE-HARDENING-CHANGE-PLAN.md)
