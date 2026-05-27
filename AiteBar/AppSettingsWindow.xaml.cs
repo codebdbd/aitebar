@@ -437,10 +437,10 @@ namespace AiteBar
             for (int i = 0; i < contexts.Count; i++)
             {
                 PanelContext context = contexts[i];
-                var row = new Grid { Height = 26, Margin = new Thickness(0, 0, 0, 4) };
-                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(34) });
-                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(42) });
+                var row = new Grid { Height = 28, Margin = new Thickness(0, 0, 0, 5) };
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });
                 row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(34) });
 
                 var badge = new Border
                 {
@@ -463,6 +463,10 @@ namespace AiteBar
                 Grid.SetColumn(badge, 0);
                 row.Children.Add(badge);
 
+                var nameTextBox = new TextBox { Text = context.Name, Height = 26 };
+                Grid.SetColumn(nameTextBox, 1);
+                row.Children.Add(nameTextBox);
+
                 var enabledCheckBox = new CheckBox
                 {
                     IsChecked = context.IsEnabled,
@@ -471,14 +475,12 @@ namespace AiteBar
                     Padding = new Thickness(0),
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                     VerticalAlignment = VerticalAlignment.Center,
-                    ToolTip = i == 0 ? LocalizationService.Get("AppSettingsWindow_PrimaryPanelAlwaysEnabled") : null
+                    ToolTip = i == 0
+                        ? LocalizationService.Get("AppSettingsWindow_PrimaryPanelAlwaysEnabled")
+                        : LocalizationService.Get("AppSettingsWindow_PanelEnabled")
                 };
-                Grid.SetColumn(enabledCheckBox, 1);
+                Grid.SetColumn(enabledCheckBox, 2);
                 row.Children.Add(enabledCheckBox);
-
-                var nameTextBox = new TextBox { Text = context.Name, Height = 26 };
-                Grid.SetColumn(nameTextBox, 2);
-                row.Children.Add(nameTextBox);
 
                 PanelContextsList.Children.Add(row);
                 _contextRows.Add((enabledCheckBox, nameTextBox));

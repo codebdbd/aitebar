@@ -113,6 +113,8 @@ namespace AiteBar
         private const double ButtonPitch = PanelLayoutHelper.ButtonOuterSize;
         private const double DragHandleSpan = 18;
         private const int WheelDeltaPerContextSwitch = 120;
+        private const int PanelShowAnimationMs = 175;
+        private const int PanelHideAnimationMs = 140;
         private static readonly TimeSpan ContextWheelSwitchCooldown = TimeSpan.FromMilliseconds(220);
 
         public MainWindow()
@@ -1847,8 +1849,10 @@ namespace AiteBar
             double finalX = finish.X;
             double finalY = finish.Y;
 
-            var animX = new DoubleAnimation(finalX, TimeSpan.FromMilliseconds(200)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
-            var animY = new DoubleAnimation(finalY, TimeSpan.FromMilliseconds(200)) { EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut } };
+            var duration = TimeSpan.FromMilliseconds(hide ? PanelHideAnimationMs : PanelShowAnimationMs);
+            var easing = new CubicEase { EasingMode = hide ? EasingMode.EaseIn : EasingMode.EaseOut };
+            var animX = new DoubleAnimation(finalX, duration) { EasingFunction = easing };
+            var animY = new DoubleAnimation(finalY, duration) { EasingFunction = easing };
             
             int completedCount = 0;
             void onCompleted(object? s, EventArgs ev) {
@@ -1881,7 +1885,7 @@ namespace AiteBar
             _shown = false;
             _hoverStartTime = null;
             Toggle(true);
-            await Task.Delay(250);
+            await Task.Delay(PanelHideAnimationMs);
         }
 
         private async void RootBorder_PreviewMouseWheel(object sender, MouseWheelEventArgs e)

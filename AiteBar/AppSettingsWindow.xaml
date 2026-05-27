@@ -116,7 +116,7 @@
                                 <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Delay}" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
                                 <TextBlock x:Name="TxtDelay" DockPanel.Dock="Right" Foreground="White" FontSize="12" Margin="8,0,0,0"/>
                             </DockPanel>
-                            <Slider x:Name="SldDelay" Minimum="0" Maximum="2000" Value="250" TickFrequency="50" IsSnapToTickEnabled="True" ValueChanged="SldDelay_ValueChanged"/>
+                            <Slider x:Name="SldDelay" Minimum="0" Maximum="2000" Value="150" TickFrequency="50" IsSnapToTickEnabled="True" ValueChanged="SldDelay_ValueChanged"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -131,15 +131,6 @@
                                    TextWrapping="Wrap"
                                    Margin="0,0,0,8"/>
 
-                        <Grid Margin="0,0,0,6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="34"/>
-                                <ColumnDefinition Width="42"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="1" Text="{local:Loc ResourceKey=AppSettingsWindow_PanelEnabled}" Style="{StaticResource FieldLabelStyle}" Margin="0" FontSize="10" TextAlignment="Center" TextTrimming="CharacterEllipsis"/>
-                            <TextBlock Grid.Column="2" Text="{local:Loc ResourceKey=SettingsWindow_ButtonName}" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
-                        </Grid>
                         <StackPanel x:Name="PanelContextsList"/>
                     </StackPanel>
                 </Border>

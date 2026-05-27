@@ -2061,7 +2061,7 @@ Tray-меню.
 | `MonitorIndex` | Монитор панели | Индекс экрана, 0 = primary/fallback | `0` |
 | `ActivationZoneSizePercent` | Размер зоны активации | Slider UI; layout helper нормализует связанные проценты | `30` |
 | `PanelSizePercent` | Размер панели вдоль активной оси | Slider UI; расчет layout ограничивает 20-100% | `80` |
-| `ActivationDelayMs` | Задержка появления панели | Slider UI в миллисекундах | `250` |
+| `ActivationDelayMs` | Задержка появления панели | Slider UI в миллисекундах | `150` |
 | `GlobalHotkeyCtrl` | Ctrl для hotkey показа панели | true/false | `false` |
 | `GlobalHotkeyAlt` | Alt для hotkey показа панели | true/false | `true` |
 | `GlobalHotkeyShift` | Shift для hotkey показа панели | true/false | `false` |

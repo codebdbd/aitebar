@@ -92,7 +92,7 @@ namespace AiteBar {
         public int MonitorIndex { get; set; } = 0; // 0 = Primary, 1, 2...
         public double ActivationZoneSizePercent { get; set; } = 30; // % от ширины/высоты края
         public double PanelSizePercent { get; set; } = 80; // % от ширины/высоты экрана
-        public int ActivationDelayMs { get; set; } = 250;
+        public int ActivationDelayMs { get; set; } = 150;
         public string UiCulture { get; set; } = "auto";
         public List<PanelContext> Contexts { get; set; } = [];
         public string ActiveContextId { get; set; } = "context-1";

@@ -59,7 +59,7 @@ AiteBar запускается как один экземпляр. Если по
 | `MonitorIndex` | `0` | Индекс монитора |
 | `ActivationZoneSizePercent` | `30` | Размер зоны активации |
 | `PanelSizePercent` | `80` | Размер панели |
-| `ActivationDelayMs` | `250` | Задержка появления |
+| `ActivationDelayMs` | `150` | Задержка появления |
 | `GlobalHotkeyCtrl` | `false` | Модификатор Ctrl для показа панели |
 | `GlobalHotkeyAlt` | `true` | Модификатор Alt для показа панели |
 | `GlobalHotkeyShift` | `false` | Модификатор Shift для показа панели |
