@@ -28,6 +28,12 @@ Application license: Proprietary (All rights reserved)
    Open-source information: https://dotnet.microsoft.com/en-us/platform/open-source
    Notes: This application is built with .NET 8 and WPF.
 
+5. Sentry .NET SDK
+   Copyright (c) Functional Software, Inc. dba Sentry
+   Project: https://github.com/getsentry/sentry-dotnet
+   License: MIT
+   Notes: Used for optional crash reporting when a Sentry DSN is configured.
+
 This notice file is provided for informational purposes.
 Please review the upstream projects for the full and current license texts and any
 additional notice requirements that may apply to your distribution model.

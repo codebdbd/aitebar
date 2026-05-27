@@ -109,6 +109,7 @@
 
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{local:Loc ResourceKey=About_Resources}"/>
             <WrapPanel>
+                <Button Content="{local:Loc ResourceKey=Update_Check}" Style="{StaticResource LinkButtonStyle}" Click="BtnCheckUpdates_Click"/>
                 <Button Content="{local:Loc ResourceKey=About_Website}" Style="{StaticResource LinkButtonStyle}" Click="BtnWebsite_Click"/>
                 <Button Content="{local:Loc ResourceKey=About_Repository}" Style="{StaticResource LinkButtonStyle}" Click="BtnRepository_Click"/>
                 <Button Content="{local:Loc ResourceKey=About_Licenses}" Style="{StaticResource LinkButtonStyle}" Click="BtnLicenses_Click"/>

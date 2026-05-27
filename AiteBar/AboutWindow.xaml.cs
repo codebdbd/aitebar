@@ -36,6 +36,11 @@ namespace AiteBar
             OpenTarget(RepositoryUrl);
         }
 
+        private async void BtnCheckUpdates_Click(object sender, RoutedEventArgs e)
+        {
+            await UpdateCheckUi.CheckForUpdatesAsync(this);
+        }
+
         private void BtnLicenses_Click(object sender, RoutedEventArgs e)
         {
             string noticesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "THIRD_PARTY_NOTICES.txt");

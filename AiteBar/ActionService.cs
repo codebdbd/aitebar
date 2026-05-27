@@ -62,7 +62,13 @@ namespace AiteBar
             }
             catch (Exception ex)
             {
-                Logger.Log(ex);
+                TelemetryService.CaptureException(ex, "custom_action", new Dictionary<string, string?>
+                {
+                    ["action_type"] = el.ActionType,
+                    ["browser"] = el.Browser.ToString(),
+                    ["is_app_mode"] = el.IsAppMode.ToString(),
+                    ["open_fullscreen"] = el.OpenFullscreen.ToString()
+                });
                 return ActionExecutionResult.Failed(ex.Message);
             }
         }

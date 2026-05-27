@@ -18,6 +18,10 @@
 
 
   <ItemGroup>
+    <PackageReference Include="Sentry" Version="6.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="Resources\app.ico" />
     <Resource Include="Resources\Font Awesome 7 Brands-Regular-400.otf" />
     <Resource Include="Resources\MaterialIcons-Regular.ttf" />

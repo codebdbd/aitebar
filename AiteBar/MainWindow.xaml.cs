@@ -68,6 +68,7 @@ namespace AiteBar
             public const int OpenFolder = 59536; // ic_fluent_open_folder_16_regular
             public const int Clipboard = 58178; // ic_fluent_clipboard_16_regular
             public const int Delete = 58491; // ic_fluent_delete_16_regular
+            public const int Update = 59548; // ic_fluent_arrow_sync_16_regular
         }
 
         private readonly AppSettingsService _settingsService = new();
@@ -82,7 +83,6 @@ namespace AiteBar
 
         private Button? _draggedButton = null;
         private CustomElement? _draggedElement = null;
-        private const string ProductPageUrl = "https://suvorov.pp.ua/aitebar/";
         private const string DonatePageUrl = "https://suvorov.pp.ua/donate/";
         private const double TopPanelVisibleOffset = 12;
         private Point _dragStartPos;
@@ -946,7 +946,8 @@ namespace AiteBar
 
             menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Open), LocalizationService.Get("Menu_Open"), (s, e) => ShowDock()));
             menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Settings), LocalizationService.Get("Menu_ProgramSettings"), (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
-            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Info), LocalizationService.Get("Menu_About"), (s, e) => OpenUrl(ProductPageUrl)));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Update), LocalizationService.Get("Update_Check"), async (s, e) => await UpdateCheckUi.CheckForUpdatesAsync(this)));
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Info), LocalizationService.Get("Menu_About"), (s, e) => new AboutWindow { Owner = this }.ShowDialog()));
             menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Donate), LocalizationService.Get("Menu_Donate"), (s, e) => OpenUrl(DonatePageUrl)));
             menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Exit), LocalizationService.Get("Menu_Exit"), (s, e) => { _notifyIcon.Dispose(); Application.Current.Shutdown(); }));
 

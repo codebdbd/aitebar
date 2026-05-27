@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Windows;
+using System.Windows.Threading;
 
 namespace AiteBar {
     public partial class App : System.Windows.Application 
@@ -8,6 +9,9 @@ namespace AiteBar {
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            TelemetryService.Initialize();
+            RegisterExceptionHandlers();
+
             LocalizationService.ApplyCulture(LocalizationService.AutoCulture);
             const string mutexName = "AiteBar_Mutex_Unique_String_123";
             _mutex = new Mutex(true, mutexName, out bool createdNew);
@@ -24,6 +28,7 @@ namespace AiteBar {
                 return;
             }
 
+            TelemetryService.CaptureMessage("AiteBar started.");
             base.OnStartup(e);
         }
 
@@ -34,7 +39,29 @@ namespace AiteBar {
                 _mutex.ReleaseMutex();
                 _mutex.Dispose();
             }
+
+            TelemetryService.Flush(TimeSpan.FromSeconds(2));
+            TelemetryService.Shutdown();
             base.OnExit(e);
+        }
+
+        private void RegisterExceptionHandlers()
+        {
+            AppDomain.CurrentDomain.UnhandledException += (_, args) =>
+            {
+                if (args.ExceptionObject is Exception ex)
+                {
+                    TelemetryService.CaptureException(ex, "appdomain_unhandled");
+                    TelemetryService.Flush(TimeSpan.FromSeconds(2));
+                }
+            };
+
+            DispatcherUnhandledException += (_, args) =>
+            {
+                TelemetryService.CaptureException(args.Exception, "dispatcher_unhandled");
+                TelemetryService.Flush(TimeSpan.FromSeconds(2));
+                args.Handled = false;
+            };
         }
     }
 }

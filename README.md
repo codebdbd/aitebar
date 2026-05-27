@@ -21,6 +21,7 @@ AiteBar — это удобная скрытая панель быстрого �
 2. Запустите `AiteBar-Setup.exe`.
 3. Установите программу как обычное Windows-приложение.
 4. После установки запустите `AiteBar` из меню Пуск. Программа появится в системном трее Windows.
+5. Для проверки новых версий используйте пункт `Check for updates` в tray-меню или окне `About`.
 
 ## Управление
 - **Настройка кнопок**: Кликните ПКМ (правой кнопкой мыши) по любой кнопке для её редактирования.
@@ -33,6 +34,12 @@ AiteBar — это удобная скрытая панель быстрого �
 - [Карта функций](docs/functions.md)
 - [Архитектура](docs/architecture.md)
 - [Предрелизный аудит](docs/release-audit.md)
+
+## Release quality
+- CI: GitHub Actions workflow `.github/workflows/build-test.yml` собирает `Release`, запускает тесты и сохраняет coverage artifact на каждый push/PR в `main`.
+- Release: тег `vX.Y.Z` должен совпадать с `<Version>` в `AiteBar/AiteBar.csproj`; `.github/workflows/release.yml` собирает installer и прикладывает `artifacts/installer/*.exe` к GitHub Release.
+- Crash reporting: Sentry включается только если задана переменная окружения `AITEBAR_SENTRY_DSN` или `SENTRY_DSN`. Без DSN приложение работает без телеметрии.
+- Updates: встроенная проверка обновлений читает latest release из `https://github.com/codebdbd/aitebar/releases` и предлагает открыть страницу релиза, если найден installer новее текущей версии.
 
 ## Требования
 - ОС: Windows 10 / Windows 11
