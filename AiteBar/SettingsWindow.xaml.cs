@@ -285,6 +285,19 @@ namespace AiteBar
             return Enum.TryParse<BrowserType>(browserStr, out var selectedBrowser) && selectedBrowser == browserType;
         }
 
+        private string GetSelectedLaunchProfile(BrowserType browserType)
+        {
+            string selectedProfile = ((ComboBoxItem)CmbChromeProfile.SelectedItem)?.Tag?.ToString() ?? "";
+            if (browserType != BrowserType.Firefox || string.IsNullOrWhiteSpace(selectedProfile))
+            {
+                return selectedProfile;
+            }
+
+            return _availableProfiles.FirstOrDefault(profile =>
+                    string.Equals(profile.ProfilePath, selectedProfile, StringComparison.OrdinalIgnoreCase))
+                ?.LaunchName ?? selectedProfile;
+        }
+
         private void ChkRotation_Changed(object sender, RoutedEventArgs e)
         {
             UpdateRotationProfilesUi();
@@ -684,7 +697,7 @@ namespace AiteBar
                     ActionType = typeStr, ActionValue = actionValue,
                     Icon = _selectedIcon, IconFont = _selectedFont, Color = _selectedColor, 
                     ImagePath = _selectedImagePath,
-                    ChromeProfile = ((ComboBoxItem)CmbChromeProfile.SelectedItem)?.Tag?.ToString() ?? "",
+                    ChromeProfile = GetSelectedLaunchProfile(browserType),
                     RotationProfilePaths = [.. _rotationProfilePaths],
                     IsAppMode = ChkAppMode.IsChecked ?? false, IsIncognito = ChkIncognito.IsChecked ?? false,
                     UseRotation = ChkRotation.IsChecked ?? false, OpenFullscreen = ChkFullscreen.IsChecked ?? false, IsTopmost = false,

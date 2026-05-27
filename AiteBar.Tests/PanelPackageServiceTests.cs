@@ -242,6 +242,20 @@ public sealed class PanelPackageServiceTests : IDisposable
         await Assert.ThrowsAsync<InvalidDataException>(() => env.PackageService.ReadImportPreviewAsync(packagePath));
     }
 
+    [Fact]
+    public async Task ReadImportPreviewAsync_ExcessiveUncompressedSize_ThrowsBeforeExtracting()
+    {
+        using TestEnvironment env = CreateEnvironment();
+        string packagePath = Path.Combine(_root, "expanded-too-large.aitebarpanel");
+
+        CreatePackageWithRepeatedEntries(
+            packagePath,
+            entryCount: 180,
+            bytesPerEntry: 300 * 1024);
+
+        await Assert.ThrowsAsync<InvalidDataException>(() => env.PackageService.ReadImportPreviewAsync(packagePath));
+    }
+
     public void Dispose()
     {
         try
@@ -321,6 +335,38 @@ public sealed class PanelPackageServiceTests : IDisposable
             catch
             {
             }
+        }
+    }
+
+    private static void CreatePackageWithRepeatedEntries(string packagePath, int entryCount, int bytesPerEntry)
+    {
+        PanelPackageManifest manifest = new()
+        {
+            FormatVersion = 1,
+            Panel = new PanelPackagePanelInfo { Id = "context-1", Name = "Large", IconGlyph = "\uE8B7" },
+            Elements = []
+        };
+
+        byte[] payload = new byte[bytesPerEntry];
+        if (File.Exists(packagePath))
+        {
+            File.Delete(packagePath);
+        }
+
+        using FileStream fileStream = File.Create(packagePath);
+        using ZipArchive archive = new(fileStream, ZipArchiveMode.Create);
+
+        ZipArchiveEntry manifestEntry = archive.CreateEntry("manifest.json", CompressionLevel.Optimal);
+        using (Stream manifestStream = manifestEntry.Open())
+        {
+            JsonSerializer.Serialize(manifestStream, manifest, new JsonSerializerOptions { WriteIndented = true });
+        }
+
+        for (int i = 0; i < entryCount; i++)
+        {
+            ZipArchiveEntry entry = archive.CreateEntry($"icons/{i:D3}.bin", CompressionLevel.Optimal);
+            using Stream entryStream = entry.Open();
+            entryStream.Write(payload);
         }
     }
 

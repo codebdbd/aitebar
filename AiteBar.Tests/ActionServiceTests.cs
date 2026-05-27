@@ -19,7 +19,7 @@ public sealed class ActionServiceTests
             IsIncognito = true
         };
 
-        var psi = ActionService.BuildWebActionProcessStartInfo(element, @"C:\Users\ostee\AppData\Roaming\Mozilla\Firefox\Profiles\Work Profile");
+        var psi = ActionService.BuildWebActionProcessStartInfo(element, "Work Profile");
 
         string[] args = psi.ArgumentList.ToArray();
 

@@ -133,7 +133,7 @@ namespace AiteBar
                 if (el.Browser == BrowserType.Firefox)
                 {
                     psi.ArgumentList.Add("-P");
-                    psi.ArgumentList.Add(Path.GetFileName(profilePathOrName));
+                    psi.ArgumentList.Add(profilePathOrName);
                 }
                 else
                 {
@@ -210,12 +210,14 @@ namespace AiteBar
 
         public async Task StartQuickNoteAsync(Func<Task>? onBeforeExecute = null)
         {
-            Task beforeExecuteTask = onBeforeExecute?.Invoke() ?? Task.CompletedTask;
+            if (onBeforeExecute != null)
+            {
+                await onBeforeExecute();
+            }
 
             if (_quickNoteWindow is { IsVisible: true })
             {
                 _quickNoteWindow.Activate();
-                await beforeExecuteTask;
                 return;
             }
 
@@ -225,7 +227,6 @@ namespace AiteBar
             };
             _quickNoteWindow.Closed += (_, _) => _quickNoteWindow = null;
             _quickNoteWindow.ShowSliding(_settingsService.Settings);
-            await beforeExecuteTask;
         }
 
         internal static ProcessStartInfo BuildShellLaunchProcessStartInfo(string target) => new(target)

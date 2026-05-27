@@ -18,6 +18,8 @@ internal sealed class PanelPackageService
     internal const long MaxPackageFileBytes = 25 * 1024 * 1024;
     internal const long MaxManifestBytes = 2 * 1024 * 1024;
     internal const long MaxPackageEntryBytes = 10 * 1024 * 1024;
+    internal const long MaxPackageUncompressedBytes = 50 * 1024 * 1024;
+    internal const int MaxPackageEntryCount = 256;
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
@@ -145,6 +147,7 @@ internal sealed class PanelPackageService
         string tempRoot = CreateTempDirectory();
         try
         {
+            ValidateArchiveEntrySizes(packagePath);
             ZipFile.ExtractToDirectory(packagePath, tempRoot);
 
             Directory.CreateDirectory(_iconsFolder);
@@ -247,13 +250,48 @@ internal sealed class PanelPackageService
     private static void ValidateArchiveEntrySizes(string packagePath)
     {
         using ZipArchive archive = ZipFile.OpenRead(packagePath);
+        long totalUncompressedBytes = 0;
+
+        if (archive.Entries.Count > MaxPackageEntryCount)
+        {
+            throw new InvalidDataException($"Слишком много файлов в пакете: {archive.Entries.Count}.");
+        }
+
         foreach (ZipArchiveEntry entry in archive.Entries)
         {
+            if (!IsArchiveEntryPathSafe(entry.FullName))
+            {
+                throw new InvalidDataException($"Некорректный путь в пакете: {entry.FullName}.");
+            }
+
             if (entry.Length > MaxPackageEntryBytes)
             {
                 throw new InvalidDataException($"Слишком большой файл в пакете: {entry.FullName}.");
             }
+
+            checked
+            {
+                totalUncompressedBytes += entry.Length;
+            }
+
+            if (totalUncompressedBytes > MaxPackageUncompressedBytes)
+            {
+                throw new InvalidDataException($"Слишком большой распакованный размер пакета: {totalUncompressedBytes} bytes.");
+            }
         }
+    }
+
+    private static bool IsArchiveEntryPathSafe(string entryName)
+    {
+        if (string.IsNullOrWhiteSpace(entryName) || Path.IsPathRooted(entryName))
+        {
+            return false;
+        }
+
+        string normalized = entryName.Replace('\\', '/');
+        return normalized
+            .Split('/', StringSplitOptions.RemoveEmptyEntries)
+            .All(part => !string.Equals(part, "..", StringComparison.Ordinal));
     }
 
     private static void ValidateManifest(PanelPackageManifest manifest)
