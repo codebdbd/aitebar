@@ -14,10 +14,10 @@ public sealed class ContextStateHelperTests
 
         Assert.Equal(8, contexts.Count);
         Assert.Equal("context-1", contexts[0].Id);
-        Assert.Equal("Панель 1", contexts[0].Name);
+        Assert.Equal(LocalizationService.Format("Panel_DefaultNameFormat", 1), contexts[0].Name);
         Assert.True(contexts[0].IsEnabled);
         Assert.Equal("context-8", contexts[7].Id);
-        Assert.Equal("Панель 8", contexts[7].Name);
+        Assert.Equal(LocalizationService.Format("Panel_DefaultNameFormat", 8), contexts[7].Name);
         Assert.All(contexts.Skip(1), context => Assert.False(context.IsEnabled));
     }
 
