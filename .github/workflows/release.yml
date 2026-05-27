@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     name: Build installer and publish release
@@ -54,6 +58,20 @@ jobs:
         shell: pwsh
         run: .\installer\Build-Installer.ps1 -Configuration Release
 
+      - name: Verify installer artifact
+        shell: pwsh
+        run: |
+          $installers = Get-ChildItem .\artifacts\installer -Filter "*.exe" -File
+          if ($installers.Count -ne 1) {
+            throw "Expected exactly one installer artifact, found $($installers.Count)."
+          }
+
+          if ($installers[0].Length -le 0) {
+            throw "Installer artifact is empty: $($installers[0].FullName)"
+          }
+
+          "Installer artifact: $($installers[0].FullName) ($($installers[0].Length) bytes)"
+
       - name: Generate release notes
         shell: pwsh
         run: |
@@ -63,8 +81,7 @@ jobs:
           $match = [regex]::Match($content, $pattern)
 
           if (-not $match.Success) {
-            "# AiteBar $version`n`nSee CHANGELOG.md for details." | Set-Content .\release_notes.md -Encoding UTF8
-            return
+            throw "CHANGELOG.md does not contain a release section for $version."
           }
 
           $start = $match.Index

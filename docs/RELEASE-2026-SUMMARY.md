@@ -5,34 +5,34 @@
 | Метрика | Оценка | Статус | Комментарий |
 |---------|--------|--------|------------|
 | **Готовность к production** | 7/10 | ✅ READY | Все критичные функции работают, есть тесты |
-| **Соответствие best practices 2026** | 6/10 | ⚠️ PARTIAL | Основы есть, автоматизация отсутствует |
+| **Соответствие best practices 2026** | 7/10 | ⚠️ PARTIAL | CI/CD, crash reporting и update check добавлены; остаются signing, CodeQL follow-up и coverage policy |
 | **Безопасность** | 8/10 | ✅ GOOD | Аудит проведен, HIGH issues исправлены |
 | **Архитектура** | 8/10 | ✅ GOOD | Четкое разделение на слои, SOLID принципы |
-| **Тестирование** | 7/10 | ⚠️ GOOD | 73 unit-тесты, но отсутствуют интеграционные |
+| **Тестирование** | 7/10 | ⚠️ GOOD | 90 unit-тестов, но отсутствуют интеграционные |
 | **Документация** | 7/10 | ✅ GOOD | README, CHANGELOG, USER_MANUAL, но нет API docs |
-| **CI/CD** | 3/10 | ❌ CRITICAL | GitHub Actions отсутствуют, все ручное |
-| **Мониторинг** | 2/10 | ❌ CRITICAL | Нет crash reporting, no telemetry |
-| **Обновления** | 1/10 | ❌ CRITICAL | Нет встроенного механизма обновления |
+| **CI/CD** | 7/10 | ✅ GOOD | GitHub Actions build/test и tag release workflow добавлены |
+| **Мониторинг** | 6/10 | ⚠️ PARTIAL | Sentry crash reporting включается через DSN; нет operational dashboard/process docs |
+| **Обновления** | 5/10 | ⚠️ PARTIAL | Добавлена проверка GitHub Releases; автоматическая установка не реализована |
 
 ---
 
 ## 🎯 Приоритетные action items
 
-### 🔴 БЛОКИРУЮЩИЕ (выполнить немедленно)
+### ✅ ВЫПОЛНЕНО В Q3-ИНКРЕМЕНТЕ
 
 | # | Task | Сложность | Время | Блокирует |
 |---|------|-----------|-------|-----------|
-| 1 | Добавить GitHub Actions (build/test) | ⭐⭐ | 1 день | Автоматизацию, CD |
-| 2 | Интегрировать Sentry (crash reporting) | ⭐⭐ | 1 день | Мониторинг, debug production issues |
-| 3 | Добавить .github/workflows/release.yml | ⭐⭐ | 1 день | Автоматический релиз |
+| 1 | Добавить GitHub Actions (build/test) | ⭐⭐ | 1 день | Выполнено |
+| 2 | Интегрировать Sentry (crash reporting) | ⭐⭐ | 1 день | Выполнено |
+| 3 | Добавить .github/workflows/release.yml | ⭐⭐ | 1 день | Выполнено |
 
 ### 🟡 ВАЖНЫЕ (планировать на Q3)
 
 | # | Task | Сложность | Время | Бенефит |
 |---|------|-----------|-------|---------|
 | 4 | Повысить test coverage до 75% | ⭐⭐⭐ | 3-5 дн | Надежность кода |
-| 5 | Добавить SonarQube/CodeQL | ⭐⭐ | 1-2 дн | Качество кода, безопасность |
-| 6 | Создать .editorconfig | ⭐ | 1 дн | Консистентность стиля |
+| 5 | Добавить/проверить CodeQL | ⭐⭐ | 1-2 дн | Качество кода, безопасность |
+| 6 | Подготовить code signing | ⭐⭐ | 1-3 дн | Доверие Windows/SmartScreen |
 | 7 | Добавить code coverage badge | ⭐ | 1 дн | Видимость, motivation |
 
 ### 🟢 ЖЕЛАТЕЛЬНЫЕ (планировать на Q4-2027)
@@ -90,9 +90,9 @@
 
 ## ✅ Чеклист для v1.7.0 (следующий релиз)
 
-- [ ] Добавить GitHub Actions workflow
-- [ ] Интегрировать Sentry SDK
-- [ ] Создать .github/workflows/release.yml
+- [x] Добавить GitHub Actions workflow
+- [x] Интегрировать Sentry SDK
+- [x] Создать .github/workflows/release.yml
 - [ ] Протестировать CI/CD на staging tag
 - [ ] Документировать новый процесс релиза
 - [ ] Провести training для team (если есть)
@@ -106,15 +106,15 @@
 |---------|----------|----------------|
 | Версия | 1.6.1 | - |
 | .NET version | 8.0 LTS | ✅ Current LTS |
-| Unit Tests | 73 | ✅ Good (целевая: 75% coverage) |
+| Unit Tests | 90 | ✅ Good (целевая: 75% coverage) |
 | Production Build | Release | ✅ OK |
 | Platforms | Windows only | ✅ OK (специфичная для продукта) |
 | Локализация | 4 языка (ru, en, de, uk) | ✅ Good |
 | Документация | README, USER_MANUAL, CHANGELOG | ⚠️ Missing: API docs |
-| GitHub Actions | Отсутствуют | ❌ Expected 2026 standard |
+| GitHub Actions | Build/test и release workflows | ✅ Expected 2026 standard |
 | Code Coverage Reports | Не публикуется | ⚠️ Should be in README |
-| Crash Reporting | Отсутствует | ❌ Expected 2026 standard |
-| Auto-Update | Отсутствует | ⚠️ Nice to have |
+| Crash Reporting | Sentry через DSN | ✅ Expected 2026 standard |
+| Auto-Update | Check-and-open release page | ⚠️ Safe first increment; full auto-update requires signing |
 
 ---
 
@@ -142,11 +142,12 @@ Q2 2026 (Текущее состояние)
 ├─ v1.6.1 Released ✅
 └─ Pre-release audit пройден ✅
 
-Q3 2026 (Блокирующие improvements)
-├─ GitHub Actions CI/CD [1 день] 🔴
-├─ Sentry crash reporting [1 день] 🔴
-├─ Release automation [1 день] 🔴
-└─ Code coverage badge [1 день] 🔴
+Q3 2026 (Release hardening)
+├─ GitHub Actions CI/CD [done] ✅
+├─ Sentry crash reporting [done] ✅
+├─ Release automation [done] ✅
+├─ CodeQL/static analysis [done/verify in GitHub] ✅
+└─ Code signing preparation [1-3 дня] 🟡
 
 Q4 2026 (Important improvements)
 ├─ Повышение test coverage до 75% [3-5 дней] 🟡
