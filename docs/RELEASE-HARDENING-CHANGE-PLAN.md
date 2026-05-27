@@ -24,9 +24,9 @@
    - Record the result in release documentation.
 
 4. Decide the Sentry production model
-   - Either keep telemetry as dev/support-only through environment variables.
-   - Or enable it for production with privacy documentation and a user-facing opt-in or opt-out setting.
-   - Do not claim production monitoring is complete until this decision is implemented.
+   - [x] Keep telemetry as dev/support-only through environment variables.
+   - [x] Document that production installer does not enable crash reporting by default.
+   - [ ] Revisit production telemetry only with privacy documentation and a user-facing opt-in or opt-out setting.
 
 5. Harden update checking
    - Validate GitHub release and installer URLs before opening or displaying them.
@@ -84,4 +84,4 @@
 3. Harden update-check URL validation and failure UX.
 4. Update tests and user documentation.
 5. Run Release build and tests.
-6. Leave certificate procurement, Sentry production enablement, and staging release proof as explicit external follow-ups.
+6. Leave certificate procurement, optional production telemetry, and staging release proof as explicit external follow-ups.

@@ -82,7 +82,7 @@
 **Ограничения:**
 - ⚠️ Sentry сейчас включается только через runtime environment variables на машине, где запущено приложение
 - ⚠️ GitHub Actions secret сам по себе не включает crash reporting у пользователей desktop-приложения
-- ⚠️ Не принято продуктовое решение: telemetry остается dev/support-only или включается в production с privacy notice и настройкой пользователя
+- ✅ Принято консервативное решение: telemetry остается dev/support-only через runtime environment variables; production installer не включает crash reporting по умолчанию
 
 **Интеграция в код**
 - ✅ Инициализация в App.xaml.cs
@@ -170,14 +170,14 @@
 ### 2. Sentry интеграция
 
 **Проблемы:**
-- Не принято решение о production-модели телеметрии
-- Нет опции отключения телеметрии в настройках приложения
+- Production telemetry намеренно не включена по умолчанию
+- Нет пользовательской настройки для будущего production telemetry режима
 - Нет фильтрации expected exceptions
 - Нет sampling для ошибок
 
 **Рекомендации:**
-- Выбрать модель: dev/support-only через env var или production telemetry с privacy notice и пользовательской настройкой
-- Добавить опцию в настройки для отключения телеметрии
+- Оставить текущую модель dev/support-only до появления явной потребности в production crash reporting
+- Если production telemetry будет включаться позже, добавить privacy notice и пользовательскую настройку opt-in/opt-out
 - Добавить фильтрацию expected exceptions
 - Рассмотреть sampling для снижения нагрузки
 
@@ -221,7 +221,7 @@
 |---|------|-----------|-------|--------|
 | 1 | Подготовить code signing для installer | ⭐⭐⭐ | 1-3 дн | ⚠️ Инфраструктура добавлена; нужен сертификат |
 | 2 | Проверить release workflow staging tag-ом | ⭐⭐ | 1-2 ч | ❌ Не выполнено |
-| 3 | Принять и задокументировать production-модель Sentry | ⭐⭐ | 2-4 ч | ❌ Не выполнено |
+| 3 | Принять и задокументировать production-модель Sentry | ⭐⭐ | 2-4 ч | ✅ Выполнено: dev/support-only |
 | 4 | Добавить URL validation и понятные ошибки для update check | ⭐⭐ | 2-4 ч | ✅ Выполнено |
 
 ### 🟡 Важные (Q3 2026)
@@ -231,7 +231,7 @@
 | 5 | Включить GitHub Dependabot | ⭐ | 30 мин | ✅ Выполнено |
 | 6 | Добавить coverage summary/threshold вместо косметического badge | ⭐⭐ | 1 день | ❌ Не выполнено |
 | 7 | Harden release workflow: Inno Setup version, artifact version, checksum | ⭐⭐ | 1 день | ✅ Выполнено |
-| 8 | Добавить опцию отключения телеметрии, если выбран production telemetry | ⭐⭐ | 2 часа | ❌ Не выполнено |
+| 8 | Добавить опцию отключения телеметрии, если позже выбран production telemetry | ⭐⭐ | 2 часа | Отложено |
 | 9 | Добавить опцию отключения проверки обновлений | ⭐⭐ | 2 часа | ❌ Не выполнено |
 
 ### 🟢 Желательные (Q4 2026)
@@ -259,7 +259,7 @@
 - [ ] Подготовить code signing certificate и GitHub Secrets
 - [x] Добавить conditional signing path для installer
 - [ ] Проверить release workflow staging tag-ом
-- [ ] Принять production-модель Sentry
+- [x] Принять production-модель Sentry: dev/support-only через env var
 - [x] Добавить URL validation и понятные ошибки для UpdateCheckService
 - [x] Включить Dependabot
 - [ ] Протестировать CI/CD на реальном релизе
@@ -279,7 +279,7 @@
 | Документация | README, USER_MANUAL, CHANGELOG, docs/ | ✅ Excellent | ✅ |
 | GitHub Actions | build-test.yml, release.yml | ✅ Expected 2026 standard | ✅ |
 | Code Coverage Reports | XPlat Code Coverage в CI | ✅ Good | ✅ |
-| Crash Reporting | Sentry wrapper, opt-in через env var | ⚠️ Partial (production-модель не выбрана) | ⚠️ |
+| Crash Reporting | Sentry wrapper, dev/support-only через env var | ✅ Conservative default | ✅ |
 | Auto-Update | GitHub Releases check-and-open | ⚠️ Partial (нет auto-install; нужен signing перед auto-install) | ⚠️ |
 | Code Signing | Conditional CI signing path | ⚠️ Нужен реальный сертификат и staging proof | ⚠️ |
 | Package Lock | packages.lock.json | ✅ Good | ✅ |
@@ -325,12 +325,12 @@
 **Остающиеся вызовы:**
 - Code signing certificate и staging proof
 - Проверка release workflow staging tag-ом
-- Решение production-модели Sentry
+- Опциональное будущее production telemetry решение, если появится потребность
 - Улучшение механизма обновлений (URL validation, понятные ошибки, кэширование)
 - Дальнейшее повышение test coverage
 - Рефакторинг архитектуры
 
-Проект приблизился к современным практикам 2026 года в автоматизации, но пока должен считаться частично hardened: до уверенного публичного релиза нужно закрыть signing, release proof, telemetry policy и update-check hardening.
+Проект приблизился к современным практикам 2026 года в автоматизации, но пока должен считаться частично hardened: до уверенного публичного релиза нужно закрыть certificate procurement/signing proof и release proof.
 
 ---
 
