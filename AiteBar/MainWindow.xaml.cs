@@ -732,13 +732,15 @@ namespace AiteBar
 
             MainPanel.Width = contentWidth;
             MainPanel.Height = contentHeight;
-            FixedPanel.Width = metrics.FixedWidth;
+            FixedPanel.Width = isVertical ? contentWidth : metrics.FixedWidth;
             FixedPanel.Height = metrics.FixedHeight;
+            ControlBlock.Width = isVertical ? contentWidth : double.NaN;
             AppSettingsBlock.Width = metrics.TrailingWidth;
             AppSettingsBlock.Height = metrics.TrailingHeight;
             if (isVertical && visibleSystemButtonCount > 1)
             {
-                SystemUtilsPanel.Width = Math.Min(metrics.FixedWidth, PanelLayoutHelper.ButtonOuterSize * PanelLayoutHelper.MaxUserBands);
+                SystemUtilsPanel.Width = metrics.SystemWidth;
+                SystemUtilsPanel.Height = metrics.SystemHeight;
             }
 
             UserButtonsPanel.Width = metrics.UserWidth;
@@ -747,6 +749,11 @@ namespace AiteBar
             UserButtonsPanel.MaxHeight = metrics.UserHeight;
             UserButtonsPanel.MinWidth = metrics.UserWidth;
             UserButtonsPanel.MinHeight = metrics.UserHeight;
+            UserButtonsPanel.LeadingPrimaryReserve = isVertical ? metrics.UserLeadingReserve : 0;
+            UserButtonsPanel.OverflowPrimaryReserve = isVertical ? metrics.UserOverflowReserve : 0;
+            UserButtonsPanel.Margin = isVertical && metrics.UserLeadingReserve > 0
+                ? new Thickness(0, -metrics.UserLeadingReserve, 0, 0)
+                : new Thickness(0);
         }
 
         private int GetVisibleSystemButtonCount()
@@ -1257,8 +1264,12 @@ namespace AiteBar
             System.Windows.Controls.DockPanel.SetDock(DragHandle, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
             FixedPanel.Orientation = orientation;
             AppSettingsBlock.Orientation = orientation;
-            UserButtonsPanel.Orientation = System.Windows.Controls.Orientation.Horizontal;
-            SystemUtilsPanel.Orientation = System.Windows.Controls.Orientation.Horizontal;
+            UserButtonsPanel.Orientation = isVertical
+                ? System.Windows.Controls.Orientation.Vertical
+                : System.Windows.Controls.Orientation.Horizontal;
+            SystemUtilsPanel.Orientation = isVertical
+                ? System.Windows.Controls.Orientation.Vertical
+                : System.Windows.Controls.Orientation.Horizontal;
             ControlBlock.Orientation = orientation;
             System.Windows.Controls.DockPanel.SetDock(FixedPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
             System.Windows.Controls.DockPanel.SetDock(UserButtonsPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
@@ -1266,7 +1277,11 @@ namespace AiteBar
             FixedPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
             UserButtonsPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
             AppSettingsBlock.VerticalAlignment = isVertical ? VerticalAlignment.Bottom : VerticalAlignment.Center;
-            ControlBlock.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Left;
+            FixedPanel.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Left : System.Windows.HorizontalAlignment.Left;
+            ControlBlock.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Stretch : System.Windows.HorizontalAlignment.Left;
+            BtnAdd.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Stretch;
+            SystemUtilsPanel.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Left : System.Windows.HorizontalAlignment.Left;
+            UserButtonsPanel.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Left : System.Windows.HorizontalAlignment.Left;
             AppSettingsBlock.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Right;
 
             if (isVertical)
