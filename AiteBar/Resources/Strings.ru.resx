@@ -37,4 +37,5 @@
   <data name="RotationProfiles_SelectedFormat" xml:space="preserve"><value>{0} из {1}</value></data>
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Выбрать все</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Снять выделение</value></data>
+  <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Проверять обновления</value></data>
 </root>

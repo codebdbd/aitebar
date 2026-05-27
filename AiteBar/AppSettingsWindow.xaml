@@ -118,6 +118,10 @@
                             </DockPanel>
                             <Slider x:Name="SldDelay" Minimum="0" Maximum="2000" Value="150" TickFrequency="50" IsSnapToTickEnabled="True" ValueChanged="SldDelay_ValueChanged"/>
                         </StackPanel>
+
+                        <StackPanel Margin="0,16,0,0">
+                            <CheckBox x:Name="ChkCheckForUpdatesEnabled" Content="{local:Loc ResourceKey=AppSettingsWindow_CheckForUpdates}" Style="{StaticResource CompactCheckBoxStyle}"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
             </TabItem>

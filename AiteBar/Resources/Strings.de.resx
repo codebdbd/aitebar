@@ -118,4 +118,5 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="RotationProfiles_SelectedFormat" xml:space="preserve"><value>{0} von {1}</value></data>
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Auswahl aufheben</value></data>
+  <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Nach Updates suchen</value></data>
 </root>

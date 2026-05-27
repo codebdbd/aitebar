@@ -55,4 +55,5 @@
   <data name="RotationProfiles_SelectedFormat" xml:space="preserve"><value>{0} з {1}</value></data>
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Вибрати всі</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Зняти виділення</value></data>
+  <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Перевіряти оновлення</value></data>
 </root>

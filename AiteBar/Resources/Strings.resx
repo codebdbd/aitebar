@@ -292,4 +292,5 @@ Open the GitHub release page?</value></data>
   <data name="RotationProfiles_SelectedFormat" xml:space="preserve"><value>{0} of {1}</value></data>
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Select all</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Clear selection</value></data>
+  <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Check for updates</value></data>
 </root>

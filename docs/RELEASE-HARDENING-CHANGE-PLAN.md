@@ -5,12 +5,12 @@
 
 ## P0: Before the next public release
 
-1. Correct `docs/RELEASE-2026-UPDATED-ANALYSIS.md`
-   - Reduce over-optimistic scores from "done" to evidence-based partial status.
-   - Fix the incorrect statement that CodeQL is missing; `.github/workflows/codeql.yml` already exists.
-   - Remove `AITEBAR_SENTRY_DSN in GitHub Actions` from blocker status because desktop runtime telemetry is not enabled by CI secrets alone.
-   - Separate "Sentry SDK is integrated" from "production monitoring is operational".
-   - Add code signing as the main release blocker for a Windows desktop installer.
+1. ~~Correct `docs/RELEASE-2026-UPDATED-ANALYSIS.md`~~ ✅ COMPLETED
+   - ~~Reduce over-optimistic scores from "done" to evidence-based partial status.~~ ✅ Done
+   - ~~Fix the incorrect statement that CodeQL is missing; `.github/workflows/codeql.yml` already exists.~~ ✅ Done
+   - ~~Remove `AITEBAR_SENTRY_DSN in GitHub Actions` from blocker status because desktop runtime telemetry is not enabled by CI secrets alone.~~ ✅ Done
+   - ~~Separate "Sentry SDK is integrated" from "production monitoring is operational".~~ ✅ Done
+   - ~~Add code signing as the main release blocker for a Windows desktop installer.~~ ✅ Done
 
 2. Add code signing for the installer
    - [ ] Select a code signing certificate.

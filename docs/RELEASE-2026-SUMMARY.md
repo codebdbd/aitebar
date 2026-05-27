@@ -4,15 +4,15 @@
 
 | Метрика | Оценка | Статус | Комментарий |
 |---------|--------|--------|------------|
-| **Готовность к production** | 7/10 | ✅ READY | Все критичные функции работают, есть тесты |
-| **Соответствие best practices 2026** | 7/10 | ⚠️ PARTIAL | CI/CD, crash reporting и update check добавлены; остаются signing, CodeQL follow-up и coverage policy |
+| **Готовность к production** | 7/10 | ⚠️ PARTIAL | Инфраструктура добавлена, но operational readiness не доказана |
+| **Соответствие best practices 2026** | 7/10 | ⚠️ PARTIAL | CI/CD, CodeQL, Sentry SDK и update check добавлены; остаются signing, operational proof и coverage policy |
 | **Безопасность** | 8/10 | ✅ GOOD | Аудит проведен, HIGH issues исправлены |
 | **Архитектура** | 8/10 | ✅ GOOD | Четкое разделение на слои, SOLID принципы |
-| **Тестирование** | 7/10 | ⚠️ GOOD | 90 unit-тестов, но отсутствуют интеграционные |
-| **Документация** | 7/10 | ✅ GOOD | README, CHANGELOG, USER_MANUAL, но нет API docs |
-| **CI/CD** | 7/10 | ✅ GOOD | GitHub Actions build/test и tag release workflow добавлены |
-| **Мониторинг** | 6/10 | ⚠️ PARTIAL | Sentry crash reporting включается через DSN; нет operational dashboard/process docs |
-| **Обновления** | 5/10 | ⚠️ PARTIAL | Добавлена проверка GitHub Releases; автоматическая установка не реализована |
+| **Тестирование** | 7/10 | ⚠️ GOOD | 90 unit-тестов, coverage собирается как artifact, но нет published summary/threshold |
+| **Документация** | 8/10 | ✅ GOOD | README, CHANGELOG, USER_MANUAL, docs/ |
+| **CI/CD** | 6/10 | ⚠️ PARTIAL | GitHub Actions build/test, release, CodeQL добавлены; operational readiness не доказана |
+| **Мониторинг** | 3/10 | ⚠️ PARTIAL | Sentry SDK интегрирован (dev/support-only через env vars), production monitoring не operational |
+| **Обновления** | 5/10 | ⚠️ PARTIAL | Проверка GitHub Releases с URL validation реализована; автоматическая установка не реализована |
 
 ---
 
@@ -20,28 +20,31 @@
 
 ### ✅ ВЫПОЛНЕНО В Q3-ИНКРЕМЕНТЕ
 
-| # | Task | Сложность | Время | Блокирует |
-|---|------|-----------|-------|-----------|
-| 1 | Добавить GitHub Actions (build/test) | ⭐⭐ | 1 день | Выполнено |
-| 2 | Интегрировать Sentry (crash reporting) | ⭐⭐ | 1 день | Выполнено |
-| 3 | Добавить .github/workflows/release.yml | ⭐⭐ | 1 день | Выполнено |
+| # | Task | Сложность | Время | Статус |
+|---|------|-----------|-------|--------|
+| 1 | Добавить GitHub Actions (build/test) | ⭐⭐ | 1 день | ✅ Инфраструктура добавлена |
+| 2 | Интегрировать Sentry SDK | ⭐⭐ | 1 день | ✅ SDK интегрирован (dev/support-only через env vars) |
+| 3 | Добавить .github/workflows/release.yml | ⭐⭐ | 1 день | ✅ Инфраструктура добавлена |
+| 4 | Добавить CodeQL workflow | ⭐⭐ | 1 день | ✅ Инфраструктура добавлена |
+| 5 | Добавить Dependabot | ⭐ | 30 мин | ✅ Настроен |
+| 6 | Добавить UpdateCheckService с URL validation | ⭐⭐ | 2-4 ч | ✅ Реализован |
 
-### 🟡 ВАЖНЫЕ (планировать на Q3)
+### 🟡 ВАЖНЫЕ (блокирующие для production)
 
 | # | Task | Сложность | Время | Бенефит |
 |---|------|-----------|-------|---------|
-| 4 | Повысить test coverage до 75% | ⭐⭐⭐ | 3-5 дн | Надежность кода |
-| 5 | Добавить/проверить CodeQL | ⭐⭐ | 1-2 дн | Качество кода, безопасность |
-| 6 | Подготовить code signing | ⭐⭐ | 1-3 дн | Доверие Windows/SmartScreen |
-| 7 | Добавить code coverage badge | ⭐ | 1 дн | Видимость, motivation |
+| 7 | Подготовить code signing certificate | ⭐⭐⭐ | 1-3 дн | Доверие Windows/SmartScreen |
+| 8 | Проверить release workflow staging/dry-run | ⭐⭐ | 1-2 ч | Operational readiness |
+| 9 | Добавить coverage summary/threshold policy | ⭐⭐ | 1 день | Видимость, качество кода |
 
 ### 🟢 ЖЕЛАТЕЛЬНЫЕ (планировать на Q4-2027)
 
 | # | Task | Сложность | Время | Бенефит |
 |---|------|-----------|-------|---------|
-| 8 | Создать API документацию (DocFX) | ⭐⭐⭐ | 3-5 дн | Developer onboarding |
-| 9 | Добавить встроенный updater | ⭐⭐⭐ | 2-3 дн | UX, user retention |
-| 10 | Добавить аналитику использования | ⭐⭐⭐ | 2-3 дн | Insights, product decisions |
+| 10 | Повысить test coverage до 75% | ⭐⭐⭐ | 3-5 дн | Надежность кода |
+| 11 | Создать API документацию (DocFX) | ⭐⭐⭐ | 3-5 дн | Developer onboarding |
+| 12 | Добавить встроенный auto-updater | ⭐⭐⭐⭐ | 5-7 дн | UX, user retention |
+| 13 | Добавить аналитику использования | ⭐⭐⭐ | 2-3 дн | Insights, product decisions |
 
 ---
 
@@ -90,13 +93,16 @@
 
 ## ✅ Чеклист для v1.7.0 (следующий релиз)
 
-- [x] Добавить GitHub Actions workflow
+- [x] Добавить GitHub Actions workflow (build-test.yml)
+- [x] Добавить GitHub Actions workflow (release.yml)
+- [x] Добавить GitHub Actions workflow (codeql.yml)
 - [x] Интегрировать Sentry SDK
-- [x] Создать .github/workflows/release.yml
-- [ ] Протестировать CI/CD на staging tag
-- [ ] Документировать новый процесс релиза
-- [ ] Провести training для team (если есть)
-- [ ] Удалить ручные шаги из documentation
+- [x] Создать UpdateCheckService с URL validation
+- [x] Настроить Dependabot
+- [ ] Подготовить code signing certificate и GitHub Secrets
+- [ ] Проверить release workflow staging/dry-run запуском в GitHub Actions
+- [ ] Добавить coverage summary/threshold policy
+- [ ] Документировать новый процесс релиза после staging proof
 
 ---
 
@@ -111,10 +117,12 @@
 | Platforms | Windows only | ✅ OK (специфичная для продукта) |
 | Локализация | 4 языка (ru, en, de, uk) | ✅ Good |
 | Документация | README, USER_MANUAL, CHANGELOG | ⚠️ Missing: API docs |
-| GitHub Actions | Build/test и release workflows | ✅ Expected 2026 standard |
-| Code Coverage Reports | Не публикуется | ⚠️ Should be in README |
-| Crash Reporting | Sentry через DSN | ✅ Expected 2026 standard |
-| Auto-Update | Check-and-open release page | ⚠️ Safe first increment; full auto-update requires signing |
+| GitHub Actions | build-test.yml, release.yml, codeql.yml | ⚠️ Infrastructure added, operational readiness not proven |
+| Code Coverage Reports | XPlat Code Coverage в CI (artifact) | ⚠️ No published summary/threshold |
+| Crash Reporting | Sentry SDK (dev/support-only через env vars) | ⚠️ SDK integrated, production monitoring not operational |
+| Auto-Update | GitHub Releases check-and-open с URL validation | ⚠️ Implemented, no auto-install (requires signing) |
+| Code Signing | Conditional CI signing path | ❌ Blocker (certificate needed) |
+| Dependabot | NuGet + GitHub Actions | ✅ Configured |
 
 ---
 
@@ -143,11 +151,15 @@ Q2 2026 (Текущее состояние)
 └─ Pre-release audit пройден ✅
 
 Q3 2026 (Release hardening)
-├─ GitHub Actions CI/CD [done] ✅
-├─ Sentry crash reporting [done] ✅
-├─ Release automation [done] ✅
-├─ CodeQL/static analysis [done/verify in GitHub] ✅
-└─ Code signing preparation [1-3 дня] 🟡
+├─ GitHub Actions CI/CD [infrastructure added] ✅
+├─ Sentry SDK integration [infrastructure added] ✅
+├─ Release automation [infrastructure added] ✅
+├─ CodeQL/static analysis [infrastructure added] ✅
+├─ Dependabot [configured] ✅
+├─ UpdateCheckService with URL validation [implemented] ✅
+├─ Code signing certificate [blocker] 🔴
+├─ Release workflow staging proof [blocker] 🔴
+└─ Coverage summary/threshold policy [important] 🟡
 
 Q4 2026 (Important improvements)
 ├─ Повышение test coverage до 75% [3-5 дней] 🟡

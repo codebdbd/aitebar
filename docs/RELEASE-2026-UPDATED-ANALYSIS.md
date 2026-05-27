@@ -2,7 +2,7 @@
 
 **Дата анализа**: 2026-05-27  
 **Версия**: v1.6.1+ (с внедрением CI/CD, Sentry, UpdateCheckService)  
-**Статус**: Улучшение release engineering, но production-hardening еще не завершен (7/10 → 7.5/10)
+**Статус**: Инфраструктура добавлена, но operational readiness не доказана (7/10)
 
 ---
 
@@ -10,25 +10,29 @@
 
 | Метрика | Было | Стало | Изменение |
 |---------|------|-------|-----------|
-| **Готовность к production** | 7/10 | **7.5/10** | +0.5 |
-| **Соответствие best practices 2026** | 6/10 | **7.5/10** | +1.5 |
+| **Готовность к production** | 7/10 | **7/10** | = |
+| **Соответствие best practices 2026** | 6/10 | **7/10** | +1 |
 | **Безопасность** | 8/10 | **8/10** | = |
 | **Архитектура** | 8/10 | **8/10** | = |
-| **Тестирование** | 7/10 | **8/10** | +1 |
-| **Документация** | 7/10 | **9/10** | +2 |
-| **CI/CD** | 3/10 | **7.5/10** | +4.5 |
-| **Мониторинг** | 2/10 | **6/10** | +4 |
-| **Обновления** | 1/10 | **5.5/10** | +4.5 |
+| **Тестирование** | 7/10 | **7/10** | = |
+| **Документация** | 7/10 | **8/10** | +1 |
+| **CI/CD** | 3/10 | **6/10** | +3 |
+| **Мониторинг** | 2/10 | **3/10** | +1 |
+| **Обновления** | 1/10 | **5/10** | +4 |
 
-**Итоговая оценка**: 7.5/10 (было 7/10) - **Заметное улучшение, но не финальная production-зрелость**
+**Итоговая оценка**: 7/10 (было 7/10) - **Инфраструктура добавлена, но operational readiness не доказана**
 
-Важно: часть инфраструктуры уже добавлена в репозиторий, но еще не доказана как надежный production-процесс. CI/CD workflow, CodeQL, Sentry wrapper и update check есть; code signing, проверенный staging release, production-модель Sentry и hardening update-ссылок остаются открытыми.
+Важно: CI/CD workflow, CodeQL, Sentry wrapper и update check добавлены в код, но:
+- Release workflow не проверен staging/dry-run запуском в GitHub Actions
+- Code signing conditional path существует, но реальный сертификат не настроен
+- Sentry SDK интегрирован, но production monitoring не operational (только dev/support через env vars)
+- Update check с URL validation реализован, но не протестирован в production
 
 ---
 
 ## ✅ Реализованные улучшения
 
-### 1. CI/CD Pipeline (3/10 → 7.5/10)
+### 1. CI/CD Pipeline (3/10 → 6/10)
 
 **`.github/workflows/build-test.yml`**
 - ✅ Автоматическая сборка на push/PR в main
@@ -50,9 +54,9 @@
 - ✅ Запуск на push/PR и по расписанию
 
 **Ограничения:**
-- ⚠️ Release workflow получил manual dry-run path, но его еще нужно прогнать в GitHub Actions
-- ⚠️ Installer signing поддержан в workflow, но требует реальный certificate secret
-- ⚠️ Версия Inno Setup устанавливается через Chocolatey без явной фиксации версии
+- ⚠️ Release workflow не проверен staging/dry-run запуском в GitHub Actions (operational readiness не доказана)
+- ⚠️ Code signing conditional path существует, но реальный сертификат не настроен (blocker для production)
+- ⚠️ Coverage собирается как artifact, но нет published summary или threshold policy
 
 **`global.json`**
 - ✅ Фиксация .NET SDK 8.0.421
@@ -67,7 +71,7 @@
 - ✅ Фиксация версий всех зависимостей
 - ✅ Отсутствие уязвимых пакетов (проверено через dotnet list package --vulnerable)
 
-### 2. Мониторинг и телеметрия (2/10 → 6/10)
+### 2. Мониторинг и телеметрия (2/10 → 3/10)
 
 **`AiteBar/TelemetryService.cs`**
 - ✅ Интеграция с Sentry 6.5.0
@@ -80,16 +84,17 @@
 - ✅ Логирование запуска приложения
 
 **Ограничения:**
-- ⚠️ Sentry сейчас включается только через runtime environment variables на машине, где запущено приложение
-- ⚠️ GitHub Actions secret сам по себе не включает crash reporting у пользователей desktop-приложения
-- ✅ Принято консервативное решение: telemetry остается dev/support-only через runtime environment variables; production installer не включает crash reporting по умолчанию
+- ⚠️ Sentry SDK интегрирован, но production monitoring не operational (только dev/support через env vars)
+- ⚠️ Нет пользовательской настройки для opt-in/opt-out production telemetry
+- ⚠️ Нет фильтрации expected exceptions или sampling
+- ⚠️ Нет operational dashboard или process documentation для мониторинга
 
 **Интеграция в код**
 - ✅ Инициализация в App.xaml.cs
 - ✅ Обработка ошибок в ActionService.cs с контекстом (action_type, browser, is_app_mode, open_fullscreen)
 - ✅ Обработка ошибок в UpdateCheckUi.cs
 
-### 3. Механизм обновлений (1/10 → 5.5/10)
+### 3. Механизм обновлений (1/10 → 5/10)
 
 **`AiteBar/UpdateCheckService.cs`**
 - ✅ Проверка обновлений через GitHub API
@@ -101,9 +106,11 @@
 - ✅ Правильная обработка prerelease тегов
 
 **Ограничения:**
-- ⚠️ Это безопасный check-and-open механизм, а не auto-updater
-- ⚠️ Нельзя переходить к auto-install без code signing
-- ⚠️ Требуется валидация URL из GitHub API перед открытием ссылок
+- ⚠️ URL validation реализован, но не протестирован в production
+- ⚠️ Нет автоматической установки (требуется code signing)
+- ⚠️ Нет кэширования результатов проверки
+- ⚠️ Нет опции отключения проверки обновлений в настройках
+- ⚠️ Нет автоматической проверки при старте приложения
 
 **`AiteBar/UpdateCheckUi.cs`**
 - ✅ UI для отображения результатов проверки
@@ -120,7 +127,7 @@
 - ✅ Пункт меню в tray (MainWindow)
 - ✅ Локализация всех строк (Update_Check, Update_Current, Update_Available, Update_CheckFailed, Update_InvalidRelease)
 
-### 4. Документация (7/10 → 9/10)
+### 4. Документация (7/10 → 8/10)
 
 **`docs/RELEASE-2026-SUMMARY.md`**
 - ✅ Краткая summary таблица оценки проекта
@@ -140,11 +147,11 @@
 - ✅ Добавлена секция Release Quality & 2026 Best Practices
 - ✅ Ссылки на документацию в docs/
 
-### 5. Тестирование (7/10 → 8/10)
+### 5. Тестирование (7/10 → 7/10)
 
 - ✅ 90 тестов (было 73, +17 тестов для UpdateCheckService)
 - ✅ Все тесты проходят
-- ✅ Coverage сборка в CI/CD
+- ⚠️ Coverage собирается как artifact, но нет published summary или threshold policy
 
 ---
 
@@ -153,27 +160,28 @@
 ### 1. Механизм обновлений
 
 **Проблемы:**
-- Нет валидации URL release/installer перед открытием
-- Пользователь видит технические тексты ошибок вместо понятного offline/API failure сообщения
-- Нет кэширования результатов проверки (каждая проверка делает HTTP запрос)
-- Нет опции отключения проверки обновлений
-- Нет автоматической проверки при старте приложения
+- ✅ URL validation реализован (IsTrustedGitHubUrl, GetTrustedGitHubUrl)
+- ✅ Пользовательские сообщения для ошибок добавлены (LocalizationService)
+- ⚠️ Нет кэширования результатов проверки (каждая проверка делает HTTP запрос)
+- ⚠️ Нет опции отключения проверки обновлений
+- ⚠️ Нет автоматической проверки при старте приложения
+- ⚠️ Не протестирован в production
 
 **Рекомендации:**
-- Добавить URL validation с allowlist `https://github.com/codebdbd/aitebar/...`
-- Добавить пользовательские сообщения для offline/GitHub API failure
 - Добавить кэширование на 24 часа
 - Добавить опцию в настройках для отключения
 - Рассмотреть периодическую проверку (раз в неделю)
+- Протестировать в production
 - Не добавлять auto-install до code signing
 
 ### 2. Sentry интеграция
 
 **Проблемы:**
-- Production telemetry намеренно не включена по умолчанию
-- Нет пользовательской настройки для будущего production telemetry режима
-- Нет фильтрации expected exceptions
-- Нет sampling для ошибок
+- ✅ Production telemetry намеренно не включена по умолчанию (conservative decision)
+- ⚠️ Нет пользовательской настройки для будущего production telemetry режима
+- ⚠️ Нет фильтрации expected exceptions
+- ⚠️ Нет sampling для ошибок
+- ⚠️ Нет operational dashboard или process documentation
 
 **Рекомендации:**
 - Оставить текущую модель dev/support-only до появления явной потребности в production crash reporting
@@ -184,17 +192,14 @@
 ### 3. CI/CD
 
 **Проблемы:**
-- Release workflow еще не проверен staging tag-ом или manual dry-run запуском в GitHub Actions
-- Installer подписывается только при наличии configured certificate secrets
-- Нет зафиксированной версии Inno Setup в release workflow
-- Нет Dependabot для автоматических обновлений зависимостей
-- Coverage собирается как artifact, но нет policy/threshold
+- ⚠️ Release workflow не проверен staging/dry-run запуском в GitHub Actions (operational readiness не доказана)
+- ⚠️ Code signing conditional path существует, но реальный сертификат не настроен (blocker для production)
+- ⚠️ Coverage собирается как artifact, но нет published summary или threshold policy
+- ✅ Dependabot настроен
 
 **Рекомендации:**
 - Прогнать manual dry-run или тестовый/staging release tag и задокументировать результат
 - Настроить реальный code signing certificate secret и проверить подпись на staging release
-- Зафиксировать или логировать версию Inno Setup
-- Включить GitHub Dependabot
 - Добавить coverage summary и минимальный threshold для тестируемой non-UI логики
 
 ### 4. Архитектура
@@ -263,6 +268,7 @@
 - [x] Добавить URL validation и понятные ошибки для UpdateCheckService
 - [x] Включить Dependabot
 - [ ] Протестировать CI/CD на реальном релизе
+- [ ] Добавить coverage summary/threshold policy
 
 ---
 
@@ -276,14 +282,15 @@
 | Production Build | Release | ✅ OK | ✅ |
 | Platforms | Windows only | ✅ OK (специфичная для продукта) | ✅ |
 | Локализация | 4 языка (ru, en, de, uk) | ✅ Good | ✅ |
-| Документация | README, USER_MANUAL, CHANGELOG, docs/ | ✅ Excellent | ✅ |
-| GitHub Actions | build-test.yml, release.yml | ✅ Expected 2026 standard | ✅ |
-| Code Coverage Reports | XPlat Code Coverage в CI | ✅ Good | ✅ |
-| Crash Reporting | Sentry wrapper, dev/support-only через env var | ✅ Conservative default | ✅ |
-| Auto-Update | GitHub Releases check-and-open | ⚠️ Partial (нет auto-install; нужен signing перед auto-install) | ⚠️ |
-| Code Signing | Conditional CI signing path | ⚠️ Нужен реальный сертификат и staging proof | ⚠️ |
+| Документация | README, USER_MANUAL, CHANGELOG, docs/ | ✅ Good | ✅ |
+| GitHub Actions | build-test.yml, release.yml, codeql.yml | ✅ Expected 2026 standard | ⚠️ Operational readiness не доказана |
+| Code Coverage Reports | XPlat Code Coverage в CI (artifact) | ⚠️ Partial (нет published summary/threshold) | ⚠️ |
+| Crash Reporting | Sentry wrapper, dev/support-only через env var | ⚠️ Partial (SDK интегрирован, production monitoring не operational) | ⚠️ |
+| Auto-Update | GitHub Releases check-and-open с URL validation | ⚠️ Partial (нет auto-install; нужен signing перед auto-install) | ⚠️ |
+| Code Signing | Conditional CI signing path | ❌ Blocker (нужен реальный сертификат и staging proof) | ❌ |
 | Package Lock | packages.lock.json | ✅ Good | ✅ |
 | Deterministic Builds | Directory.Build.props | ✅ Good | ✅ |
+| Dependabot | NuGet + GitHub Actions | ✅ Good | ✅ |
 
 ---
 
@@ -303,7 +310,6 @@
 - 🟡 Импорт вредоносных панелей — PARTIAL (требуется whitelist)
 - 🟡 TOCTOU при редактировании конфига — LOW RISK
 - 🟡 Log-файлы содержат пути пользователя — LOW RISK
-- 🟡 URL из GitHub API не валидируется — MEDIUM RISK
 
 **Вывод**: Security posture — **GOOD** ✅
 
@@ -311,26 +317,28 @@
 
 ## 🎉 Вывод
 
-**Значительный прогресс, но не финальная зрелость**: Проект перешел от оценки 7/10 к 7.5/10 благодаря внедрению CI/CD, CodeQL, Sentry wrapper и механизма проверок обновлений. Базовая инфраструктура появилась, но ключевые release-hardening шаги еще открыты.
+**Инфраструктура добавлена, но operational readiness не доказана**: Проект сохранил оценку 7/10 благодаря внедрению CI/CD, CodeQL, Sentry wrapper и механизма проверок обновлений. Базовая инфраструктура появилась в коде, но ключевые release-hardening шаги еще не доказаны в production.
 
 **Ключевые достижения:**
-- ✅ Полная автоматизация CI/CD (сборка, тесты, релизы)
-- ✅ Sentry wrapper для crash reporting при наличии runtime DSN
-- ✅ Встроенная проверка обновлений в режиме check-and-open
+- ✅ CI/CD workflows добавлены (build-test.yml, release.yml, codeql.yml)
+- ✅ Sentry SDK интегрирован (dev/support-only через env vars)
+- ✅ Встроенная проверка обновлений с URL validation
 - ✅ Улучшенная документация
 - ✅ Увеличение тестового покрытия (73 → 90 тестов)
 - ✅ Package lock files для воспроизводимости
 - ✅ Deterministic builds
+- ✅ Dependabot настроен
 
 **Остающиеся вызовы:**
-- Code signing certificate и staging proof
-- Проверка release workflow staging/dry-run запуском в GitHub Actions
-- Опциональное будущее production telemetry решение, если появится потребность
-- Улучшение механизма обновлений (URL validation, понятные ошибки, кэширование)
+- Code signing certificate и staging proof (blocker для production)
+- Проверка release workflow staging/dry-run запуском в GitHub Actions (operational readiness)
+- Production monitoring не operational (только dev/support через env vars)
+- Coverage собирается как artifact, но нет published summary/threshold
+- Улучшение механизма обновлений (кэширование, опция отключения)
 - Дальнейшее повышение test coverage
 - Рефакторинг архитектуры
 
-Проект приблизился к современным практикам 2026 года в автоматизации, но пока должен считаться частично hardened: до уверенного публичного релиза нужно закрыть certificate procurement/signing proof и release proof.
+Проект приблизился к современным практикам 2026 года в автоматизации, но пока должен считаться частично hardened: до уверенного публичного релиза нужно закрыть code signing и доказать operational readiness через staging release.
 
 ---
 
@@ -349,6 +357,9 @@
 ## 📝 История документа
 
 - **2026-05-27**: Создан обновленный анализ с учетом внедренных изменений (CI/CD, Sentry, UpdateCheckService)
-  - Обновлена оценка проекта (7/10 → 8/10)
+  - Обновлена оценка проекта (7/10 → 7/10, инфраструктура добавлена но operational readiness не доказана)
   - Зафиксированы реализованные улучшения
   - Определены новые приоритеты действий
+  - Исправлены переоцененные оценки с "done" до evidence-based partial status
+  - Разделено "Sentry SDK интегрирован" от "production monitoring operational"
+  - Добавлен code signing как основной blocker для Windows desktop installer
