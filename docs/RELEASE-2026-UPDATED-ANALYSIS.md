@@ -50,7 +50,7 @@
 - ✅ Запуск на push/PR и по расписанию
 
 **Ограничения:**
-- ⚠️ Release workflow еще нужно доказать staging tag-ом или тестовым релизом
+- ⚠️ Release workflow получил manual dry-run path, но его еще нужно прогнать в GitHub Actions
 - ⚠️ Installer signing поддержан в workflow, но требует реальный certificate secret
 - ⚠️ Версия Inno Setup устанавливается через Chocolatey без явной фиксации версии
 
@@ -184,14 +184,14 @@
 ### 3. CI/CD
 
 **Проблемы:**
-- Release workflow еще не проверен staging tag-ом
+- Release workflow еще не проверен staging tag-ом или manual dry-run запуском в GitHub Actions
 - Installer подписывается только при наличии configured certificate secrets
 - Нет зафиксированной версии Inno Setup в release workflow
 - Нет Dependabot для автоматических обновлений зависимостей
 - Coverage собирается как artifact, но нет policy/threshold
 
 **Рекомендации:**
-- Прогнать тестовый/staging release tag и задокументировать результат
+- Прогнать manual dry-run или тестовый/staging release tag и задокументировать результат
 - Настроить реальный code signing certificate secret и проверить подпись на staging release
 - Зафиксировать или логировать версию Inno Setup
 - Включить GitHub Dependabot
@@ -220,7 +220,7 @@
 | # | Task | Сложность | Время | Статус |
 |---|------|-----------|-------|--------|
 | 1 | Подготовить code signing для installer | ⭐⭐⭐ | 1-3 дн | ⚠️ Инфраструктура добавлена; нужен сертификат |
-| 2 | Проверить release workflow staging tag-ом | ⭐⭐ | 1-2 ч | ❌ Не выполнено |
+| 2 | Проверить release workflow staging/dry-run запуском | ⭐⭐ | 1-2 ч | ⚠️ Dry-run path добавлен; запуск нужен в GitHub |
 | 3 | Принять и задокументировать production-модель Sentry | ⭐⭐ | 2-4 ч | ✅ Выполнено: dev/support-only |
 | 4 | Добавить URL validation и понятные ошибки для update check | ⭐⭐ | 2-4 ч | ✅ Выполнено |
 
@@ -258,7 +258,7 @@
 - [x] Обновить документацию
 - [ ] Подготовить code signing certificate и GitHub Secrets
 - [x] Добавить conditional signing path для installer
-- [ ] Проверить release workflow staging tag-ом
+- [ ] Проверить release workflow staging/dry-run запуском в GitHub Actions
 - [x] Принять production-модель Sentry: dev/support-only через env var
 - [x] Добавить URL validation и понятные ошибки для UpdateCheckService
 - [x] Включить Dependabot
@@ -324,7 +324,7 @@
 
 **Остающиеся вызовы:**
 - Code signing certificate и staging proof
-- Проверка release workflow staging tag-ом
+- Проверка release workflow staging/dry-run запуском в GitHub Actions
 - Опциональное будущее production telemetry решение, если появится потребность
 - Улучшение механизма обновлений (URL validation, понятные ошибки, кэширование)
 - Дальнейшее повышение test coverage

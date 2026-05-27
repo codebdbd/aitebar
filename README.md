@@ -40,7 +40,7 @@ AiteBar — это удобная скрытая панель быстрого �
 - Static analysis: `.github/workflows/codeql.yml` запускает CodeQL security-and-quality анализ для C#.
 - Dependency updates: `.github/dependabot.yml` проверяет NuGet и GitHub Actions зависимости раз в неделю.
 - Release: тег `vX.Y.Z` должен совпадать с `<Version>` в `AiteBar/AiteBar.csproj`; `.github/workflows/release.yml` собирает installer и прикладывает `artifacts/installer/*.exe` к GitHub Release.
-- Release guardrails: release workflow требует секцию `## [X.Y.Z]` в `CHANGELOG.md`, ровно один непустой installer artifact и публикует `SHA256SUMS.txt`.
+- Release guardrails: release workflow можно запустить вручную как dry-run, он требует секцию `## [X.Y.Z]` в `CHANGELOG.md`, ровно один непустой installer artifact и публикует `SHA256SUMS.txt`.
 - Code signing: installer подписывается автоматически, если в GitHub Secrets заданы `WINDOWS_SIGNING_CERT_BASE64` и `WINDOWS_SIGNING_CERT_PASSWORD`. Без этих secrets сборка остается неподписанной.
 - Crash reporting: Sentry используется только для dev/support diagnostics и включается, если на машине запуска задана переменная окружения `AITEBAR_SENTRY_DSN` или `SENTRY_DSN`. Без DSN приложение работает без телеметрии; production installer не включает crash reporting по умолчанию.
 - Updates: встроенная проверка обновлений читает latest release из `https://github.com/codebdbd/aitebar/releases`, проверяет GitHub URL перед открытием и предлагает открыть страницу релиза, если найден installer новее текущей версии. Автоматическая установка не выполняется.

@@ -19,7 +19,8 @@
    - [x] Update the release checklist and README.
 
 3. Prove the release workflow with a staging tag
-   - Run the release workflow on a non-production test tag or dry-run path.
+   - [x] Add a manual dry-run path to the release workflow.
+   - [ ] Run the release workflow on a non-production test tag or dry-run path.
    - Verify installer generation, release notes extraction, and release asset upload.
    - Record the result in release documentation.
 

@@ -4,6 +4,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to validate for a dry-run release. Defaults to AiteBar.csproj Version."
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -54,17 +60,25 @@ jobs:
       - name: Verify tag matches project version
         shell: pwsh
         run: |
-          $tag = "${{ github.ref_name }}"
-          if (-not $tag.StartsWith("v")) {
-            throw "Release tag must start with v. Actual tag: $tag"
-          }
-
-          $tagVersion = $tag.Substring(1)
           $project = [xml](Get-Content .\AiteBar\AiteBar.csproj)
           $projectVersion = $project.Project.PropertyGroup.Version | Select-Object -First 1
+          $expectedVersion = "${{ inputs.version }}"
 
-          if ($tagVersion -ne $projectVersion) {
-            throw "Tag version $tagVersion does not match project version $projectVersion."
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $tag = "${{ github.ref_name }}"
+            if (-not $tag.StartsWith("v")) {
+              throw "Release tag must start with v. Actual tag: $tag"
+            }
+
+            $expectedVersion = $tag.Substring(1)
+          }
+
+          if ([string]::IsNullOrWhiteSpace($expectedVersion)) {
+            $expectedVersion = $projectVersion
+          }
+
+          if ($expectedVersion -ne $projectVersion) {
+            throw "Release version $expectedVersion does not match project version $projectVersion."
           }
 
       - name: Build Release
@@ -138,7 +152,16 @@ jobs:
       - name: Generate release notes
         shell: pwsh
         run: |
-          $version = "${{ github.ref_name }}".Substring(1)
+          if ("${{ github.ref_type }}" -eq "tag") {
+            $version = "${{ github.ref_name }}".Substring(1)
+          } else {
+            $version = "${{ inputs.version }}"
+            if ([string]::IsNullOrWhiteSpace($version)) {
+              $project = [xml](Get-Content .\AiteBar\AiteBar.csproj)
+              $version = $project.Project.PropertyGroup.Version | Select-Object -First 1
+            }
+          }
+
           $content = Get-Content .\CHANGELOG.md -Raw
           $pattern = "## \[$([regex]::Escape($version))\]"
           $match = [regex]::Match($content, $pattern)
@@ -152,10 +175,22 @@ jobs:
           if ($next -lt 0) {
             $content.Substring($start).Trim() | Set-Content .\release_notes.md -Encoding UTF8
           } else {
-            $content.Substring($start, $next - $start).Trim() | Set-Content .\release_notes.md -Encoding UTF8
+              $content.Substring($start, $next - $start).Trim() | Set-Content .\release_notes.md -Encoding UTF8
           }
 
+      - name: Upload release dry-run artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts-${{ github.run_number }}
+          path: |
+            artifacts/installer/*.exe
+            artifacts/installer/SHA256SUMS.txt
+            release_notes.md
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Publish GitHub Release
+        if: ${{ github.ref_type == 'tag' }}
         uses: softprops/action-gh-release@v2
         with:
           body_path: release_notes.md
