@@ -152,7 +152,7 @@ artifacts\installer
 - ✅ **Безопасность**: 8/10 — проведен pre-release audit, все HIGH issues исправлены
 - ✅ **Тестирование**: 7/10 — 99 unit-тестов, coverage summary/artifact и baseline threshold в CI
 - ✅ **Документация**: 7/10 — README, CHANGELOG, USER_MANUAL, но нет API docs
-- ⚠️ **CI/CD**: 6/10 — GitHub Actions build/test, release workflow и CodeQL добавлены; нужен staging/dry-run proof
+- ✅ **CI/CD**: 7/10 — GitHub Actions build/test, release dry-run, CodeQL и Dependabot работают
 - ⚠️ **Мониторинг**: 3/10 — Sentry SDK интегрирован dev/support-only через env vars
 - ⚠️ **Обновления**: 5/10 — GitHub Releases check-and-open с URL validation; auto-install не реализован до signing
 
@@ -166,15 +166,11 @@ artifacts\installer
 
 ### 🔴 Приоритет-1 действия (Q3 2026)
 
-1. **Проверить release workflow dry-run/staging запуском** — 1-2 часа
-   - `workflow_dispatch` dry-run без GitHub Release
-   - проверка installer artifact, `release_notes.md` и `SHA256SUMS.txt`
-
-2. **Подготовить code signing certificate** — отложено до появления бюджета
+1. **Подготовить code signing certificate** — отложено до появления бюджета
    - после покупки настроить GitHub Secrets `WINDOWS_SIGNING_CERT_BASE64` и `WINDOWS_SIGNING_CERT_PASSWORD`
    - проверить подпись на staging/dry-run release
 
-3. **Повышать coverage постепенно**
+2. **Повышать coverage постепенно**
    - baseline threshold уже включен в CI
    - повышать порог только после добавления тестов для non-UI логики
 

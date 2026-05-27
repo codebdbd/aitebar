@@ -4,13 +4,13 @@
 
 | Метрика | Оценка | Статус | Комментарий |
 |---------|--------|--------|------------|
-| **Готовность к production** | 7/10 | ⚠️ PARTIAL | Инфраструктура добавлена, но operational readiness не доказана |
+| **Готовность к production** | 7/10 | ⚠️ PARTIAL | Инфраструктура и release dry-run proof добавлены; code signing certificate отложен |
 | **Соответствие best practices 2026** | 7/10 | ⚠️ PARTIAL | CI/CD, CodeQL, Sentry SDK, update check и coverage policy добавлены; остаются signing и operational proof |
 | **Безопасность** | 8/10 | ✅ GOOD | Аудит проведен, HIGH issues исправлены |
 | **Архитектура** | 8/10 | ✅ GOOD | Четкое разделение на слои, SOLID принципы |
 | **Тестирование** | 7/10 | ⚠️ GOOD | 99 unit-тестов, coverage summary/artifact и baseline threshold в CI |
 | **Документация** | 8/10 | ✅ GOOD | README, CHANGELOG, USER_MANUAL, docs/ |
-| **CI/CD** | 6/10 | ⚠️ PARTIAL | GitHub Actions build/test, release, CodeQL добавлены; operational readiness не доказана |
+| **CI/CD** | 7/10 | ✅ GOOD | GitHub Actions build/test, release dry-run, CodeQL и Dependabot работают |
 | **Мониторинг** | 3/10 | ⚠️ PARTIAL | Sentry SDK интегрирован (dev/support-only через env vars), production monitoring не operational |
 | **Обновления** | 5/10 | ⚠️ PARTIAL | Проверка GitHub Releases с URL validation реализована; автоматическая установка не реализована |
 
@@ -34,7 +34,7 @@
 | # | Task | Сложность | Время | Бенефит |
 |---|------|-----------|-------|---------|
 | 7 | Подготовить code signing certificate | ⭐⭐⭐ | 1-3 дн | Доверие Windows/SmartScreen |
-| 8 | Проверить release workflow staging/dry-run | ⭐⭐ | 1-2 ч | Operational readiness |
+| 8 | Проверить release workflow staging/dry-run | ⭐⭐ | 1-2 ч | ✅ Выполнено |
 | 9 | Добавить coverage summary/threshold policy | ⭐⭐ | 1 день | ✅ Реализовано |
 
 ### 🟢 ЖЕЛАТЕЛЬНЫЕ (планировать на Q4-2027)
@@ -100,9 +100,9 @@
 - [x] Создать UpdateCheckService с URL validation
 - [x] Настроить Dependabot
 - [ ] Подготовить code signing certificate и GitHub Secrets (отложено до появления бюджета)
-- [ ] Проверить release workflow staging/dry-run запуском в GitHub Actions
+- [x] Проверить release workflow staging/dry-run запуском в GitHub Actions
 - [x] Добавить coverage summary/threshold policy
-- [ ] Документировать новый процесс релиза после staging proof
+- [x] Документировать новый процесс релиза после staging proof
 
 ---
 
@@ -117,7 +117,7 @@
 | Platforms | Windows only | ✅ OK (специфичная для продукта) |
 | Локализация | 4 языка (ru, en, de, uk) | ✅ Good |
 | Документация | README, USER_MANUAL, CHANGELOG | ⚠️ Missing: API docs |
-| GitHub Actions | build-test.yml, release.yml, codeql.yml | ⚠️ Infrastructure added, operational readiness not proven |
+| GitHub Actions | build-test.yml, release.yml, codeql.yml | ✅ Build/test, CodeQL and release dry-run verified |
 | Code Coverage Reports | XPlat Code Coverage в CI (summary + artifact, baseline threshold 20%) | ✅ Baseline policy |
 | Crash Reporting | Sentry SDK (dev/support-only через env vars) | ⚠️ SDK integrated, production monitoring not operational |
 | Auto-Update | GitHub Releases check-and-open с URL validation | ⚠️ Implemented, no auto-install (requires signing) |
@@ -158,7 +158,7 @@ Q3 2026 (Release hardening)
 ├─ Dependabot [configured] ✅
 ├─ UpdateCheckService with URL validation [implemented] ✅
 ├─ Code signing certificate [deferred until budget] 🔴
-├─ Release workflow staging proof [blocker] 🔴
+├─ Release workflow staging proof [completed] ✅
 └─ Coverage summary/threshold policy [implemented] ✅
 
 Q4 2026 (Important improvements)

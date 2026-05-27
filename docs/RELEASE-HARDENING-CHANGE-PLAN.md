@@ -20,9 +20,10 @@
 
 3. Prove the release workflow with a staging tag
    - [x] Add a manual dry-run path to the release workflow.
-   - [ ] Run the release workflow on a non-production test tag or dry-run path.
-   - [ ] Verify installer generation, release notes extraction, and release asset upload.
-   - [ ] Record the result in release documentation.
+   - [x] Run the release workflow on a non-production test tag or dry-run path.
+   - [x] Verify installer generation, release notes extraction, and dry-run artifact upload.
+   - [x] Record the result in release documentation.
+   - Result: `Release #1` workflow_dispatch on `master` completed successfully on 2026-05-27 for commit `55b7c6c`; artifact `release-artifacts-1` was uploaded (52,059,580 bytes, expires 2026-06-10). Run: https://github.com/codebdbd/aitebar/actions/runs/26534464645
 
 4. Decide the Sentry production model
    - [x] Keep telemetry as dev/support-only through environment variables.
@@ -86,4 +87,4 @@
 4. Update tests and user documentation.
 5. Run Release build and tests.
 6. Add CI coverage summary and baseline threshold.
-7. Leave certificate procurement, optional production telemetry, staging release proof, and P2 architecture work as explicit follow-ups. Code signing certificate purchase is intentionally deferred until budget is available.
+7. Leave certificate procurement, optional production telemetry, and P2 architecture work as explicit follow-ups. Code signing certificate purchase is intentionally deferred until budget is available.
