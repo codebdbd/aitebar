@@ -51,7 +51,7 @@
 
 **Ограничения:**
 - ⚠️ Release workflow еще нужно доказать staging tag-ом или тестовым релизом
-- ⚠️ Installer пока не подписывается code signing сертификатом
+- ⚠️ Installer signing поддержан в workflow, но требует реальный certificate secret
 - ⚠️ Версия Inno Setup устанавливается через Chocolatey без явной фиксации версии
 
 **`global.json`**
@@ -185,14 +185,14 @@
 
 **Проблемы:**
 - Release workflow еще не проверен staging tag-ом
-- Installer не подписывается
+- Installer подписывается только при наличии configured certificate secrets
 - Нет зафиксированной версии Inno Setup в release workflow
 - Нет Dependabot для автоматических обновлений зависимостей
 - Coverage собирается как artifact, но нет policy/threshold
 
 **Рекомендации:**
 - Прогнать тестовый/staging release tag и задокументировать результат
-- Добавить code signing и проверку подписи
+- Настроить реальный code signing certificate secret и проверить подпись на staging release
 - Зафиксировать или логировать версию Inno Setup
 - Включить GitHub Dependabot
 - Добавить coverage summary и минимальный threshold для тестируемой non-UI логики
@@ -219,7 +219,7 @@
 
 | # | Task | Сложность | Время | Статус |
 |---|------|-----------|-------|--------|
-| 1 | Подготовить code signing для installer | ⭐⭐⭐ | 1-3 дн | ❌ Не выполнено |
+| 1 | Подготовить code signing для installer | ⭐⭐⭐ | 1-3 дн | ⚠️ Инфраструктура добавлена; нужен сертификат |
 | 2 | Проверить release workflow staging tag-ом | ⭐⭐ | 1-2 ч | ❌ Не выполнено |
 | 3 | Принять и задокументировать production-модель Sentry | ⭐⭐ | 2-4 ч | ❌ Не выполнено |
 | 4 | Добавить URL validation и понятные ошибки для update check | ⭐⭐ | 2-4 ч | ✅ Выполнено |
@@ -230,7 +230,7 @@
 |---|------|-----------|-------|--------|
 | 5 | Включить GitHub Dependabot | ⭐ | 30 мин | ✅ Выполнено |
 | 6 | Добавить coverage summary/threshold вместо косметического badge | ⭐⭐ | 1 день | ❌ Не выполнено |
-| 7 | Harden release workflow: Inno Setup version, artifact name/version, checksum | ⭐⭐ | 1 день | ❌ Не выполнено |
+| 7 | Harden release workflow: Inno Setup version, artifact version, checksum | ⭐⭐ | 1 день | ✅ Выполнено |
 | 8 | Добавить опцию отключения телеметрии, если выбран production telemetry | ⭐⭐ | 2 часа | ❌ Не выполнено |
 | 9 | Добавить опцию отключения проверки обновлений | ⭐⭐ | 2 часа | ❌ Не выполнено |
 
@@ -256,7 +256,8 @@
 - [x] Добавить global.json
 - [x] Добавить Directory.Build.props
 - [x] Обновить документацию
-- [ ] Подготовить code signing для installer
+- [ ] Подготовить code signing certificate и GitHub Secrets
+- [x] Добавить conditional signing path для installer
 - [ ] Проверить release workflow staging tag-ом
 - [ ] Принять production-модель Sentry
 - [x] Добавить URL validation и понятные ошибки для UpdateCheckService
@@ -280,7 +281,7 @@
 | Code Coverage Reports | XPlat Code Coverage в CI | ✅ Good | ✅ |
 | Crash Reporting | Sentry wrapper, opt-in через env var | ⚠️ Partial (production-модель не выбрана) | ⚠️ |
 | Auto-Update | GitHub Releases check-and-open | ⚠️ Partial (нет auto-install; нужен signing перед auto-install) | ⚠️ |
-| Code Signing | Нет | ❌ Expected for Windows installer | ❌ |
+| Code Signing | Conditional CI signing path | ⚠️ Нужен реальный сертификат и staging proof | ⚠️ |
 | Package Lock | packages.lock.json | ✅ Good | ✅ |
 | Deterministic Builds | Directory.Build.props | ✅ Good | ✅ |
 
@@ -322,7 +323,7 @@
 - ✅ Deterministic builds
 
 **Остающиеся вызовы:**
-- Code signing installer
+- Code signing certificate и staging proof
 - Проверка release workflow staging tag-ом
 - Решение production-модели Sentry
 - Улучшение механизма обновлений (URL validation, понятные ошибки, кэширование)

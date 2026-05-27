@@ -16,6 +16,9 @@ jobs:
   release:
     name: Build installer and publish release
     runs-on: windows-latest
+    env:
+      WINDOWS_SIGNING_CERT_BASE64: ${{ secrets.WINDOWS_SIGNING_CERT_BASE64 }}
+      WINDOWS_SIGNING_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGNING_CERT_PASSWORD }}
 
     steps:
       - name: Checkout
@@ -28,6 +31,22 @@ jobs:
 
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y
+
+      - name: Log Inno Setup version
+        shell: pwsh
+        run: |
+          $iscc = @(
+            "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe",
+            "$env:ProgramFiles\Inno Setup 6\ISCC.exe"
+          ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+          if (-not $iscc) {
+            throw "ISCC.exe not found after Chocolatey install."
+          }
+
+          $version = (Get-Item $iscc).VersionInfo.ProductVersion
+          "Inno Setup compiler: $iscc"
+          "Inno Setup version: $version"
 
       - name: Restore locked dependencies
         run: dotnet restore .\AiteBar.sln --locked-mode
@@ -54,9 +73,27 @@ jobs:
       - name: Run tests
         run: dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --no-build
 
+      - name: Prepare signing certificate
+        if: ${{ env.WINDOWS_SIGNING_CERT_BASE64 != '' }}
+        shell: pwsh
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:WINDOWS_SIGNING_CERT_PASSWORD)) {
+            throw "WINDOWS_SIGNING_CERT_BASE64 is set, but WINDOWS_SIGNING_CERT_PASSWORD is missing."
+          }
+
+          $certPath = Join-Path $env:RUNNER_TEMP "aitebar-signing.pfx"
+          [IO.File]::WriteAllBytes($certPath, [Convert]::FromBase64String($env:WINDOWS_SIGNING_CERT_BASE64))
+          "AITEBAR_SIGN_CERT_PATH=$certPath" >> $env:GITHUB_ENV
+          "AITEBAR_SIGN_CERT_PASSWORD=$env:WINDOWS_SIGNING_CERT_PASSWORD" >> $env:GITHUB_ENV
+
       - name: Build installer
         shell: pwsh
-        run: .\installer\Build-Installer.ps1 -Configuration Release
+        run: |
+          if ($env:AITEBAR_SIGN_CERT_PATH) {
+            .\installer\Build-Installer.ps1 -Configuration Release -Sign
+          } else {
+            .\installer\Build-Installer.ps1 -Configuration Release
+          }
 
       - name: Verify installer artifact
         shell: pwsh
@@ -70,7 +107,33 @@ jobs:
             throw "Installer artifact is empty: $($installers[0].FullName)"
           }
 
+          $project = [xml](Get-Content .\AiteBar\AiteBar.csproj)
+          $projectVersion = $project.Project.PropertyGroup.Version | Select-Object -First 1
+          $installerVersion = (Get-Item $installers[0].FullName).VersionInfo.ProductVersion
+          $installerVersion = if ($installerVersion) { $installerVersion.Trim() } else { "" }
+          if ($installerVersion -and $installerVersion -ne $projectVersion) {
+            throw "Installer ProductVersion $installerVersion does not match project version $projectVersion."
+          }
+
+          if ($env:AITEBAR_SIGN_CERT_PATH) {
+            $signature = Get-AuthenticodeSignature -FilePath $installers[0].FullName
+            if ($signature.Status -ne "Valid") {
+              throw "Installer signature is not valid. Status: $($signature.Status)"
+            }
+          }
+
           "Installer artifact: $($installers[0].FullName) ($($installers[0].Length) bytes)"
+
+      - name: Generate installer checksum
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem .\artifacts\installer -Filter "*.exe" -File | Select-Object -First 1
+          if (-not $installer) {
+            throw "Installer artifact not found."
+          }
+
+          $hash = Get-FileHash -Algorithm SHA256 -LiteralPath $installer.FullName
+          "$($hash.Hash)  $($installer.Name)" | Set-Content .\artifacts\installer\SHA256SUMS.txt -Encoding ASCII
 
       - name: Generate release notes
         shell: pwsh
@@ -96,4 +159,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           body_path: release_notes.md
-          files: artifacts/installer/*.exe
+          files: |
+            artifacts/installer/*.exe
+            artifacts/installer/SHA256SUMS.txt

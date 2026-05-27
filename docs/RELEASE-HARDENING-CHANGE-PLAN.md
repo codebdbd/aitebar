@@ -13,10 +13,10 @@
    - Add code signing as the main release blocker for a Windows desktop installer.
 
 2. Add code signing for the installer
-   - Select a code signing certificate.
-   - Sign the installer after Inno Setup builds it.
-   - Verify the signature in CI.
-   - Update the release checklist.
+   - [ ] Select a code signing certificate.
+   - [x] Add conditional signing support after Inno Setup builds the installer.
+   - [x] Verify the signature in CI when signing secrets are configured.
+   - [x] Update the release checklist and README.
 
 3. Prove the release workflow with a staging tag
    - Run the release workflow on a non-production test tag or dry-run path.
@@ -47,9 +47,9 @@
    - Avoid artificial whole-WPF coverage goals that do not reduce real risk.
 
 8. Harden the release workflow
-   - Pin or log the Inno Setup version.
-   - Validate installer artifact name and version.
-   - Add release asset checksums.
+   - [x] Log the Inno Setup version.
+   - [x] Validate installer artifact version metadata.
+   - [x] Add release asset checksums.
    - Configure artifact retention.
 
 9. Update user-facing documentation
@@ -84,4 +84,4 @@
 3. Harden update-check URL validation and failure UX.
 4. Update tests and user documentation.
 5. Run Release build and tests.
-6. Leave code signing, Sentry production enablement, and staging release proof as explicit external follow-ups.
+6. Leave certificate procurement, Sentry production enablement, and staging release proof as explicit external follow-ups.
