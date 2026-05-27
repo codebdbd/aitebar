@@ -36,18 +36,18 @@ using MediaColor = System.Windows.Media.Color;
 using MediaColorConverter = System.Windows.Media.ColorConverter;
 using PlacementMode = System.Windows.Controls.Primitives.PlacementMode;
 
-namespace AiteBar
+namespace AiteBar;
+
+[SupportedOSPlatform("windows6.1")]
+public partial class MainWindow : Window
 {
-    [SupportedOSPlatform("windows6.1")]
-    public partial class MainWindow : Window
-    {
-        private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
-        private DateTime? _hoverStartTime;
-        private bool _shown = false, _isAnimating = false;
-        private double _panelLeft, _panelTop, _panelRight, _panelBottom, _cachedDpi = 1.0;
-        private static readonly BrushConverter _brushConverter = new();
-        private static FontFamily? _menuIconFont;
-        private static FontFamily MenuIconFont => _menuIconFont ??= FontHelper.Resolve(FontHelper.FluentKey);
+    private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
+    private DateTime? _hoverStartTime;
+    private bool _shown = false, _isAnimating = false;
+    private double _panelLeft, _panelTop, _panelRight, _panelBottom, _cachedDpi = 1.0;
+    private static readonly BrushConverter _brushConverter = new();
+    private static FontFamily? _menuIconFont;
+    private static FontFamily MenuIconFont => _menuIconFont ??= FontHelper.Resolve(FontHelper.FluentKey);
 
         private static class MenuIcons
         {
@@ -2146,7 +2146,6 @@ namespace AiteBar
             } catch (Exception ex) { Logger.Log(ex); }
         }
         protected override void OnClosed(EventArgs e) { _nativeService?.Dispose(); _notifyIcon?.Dispose(); base.OnClosed(e); }
-    }
 }
 
 
