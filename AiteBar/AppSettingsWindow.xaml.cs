@@ -390,6 +390,7 @@ public partial class AppSettingsWindow : DarkWindow
 
     private void LoadSettings()
     {
+        // Load all settings from config
         ChkShowPresetSearch.IsChecked = _settings.ShowPresetSearch;
         ChkShowPresetScreenshot.IsChecked = _settings.ShowPresetScreenshot;
         ChkShowPresetVideo.IsChecked = _settings.ShowPresetVideo;
