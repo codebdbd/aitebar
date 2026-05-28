@@ -1,12 +1,31 @@
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using AiteBar;
 using Xunit;
 
 namespace AiteBar.Tests;
 
-public sealed class ContextStateHelperTests
+public sealed class ContextStateHelperTests : IDisposable
 {
+    private readonly CultureInfo _originalCulture;
+    private readonly CultureInfo _originalUICulture;
+
+    public ContextStateHelperTests()
+    {
+        _originalCulture = CultureInfo.CurrentCulture;
+        _originalUICulture = CultureInfo.CurrentUICulture;
+        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en");
+        CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en");
+    }
+
+    public void Dispose()
+    {
+        CultureInfo.CurrentCulture = _originalCulture;
+        CultureInfo.CurrentUICulture = _originalUICulture;
+    }
+
     [Fact]
     public void NormalizeContexts_CreatesEightDefaultContextsWithOnlyFirstEnabled()
     {
@@ -14,10 +33,10 @@ public sealed class ContextStateHelperTests
 
         Assert.Equal(8, contexts.Count);
         Assert.Equal("context-1", contexts[0].Id);
-        Assert.Equal(LocalizationService.Format("Panel_DefaultNameFormat", 1), contexts[0].Name);
+        Assert.Equal("Panel 1", contexts[0].Name);
         Assert.True(contexts[0].IsEnabled);
         Assert.Equal("context-8", contexts[7].Id);
-        Assert.Equal(LocalizationService.Format("Panel_DefaultNameFormat", 8), contexts[7].Name);
+        Assert.Equal("Panel 8", contexts[7].Name);
         Assert.All(contexts.Skip(1), context => Assert.False(context.IsEnabled));
     }
 
