@@ -102,7 +102,25 @@ public sealed class PanelLayoutHelperTests
         Assert.Equal(312, metrics.UserHeight);
         Assert.Equal(2, metrics.UserBands);
         Assert.Equal(53, metrics.UserLeadingReserve);
-        Assert.Equal(53, metrics.UserOverflowReserve);
+        Assert.Equal(metrics.UserLeadingReserve, metrics.UserOverflowReserve);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_AlignsOverflowColumnWithLeadingWhenNoSystemUtils()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 800,
+            panelPercent: 40,
+            visibleSystemButtonCount: 0,
+            controlButtonCount: 1,
+            contextCounts: [12],
+            activeContextIndex: 0,
+            hideControlSeparator: true);
+
+        Assert.Equal(2, metrics.UserBands);
+        Assert.Equal(44, metrics.UserLeadingReserve);
+        Assert.Equal(metrics.UserLeadingReserve, metrics.UserOverflowReserve);
     }
 
     [Fact]
@@ -310,5 +328,24 @@ public sealed class PanelLayoutHelperTests
         Assert.Equal(229, metrics.UserHeight);
         Assert.Equal(290, metrics.PanelHeight);
         Assert.Equal(53, metrics.UserLeadingReserve);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_WithUserButtons_UsesUserLayoutPrimaryForTotalPanelHeight()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 600,
+            panelPercent: 100,
+            visibleSystemButtonCount: 0,
+            controlButtonCount: 1,
+            contextCounts: [4],
+            activeContextIndex: 0,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(1, metrics.UserBands);
+        Assert.Equal(0, metrics.UserOverflowReserve);
+        Assert.Equal(229, metrics.UserHeight);
+        Assert.Equal(290, metrics.PanelHeight);
     }
 }
