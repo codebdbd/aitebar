@@ -70,6 +70,29 @@ internal static class UpdateCheckUi
 
     private static async Task DownloadAndInstallAsync(UpdateCheckService service, UpdateCheckResult result, Window owner)
     {
+        // ⚠️ WARNING: Code signing is not yet configured (P1 blocker)
+        // Show security warning before auto-install
+        var warningButtons = new List<DialogButton>
+        {
+            new() { Text = LocalizationService.Get("Common_Continue"), Value = "continue", IsPrimary = true },
+            new() { Text = LocalizationService.Get("Common_Cancel"), Value = "cancel", IsPrimary = false }
+        };
+        
+        var warningDialog = new DarkDialog(
+            LocalizationService.Get("Update_UnsignedWarning"),
+            warningButtons,
+            LocalizationService.Get("Update_SecurityWarning"))
+        {
+            Owner = owner
+        };
+        
+        warningDialog.ShowDialog();
+        if (warningDialog.Tag as string != "continue")
+        {
+            service.OpenReleasePage(result);
+            return;
+        }
+
         var downloadingDialog = new DarkDialog(LocalizationService.Get("Update_Downloading")) { Owner = owner };
         downloadingDialog.Show();
         

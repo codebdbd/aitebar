@@ -70,4 +70,10 @@
 Помилка: {0}</value></data>
   <data name="Update_Installing" xml:space="preserve"><value>Запускаємо інсталятор...
 Зараз AiteBar закриється.</value></data>
+  <data name="Update_SecurityWarning" xml:space="preserve"><value>Попередження про безпеку</value></data>
+  <data name="Update_UnsignedWarning" xml:space="preserve"><value>Інсталятор не підписаний цифровим підписом.
+
+Ви можете побачити попередження Windows SmartScreen. Це відома проблема в поточній версії.
+
+Продовжити встановлення?</value></data>
 </root>

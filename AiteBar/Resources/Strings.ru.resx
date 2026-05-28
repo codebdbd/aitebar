@@ -52,4 +52,10 @@
 Ошибка: {0}</value></data>
   <data name="Update_Installing" xml:space="preserve"><value>Запускаем инсталлятор...
 Сейчас AiteBar закроется.</value></data>
+  <data name="Update_SecurityWarning" xml:space="preserve"><value>Предупреждение безопасности</value></data>
+  <data name="Update_UnsignedWarning" xml:space="preserve"><value>Инсталлятор не подписан цифровой подписью.
+
+Вы можете увидеть предупреждение Windows SmartScreen. Это известное ограничение текущей версии.
+
+Продолжить установку?</value></data>
 </root>

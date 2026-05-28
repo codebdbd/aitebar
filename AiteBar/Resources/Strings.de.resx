@@ -133,4 +133,10 @@ Bitte öffne die GitHub-Release-Seite, um manuell herunterzuladen.
 Fehler: {0}</value></data>
   <data name="Update_Installing" xml:space="preserve"><value>Installationsprogramm wird gestartet...
 AiteBar wird jetzt geschlossen.</value></data>
+  <data name="Update_SecurityWarning" xml:space="preserve"><value>Sicherheitswarnung</value></data>
+  <data name="Update_UnsignedWarning" xml:space="preserve"><value>Das Installationsprogramm ist nicht digital signiert.
+
+Sie können eine Windows SmartScreen-Warnung sehen. Dies ist eine bekannte Einschränkung in der aktuellen Version.
+
+Installation fortsetzen?</value></data>
 </root>

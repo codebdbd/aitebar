@@ -307,4 +307,10 @@ Please open the GitHub release page to download manually.
 Error: {0}</value></data>
   <data name="Update_Installing" xml:space="preserve"><value>Starting installer...
 AiteBar will close now.</value></data>
+  <data name="Update_SecurityWarning" xml:space="preserve"><value>Security Warning</value></data>
+  <data name="Update_UnsignedWarning" xml:space="preserve"><value>The installer is not digitally signed yet.
+
+You may see a Windows SmartScreen warning. This is a known limitation in the current release.
+
+Continue with installation?</value></data>
 </root>
