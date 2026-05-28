@@ -293,4 +293,18 @@ Open the GitHub release page?</value></data>
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Select all</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Clear selection</value></data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Update_AutoInstallPrompt" xml:space="preserve"><value>AiteBar {0} is available.
+You are using {1}.
+
+What would you like to do?</value></data>
+  <data name="Update_DownloadAndInstall" xml:space="preserve"><value>Download and install</value></data>
+  <data name="Update_OpenReleasePage" xml:space="preserve"><value>Open GitHub release page</value></data>
+  <data name="Update_Downloading" xml:space="preserve"><value>Downloading update...
+Please wait.</value></data>
+  <data name="Update_DownloadFailed" xml:space="preserve"><value>Download failed.
+Please open the GitHub release page to download manually.
+
+Error: {0}</value></data>
+  <data name="Update_Installing" xml:space="preserve"><value>Starting installer...
+AiteBar will close now.</value></data>
 </root>

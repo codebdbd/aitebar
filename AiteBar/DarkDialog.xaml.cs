@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace AiteBar {
     public partial class DarkDialog : DarkWindow {
@@ -15,6 +19,38 @@ namespace AiteBar {
             }
         }
 
+        public DarkDialog(string message, List<DialogButton> buttons, string? title = null) {
+            InitializeComponent();
+            TxtMessage.Text = message;
+            
+            if (!string.IsNullOrEmpty(title)) {
+                this.Title = title;
+            }
+            
+            // Hide default buttons
+            BtnYes.Visibility = Visibility.Collapsed;
+            BtnNo.Visibility = Visibility.Collapsed;
+            BtnOk.Visibility = Visibility.Collapsed;
+            
+            // Add custom buttons
+            foreach (var button in buttons) {
+                var btn = new System.Windows.Controls.Button
+                {
+                    Content = button.Text,
+                    Background = new SolidColorBrush(button.IsPrimary ? System.Windows.Media.Color.FromRgb(66, 133, 244) : System.Windows.Media.Color.FromRgb(51, 51, 51)),
+                    Style = (Style)FindResource("DialogBtnStyle")
+                };
+                
+                var btnCopy = button;
+                btn.Click += (s, e) => {
+                    this.Tag = btnCopy.Value;
+                    this.DialogResult = btnCopy.IsPrimary;
+                };
+                
+                ButtonsPanel.Children.Insert(0, btn);
+            }
+        }
+
         private void BtnYes_Click(object sender, RoutedEventArgs e) {
             this.DialogResult = true;
         }
@@ -26,5 +62,12 @@ namespace AiteBar {
         private void BtnOk_Click(object sender, RoutedEventArgs e) {
             this.Close();
         }
+    }
+
+    public class DialogButton
+    {
+        public string Text { get; set; } = string.Empty;
+        public string Value { get; set; } = string.Empty;
+        public bool IsPrimary { get; set; }
     }
 }

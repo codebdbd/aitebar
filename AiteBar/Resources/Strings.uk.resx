@@ -56,4 +56,18 @@
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Вибрати всі</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Зняти виділення</value></data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Перевіряти оновлення</value></data>
+  <data name="Update_AutoInstallPrompt" xml:space="preserve"><value>Доступна AiteBar {0}.
+У вас зараз {1}.
+
+Що ви хочете зробити?</value></data>
+  <data name="Update_DownloadAndInstall" xml:space="preserve"><value>Завантажити та встановити</value></data>
+  <data name="Update_OpenReleasePage" xml:space="preserve"><value>Відкрити сторінку релізу GitHub</value></data>
+  <data name="Update_Downloading" xml:space="preserve"><value>Завантажуємо оновлення...
+Будь ласка, зачекайте.</value></data>
+  <data name="Update_DownloadFailed" xml:space="preserve"><value>Помилка завантаження.
+Будь ласка, відкрийте сторінку релізу GitHub, щоб завантажити вручну.
+
+Помилка: {0}</value></data>
+  <data name="Update_Installing" xml:space="preserve"><value>Запускаємо інсталятор...
+Зараз AiteBar закриється.</value></data>
 </root>

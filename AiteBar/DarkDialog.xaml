@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="{local:Loc ResourceKey=Common_Warning}" Width="380" SizeToContent="Height"
+        Title="{local:Loc ResourceKey=Common_Warning}" Width="420" SizeToContent="Height"
         WindowStartupLocation="CenterOwner" Background="#1E1E1E" Foreground="White"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
@@ -13,9 +13,10 @@
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="Width" Value="90"/>
-            <Setter Property="Margin" Value="10,0,0,0"/>
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="MinWidth" Value="100"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="Padding" Value="16,0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -33,15 +34,15 @@
         </Style>
     </Window.Resources>
 
-    <Grid Margin="20">
+    <Grid Margin="24">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="TxtMessage" Text="" TextWrapping="Wrap" FontSize="14" Margin="0,0,0,25"/>
+        <TextBlock x:Name="TxtMessage" Text="" TextWrapping="Wrap" FontSize="14" Margin="0,0,0,28" LineHeight="18"/>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+        <StackPanel x:Name="ButtonsPanel" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
             <Button x:Name="BtnYes" Content="{local:Loc ResourceKey=Common_Yes}" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnYes_Click" Visibility="Collapsed"/>
             <Button x:Name="BtnNo" Content="{local:Loc ResourceKey=Common_Cancel}" Background="#333333" Style="{StaticResource DialogBtnStyle}" Click="BtnNo_Click" Visibility="Collapsed"/>
             <Button x:Name="BtnOk" Content="{local:Loc ResourceKey=Common_OK}" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnOk_Click" Visibility="Collapsed"/>

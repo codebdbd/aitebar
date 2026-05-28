@@ -119,4 +119,18 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Auswahl aufheben</value></data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Nach Updates suchen</value></data>
+  <data name="Update_AutoInstallPrompt" xml:space="preserve"><value>AiteBar {0} ist verfügbar.
+Du nutzt {1}.
+
+Was möchtest du tun?</value></data>
+  <data name="Update_DownloadAndInstall" xml:space="preserve"><value>Herunterladen und installieren</value></data>
+  <data name="Update_OpenReleasePage" xml:space="preserve"><value>GitHub-Release-Seite öffnen</value></data>
+  <data name="Update_Downloading" xml:space="preserve"><value>Update wird heruntergeladen...
+Bitte warten.</value></data>
+  <data name="Update_DownloadFailed" xml:space="preserve"><value>Download fehlgeschlagen.
+Bitte öffne die GitHub-Release-Seite, um manuell herunterzuladen.
+
+Fehler: {0}</value></data>
+  <data name="Update_Installing" xml:space="preserve"><value>Installationsprogramm wird gestartet...
+AiteBar wird jetzt geschlossen.</value></data>
 </root>
