@@ -181,7 +181,7 @@ Q4 2026 (Important improvements)
 | Hardening plan | [RELEASE-HARDENING-CHANGE-PLAN.md](RELEASE-HARDENING-CHANGE-PLAN.md) | Актуальный план оставшихся release-hardening follow-ups |
 | Pre-release audit | [release-audit.md](release-audit.md) | Результаты security audit |
 | Архитектура | [architecture.md](architecture.md) | Техническая архитектура системы |
-| Пользовательское руководство | [../USER_MANUAL.md](../USER_MANUAL.md) | Документация для конечных пользователей |
+| Пользовательское руководство | [USER_MANUAL.md](USER_MANUAL.md) | Документация для конечных пользователей |
 
 ---
 

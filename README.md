@@ -50,7 +50,7 @@ AiteBar — Your Personal Command Center for Windows. Turn the edge of your scre
 - **Import/export panel**: Use the panel context menu or tray menu to import into the current panel and export the current panel.
 
 ### Documentation
-- [User Manual](USER_MANUAL.md)
+- [User Manual](docs/USER_MANUAL.md)
 - [Features Map](docs/functions.md)
 - [Architecture](docs/architecture.md)
 - [Pre-release Audit](docs/release-audit.md)
@@ -111,7 +111,7 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 - **Импорт/экспорт панели**: Используйте контекстное меню панели или меню в tray для импорта в текущую панель и экспорта текущей панели.
 
 ### Документация
-- [Руководство пользователя](USER_MANUAL.md)
+- [Руководство пользователя](docs/USER_MANUAL.md)
 - [Карта функций](docs/functions.md)
 - [Архитектура](docs/architecture.md)
 - [Предрелизный аудит](docs/release-audit.md)
