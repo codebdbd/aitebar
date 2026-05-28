@@ -451,12 +451,16 @@ namespace AiteBar
 
         private static string ApplyOperations(string text, IReadOnlyCollection<QuickNoteTextOperation> operations)
         {
-            foreach (var operation in operations.OrderByDescending(operation => operation.Offset))
+            var sortedOperations = operations.OrderByDescending(op => op.Offset).ToList();
+            var builder = new StringBuilder(text);
+            
+            foreach (var operation in sortedOperations)
             {
-                text = text[..operation.Offset] + operation.InsertText + text[(operation.Offset + operation.RemoveLength)..];
+                builder.Remove(operation.Offset, operation.RemoveLength);
+                builder.Insert(operation.Offset, operation.InsertText);
             }
 
-            return text;
+            return builder.ToString();
         }
 
         private static int MapOffsetThroughOperations(int offset, IReadOnlyCollection<QuickNoteTextOperation> operations)
