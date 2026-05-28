@@ -10,6 +10,8 @@ _installer_test/
 startup_log.txt
 
 # Internal AI / Prompt files
+AGENTS.md
+PLANS.md
 AiteBar/codex_instructions_fixes_r5.md
 AiteBar/codex_release_code_review_prompt.md
 AiteBar/ui_parameters.md
