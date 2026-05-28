@@ -1733,7 +1733,7 @@ public partial class MainWindow : Window
                 UserButtonsPanel.RenderTransform = transform;
             }
 
-            double initialOffset = direction * 8;
+            double initialOffset = direction * 8d;
             if (isVertical)
             {
                 transform.X = 0;
