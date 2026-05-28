@@ -109,4 +109,14 @@ public class AppSettings
 
     public List<CustomElement> Elements { get; set; } = new();
     public bool CheckForUpdatesEnabled { get; set; } = true;
+    public SentrySettings? Sentry { get; set; }
+}
+
+public class SentrySettings
+{
+    public string? Dsn { get; set; }
+    public bool IsEnabled { get; set; } = false;
+    public string? Environment { get; set; }
+    public double TracesSampleRate { get; set; } = 0.0;
+    public bool SendDefaultPii { get; set; } = false;
 }

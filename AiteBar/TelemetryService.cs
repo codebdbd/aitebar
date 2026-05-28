@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using System.Text.Json;
 using Sentry;
 
 namespace AiteBar;
@@ -23,10 +25,23 @@ internal static class TelemetryService
             }
 
             _initialized = true;
-            string? dsn = Environment.GetEnvironmentVariable("AITEBAR_SENTRY_DSN");
+
+            SentrySettings? settingsFromFile = LoadSettingsFromFile();
+            string? dsn = null;
+            string? environment = null;
+            double tracesSampleRate = 0.0;
+            bool sendDefaultPii = false;
+
+            // Приоритет: сначала переменные окружения, потом файл настроек
+            dsn = Environment.GetEnvironmentVariable("AITEBAR_SENTRY_DSN");
             if (string.IsNullOrWhiteSpace(dsn))
             {
                 dsn = Environment.GetEnvironmentVariable("SENTRY_DSN");
+            }
+
+            if (string.IsNullOrWhiteSpace(dsn) && settingsFromFile?.IsEnabled == true)
+            {
+                dsn = settingsFromFile.Dsn;
             }
 
             if (string.IsNullOrWhiteSpace(dsn))
@@ -34,16 +49,61 @@ internal static class TelemetryService
                 return;
             }
 
+            // Дополнительные опции из переменных окружения
+            environment = Environment.GetEnvironmentVariable("AITEBAR_ENVIRONMENT");
+            if (string.IsNullOrWhiteSpace(environment))
+            {
+                environment = settingsFromFile?.Environment ?? "production";
+            }
+
+            if (double.TryParse(Environment.GetEnvironmentVariable("AITEBAR_TRACES_SAMPLE_RATE"), out double envTracesRate))
+            {
+                tracesSampleRate = envTracesRate;
+            }
+            else if (settingsFromFile != null)
+            {
+                tracesSampleRate = settingsFromFile.TracesSampleRate;
+            }
+
+            if (bool.TryParse(Environment.GetEnvironmentVariable("AITEBAR_SEND_PII"), out bool envSendPii))
+            {
+                sendDefaultPii = envSendPii;
+            }
+            else if (settingsFromFile != null)
+            {
+                sendDefaultPii = settingsFromFile.SendDefaultPii;
+            }
+
             _sentryHandle = SentrySdk.Init(options =>
             {
                 options.Dsn = dsn;
                 options.Release = $"aitebar@{GetAppVersion()}";
-                options.Environment = Environment.GetEnvironmentVariable("AITEBAR_ENVIRONMENT") ?? "production";
-                options.SendDefaultPii = false;
-                options.TracesSampleRate = 0.0;
+                options.Environment = environment;
+                options.SendDefaultPii = sendDefaultPii;
+                options.TracesSampleRate = tracesSampleRate;
             });
 
             IsEnabled = true;
+        }
+    }
+
+    private static SentrySettings? LoadSettingsFromFile()
+    {
+        try
+        {
+            string settingsPath = PathHelper.SettingsFile;
+            if (!File.Exists(settingsPath))
+            {
+                return null;
+            }
+
+            string json = File.ReadAllText(settingsPath);
+            var settings = JsonSerializer.Deserialize<AppSettings>(json);
+            return settings?.Sentry;
+        }
+        catch
+        {
+            return null;
         }
     }
 
