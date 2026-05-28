@@ -7,29 +7,14 @@ using Xunit;
 
 namespace AiteBar.Tests;
 
-public sealed class ContextStateHelperTests : IDisposable
+public sealed class ContextStateHelperTests
 {
-    private readonly CultureInfo _originalCulture;
-    private readonly CultureInfo _originalUICulture;
-
-    public ContextStateHelperTests()
-    {
-        _originalCulture = CultureInfo.CurrentCulture;
-        _originalUICulture = CultureInfo.CurrentUICulture;
-        CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en");
-        CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en");
-    }
-
-    public void Dispose()
-    {
-        CultureInfo.CurrentCulture = _originalCulture;
-        CultureInfo.CurrentUICulture = _originalUICulture;
-    }
+    private static readonly CultureInfo EnglishCulture = CultureInfo.GetCultureInfo("en");
 
     [Fact]
     public void NormalizeContexts_CreatesEightDefaultContextsWithOnlyFirstEnabled()
     {
-        List<PanelContext> contexts = ContextStateHelper.NormalizeContexts([]);
+        List<PanelContext> contexts = ContextStateHelper.NormalizeContexts([], EnglishCulture);
 
         Assert.Equal(8, contexts.Count);
         Assert.Equal("context-1", contexts[0].Id);

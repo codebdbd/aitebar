@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace AiteBar
@@ -11,9 +12,16 @@ namespace AiteBar
 
         public static string GetDefaultContextId(int index) => $"context-{index + 1}";
 
-        public static string GetDefaultContextName(int index) => LocalizationService.Format("Panel_DefaultNameFormat", index + 1);
+        public static string GetDefaultContextName(int index) => GetDefaultContextName(index, CultureInfo.CurrentUICulture);
+
+        public static string GetDefaultContextName(int index, CultureInfo culture) => LocalizationService.Format("Panel_DefaultNameFormat", culture, index + 1);
 
         public static List<PanelContext> NormalizeContexts(IReadOnlyList<PanelContext>? source)
+        {
+            return NormalizeContexts(source, CultureInfo.CurrentUICulture);
+        }
+
+        public static List<PanelContext> NormalizeContexts(IReadOnlyList<PanelContext>? source, CultureInfo culture)
         {
             var normalized = new List<PanelContext>(FixedContextCount);
             var usedIds = new HashSet<string>(StringComparer.Ordinal);
@@ -22,7 +30,7 @@ namespace AiteBar
             {
                 PanelContext? existing = source != null && i < source.Count ? source[i] : null;
                 string id = string.IsNullOrWhiteSpace(existing?.Id) ? GetDefaultContextId(i) : existing!.Id;
-                string name = string.IsNullOrWhiteSpace(existing?.Name) ? GetDefaultContextName(i) : existing!.Name.Trim();
+                string name = string.IsNullOrWhiteSpace(existing?.Name) ? GetDefaultContextName(i, culture) : existing!.Name.Trim();
 
                 if (!usedIds.Add(id) || !string.Equals(id, GetDefaultContextId(i), StringComparison.Ordinal))
                 {
@@ -33,7 +41,7 @@ namespace AiteBar
                 normalized.Add(new PanelContext
                 {
                     Id = id,
-                    Name = string.IsNullOrWhiteSpace(name) ? GetDefaultContextName(i) : name,
+                    Name = string.IsNullOrWhiteSpace(name) ? GetDefaultContextName(i, culture) : name,
                     IconGlyph = string.IsNullOrWhiteSpace(existing?.IconGlyph) ? "\uE8B7" : existing.IconGlyph,
                     IsEnabled = i == 0 || (existing?.IsEnabled ?? false)
                 });
