@@ -119,7 +119,7 @@ public static class PanelLayoutHelper
                 fixedCross = fixedLayout.Cross;
                 panelPrimary = Math.Max(
                     ButtonOuterSize + PanelChrome,
-                    (isVertical && hasUserButtons ? userLayout.Primary : fixedPrimary + userLayout.Primary) + trailingPrimary + PanelChrome);
+                    (hasUserButtons ? userLayout.Primary : fixedPrimary + userLayout.Primary) + trailingPrimary + PanelChrome);
                 panelCross = Math.Max(ButtonOuterSize + PanelChrome, Math.Max(Math.Max(fixedCross, trailingCross), userLayout.Cross) + PanelChrome);
             }
 

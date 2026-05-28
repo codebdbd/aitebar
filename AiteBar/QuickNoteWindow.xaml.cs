@@ -39,7 +39,7 @@ namespace AiteBar
         private QuickNoteTheme _theme;
         private bool _loaded;
         private bool _hasPendingChanges;
-        private bool _isSaving;
+        private readonly System.Threading.SemaphoreSlim _saveSemaphore = new(1, 1);
         private bool _saveAgainAfterCurrent;
         private bool _isFormattingLinks;
         private bool _allowClose;
@@ -162,18 +162,16 @@ namespace AiteBar
                 return true;
             }
 
-            if (_isSaving)
+            // Try to acquire the semaphore - if we can't, it means a save is already in progress
+            if (!await _saveSemaphore.WaitAsync(0))
             {
                 _saveAgainAfterCurrent = true;
-                while (_isSaving)
-                {
-                    await Task.Delay(30);
-                }
-
+                // Wait for the semaphore to be released (i.e., current save to complete)
+                await _saveSemaphore.WaitAsync();
+                _saveSemaphore.Release();
                 return await SaveNowAsync(force);
             }
 
-            _isSaving = true;
             TxtSaveStatus.Text = LocalizationService.Get("QuickNote_Saving");
             try
             {
@@ -214,7 +212,7 @@ namespace AiteBar
             }
             finally
             {
-                _isSaving = false;
+                _saveSemaphore.Release();
             }
         }
 

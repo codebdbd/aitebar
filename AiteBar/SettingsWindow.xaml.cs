@@ -176,7 +176,7 @@ namespace AiteBar
                 if (string.IsNullOrEmpty(colorStr)) return;
                 if (!colorStr.StartsWith('#')) colorStr = "#" + colorStr;
                 if (colorStr.Length is 7 or 9) { 
-                    if (_brushConverter.ConvertFromString(colorStr) is Brush brush) { _selectedColor = colorStr; UpdatePreview(); }
+                    if (_brushConverter.ConvertFromString(colorStr) is Brush) { _selectedColor = colorStr; UpdatePreview(); }
                 }
             } catch (Exception ex) { Logger.Log(ex); }
         }
