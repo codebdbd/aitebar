@@ -40,7 +40,8 @@ public static class PanelLayoutHelper
         IReadOnlyList<int> contextCounts,
         int activeContextIndex,
         int systemContextIndex = 0,
-        int trailingControlButtonCount = 0)
+        int trailingControlButtonCount = 0,
+        bool hideControlSeparator = false)
     {
         double normalizedPercent = Math.Clamp(panelPercent, 20, 100) / 100.0;
         double maxPrimary = Math.Max(ButtonOuterSize, availablePrimary * normalizedPercent);
@@ -64,7 +65,7 @@ public static class PanelLayoutHelper
                 fixedSeparatorCount++;
             }
 
-            if (hasUserButtons && (systemCount > 0 || controlsCount > 0))
+            if (hasUserButtons && (systemCount > 0 || controlsCount > 0) && !hideControlSeparator)
             {
                 fixedSeparatorCount++;
             }

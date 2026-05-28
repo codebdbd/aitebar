@@ -697,17 +697,37 @@ public partial class MainWindow : Window
             double availableWidth = Math.Max(150, (workArea.Value.Width / _cachedDpi) - PanelScreenPadding);
             double availableHeight = Math.Max(150, (workArea.Value.Height / _cachedDpi) - PanelScreenPadding);
             int visibleSystemButtonCount = GetVisibleSystemButtonCount();
+            var contextCountsList = ContextStateHelper.GetEnabledContexts(_appSettings.Contexts)
+                .Select(context => _elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal))).ToList();
+            int activeContextIdx = Math.Max(0, ContextStateHelper.GetEnabledContexts(_appSettings.Contexts).ToList().FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal)));
+            
+            // First calculate metrics to check UserBands
+            var tempMetrics = PanelLayoutHelper.Calculate(
+                isVertical: isVertical,
+                availablePrimary: isVertical ? availableHeight : availableWidth,
+                panelPercent: _appSettings.PanelSizePercent,
+                visibleSystemButtonCount: visibleSystemButtonCount,
+                controlButtonCount: 1,
+                contextCounts: contextCountsList,
+                activeContextIndex: activeContextIdx,
+                systemContextIndex: 0,
+                trailingControlButtonCount: 1);
+            
+            bool hasUserButtons = contextCountsList.Count > 0 && contextCountsList.Any(c => c > 0);
+            bool hideSepControl = isVertical && hasUserButtons && tempMetrics.UserBands == 2;
+            
+            // Now calculate final metrics with hideControlSeparator
             var metrics = PanelLayoutHelper.Calculate(
                 isVertical: isVertical,
                 availablePrimary: isVertical ? availableHeight : availableWidth,
                 panelPercent: _appSettings.PanelSizePercent,
                 visibleSystemButtonCount: visibleSystemButtonCount,
                 controlButtonCount: 1,
-                contextCounts: ContextStateHelper.GetEnabledContexts(_appSettings.Contexts)
-                    .Select(context => _elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal))).ToList(),
-                activeContextIndex: Math.Max(0, ContextStateHelper.GetEnabledContexts(_appSettings.Contexts).ToList().FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal))),
+                contextCounts: contextCountsList,
+                activeContextIndex: activeContextIdx,
                 systemContextIndex: 0,
-                trailingControlButtonCount: 1);
+                trailingControlButtonCount: 1,
+                hideControlSeparator: hideSepControl);
 
             RootBorder.MinWidth = metrics.PanelWidth;
             RootBorder.MaxWidth = metrics.PanelWidth;
@@ -1410,22 +1430,39 @@ public partial class MainWindow : Window
             double availableWidth = workArea.HasValue ? Math.Max(150, (workArea.Value.Width / _cachedDpi) - PanelLayoutHelper.PanelChrome) : 150;
             double availableHeight = workArea.HasValue ? Math.Max(150, (workArea.Value.Height / _cachedDpi) - PanelLayoutHelper.PanelChrome) : 150;
             int visibleSystemButtonCount = GetVisibleSystemButtonCount();
+            var contextCountsList = ContextStateHelper.GetEnabledContexts(_appSettings.Contexts)
+                .Select(context => _elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal))).ToList();
+            int activeContextIdx = Math.Max(0, ContextStateHelper.GetEnabledContexts(_appSettings.Contexts).ToList().FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal)));
+            
+            // First calculate metrics to check UserBands
+            var tempMetrics = PanelLayoutHelper.Calculate(
+                isVertical: isVertical,
+                availablePrimary: isVertical ? availableHeight : availableWidth,
+                panelPercent: _appSettings.PanelSizePercent,
+                visibleSystemButtonCount: visibleSystemButtonCount,
+                controlButtonCount: 1,
+                contextCounts: contextCountsList,
+                activeContextIndex: activeContextIdx,
+                systemContextIndex: 0,
+                trailingControlButtonCount: 1);
+            
+            // Now calculate final metrics with hideControlSeparator
+            bool hasUserButtons = UserButtonsPanel.Children.Count > 0;
+            bool hideSepControl = isVertical && hasUserButtons && tempMetrics.UserBands == 2;
             var metrics = PanelLayoutHelper.Calculate(
                 isVertical: isVertical,
                 availablePrimary: isVertical ? availableHeight : availableWidth,
                 panelPercent: _appSettings.PanelSizePercent,
                 visibleSystemButtonCount: visibleSystemButtonCount,
                 controlButtonCount: 1,
-                contextCounts: ContextStateHelper.GetEnabledContexts(_appSettings.Contexts)
-                    .Select(context => _elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal))).ToList(),
-                activeContextIndex: Math.Max(0, ContextStateHelper.GetEnabledContexts(_appSettings.Contexts).ToList().FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal))),
+                contextCounts: contextCountsList,
+                activeContextIndex: activeContextIdx,
                 systemContextIndex: 0,
-                trailingControlButtonCount: 1);
+                trailingControlButtonCount: 1,
+                hideControlSeparator: hideSepControl);
 
             // Разделители
             SepSystem.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
-            bool hasUserButtons = UserButtonsPanel.Children.Count > 0;
-            bool hideSepControl = isVertical && hasUserButtons && metrics.UserBands == 2;
             SepControl.Visibility = hasUserButtons && !hideSepControl ? Visibility.Visible : Visibility.Collapsed;
             SepAppSettings.Visibility = hasUserButtons ? Visibility.Visible : Visibility.Collapsed;
 
