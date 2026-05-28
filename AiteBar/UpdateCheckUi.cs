@@ -40,7 +40,7 @@ internal static class UpdateCheckUi
                 };
                 
                 var dialog = new DarkDialog(LocalizationService.Format("Update_AutoInstallPrompt", latest, current), buttons, LocalizationService.Get("Common_Confirmation")) { Owner = owner };
-                bool? dialogResult = dialog.ShowDialog();
+                dialog.ShowDialog();
                 
                 if (dialog.Tag as string == "download")
                 {
