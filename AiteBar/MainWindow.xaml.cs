@@ -1403,10 +1403,31 @@ public partial class MainWindow : Window
                 _userButtons.Add(btn);
             }
             
+            // Calculate metrics to check UserBands
+            bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
+            var screen = GetTargetScreen();
+            var workArea = screen?.WorkingArea;
+            double availableWidth = workArea.HasValue ? Math.Max(150, (workArea.Value.Width / _cachedDpi) - PanelLayoutHelper.PanelChrome) : 150;
+            double availableHeight = workArea.HasValue ? Math.Max(150, (workArea.Value.Height / _cachedDpi) - PanelLayoutHelper.PanelChrome) : 150;
+            int visibleSystemButtonCount = GetVisibleSystemButtonCount();
+            var metrics = PanelLayoutHelper.Calculate(
+                isVertical: isVertical,
+                availablePrimary: isVertical ? availableHeight : availableWidth,
+                panelPercent: _appSettings.PanelSizePercent,
+                visibleSystemButtonCount: visibleSystemButtonCount,
+                controlButtonCount: 1,
+                contextCounts: ContextStateHelper.GetEnabledContexts(_appSettings.Contexts)
+                    .Select(context => _elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal))).ToList(),
+                activeContextIndex: Math.Max(0, ContextStateHelper.GetEnabledContexts(_appSettings.Contexts).ToList().FindIndex(context => string.Equals(context.Id, _appSettings.ActiveContextId, StringComparison.Ordinal))),
+                systemContextIndex: 0,
+                trailingControlButtonCount: 1);
+
             // Разделители
             SepSystem.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
-            SepControl.Visibility = UserButtonsPanel.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-            SepAppSettings.Visibility = UserButtonsPanel.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+            bool hasUserButtons = UserButtonsPanel.Children.Count > 0;
+            bool hideSepControl = isVertical && hasUserButtons && metrics.UserBands == 2;
+            SepControl.Visibility = hasUserButtons && !hideSepControl ? Visibility.Visible : Visibility.Collapsed;
+            SepAppSettings.Visibility = hasUserButtons ? Visibility.Visible : Visibility.Collapsed;
 
             AnimateContextTransitionIfNeeded();
             ApplyPanelToolTipPlacement();
