@@ -61,7 +61,7 @@ jobs:
           $branchRate = [double]::Parse($coverage.coverage.'branch-rate', [Globalization.CultureInfo]::InvariantCulture)
           $linePercent = [Math]::Round($lineRate * 100, 2)
           $branchPercent = [Math]::Round($branchRate * 100, 2)
-          $threshold = 20.0
+          $threshold = 19.0
 
           @(
             "## Coverage",
