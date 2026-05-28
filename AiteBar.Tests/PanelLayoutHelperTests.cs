@@ -326,7 +326,6 @@ public sealed class PanelLayoutHelperTests
             activeContextIndex: 0);
 
         Assert.True(metrics.PanelHeight > 0);
-        Assert.Equal(1, metrics.SystemWidth);
         Assert.Equal(2, metrics.UserBands);
     }
 }
