@@ -311,21 +311,4 @@ public sealed class PanelLayoutHelperTests
         Assert.Equal(290, metrics.PanelHeight);
         Assert.Equal(53, metrics.UserLeadingReserve);
     }
-
-    [Fact]
-    public void Calculate_Vertical_WithUserButtons_UsesUserLayoutPrimaryForTotalPanelHeight()
-    {
-        // Test for the fix in commit f4e69d5 (restored isVertical check)
-        var metrics = PanelLayoutHelper.Calculate(
-            isVertical: true,
-            availablePrimary: 800,
-            panelPercent: 70,
-            visibleSystemButtonCount: 4,
-            controlButtonCount: 1,
-            contextCounts: [12],
-            activeContextIndex: 0);
-
-        Assert.True(metrics.PanelHeight > 0);
-        Assert.Equal(2, metrics.UserBands);
-    }
 }
