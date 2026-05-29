@@ -729,50 +729,51 @@ public partial class MainWindow : Window
                 trailingControlButtonCount: 1,
                 hideControlSeparator: hideSepControl);
 
-            RootBorder.MinWidth = metrics.PanelWidth;
-            RootBorder.MaxWidth = metrics.PanelWidth;
-            RootBorder.MinHeight = metrics.PanelHeight;
-            RootBorder.MaxHeight = metrics.PanelHeight;
+            // Apply layout rounding to avoid sub‑pixel values (prevents flicker & phantom scroll)
+            RootBorder.MinWidth = Math.Round(metrics.PanelWidth);
+            RootBorder.MaxWidth = Math.Round(metrics.PanelWidth);
+            RootBorder.MinHeight = Math.Round(metrics.PanelHeight);
+            RootBorder.MaxHeight = Math.Round(metrics.PanelHeight);
 
-            double contentWidth = Math.Max(0, metrics.PanelWidth - PanelLayoutHelper.PanelChrome);
-            double contentHeight = Math.Max(0, metrics.PanelHeight - PanelLayoutHelper.PanelChrome);
+            double contentWidth = Math.Max(0, Math.Round(metrics.PanelWidth - PanelLayoutHelper.PanelChrome));
+            double contentHeight = Math.Max(0, Math.Round(metrics.PanelHeight - PanelLayoutHelper.PanelChrome));
 
             if (isVertical)
             {
-                RootBorder.MinHeight += DragHandleSpan;
-                RootBorder.MaxHeight += DragHandleSpan;
-                contentHeight += DragHandleSpan;
+                RootBorder.MinHeight = Math.Round(RootBorder.MinHeight + DragHandleSpan);
+                RootBorder.MaxHeight = Math.Round(RootBorder.MaxHeight + DragHandleSpan);
+                contentHeight = Math.Round(contentHeight + DragHandleSpan);
             }
             else
             {
-                RootBorder.MinWidth += DragHandleSpan;
-                RootBorder.MaxWidth += DragHandleSpan;
-                contentWidth += DragHandleSpan;
+                RootBorder.MinWidth = Math.Round(RootBorder.MinWidth + DragHandleSpan);
+                RootBorder.MaxWidth = Math.Round(RootBorder.MaxWidth + DragHandleSpan);
+                contentWidth = Math.Round(contentWidth + DragHandleSpan);
             }
 
             MainPanel.Width = contentWidth;
             MainPanel.Height = contentHeight;
-            FixedPanel.Width = isVertical ? contentWidth : metrics.FixedWidth;
-            FixedPanel.Height = metrics.FixedHeight;
+            FixedPanel.Width = isVertical ? contentWidth : Math.Round(metrics.FixedWidth);
+            FixedPanel.Height = Math.Round(metrics.FixedHeight);
             ControlBlock.Width = isVertical ? contentWidth : double.NaN;
-            AppSettingsBlock.Width = metrics.TrailingWidth;
-            AppSettingsBlock.Height = metrics.TrailingHeight;
+            AppSettingsBlock.Width = Math.Round(metrics.TrailingWidth);
+            AppSettingsBlock.Height = Math.Round(metrics.TrailingHeight);
             if (isVertical && visibleSystemButtonCount > 1)
             {
-                SystemUtilsPanel.Width = metrics.SystemWidth;
-                SystemUtilsPanel.Height = metrics.SystemHeight;
+                SystemUtilsPanel.Width = Math.Round(metrics.SystemWidth);
+                SystemUtilsPanel.Height = Math.Round(metrics.SystemHeight);
             }
 
-            UserButtonsPanel.Width = metrics.UserWidth;
-            UserButtonsPanel.Height = metrics.UserHeight;
-            UserButtonsPanel.MaxWidth = metrics.UserWidth;
-            UserButtonsPanel.MaxHeight = metrics.UserHeight;
-            UserButtonsPanel.MinWidth = metrics.UserWidth;
-            UserButtonsPanel.MinHeight = metrics.UserHeight;
-            UserButtonsPanel.LeadingPrimaryReserve = isVertical ? metrics.UserLeadingReserve : 0;
-            UserButtonsPanel.OverflowPrimaryReserve = isVertical ? metrics.UserOverflowReserve : 0;
+            UserButtonsPanel.Width = Math.Round(metrics.UserWidth);
+            UserButtonsPanel.Height = Math.Round(metrics.UserHeight);
+            UserButtonsPanel.MaxWidth = Math.Round(metrics.UserWidth);
+            UserButtonsPanel.MaxHeight = Math.Round(metrics.UserHeight);
+            UserButtonsPanel.MinWidth = Math.Round(metrics.UserWidth);
+            UserButtonsPanel.MinHeight = Math.Round(metrics.UserHeight);
+            UserButtonsPanel.LeadingPrimaryReserve = isVertical ? Math.Round(metrics.UserLeadingReserve) : 0;
+            UserButtonsPanel.OverflowPrimaryReserve = isVertical ? Math.Round(metrics.UserOverflowReserve) : 0;
             UserButtonsPanel.Margin = isVertical && metrics.UserLeadingReserve > 0
-                ? new Thickness(0, -metrics.UserLeadingReserve, 0, 0)
+                ? new Thickness(0, -Math.Round(metrics.UserLeadingReserve), 0, 0)
                 : new Thickness(0);
         }
 
@@ -1165,6 +1166,7 @@ public partial class MainWindow : Window
             _isPositioning = true;
             try
             {
+                this.UpdateLayout();
                 var coordinates = GetDockCoordinates(hide: !shown);
                 Left = coordinates.X;
                 Top = coordinates.Y;
@@ -1273,7 +1275,7 @@ public partial class MainWindow : Window
             }
         }
 
-        private void UpdateOrientation()
+        private void UpdateOrientation(bool reposition = true)
         {
             bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
             var orientation = System.Windows.Controls.Orientation.Horizontal;
@@ -1331,7 +1333,10 @@ public partial class MainWindow : Window
 
             ApplyPanelSizeConstraints();
             ApplyPanelToolTipPlacement();
-            PositionWindowImmediately(_shown);
+            if (reposition)
+            {
+                PositionWindowImmediately(_shown);
+            }
         }
 
         public void RefreshPanel() {
@@ -1341,7 +1346,7 @@ public partial class MainWindow : Window
             string activeContextId = _appSettings.ActiveContextId;
             bool hasSystemUtils = ApplySystemUtilityVisibility(activeContextId);
 
-            UpdateOrientation();
+            UpdateOrientation(reposition: false);
             UserButtonsPanel.Children.Clear();
             _userButtons.Clear();
 
@@ -1469,7 +1474,7 @@ public partial class MainWindow : Window
             AnimateContextTransitionIfNeeded();
             ApplyPanelToolTipPlacement();
             
-            UpdatePanelBounds();
+            PositionWindowImmediately(_shown);
         }
 
         private void ApplyPanelToolTipPlacement()
@@ -1962,12 +1967,45 @@ public partial class MainWindow : Window
             await Task.Delay(PanelHideAnimationMs);
         }
 
+        private int _mouseWheelCaptureToken = 0;
+        private void CaptureMouseForWheel()
+        {
+            if (!RootBorder.IsMouseCaptured)
+            {
+                RootBorder.CaptureMouse();
+            }
+            int currentToken = ++_mouseWheelCaptureToken;
+            Task.Delay(500).ContinueWith(t =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    if (_mouseWheelCaptureToken == currentToken)
+                    {
+                        if (RootBorder.IsMouseCaptured)
+                        {
+                            RootBorder.ReleaseMouseCapture();
+                        }
+                    }
+                });
+            });
+        }
+
+        private void RootBorder_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (RootBorder.IsMouseCaptured)
+            {
+                RootBorder.ReleaseMouseCapture();
+            }
+        }
+
         private async void RootBorder_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
         {
             if (_isAnimating || !_shown) return;
             if (e.Delta == 0) return;
 
             e.Handled = true;
+            CaptureMouseForWheel();
+
             DateTime now = DateTime.UtcNow;
             if (now - _lastContextWheelSwitchUtc < ContextWheelSwitchCooldown)
             {
