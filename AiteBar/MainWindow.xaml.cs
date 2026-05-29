@@ -1471,6 +1471,7 @@ public partial class MainWindow : Window
             SepControl.Visibility = hasUserButtons && !hideSepControl && hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
             SepAppSettings.Visibility = hasUserButtons ? Visibility.Visible : Visibility.Collapsed;
 
+            ApplyPanelSizeConstraints();
             AnimateContextTransitionIfNeeded();
             ApplyPanelToolTipPlacement();
             
