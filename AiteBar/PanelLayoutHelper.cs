@@ -60,12 +60,14 @@ public static class PanelLayoutHelper
             bool hasUserButtons = count > 0;
 
             int fixedSeparatorCount = 0;
-            if (systemCount > 0 && controlsCount > 0)
+            // SepSystem: всегда если есть пользовательские кнопки ИЛИ системные утилиты (разделитель после кнопки добавить)
+            if (hasUserButtons || systemCount > 0)
             {
                 fixedSeparatorCount++;
             }
 
-            if (hasUserButtons && (systemCount > 0 || controlsCount > 0) && !hideControlSeparator)
+            // SepControl: только если есть и системные утилиты, и пользовательские кнопки, и не скрыт
+            if (systemCount > 0 && hasUserButtons && !hideControlSeparator)
             {
                 fixedSeparatorCount++;
             }

@@ -119,7 +119,7 @@ public sealed class PanelLayoutHelperTests
             hideControlSeparator: true);
 
         Assert.Equal(2, metrics.UserBands);
-        Assert.Equal(44, metrics.UserLeadingReserve);
+        Assert.Equal(53, metrics.UserLeadingReserve);
         Assert.Equal(metrics.UserLeadingReserve, metrics.UserOverflowReserve);
     }
 

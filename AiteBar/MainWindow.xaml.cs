@@ -1467,8 +1467,8 @@ public partial class MainWindow : Window
                 hideControlSeparator: hideSepControl);
 
             // Разделители
-            SepSystem.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
-            SepControl.Visibility = hasUserButtons && !hideSepControl ? Visibility.Visible : Visibility.Collapsed;
+            SepSystem.Visibility = hasUserButtons || hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
+            SepControl.Visibility = hasUserButtons && !hideSepControl && hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
             SepAppSettings.Visibility = hasUserButtons ? Visibility.Visible : Visibility.Collapsed;
 
             AnimateContextTransitionIfNeeded();
@@ -1810,14 +1810,14 @@ public partial class MainWindow : Window
 
             UserButtonsPanel.Opacity = 0.55;
 
-            var fadeAnimation = new DoubleAnimation(1, TimeSpan.FromMilliseconds(140))
+            var fadeAnimation = new DoubleAnimation(1, TimeSpan.FromMilliseconds(Constants.AnimationFadeMs))
             {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                EasingFunction = EasingHelper.DefaultEasing
             };
 
-            var slideAnimation = new DoubleAnimation(0, TimeSpan.FromMilliseconds(140))
+            var slideAnimation = new DoubleAnimation(0, TimeSpan.FromMilliseconds(Constants.AnimationFadeMs))
             {
-                EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                EasingFunction = EasingHelper.DefaultEasing
             };
 
             UserButtonsPanel.BeginAnimation(OpacityProperty, fadeAnimation);
@@ -1865,8 +1865,8 @@ public partial class MainWindow : Window
                 double currentOffset = isVertical ? tt.Y : tt.X;
 
                 if (Math.Abs(currentOffset - targetOffset) > 0.1) {
-                    var anim = new DoubleAnimation(targetOffset, TimeSpan.FromMilliseconds(150)) {
-                        EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut }
+                    var anim = new DoubleAnimation(targetOffset, TimeSpan.FromMilliseconds(Constants.AnimationSlideMs)) {
+                        EasingFunction = EasingHelper.DefaultEasing
                     };
                     tt.BeginAnimation(isVertical ? TranslateTransform.YProperty : TranslateTransform.XProperty, anim);
                 }
@@ -1928,8 +1928,8 @@ public partial class MainWindow : Window
             double finalX = finish.X;
             double finalY = finish.Y;
 
-            var duration = TimeSpan.FromMilliseconds(hide ? PanelHideAnimationMs : PanelShowAnimationMs);
-            var easing = new CubicEase { EasingMode = hide ? EasingMode.EaseIn : EasingMode.EaseOut };
+            var duration = TimeSpan.FromMilliseconds(hide ? Constants.PanelHideAnimationMs : Constants.PanelShowAnimationMs);
+            var easing = EasingHelper.ForToggle(hide);
             var animX = new DoubleAnimation(finalX, duration) { EasingFunction = easing };
             var animY = new DoubleAnimation(finalY, duration) { EasingFunction = easing };
             

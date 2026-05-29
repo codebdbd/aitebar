@@ -7,6 +7,22 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.1] - 2026-05-29
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Анимации панелей и Quick Note**: Реализована новая система анимаций с централизованными константами и easing-функциями
+- **Panel and Quick Note animations**: Implemented new animation system with centralized constants and easing functions
+
+- **Компонент Settings Dropdown**: Анимация открытия списка изменена с Fade на Slide для лучшего UX
+- **Settings Dropdown component**: Opening animation changed from Fade to Slide for better UX
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Разделитель после кнопки "Добавить"**: Разделитель теперь отображается всегда, если есть пользовательские кнопки (включая вторые панели без системных утилит)
+- **Separator after Add button**: Separator now always appears if there are user buttons (including secondary panels without system utilities)
+
+- **Расчет размеров панели**: Обновлена логика расчета размеров для корректного отображения разделителей
+- **Panel size calculation**: Updated size calculation logic for proper separator display
+
 ## [1.7.0] - 2026-05-28
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added
