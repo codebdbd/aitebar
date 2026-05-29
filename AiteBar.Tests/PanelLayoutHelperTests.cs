@@ -348,4 +348,114 @@ public sealed class PanelLayoutHelperTests
         Assert.Equal(229, metrics.UserHeight);
         Assert.Equal(290, metrics.PanelHeight);
     }
+
+    [Fact]
+    public void Calculate_Vertical_PanelHeightUsesTallestContextRegardlessOfActiveIndex()
+    {
+        const int availablePrimary = 800;
+        const int panelPercent = 40;
+        const int visibleSystemButtonCount = 4;
+        int[] contextCounts = [4, 12];
+
+        var primaryContextMetrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: availablePrimary,
+            panelPercent: panelPercent,
+            visibleSystemButtonCount: visibleSystemButtonCount,
+            controlButtonCount: 1,
+            contextCounts: contextCounts,
+            activeContextIndex: 0,
+            trailingControlButtonCount: 1);
+
+        var secondaryContextMetrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: availablePrimary,
+            panelPercent: panelPercent,
+            visibleSystemButtonCount: visibleSystemButtonCount,
+            controlButtonCount: 1,
+            contextCounts: contextCounts,
+            activeContextIndex: 1,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(primaryContextMetrics.PanelHeight, secondaryContextMetrics.PanelHeight);
+        Assert.True(secondaryContextMetrics.UserHeight > primaryContextMetrics.UserHeight);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_PrimaryContext_UsesUtilityOverflowReserveWhenTwoBands()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 800,
+            panelPercent: 40,
+            visibleSystemButtonCount: 4,
+            controlButtonCount: 1,
+            contextCounts: [12],
+            activeContextIndex: 0,
+            systemContextIndex: 0,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(2, metrics.UserBands);
+        Assert.Equal(53, metrics.UserOverflowReserve);
+        Assert.True(metrics.UserLeadingReserve > metrics.UserOverflowReserve);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_NonPrimaryContext_AlignsOverflowWithLeadingWhenTwoBands()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 800,
+            panelPercent: 40,
+            visibleSystemButtonCount: 4,
+            controlButtonCount: 1,
+            contextCounts: [0, 12],
+            activeContextIndex: 1,
+            systemContextIndex: 0,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(2, metrics.UserBands);
+        Assert.Equal(53, metrics.UserLeadingReserve);
+        Assert.Equal(metrics.UserLeadingReserve, metrics.UserOverflowReserve);
+        Assert.Equal(44, metrics.FixedWidth);
+        Assert.Equal(53, metrics.FixedHeight);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_NonPrimaryContext_UsesZeroOverflowReserveForSingleBand()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 600,
+            panelPercent: 100,
+            visibleSystemButtonCount: 8,
+            controlButtonCount: 1,
+            contextCounts: [0, 4],
+            activeContextIndex: 1,
+            systemContextIndex: 0,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(1, metrics.UserBands);
+        Assert.Equal(0, metrics.UserOverflowReserve);
+        Assert.Equal(53, metrics.FixedHeight);
+        Assert.Equal(44, metrics.FixedWidth);
+    }
+
+    [Fact]
+    public void Calculate_Horizontal_NonPrimaryContext_ReservesUtilityWidthWithoutSystemButtons()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: false,
+            availablePrimary: 600,
+            panelPercent: 100,
+            visibleSystemButtonCount: 4,
+            controlButtonCount: 1,
+            contextCounts: [1, 2],
+            activeContextIndex: 1,
+            systemContextIndex: 0);
+
+        Assert.Equal(290, metrics.PanelWidth);
+        Assert.Equal(88, metrics.UserWidth);
+        Assert.Equal(53, metrics.FixedWidth);
+    }
 }

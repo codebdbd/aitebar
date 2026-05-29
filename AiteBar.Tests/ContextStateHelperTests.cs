@@ -110,4 +110,48 @@ public sealed class ContextStateHelperTests : IDisposable
 
         Assert.Equal(expected, actual);
     }
+
+    [Fact]
+    public void NormalizeActiveContextId_KeepsValidEnabledContext()
+    {
+        List<PanelContext> contexts =
+        [
+            new() { Id = "context-1", IsEnabled = true },
+            new() { Id = "context-2", IsEnabled = true }
+        ];
+
+        string activeContextId = ContextStateHelper.NormalizeActiveContextId("context-2", contexts);
+
+        Assert.Equal("context-2", activeContextId);
+    }
+
+    [Fact]
+    public void GetRelativeEnabledContextId_WrapsFromLastToFirst()
+    {
+        List<PanelContext> contexts =
+        [
+            new() { Id = "context-1", IsEnabled = true },
+            new() { Id = "context-2", IsEnabled = true },
+            new() { Id = "context-3", IsEnabled = false }
+        ];
+
+        string? nextContextId = ContextStateHelper.GetRelativeEnabledContextId("context-2", contexts, 1);
+
+        Assert.Equal("context-1", nextContextId);
+    }
+
+    [Fact]
+    public void GetRelativeEnabledContextId_WrapsFromFirstToLast()
+    {
+        List<PanelContext> contexts =
+        [
+            new() { Id = "context-1", IsEnabled = true },
+            new() { Id = "context-2", IsEnabled = false },
+            new() { Id = "context-3", IsEnabled = true }
+        ];
+
+        string? previousContextId = ContextStateHelper.GetRelativeEnabledContextId("context-1", contexts, -1);
+
+        Assert.Equal("context-3", previousContextId);
+    }
 }
