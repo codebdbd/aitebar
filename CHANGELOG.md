@@ -7,6 +7,26 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.2] - 2026-05-30
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Система резервных копий настроек**: Автоматическое создание бэкапов (до 5 версий) при каждом сохранении настроек и восстановление из бэкапов при повреждении основного файла
+- **Backup system for settings**: Automatic backup creation (up to 5 versions) on each settings save and restore from backups when main file is corrupted
+
+- **Расширенное тестовое покрытие**: Добавлено более 100 новых тестов для модулей `ActionExecutionResult`, `BrowserHelper`, `Constants`, `EasingHelper`, `FontHelper`, `IconHelper`, `LocalizationService`, `PanelPackageMapper`, `QuickNoteService` и `TelemetryService`
+- **Extended test coverage**: Added over 100 new tests for `ActionExecutionResult`, `BrowserHelper`, `Constants`, `EasingHelper`, `FontHelper`, `IconHelper`, `LocalizationService`, `PanelPackageMapper`, `QuickNoteService` and `TelemetryService` modules
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **UI кнопки "Добавить"**: Полностью переработан дизайн кнопки "Add" с круглым фоном и улучшенными состояниями hover/active
+- **Add button UI**: Complete redesign of Add button with round background and improved hover/active states
+
+- **Обработка файлов настроек**: Улучшена устойчивость к поврежденным и слишком большим файлам настроек (не бросает исключения, логирует предупреждения)
+- **Settings file handling**: Improved resilience to corrupted and oversized settings files (no exceptions thrown, warnings logged)
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Обновление внутренних методов**: Методы работы с бэкапами в `AppSettingsService` сделаны `internal` для тестирования
+- **Internal methods update**: Backup-related methods in `AppSettingsService` made `internal` for testing
+
 ## [1.7.1] - 2026-05-29
 
 ### 🇷🇺 Изменено | 🇬🇧 Changed
