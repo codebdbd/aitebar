@@ -10,12 +10,12 @@ namespace AiteBar
 {
     public class AppSettingsService
     {
-        private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
+        private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = false };
         private readonly string _configFile;
         private readonly string _settingsFile;
         private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
         private readonly object _stateLock = new();
-        internal const long MaxSettingsFileBytes = 2 * 1024 * 1024;
+        internal const long MaxSettingsFileBytes = 100 * 1024 * 1024;
         
         private AppSettings _appSettings = new();
         private List<CustomElement> _elements = new();
@@ -45,27 +45,60 @@ namespace AiteBar
             try
             {
                 bool changed = false;
+                bool loadedFromBackup = false;
+
                 if (File.Exists(_settingsFile))
                 {
-                    EnsureFileSizeWithinLimit(_settingsFile, MaxSettingsFileBytes);
-                    string json = await File.ReadAllTextAsync(_settingsFile);
-                    _appSettings = JsonSerializer.Deserialize<AppSettings>(json) ?? new();
+                    try
+                    {
+                        EnsureFileSizeWithinLimit(_settingsFile, MaxSettingsFileBytes);
+                        string json = await File.ReadAllTextAsync(_settingsFile);
+                        _appSettings = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions) ?? new();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                        // Если не удалось загрузить основной файл - попробуем бэкапы
+                        loadedFromBackup = TryLoadFromBackup();
+                        if (!loadedFromBackup)
+                        {
+                            _appSettings = new AppSettings();
+                        }
+                    }
                     changed = NormalizeAppState();
                 }
                 else if (File.Exists(_configFile))
                 {
-                    EnsureFileSizeWithinLimit(_configFile, MaxSettingsFileBytes);
-                    string json = await File.ReadAllTextAsync(_configFile);
-                    _appSettings.Elements = JsonSerializer.Deserialize<List<CustomElement>>(json) ?? [];
-                    changed = NormalizeAppState();
-                    await SaveAsync();
+                    try
+                    {
+                        EnsureFileSizeWithinLimit(_configFile, MaxSettingsFileBytes);
+                        string json = await File.ReadAllTextAsync(_configFile);
+                        _appSettings.Elements = JsonSerializer.Deserialize<List<CustomElement>>(json, _jsonOptions) ?? [];
+                        changed = NormalizeAppState();
+                        await SaveAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                        loadedFromBackup = TryLoadFromBackup();
+                        if (!loadedFromBackup)
+                        {
+                            _appSettings = new AppSettings();
+                            changed = NormalizeAppState();
+                        }
+                    }
                 }
                 else
                 {
-                    changed = NormalizeAppState();
+                    // Если вообще нет файлов - сначала попробуем бэкапы
+                    loadedFromBackup = TryLoadFromBackup();
+                    if (!loadedFromBackup)
+                    {
+                        changed = NormalizeAppState();
+                    }
                 }
 
-                if (changed)
+                if (changed || loadedFromBackup)
                 {
                     await SaveAsync();
                 }
@@ -74,6 +107,83 @@ namespace AiteBar
             { 
                 Logger.Log(ex); 
             }
+        }
+
+        internal const int MaxBackupCount = 5;
+
+        internal string GetBackupFilePath(int backupIndex)
+        {
+            return $"{_settingsFile}.backup.{backupIndex}";
+        }
+
+        internal void RotateBackups()
+        {
+            try
+            {
+                // Удаляем самый старый бэкап
+                string oldestBackup = GetBackupFilePath(MaxBackupCount - 1);
+                if (File.Exists(oldestBackup))
+                {
+                    File.Delete(oldestBackup);
+                }
+
+                // Сдвигаем все бэкапы на один индекс вперёд
+                for (int i = MaxBackupCount - 2; i >= 0; i--)
+                {
+                    string source = GetBackupFilePath(i);
+                    string destination = GetBackupFilePath(i + 1);
+                    if (File.Exists(source))
+                    {
+                        if (File.Exists(destination))
+                        {
+                            File.Delete(destination);
+                        }
+                        File.Move(source, destination);
+                    }
+                }
+
+                // Сохраняем текущий файл как новый бэкап 0
+                if (File.Exists(_settingsFile))
+                {
+                    string newBackup = GetBackupFilePath(0);
+                    if (File.Exists(newBackup))
+                    {
+                        File.Delete(newBackup);
+                    }
+                    File.Move(_settingsFile, newBackup);
+                }
+            }
+            catch
+            {
+                // Если не удалось сделать бэкапы - продолжаем
+            }
+        }
+
+        internal bool TryLoadFromBackup()
+        {
+            for (int i = 0; i < MaxBackupCount; i++)
+            {
+                string backupFile = GetBackupFilePath(i);
+                if (!File.Exists(backupFile)) continue;
+
+                try
+                {
+                    EnsureFileSizeWithinLimit(backupFile, MaxSettingsFileBytes);
+                    string json = File.ReadAllText(backupFile);
+                    var loadedSettings = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions);
+                    if (loadedSettings != null)
+                    {
+                        _appSettings = loadedSettings;
+                        Logger.Log(new Exception($"Restored settings from backup {i}"));
+                        return true;
+                    }
+                }
+                catch
+                {
+                    // Попробуем следующий бэкап
+                }
+            }
+            return false;
         }
 
         public async Task SaveAsync()
@@ -87,6 +197,10 @@ namespace AiteBar
                 }
 
                 string json = JsonSerializer.Serialize(_appSettings, _jsonOptions);
+                
+                // Создаём несколько бэкапов перед сохранением
+                RotateBackups();
+                
                 await File.WriteAllTextAsync(_settingsFile, json);
                 SettingsChanged?.Invoke(this, EventArgs.Empty);
             }
@@ -169,10 +283,18 @@ namespace AiteBar
 
         private static void EnsureFileSizeWithinLimit(string path, long maxBytes)
         {
-            long length = new FileInfo(path).Length;
-            if (length > maxBytes)
+            try
             {
-                throw new InvalidDataException($"Файл слишком большой: {length} bytes.");
+                long length = new FileInfo(path).Length;
+                if (length > maxBytes)
+                {
+                    // Логируем предупреждение, но НЕ БРОСАЕМ исключения - загружаем как есть
+                    Logger.Log(new InvalidDataException($"Файл настроек большой ({length} bytes), лимит {maxBytes} bytes. Загружаем как есть."));
+                }
+            }
+            catch
+            {
+                // Если не удалось проверить размер - продолжаем
             }
         }
 

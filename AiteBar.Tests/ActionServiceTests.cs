@@ -77,4 +77,80 @@ public sealed class ActionServiceTests
             }
         }
     }
+
+    [Fact]
+    public void BuildWebActionProcessStartInfo_ChromeWithProfile_UsesProfileArgument()
+    {
+        var element = new CustomElement
+        {
+            Browser = BrowserType.Chrome,
+            ActionType = nameof(ActionType.Web),
+            ActionValue = "https://example.com",
+            ChromeProfile = "Profile 1"
+        };
+
+        var psi = ActionService.BuildWebActionProcessStartInfo(element, "Profile 1");
+
+        string[] args = psi.ArgumentList.ToArray();
+
+        Assert.Equal("https://example.com", args[0]);
+        Assert.Contains("--profile-directory=Profile 1", args);
+    }
+
+    [Fact]
+    public void BuildWebActionProcessStartInfo_EdgeWithAppMode_UsesAppMode()
+    {
+        var element = new CustomElement
+        {
+            Browser = BrowserType.Edge,
+            ActionType = nameof(ActionType.Web),
+            ActionValue = "https://example.com",
+            IsAppMode = true
+        };
+
+        var psi = ActionService.BuildWebActionProcessStartInfo(element, null);
+
+        string[] args = psi.ArgumentList.ToArray();
+
+        Assert.Contains("--app=https://example.com", args);
+    }
+
+    [Fact]
+    public void BuildWebActionProcessStartInfo_BraveWithIncognito_AddsIncognito()
+    {
+        var element = new CustomElement
+        {
+            Browser = BrowserType.Brave,
+            ActionType = nameof(ActionType.Web),
+            ActionValue = "https://example.com",
+            IsIncognito = true
+        };
+
+        var psi = ActionService.BuildWebActionProcessStartInfo(element, null);
+
+        string[] args = psi.ArgumentList.ToArray();
+
+        Assert.Equal("https://example.com", args[0]);
+        Assert.Contains("--incognito", args);
+    }
+
+    [Fact]
+    public void BuildWebActionProcessStartInfo_YandexWithRotation_AddsRotation()
+    {
+        var element = new CustomElement
+        {
+            Browser = BrowserType.Yandex,
+            ActionType = nameof(ActionType.Web),
+            ActionValue = "https://example.com",
+            UseRotation = true,
+            RotationProfilePaths = new System.Collections.Generic.List<string> { "Profile1", "Profile2" }
+        };
+
+        var psi = ActionService.BuildWebActionProcessStartInfo(element, "Profile2");
+
+        string[] args = psi.ArgumentList.ToArray();
+
+        Assert.Equal("https://example.com", args[0]);
+        Assert.Contains("--profile-directory=Profile2", args);
+    }
 }

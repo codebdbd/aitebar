@@ -77,7 +77,27 @@
 
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
-                        <Button x:Name="BtnAdd" Content="&#xE005;" Click="BtnAdd_Click" Foreground="#2A9CFF"/>
+                        <Button x:Name="BtnAdd" Content="&#xF10A;" Click="BtnAdd_Click" Width="40" Height="40" Margin="2,2" FontSize="14" Padding="0"
+                                Foreground="#FFFFFF">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="Transparent">
+                                        <Border Width="24" Height="24" Background="#2A9CFF" CornerRadius="12" 
+                                                HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="CircleBorder">
+                                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
+                                        </Border>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#1E6FD9" TargetName="CircleBorder"/>
+                                        </Trigger>
+                                        <Trigger Property="IsPressed" Value="True">
+                                            <Setter Property="Background" Value="#164C99" TargetName="CircleBorder"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                     </StackPanel>
 
                     <Rectangle x:Name="SepSystem" Width="1" Height="20" Fill="#332A9CFF" Margin="4,0" VerticalAlignment="Center"/>
