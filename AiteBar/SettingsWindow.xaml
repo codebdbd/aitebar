@@ -186,7 +186,7 @@
                             
                                     <Border x:Name="BorderPreview" Grid.Column="0" Background="#1A1A1C" Width="80" Height="80" CornerRadius="12" BorderThickness="1" BorderBrush="#3A3A3E" Cursor="Hand" MouseLeftButtonDown="BorderPreview_MouseLeftButtonDown">
                                         <Grid>
-                                            <TextBlock x:Name="PreviewIcon" Text="&#xE8B9;" FontFamily="Segoe MDL2 Assets" FontSize="36" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="PreviewIcon" Text="&#xF45B;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="36" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                             <Image x:Name="PreviewImage" Width="64" Height="64" Stretch="Uniform" Visibility="Collapsed"/>
                                         </Grid>
                                     </Border>

@@ -94,7 +94,7 @@ internal sealed class PanelPackageElement
     public string Key { get; set; } = "None";
 
     [JsonPropertyName("icon")]
-    public string Icon { get; set; } = "\uE710";
+    public string Icon { get; set; } = "\uF45B";
 
     [JsonPropertyName("iconFont")]
     public string IconFont { get; set; } = FontHelper.FluentKey;

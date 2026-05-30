@@ -82,38 +82,6 @@ namespace AiteBar
         private void BtnTabBrands_Click(object sender, RoutedEventArgs e)
             => SetActiveTab(FontHelper.BrandsKey);
 
-        private void BtnTabCustom_Click(object sender, RoutedEventArgs e)
-        {
-            var dlg = new Microsoft.Win32.OpenFileDialog
-            {
-                Filter = LocalizationService.Get("IconPicker_ImageFilter"),
-                Title = LocalizationService.Get("SettingsWindow_SelectIconTitle")
-            };
-            if (dlg.ShowDialog() == true)
-            {
-                try
-                {
-                    string appData = PathHelper.IconsFolder;
-                    PathHelper.EnsureDirectories();
-                    
-                    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(dlg.FileName);
-                    string destPath = Path.Combine(appData, fileName);
-                    File.Copy(dlg.FileName, destPath);
-                    
-                    SelectedIcon = "";
-                    SelectedFont = "";
-                    SelectedImagePath = destPath;
-                    this.DialogResult = true;
-                    this.Close();
-                }
-                catch (Exception ex)
-                {
-                    Logger.Log(ex);
-                    new DarkDialog(LocalizationService.Get("IconPicker_CopyFailed")) { Owner = this }.ShowDialog();
-                }
-            }
-        }
-
         private void SetActiveTab(string fontName)
         {
             _activeFont = fontName;
@@ -125,7 +93,6 @@ namespace AiteBar
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
             BtnTabBrands.Foreground   = fontName == FontHelper.BrandsKey
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
-            BtnTabCustom.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
 
             TxtSearchHint.Text = fontName switch
             {

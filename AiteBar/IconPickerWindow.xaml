@@ -81,10 +81,6 @@
                     Margin="2,6,6,0"
                     Style="{StaticResource TabButtonStyle}"
                     Click="BtnTabBrands_Click"/>
-            <Button x:Name="BtnTabCustom" Content="{local:Loc ResourceKey=IconPicker_CustomIcon}"
-                    Margin="2,6,6,0"
-                    Style="{StaticResource TabButtonStyle}"
-                    Click="BtnTabCustom_Click" Foreground="#FFD700"/>
         </StackPanel>
 
         <!-- Строка поиска -->

@@ -46,7 +46,7 @@ public class CustomElement
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
     public string Name { get; set; } = "";
-    public string Icon { get; set; } = "\uE710";
+    public string Icon { get; set; } = "\uF45B";
     public string IconFont { get; set; } = FontHelper.FluentKey;
     public string Color { get; set; } = "#E3E3E3";
     public string ActionType { get; set; } = nameof(AiteBar.ActionType.Web);

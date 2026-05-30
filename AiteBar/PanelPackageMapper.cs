@@ -5,7 +5,7 @@ namespace AiteBar;
 
 internal static class PanelPackageMapper
 {
-    private const string DefaultIcon = "\uE710";
+    private const string DefaultIcon = "\uF45B";
     private const string DefaultColor = "#E3E3E3";
 
     public static PanelPackageElement FromCustomElement(CustomElement element, Func<string, string?> mapImagePathToPackagePath)

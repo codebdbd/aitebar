@@ -24,8 +24,8 @@ namespace AiteBar
     [SupportedOSPlatform("windows6.1")]
     public partial class SettingsWindow : DarkWindow
     {
-        private string _selectedIcon = "\uE8B9";
-        private string _selectedFont = "Segoe MDL2 Assets";
+        private string _selectedIcon = "\uF45B";
+        private string _selectedFont = FontHelper.FluentKey;
         private string _selectedColor = "#FFFFFF";
         private string _selectedImagePath = "";
         private static readonly BrushConverter _brushConverter = new();

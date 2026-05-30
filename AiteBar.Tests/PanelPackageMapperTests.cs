@@ -122,7 +122,7 @@ public sealed class PanelPackageMapperTests
         Assert.Equal("Test Button", result.Name);
         Assert.Equal(nameof(ActionType.Web), result.ActionType);
         Assert.Equal("https://example.com", result.ActionValue);
-        Assert.Equal("\uE710", result.Icon);
+        Assert.Equal("\uF45B", result.Icon);
         Assert.Equal(FontHelper.FluentKey, result.IconFont);
         Assert.Equal("#E3E3E3", result.Color);
         Assert.Equal("None", result.Key);
