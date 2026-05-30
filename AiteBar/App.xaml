@@ -8,7 +8,7 @@
         <ResourceDictionary>
             <!-- Colors -->
         <SolidColorBrush x:Key="WindowBackground" Color="#1A1A1C"/>
-        <SolidColorBrush x:Key="PanelBackground" Color="#101418"/>
+        <SolidColorBrush x:Key="PanelBackground" Color="#0F1115"/>
         <SolidColorBrush x:Key="BorderColor" Color="#16202A"/>
         <SolidColorBrush x:Key="AccentColor" Color="#007ACC"/>
         <SolidColorBrush x:Key="MutedText" Color="#9BA1A6"/>

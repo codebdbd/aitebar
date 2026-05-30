@@ -46,8 +46,6 @@
     <Style TargetType="ComboBox">
         <Setter Property="Background" Value="{StaticResource SettingsControlBackground}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="BorderBrush" Value="{StaticResource SettingsControlBorder}"/>
         <Setter Property="Height" Value="30"/>
         <Setter Property="Padding" Value="10,0"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
@@ -55,16 +53,17 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
                     <Grid>
-                        <ToggleButton x:Name="ToggleButton" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                        <ToggleButton x:Name="ToggleButton" Background="{TemplateBinding Background}" IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
-                                    <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                                    <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{StaticResource SettingsControlBorder}" BorderThickness="1">
                                         <Border.Style>
                                             <Style TargetType="Border">
                                                 <Setter Property="CornerRadius" Value="4"/>
                                                 <Style.Triggers>
                                                     <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource TemplatedParent}}" Value="True">
                                                         <Setter Property="CornerRadius" Value="4,4,0,0"/>
+                                                        <Setter Property="BorderThickness" Value="1,1,1,0"/>
                                                     </DataTrigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -80,8 +79,8 @@
                                    Margin="10,0,30,0"
                                    VerticalAlignment="Center"
                                    TextTrimming="CharacterEllipsis"/>
-                        <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade">
-                            <Border Background="{StaticResource SettingsControlBackground}" BorderThickness="1" BorderBrush="{StaticResource SettingsControlBorder}" CornerRadius="0,0,4,4" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="300">
+                        <Popup x:Name="Popup" Placement="Bottom" IsOpen="{TemplateBinding IsDropDownOpen}" AllowsTransparency="True" Focusable="False" PopupAnimation="Fade" VerticalOffset="-1">
+                            <Border Background="{StaticResource SettingsControlBackground}" BorderThickness="0,1,1,1" BorderBrush="{StaticResource SettingsControlBorder}" CornerRadius="0,0,4,4" MinWidth="{TemplateBinding ActualWidth}" MaxHeight="300">
                                 <ScrollViewer SnapsToDevicePixels="True">
                                     <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Contained"/>
                                 </ScrollViewer>
