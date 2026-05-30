@@ -8,9 +8,17 @@ namespace AiteBar
 {
     public sealed class QuickNoteService
     {
+        private readonly string _notePath;
         private DateTime _lastKnownWriteTimeUtc = DateTime.MinValue;
 
-        public string NotePath => Path.Combine(PathHelper.AppDataFolder, "QuickNote.md");
+        public QuickNoteService(string? notePath = null)
+        {
+            _notePath = string.IsNullOrWhiteSpace(notePath)
+                ? Path.Combine(PathHelper.AppDataFolder, "QuickNote.md")
+                : notePath;
+        }
+
+        public string NotePath => _notePath;
 
         public bool HasExternalChanges()
         {
@@ -31,7 +39,7 @@ namespace AiteBar
 
         public async Task<string> ReadMarkdownAsync()
         {
-            PathHelper.EnsureDirectories();
+            EnsureNoteDirectory();
             if (!File.Exists(NotePath))
             {
                 _lastKnownWriteTimeUtc = DateTime.MinValue;
@@ -51,16 +59,16 @@ namespace AiteBar
 
         public async Task SaveAsync(FlowDocument document)
         {
-            PathHelper.EnsureDirectories();
+            EnsureNoteDirectory();
             await File.WriteAllTextAsync(NotePath, QuickNoteMarkdown.ToMarkdown(document));
             _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(NotePath);
         }
 
         public async Task<string> SaveConflictCopyAsync(FlowDocument document)
         {
-            PathHelper.EnsureDirectories();
+            EnsureNoteDirectory();
             string conflictPath = Path.Combine(
-                PathHelper.AppDataFolder,
+                Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder,
                 $"QuickNote.conflict-{DateTime.Now:yyyyMMdd-HHmmss}.md");
             await File.WriteAllTextAsync(conflictPath, QuickNoteMarkdown.ToMarkdown(document));
             return conflictPath;
@@ -68,13 +76,25 @@ namespace AiteBar
 
         public void OpenInEditor()
         {
-            PathHelper.EnsureDirectories();
+            EnsureNoteDirectory();
             if (!File.Exists(NotePath))
             {
                 File.WriteAllText(NotePath, string.Empty);
             }
 
             Process.Start(new ProcessStartInfo(NotePath) { UseShellExecute = true });
+        }
+
+        private void EnsureNoteDirectory()
+        {
+            string? directory = Path.GetDirectoryName(NotePath);
+            if (string.IsNullOrWhiteSpace(directory))
+            {
+                PathHelper.EnsureDirectories();
+                return;
+            }
+
+            Directory.CreateDirectory(directory);
         }
     }
 }

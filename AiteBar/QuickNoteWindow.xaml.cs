@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
-using System.Windows.Interop;
 using System.Windows.Media.Animation;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -31,12 +30,10 @@ namespace AiteBar
         private const int WMSZ_BOTTOMLEFT = 7;
         private const int WMSZ_BOTTOMRIGHT = 8;
         private const int MaxInlineLinkHighlightLength = 20000;
-        private const double EdgeClearance = PanelLayoutHelper.ButtonOuterSize + PanelLayoutHelper.PanelChrome + 18;
 
         private readonly QuickNoteService _noteService;
         private readonly AppSettingsService _settingsService;
         private readonly DispatcherTimer _saveTimer;
-        private NativeIntegrationService? _nativeService;
         private QuickNoteTheme _theme;
         private bool _loaded;
         private bool _hasPendingChanges;
@@ -65,7 +62,6 @@ namespace AiteBar
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            EnsureNativeIntegration();
             try
             {
                 await _noteService.LoadAsync(TxtNote.Document);
@@ -91,6 +87,15 @@ namespace AiteBar
             ResetCaretFormatting();
         }
 
+        private async void Window_Deactivated(object? sender, EventArgs e)
+        {
+            await Dispatcher.Yield(DispatcherPriority.Background);
+            if (!_allowClose && !_isSlidingClosed && !IsActive && !IsTransientUiOpen())
+            {
+                _ = CloseSlidingAsync();
+            }
+        }
+
         private void Window_Closing(object? sender, CancelEventArgs e)
         {
             if (!_allowClose)
@@ -102,8 +107,6 @@ namespace AiteBar
 
         protected override void OnClosed(EventArgs e)
         {
-            _nativeService?.Dispose();
-            _nativeService = null;
             base.OnClosed(e);
         }
 
@@ -385,7 +388,7 @@ namespace AiteBar
                 FontStyle = FontStyles.Normal
             };
 
-            string[] lines = NormalizeLineEndings(text).Split('\n');
+            string[] lines = QuickNoteDocumentHelper.NormalizeLineEndings(text).Split('\n');
             for (int i = 0; i < lines.Length; i++)
             {
                 if (i > 0)
@@ -472,48 +475,6 @@ namespace AiteBar
             Top = hiddenY;
             Show();
             AnimateTo(shownX, shownY, null);
-        }
-
-        private void EnsureNativeIntegration()
-        {
-            if (_nativeService != null)
-            {
-                return;
-            }
-
-            var handle = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-            if (handle == IntPtr.Zero)
-            {
-                return;
-            }
-
-            _nativeService = new NativeIntegrationService(handle);
-            _nativeService.MouseDownOutside += (x, y) =>
-            {
-                Dispatcher.InvokeAsync(() =>
-                {
-                    if (!_allowClose && !_isSlidingClosed && !IsTransientUiOpen() && !IsPointInsideWindow(x, y))
-                    {
-                        _ = CloseSlidingAsync();
-                    }
-                });
-            };
-            _nativeService.InstallMouseHook();
-        }
-
-        private bool IsPointInsideWindow(int screenX, int screenY)
-        {
-            var source = PresentationSource.FromVisual(this);
-            if (source?.CompositionTarget == null)
-            {
-                double fallbackWidth = ActualWidth > 0 ? ActualWidth : Width;
-                double fallbackHeight = ActualHeight > 0 ? ActualHeight : Height;
-                return screenX >= Left && screenX <= Left + fallbackWidth && screenY >= Top && screenY <= Top + fallbackHeight;
-            }
-
-            var topLeft = PointToScreen(new System.Windows.Point(0, 0));
-            var bottomRight = PointToScreen(new System.Windows.Point(ActualWidth > 0 ? ActualWidth : Width, ActualHeight > 0 ? ActualHeight : Height));
-            return screenX >= topLeft.X && screenX <= bottomRight.X && screenY >= topLeft.Y && screenY <= bottomRight.Y;
         }
 
         private bool IsTransientUiOpen()
@@ -733,18 +694,7 @@ namespace AiteBar
 
             double width = ActualWidth > 0 ? ActualWidth : Width;
             double height = ActualHeight > 0 ? ActualHeight : Height;
-            const double inset = EdgeClearance;
-
-            double centeredX = work.Left + Math.Max(0, (work.Width - width) / 2);
-            double centeredY = work.Top + Math.Max(0, (work.Height - height) / 2);
-
-            return _edge switch
-            {
-                DockEdge.Bottom => (centeredX, work.Bottom + inset, centeredX, work.Bottom - height - inset),
-                DockEdge.Left => (work.Left - width - inset, centeredY, work.Left + inset, centeredY),
-                DockEdge.Right => (work.Right + inset, centeredY, work.Right - width - inset, centeredY),
-                _ => (centeredX, work.Top - height - inset, centeredX, work.Top + inset)
-            };
+            return QuickNoteLayoutHelper.GetSlideCoordinates(_edge, work, width, height);
         }
 
         private bool TryOpenUrlAtMouse(MouseButtonEventArgs e)
@@ -800,7 +750,7 @@ namespace AiteBar
         private string GetEditorText()
         {
             string text = new TextRange(TxtNote.Document.ContentStart, TxtNote.Document.ContentEnd).Text;
-            text = NormalizeLineEndings(text);
+            text = QuickNoteDocumentHelper.NormalizeLineEndings(text);
             return text.EndsWith('\n') ? text[..^1] : text;
         }
 
@@ -882,7 +832,7 @@ namespace AiteBar
 
         private int GetTextOffset(TextPointer pointer)
         {
-            return NormalizeLineEndings(new TextRange(TxtNote.Document.ContentStart, pointer).Text).Length;
+            return QuickNoteDocumentHelper.GetTextOffset(TxtNote.Document, pointer);
         }
 
         private void SetCaretOffset(int offset)
@@ -893,47 +843,7 @@ namespace AiteBar
 
         private TextPointer? GetTextPointerAtOffset(int offset)
         {
-            offset = Math.Max(0, offset);
-            TextPointer? pointer = TxtNote.Document.ContentStart;
-            TextPointer? best = TxtNote.Document.ContentStart.GetInsertionPosition(LogicalDirection.Forward);
-            int currentOffset = 0;
-
-            while (pointer != null && pointer.CompareTo(TxtNote.Document.ContentEnd) < 0)
-            {
-                TextPointerContext context = pointer.GetPointerContext(LogicalDirection.Forward);
-                if (context == TextPointerContext.Text)
-                {
-                    string runText = pointer.GetTextInRun(LogicalDirection.Forward);
-                    if (offset <= currentOffset + runText.Length)
-                    {
-                        int runOffset = offset - currentOffset;
-                        return pointer.GetPositionAtOffset(runOffset, LogicalDirection.Forward) ?? pointer;
-                    }
-
-                    currentOffset += runText.Length;
-                    pointer = pointer.GetPositionAtOffset(runText.Length, LogicalDirection.Forward);
-                    best = pointer?.GetInsertionPosition(LogicalDirection.Forward) ?? best;
-                    continue;
-                }
-
-                if (context == TextPointerContext.ElementStart &&
-                    pointer.GetAdjacentElement(LogicalDirection.Forward) is LineBreak)
-                {
-                    if (offset <= currentOffset)
-                    {
-                        return pointer.GetInsertionPosition(LogicalDirection.Forward) ?? pointer;
-                    }
-
-                    currentOffset++;
-                    best = pointer.GetNextInsertionPosition(LogicalDirection.Forward) ?? best;
-                }
-
-                pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
-            }
-
-            return offset <= currentOffset
-                ? best ?? TxtNote.Document.ContentEnd
-                : TxtNote.Document.ContentEnd;
+            return QuickNoteDocumentHelper.GetTextPointerAtOffset(TxtNote.Document, offset);
         }
 
         private (int Start, int End) GetSelectionOffsets()
@@ -942,8 +852,6 @@ namespace AiteBar
             int end = GetTextOffset(TxtNote.Selection.End);
             return (Math.Min(start, end), Math.Max(start, end));
         }
-
-        private static string NormalizeLineEndings(string text) => text.Replace("\r\n", "\n").Replace('\r', '\n');
 
         [DllImport("user32.dll")]
         private static extern bool ReleaseCapture();

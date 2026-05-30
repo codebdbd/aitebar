@@ -47,6 +47,33 @@ public sealed class QuickNoteMarkdownTests
     }
 
     [Fact]
+    public void MatchUrls_FindsHttpHttpsAndWwwUrls()
+    {
+        var matches = QuickNoteMarkdown.MatchUrls("See http://a.test, https://b.test/path and www.c.test.")
+            .Select(match => match.Value)
+            .ToArray();
+
+        Assert.Equal(["http://a.test,", "https://b.test/path", "www.c.test."], matches);
+    }
+
+    [Fact]
+    public void ToggleListMarkers_PreservesIndentation()
+    {
+        QuickNoteTextEdit edit = QuickNoteMarkdown.ToggleListMarkers("  one\n  two", 0, 10, numbered: false);
+
+        Assert.Equal("  - one\n  - two", edit.Text);
+    }
+
+    [Fact]
+    public void ToggleListMarkers_MapsCaretAfterInsertedMarkers()
+    {
+        QuickNoteTextEdit edit = QuickNoteMarkdown.ToggleListMarkers("one\ntwo", 7, 7, numbered: false);
+
+        Assert.Equal("one\n- two", edit.Text);
+        Assert.Equal(9, edit.CaretOffset);
+    }
+
+    [Fact]
     public void ToMarkdown_EscapesLiteralMarkdownCharacters()
     {
         string markdown = RunSta(() =>
@@ -82,6 +109,22 @@ public sealed class QuickNoteMarkdownTests
         });
 
         Assert.Equal("literal **not bold**", visibleText);
+    }
+
+    [Fact]
+    public void ToMarkdown_PreservesMultipleLines()
+    {
+        string markdown = RunSta(() =>
+        {
+            var paragraph = new Paragraph();
+            paragraph.Inlines.Add(new Run("one"));
+            paragraph.Inlines.Add(new LineBreak());
+            paragraph.Inlines.Add(new Run("two"));
+            var document = new FlowDocument(paragraph);
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("one\ntwo", markdown.Replace("\r\n", "\n"));
     }
 
     private static T RunSta<T>(Func<T> action)
