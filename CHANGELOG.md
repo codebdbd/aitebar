@@ -7,6 +7,29 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.3] - 2026-05-31
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Quick Note без глобального mouse hook**: Окно заметки больше не устанавливает отдельный low-level mouse hook; закрытие при потере фокуса переведено на WPF `Deactivated`, чтобы не влиять на движение мыши.
+- **Quick Note without global mouse hook**: The note window no longer installs its own low-level mouse hook; focus-loss closing now uses WPF `Deactivated` to avoid interfering with mouse movement.
+
+- **Позиционирование Quick Note**: Увеличен отступ от края экрана, чтобы заметка не перекрывала рабочую панель.
+- **Quick Note positioning**: Increased edge clearance so the note window does not overlap the dock panel.
+
+- **Тестируемая логика заметок**: Расчет позиции и работа с `FlowDocument`/`TextPointer` вынесены в helper-классы.
+- **Testable note logic**: Position calculation and `FlowDocument`/`TextPointer` handling moved into helper classes.
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Зависание Quick Note**: Оптимизирован поиск позиции в тексте заметки для подсветки ссылок и операций форматирования.
+- **Quick Note hangs**: Optimized text position lookup used by link highlighting and formatting operations.
+
+- **Поведение мыши**: Устранен второй глобальный перехват мыши при открытой заметке, который мог вызывать рывки и задержки курсора.
+- **Mouse behavior**: Removed the second global mouse interception while Quick Note is open, which could cause cursor lag or erratic movement.
+
+### 🇷🇺 Тесты | 🇬🇧 Tests
+- **Quick Note coverage**: Добавлены тесты для Markdown, файлового сервиса заметок, тем, расчета координат и `FlowDocument` helper-ов.
+- **Quick Note coverage**: Added tests for Markdown, note file service, themes, coordinate calculation and `FlowDocument` helpers.
+
 ## [1.7.2] - 2026-05-30
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added
