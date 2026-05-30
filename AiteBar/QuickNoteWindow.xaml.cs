@@ -31,6 +31,7 @@ namespace AiteBar
         private const int WMSZ_BOTTOMLEFT = 7;
         private const int WMSZ_BOTTOMRIGHT = 8;
         private const int MaxInlineLinkHighlightLength = 20000;
+        private const double EdgeClearance = PanelLayoutHelper.ButtonOuterSize + PanelLayoutHelper.PanelChrome + 18;
 
         private readonly QuickNoteService _noteService;
         private readonly AppSettingsService _settingsService;
@@ -732,7 +733,7 @@ namespace AiteBar
 
             double width = ActualWidth > 0 ? ActualWidth : Width;
             double height = ActualHeight > 0 ? ActualHeight : Height;
-            const double inset = 18;
+            const double inset = EdgeClearance;
 
             double centeredX = work.Left + Math.Max(0, (work.Width - width) / 2);
             double centeredY = work.Top + Math.Max(0, (work.Height - height) / 2);
@@ -893,25 +894,46 @@ namespace AiteBar
         private TextPointer? GetTextPointerAtOffset(int offset)
         {
             offset = Math.Max(0, offset);
-            TextPointer? pointer = TxtNote.Document.ContentStart.GetInsertionPosition(LogicalDirection.Forward);
-            TextPointer? best = pointer;
-            while (pointer != null && pointer.CompareTo(TxtNote.Document.ContentEnd) <= 0)
+            TextPointer? pointer = TxtNote.Document.ContentStart;
+            TextPointer? best = TxtNote.Document.ContentStart.GetInsertionPosition(LogicalDirection.Forward);
+            int currentOffset = 0;
+
+            while (pointer != null && pointer.CompareTo(TxtNote.Document.ContentEnd) < 0)
             {
-                if (pointer.IsAtInsertionPosition)
+                TextPointerContext context = pointer.GetPointerContext(LogicalDirection.Forward);
+                if (context == TextPointerContext.Text)
                 {
-                    int currentOffset = GetTextOffset(pointer);
-                    if (currentOffset >= offset)
+                    string runText = pointer.GetTextInRun(LogicalDirection.Forward);
+                    if (offset <= currentOffset + runText.Length)
                     {
-                        return pointer;
+                        int runOffset = offset - currentOffset;
+                        return pointer.GetPositionAtOffset(runOffset, LogicalDirection.Forward) ?? pointer;
                     }
 
-                    best = pointer;
+                    currentOffset += runText.Length;
+                    pointer = pointer.GetPositionAtOffset(runText.Length, LogicalDirection.Forward);
+                    best = pointer?.GetInsertionPosition(LogicalDirection.Forward) ?? best;
+                    continue;
                 }
 
-                pointer = pointer.GetNextInsertionPosition(LogicalDirection.Forward);
+                if (context == TextPointerContext.ElementStart &&
+                    pointer.GetAdjacentElement(LogicalDirection.Forward) is LineBreak)
+                {
+                    if (offset <= currentOffset)
+                    {
+                        return pointer.GetInsertionPosition(LogicalDirection.Forward) ?? pointer;
+                    }
+
+                    currentOffset++;
+                    best = pointer.GetNextInsertionPosition(LogicalDirection.Forward) ?? best;
+                }
+
+                pointer = pointer.GetNextContextPosition(LogicalDirection.Forward);
             }
 
-            return best ?? TxtNote.Document.ContentEnd;
+            return offset <= currentOffset
+                ? best ?? TxtNote.Document.ContentEnd
+                : TxtNote.Document.ContentEnd;
         }
 
         private (int Start, int End) GetSelectionOffsets()
