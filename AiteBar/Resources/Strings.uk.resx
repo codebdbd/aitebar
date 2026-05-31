@@ -4,7 +4,7 @@
   <data name="Action_Web" xml:space="preserve"><value>Посилання</value></data><data name="Action_Program" xml:space="preserve"><value>Програма</value></data><data name="Action_File" xml:space="preserve"><value>Файл</value></data><data name="Action_Folder" xml:space="preserve"><value>Папка</value></data><data name="Action_ScriptFile" xml:space="preserve"><value>Скрипт</value></data><data name="Action_Command" xml:space="preserve"><value>Команда</value></data><data name="Action_Hotkey" xml:space="preserve"><value>Гарячі клавіші</value></data>
   <data name="SettingsWindow_Title" xml:space="preserve"><value>Налаштування</value></data><data name="SettingsWindow_EditTitle" xml:space="preserve"><value>Редагувати кнопку</value></data><data name="SettingsWindow_ButtonName" xml:space="preserve"><value>Назва кнопки</value></data><data name="SettingsWindow_ActionType" xml:space="preserve"><value>Тип дії</value></data><data name="SettingsWindow_Panel" xml:space="preserve"><value>Панель</value></data><data name="SettingsWindow_Browser" xml:space="preserve"><value>Браузер</value></data><data name="SettingsWindow_Profile" xml:space="preserve"><value>Профіль</value></data><data name="SettingsWindow_NoProfile" xml:space="preserve"><value>Без профілю</value></data><data name="SettingsWindow_IconPicker" xml:space="preserve"><value>Вибір іконки</value></data><data name="SettingsWindow_CustomIcon" xml:space="preserve"><value>Своя іконка</value></data><data name="SettingsWindow_AppSettings" xml:space="preserve"><value>Налаштування програми</value></data>
   <data name="AppSettingsWindow_Title" xml:space="preserve"><value>Налаштування програми</value></data><data name="AppSettingsWindow_Language" xml:space="preserve"><value>Мова</value></data><data name="AppSettingsWindow_LanguageAuto" xml:space="preserve"><value>Авто (Windows)</value></data><data name="AppSettingsWindow_General" xml:space="preserve"><value>Загальні параметри</value></data><data name="AppSettingsWindow_Edge" xml:space="preserve"><value>Позиція панелі</value></data><data name="AppSettingsWindow_Monitor" xml:space="preserve"><value>Монітор</value></data><data name="AppSettingsWindow_ContextNames" xml:space="preserve"><value>Назви панелей</value></data><data name="AppSettingsWindow_PanelEnabled" xml:space="preserve"><value>Увімкнена</value></data><data name="AppSettingsWindow_PrimaryPanelAlwaysEnabled" xml:space="preserve"><value>Перша панель завжди увімкнена.</value></data><data name="AppSettingsWindow_Hotkeys" xml:space="preserve"><value>Гарячі клавіші</value></data><data name="AppSettingsWindow_QuickTools" xml:space="preserve"><value>Швидкі інструменти</value></data>
-  <data name="Tool_Search" xml:space="preserve"><value>Пошук</value></data><data name="Tool_Screenshot" xml:space="preserve"><value>Знімок екрана</value></data><data name="Tool_Video" xml:space="preserve"><value>Відео</value></data><data name="Tool_Calculator" xml:space="preserve"><value>Калькулятор</value></data><data name="Tool_Explorer" xml:space="preserve"><value>Провідник</value></data><data name="Tool_Downloads" xml:space="preserve"><value>Завантаження</value></data><data name="Tool_ColorPicker" xml:space="preserve"><value>Піпетка</value></data><data name="Tool_QuickNote" xml:space="preserve"><value>Швидка нотатка</value></data>
+  <data name="Tool_Search" xml:space="preserve"><value>Пошук</value></data><data name="Tool_Screenshot" xml:space="preserve"><value>Знімок екрана</value></data><data name="Tool_Video" xml:space="preserve"><value>Відео</value></data><data name="Tool_Calculator" xml:space="preserve"><value>Калькулятор</value></data><data name="Tool_Explorer" xml:space="preserve"><value>Провідник</value></data><data name="Tool_Downloads" xml:space="preserve"><value>Завантаження</value></data><data name="Tool_TimerStopwatch" xml:space="preserve"><value>Таймер і секундомір</value></data><data name="Tool_ColorPicker" xml:space="preserve"><value>Піпетка</value></data><data name="Tool_QuickNote" xml:space="preserve"><value>Швидка нотатка</value></data>
   <data name="Dock_Top" xml:space="preserve"><value>Зверху</value></data><data name="Dock_Bottom" xml:space="preserve"><value>Знизу</value></data><data name="Dock_Left" xml:space="preserve"><value>Ліворуч</value></data><data name="Dock_Right" xml:space="preserve"><value>Праворуч</value></data>
   <data name="Menu_Open" xml:space="preserve"><value>Відкрити</value></data><data name="Menu_ProgramSettings" xml:space="preserve"><value>Налаштування програми</value></data><data name="Menu_Panels" xml:space="preserve"><value>Панелі</value></data><data name="Menu_ImportCurrentPanel" xml:space="preserve"><value>Імпорт у поточну панель...</value></data><data name="Menu_ExportCurrentPanel" xml:space="preserve"><value>Експорт поточної панелі...</value></data><data name="Menu_About" xml:space="preserve"><value>Про програму</value></data><data name="Menu_Delete" xml:space="preserve"><value>Видалити</value></data><data name="About_Title" xml:space="preserve"><value>Про програму</value></data><data name="IconPicker_Title" xml:space="preserve"><value>Каталог іконок</value></data>
   <data name="AppSettingsWindow_HotkeysHint" xml:space="preserve"><value>Призначте комбінації для показу панелі, перемикання між панелями та додавання кнопки.</value></data>
@@ -17,6 +17,7 @@
 {0}
 
 Виберіть комбінації, які не використовуються Windows або іншою програмою.</value></data>
+  <data name="Main_TimerStopwatchTooltip" xml:space="preserve"><value>Таймер і секундомір</value></data>
   <data name="Main_QuickNoteTooltip" xml:space="preserve"><value>Швидка нотатка</value></data>
   <data name="QuickNote_Title" xml:space="preserve"><value>Швидка нотатка</value></data>
   <data name="QuickNote_Placeholder" xml:space="preserve"><value>Вставте текст, посилання, команди...</value></data>
@@ -76,4 +77,29 @@
 Ви можете побачити попередження Windows SmartScreen. Це відома проблема в поточній версії.
 
 Продовжити встановлення?</value></data>
+  <data name="TimerStopwatch_Timer" xml:space="preserve"><value>Таймер</value></data>
+  <data name="TimerStopwatch_Stopwatch" xml:space="preserve"><value>Секундомір</value></data>
+  <data name="TimerStopwatch_Start" xml:space="preserve"><value>Старт</value></data>
+  <data name="TimerStopwatch_Pause" xml:space="preserve"><value>Пауза</value></data>
+  <data name="TimerStopwatch_Stop" xml:space="preserve"><value>Стоп</value></data>
+  <data name="TimerStopwatch_Reset" xml:space="preserve"><value>Скинути</value></data>
+  <data name="TimerStopwatch_DefaultName" xml:space="preserve"><value>Чай</value></data>
+  <data name="TimerStopwatch_CustomTime" xml:space="preserve"><value>Свій час</value></data>
+  <data name="TimerStopwatch_SoundDefault" xml:space="preserve"><value>Звук: За замовчуванням</value></data>
+  <data name="TimerStopwatch_SoundOff" xml:space="preserve"><value>Звук: Вимк.</value></data>
+  <data name="TimerStopwatch_Laps" xml:space="preserve"><value>Кола</value></data>
+  <data name="TimerStopwatch_Time" xml:space="preserve"><value>Час</value></data>
+  <data name="TimerStopwatch_ClearLaps" xml:space="preserve"><value>Очистити кола</value></data>
+  <data name="TimerStopwatch_LapFormat" xml:space="preserve"><value>Коло {0}</value></data>
+  <data name="TimerStopwatch_Preset1Minute" xml:space="preserve"><value>1 хв</value></data>
+  <data name="TimerStopwatch_Preset3Minutes" xml:space="preserve"><value>3 хв</value></data>
+  <data name="TimerStopwatch_Preset5Minutes" xml:space="preserve"><value>5 хв</value></data>
+  <data name="TimerStopwatch_Preset10Minutes" xml:space="preserve"><value>10 хв</value></data>
+  <data name="TimerStopwatch_Preset15Minutes" xml:space="preserve"><value>15 хв</value></data>
+  <data name="TimerStopwatch_Preset30Minutes" xml:space="preserve"><value>30 хв</value></data>
+  <data name="TimerStopwatch_Preset45Minutes" xml:space="preserve"><value>45 хв</value></data>
+  <data name="TimerStopwatch_Preset60Minutes" xml:space="preserve"><value>60 хв</value></data>
+  <data name="TimerStopwatch_Preset90Minutes" xml:space="preserve"><value>90 хв</value></data>
+  <data name="TimerStopwatch_Preset120Minutes" xml:space="preserve"><value>120 хв</value></data>
+  <data name="TimerStopwatch_StopwatchFormatHint" xml:space="preserve"><value>гг:хх:сс.сс</value></data>
 </root>

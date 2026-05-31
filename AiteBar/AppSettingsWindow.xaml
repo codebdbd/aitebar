@@ -211,6 +211,7 @@
                             <CheckBox x:Name="ChkShowPresetCalc" Content="{local:Loc ResourceKey=Tool_Calculator}" Style="{StaticResource CompactCheckBoxStyle}"/>
                             <CheckBox x:Name="ChkShowPresetExplorer" Content="{local:Loc ResourceKey=Tool_Explorer}" Style="{StaticResource CompactCheckBoxStyle}"/>
                             <CheckBox x:Name="ChkShowPresetDownloads" Content="{local:Loc ResourceKey=Tool_Downloads}" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <CheckBox x:Name="ChkShowPresetTimerStopwatch" Content="{local:Loc ResourceKey=Tool_TimerStopwatch}" Style="{StaticResource CompactCheckBoxStyle}"/>
                             <CheckBox x:Name="ChkShowPresetColorPicker" Content="{local:Loc ResourceKey=Tool_ColorPicker}" Style="{StaticResource CompactCheckBoxStyle}"/>
                             <CheckBox x:Name="ChkShowPresetQuickNote" Content="{local:Loc ResourceKey=Tool_QuickNote}" Style="{StaticResource CompactCheckBoxStyle}"/>
                         </UniformGrid>

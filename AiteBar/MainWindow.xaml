@@ -109,6 +109,7 @@
                         <Button x:Name="BtnCalc" Content="&#xF06C;" Click="BtnCalc_Click" Foreground="#A3E635"/>
                         <Button x:Name="BtnExplorer" Content="&#xF42F;" Click="BtnExplorer_Click" Foreground="#F59E0B"/>
                         <Button x:Name="BtnDownloads" Content="&#xF151;" Click="BtnDownloads_Click" Foreground="#34D399"/>
+                        <Button x:Name="BtnTimerStopwatch" Content="&#xED88;" Click="BtnTimerStopwatch_Click" Foreground="#38BDF8"/>
                         <Button x:Name="BtnColorPicker" Content="&#xF2F6;" Click="BtnColorPicker_Click" Foreground="#A855F7"/>
                         <Button x:Name="BtnQuickNote" Content="&#xF56F;" Click="BtnQuickNote_Click" Foreground="#22D3EE"/>
                     </local:OverflowWrapPanel>

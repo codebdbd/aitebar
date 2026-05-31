@@ -4,7 +4,7 @@
   <data name="Action_Web" xml:space="preserve"><value>Link</value></data><data name="Action_Program" xml:space="preserve"><value>Programm</value></data><data name="Action_File" xml:space="preserve"><value>Datei</value></data><data name="Action_Folder" xml:space="preserve"><value>Ordner</value></data><data name="Action_ScriptFile" xml:space="preserve"><value>Skript</value></data><data name="Action_Command" xml:space="preserve"><value>Befehl</value></data><data name="Action_Hotkey" xml:space="preserve"><value>Tastenkürzel</value></data>
   <data name="SettingsWindow_Title" xml:space="preserve"><value>Einstellungen</value></data><data name="SettingsWindow_EditTitle" xml:space="preserve"><value>Schaltfläche bearbeiten</value></data><data name="SettingsWindow_ButtonName" xml:space="preserve"><value>Schaltflächenname</value></data><data name="SettingsWindow_ActionType" xml:space="preserve"><value>Aktionstyp</value></data><data name="SettingsWindow_Panel" xml:space="preserve"><value>Leiste</value></data><data name="SettingsWindow_Browser" xml:space="preserve"><value>Browser</value></data><data name="SettingsWindow_Profile" xml:space="preserve"><value>Profil</value></data><data name="SettingsWindow_NoProfile" xml:space="preserve"><value>Kein Profil</value></data><data name="SettingsWindow_IconPicker" xml:space="preserve"><value>Symbolauswahl</value></data><data name="SettingsWindow_CustomIcon" xml:space="preserve"><value>Eigenes Symbol</value></data><data name="SettingsWindow_AppSettings" xml:space="preserve"><value>Programmeinstellungen</value></data>
   <data name="AppSettingsWindow_Title" xml:space="preserve"><value>Programmeinstellungen</value></data><data name="AppSettingsWindow_Language" xml:space="preserve"><value>Sprache</value></data><data name="AppSettingsWindow_LanguageAuto" xml:space="preserve"><value>Automatisch (Windows)</value></data><data name="AppSettingsWindow_General" xml:space="preserve"><value>Allgemeine Einstellungen</value></data><data name="AppSettingsWindow_Edge" xml:space="preserve"><value>Leistenposition</value></data><data name="AppSettingsWindow_Monitor" xml:space="preserve"><value>Monitor</value></data><data name="AppSettingsWindow_ContextNames" xml:space="preserve"><value>Leistennamen</value></data><data name="AppSettingsWindow_Hotkeys" xml:space="preserve"><value>Tastenkürzel</value></data><data name="AppSettingsWindow_QuickTools" xml:space="preserve"><value>Schnellwerkzeuge</value></data>
-  <data name="Tool_Search" xml:space="preserve"><value>Suche</value></data><data name="Tool_Screenshot" xml:space="preserve"><value>Screenshot</value></data><data name="Tool_Video" xml:space="preserve"><value>Video</value></data><data name="Tool_Calculator" xml:space="preserve"><value>Rechner</value></data><data name="Tool_Explorer" xml:space="preserve"><value>Explorer</value></data><data name="Tool_Downloads" xml:space="preserve"><value>Downloads</value></data><data name="Tool_ColorPicker" xml:space="preserve"><value>Farbpipette</value></data><data name="Tool_QuickNote" xml:space="preserve"><value>Schnellnotiz</value></data>
+  <data name="Tool_Search" xml:space="preserve"><value>Suche</value></data><data name="Tool_Screenshot" xml:space="preserve"><value>Screenshot</value></data><data name="Tool_Video" xml:space="preserve"><value>Video</value></data><data name="Tool_Calculator" xml:space="preserve"><value>Rechner</value></data><data name="Tool_Explorer" xml:space="preserve"><value>Explorer</value></data><data name="Tool_Downloads" xml:space="preserve"><value>Downloads</value></data><data name="Tool_TimerStopwatch" xml:space="preserve"><value>Timer und Stoppuhr</value></data><data name="Tool_ColorPicker" xml:space="preserve"><value>Farbpipette</value></data><data name="Tool_QuickNote" xml:space="preserve"><value>Schnellnotiz</value></data>
   <data name="Dock_Top" xml:space="preserve"><value>Oben</value></data><data name="Dock_Bottom" xml:space="preserve"><value>Unten</value></data><data name="Dock_Left" xml:space="preserve"><value>Links</value></data><data name="Dock_Right" xml:space="preserve"><value>Rechts</value></data>
   <data name="Menu_Open" xml:space="preserve"><value>Öffnen</value></data><data name="Menu_ProgramSettings" xml:space="preserve"><value>Programmeinstellungen</value></data><data name="Menu_About" xml:space="preserve"><value>Über</value></data><data name="Menu_Delete" xml:space="preserve"><value>Löschen</value></data><data name="About_Title" xml:space="preserve"><value>Über</value></data><data name="IconPicker_Title" xml:space="preserve"><value>Symbolkatalog</value></data>
   <data name="Common_Info" xml:space="preserve"><value>Information</value></data>
@@ -80,6 +80,7 @@
 {0}
 
 Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwendet werden.</value></data>
+  <data name="Main_TimerStopwatchTooltip" xml:space="preserve"><value>Timer und Stoppuhr</value></data>
   <data name="Main_QuickNoteTooltip" xml:space="preserve"><value>Schnellnotiz</value></data>
   <data name="QuickNote_Title" xml:space="preserve"><value>Schnellnotiz</value></data>
   <data name="QuickNote_Placeholder" xml:space="preserve"><value>Text, Links, Befehle einfügen...</value></data>
@@ -139,4 +140,29 @@ AiteBar wird jetzt geschlossen.</value></data>
 Sie können eine Windows SmartScreen-Warnung sehen. Dies ist eine bekannte Einschränkung in der aktuellen Version.
 
 Installation fortsetzen?</value></data>
+  <data name="TimerStopwatch_Timer" xml:space="preserve"><value>Timer</value></data>
+  <data name="TimerStopwatch_Stopwatch" xml:space="preserve"><value>Stoppuhr</value></data>
+  <data name="TimerStopwatch_Start" xml:space="preserve"><value>Start</value></data>
+  <data name="TimerStopwatch_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="TimerStopwatch_Stop" xml:space="preserve"><value>Stopp</value></data>
+  <data name="TimerStopwatch_Reset" xml:space="preserve"><value>Zurücksetzen</value></data>
+  <data name="TimerStopwatch_DefaultName" xml:space="preserve"><value>Tee</value></data>
+  <data name="TimerStopwatch_CustomTime" xml:space="preserve"><value>Eigene Zeit</value></data>
+  <data name="TimerStopwatch_SoundDefault" xml:space="preserve"><value>Ton: Standard</value></data>
+  <data name="TimerStopwatch_SoundOff" xml:space="preserve"><value>Ton: Aus</value></data>
+  <data name="TimerStopwatch_Laps" xml:space="preserve"><value>Runden</value></data>
+  <data name="TimerStopwatch_Time" xml:space="preserve"><value>Zeit</value></data>
+  <data name="TimerStopwatch_ClearLaps" xml:space="preserve"><value>Runden löschen</value></data>
+  <data name="TimerStopwatch_LapFormat" xml:space="preserve"><value>Runde {0}</value></data>
+  <data name="TimerStopwatch_Preset1Minute" xml:space="preserve"><value>1 Min</value></data>
+  <data name="TimerStopwatch_Preset3Minutes" xml:space="preserve"><value>3 Min</value></data>
+  <data name="TimerStopwatch_Preset5Minutes" xml:space="preserve"><value>5 Min</value></data>
+  <data name="TimerStopwatch_Preset10Minutes" xml:space="preserve"><value>10 Min</value></data>
+  <data name="TimerStopwatch_Preset15Minutes" xml:space="preserve"><value>15 Min</value></data>
+  <data name="TimerStopwatch_Preset30Minutes" xml:space="preserve"><value>30 min</value></data>
+  <data name="TimerStopwatch_Preset45Minutes" xml:space="preserve"><value>45 min</value></data>
+  <data name="TimerStopwatch_Preset60Minutes" xml:space="preserve"><value>60 min</value></data>
+  <data name="TimerStopwatch_Preset90Minutes" xml:space="preserve"><value>90 min</value></data>
+  <data name="TimerStopwatch_Preset120Minutes" xml:space="preserve"><value>120 min</value></data>
+  <data name="TimerStopwatch_StopwatchFormatHint" xml:space="preserve"><value>hh:mm:ss.ms</value></data>
 </root>

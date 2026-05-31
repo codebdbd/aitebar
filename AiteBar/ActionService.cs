@@ -16,6 +16,7 @@ namespace AiteBar
     {
         private readonly AppSettingsService _settingsService;
         private QuickNoteWindow? _quickNoteWindow;
+        private TimerStopwatchWindow? _timerStopwatchWindow;
         private const int FullscreenActivationAttempts = 25;
         private const int FullscreenWindowPollDelayMs = 200;
         private const int FullscreenForegroundDelayMs = 100;
@@ -233,6 +234,27 @@ namespace AiteBar
             };
             _quickNoteWindow.Closed += (_, _) => _quickNoteWindow = null;
             _quickNoteWindow.ShowSliding(_settingsService.Settings);
+        }
+
+        public async Task StartTimerStopwatchAsync(Func<Task>? onBeforeExecute = null)
+        {
+            if (onBeforeExecute != null)
+            {
+                await onBeforeExecute();
+            }
+
+            if (_timerStopwatchWindow is { IsVisible: true })
+            {
+                _timerStopwatchWindow.Activate();
+                return;
+            }
+
+            _timerStopwatchWindow = new TimerStopwatchWindow
+            {
+                Owner = System.Windows.Application.Current.MainWindow
+            };
+            _timerStopwatchWindow.Closed += (_, _) => _timerStopwatchWindow = null;
+            _timerStopwatchWindow.ShowNearPanel(_settingsService);
         }
 
         internal static ProcessStartInfo BuildShellLaunchProcessStartInfo(string target) => new(target)

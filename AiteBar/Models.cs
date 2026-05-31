@@ -89,7 +89,11 @@ public class AppSettings
     public bool ShowPresetDownloads { get; set; } = true;
     public bool ShowPresetColorPicker { get; set; } = false;
     public bool ShowPresetQuickNote { get; set; } = false;
+    public bool ShowPresetTimerStopwatch { get; set; } = true;
     public string QuickNoteThemeId { get; set; } = "dark";
+    public bool TimerSoundEnabled { get; set; } = true;
+    public bool TimerIsStopwatchMode { get; set; } = false;
+    public TimeSpan TimerDuration { get; set; } = TimeSpan.FromMinutes(5);
 
     public DockEdge Edge { get; set; } = DockEdge.Top;
     public int MonitorIndex { get; set; } = 0; // 0 = Primary, 1, 2...

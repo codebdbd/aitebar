@@ -157,6 +157,7 @@ public partial class MainWindow : Window
             BtnCalc.ToolTip = LocalizationService.Get("Main_CalcTooltip");
             BtnExplorer.ToolTip = LocalizationService.Get("Main_ExplorerTooltip");
             BtnDownloads.ToolTip = LocalizationService.Get("Main_DownloadsTooltip");
+            BtnTimerStopwatch.ToolTip = LocalizationService.Get("Main_TimerStopwatchTooltip");
             BtnColorPicker.ToolTip = LocalizationService.Get("Main_ColorPickerTooltip");
             BtnQuickNote.ToolTip = LocalizationService.Get("Main_QuickNoteTooltip");
             AttachSystemUtilityContextMenus();
@@ -171,6 +172,7 @@ public partial class MainWindow : Window
             BtnCalc.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Calculator"), () => _appSettings.ShowPresetCalc = false);
             BtnExplorer.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Explorer"), () => _appSettings.ShowPresetExplorer = false);
             BtnDownloads.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Downloads"), () => _appSettings.ShowPresetDownloads = false);
+            BtnTimerStopwatch.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_TimerStopwatch"), () => _appSettings.ShowPresetTimerStopwatch = false);
             BtnColorPicker.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_ColorPicker"), () => _appSettings.ShowPresetColorPicker = false);
             BtnQuickNote.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_QuickNote"), () => _appSettings.ShowPresetQuickNote = false);
         }
@@ -786,6 +788,7 @@ public partial class MainWindow : Window
             if (_appSettings.ShowPresetCalc) count++;
             if (_appSettings.ShowPresetExplorer) count++;
             if (_appSettings.ShowPresetDownloads) count++;
+            if (_appSettings.ShowPresetTimerStopwatch) count++;
             if (_appSettings.ShowPresetColorPicker) count++;
             if (_appSettings.ShowPresetQuickNote) count++;
             return count;
@@ -1511,6 +1514,7 @@ public partial class MainWindow : Window
             yield return BtnCalc;
             yield return BtnExplorer;
             yield return BtnDownloads;
+            yield return BtnTimerStopwatch;
             yield return BtnColorPicker;
             yield return BtnQuickNote;
             yield return BtnAppSettings;
@@ -1538,6 +1542,7 @@ public partial class MainWindow : Window
             BtnCalc.Visibility = showSystemUtils && _appSettings.ShowPresetCalc ? Visibility.Visible : Visibility.Collapsed;
             BtnExplorer.Visibility = showSystemUtils && _appSettings.ShowPresetExplorer ? Visibility.Visible : Visibility.Collapsed;
             BtnDownloads.Visibility = showSystemUtils && _appSettings.ShowPresetDownloads ? Visibility.Visible : Visibility.Collapsed;
+            BtnTimerStopwatch.Visibility = showSystemUtils && _appSettings.ShowPresetTimerStopwatch ? Visibility.Visible : Visibility.Collapsed;
             BtnColorPicker.Visibility = showSystemUtils && _appSettings.ShowPresetColorPicker ? Visibility.Visible : Visibility.Collapsed;
             BtnQuickNote.Visibility = showSystemUtils && _appSettings.ShowPresetQuickNote ? Visibility.Visible : Visibility.Collapsed;
 
@@ -1547,6 +1552,7 @@ public partial class MainWindow : Window
                                   BtnCalc.Visibility == Visibility.Visible ||
                                   BtnExplorer.Visibility == Visibility.Visible ||
                                   BtnDownloads.Visibility == Visibility.Visible ||
+                                  BtnTimerStopwatch.Visibility == Visibility.Visible ||
                                   BtnColorPicker.Visibility == Visibility.Visible ||
                                   BtnQuickNote.Visibility == Visibility.Visible;
             SystemUtilsPanel.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
@@ -2057,6 +2063,7 @@ public partial class MainWindow : Window
         private async void BtnCalc_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartCalculatorAsync(HideDock)); }
         private async void BtnExplorer_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartExplorerAsync(HideDock)); }
         private async void BtnDownloads_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartDownloadsAsync(HideDock)); }
+        private async void BtnTimerStopwatch_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartTimerStopwatchAsync(HideDock)); }
         private async void BtnColorPicker_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartColorPickerAsync(HideDock)); }
         private async void BtnQuickNote_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartQuickNoteAsync(HideDock)); }
         private async Task OpenAddButtonWindowAsync()

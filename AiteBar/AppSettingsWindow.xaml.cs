@@ -397,6 +397,7 @@ public partial class AppSettingsWindow : DarkWindow
         ChkShowPresetCalc.IsChecked = _settings.ShowPresetCalc;
         ChkShowPresetExplorer.IsChecked = _settings.ShowPresetExplorer;
         ChkShowPresetDownloads.IsChecked = _settings.ShowPresetDownloads;
+        ChkShowPresetTimerStopwatch.IsChecked = _settings.ShowPresetTimerStopwatch;
         ChkShowPresetColorPicker.IsChecked = _settings.ShowPresetColorPicker;
         ChkShowPresetQuickNote.IsChecked = _settings.ShowPresetQuickNote;
         ChkCheckForUpdatesEnabled.IsChecked = _settings.CheckForUpdatesEnabled;
@@ -564,6 +565,7 @@ public partial class AppSettingsWindow : DarkWindow
         _settings.ShowPresetCalc = ChkShowPresetCalc.IsChecked ?? false;
         _settings.ShowPresetExplorer = ChkShowPresetExplorer.IsChecked ?? false;
         _settings.ShowPresetDownloads = ChkShowPresetDownloads.IsChecked ?? false;
+        _settings.ShowPresetTimerStopwatch = ChkShowPresetTimerStopwatch.IsChecked ?? false;
         _settings.ShowPresetColorPicker = ChkShowPresetColorPicker.IsChecked ?? false;
         _settings.ShowPresetQuickNote = ChkShowPresetQuickNote.IsChecked ?? false;
         _settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;

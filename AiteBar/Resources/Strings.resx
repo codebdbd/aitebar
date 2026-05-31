@@ -124,6 +124,7 @@ For modular Python projects use the "Command" type.</value></data>
   <data name="Tool_Calculator" xml:space="preserve"><value>Calculator</value></data>
   <data name="Tool_Explorer" xml:space="preserve"><value>Explorer</value></data>
   <data name="Tool_Downloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="Tool_TimerStopwatch" xml:space="preserve"><value>Timer and stopwatch</value></data>
   <data name="Tool_ColorPicker" xml:space="preserve"><value>Color picker</value></data>
   <data name="Tool_QuickNote" xml:space="preserve"><value>Quick note</value></data>
   <data name="Dock_Top" xml:space="preserve"><value>Top</value></data>
@@ -147,6 +148,7 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="Main_CalcTooltip" xml:space="preserve"><value>Calculator</value></data>
   <data name="Main_ExplorerTooltip" xml:space="preserve"><value>Explorer</value></data>
   <data name="Main_DownloadsTooltip" xml:space="preserve"><value>Downloads</value></data>
+  <data name="Main_TimerStopwatchTooltip" xml:space="preserve"><value>Timer and stopwatch</value></data>
   <data name="Main_ColorPickerTooltip" xml:space="preserve"><value>Pick color from screen</value></data>
   <data name="Main_QuickNoteTooltip" xml:space="preserve"><value>Quick note</value></data>
   <data name="ColorPicker_Instruction" xml:space="preserve"><value>Click anywhere to copy the color. Esc cancels.</value></data>
@@ -178,6 +180,31 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_BulletList" xml:space="preserve"><value>Bullet list</value></data>
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Numbered list</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Clear formatting</value></data>
+  <data name="TimerStopwatch_Timer" xml:space="preserve"><value>Timer</value></data>
+  <data name="TimerStopwatch_Stopwatch" xml:space="preserve"><value>Stopwatch</value></data>
+  <data name="TimerStopwatch_Start" xml:space="preserve"><value>Start</value></data>
+  <data name="TimerStopwatch_Pause" xml:space="preserve"><value>Pause</value></data>
+  <data name="TimerStopwatch_Stop" xml:space="preserve"><value>Stop</value></data>
+  <data name="TimerStopwatch_Reset" xml:space="preserve"><value>Reset</value></data>
+  <data name="TimerStopwatch_DefaultName" xml:space="preserve"><value>Tea</value></data>
+  <data name="TimerStopwatch_CustomTime" xml:space="preserve"><value>Custom time</value></data>
+  <data name="TimerStopwatch_SoundDefault" xml:space="preserve"><value>Sound: Default</value></data>
+  <data name="TimerStopwatch_SoundOff" xml:space="preserve"><value>Sound: Off</value></data>
+  <data name="TimerStopwatch_Laps" xml:space="preserve"><value>Laps</value></data>
+  <data name="TimerStopwatch_Time" xml:space="preserve"><value>Time</value></data>
+  <data name="TimerStopwatch_ClearLaps" xml:space="preserve"><value>Clear laps</value></data>
+  <data name="TimerStopwatch_LapFormat" xml:space="preserve"><value>Lap {0}</value></data>
+  <data name="TimerStopwatch_Preset1Minute" xml:space="preserve"><value>1 min</value></data>
+  <data name="TimerStopwatch_Preset3Minutes" xml:space="preserve"><value>3 min</value></data>
+  <data name="TimerStopwatch_Preset5Minutes" xml:space="preserve"><value>5 min</value></data>
+  <data name="TimerStopwatch_Preset10Minutes" xml:space="preserve"><value>10 min</value></data>
+  <data name="TimerStopwatch_Preset15Minutes" xml:space="preserve"><value>15 min</value></data>
+  <data name="TimerStopwatch_Preset30Minutes" xml:space="preserve"><value>30 min</value></data>
+  <data name="TimerStopwatch_Preset45Minutes" xml:space="preserve"><value>45 min</value></data>
+  <data name="TimerStopwatch_Preset60Minutes" xml:space="preserve"><value>60 min</value></data>
+  <data name="TimerStopwatch_Preset90Minutes" xml:space="preserve"><value>90 min</value></data>
+  <data name="TimerStopwatch_Preset120Minutes" xml:space="preserve"><value>120 min</value></data>
+  <data name="TimerStopwatch_StopwatchFormatHint" xml:space="preserve"><value>hh:mm:ss.ms</value></data>
   <data name="Menu_Open" xml:space="preserve"><value>Open</value></data>
   <data name="Menu_ProgramSettings" xml:space="preserve"><value>Program settings</value></data>
   <data name="Menu_ImportPanel" xml:space="preserve"><value>Import panel...</value></data>
