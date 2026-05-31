@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -28,109 +27,17 @@ internal static class UpdateCheckUi
 
             string latest = UpdateCheckService.FormatVersion(result.LatestVersion);
             string current = UpdateCheckService.FormatVersion(result.CurrentVersion);
-            
-            // Если инсталлятор доступен - показываем диалог с опциями
-            if (!string.IsNullOrEmpty(result.InstallerUrl))
+
+            var dialog = new DarkDialog(LocalizationService.Format("Update_Available", latest, current), isConfirm: true) { Owner = owner };
+            if (dialog.ShowDialog() == true)
             {
-                var buttons = new List<DialogButton>
-                {
-                    new() { Text = LocalizationService.Get("Update_DownloadAndInstall"), Value = "download", IsPrimary = true },
-                    new() { Text = LocalizationService.Get("Update_OpenReleasePage"), Value = "openpage", IsPrimary = false },
-                    new() { Text = LocalizationService.Get("Common_Cancel"), Value = "cancel", IsPrimary = false }
-                };
-                
-                var dialog = new DarkDialog(LocalizationService.Format("Update_AutoInstallPrompt", latest, current), buttons, LocalizationService.Get("Common_Confirmation")) { Owner = owner };
-                dialog.ShowDialog();
-                
-                if (dialog.Tag as string == "download")
-                {
-                    await DownloadAndInstallAsync(service, result, owner);
-                }
-                else if (dialog.Tag as string == "openpage")
-                {
-                    service.OpenReleasePage(result);
-                }
-            }
-            else
-            {
-                // Если инсталлятор не доступен - стандартное поведение
-                var dialog = new DarkDialog(LocalizationService.Format("Update_Available", latest, current), isConfirm: true) { Owner = owner };
-                if (dialog.ShowDialog() == true)
-                {
-                    service.OpenReleasePage(result);
-                }
+                service.OpenReleasePage(result);
             }
         }
         catch (Exception ex)
         {
             TelemetryService.CaptureException(ex, "update_check_ui");
             new DarkDialog(LocalizationService.Format("Update_CheckFailed", ex.Message)) { Owner = owner }.ShowDialog();
-        }
-    }
-
-    private static async Task DownloadAndInstallAsync(UpdateCheckService service, UpdateCheckResult result, Window owner)
-    {
-        // ⚠️ WARNING: Code signing is not yet configured (P1 blocker)
-        // Show security warning before auto-install
-        var warningButtons = new List<DialogButton>
-        {
-            new() { Text = LocalizationService.Get("Common_Continue"), Value = "continue", IsPrimary = true },
-            new() { Text = LocalizationService.Get("Common_Cancel"), Value = "cancel", IsPrimary = false }
-        };
-        
-        var warningDialog = new DarkDialog(
-            LocalizationService.Get("Update_UnsignedWarning"),
-            warningButtons,
-            LocalizationService.Get("Update_SecurityWarning"))
-        {
-            Owner = owner
-        };
-        
-        warningDialog.ShowDialog();
-        if (warningDialog.Tag as string != "continue")
-        {
-            service.OpenReleasePage(result);
-            return;
-        }
-
-        var downloadingDialog = new DarkDialog(LocalizationService.Get("Update_Downloading")) { Owner = owner };
-        downloadingDialog.Show();
-        
-        try
-        {
-            string? installerPath = await service.DownloadInstallerAsync(result);
-            
-            downloadingDialog.Close();
-            
-            if (string.IsNullOrEmpty(installerPath))
-            {
-                service.OpenReleasePage(result);
-                return;
-            }
-            
-            // Показываем сообщение, что запускаем инсталлятор
-            var installingDialog = new DarkDialog(LocalizationService.Get("Update_Installing")) { Owner = owner };
-            installingDialog.Show();
-            
-            // Запускаем инсталлятор и закрываем приложение
-            service.RunInstaller(installerPath);
-            
-            // Даем время инсталлятору запуститься
-            await Task.Delay(1000);
-            
-            installingDialog.Close();
-            System.Windows.Application.Current.Shutdown();
-        }
-        catch (Exception ex)
-        {
-            TelemetryService.CaptureException(ex, "update_install");
-            downloadingDialog.Close();
-            
-            var errorDialog = new DarkDialog(LocalizationService.Format("Update_DownloadFailed", ex.Message), isConfirm: true) { Owner = owner };
-            if (errorDialog.ShowDialog() == true)
-            {
-                service.OpenReleasePage(result);
-            }
         }
     }
 }

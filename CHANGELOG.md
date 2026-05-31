@@ -7,6 +7,20 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.4] - 2026-06-01
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Проверка обновлений без автоустановки**: До появления подписи инсталлятора проверка обновлений снова открывает страницу релиза GitHub вместо скачивания и запуска `.exe` из приложения.
+- **Update check without auto-install**: Until installer signing is available, update checking opens the GitHub release page instead of downloading and launching `.exe` from the app.
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Таймер и секундомер**: При закрытии окна работающий таймер теперь останавливается и отписывается от `DispatcherTimer`, чтобы закрытое окно не удерживалось обработчиком тиков.
+- **Timer and stopwatch**: Closing the window now stops the running timer and unsubscribes from `DispatcherTimer` so the closed window is not retained by tick handlers.
+
+### 🇷🇺 Тесты | 🇬🇧 Tests
+- **Релизные проверки**: Убраны nullable warnings в тестах и пересобран установщик для версии `1.7.4`.
+- **Release checks**: Removed nullable warnings from tests and rebuilt the installer for version `1.7.4`.
+
 ## [1.7.3] - 2026-05-31
 
 ### 🇷🇺 Изменено | 🇬🇧 Changed

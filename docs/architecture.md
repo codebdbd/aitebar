@@ -1145,7 +1145,13 @@ dotnet vstest .\AiteBar.Tests\bin\Release\net8.0-windows\AiteBar.Tests.dll
 ---
 
 # 20. CI/CD
-CI/CD в проекте не настроен (нет файлов GitHub Actions, GitLab CI и т.д.).
+CI/CD настроен через GitHub Actions:
+
+- `.github/workflows/build-test.yml` — Release build, тесты и coverage summary/artifact для push/PR в `main` и `master`.
+- `.github/workflows/codeql.yml` — CodeQL security-and-quality analysis для C#.
+- `.github/workflows/release.yml` — проверка версии, сборка инсталлятора, checksum и публикация GitHub Release для `vX.Y.Z` tag.
+
+Зависимости NuGet и GitHub Actions отслеживаются через `.github/dependabot.yml`.
 
 ---
 

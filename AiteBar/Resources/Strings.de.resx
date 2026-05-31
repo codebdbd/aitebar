@@ -120,26 +120,7 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Auswahl aufheben</value></data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Nach Updates suchen</value></data>
-  <data name="Update_AutoInstallPrompt" xml:space="preserve"><value>AiteBar {0} ist verfügbar.
-Du nutzt {1}.
-
-Was möchtest du tun?</value></data>
-  <data name="Update_DownloadAndInstall" xml:space="preserve"><value>Herunterladen und installieren</value></data>
   <data name="Update_OpenReleasePage" xml:space="preserve"><value>GitHub-Release-Seite öffnen</value></data>
-  <data name="Update_Downloading" xml:space="preserve"><value>Update wird heruntergeladen...
-Bitte warten.</value></data>
-  <data name="Update_DownloadFailed" xml:space="preserve"><value>Download fehlgeschlagen.
-Bitte öffne die GitHub-Release-Seite, um manuell herunterzuladen.
-
-Fehler: {0}</value></data>
-  <data name="Update_Installing" xml:space="preserve"><value>Installationsprogramm wird gestartet...
-AiteBar wird jetzt geschlossen.</value></data>
-  <data name="Update_SecurityWarning" xml:space="preserve"><value>Sicherheitswarnung</value></data>
-  <data name="Update_UnsignedWarning" xml:space="preserve"><value>Das Installationsprogramm ist nicht digital signiert.
-
-Sie können eine Windows SmartScreen-Warnung sehen. Dies ist eine bekannte Einschränkung in der aktuellen Version.
-
-Installation fortsetzen?</value></data>
   <data name="TimerStopwatch_Timer" xml:space="preserve"><value>Timer</value></data>
   <data name="TimerStopwatch_Stopwatch" xml:space="preserve"><value>Stoppuhr</value></data>
   <data name="TimerStopwatch_Start" xml:space="preserve"><value>Start</value></data>
@@ -150,10 +131,6 @@ Installation fortsetzen?</value></data>
   <data name="TimerStopwatch_CustomTime" xml:space="preserve"><value>Eigene Zeit</value></data>
   <data name="TimerStopwatch_SoundDefault" xml:space="preserve"><value>Ton: Standard</value></data>
   <data name="TimerStopwatch_SoundOff" xml:space="preserve"><value>Ton: Aus</value></data>
-  <data name="TimerStopwatch_Laps" xml:space="preserve"><value>Runden</value></data>
-  <data name="TimerStopwatch_Time" xml:space="preserve"><value>Zeit</value></data>
-  <data name="TimerStopwatch_ClearLaps" xml:space="preserve"><value>Runden löschen</value></data>
-  <data name="TimerStopwatch_LapFormat" xml:space="preserve"><value>Runde {0}</value></data>
   <data name="TimerStopwatch_Preset1Minute" xml:space="preserve"><value>1 Min</value></data>
   <data name="TimerStopwatch_Preset3Minutes" xml:space="preserve"><value>3 Min</value></data>
   <data name="TimerStopwatch_Preset5Minutes" xml:space="preserve"><value>5 Min</value></data>

@@ -190,10 +190,6 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="TimerStopwatch_CustomTime" xml:space="preserve"><value>Custom time</value></data>
   <data name="TimerStopwatch_SoundDefault" xml:space="preserve"><value>Sound: Default</value></data>
   <data name="TimerStopwatch_SoundOff" xml:space="preserve"><value>Sound: Off</value></data>
-  <data name="TimerStopwatch_Laps" xml:space="preserve"><value>Laps</value></data>
-  <data name="TimerStopwatch_Time" xml:space="preserve"><value>Time</value></data>
-  <data name="TimerStopwatch_ClearLaps" xml:space="preserve"><value>Clear laps</value></data>
-  <data name="TimerStopwatch_LapFormat" xml:space="preserve"><value>Lap {0}</value></data>
   <data name="TimerStopwatch_Preset1Minute" xml:space="preserve"><value>1 min</value></data>
   <data name="TimerStopwatch_Preset3Minutes" xml:space="preserve"><value>3 min</value></data>
   <data name="TimerStopwatch_Preset5Minutes" xml:space="preserve"><value>5 min</value></data>
@@ -320,24 +316,5 @@ Open the GitHub release page?</value></data>
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Select all</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Clear selection</value></data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Check for updates</value></data>
-  <data name="Update_AutoInstallPrompt" xml:space="preserve"><value>AiteBar {0} is available.
-You are using {1}.
-
-What would you like to do?</value></data>
-  <data name="Update_DownloadAndInstall" xml:space="preserve"><value>Download and install</value></data>
   <data name="Update_OpenReleasePage" xml:space="preserve"><value>Open GitHub release page</value></data>
-  <data name="Update_Downloading" xml:space="preserve"><value>Downloading update...
-Please wait.</value></data>
-  <data name="Update_DownloadFailed" xml:space="preserve"><value>Download failed.
-Please open the GitHub release page to download manually.
-
-Error: {0}</value></data>
-  <data name="Update_Installing" xml:space="preserve"><value>Starting installer...
-AiteBar will close now.</value></data>
-  <data name="Update_SecurityWarning" xml:space="preserve"><value>Security Warning</value></data>
-  <data name="Update_UnsignedWarning" xml:space="preserve"><value>The installer is not digitally signed yet.
-
-You may see a Windows SmartScreen warning. This is a known limitation in the current release.
-
-Continue with installation?</value></data>
 </root>

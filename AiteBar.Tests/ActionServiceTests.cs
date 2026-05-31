@@ -108,7 +108,7 @@ public sealed class ActionServiceTests
             IsAppMode = true
         };
 
-        var psi = ActionService.BuildWebActionProcessStartInfo(element, null);
+        var psi = ActionService.BuildWebActionProcessStartInfo(element, null!);
 
         string[] args = psi.ArgumentList.ToArray();
 
@@ -126,7 +126,7 @@ public sealed class ActionServiceTests
             IsIncognito = true
         };
 
-        var psi = ActionService.BuildWebActionProcessStartInfo(element, null);
+        var psi = ActionService.BuildWebActionProcessStartInfo(element, null!);
 
         string[] args = psi.ArgumentList.ToArray();
 

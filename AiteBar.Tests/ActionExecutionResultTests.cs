@@ -24,7 +24,7 @@ public sealed class ActionExecutionResultTests
     [Fact]
     public void Failed_WithNullMessage_UsesDefault()
     {
-        var result = ActionExecutionResult.Failed(null);
+        var result = ActionExecutionResult.Failed(null!);
         Assert.False(result.Success);
         Assert.NotNull(result.ErrorMessage);
         Assert.NotEmpty(result.ErrorMessage);

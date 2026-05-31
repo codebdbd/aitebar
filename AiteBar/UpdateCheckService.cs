@@ -1,6 +1,5 @@
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -92,64 +91,6 @@ public sealed class UpdateCheckService
             TelemetryService.CaptureException(ex, "update_check");
             return new UpdateCheckResult(false, current, null, null, null, LocalizationService.Get("Update_InvalidResponse"));
         }
-    }
-
-    public async Task<string?> DownloadInstallerAsync(UpdateCheckResult result, IProgress<double>? progress = null, CancellationToken cancellationToken = default)
-    {
-        if (string.IsNullOrEmpty(result.InstallerUrl))
-        {
-            return null;
-        }
-
-        string tempPath = Path.Combine(Path.GetTempPath(), $"AiteBar-Setup-{result.LatestVersion?.ToString() ?? "latest"}.exe");
-        
-        try
-        {
-            using var response = await _httpClient.GetAsync(result.InstallerUrl, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-            response.EnsureSuccessStatusCode();
-
-            long? totalBytes = response.Content.Headers.ContentLength;
-            
-            await using var fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, FileOptions.Asynchronous);
-            await using var contentStream = await response.Content.ReadAsStreamAsync(cancellationToken);
-
-            byte[] buffer = new byte[8192];
-            int bytesRead;
-            long totalBytesRead = 0;
-            
-            while ((bytesRead = await contentStream.ReadAsync(buffer, cancellationToken)) > 0)
-            {
-                await fileStream.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken);
-                totalBytesRead += bytesRead;
-                
-                if (totalBytes.HasValue && progress != null)
-                {
-                    progress.Report((double)totalBytesRead / totalBytes.Value * 100);
-                }
-            }
-
-            return tempPath;
-        }
-        catch (Exception ex)
-        {
-            TelemetryService.CaptureException(ex, "update_download");
-            
-            if (File.Exists(tempPath))
-            {
-                try { File.Delete(tempPath); } catch { }
-            }
-            
-            throw;
-        }
-    }
-
-    public void RunInstaller(string installerPath)
-    {
-        Process.Start(new ProcessStartInfo(installerPath)
-        {
-            UseShellExecute = true,
-            Verb = "open"
-        });
     }
 
     internal static bool TryParseReleaseVersion(string? tagName, out Version version)

@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -63,47 +62,6 @@ public sealed class UpdateCheckServiceTests
     public void IsTrustedGitHubReleaseUrl_RejectsUnexpectedUrls(string url)
     {
         Assert.False(UpdateCheckService.IsTrustedGitHubReleaseUrl(url));
-    }
-
-    [Fact]
-    public async Task DownloadInstallerAsync_NullInstallerUrl_ReturnsNull()
-    {
-        var mockHandler = new MockHttpMessageHandler(() => new HttpResponseMessage(System.Net.HttpStatusCode.OK));
-        var httpClient = new HttpClient(mockHandler);
-        var service = new UpdateCheckService(httpClient);
-        var result = new UpdateCheckResult(false, new Version(1,0,0), null, null, null, null);
-
-        string? path = await service.DownloadInstallerAsync(result);
-        
-        Assert.Null(path);
-    }
-
-    [Fact]
-    public async Task DownloadInstallerAsync_ValidInstallerUrl_DownloadsFile()
-    {
-        var testContent = new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04 };
-        var mockHandler = new MockHttpMessageHandler(() => new HttpResponseMessage(System.Net.HttpStatusCode.OK)
-        {
-            Content = new ByteArrayContent(testContent)
-        });
-        var httpClient = new HttpClient(mockHandler);
-        var service = new UpdateCheckService(httpClient);
-        var result = new UpdateCheckResult(
-            true, 
-            new Version(1,0,0), 
-            new Version(1,1,0), 
-            "https://github.com/codebdbd/aitebar/releases/tag/v1.1.0", 
-            "https://github.com/codebdbd/aitebar/releases/download/v1.1.0/AiteBarSetup.exe", 
-            null);
-
-        string? path = await service.DownloadInstallerAsync(result);
-        
-        Assert.NotNull(path);
-        Assert.True(File.Exists(path));
-        byte[] downloadedContent = await File.ReadAllBytesAsync(path);
-        Assert.Equal(testContent, downloadedContent);
-        
-        File.Delete(path);
     }
 
     private sealed class MockHttpMessageHandler : HttpMessageHandler

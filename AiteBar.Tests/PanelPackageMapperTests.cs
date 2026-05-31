@@ -274,7 +274,7 @@ public sealed class PanelPackageMapperTests
     {
         var source = new PanelPackageElement
         {
-            Name = null,
+            Name = null!,
             ActionType = nameof(ActionType.Web),
             ActionValue = "https://example.com"
         };

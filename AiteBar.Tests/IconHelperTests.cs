@@ -10,7 +10,7 @@ public sealed class IconHelperTests
     [Fact]
     public void ExtractAndSaveIcon_NullPath_ReturnsNull()
     {
-        var result = IconHelper.ExtractAndSaveIcon(null);
+        var result = IconHelper.ExtractAndSaveIcon(null!);
         Assert.Null(result);
     }
 
@@ -31,7 +31,7 @@ public sealed class IconHelperTests
     [Fact]
     public void SaveCustomIcon_NullPath_ReturnsNull()
     {
-        var result = IconHelper.SaveCustomIcon(null);
+        var result = IconHelper.SaveCustomIcon(null!);
         Assert.Null(result);
     }
 
@@ -52,7 +52,7 @@ public sealed class IconHelperTests
     [Fact]
     public async Task DownloadFaviconAsync_NullUrl_ReturnsNull()
     {
-        var result = await IconHelper.DownloadFaviconAsync(null);
+        var result = await IconHelper.DownloadFaviconAsync(null!);
         Assert.Null(result);
     }
 

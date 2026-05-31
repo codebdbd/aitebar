@@ -40,6 +40,10 @@ public partial class TimerStopwatchWindow : DarkWindow
 
     private async void TimerStopwatchWindow_Closed(object? sender, EventArgs e)
     {
+        StopRunning();
+        _tickTimer.Tick -= TickTimer_Tick;
+        Closed -= TimerStopwatchWindow_Closed;
+
         if (_settingsService != null)
         {
             SaveSettings(_settingsService);

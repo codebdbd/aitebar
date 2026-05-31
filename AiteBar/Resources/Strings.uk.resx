@@ -57,26 +57,7 @@
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Вибрати всі</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Зняти виділення</value></data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Перевіряти оновлення</value></data>
-  <data name="Update_AutoInstallPrompt" xml:space="preserve"><value>Доступна AiteBar {0}.
-У вас зараз {1}.
-
-Що ви хочете зробити?</value></data>
-  <data name="Update_DownloadAndInstall" xml:space="preserve"><value>Завантажити та встановити</value></data>
   <data name="Update_OpenReleasePage" xml:space="preserve"><value>Відкрити сторінку релізу GitHub</value></data>
-  <data name="Update_Downloading" xml:space="preserve"><value>Завантажуємо оновлення...
-Будь ласка, зачекайте.</value></data>
-  <data name="Update_DownloadFailed" xml:space="preserve"><value>Помилка завантаження.
-Будь ласка, відкрийте сторінку релізу GitHub, щоб завантажити вручну.
-
-Помилка: {0}</value></data>
-  <data name="Update_Installing" xml:space="preserve"><value>Запускаємо інсталятор...
-Зараз AiteBar закриється.</value></data>
-  <data name="Update_SecurityWarning" xml:space="preserve"><value>Попередження про безпеку</value></data>
-  <data name="Update_UnsignedWarning" xml:space="preserve"><value>Інсталятор не підписаний цифровим підписом.
-
-Ви можете побачити попередження Windows SmartScreen. Це відома проблема в поточній версії.
-
-Продовжити встановлення?</value></data>
   <data name="TimerStopwatch_Timer" xml:space="preserve"><value>Таймер</value></data>
   <data name="TimerStopwatch_Stopwatch" xml:space="preserve"><value>Секундомір</value></data>
   <data name="TimerStopwatch_Start" xml:space="preserve"><value>Старт</value></data>
@@ -87,10 +68,6 @@
   <data name="TimerStopwatch_CustomTime" xml:space="preserve"><value>Свій час</value></data>
   <data name="TimerStopwatch_SoundDefault" xml:space="preserve"><value>Звук: За замовчуванням</value></data>
   <data name="TimerStopwatch_SoundOff" xml:space="preserve"><value>Звук: Вимк.</value></data>
-  <data name="TimerStopwatch_Laps" xml:space="preserve"><value>Кола</value></data>
-  <data name="TimerStopwatch_Time" xml:space="preserve"><value>Час</value></data>
-  <data name="TimerStopwatch_ClearLaps" xml:space="preserve"><value>Очистити кола</value></data>
-  <data name="TimerStopwatch_LapFormat" xml:space="preserve"><value>Коло {0}</value></data>
   <data name="TimerStopwatch_Preset1Minute" xml:space="preserve"><value>1 хв</value></data>
   <data name="TimerStopwatch_Preset3Minutes" xml:space="preserve"><value>3 хв</value></data>
   <data name="TimerStopwatch_Preset5Minutes" xml:space="preserve"><value>5 хв</value></data>

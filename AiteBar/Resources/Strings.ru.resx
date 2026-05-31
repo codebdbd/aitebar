@@ -417,18 +417,6 @@
   <data name="TimerStopwatch_SoundOff" xml:space="preserve">
     <value>Звук: Выкл.</value>
   </data>
-  <data name="TimerStopwatch_Laps" xml:space="preserve">
-    <value>Круги</value>
-  </data>
-  <data name="TimerStopwatch_Time" xml:space="preserve">
-    <value>Время</value>
-  </data>
-  <data name="TimerStopwatch_ClearLaps" xml:space="preserve">
-    <value>Очистить круги</value>
-  </data>
-  <data name="TimerStopwatch_LapFormat" xml:space="preserve">
-    <value>Круг {0}</value>
-  </data>
   <data name="TimerStopwatch_Preset1Minute" xml:space="preserve">
     <value>1 мин</value>
   </data>
@@ -570,41 +558,8 @@
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve">
     <value>Проверять обновления</value>
   </data>
-  <data name="Update_AutoInstallPrompt" xml:space="preserve">
-    <value>Доступна AiteBar {0}.
-У вас сейчас {1}.
-
-Что бы вы хотели сделать?</value>
-  </data>
-  <data name="Update_DownloadAndInstall" xml:space="preserve">
-    <value>Скачать и установить</value>
-  </data>
   <data name="Update_OpenReleasePage" xml:space="preserve">
     <value>Открыть страницу релиза GitHub</value>
-  </data>
-  <data name="Update_Downloading" xml:space="preserve">
-    <value>Скачиваем обновление...
-Пожалуйста, подождите.</value>
-  </data>
-  <data name="Update_DownloadFailed" xml:space="preserve">
-    <value>Ошибка скачивания.
-Пожалуйста, откройте страницу релиза GitHub, чтобы скачать вручную.
-
-Ошибка: {0}</value>
-  </data>
-  <data name="Update_Installing" xml:space="preserve">
-    <value>Запускаем инсталлятор...
-Сейчас AiteBar закроется.</value>
-  </data>
-  <data name="Update_SecurityWarning" xml:space="preserve">
-    <value>Предупреждение безопасности</value>
-  </data>
-  <data name="Update_UnsignedWarning" xml:space="preserve">
-    <value>Инсталлятор не подписан цифровой подписью.
-
-Вы можете увидеть предупреждение Windows SmartScreen. Это известное ограничение текущей версии.
-
-Продолжить установку?</value>
   </data>
   <data name="TimerStopwatch_Preset45Minutes" xml:space="preserve">
     <value>45 мин</value>
