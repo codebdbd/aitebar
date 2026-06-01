@@ -59,16 +59,6 @@ namespace AiteBar
             return NativeMethods.CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }
 
-        public void RegisterHotkey(int id, uint modifiers, uint vk)
-        {
-            NativeMethods.RegisterHotKey(_windowHandle, id, modifiers, vk);
-        }
-
-        public void UnregisterHotkey(int id)
-        {
-            NativeMethods.UnregisterHotKey(_windowHandle, id);
-        }
-
         public void Dispose()
         {
             UninstallMouseHook();

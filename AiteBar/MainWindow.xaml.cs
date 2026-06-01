@@ -73,6 +73,7 @@ public partial class MainWindow : Window
 
         private readonly AppSettingsService _settingsService = new();
         private readonly ActionService _actionService;
+        private readonly HotkeyService _hotkeyService = new();
         private readonly PanelPackageService _panelPackageService;
         private NativeIntegrationService? _nativeService;
 
@@ -103,17 +104,10 @@ public partial class MainWindow : Window
         private int _panelRefreshVersion;
         private int _panelFocusRequestVersion;
         private int _contextWheelDelta;
+        private Button? _suppressUserButtonClickFor;
         private DateTime _lastContextWheelSwitchUtc = DateTime.MinValue;
         private readonly Dictionary<string, CachedButtonImage> _buttonImageCache = new(StringComparer.OrdinalIgnoreCase);
 
-        private const int HOTKEY_ID = 9000;
-        private const int HOTKEY_CONTEXT_NEXT_ID = 9001;
-        private const int HOTKEY_CONTEXT_PREVIOUS_ID = 9002;
-        private const int HOTKEY_ADD_BUTTON_ID = 9003;
-        private const int HOTKEY_QUICK_NOTE_ID = 9004;
-        private const int HOTKEY_COLOR_PICKER_ID = 9005;
-        private const int HOTKEY_TIMER_STOPWATCH_ID = 9006;
-        private const int WM_HOTKEY = 0x0312;
         private const double PanelScreenPadding = 20;
         private const double ButtonPitch = PanelLayoutHelper.ButtonOuterSize;
         private const double DragHandleSpan = 18;
@@ -141,10 +135,20 @@ public partial class MainWindow : Window
             PathHelper.EnsureDirectories();
             InitTrayIcon();
 
+            // Subscribe to settings changes for auto-re-registration
+            _settingsService.SettingsChanged += OnSettingsChanged;
+
             Application.Current.Exit += (_, _) => {
                 _nativeService?.Dispose();
+                _settingsService.SettingsChanged -= OnSettingsChanged;
                 UnregisterGlobalHotkey();
             };
+        }
+
+        private void OnSettingsChanged(object? sender, EventArgs e)
+        {
+            UnregisterGlobalHotkey();
+            RegisterGlobalHotkey();
         }
 
         public AppSettings GetAppSettings() => _settingsService.Settings;
@@ -799,158 +803,96 @@ public partial class MainWindow : Window
             return count;
         }
 
+        private static readonly HashSet<HotkeyCommand> AllowedHotkeysWithOwnedWindows = new()
+        {
+            HotkeyCommand.QuickNote,
+            HotkeyCommand.TimerStopwatch
+        };
+
         private IReadOnlyList<string> RegisterGlobalHotkey()
         {
-            var failedHotkeys = new List<string>();
-            UnregisterGlobalHotkey();
             IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-            if (hwnd == IntPtr.Zero) return failedHotkeys;
-
-            var showPanelBinding = new HotkeyBinding
-            {
-                Ctrl = _appSettings.GlobalHotkeyCtrl,
-                Alt = _appSettings.GlobalHotkeyAlt,
-                Shift = _appSettings.GlobalHotkeyShift,
-                Win = _appSettings.GlobalHotkeyWin,
-                Key = _appSettings.GlobalHotkeyKey
-            };
-
-            AddFailedHotkey(
-                failedHotkeys,
-                LocalizationService.Get("AppSettingsWindow_ShowPanel"),
-                RegisterHotkeyBinding(hwnd, HOTKEY_ID, showPanelBinding));
-            AddFailedHotkey(
-                failedHotkeys,
-                LocalizationService.Get("AppSettingsWindow_NextPanel"),
-                RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT_NEXT_ID, _appSettings.NextContextHotkey));
-            AddFailedHotkey(
-                failedHotkeys,
-                LocalizationService.Get("AppSettingsWindow_PreviousPanel"),
-                RegisterHotkeyBinding(hwnd, HOTKEY_CONTEXT_PREVIOUS_ID, _appSettings.PreviousContextHotkey));
-            AddFailedHotkey(
-                failedHotkeys,
-                LocalizationService.Get("AppSettingsWindow_AddButton"),
-                RegisterHotkeyBinding(hwnd, HOTKEY_ADD_BUTTON_ID, _appSettings.AddButtonHotkey));
-            AddFailedHotkey(
-                failedHotkeys,
-                LocalizationService.Get("Tool_QuickNote"),
-                RegisterHotkeyBinding(hwnd, HOTKEY_QUICK_NOTE_ID, _appSettings.QuickNoteHotkey));
-            AddFailedHotkey(
-                failedHotkeys,
-                LocalizationService.Get("Tool_ColorPicker"),
-                RegisterHotkeyBinding(hwnd, HOTKEY_COLOR_PICKER_ID, _appSettings.ColorPickerHotkey));
-            AddFailedHotkey(
-                failedHotkeys,
-                LocalizationService.Get("Tool_TimerStopwatch"),
-                RegisterHotkeyBinding(hwnd, HOTKEY_TIMER_STOPWATCH_ID, _appSettings.TimerStopwatchHotkey));
-
-            return failedHotkeys;
-        }
-
-        private static void AddFailedHotkey(List<string> failedHotkeys, string name, bool success)
-        {
-            if (!success)
-            {
-                failedHotkeys.Add(name);
-            }
+            var commandDefinitions = _hotkeyService.CreateDefinitions(_appSettings, LocalizationService.Get);
+            var elementDefinitions = _hotkeyService.CreateElementDefinitions(_elements);
+            var allDefinitions = commandDefinitions.Concat(elementDefinitions).ToList();
+            var results = _hotkeyService.RegisterAll(hwnd, allDefinitions);
+            return _hotkeyService.GetFailedDisplayNames(results);
         }
 
         private void UnregisterGlobalHotkey()
         {
             IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-            if (hwnd == IntPtr.Zero)
-            {
-                return;
-            }
-
-            int[] hotkeyIds =
-            [
-                HOTKEY_ID,
-                HOTKEY_CONTEXT_NEXT_ID,
-                HOTKEY_CONTEXT_PREVIOUS_ID,
-                HOTKEY_ADD_BUTTON_ID,
-                HOTKEY_QUICK_NOTE_ID,
-                HOTKEY_COLOR_PICKER_ID,
-                HOTKEY_TIMER_STOPWATCH_ID
-            ];
-
-            foreach (int hotkeyId in hotkeyIds)
-            {
-                NativeMethods.UnregisterHotKey(hwnd, hotkeyId);
-            }
-        }
-
-        private static bool RegisterHotkeyBinding(IntPtr hwnd, int hotkeyId, HotkeyBinding binding)
-        {
-            if (binding == null || string.IsNullOrWhiteSpace(binding.Key) || string.Equals(binding.Key, "None", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            if (!HotkeyValidationHelper.IsRegisterableGlobalHotkey(binding))
-            {
-                return false;
-            }
-
-            if (!Enum.TryParse(typeof(Key), binding.Key, out var key))
-            {
-                return false;
-            }
-
-            uint modifiers = 0;
-            if (binding.Ctrl) modifiers |= 0x0002;
-            if (binding.Alt) modifiers |= 0x0001;
-            if (binding.Shift) modifiers |= 0x0004;
-            if (binding.Win) modifiers |= 0x0008;
-
-            uint vk = (uint)KeyInterop.VirtualKeyFromKey((Key)key!);
-            return NativeMethods.RegisterHotKey(hwnd, hotkeyId, modifiers, vk);
+            _hotkeyService.UnregisterAll(hwnd);
         }
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
-            if (msg == NativeMethods.WM_HOTKEY && HasVisibleOwnedWindow())
+            if (msg == NativeMethods.WM_HOTKEY)
             {
-                handled = true;
-                return IntPtr.Zero;
-            }
+                int hotkeyId = wParam.ToInt32();
 
-            if (msg == NativeMethods.WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
-            {
-                ToggleDock();
-                handled = true;
-            }
-            else if (msg == NativeMethods.WM_HOTKEY)
-            {
-                switch (wParam.ToInt32())
+                // Check if we have a visible owned window
+                if (HasVisibleOwnedWindow())
                 {
-                    case HOTKEY_CONTEXT_NEXT_ID:
-                        ActivateContextRelative(1);
+                    // Check if this is an allowed command hotkey
+                    if (_hotkeyService.TryGetCommand(hotkeyId, out var command) && 
+                        AllowedHotkeysWithOwnedWindows.Contains(command))
+                    {
+                        // Allow it - fall through to normal handling
+                    }
+                    else
+                    {
                         handled = true;
-                        break;
-                    case HOTKEY_CONTEXT_PREVIOUS_ID:
-                        ActivateContextRelative(-1);
-                        handled = true;
-                        break;
-                    case HOTKEY_ADD_BUTTON_ID:
-                        _ = OpenAddButtonWindowAsync();
-                        handled = true;
-                        break;
-                    case HOTKEY_QUICK_NOTE_ID:
-                        _ = RunPresetActionAsync(() => _actionService.StartQuickNoteAsync(HideDock));
-                        handled = true;
-                        break;
-                    case HOTKEY_COLOR_PICKER_ID:
-                        _ = RunPresetActionAsync(() => _actionService.StartColorPickerAsync(HideDock));
-                        handled = true;
-                        break;
-                    case HOTKEY_TIMER_STOPWATCH_ID:
-                        _ = RunPresetActionAsync(() => _actionService.StartTimerStopwatchAsync(HideDock));
-                        handled = true;
-                        break;
+                        return IntPtr.Zero;
+                    }
+                }
+
+                // Handle command hotkey
+                if (_hotkeyService.TryGetCommand(hotkeyId, out var cmd))
+                {
+                    ExecuteHotkeyCommand(cmd);
+                    handled = true;
+                }
+                // Handle element hotkey
+                else if (_hotkeyService.TryGetElementId(hotkeyId, out var elementId))
+                {
+                    var element = _elements.FirstOrDefault(e => e.Id == elementId);
+                    if (element != null)
+                    {
+                        _ = _actionService.ExecuteCustomActionAsync(element, HideDock);
+                    }
+                    handled = true;
                 }
             }
             return IntPtr.Zero;
+        }
+
+        private void ExecuteHotkeyCommand(HotkeyCommand command)
+        {
+            switch (command)
+            {
+                case HotkeyCommand.ShowPanel:
+                    ToggleDock();
+                    break;
+                case HotkeyCommand.NextContext:
+                    ActivateContextRelative(1);
+                    break;
+                case HotkeyCommand.PreviousContext:
+                    ActivateContextRelative(-1);
+                    break;
+                case HotkeyCommand.AddButton:
+                    _ = OpenAddButtonWindowAsync();
+                    break;
+                case HotkeyCommand.QuickNote:
+                    _ = RunPresetActionAsync(() => _actionService.StartQuickNoteAsync(HideDock));
+                    break;
+                case HotkeyCommand.ColorPicker:
+                    _ = RunPresetActionAsync(() => _actionService.StartColorPickerAsync(HideDock));
+                    break;
+                case HotkeyCommand.TimerStopwatch:
+                    _ = RunPresetActionAsync(() => _actionService.StartTimerStopwatchAsync(HideDock));
+                    break;
+            }
         }
 
         private bool HasVisibleOwnedWindow()
@@ -1411,8 +1353,16 @@ public partial class MainWindow : Window
                 .ToList();
 
             foreach (var el in _activeContextElements) {
-                var btn = CreatePanelButton(string.Empty, el.Name, (s, e) => {
-                    // Обработка клика перенесена в PreviewMouseUp для поддержки реордеринга
+                var capturedElement = el;
+                var btn = CreatePanelButton(string.Empty, el.Name, async (s, e) =>
+                {
+                    if (ReferenceEquals(s, _suppressUserButtonClickFor))
+                    {
+                        _suppressUserButtonClickFor = null;
+                        return;
+                    }
+
+                    await ExecuteUserButtonActionAsync(capturedElement);
                 }, (Brush)_brushConverter.ConvertFromString(el.Color ?? "#E3E3E3")!);
                 
                 btn.RenderTransform = new TranslateTransform();
@@ -1420,7 +1370,6 @@ public partial class MainWindow : Window
 
                 ApplyButtonIcon(btn, el, panelVersion);
                  
-                var capturedElement = el;
                 btn.PreviewMouseDown += (s, e) => {
                     if (e.ChangedButton != MouseButton.Left) return;
                     _draggedButton = s as Button; 
@@ -1428,7 +1377,6 @@ public partial class MainWindow : Window
                     _dragStartPos = e.GetPosition(this); 
                     _isReordering = false;
                     _draggedOriginalIndex = _userButtons.IndexOf(_draggedButton!);
-                    _draggedButton!.CaptureMouse();
                 };
                 
                 btn.PreviewMouseMove += (s, e) => {
@@ -1442,6 +1390,7 @@ public partial class MainWindow : Window
                         _isReordering = true;
                         _draggedButton.Opacity = 0.7;
                         Panel.SetZIndex(_draggedButton, 100);
+                        _draggedButton.CaptureMouse();
                     }
 
                     if (_isReordering) {
@@ -1455,9 +1404,15 @@ public partial class MainWindow : Window
 
                 btn.PreviewMouseUp += async (s, e) => {
                     if (_draggedButton == null) return;
-                    _draggedButton.ReleaseMouseCapture();
 
                     if (_isReordering) {
+                        if (_draggedButton.IsMouseCaptured)
+                        {
+                            _draggedButton.ReleaseMouseCapture();
+                        }
+
+                        _suppressUserButtonClickFor = _draggedButton;
+                        e.Handled = true;
                         _draggedButton.Opacity = 1.0;
                         int newIndex = CalculateTargetIndex(e.GetPosition(this));
                         if (newIndex >= 0 && newIndex < _activeContextElements.Count && newIndex != _draggedOriginalIndex) {
@@ -1465,14 +1420,8 @@ public partial class MainWindow : Window
                             await _settingsService.SaveAsync();
                         }
                         RefreshPanel();
-                    } else {
-                        // Если это был просто клик (не реордеринг), выполняем действие
-                        var result = await _actionService.ExecuteCustomActionAsync(capturedElement, HideDock);
-                        if (!result.Success)
-                        {
-                            new DarkDialog(LocalizationService.Format("Action_Failed", result.ErrorMessage)) { Owner = this }.ShowDialog();
-                        }
                     }
+
                     _draggedButton = null; _draggedElement = null; _isReordering = false;
                 };
 
@@ -1532,6 +1481,15 @@ public partial class MainWindow : Window
             ApplyPanelToolTipPlacement();
             
             PositionWindowImmediately(_shown);
+        }
+
+        private async Task ExecuteUserButtonActionAsync(CustomElement element)
+        {
+            var result = await _actionService.ExecuteCustomActionAsync(element, HideDock);
+            if (!result.Success)
+            {
+                new DarkDialog(LocalizationService.Format("Action_Failed", result.ErrorMessage)) { Owner = this }.ShowDialog();
+            }
         }
 
         private void ApplyPanelToolTipPlacement()
@@ -2089,15 +2047,9 @@ public partial class MainWindow : Window
                     else
                         focusableButtons[0].Focus();
                     break;
-                case Key.Space:
                 case Key.Enter:
                     e.Handled = true;
-                    if (currentFocus != null)
-                    {
-                        // Raise click event
-                        var args = new RoutedEventArgs(Button.ClickEvent, currentFocus);
-                        currentFocus.RaiseEvent(args);
-                    }
+                    currentFocus?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, currentFocus));
                     break;
                 case Key.Escape:
                     e.Handled = true;

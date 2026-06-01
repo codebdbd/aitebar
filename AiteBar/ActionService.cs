@@ -40,7 +40,7 @@ namespace AiteBar
                     switch (actionType)
                     {
                         case ActionType.Hotkey:
-                            ExecuteHotkey(el);
+                            await ExecuteHotkeyAsync(el);
                             break;
                         case ActionType.Web:
                             await ExecuteWebActionAsync(el);
@@ -74,32 +74,86 @@ namespace AiteBar
             }
         }
 
-        private void ExecuteHotkey(CustomElement el)
+        private async Task ExecuteHotkeyAsync(CustomElement el)
         {
-            var downKeys = new List<byte>();
-            if (el.Ctrl) downKeys.Add(NativeMethods.VK_CONTROL);
-            if (el.Shift) downKeys.Add(NativeMethods.VK_SHIFT);
-            if (el.Alt) downKeys.Add(NativeMethods.VK_MENU);
-            if (el.Win) downKeys.Add(NativeMethods.VK_LWIN);
-
-            byte mainVk = 0;
-            if (Enum.TryParse(typeof(Key), el.Key, out var k))
-                mainVk = (byte)KeyInterop.VirtualKeyFromKey((Key)k!);
-
-            var inputs = new List<NativeMethods.INPUT>();
-            foreach (var vk in downKeys)
-                inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk } } });
-
-            if (mainVk != 0)
+            try
             {
-                inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk } } });
-                inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } });
+                const int KeyDelayMs = 30; // Задержка между нажатиями клавиш
+                var downKeys = new List<byte>();
+                if (el.Ctrl) downKeys.Add(NativeMethods.VK_CONTROL);
+                if (el.Shift) downKeys.Add(NativeMethods.VK_SHIFT);
+                if (el.Alt) downKeys.Add(NativeMethods.VK_MENU);
+                if (el.Win) downKeys.Add(NativeMethods.VK_LWIN);
+
+                byte mainVk = 0;
+                if (Enum.TryParse(typeof(Key), el.Key, out var k))
+                    mainVk = (byte)KeyInterop.VirtualKeyFromKey((Key)k!);
+
+                var pressedModifiers = new HashSet<byte>();
+
+                // Нажимаем модификаторы по одному с задержкой
+                foreach (var vk in downKeys)
+                {
+                    if (!IsKeyPressed(vk))
+                    {
+                        var input = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk } } };
+                        uint sent = NativeMethods.SendInput(1, [input], Marshal.SizeOf<NativeMethods.INPUT>());
+                        if (sent != 1)
+                        {
+                            Logger.Log(new InvalidOperationException($"Failed to send modifier key down: VK={vk}"));
+                        }
+                        pressedModifiers.Add(vk);
+                        await Task.Delay(KeyDelayMs);
+                    }
+                }
+
+                // Нажимаем и отпускаем основную клавишу
+                if (mainVk != 0)
+                {
+                    // Нажатие основной клавиши
+                    var downInput = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk } } };
+                    uint downSent = NativeMethods.SendInput(1, [downInput], Marshal.SizeOf<NativeMethods.INPUT>());
+                    if (downSent != 1)
+                    {
+                        Logger.Log(new InvalidOperationException($"Failed to send main key down: VK={mainVk}"));
+                    }
+                    await Task.Delay(KeyDelayMs);
+
+                    // Отпускание основной клавиши
+                    var upInput = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } };
+                    uint upSent = NativeMethods.SendInput(1, [upInput], Marshal.SizeOf<NativeMethods.INPUT>());
+                    if (upSent != 1)
+                    {
+                        Logger.Log(new InvalidOperationException($"Failed to send main key up: VK={mainVk}"));
+                    }
+                    await Task.Delay(KeyDelayMs);
+                }
+
+                // Отпускаем модификаторы в обратном порядке с задержкой
+                foreach (var vk in Enumerable.Reverse(pressedModifiers))
+                {
+                    var upInput = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } };
+                    uint sent = NativeMethods.SendInput(1, [upInput], Marshal.SizeOf<NativeMethods.INPUT>());
+                    if (sent != 1)
+                    {
+                        Logger.Log(new InvalidOperationException($"Failed to send modifier key up: VK={vk}"));
+                    }
+                    await Task.Delay(KeyDelayMs);
+                }
             }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                TelemetryService.CaptureException(ex, "hotkey_execution");
+            }
+        }
 
-            foreach (var vk in Enumerable.Reverse(downKeys))
-                inputs.Add(new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } });
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(int vKey);
 
-            _ = NativeMethods.SendInput((uint)inputs.Count, [.. inputs], Marshal.SizeOf<NativeMethods.INPUT>());
+        private static bool IsKeyPressed(byte vk)
+        {
+            return (GetAsyncKeyState(vk) & 0x8000) != 0;
         }
 
         private async Task ExecuteWebActionAsync(CustomElement el)
