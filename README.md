@@ -20,7 +20,7 @@ AiteBar — Your Personal Command Center for Windows. Turn the edge of your scre
 #### Quick Actions
 - **Hidden edge panel**: Appears when hovering over the screen edge
 - **Global hotkeys**: Quick access to the panel and actions
-- **Built-in tools**: Screenshot, screen recording, calculator, file explorer, downloads, color picker, Quick Note
+- **Built-in tools**: Screenshot, screen recording, calculator, file explorer, downloads, timer and stopwatch, color picker, Quick Note
 - **Drag-and-drop**: Add files, folders, .url shortcuts and links by dragging
 
 #### Action Types
@@ -81,7 +81,7 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 #### Быстрые действия
 - **Скрытая edge-панель**: Появляется при наведении на край экрана
 - **Глобальные горячие клавиши**: Быстрый доступ к панели и действиям
-- **Встроенные инструменты**: Скриншот, запись экрана, калькулятор, проводник, загрузки, пипетка цвета, Quick Note
+- **Встроенные инструменты**: Скриншот, запись экрана, калькулятор, проводник, загрузки, таймер и секундомер, пипетка цвета, Quick Note
 - **Drag-and-drop**: Добавляй файлы, папки, .url и ссылки перетаскиванием
 
 #### Типы действий

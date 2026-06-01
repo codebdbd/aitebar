@@ -9,6 +9,10 @@
 
 ## [1.7.4] - 2026-06-01
 
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Таймер и секундомер**: Встроенная утилита быстрых инструментов для запуска таймера с пресетами и своего времени, секундомера, паузы, сброса, компактного режима и звука окончания.
+- **Timer and stopwatch**: Built-in quick tool for timer presets and custom time entry, stopwatch mode, pause, reset, compact mode and completion sound.
+
 ### 🇷🇺 Изменено | 🇬🇧 Changed
 - **Проверка обновлений без автоустановки**: До появления подписи инсталлятора проверка обновлений снова открывает страницу релиза GitHub вместо скачивания и запуска `.exe` из приложения.
 - **Update check without auto-install**: Until installer signing is available, update checking opens the GitHub release page instead of downloading and launching `.exe` from the app.

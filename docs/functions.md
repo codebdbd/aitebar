@@ -65,6 +65,7 @@ AiteBar - desktop-утилита для Windows: скрываемая edge-па�
   - Открыть калькулятор
   - Открыть проводник
   - Открыть папку загрузок
+  - Открыть таймер и секундомер
   - Взять цвет с экрана и скопировать HEX
   - Открыть Quick Note
   - Открепить встроенный инструмент от панели
@@ -1358,6 +1359,44 @@ Fullscreen зависит от появления `MainWindowHandle` у проц
 
 `AiteBar/ActionService.cs`.
 
+## Таймер и секундомер
+
+### Назначение
+
+Открывает встроенное окно таймера или секундомера для коротких рабочих интервалов.
+
+### Где находится
+
+Встроенная кнопка `Таймер и секундомер`.
+
+### Как использовать
+
+1. Нажать кнопку таймера на панели.
+2. Выбрать режим `Таймер` или `Секундомер`.
+3. Для таймера выбрать пресет или ввести своё время.
+4. Нажать `Старт`.
+5. Использовать `Пауза`, `Сброс` или компактный режим по необходимости.
+
+### Входные данные
+
+Режим, длительность таймера, настройка звука.
+
+### Результат
+
+Открывается локальное WPF-окно таймера/секундомера. Таймер отсчитывает время до нуля и может проиграть системный звук; секундомер считает прошедшее время.
+
+### Ограничения
+
+Lap/круги в секундомере не поддерживаются. Окно рассчитано на один активный экземпляр через `ActionService`.
+
+### Связанные функции
+
+Быстрые инструменты, настройки программы.
+
+### Подтверждение в коде
+
+`AiteBar/TimerStopwatchWindow.xaml`, `AiteBar/TimerStopwatchWindow.xaml.cs`, `AiteBar/TimerStopwatchFormatter.cs`, `AiteBar/TimerStopwatchLayoutHelper.cs`, `AiteBar/ActionService.cs`.
+
 ## Пипетка цвета
 
 ### Назначение
@@ -2076,8 +2115,12 @@ Tray-меню.
 | `ShowPresetCalc` | Показывать калькулятор | true/false | `true` |
 | `ShowPresetExplorer` | Показывать проводник | true/false | `true` |
 | `ShowPresetDownloads` | Показывать загрузки | true/false | `true` |
+| `ShowPresetTimerStopwatch` | Показывать таймер и секундомер | true/false | `true` |
 | `ShowPresetColorPicker` | Показывать пипетку | true/false | `false` |
 | `ShowPresetQuickNote` | Показывать Quick Note | true/false | `false` |
+| `TimerSoundEnabled` | Звук окончания таймера | true/false | `true` |
+| `TimerIsStopwatchMode` | Последний выбранный режим таймера/секундомера | true/false | `false` |
+| `TimerDuration` | Последняя длительность таймера | TimeSpan | `00:05:00` |
 | `QuickNoteThemeId` | Тема Quick Note | `dark`, `graphite`, `rose`, `clay`, `sand`, `lemon`, `sage`, `mist`, `sky`, `lavender`, `mauve`, `stone` | `dark` |
 | `Contexts` | Панели-контексты | До 8 нормализованных панелей | Панель 1 включена |
 | `ActiveContextId` | Текущая панель | ID включенной панели | `context-1` |
@@ -2267,6 +2310,7 @@ Tray-меню.
 - Открыть calculator.
 - Открыть explorer.
 - Открыть downloads.
+- Открыть timer/stopwatch.
 - Выбрать screen color.
 - Открыть Quick Note.
 - Открепить quick tool.
