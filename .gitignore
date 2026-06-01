@@ -17,3 +17,7 @@ AiteBar/codex_release_code_review_prompt.md
 AiteBar/ui_parameters.md
 *.zip
 *.pfx
+
+# Architecture plans
+docs/MAINWINDOW-REFACTORING-PLAN.md
+docs/COVERAGE-IMPROVEMENT-PLAN.md
