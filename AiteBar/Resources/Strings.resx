@@ -317,4 +317,7 @@ Open the GitHub release page?</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Clear selection</value></data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Check for updates</value></data>
   <data name="Update_OpenReleasePage" xml:space="preserve"><value>Open GitHub release page</value></data>
+  <data name="SettingsWindow_InvalidHotkey" xml:space="preserve"><value>Choose a key for the hotkey action.</value></data>
+  <data name="HotkeyModifierRequiredMessage" xml:space="preserve"><value>Global hotkeys must include Ctrl, Alt, Shift, or Win:
+{0}</value></data>
 </root>

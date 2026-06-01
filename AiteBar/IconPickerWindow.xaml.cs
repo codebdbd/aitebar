@@ -71,6 +71,7 @@ namespace AiteBar
         {
             InitializeComponent();
             SetActiveTab(FontHelper.FluentKey);
+            Loaded += (_, _) => TxtSearch.Focus();
         }
 
         private void BtnTabMaterial_Click(object sender, RoutedEventArgs e)
@@ -81,6 +82,16 @@ namespace AiteBar
 
         private void BtnTabBrands_Click(object sender, RoutedEventArgs e)
             => SetActiveTab(FontHelper.BrandsKey);
+
+        private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                DialogResult = false;
+                Close();
+                e.Handled = true;
+            }
+        }
 
         private void SetActiveTab(string fontName)
         {

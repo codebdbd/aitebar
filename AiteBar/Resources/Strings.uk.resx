@@ -79,4 +79,7 @@
   <data name="TimerStopwatch_Preset90Minutes" xml:space="preserve"><value>90 хв</value></data>
   <data name="TimerStopwatch_Preset120Minutes" xml:space="preserve"><value>120 хв</value></data>
   <data name="TimerStopwatch_StopwatchFormatHint" xml:space="preserve"><value>гг:хх:сс.сс</value></data>
+  <data name="SettingsWindow_InvalidHotkey" xml:space="preserve"><value>Виберіть клавішу для дії гарячої клавіші.</value></data>
+  <data name="HotkeyModifierRequiredMessage" xml:space="preserve"><value>Глобальні гарячі клавіші мають містити Ctrl, Alt, Shift або Win:
+{0}</value></data>
 </root>

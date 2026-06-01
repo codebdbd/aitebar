@@ -145,7 +145,7 @@ public partial class TimerStopwatchWindow : DarkWindow
             return;
         }
 
-        if (e.Key == Key.Enter || e.Key == Key.Space)
+        if ((e.Key == Key.Enter || e.Key == Key.Space) && !IsInteractiveKeyboardSource(e.OriginalSource))
         {
             ToggleRunning();
             e.Handled = true;
@@ -157,6 +157,26 @@ public partial class TimerStopwatchWindow : DarkWindow
             ResetCurrentMode();
             e.Handled = true;
         }
+    }
+
+    private static bool IsInteractiveKeyboardSource(object source)
+    {
+        if (source is not DependencyObject current)
+        {
+            return false;
+        }
+
+        while (current != null)
+        {
+            if (current is System.Windows.Controls.Primitives.ButtonBase || current is System.Windows.Controls.TextBox)
+            {
+                return true;
+            }
+
+            current = System.Windows.Media.VisualTreeHelper.GetParent(current);
+        }
+
+        return false;
     }
 
     private void Mode_Checked(object sender, RoutedEventArgs e)

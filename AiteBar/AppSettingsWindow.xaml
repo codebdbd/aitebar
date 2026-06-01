@@ -47,6 +47,10 @@
                                     <Setter Property="Cursor" Value="Hand"/>
                                     <Setter Property="Foreground" Value="White"/>
                                 </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
@@ -142,57 +146,85 @@
 
             <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_Hotkeys}">
                 <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
-                    <StackPanel>
-                        <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_HotkeysHint}"
-                                   Foreground="{StaticResource MutedText}"
-                                   FontSize="11"
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,14"/>
-
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="130"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ShowPanel}" Foreground="White" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="CmbShowPanelModifier" Grid.Column="1" Margin="0,0,12,0"/>
-                            <ComboBox x:Name="CmbKey" Grid.Column="2"/>
-                        </Grid>
-
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="130"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_NextPanel}" Foreground="White" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="CmbNextContextModifier" Grid.Column="1" Margin="0,0,12,0"/>
-                            <ComboBox x:Name="CmbNextContextKey" Grid.Column="2"/>
-                        </Grid>
-
-                        <Grid Margin="0,0,0,12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="130"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PreviousPanel}" Foreground="White" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="CmbPrevContextModifier" Grid.Column="1" Margin="0,0,12,0"/>
-                            <ComboBox x:Name="CmbPrevContextKey" Grid.Column="2"/>
-                        </Grid>
-
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="170"/>
-                                <ColumnDefinition Width="150"/>
-                                <ColumnDefinition Width="130"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_AddButton}" Foreground="White" VerticalAlignment="Center"/>
-                            <ComboBox x:Name="CmbAddButtonModifier" Grid.Column="1" Margin="0,0,12,0"/>
-                            <ComboBox x:Name="CmbAddButtonKey" Grid.Column="2"/>
-                        </Grid>
-                    </StackPanel>
+                    <ScrollViewer>
+                        <StackPanel Margin="0,0,0,4">
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_HotkeysHint}"
+                                       Foreground="{StaticResource MutedText}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,14"/>
+                            
+                            <!-- Показать панель -->
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ShowPanel}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkShowPanelCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkShowPanelShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkShowPanelAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkShowPanelWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbShowPanelKey" Width="200" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            
+                            <!-- Следующая панель -->
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_NextPanel}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkNextContextCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkNextContextShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkNextContextAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkNextContextWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbNextContextKey" Width="200" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            
+                            <!-- Предыдущая панель -->
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PreviousPanel}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkPrevContextCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkPrevContextShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkPrevContextAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkPrevContextWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbPrevContextKey" Width="200" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            
+                            <!-- Добавить кнопку -->
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_AddButton}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkAddButtonCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkAddButtonShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkAddButtonAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkAddButtonWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbAddButtonKey" Width="200" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            
+                            <!-- Быстрая заметка -->
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="{local:Loc ResourceKey=Tool_QuickNote}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkQuickNoteCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkQuickNoteShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkQuickNoteAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkQuickNoteWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbQuickNoteKey" Width="200" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            
+                            <!-- Пипетка цвета -->
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="{local:Loc ResourceKey=Tool_ColorPicker}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkColorPickerCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkColorPickerShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkColorPickerAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkColorPickerWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbColorPickerKey" Width="200" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            
+                            <!-- Таймер/Секундомер -->
+                            <DockPanel>
+                                <TextBlock Text="{local:Loc ResourceKey=Tool_TimerStopwatch}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkTimerStopwatchCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkTimerStopwatchShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkTimerStopwatchAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <CheckBox x:Name="ChkTimerStopwatchWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbTimerStopwatchKey" Width="200" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </ScrollViewer>
                 </Border>
             </TabItem>
 
@@ -221,8 +253,8 @@
         </TabControl>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-            <Button Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource SecondaryButtonStyle}" Click="BtnCancel_Click" Height="36" Width="130" Margin="0,0,10,0" FontWeight="SemiBold"/>
-            <Button Content="{local:Loc ResourceKey=Common_Save}" Style="{StaticResource ActionButtonStyle}" Click="BtnSave_Click" Height="36" Width="180" FontWeight="Bold"/>
+            <Button Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource SecondaryButtonStyle}" Click="BtnCancel_Click" Height="36" Width="130" Margin="0,0,10,0" FontWeight="SemiBold" IsCancel="True"/>
+            <Button Content="{local:Loc ResourceKey=Common_Save}" Style="{StaticResource ActionButtonStyle}" Click="BtnSave_Click" Height="36" Width="180" FontWeight="Bold" IsDefault="True"/>
         </StackPanel>
     </Grid>
 </local:DarkWindow>

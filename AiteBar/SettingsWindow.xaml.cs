@@ -407,6 +407,7 @@ namespace AiteBar
         }
 
         private void CmbActionType_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateActionUI();
+        private void CmbKey_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateSaveButtonState();
         private void TxtName_TextChanged(object sender, TextChangedEventArgs e)
         {
             UpdateNamePlaceholderVisibility();
@@ -563,7 +564,10 @@ namespace AiteBar
             var actionType = GetSelectedActionType();
             bool hasName = !string.IsNullOrWhiteSpace(TxtName.Text);
             bool hasActionValue = actionType == AiteBar.ActionType.Hotkey || !string.IsNullOrWhiteSpace(TxtActionValue.Text);
-            return hasName && hasActionValue;
+            string selectedKey = (CmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "None";
+            bool hasHotkeyKey = actionType != AiteBar.ActionType.Hotkey ||
+                !string.Equals(selectedKey, "None", StringComparison.OrdinalIgnoreCase);
+            return hasName && hasActionValue && hasHotkeyKey;
         }
 
         private void UpdateSaveButtonState()
@@ -597,6 +601,7 @@ namespace AiteBar
 
                 bool missingName = string.IsNullOrWhiteSpace(TxtName.Text);
                 bool missingActionValue = actionType != AiteBar.ActionType.Hotkey && string.IsNullOrWhiteSpace(TxtActionValue.Text);
+                bool missingHotkeyKey = actionType == AiteBar.ActionType.Hotkey && string.Equals(selectedKey, "None", StringComparison.OrdinalIgnoreCase);
                 if (missingName || missingActionValue)
                 {
                     _showRequiredValidation = true;
@@ -614,6 +619,11 @@ namespace AiteBar
                         });
                     }
                     new DarkDialog(LocalizationService.Format("SettingsWindow_RequiredFields", string.Join(", ", requiredFields))) { Owner = this }.ShowDialog();
+                    return;
+                }
+                if (missingHotkeyKey)
+                {
+                    new DarkDialog(LocalizationService.Get("SettingsWindow_InvalidHotkey")) { Owner = this }.ShowDialog();
                     return;
                 }
                 _showRequiredValidation = false;

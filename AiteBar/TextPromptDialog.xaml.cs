@@ -12,8 +12,11 @@ namespace AiteBar
             Title = title;
             TxtLabel.Text = label;
             TxtValue.Text = initialValue ?? string.Empty;
-            TxtValue.SelectAll();
-            TxtValue.Focus();
+            Loaded += (_, _) =>
+            {
+                TxtValue.SelectAll();
+                TxtValue.Focus();
+            };
             UpdateSaveState();
         }
 

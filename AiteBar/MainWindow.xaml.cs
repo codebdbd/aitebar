@@ -94,12 +94,14 @@ public partial class MainWindow : Window
         private int _dragStartMonitorIndex;
         private bool _isElementContextMenuOpen;
         private bool _isBlockingPanelInteraction;
+        private bool _panelKeyboardMode;
         private List<Button> _userButtons = [];
         private List<CustomElement> _activeContextElements = [];
         private int _pendingContextAnimationDirection;
         private bool _startupInfrastructureInitialized;
         private bool _deferredStartupCompleted;
         private int _panelRefreshVersion;
+        private int _panelFocusRequestVersion;
         private int _contextWheelDelta;
         private DateTime _lastContextWheelSwitchUtc = DateTime.MinValue;
         private readonly Dictionary<string, CachedButtonImage> _buttonImageCache = new(StringComparer.OrdinalIgnoreCase);
@@ -108,6 +110,9 @@ public partial class MainWindow : Window
         private const int HOTKEY_CONTEXT_NEXT_ID = 9001;
         private const int HOTKEY_CONTEXT_PREVIOUS_ID = 9002;
         private const int HOTKEY_ADD_BUTTON_ID = 9003;
+        private const int HOTKEY_QUICK_NOTE_ID = 9004;
+        private const int HOTKEY_COLOR_PICKER_ID = 9005;
+        private const int HOTKEY_TIMER_STOPWATCH_ID = 9006;
         private const int WM_HOTKEY = 0x0312;
         private const double PanelScreenPadding = 20;
         private const double ButtonPitch = PanelLayoutHelper.ButtonOuterSize;
@@ -826,6 +831,18 @@ public partial class MainWindow : Window
                 failedHotkeys,
                 LocalizationService.Get("AppSettingsWindow_AddButton"),
                 RegisterHotkeyBinding(hwnd, HOTKEY_ADD_BUTTON_ID, _appSettings.AddButtonHotkey));
+            AddFailedHotkey(
+                failedHotkeys,
+                LocalizationService.Get("Tool_QuickNote"),
+                RegisterHotkeyBinding(hwnd, HOTKEY_QUICK_NOTE_ID, _appSettings.QuickNoteHotkey));
+            AddFailedHotkey(
+                failedHotkeys,
+                LocalizationService.Get("Tool_ColorPicker"),
+                RegisterHotkeyBinding(hwnd, HOTKEY_COLOR_PICKER_ID, _appSettings.ColorPickerHotkey));
+            AddFailedHotkey(
+                failedHotkeys,
+                LocalizationService.Get("Tool_TimerStopwatch"),
+                RegisterHotkeyBinding(hwnd, HOTKEY_TIMER_STOPWATCH_ID, _appSettings.TimerStopwatchHotkey));
 
             return failedHotkeys;
         }
@@ -852,10 +869,9 @@ public partial class MainWindow : Window
                 HOTKEY_CONTEXT_NEXT_ID,
                 HOTKEY_CONTEXT_PREVIOUS_ID,
                 HOTKEY_ADD_BUTTON_ID,
-                9011,
-                9012,
-                9013,
-                9014
+                HOTKEY_QUICK_NOTE_ID,
+                HOTKEY_COLOR_PICKER_ID,
+                HOTKEY_TIMER_STOPWATCH_ID
             ];
 
             foreach (int hotkeyId in hotkeyIds)
@@ -869,6 +885,11 @@ public partial class MainWindow : Window
             if (binding == null || string.IsNullOrWhiteSpace(binding.Key) || string.Equals(binding.Key, "None", StringComparison.OrdinalIgnoreCase))
             {
                 return true;
+            }
+
+            if (!HotkeyValidationHelper.IsRegisterableGlobalHotkey(binding))
+            {
+                return false;
             }
 
             if (!Enum.TryParse(typeof(Key), binding.Key, out var key))
@@ -888,6 +909,12 @@ public partial class MainWindow : Window
 
         private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
+            if (msg == NativeMethods.WM_HOTKEY && HasVisibleOwnedWindow())
+            {
+                handled = true;
+                return IntPtr.Zero;
+            }
+
             if (msg == NativeMethods.WM_HOTKEY && wParam.ToInt32() == HOTKEY_ID)
             {
                 ToggleDock();
@@ -909,9 +936,34 @@ public partial class MainWindow : Window
                         _ = OpenAddButtonWindowAsync();
                         handled = true;
                         break;
+                    case HOTKEY_QUICK_NOTE_ID:
+                        _ = RunPresetActionAsync(() => _actionService.StartQuickNoteAsync(HideDock));
+                        handled = true;
+                        break;
+                    case HOTKEY_COLOR_PICKER_ID:
+                        _ = RunPresetActionAsync(() => _actionService.StartColorPickerAsync(HideDock));
+                        handled = true;
+                        break;
+                    case HOTKEY_TIMER_STOPWATCH_ID:
+                        _ = RunPresetActionAsync(() => _actionService.StartTimerStopwatchAsync(HideDock));
+                        handled = true;
+                        break;
                 }
             }
             return IntPtr.Zero;
+        }
+
+        private bool HasVisibleOwnedWindow()
+        {
+            foreach (Window window in OwnedWindows)
+            {
+                if (window.IsVisible)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void Window_SourceInitialized(object sender, EventArgs e)
@@ -952,7 +1004,8 @@ public partial class MainWindow : Window
             {
                 Content = content,
                 ToolTip = tooltip,
-                Style = (Style)FindResource("PanelButtonStyle")
+                Style = (Style)FindResource("PanelButtonStyle"),
+                Focusable = true
             };
             
             if (foreground != null)
@@ -1244,7 +1297,7 @@ public partial class MainWindow : Window
                     if (inActivationZone && !_shown) {
                         if (_hoverStartTime == null) _hoverStartTime = DateTime.Now;
                         else if ((DateTime.Now - _hoverStartTime.Value).TotalMilliseconds >= delayMs) {
-                            _shown = true; _hoverStartTime = null; Toggle(false);
+                            ShowDockFromHover();
                         }
                     } else _hoverStartTime = null;
                 }
@@ -1895,9 +1948,162 @@ public partial class MainWindow : Window
                 return;
             }
 
+            _panelKeyboardMode = true;
             _shown = true;
             _hoverStartTime = null;
             Toggle(false);
+        }
+
+        private void ShowDockFromHover()
+        {
+            if (_shown || _isAnimating)
+            {
+                return;
+            }
+
+            _panelKeyboardMode = true;
+            _shown = true;
+            _hoverStartTime = null;
+            Toggle(false);
+        }
+
+        private void FocusPanelForKeyboard()
+        {
+            int focusRequestVersion = unchecked(++_panelFocusRequestVersion);
+            Dispatcher.InvokeAsync(() =>
+            {
+                if (focusRequestVersion != _panelFocusRequestVersion || !_shown || !_panelKeyboardMode || HasVisibleOwnedWindow())
+                    return;
+
+                var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                NativeMethods.SetForegroundWindow(hwnd);
+                Activate();
+                Focus();
+
+                var focusTarget = GetFirstFocusablePanelButton();
+                if (focusTarget != null)
+                {
+                    focusTarget.Focusable = true;
+                    Keyboard.Focus(focusTarget);
+                    focusTarget.Focus();
+                }
+            }, System.Windows.Threading.DispatcherPriority.Input);
+        }
+
+        private Button? GetFirstFocusablePanelButton()
+        {
+            if (_userButtons.Count > 0)
+            {
+                return _userButtons[0];
+            }
+
+            foreach (var child in SystemUtilsPanel.Children)
+            {
+                if (child is Button btn && btn.Visibility == Visibility.Visible)
+                {
+                    return btn;
+                }
+            }
+
+            return BtnAdd.Visibility == Visibility.Visible ? BtnAdd : null;
+        }
+        
+        // Get all focusable buttons in order
+        private List<Button> GetAllFocusableButtons()
+        {
+            var buttons = new List<Button>();
+            // Add BtnAdd
+            if (BtnAdd.Visibility == Visibility.Visible)
+                buttons.Add(BtnAdd);
+            // Add system buttons
+            foreach (var child in SystemUtilsPanel.Children)
+            {
+                if (child is Button btn && btn.Visibility == Visibility.Visible)
+                    buttons.Add(btn);
+            }
+            // Add user buttons
+            buttons.AddRange(_userButtons);
+            // Add BtnAppSettings
+            if (BtnAppSettings.Visibility == Visibility.Visible)
+                buttons.Add(BtnAppSettings);
+            return buttons;
+        }
+        
+        private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (!_shown || !_panelKeyboardMode)
+                return;
+                
+            var focusableButtons = GetAllFocusableButtons();
+            if (focusableButtons.Count == 0)
+                return;
+                
+            var currentFocus = Keyboard.FocusedElement as Button;
+            int currentIndex = currentFocus != null ? focusableButtons.IndexOf(currentFocus) : -1;
+            
+            bool isVertical = _appSettings.Edge == DockEdge.Left || _appSettings.Edge == DockEdge.Right;
+            
+            // Handle arrow keys and tab
+            switch (e.Key)
+            {
+                case Key.Tab:
+                    e.Handled = true;
+                    if (Keyboard.Modifiers == ModifierKeys.Shift)
+                    {
+                        if (currentIndex > 0)
+                            focusableButtons[currentIndex - 1].Focus();
+                        else
+                            focusableButtons[focusableButtons.Count - 1].Focus();
+                    }
+                    else
+                    {
+                        if (currentIndex < focusableButtons.Count - 1)
+                            focusableButtons[currentIndex + 1].Focus();
+                        else
+                            focusableButtons[0].Focus();
+                    }
+                    break;
+                case Key.Left:
+                case Key.Up:
+                    e.Handled = true;
+                    if (isVertical && e.Key == Key.Left)
+                        break;
+                    if (!isVertical && e.Key == Key.Up)
+                        break;
+                        
+                    if (currentIndex > 0)
+                        focusableButtons[currentIndex - 1].Focus();
+                    else
+                        focusableButtons[focusableButtons.Count - 1].Focus();
+                    break;
+                case Key.Right:
+                case Key.Down:
+                    e.Handled = true;
+                    if (isVertical && e.Key == Key.Right)
+                        break;
+                    if (!isVertical && e.Key == Key.Down)
+                        break;
+                        
+                    if (currentIndex < focusableButtons.Count - 1)
+                        focusableButtons[currentIndex + 1].Focus();
+                    else
+                        focusableButtons[0].Focus();
+                    break;
+                case Key.Space:
+                case Key.Enter:
+                    e.Handled = true;
+                    if (currentFocus != null)
+                    {
+                        // Raise click event
+                        var args = new RoutedEventArgs(Button.ClickEvent, currentFocus);
+                        currentFocus.RaiseEvent(args);
+                    }
+                    break;
+                case Key.Escape:
+                    e.Handled = true;
+                    _ = HideDock();
+                    break;
+            }
         }
 
         private void ToggleDock()
@@ -1909,6 +2115,12 @@ public partial class MainWindow : Window
 
             if (_shown)
             {
+                if (!_panelKeyboardMode)
+                {
+                    EnablePanelKeyboardMode();
+                    return;
+                }
+
                 _ = HideDock();
             }
             else
@@ -1917,7 +2129,19 @@ public partial class MainWindow : Window
             }
         }
 
-        private void Toggle(bool hide) {
+        private void EnablePanelKeyboardMode()
+        {
+            if (!_shown)
+            {
+                return;
+            }
+
+            _panelKeyboardMode = true;
+            _hoverStartTime = null;
+            FocusPanelForKeyboard();
+        }
+
+        private void Toggle(bool hide, bool fromCurrentPosition = false) {
             _isAnimating = true; _timer.Stop();
 
             if (!hide) { 
@@ -1927,7 +2151,7 @@ public partial class MainWindow : Window
                 this.Topmost = true; 
             }
 
-            var start = GetDockCoordinates(hide: !hide);
+            var start = fromCurrentPosition ? (X: Left, Y: Top) : GetDockCoordinates(hide: !hide);
             var finish = GetDockCoordinates(hide: hide);
             this.Left = start.X;
             this.Top = start.Y;
@@ -1951,6 +2175,10 @@ public partial class MainWindow : Window
                     _isAnimating = false; 
                     _timer.Start(); 
                     UpdatePanelBounds();
+                    if (!hide && _panelKeyboardMode)
+                    {
+                        FocusPanelForKeyboard();
+                    }
                 }
             }
 
@@ -1963,15 +2191,36 @@ public partial class MainWindow : Window
 
         private async Task HideDock()
         {
-            if (!_shown || _isAnimating)
+            unchecked { _panelFocusRequestVersion++; }
+
+            if (!_shown)
             {
                 return;
             }
 
+            if (_isAnimating)
+            {
+                StopPanelAnimationAtCurrentPosition();
+            }
+
             _shown = false;
+            _panelKeyboardMode = false;
             _hoverStartTime = null;
-            Toggle(true);
+            Keyboard.ClearFocus();
+            Toggle(true, fromCurrentPosition: true);
             await Task.Delay(PanelHideAnimationMs);
+        }
+
+        private void StopPanelAnimationAtCurrentPosition()
+        {
+            double currentLeft = Left;
+            double currentTop = Top;
+            BeginAnimation(LeftProperty, null);
+            BeginAnimation(TopProperty, null);
+            Left = currentLeft;
+            Top = currentTop;
+            _isAnimating = false;
+            _timer.Start();
         }
 
         private int _mouseWheelCaptureToken = 0;
@@ -2040,6 +2289,7 @@ public partial class MainWindow : Window
         {
             try
             {
+                unchecked { _panelFocusRequestVersion++; }
                 await action();
             }
             catch (Exception ex)

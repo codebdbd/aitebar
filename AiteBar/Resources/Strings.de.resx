@@ -142,4 +142,7 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="TimerStopwatch_Preset90Minutes" xml:space="preserve"><value>90 min</value></data>
   <data name="TimerStopwatch_Preset120Minutes" xml:space="preserve"><value>120 min</value></data>
   <data name="TimerStopwatch_StopwatchFormatHint" xml:space="preserve"><value>hh:mm:ss.ms</value></data>
+  <data name="SettingsWindow_InvalidHotkey" xml:space="preserve"><value>Wählen Sie eine Taste für die Tastenkürzel-Aktion.</value></data>
+  <data name="HotkeyModifierRequiredMessage" xml:space="preserve"><value>Globale Tastenkürzel müssen Ctrl, Alt, Shift oder Win enthalten:
+{0}</value></data>
 </root>

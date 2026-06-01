@@ -40,6 +40,10 @@
                                 <Setter Property="Cursor" Value="Hand"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
                 </Setter.Value>
@@ -164,7 +168,7 @@
                                 <CheckBox x:Name="ChkAlt" Content="Alt" Foreground="White" Margin="0,0,15,0"/>
                                 <CheckBox x:Name="ChkWin" Content="Win" Foreground="White"/>
                             </StackPanel>
-                            <ComboBox x:Name="CmbKey" Width="200" HorizontalAlignment="Left"/>
+                            <ComboBox x:Name="CmbKey" Width="200" HorizontalAlignment="Left" SelectionChanged="CmbKey_SelectionChanged"/>
                         </StackPanel>
 
                         <Border x:Name="ActionHelpBox" Background="#2D2D30" Padding="10" CornerRadius="4" Visibility="Collapsed">
@@ -221,8 +225,8 @@
                 <Border BorderBrush="#3A3A3E" BorderThickness="0,1,0,0" Margin="0,0,0,15"/>
                 <DockPanel LastChildFill="False">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                    <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Height="40" Width="120" Margin="0,0,10,0"/>
-                    <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Height="40" Width="160" FontWeight="Bold"/>
+                    <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Height="40" Width="120" Margin="0,0,10,0" IsCancel="True"/>
+                    <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Height="40" Width="160" FontWeight="Bold" IsDefault="True"/>
                     </StackPanel>
                 </DockPanel>
             </StackPanel>

@@ -17,6 +17,8 @@ namespace AiteBar {
             } else {
                 BtnOk.Visibility = Visibility.Visible;
             }
+
+            Loaded += (_, _) => FocusDefaultButton();
         }
 
         public DarkDialog(string message, List<DialogButton> buttons, string? title = null) {
@@ -38,7 +40,9 @@ namespace AiteBar {
                 {
                     Content = button.Text,
                     Background = new SolidColorBrush(button.IsPrimary ? System.Windows.Media.Color.FromRgb(66, 133, 244) : System.Windows.Media.Color.FromRgb(51, 51, 51)),
-                    Style = (Style)FindResource("DialogBtnStyle")
+                    Style = (Style)FindResource("DialogBtnStyle"),
+                    IsDefault = button.IsPrimary,
+                    IsCancel = !button.IsPrimary
                 };
                 
                 var btnCopy = button;
@@ -48,6 +52,25 @@ namespace AiteBar {
                 };
                 
                 ButtonsPanel.Children.Insert(0, btn);
+            }
+
+            Loaded += (_, _) => FocusDefaultButton();
+        }
+
+        private void FocusDefaultButton()
+        {
+            foreach (var child in ButtonsPanel.Children)
+            {
+                if (child is System.Windows.Controls.Button { IsDefault: true, Visibility: Visibility.Visible } button)
+                {
+                    button.Focus();
+                    return;
+                }
+            }
+
+            if (BtnOk.Visibility == Visibility.Visible)
+            {
+                BtnOk.Focus();
             }
         }
 

@@ -106,10 +106,9 @@ public class AppSettings
     public HotkeyBinding NextContextHotkey { get; set; } = new();
     public HotkeyBinding PreviousContextHotkey { get; set; } = new();
     public HotkeyBinding AddButtonHotkey { get; set; } = new();
-    public HotkeyBinding Context1Hotkey { get; set; } = new();
-    public HotkeyBinding Context2Hotkey { get; set; } = new();
-    public HotkeyBinding Context3Hotkey { get; set; } = new();
-    public HotkeyBinding Context4Hotkey { get; set; } = new();
+    public HotkeyBinding QuickNoteHotkey { get; set; } = new();
+    public HotkeyBinding ColorPickerHotkey { get; set; } = new();
+    public HotkeyBinding TimerStopwatchHotkey { get; set; } = new();
 
     public List<CustomElement> Elements { get; set; } = new();
     public bool CheckForUpdatesEnabled { get; set; } = true;

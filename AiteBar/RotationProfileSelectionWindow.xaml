@@ -51,8 +51,8 @@
         <UniformGrid Grid.Row="3" Columns="4" Margin="0,14,0,0">
             <Button Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=RotationProfiles_SelectAll}" Click="BtnSelectAll_Click" Height="36" Margin="0,0,6,0"/>
             <Button Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=RotationProfiles_Clear}" Click="BtnClear_Click" Height="36" Margin="6,0,6,0"/>
-            <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Height="36" Margin="6,0,6,0"/>
-            <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Height="36" Margin="6,0,0,0"/>
+            <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Height="36" Margin="6,0,6,0" IsCancel="True"/>
+            <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Height="36" Margin="6,0,0,0" IsDefault="True"/>
         </UniformGrid>
     </Grid>
 </local:DarkWindow>

@@ -22,6 +22,7 @@ public partial class RotationProfileSelectionWindow : DarkWindow
         _profiles = profiles;
         LoadProfiles(selectedProfilePaths);
         UpdateSaveButtonState();
+        Loaded += (_, _) => TxtSearch.Focus();
     }
 
     public List<string> SelectedProfilePaths { get; private set; } = [];

@@ -34,7 +34,7 @@ public partial class AppSettingsWindow : DarkWindow
 {
     private readonly MainWindow _mainWindow;
     private readonly AppSettings _settings;
-    private readonly List<(CheckBox EnabledCheckBox, TextBox NameTextBox)> _contextRows = [];
+    private readonly List<(CheckBox EnabledCheckBox, TextBox NameTextBox)> _contextRows = new();
     private bool _isLoadingSettings;
 
     public AppSettingsWindow(MainWindow mainWindow)
@@ -45,10 +45,6 @@ public partial class AppSettingsWindow : DarkWindow
 
         _isLoadingSettings = true;
         LoadLanguageList();
-        LoadModifierList(CmbShowPanelModifier);
-        LoadModifierList(CmbNextContextModifier);
-        LoadModifierList(CmbPrevContextModifier);
-        LoadModifierList(CmbAddButtonModifier);
         LoadKeyList();
         LoadSettings();
         _isLoadingSettings = false;
@@ -65,27 +61,6 @@ public partial class AppSettingsWindow : DarkWindow
         CmbLanguage.SelectedIndex = 0;
     }
 
-    private static void LoadModifierList(ComboBox combo, bool includeMixed = false)
-    {
-        combo.Items.Clear();
-        combo.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Common_NotAssigned"), Tag = "None" });
-        if (includeMixed)
-        {
-            combo.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Common_Mixed"), Tag = "Mixed" });
-        }
-        combo.Items.Add(new ComboBoxItem { Content = "Ctrl", Tag = "C" });
-        combo.Items.Add(new ComboBoxItem { Content = "Alt", Tag = "A" });
-        combo.Items.Add(new ComboBoxItem { Content = "Shift", Tag = "S" });
-        combo.Items.Add(new ComboBoxItem { Content = "Win", Tag = "W" });
-        combo.Items.Add(new ComboBoxItem { Content = "Ctrl + Alt", Tag = "CA" });
-        combo.Items.Add(new ComboBoxItem { Content = "Ctrl + Shift", Tag = "CS" });
-        combo.Items.Add(new ComboBoxItem { Content = "Alt + Shift", Tag = "AS" });
-        combo.Items.Add(new ComboBoxItem { Content = "Ctrl + Win", Tag = "CW" });
-        combo.Items.Add(new ComboBoxItem { Content = "Alt + Win", Tag = "AW" });
-        combo.Items.Add(new ComboBoxItem { Content = "Ctrl + Alt + Shift", Tag = "CAS" });
-        combo.SelectedIndex = 0;
-    }
-
     private void LoadKeyList()
     {
         foreach (var combo in GetHotkeyCombos())
@@ -97,6 +72,12 @@ public partial class AppSettingsWindow : DarkWindow
             combo.Items.Add(new ComboBoxItem { Content = "]", Tag = "Oem6" });
             for (char c = 'A'; c <= 'Z'; c++) combo.Items.Add(new ComboBoxItem { Content = c.ToString(), Tag = c.ToString() });
             for (int i = 0; i <= 9; i++) combo.Items.Add(new ComboBoxItem { Content = i.ToString(), Tag = "D" + i });
+            for (int i = 0; i <= 9; i++) combo.Items.Add(new ComboBoxItem { Content = "NumPad " + i, Tag = "NumPad" + i });
+            combo.Items.Add(new ComboBoxItem { Content = "NumPad +", Tag = "Add" });
+            combo.Items.Add(new ComboBoxItem { Content = "NumPad -", Tag = "Subtract" });
+            combo.Items.Add(new ComboBoxItem { Content = "NumPad *", Tag = "Multiply" });
+            combo.Items.Add(new ComboBoxItem { Content = "NumPad /", Tag = "Divide" });
+            combo.Items.Add(new ComboBoxItem { Content = "NumPad .", Tag = "Decimal" });
             for (int i = 1; i <= 12; i++) combo.Items.Add(new ComboBoxItem { Content = "F" + i, Tag = "F" + i });
             combo.SelectedIndex = 0;
         }
@@ -104,89 +85,13 @@ public partial class AppSettingsWindow : DarkWindow
 
     private IEnumerable<ComboBox> GetHotkeyCombos()
     {
-        yield return CmbKey;
+        yield return CmbShowPanelKey;
         yield return CmbNextContextKey;
         yield return CmbPrevContextKey;
         yield return CmbAddButtonKey;
-    }
-
-    private static string GetModifierToken(bool ctrl, bool alt, bool shift, bool win)
-    {
-        if (!ctrl && !alt && !shift && !win) return "None";
-        if (ctrl && !alt && !shift && !win) return "C";
-        if (!ctrl && alt && !shift && !win) return "A";
-        if (!ctrl && !alt && shift && !win) return "S";
-        if (!ctrl && !alt && !shift && win) return "W";
-        if (ctrl && alt && !shift && !win) return "CA";
-        if (ctrl && !alt && shift && !win) return "CS";
-        if (!ctrl && alt && shift && !win) return "AS";
-        if (ctrl && !alt && !shift && win) return "CW";
-        if (!ctrl && alt && !shift && win) return "AW";
-        if (ctrl && alt && shift && !win) return "CAS";
-        return "None";
-    }
-
-    private static void ApplyModifierToken(string? token, HotkeyBinding binding)
-    {
-        binding.Ctrl = false;
-        binding.Alt = false;
-        binding.Shift = false;
-        binding.Win = false;
-
-        switch (token)
-        {
-            case "C":
-                binding.Ctrl = true;
-                break;
-            case "A":
-                binding.Alt = true;
-                break;
-            case "S":
-                binding.Shift = true;
-                break;
-            case "W":
-                binding.Win = true;
-                break;
-            case "CA":
-                binding.Ctrl = true;
-                binding.Alt = true;
-                break;
-            case "CS":
-                binding.Ctrl = true;
-                binding.Shift = true;
-                break;
-            case "AS":
-                binding.Alt = true;
-                binding.Shift = true;
-                break;
-            case "CW":
-                binding.Ctrl = true;
-                binding.Win = true;
-                break;
-            case "AW":
-                binding.Alt = true;
-                binding.Win = true;
-                break;
-            case "CAS":
-                binding.Ctrl = true;
-                binding.Alt = true;
-                binding.Shift = true;
-                break;
-        }
-    }
-
-    private static void SetModifierComboValue(ComboBox combo, string token)
-    {
-        foreach (ComboBoxItem item in combo.Items)
-        {
-            if (string.Equals(item.Tag?.ToString(), token, StringComparison.Ordinal))
-            {
-                combo.SelectedItem = item;
-                return;
-            }
-        }
-
-        combo.SelectedIndex = 0;
+        yield return CmbQuickNoteKey;
+        yield return CmbColorPickerKey;
+        yield return CmbTimerStopwatchKey;
     }
 
     private static void SetKeyComboValue(ComboBox combo, string? key)
@@ -229,14 +134,13 @@ public partial class AppSettingsWindow : DarkWindow
     private void ReloadLocalizedChoiceLists()
     {
         string language = GetComboTag(CmbLanguage) ?? LocalizationService.AutoCulture;
-        string showPanelModifier = GetComboTag(CmbShowPanelModifier) ?? "None";
-        string nextContextModifier = GetComboTag(CmbNextContextModifier) ?? "None";
-        string previousContextModifier = GetComboTag(CmbPrevContextModifier) ?? "None";
-        string addButtonModifier = GetComboTag(CmbAddButtonModifier) ?? "None";
-        string showPanelKey = GetComboTag(CmbKey) ?? "None";
+        string showPanelKey = GetComboTag(CmbShowPanelKey) ?? "None";
         string nextContextKey = GetComboTag(CmbNextContextKey) ?? "None";
         string previousContextKey = GetComboTag(CmbPrevContextKey) ?? "None";
         string addButtonKey = GetComboTag(CmbAddButtonKey) ?? "None";
+        string quickNoteKey = GetComboTag(CmbQuickNoteKey) ?? "None";
+        string colorPickerKey = GetComboTag(CmbColorPickerKey) ?? "None";
+        string timerStopwatchKey = GetComboTag(CmbTimerStopwatchKey) ?? "None";
         object? edgeTag = (CmbEdge.SelectedItem as ComboBoxItem)?.Tag;
         object? monitorTag = (CmbMonitor.SelectedItem as ComboBoxItem)?.Tag;
 
@@ -246,20 +150,14 @@ public partial class AppSettingsWindow : DarkWindow
             LoadLanguageList();
             SetComboValue(CmbLanguage, language);
 
-            LoadModifierList(CmbShowPanelModifier);
-            LoadModifierList(CmbNextContextModifier);
-            LoadModifierList(CmbPrevContextModifier);
-            LoadModifierList(CmbAddButtonModifier);
-            SetModifierComboValue(CmbShowPanelModifier, showPanelModifier);
-            SetModifierComboValue(CmbNextContextModifier, nextContextModifier);
-            SetModifierComboValue(CmbPrevContextModifier, previousContextModifier);
-            SetModifierComboValue(CmbAddButtonModifier, addButtonModifier);
-
             LoadKeyList();
-            SetKeyComboValue(CmbKey, showPanelKey);
+            SetKeyComboValue(CmbShowPanelKey, showPanelKey);
             SetKeyComboValue(CmbNextContextKey, nextContextKey);
             SetKeyComboValue(CmbPrevContextKey, previousContextKey);
             SetKeyComboValue(CmbAddButtonKey, addButtonKey);
+            SetKeyComboValue(CmbQuickNoteKey, quickNoteKey);
+            SetKeyComboValue(CmbColorPickerKey, colorPickerKey);
+            SetKeyComboValue(CmbTimerStopwatchKey, timerStopwatchKey);
 
             ReloadEdgeList(edgeTag);
             ReloadMonitorList(monitorTag);
@@ -268,7 +166,6 @@ public partial class AppSettingsWindow : DarkWindow
         {
             _isLoadingSettings = false;
         }
-
     }
 
     private void ReloadEdgeList(object? selectedEdge)
@@ -322,16 +219,22 @@ public partial class AppSettingsWindow : DarkWindow
         }
     }
 
-    private static void LoadHotkeyBinding(HotkeyBinding binding, ComboBox cmbModifier, ComboBox cmbKey)
+    private static void LoadHotkeyBinding(HotkeyBinding binding, CheckBox chkCtrl, CheckBox chkAlt, CheckBox chkShift, CheckBox chkWin, ComboBox cmbKey)
     {
-        SetModifierComboValue(cmbModifier, GetModifierToken(binding.Ctrl, binding.Alt, binding.Shift, binding.Win));
+        chkCtrl.IsChecked = binding.Ctrl;
+        chkAlt.IsChecked = binding.Alt;
+        chkShift.IsChecked = binding.Shift;
+        chkWin.IsChecked = binding.Win;
         SetKeyComboValue(cmbKey, binding.Key);
     }
 
-    private static HotkeyBinding BuildHotkeyBinding(ComboBox cmbModifier, ComboBox cmbKey)
+    private static HotkeyBinding BuildHotkeyBinding(CheckBox chkCtrl, CheckBox chkAlt, CheckBox chkShift, CheckBox chkWin, ComboBox cmbKey)
     {
         var binding = new HotkeyBinding();
-        ApplyModifierToken((cmbModifier.SelectedItem as ComboBoxItem)?.Tag?.ToString(), binding);
+        binding.Ctrl = chkCtrl.IsChecked ?? false;
+        binding.Alt = chkAlt.IsChecked ?? false;
+        binding.Shift = chkShift.IsChecked ?? false;
+        binding.Win = chkWin.IsChecked ?? false;
         binding.Key = (cmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "None";
         return binding;
     }
@@ -348,24 +251,48 @@ public partial class AppSettingsWindow : DarkWindow
 
     private static bool HasAssignedKey(HotkeyBinding binding)
     {
-        return binding != null
-            && !string.IsNullOrWhiteSpace(binding.Key)
-            && !string.Equals(binding.Key, "None", StringComparison.OrdinalIgnoreCase);
+        return HotkeyValidationHelper.HasAssignedKey(binding);
+    }
+
+    private static bool HasModifier(HotkeyBinding binding)
+    {
+        return HotkeyValidationHelper.HasModifier(binding);
     }
 
     private bool ValidateHotkeyBindings(
         HotkeyBinding globalBinding,
         HotkeyBinding nextBinding,
         HotkeyBinding previousBinding,
-        HotkeyBinding addButtonBinding)
+        HotkeyBinding addButtonBinding,
+        HotkeyBinding quickNoteBinding,
+        HotkeyBinding colorPickerBinding,
+        HotkeyBinding timerStopwatchBinding)
     {
         var registrations = new (string Name, HotkeyBinding Binding)[]
         {
             (LocalizationService.Get("AppSettingsWindow_ShowPanel"), globalBinding),
             (LocalizationService.Get("AppSettingsWindow_NextPanel"), nextBinding),
             (LocalizationService.Get("AppSettingsWindow_PreviousPanel"), previousBinding),
-            (LocalizationService.Get("AppSettingsWindow_AddButton"), addButtonBinding)
+            (LocalizationService.Get("AppSettingsWindow_AddButton"), addButtonBinding),
+            (LocalizationService.Get("Tool_QuickNote"), quickNoteBinding),
+            (LocalizationService.Get("Tool_ColorPicker"), colorPickerBinding),
+            (LocalizationService.Get("Tool_TimerStopwatch"), timerStopwatchBinding)
         };
+
+        var missingModifiers = registrations
+            .Where(item => HasAssignedKey(item.Binding) && !HasModifier(item.Binding))
+            .Select(item => item.Name)
+            .ToList();
+
+        if (missingModifiers.Count > 0)
+        {
+            new DarkDialog(
+                LocalizationService.Format("HotkeyModifierRequiredMessage", string.Join("\n", missingModifiers)))
+            {
+                Owner = this
+            }.ShowDialog();
+            return false;
+        }
 
         var duplicates = registrations
             .Select(item => new { item.Name, Token = GetHotkeyToken(item.Binding) })
@@ -412,12 +339,18 @@ public partial class AppSettingsWindow : DarkWindow
                 Win = _settings.GlobalHotkeyWin,
                 Key = _settings.GlobalHotkeyKey
             },
-            CmbShowPanelModifier,
-            CmbKey);
+            ChkShowPanelCtrl,
+            ChkShowPanelAlt,
+            ChkShowPanelShift,
+            ChkShowPanelWin,
+            CmbShowPanelKey);
 
-        LoadHotkeyBinding(_settings.NextContextHotkey, CmbNextContextModifier, CmbNextContextKey);
-        LoadHotkeyBinding(_settings.PreviousContextHotkey, CmbPrevContextModifier, CmbPrevContextKey);
-        LoadHotkeyBinding(_settings.AddButtonHotkey, CmbAddButtonModifier, CmbAddButtonKey);
+        LoadHotkeyBinding(_settings.NextContextHotkey, ChkNextContextCtrl, ChkNextContextAlt, ChkNextContextShift, ChkNextContextWin, CmbNextContextKey);
+        LoadHotkeyBinding(_settings.PreviousContextHotkey, ChkPrevContextCtrl, ChkPrevContextAlt, ChkPrevContextShift, ChkPrevContextWin, CmbPrevContextKey);
+        LoadHotkeyBinding(_settings.AddButtonHotkey, ChkAddButtonCtrl, ChkAddButtonAlt, ChkAddButtonShift, ChkAddButtonWin, CmbAddButtonKey);
+        LoadHotkeyBinding(_settings.QuickNoteHotkey, ChkQuickNoteCtrl, ChkQuickNoteAlt, ChkQuickNoteShift, ChkQuickNoteWin, CmbQuickNoteKey);
+        LoadHotkeyBinding(_settings.ColorPickerHotkey, ChkColorPickerCtrl, ChkColorPickerAlt, ChkColorPickerShift, ChkColorPickerWin, CmbColorPickerKey);
+        LoadHotkeyBinding(_settings.TimerStopwatchHotkey, ChkTimerStopwatchCtrl, ChkTimerStopwatchAlt, ChkTimerStopwatchShift, ChkTimerStopwatchWin, CmbTimerStopwatchKey);
 
         ReloadEdgeList(_settings.Edge);
         ReloadMonitorList(_settings.MonitorIndex);
@@ -539,12 +472,15 @@ public partial class AppSettingsWindow : DarkWindow
 
     private async void BtnSave_Click(object sender, RoutedEventArgs e)
     {
-        var globalBinding = BuildHotkeyBinding(CmbShowPanelModifier, CmbKey);
-        var nextBinding = BuildHotkeyBinding(CmbNextContextModifier, CmbNextContextKey);
-        var previousBinding = BuildHotkeyBinding(CmbPrevContextModifier, CmbPrevContextKey);
-        var addButtonBinding = BuildHotkeyBinding(CmbAddButtonModifier, CmbAddButtonKey);
+        var globalBinding = BuildHotkeyBinding(ChkShowPanelCtrl, ChkShowPanelAlt, ChkShowPanelShift, ChkShowPanelWin, CmbShowPanelKey);
+        var nextBinding = BuildHotkeyBinding(ChkNextContextCtrl, ChkNextContextAlt, ChkNextContextShift, ChkNextContextWin, CmbNextContextKey);
+        var previousBinding = BuildHotkeyBinding(ChkPrevContextCtrl, ChkPrevContextAlt, ChkPrevContextShift, ChkPrevContextWin, CmbPrevContextKey);
+        var addButtonBinding = BuildHotkeyBinding(ChkAddButtonCtrl, ChkAddButtonAlt, ChkAddButtonShift, ChkAddButtonWin, CmbAddButtonKey);
+        var quickNoteBinding = BuildHotkeyBinding(ChkQuickNoteCtrl, ChkQuickNoteAlt, ChkQuickNoteShift, ChkQuickNoteWin, CmbQuickNoteKey);
+        var colorPickerBinding = BuildHotkeyBinding(ChkColorPickerCtrl, ChkColorPickerAlt, ChkColorPickerShift, ChkColorPickerWin, CmbColorPickerKey);
+        var timerStopwatchBinding = BuildHotkeyBinding(ChkTimerStopwatchCtrl, ChkTimerStopwatchAlt, ChkTimerStopwatchShift, ChkTimerStopwatchWin, CmbTimerStopwatchKey);
 
-        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding))
+        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding))
         {
             return;
         }
@@ -558,6 +494,9 @@ public partial class AppSettingsWindow : DarkWindow
         _settings.NextContextHotkey = nextBinding;
         _settings.PreviousContextHotkey = previousBinding;
         _settings.AddButtonHotkey = addButtonBinding;
+        _settings.QuickNoteHotkey = quickNoteBinding;
+        _settings.ColorPickerHotkey = colorPickerBinding;
+        _settings.TimerStopwatchHotkey = timerStopwatchBinding;
 
         _settings.ShowPresetSearch = ChkShowPresetSearch.IsChecked ?? false;
         _settings.ShowPresetScreenshot = ChkShowPresetScreenshot.IsChecked ?? false;

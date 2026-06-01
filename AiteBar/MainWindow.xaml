@@ -8,9 +8,20 @@
         Topmost="True" ShowInTaskbar="False" ResizeMode="NoResize"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
-        Loaded="Window_Loaded" SourceInitialized="Window_SourceInitialized" Left="0" Top="-2000">
+        Loaded="Window_Loaded" SourceInitialized="Window_SourceInitialized" PreviewKeyDown="Window_PreviewKeyDown" Left="0" Top="-2000">
     
     <Window.Resources>
+        <!-- Focus visual style for keyboard navigation -->
+        <Style x:Key="ButtonFocusVisual">
+            <Setter Property="Control.Template">
+                <Setter.Value>
+                    <ControlTemplate>
+                        <Border BorderBrush="#2A9CFF" BorderThickness="2" CornerRadius="4" Margin="2"/>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        
         <Style TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -21,7 +32,7 @@
             <Setter Property="Height" Value="40"/>
             <Setter Property="Margin" Value="2,2"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="FocusVisualStyle" Value="{StaticResource ButtonFocusVisual}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -31,6 +42,9 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="#25FFFFFF"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter Property="Background" Value="#2A2A2C"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -78,7 +92,7 @@
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
                         <Button x:Name="BtnAdd" Content="&#xF10A;" Click="BtnAdd_Click" Width="40" Height="40" Margin="2,2" FontSize="14" Padding="0"
-                                Foreground="#FFFFFF">
+                                Foreground="#FFFFFF" Focusable="True">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Border Background="Transparent">
@@ -103,15 +117,15 @@
                     <Rectangle x:Name="SepSystem" Width="1" Height="20" Fill="#332A9CFF" Margin="2,0" VerticalAlignment="Center"/>
 
                     <local:OverflowWrapPanel x:Name="SystemUtilsPanel" Orientation="Horizontal">
-                        <Button x:Name="BtnSearch" Content="&#xEA7C;" Click="BtnSearch_Click" Foreground="#3ABEFF"/>
-                        <Button x:Name="BtnScreenshot" Content="&#xF68E;" Click="BtnScreenshotRegion_Click" Foreground="#60A5FA"/>
-                        <Button x:Name="BtnRecord" Content="&#xF535;" Click="BtnRecordVideo_Click" Foreground="#FB7185"/>
-                        <Button x:Name="BtnCalc" Content="&#xF06C;" Click="BtnCalc_Click" Foreground="#A3E635"/>
-                        <Button x:Name="BtnExplorer" Content="&#xF42F;" Click="BtnExplorer_Click" Foreground="#F59E0B"/>
-                        <Button x:Name="BtnDownloads" Content="&#xF151;" Click="BtnDownloads_Click" Foreground="#34D399"/>
-                        <Button x:Name="BtnTimerStopwatch" Content="&#xED88;" Click="BtnTimerStopwatch_Click" Foreground="#38BDF8"/>
-                        <Button x:Name="BtnColorPicker" Content="&#xF2F6;" Click="BtnColorPicker_Click" Foreground="#A855F7"/>
-                        <Button x:Name="BtnQuickNote" Content="&#xF56F;" Click="BtnQuickNote_Click" Foreground="#22D3EE"/>
+                        <Button x:Name="BtnSearch" Content="&#xEA7C;" Click="BtnSearch_Click" Foreground="#3ABEFF" Focusable="True"/>
+                        <Button x:Name="BtnScreenshot" Content="&#xF68E;" Click="BtnScreenshotRegion_Click" Foreground="#60A5FA" Focusable="True"/>
+                        <Button x:Name="BtnRecord" Content="&#xF535;" Click="BtnRecordVideo_Click" Foreground="#FB7185" Focusable="True"/>
+                        <Button x:Name="BtnCalc" Content="&#xF06C;" Click="BtnCalc_Click" Foreground="#A3E635" Focusable="True"/>
+                        <Button x:Name="BtnExplorer" Content="&#xF42F;" Click="BtnExplorer_Click" Foreground="#F59E0B" Focusable="True"/>
+                        <Button x:Name="BtnDownloads" Content="&#xF151;" Click="BtnDownloads_Click" Foreground="#34D399" Focusable="True"/>
+                        <Button x:Name="BtnTimerStopwatch" Content="&#xED88;" Click="BtnTimerStopwatch_Click" Foreground="#38BDF8" Focusable="True"/>
+                        <Button x:Name="BtnColorPicker" Content="&#xF2F6;" Click="BtnColorPicker_Click" Foreground="#A855F7" Focusable="True"/>
+                        <Button x:Name="BtnQuickNote" Content="&#xF56F;" Click="BtnQuickNote_Click" Foreground="#22D3EE" Focusable="True"/>
                     </local:OverflowWrapPanel>
 
                     <Rectangle x:Name="SepControl" Width="1" Height="20" Fill="#332A9CFF" Margin="4,0" VerticalAlignment="Center"/>
@@ -121,7 +135,7 @@
 
                 <StackPanel x:Name="AppSettingsBlock" Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
                     <Rectangle x:Name="SepAppSettings" Width="1" Height="20" Fill="#332A9CFF" Margin="4,0" VerticalAlignment="Center"/>
-                    <Button x:Name="BtnAppSettings" Content="&#xF6A8;" Click="BtnAppSettings_Click" Foreground="#2A9CFF"/>
+                    <Button x:Name="BtnAppSettings" Content="&#xF6A8;" Click="BtnAppSettings_Click" Foreground="#2A9CFF" Focusable="True"/>
                 </StackPanel>
         </DockPanel>
         </Border>
