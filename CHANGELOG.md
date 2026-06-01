@@ -7,6 +7,40 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-06-02
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Поддержка горячих клавиш для пользовательских кнопок: теперь каждой кнопке можно назначить глобальную горячую клавишу, которая будет выполнять действие кнопки.
+- **Hotkeys support for custom buttons**: Every custom button can now have a global hotkey assigned to trigger its action.
+- **Расширенная валидация горячих клавиш: проверка зарезервированных системой сочетаний (Win+E, Win+R, Win+L и другие), конфликтов между клавиш и поддерживаемых сочетаний.
+- **Enhanced hotkey validation: Checks for system-reserved combinations (Win+E, Win+R, Win+L and others), hotkey conflicts and supported key validity.
+- **Приоритет командных горячих клавиш: системные горячие клавиши (ShowPanel, QuickNote и другие) имеют приоритет над пользовательскими кнопками.
+- **Command hotkey priority**: System hotkeys (ShowPanel, QuickNote, etc.) now take priority over custom button hotkeys.
+- **Выборочная блокировка горячих клавиш: при открытых окнах разрешены горячие клавиши QuickNote и TimerStopwatch, чтобы не блокировать их при открытых окнах.
+- **Selective hotkey blocking: QuickNote and TimerStopwatch hotkeys are allowed even when owned windows are open**.
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Переработка HotkeyService: добавлен динамический пул ID для горячих клавиш пользовательских элементов.
+- **HotkeyService refactoring: Added dynamic hotkey ID pool for user element hotkeys.
+- **Автоперерегистрация горячих клавиш: горячие клавиши перерегистрируются автоматически при изменении настроек без перезапуска приложения.
+- **Hotkey auto‑registration: Hotkeys are now automatically re‑registered when settings change without restarting the app.
+- **ExecuteHotkey: добавлена проверка состояния клавиш перед эмуляцией (избегаем застревания клавиш), логирование ошибок SendInput и 30‑мс задержки между нажатиями для лучшей совместимости.
+- **ExecuteHotkey: Added key state check before simulation (prevents stuck keys), SendInput error logging and 30ms delays between presses for better compatibility.
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Возможные застревания клавиш при эмуляции горячих клавиш из-за не проверки состояния клавиш.
+- **Possible stuck keys when simulating hotkeys caused by missing key state checks.
+- **Неполная валидация горячих клавиш при регистрации (не проверялись системные сочетания и конфликты).
+- **Incomplete hotkey validation (did not check system reserved combinations and conflicts).
+- **Нет перерегистрации горячих клавиш при изменении настроек (требовалось перезапускать приложение).
+- **Missing hotkey re‑registration after settings changes (required app restart).
+
+### 🇷🇺 Тесты | 🇬🇧 Tests
+- **Полное покрытие тестами HotkeyService, включая динамические ID, элементы и валидацию.
+- **Full test coverage for HotkeyService, including dynamic IDs, element hotkeys and validation.
+- **Обновлены тесты HotkeyServiceTests для новой логики.
+- **Updated HotkeyServiceTests for new logic.
+
 ## [1.7.4] - 2026-06-01
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added
