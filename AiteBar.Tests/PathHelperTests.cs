@@ -33,5 +33,23 @@ namespace AiteBar.Tests
             Assert.StartsWith(PathHelper.AppDataFolder, file);
             Assert.EndsWith("error.log", file);
         }
+
+        [Fact]
+        public void EnsureDirectories_CreatesAppDataAndIconsFolders()
+        {
+            PathHelper.EnsureDirectories();
+
+            Assert.True(Directory.Exists(PathHelper.AppDataFolder));
+            Assert.True(Directory.Exists(PathHelper.IconsFolder));
+        }
+
+        [Fact]
+        public void IconsFolder_ShouldBeUnderAppData()
+        {
+            var folder = PathHelper.IconsFolder;
+
+            Assert.StartsWith(PathHelper.AppDataFolder, folder);
+            Assert.EndsWith("Icons", folder);
+        }
     }
 }

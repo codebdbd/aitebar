@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Windows.Threading;
@@ -128,6 +129,63 @@ public sealed class QuickNoteServiceTests : IDisposable
         Assert.Equal("original", await File.ReadAllTextAsync(_service.NotePath));
     }
 
+    [Fact]
+    public async Task HasExternalChanges_WhenTrackedFileIsDeleted_ReturnsTrue()
+    {
+        File.WriteAllText(_service.NotePath, "tracked");
+        await _service.ReadMarkdownAsync();
+        File.Delete(_service.NotePath);
+
+        bool result = _service.HasExternalChanges();
+
+        Assert.True(result);
+    }
+
+    [Fact]
+    public void OpenInEditor_CreatesMissingFileAndStartsShellProcess()
+    {
+        var dispatcher = new FakeQuickNoteProcessStartDispatcher();
+        string notePath = Path.Combine(_tempDir, "nested", "QuickNote.md");
+        var service = new QuickNoteService(notePath, dispatcher);
+
+        service.OpenInEditor();
+
+        Assert.True(File.Exists(notePath));
+        Assert.Single(dispatcher.StartCalls);
+        Assert.Equal(notePath, dispatcher.StartCalls[0].FileName);
+        Assert.True(dispatcher.StartCalls[0].UseShellExecute);
+    }
+
+    [Fact]
+    public void OpenInEditor_PathWithoutDirectory_UsesPathHelperDirectories()
+    {
+        string fileNameOnly = "QuickNoteStandalone.md";
+        string appDataFile = Path.Combine(PathHelper.AppDataFolder, fileNameOnly);
+        var dispatcher = new FakeQuickNoteProcessStartDispatcher();
+        var service = new QuickNoteService(fileNameOnly, dispatcher);
+
+        try
+        {
+            service.OpenInEditor();
+
+            Assert.True(File.Exists(fileNameOnly));
+            Assert.Single(dispatcher.StartCalls);
+            Assert.Equal(fileNameOnly, dispatcher.StartCalls[0].FileName);
+        }
+        finally
+        {
+            if (File.Exists(fileNameOnly))
+            {
+                File.Delete(fileNameOnly);
+            }
+
+            if (File.Exists(appDataFile))
+            {
+                File.Delete(appDataFile);
+            }
+        }
+    }
+
     private static async Task WaitForDistinctFileTimestampAsync()
     {
         await Task.Delay(1100);
@@ -169,4 +227,14 @@ public sealed class QuickNoteServiceTests : IDisposable
             await action();
             return true;
         });
+
+    private sealed class FakeQuickNoteProcessStartDispatcher : IQuickNoteProcessStartDispatcher
+    {
+        public System.Collections.Generic.List<ProcessStartInfo> StartCalls { get; } = [];
+
+        public void Start(ProcessStartInfo startInfo)
+        {
+            StartCalls.Add(startInfo);
+        }
+    }
 }

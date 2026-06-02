@@ -11,6 +11,19 @@ using System.Threading.Tasks;
 
 namespace AiteBar;
 
+internal interface IProcessStartDispatcher
+{
+    void Start(ProcessStartInfo startInfo);
+}
+
+internal sealed class ProcessStartDispatcher : IProcessStartDispatcher
+{
+    public void Start(ProcessStartInfo startInfo)
+    {
+        Process.Start(startInfo);
+    }
+}
+
 public sealed record UpdateCheckResult(
     bool IsUpdateAvailable,
     Version CurrentVersion,
@@ -27,15 +40,22 @@ public sealed class UpdateCheckService
     private const string RepositoryPathPrefix = "/codebdbd/aitebar/";
     private static readonly Uri LatestReleaseUri = new(LatestReleaseApiUrl);
     private readonly HttpClient _httpClient;
+    private readonly IProcessStartDispatcher _processStartDispatcher;
 
     public UpdateCheckService()
-        : this(CreateHttpClient())
+        : this(CreateHttpClient(), new ProcessStartDispatcher())
     {
     }
 
     internal UpdateCheckService(HttpClient httpClient)
+        : this(httpClient, new ProcessStartDispatcher())
+    {
+    }
+
+    internal UpdateCheckService(HttpClient httpClient, IProcessStartDispatcher processStartDispatcher)
     {
         _httpClient = httpClient;
+        _processStartDispatcher = processStartDispatcher;
     }
 
     public async Task<UpdateCheckResult> CheckLatestReleaseAsync(CancellationToken cancellationToken = default)
@@ -156,7 +176,7 @@ public sealed class UpdateCheckService
     public void OpenReleasePage(UpdateCheckResult result)
     {
         string target = GetTrustedGitHubUrl(result.ReleasePageUrl) ?? ReleasesFallbackUrl;
-        Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
+        _processStartDispatcher.Start(new ProcessStartInfo(target) { UseShellExecute = true });
     }
 
     internal static bool IsTrustedGitHubReleaseUrl(string? url)

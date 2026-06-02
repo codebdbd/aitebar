@@ -186,6 +186,7 @@ internal static class TelemetryService
         {
             _sentryHandle?.Dispose();
             _sentryHandle = null;
+            _initialized = false;
             IsEnabled = false;
         }
     }

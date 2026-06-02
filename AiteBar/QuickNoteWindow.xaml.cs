@@ -17,7 +17,7 @@ using Forms = System.Windows.Forms;
 namespace AiteBar
 {
     [SupportedOSPlatform("windows6.1")]
-    public partial class QuickNoteWindow : DarkWindow
+    public partial class QuickNoteWindow : DarkWindow, IQuickNoteToolWindow
     {
         private const int WM_SYSCOMMAND = 0x0112;
         private const int SC_SIZE = 0xF000;

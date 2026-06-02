@@ -491,4 +491,155 @@ public sealed class AppSettingsServiceTests
 
         Assert.Equal("non-existing-id", result);
     }
+
+    [Fact]
+    public void NormalizeAppState_NormalizesUiCultureActiveContextAndElements()
+    {
+        var service = new AppSettingsService();
+        service.Settings.UiCulture = "de-DE";
+        service.Settings.ActiveContextId = "missing-context";
+        service.Settings.Contexts =
+        [
+            new() { Id = "context-1", Name = "Main", IsEnabled = true },
+            new() { Id = "context-2", Name = "Work", IsEnabled = true }
+        ];
+        service.Settings.Elements =
+        [
+            new() { Id = "", Name = "Needs Id", ContextId = "", RotationProfilePaths = null! },
+            new() { Id = "dup", Name = "First", ContextId = "context-2" },
+            new() { Id = "dup", Name = "Duplicate", ContextId = "context-2" }
+        ];
+
+        bool changed = service.NormalizeAppState();
+
+        Assert.True(changed);
+        Assert.Equal("de", service.Settings.UiCulture);
+        Assert.Equal("context-1", service.Settings.ActiveContextId);
+        Assert.Equal(2, service.Elements.Count);
+        Assert.False(string.IsNullOrWhiteSpace(service.Elements[0].Id));
+        Assert.Equal("context-1", service.Elements[0].ContextId);
+        Assert.NotNull(service.Elements[0].RotationProfilePaths);
+        Assert.Single(service.Elements, element => element.Id == "dup");
+    }
+
+    [Fact]
+    public async Task LoadAsync_LegacyConfigFile_MigratesElementsAndCreatesSettingsFile()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string settingsPath = Path.Combine(root, "settings.json");
+        string configPath = Path.Combine(root, "custom_buttons.json");
+
+        try
+        {
+            CustomElement[] elements =
+            [
+                new() { Id = "legacy-1", Name = "Legacy", ContextId = "context-1" }
+            ];
+            await File.WriteAllTextAsync(configPath, System.Text.Json.JsonSerializer.Serialize(elements));
+            var service = new AppSettingsService(configPath, settingsPath);
+
+            await service.LoadAsync();
+
+            Assert.Single(service.Elements);
+            Assert.Equal("legacy-1", service.Elements[0].Id);
+            Assert.True(File.Exists(settingsPath));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task SaveElementAsync_ReplacesElementByRemoveId()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string settingsPath = Path.Combine(root, "settings.json");
+        string configPath = Path.Combine(root, "custom_buttons.json");
+
+        try
+        {
+            var service = new AppSettingsService(configPath, settingsPath);
+            await service.AddElementsAsync([new CustomElement { Id = "old", Name = "Old", ContextId = "context-1" }]);
+
+            await service.SaveElementAsync(
+                new CustomElement { Id = "new", Name = "New", ContextId = "context-1" },
+                removeId: "old");
+
+            Assert.Single(service.Elements);
+            Assert.Equal("new", service.Elements[0].Id);
+            Assert.Equal("New", service.Elements[0].Name);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ReorderElements_MovesItemsWithinContextWithoutAffectingOtherContexts()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string settingsPath = Path.Combine(root, "settings.json");
+        string configPath = Path.Combine(root, "custom_buttons.json");
+
+        try
+        {
+            var service = new AppSettingsService(configPath, settingsPath);
+            await service.AddElementsAsync(
+            [
+                new CustomElement { Id = "a", Name = "A", ContextId = "context-1" },
+                new CustomElement { Id = "b", Name = "B", ContextId = "context-1" },
+                new CustomElement { Id = "c", Name = "C", ContextId = "context-2" }
+            ]);
+
+            service.ReorderElements(0, 1, "context-1");
+
+            Assert.Equal(["b", "a", "c"], service.Elements.Select(element => element.Id).ToArray());
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void GetEnabledContextsSnapshot_ReturnsClonedEnabledContexts()
+    {
+        var service = new AppSettingsService();
+        service.Settings.Contexts =
+        [
+            new() { Id = "context-1", Name = "Main", IsEnabled = true },
+            new() { Id = "context-2", Name = "Disabled", IsEnabled = false },
+            new() { Id = "context-3", Name = "Work", IsEnabled = true }
+        ];
+
+        IReadOnlyList<PanelContext> snapshot = service.GetEnabledContextsSnapshot();
+
+        Assert.Equal(["context-1", "context-3"], snapshot.Select(context => context.Id).ToArray());
+        snapshot[0].Name = "Changed";
+        Assert.Equal("Main", service.Settings.Contexts[0].Name);
+    }
+
+    [Fact]
+    public void CloneElement_CreatesDeepCopyOfRotationProfiles()
+    {
+        var service = new AppSettingsService();
+        var source = new CustomElement
+        {
+            Id = "source",
+            RotationProfilePaths = ["Profile A"],
+            ContextId = "context-2"
+        };
+
+        CustomElement clone = service.CloneElement(source);
+        clone.RotationProfilePaths.Add("Profile B");
+        clone.ContextId = "context-3";
+
+        Assert.Equal(["Profile A"], source.RotationProfilePaths);
+        Assert.Equal("context-2", source.ContextId);
+    }
 }

@@ -11,19 +11,68 @@ using System.Windows.Input;
 
 namespace AiteBar
 {
+    internal interface IActionServiceRuntime
+    {
+        Task DelayAsync(int milliseconds);
+        bool IsKeyPressed(byte virtualKey);
+        uint SendInput(NativeMethods.INPUT[] inputs);
+        bool SetForegroundWindow(IntPtr handle);
+        bool Confirm(string message, Window? owner);
+        IActionProcessHandle? StartProcess(ProcessStartInfo startInfo);
+        IActionProcessHandle? StartProcess(string fileName);
+        IColorPickerDialog CreateColorPickerDialog(Window? owner);
+        IQuickNoteToolWindow CreateQuickNoteWindow(AppSettingsService settingsService, Window? owner);
+        ITimerStopwatchToolWindow CreateTimerStopwatchWindow(Window? owner);
+        Window? GetMainWindow();
+    }
+
+    internal interface IActionProcessHandle : IDisposable
+    {
+        IntPtr MainWindowHandle { get; }
+        void Refresh();
+    }
+
+    internal interface IColorPickerDialog
+    {
+        bool? ShowDialog();
+    }
+
+    internal interface IQuickNoteToolWindow
+    {
+        bool IsVisible { get; }
+        event EventHandler? Closed;
+        bool Activate();
+        void ShowSliding(AppSettings settings);
+    }
+
+    internal interface ITimerStopwatchToolWindow
+    {
+        bool IsVisible { get; }
+        event EventHandler? Closed;
+        bool Activate();
+        void ShowNearPanel(AppSettingsService settingsService);
+    }
+
     [SupportedOSPlatform("windows6.1")]
     public class ActionService
     {
         private readonly AppSettingsService _settingsService;
-        private QuickNoteWindow? _quickNoteWindow;
-        private TimerStopwatchWindow? _timerStopwatchWindow;
+        private readonly IActionServiceRuntime _runtime;
+        private IQuickNoteToolWindow? _quickNoteWindow;
+        private ITimerStopwatchToolWindow? _timerStopwatchWindow;
         private const int FullscreenActivationAttempts = 25;
         private const int FullscreenWindowPollDelayMs = 200;
         private const int FullscreenForegroundDelayMs = 100;
 
         public ActionService(AppSettingsService settingsService)
+            : this(settingsService, new ActionServiceRuntime())
+        {
+        }
+
+        internal ActionService(AppSettingsService settingsService, IActionServiceRuntime runtime)
         {
             _settingsService = settingsService;
+            _runtime = runtime;
         }
 
         public async Task<ActionExecutionResult> ExecuteCustomActionAsync(CustomElement el, Func<Task>? onBeforeExecute = null)
@@ -48,7 +97,7 @@ namespace AiteBar
                         case ActionType.Program:
                         case ActionType.File:
                         case ActionType.Folder:
-                            Process.Start(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true });
+                            _runtime.StartProcess(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true });
                             break;
                         case ActionType.ScriptFile:
                             await StartScriptFileAsync(el.ActionValue);
@@ -94,16 +143,16 @@ namespace AiteBar
                 // Нажимаем модификаторы по одному с задержкой
                 foreach (var vk in downKeys)
                 {
-                    if (!IsKeyPressed(vk))
+                    if (!_runtime.IsKeyPressed(vk))
                     {
                         var input = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk } } };
-                        uint sent = NativeMethods.SendInput(1, [input], Marshal.SizeOf<NativeMethods.INPUT>());
+                        uint sent = _runtime.SendInput([input]);
                         if (sent != 1)
                         {
                             Logger.Log(new InvalidOperationException($"Failed to send modifier key down: VK={vk}"));
                         }
                         pressedModifiers.Add(vk);
-                        await Task.Delay(KeyDelayMs);
+                        await _runtime.DelayAsync(KeyDelayMs);
                     }
                 }
 
@@ -112,33 +161,33 @@ namespace AiteBar
                 {
                     // Нажатие основной клавиши
                     var downInput = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk } } };
-                    uint downSent = NativeMethods.SendInput(1, [downInput], Marshal.SizeOf<NativeMethods.INPUT>());
+                    uint downSent = _runtime.SendInput([downInput]);
                     if (downSent != 1)
                     {
                         Logger.Log(new InvalidOperationException($"Failed to send main key down: VK={mainVk}"));
                     }
-                    await Task.Delay(KeyDelayMs);
+                    await _runtime.DelayAsync(KeyDelayMs);
 
                     // Отпускание основной клавиши
                     var upInput = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } };
-                    uint upSent = NativeMethods.SendInput(1, [upInput], Marshal.SizeOf<NativeMethods.INPUT>());
+                    uint upSent = _runtime.SendInput([upInput]);
                     if (upSent != 1)
                     {
                         Logger.Log(new InvalidOperationException($"Failed to send main key up: VK={mainVk}"));
                     }
-                    await Task.Delay(KeyDelayMs);
+                    await _runtime.DelayAsync(KeyDelayMs);
                 }
 
                 // Отпускаем модификаторы в обратном порядке с задержкой
                 foreach (var vk in Enumerable.Reverse(pressedModifiers))
                 {
                     var upInput = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } };
-                    uint sent = NativeMethods.SendInput(1, [upInput], Marshal.SizeOf<NativeMethods.INPUT>());
+                    uint sent = _runtime.SendInput([upInput]);
                     if (sent != 1)
                     {
                         Logger.Log(new InvalidOperationException($"Failed to send modifier key up: VK={vk}"));
                     }
-                    await Task.Delay(KeyDelayMs);
+                    await _runtime.DelayAsync(KeyDelayMs);
                 }
             }
             catch (Exception ex)
@@ -148,14 +197,6 @@ namespace AiteBar
             }
         }
 
-        [DllImport("user32.dll")]
-        private static extern short GetAsyncKeyState(int vKey);
-
-        private static bool IsKeyPressed(byte vk)
-        {
-            return (GetAsyncKeyState(vk) & 0x8000) != 0;
-        }
-
         private async Task ExecuteWebActionAsync(CustomElement el)
         {
             string prof = el.UseRotation ? AdvanceRotationProfile(el) : el.ChromeProfile;
@@ -163,7 +204,7 @@ namespace AiteBar
             await _settingsService.SaveAsync();
 
             var psi = BuildWebActionProcessStartInfo(el, prof);
-            using var proc = Process.Start(psi);
+            using var proc = _runtime.StartProcess(psi);
             if (proc != null && el.OpenFullscreen)
             {
                 await TryEnterFullscreenAsync(proc);
@@ -207,10 +248,9 @@ namespace AiteBar
 
         private void ExecuteCommand(string command)
         {
-            var confirm = new DarkDialog(LocalizationService.Format("Action_ConfirmCommand", command), isConfirm: true) { Owner = System.Windows.Application.Current.MainWindow };
-            if (confirm.ShowDialog() == true)
+            if (_runtime.Confirm(LocalizationService.Format("Action_ConfirmCommand", command), _runtime.GetMainWindow()))
             {
-                Process.Start(new ProcessStartInfo("cmd.exe")
+                _runtime.StartProcess(new ProcessStartInfo("cmd.exe")
                 {
                     CreateNoWindow = true,
                     UseShellExecute = false,
@@ -225,7 +265,7 @@ namespace AiteBar
             
             if (onBeforeExecute != null) await onBeforeExecute();
             
-            using var proc = Process.Start(new ProcessStartInfo(BrowserHelper.GetExecutablePath(BrowserType.Chrome))
+            using var proc = _runtime.StartProcess(new ProcessStartInfo(BrowserHelper.GetExecutablePath(BrowserType.Chrome))
             {
                 UseShellExecute = false,
                 ArgumentList = { $"https://www.google.com/search?q={Uri.EscapeDataString(text)}" }
@@ -235,38 +275,38 @@ namespace AiteBar
         public async Task StartScreenshotAsync(Func<Task>? onBeforeExecute = null)
         {
             if (onBeforeExecute != null) await onBeforeExecute();
-            Process.Start(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true });
+            _runtime.StartProcess(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true });
         }
 
         public async Task StartRecordVideoAsync(Func<Task>? onBeforeExecute = null)
         {
             if (onBeforeExecute != null) await onBeforeExecute();
-            Process.Start(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true });
+            _runtime.StartProcess(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true });
         }
 
         public async Task StartCalculatorAsync(Func<Task>? onBeforeExecute = null)
         {
             if (onBeforeExecute != null) await onBeforeExecute();
-            Process.Start("calc.exe");
+            _runtime.StartProcess("calc.exe");
         }
 
         public async Task StartExplorerAsync(Func<Task>? onBeforeExecute = null)
         {
             if (onBeforeExecute != null) await onBeforeExecute();
-            Process.Start(BuildShellLaunchProcessStartInfo("explorer.exe"));
+            _runtime.StartProcess(BuildShellLaunchProcessStartInfo("explorer.exe"));
         }
 
         public async Task StartDownloadsAsync(Func<Task>? onBeforeExecute = null)
         {
             if (onBeforeExecute != null) await onBeforeExecute();
-            Process.Start(BuildShellLaunchProcessStartInfo("shell:Downloads"));
+            _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:Downloads"));
         }
 
         public async Task StartColorPickerAsync(Func<Task>? onBeforeExecute = null)
         {
             if (onBeforeExecute != null) await onBeforeExecute();
-            await Task.Delay(120);
-            new ScreenColorPickerWindow { Owner = System.Windows.Application.Current.MainWindow }.ShowDialog();
+            await _runtime.DelayAsync(120);
+            _runtime.CreateColorPickerDialog(_runtime.GetMainWindow()).ShowDialog();
         }
 
         public async Task StartQuickNoteAsync(Func<Task>? onBeforeExecute = null)
@@ -282,10 +322,7 @@ namespace AiteBar
                 return;
             }
 
-            _quickNoteWindow = new QuickNoteWindow(new QuickNoteService(), _settingsService)
-            {
-                Owner = System.Windows.Application.Current.MainWindow
-            };
+            _quickNoteWindow = _runtime.CreateQuickNoteWindow(_settingsService, _runtime.GetMainWindow());
             _quickNoteWindow.Closed += (_, _) => _quickNoteWindow = null;
             _quickNoteWindow.ShowSliding(_settingsService.Settings);
         }
@@ -303,10 +340,7 @@ namespace AiteBar
                 return;
             }
 
-            _timerStopwatchWindow = new TimerStopwatchWindow
-            {
-                Owner = System.Windows.Application.Current.MainWindow
-            };
+            _timerStopwatchWindow = _runtime.CreateTimerStopwatchWindow(_runtime.GetMainWindow());
             _timerStopwatchWindow.Closed += (_, _) => _timerStopwatchWindow = null;
             _timerStopwatchWindow.ShowNearPanel(_settingsService);
         }
@@ -316,16 +350,15 @@ namespace AiteBar
             UseShellExecute = true
         };
 
-        private static async Task StartScriptFileAsync(string scriptPath)
+        private async Task StartScriptFileAsync(string scriptPath)
         {
-            var confirm = new DarkDialog(LocalizationService.Format("Action_ConfirmScript", scriptPath), isConfirm: true) { Owner = System.Windows.Application.Current.MainWindow };
-            if (confirm.ShowDialog() != true)
+            if (!_runtime.Confirm(LocalizationService.Format("Action_ConfirmScript", scriptPath), _runtime.GetMainWindow()))
             {
                 return;
             }
 
             var psi = CreateScriptProcessStartInfo(scriptPath);
-            using var proc = Process.Start(psi) ?? throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
+            using var proc = _runtime.StartProcess(psi) ?? throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
             await Task.CompletedTask;
         }
 
@@ -367,22 +400,22 @@ namespace AiteBar
             return fileName;
         }
 
-        private static async Task TryEnterFullscreenAsync(Process proc)
+        private async Task TryEnterFullscreenAsync(IActionProcessHandle proc)
         {
             for (int i = 0; i < FullscreenActivationAttempts; i++)
             {
-                await Task.Delay(FullscreenWindowPollDelayMs);
+                await _runtime.DelayAsync(FullscreenWindowPollDelayMs);
                 proc.Refresh();
                 if (proc.MainWindowHandle == IntPtr.Zero) continue;
 
-                NativeMethods.SetForegroundWindow(proc.MainWindowHandle);
-                await Task.Delay(FullscreenForegroundDelayMs);
+                _runtime.SetForegroundWindow(proc.MainWindowHandle);
+                await _runtime.DelayAsync(FullscreenForegroundDelayMs);
                 SendVirtualKey((byte)KeyInterop.VirtualKeyFromKey(Key.F11));
                 break;
             }
         }
 
-        private static void SendVirtualKey(byte virtualKey)
+        private void SendVirtualKey(byte virtualKey)
         {
             NativeMethods.INPUT[] inputs =
             [
@@ -398,7 +431,61 @@ namespace AiteBar
                 }
             ];
 
-            _ = NativeMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<NativeMethods.INPUT>());
+            _ = _runtime.SendInput(inputs);
         }
+    }
+
+    [SupportedOSPlatform("windows6.1")]
+    internal sealed class ActionServiceRuntime : IActionServiceRuntime
+    {
+        public Task DelayAsync(int milliseconds) => Task.Delay(milliseconds);
+
+        public bool IsKeyPressed(byte virtualKey) => (GetAsyncKeyState(virtualKey) & 0x8000) != 0;
+
+        public uint SendInput(NativeMethods.INPUT[] inputs) =>
+            NativeMethods.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<NativeMethods.INPUT>());
+
+        public bool SetForegroundWindow(IntPtr handle) => NativeMethods.SetForegroundWindow(handle);
+
+        public bool Confirm(string message, Window? owner)
+        {
+            var dialog = new DarkDialog(message, isConfirm: true) { Owner = owner };
+            return dialog.ShowDialog() == true;
+        }
+
+        public IActionProcessHandle? StartProcess(ProcessStartInfo startInfo)
+        {
+            Process? process = Process.Start(startInfo);
+            return process == null ? null : new ActionProcessHandle(process);
+        }
+
+        public IActionProcessHandle? StartProcess(string fileName)
+        {
+            Process? process = Process.Start(fileName);
+            return process == null ? null : new ActionProcessHandle(process);
+        }
+
+        public IColorPickerDialog CreateColorPickerDialog(Window? owner) =>
+            new ScreenColorPickerWindow { Owner = owner };
+
+        public IQuickNoteToolWindow CreateQuickNoteWindow(AppSettingsService settingsService, Window? owner) =>
+            new QuickNoteWindow(new QuickNoteService(), settingsService) { Owner = owner };
+
+        public ITimerStopwatchToolWindow CreateTimerStopwatchWindow(Window? owner) =>
+            new TimerStopwatchWindow { Owner = owner };
+
+        public Window? GetMainWindow() => System.Windows.Application.Current?.MainWindow;
+
+        [DllImport("user32.dll")]
+        private static extern short GetAsyncKeyState(int vKey);
+    }
+
+    internal sealed class ActionProcessHandle(Process process) : IActionProcessHandle
+    {
+        public IntPtr MainWindowHandle => process.MainWindowHandle;
+
+        public void Refresh() => process.Refresh();
+
+        public void Dispose() => process.Dispose();
     }
 }

@@ -6,16 +6,36 @@ using System.Windows.Documents;
 
 namespace AiteBar
 {
+    internal interface IQuickNoteProcessStartDispatcher
+    {
+        void Start(ProcessStartInfo startInfo);
+    }
+
+    internal sealed class QuickNoteProcessStartDispatcher : IQuickNoteProcessStartDispatcher
+    {
+        public void Start(ProcessStartInfo startInfo)
+        {
+            Process.Start(startInfo);
+        }
+    }
+
     public sealed class QuickNoteService
     {
         private readonly string _notePath;
+        private readonly IQuickNoteProcessStartDispatcher _processStartDispatcher;
         private DateTime _lastKnownWriteTimeUtc = DateTime.MinValue;
 
         public QuickNoteService(string? notePath = null)
+            : this(notePath, new QuickNoteProcessStartDispatcher())
+        {
+        }
+
+        internal QuickNoteService(string? notePath, IQuickNoteProcessStartDispatcher processStartDispatcher)
         {
             _notePath = string.IsNullOrWhiteSpace(notePath)
                 ? Path.Combine(PathHelper.AppDataFolder, "QuickNote.md")
                 : notePath;
+            _processStartDispatcher = processStartDispatcher;
         }
 
         public string NotePath => _notePath;
@@ -82,7 +102,7 @@ namespace AiteBar
                 File.WriteAllText(NotePath, string.Empty);
             }
 
-            Process.Start(new ProcessStartInfo(NotePath) { UseShellExecute = true });
+            _processStartDispatcher.Start(new ProcessStartInfo(NotePath) { UseShellExecute = true });
         }
 
         private void EnsureNoteDirectory()

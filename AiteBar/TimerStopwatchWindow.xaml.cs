@@ -9,7 +9,7 @@ using Forms = System.Windows.Forms;
 namespace AiteBar;
 
 [SupportedOSPlatform("windows6.1")]
-public partial class TimerStopwatchWindow : DarkWindow
+public partial class TimerStopwatchWindow : DarkWindow, ITimerStopwatchToolWindow
 {
     private const int TimerIntervalMs = 40;
 
