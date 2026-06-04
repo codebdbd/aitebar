@@ -29,8 +29,8 @@ namespace AiteBar
         private string _selectedColor = "#FFFFFF";
         private string _selectedImagePath = "";
         private static readonly BrushConverter _brushConverter = new();
-        private static readonly Brush _defaultInputBorderBrush = _brushConverter.ConvertFromString("#555555") as Brush ?? Brushes.Gray;
-        private static readonly Brush _requiredErrorBorderBrush = _brushConverter.ConvertFromString("#E85A5A") as Brush ?? Brushes.OrangeRed;
+        private Brush _defaultInputBorderBrush = Brushes.Gray;
+        private Brush _requiredErrorBorderBrush = Brushes.OrangeRed;
         private readonly MainWindow _mainWindow;
         private readonly CustomElement? _editingElement = null;
         private bool _showRequiredValidation;
@@ -43,6 +43,10 @@ namespace AiteBar
             InitializeComponent();
             _mainWindow = main;
             _editingElement = el;
+            _defaultInputBorderBrush = TryFindResource("FormControlBorderBrush") as Brush
+                ?? (_brushConverter.ConvertFromString("#3A3A3E") as Brush ?? Brushes.Gray);
+            _requiredErrorBorderBrush = TryFindResource("FormControlErrorBorderBrush") as Brush
+                ?? (_brushConverter.ConvertFromString("#E85A5A") as Brush ?? Brushes.OrangeRed);
 
             LoadColors();
             LoadContexts();

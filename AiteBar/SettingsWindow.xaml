@@ -22,6 +22,7 @@
         </Style>
 
         <Style TargetType="TabItem">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">
@@ -135,6 +136,9 @@
                                         </StackPanel>
                                     </Grid>
                                     <Grid>
+                                        <Grid.Resources>
+                                            <Style TargetType="CheckBox" BasedOn="{StaticResource DenseCheckBoxStyle}"/>
+                                        </Grid.Resources>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
@@ -143,15 +147,15 @@
                                             <RowDefinition Height="Auto"/>
                                             <RowDefinition Height="Auto"/>
                                         </Grid.RowDefinitions>
-                                        <CheckBox x:Name="ChkAppMode" Grid.Row="0" Grid.Column="0" Content="{local:Loc ResourceKey=SettingsWindow_AppMode}" Foreground="White" Margin="0,3"/>
-                                        <CheckBox x:Name="ChkIncognito" Grid.Row="0" Grid.Column="1" Content="{local:Loc ResourceKey=SettingsWindow_Incognito}" Foreground="White" Margin="5,3,0,3"/>
-                                        <CheckBox x:Name="ChkFullscreen" Grid.Row="1" Grid.Column="0" Content="{local:Loc ResourceKey=SettingsWindow_Fullscreen}" Foreground="White" Margin="0,3"/>
+                                        <CheckBox x:Name="ChkAppMode" Grid.Row="0" Grid.Column="0" Content="{local:Loc ResourceKey=SettingsWindow_AppMode}"/>
+                                        <CheckBox x:Name="ChkIncognito" Grid.Row="0" Grid.Column="1" Content="{local:Loc ResourceKey=SettingsWindow_Incognito}" Margin="5,2,0,2"/>
+                                        <CheckBox x:Name="ChkFullscreen" Grid.Row="1" Grid.Column="0" Content="{local:Loc ResourceKey=SettingsWindow_Fullscreen}"/>
                                         <Grid Grid.Row="1" Grid.Column="1" Margin="5,3,0,3">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="Auto"/>
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
-                                            <CheckBox x:Name="ChkRotation" Content="{local:Loc ResourceKey=SettingsWindow_Rotation}" Foreground="White" Checked="ChkRotation_Changed" Unchecked="ChkRotation_Changed" VerticalAlignment="Center"/>
+                                            <CheckBox x:Name="ChkRotation" Content="{local:Loc ResourceKey=SettingsWindow_Rotation}" Checked="ChkRotation_Changed" Unchecked="ChkRotation_Changed"/>
                                             <Button x:Name="BtnRotationProfiles" Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_RotationProfilesButton}" Click="BtnRotationProfiles_Click" Height="24" MinWidth="90" Margin="10,0,0,0"/>
                                         </Grid>
                                     </Grid>
@@ -163,10 +167,13 @@
                         <StackPanel x:Name="PanelHotkeyAction" Visibility="Collapsed" Margin="0,0,0,15">
                             <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_HotkeyCombination}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
                             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                <CheckBox x:Name="ChkCtrl" Content="Ctrl" Foreground="White" Margin="0,0,15,0"/>
-                                <CheckBox x:Name="ChkShift" Content="Shift" Foreground="White" Margin="0,0,15,0"/>
-                                <CheckBox x:Name="ChkAlt" Content="Alt" Foreground="White" Margin="0,0,15,0"/>
-                                <CheckBox x:Name="ChkWin" Content="Win" Foreground="White"/>
+                                <StackPanel.Resources>
+                                    <Style TargetType="CheckBox" BasedOn="{StaticResource InlineCheckBoxStyle}"/>
+                                </StackPanel.Resources>
+                                <CheckBox x:Name="ChkCtrl" Content="Ctrl"/>
+                                <CheckBox x:Name="ChkShift" Content="Shift"/>
+                                <CheckBox x:Name="ChkAlt" Content="Alt"/>
+                                <CheckBox x:Name="ChkWin" Content="Win"/>
                             </StackPanel>
                             <ComboBox x:Name="CmbKey" Width="200" HorizontalAlignment="Left" SelectionChanged="CmbKey_SelectionChanged"/>
                         </StackPanel>
@@ -211,7 +218,7 @@
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="#" VerticalAlignment="Center" Foreground="{StaticResource MutedText}" Margin="0,0,5,0"/>
-                                    <TextBox x:Name="TxtHexColor" Grid.Column="1" Height="28" FontSize="12" TextChanged="TxtHexColor_TextChanged"/>
+                                    <TextBox x:Name="TxtHexColor" Grid.Column="1" TextChanged="TxtHexColor_TextChanged"/>
                                     <TextBlock x:Name="TxtHexPlaceholder" Grid.Column="1" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_HexPlaceholder}" Visibility="Collapsed"/>
                                 </Grid>
                             </StackPanel>
@@ -225,8 +232,8 @@
                 <Border BorderBrush="#3A3A3E" BorderThickness="0,1,0,0" Margin="0,0,0,15"/>
                 <DockPanel LastChildFill="False">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                    <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Height="40" Width="120" Margin="0,0,10,0" IsCancel="True"/>
-                    <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Height="40" Width="160" FontWeight="Bold" IsDefault="True"/>
+                    <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Width="130" Margin="0,0,10,0" IsCancel="True"/>
+                    <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Width="180" IsDefault="True"/>
                     </StackPanel>
                 </DockPanel>
             </StackPanel>

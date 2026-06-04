@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="{local:Loc ResourceKey=AppSettingsWindow_Title}" Width="720" Height="480"
+        Title="{local:Loc ResourceKey=AppSettingsWindow_Title}" Width="720" Height="560"
         WindowStartupLocation="CenterOwner" Background="#1A1A1C" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
@@ -22,6 +22,85 @@
             <SolidColorBrush x:Key="PanelBadge3" Color="#D97706"/>
             <SolidColorBrush x:Key="PanelBadge4" Color="#7C3AED"/>
 
+            <Style x:Key="HotkeyModifierButtonStyle" TargetType="ToggleButton">
+                <Setter Property="Width" Value="62"/>
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="Margin" Value="0,0,6,0"/>
+                <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
+                <Setter Property="Background" Value="#151A22"/>
+                <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border x:Name="Chrome"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="6"
+                                    SnapsToDevicePixels="True">
+                                <Grid Margin="8,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter HorizontalAlignment="Center"
+                                                      VerticalAlignment="Center"
+                                                      RecognizesAccessKey="True"/>
+                                    <TextBlock x:Name="CheckMark"
+                                               Grid.Column="1"
+                                               Text="✓"
+                                               Margin="5,0,0,0"
+                                               FontSize="12"
+                                               FontWeight="Bold"
+                                               Foreground="White"
+                                               VerticalAlignment="Center"
+                                               Visibility="Collapsed"/>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Chrome" Property="Background" Value="#1D2633"/>
+                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Chrome" Property="Background" Value="#2D7BEA"/>
+                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="Transparent"/>
+                                    <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsChecked" Value="True"/>
+                                        <Condition Property="IsMouseOver" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="Chrome" Property="Background" Value="#3487F3"/>
+                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="#3487F3"/>
+                                </MultiTrigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsChecked" Value="True"/>
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                </MultiTrigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Foreground" Value="{StaticResource FormControlDisabledForegroundBrush}"/>
+                                    <Setter TargetName="Chrome" Property="Opacity" Value="0.55"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
             <Style TargetType="TabControl">
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="BorderThickness" Value="0"/>
@@ -29,6 +108,7 @@
             </Style>
 
             <Style TargetType="TabItem">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="TabItem">
@@ -124,7 +204,10 @@
                         </StackPanel>
 
                         <StackPanel Margin="0,16,0,0">
-                            <CheckBox x:Name="ChkCheckForUpdatesEnabled" Content="{local:Loc ResourceKey=AppSettingsWindow_CheckForUpdates}" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <StackPanel.Resources>
+                                <Style TargetType="CheckBox" BasedOn="{StaticResource CompactCheckBoxStyle}"/>
+                            </StackPanel.Resources>
+                            <CheckBox x:Name="ChkCheckForUpdatesEnabled" Content="{local:Loc ResourceKey=AppSettingsWindow_CheckForUpdates}"/>
                         </StackPanel>
                     </StackPanel>
                 </Border>
@@ -148,6 +231,9 @@
                 <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
                     <ScrollViewer>
                         <StackPanel Margin="0,0,0,4">
+                            <StackPanel.Resources>
+                                <Style TargetType="ToggleButton" BasedOn="{StaticResource HotkeyModifierButtonStyle}"/>
+                            </StackPanel.Resources>
                             <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_HotkeysHint}"
                                        Foreground="{StaticResource MutedText}"
                                        FontSize="11"
@@ -157,70 +243,70 @@
                             <!-- Показать панель -->
                             <DockPanel Margin="0,0,0,12">
                                 <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ShowPanel}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkShowPanelCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkShowPanelShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkShowPanelAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkShowPanelWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ToggleButton x:Name="ChkShowPanelCtrl" Content="Ctrl"/>
+                                <ToggleButton x:Name="ChkShowPanelShift" Content="Shift"/>
+                                <ToggleButton x:Name="ChkShowPanelAlt" Content="Alt"/>
+                                <ToggleButton x:Name="ChkShowPanelWin" Content="Win"/>
                                 <ComboBox x:Name="CmbShowPanelKey" Width="200" VerticalAlignment="Center"/>
                             </DockPanel>
                             
                             <!-- Следующая панель -->
                             <DockPanel Margin="0,0,0,12">
                                 <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_NextPanel}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkNextContextCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkNextContextShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkNextContextAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkNextContextWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ToggleButton x:Name="ChkNextContextCtrl" Content="Ctrl"/>
+                                <ToggleButton x:Name="ChkNextContextShift" Content="Shift"/>
+                                <ToggleButton x:Name="ChkNextContextAlt" Content="Alt"/>
+                                <ToggleButton x:Name="ChkNextContextWin" Content="Win"/>
                                 <ComboBox x:Name="CmbNextContextKey" Width="200" VerticalAlignment="Center"/>
                             </DockPanel>
                             
                             <!-- Предыдущая панель -->
                             <DockPanel Margin="0,0,0,12">
                                 <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PreviousPanel}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkPrevContextCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkPrevContextShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkPrevContextAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkPrevContextWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ToggleButton x:Name="ChkPrevContextCtrl" Content="Ctrl"/>
+                                <ToggleButton x:Name="ChkPrevContextShift" Content="Shift"/>
+                                <ToggleButton x:Name="ChkPrevContextAlt" Content="Alt"/>
+                                <ToggleButton x:Name="ChkPrevContextWin" Content="Win"/>
                                 <ComboBox x:Name="CmbPrevContextKey" Width="200" VerticalAlignment="Center"/>
                             </DockPanel>
                             
                             <!-- Добавить кнопку -->
                             <DockPanel Margin="0,0,0,12">
                                 <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_AddButton}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkAddButtonCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkAddButtonShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkAddButtonAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkAddButtonWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ToggleButton x:Name="ChkAddButtonCtrl" Content="Ctrl"/>
+                                <ToggleButton x:Name="ChkAddButtonShift" Content="Shift"/>
+                                <ToggleButton x:Name="ChkAddButtonAlt" Content="Alt"/>
+                                <ToggleButton x:Name="ChkAddButtonWin" Content="Win"/>
                                 <ComboBox x:Name="CmbAddButtonKey" Width="200" VerticalAlignment="Center"/>
                             </DockPanel>
                             
                             <!-- Быстрая заметка -->
                             <DockPanel Margin="0,0,0,12">
                                 <TextBlock Text="{local:Loc ResourceKey=Tool_QuickNote}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkQuickNoteCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkQuickNoteShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkQuickNoteAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkQuickNoteWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ToggleButton x:Name="ChkQuickNoteCtrl" Content="Ctrl"/>
+                                <ToggleButton x:Name="ChkQuickNoteShift" Content="Shift"/>
+                                <ToggleButton x:Name="ChkQuickNoteAlt" Content="Alt"/>
+                                <ToggleButton x:Name="ChkQuickNoteWin" Content="Win"/>
                                 <ComboBox x:Name="CmbQuickNoteKey" Width="200" VerticalAlignment="Center"/>
                             </DockPanel>
                             
                             <!-- Пипетка цвета -->
                             <DockPanel Margin="0,0,0,12">
                                 <TextBlock Text="{local:Loc ResourceKey=Tool_ColorPicker}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkColorPickerCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkColorPickerShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkColorPickerAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkColorPickerWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ToggleButton x:Name="ChkColorPickerCtrl" Content="Ctrl"/>
+                                <ToggleButton x:Name="ChkColorPickerShift" Content="Shift"/>
+                                <ToggleButton x:Name="ChkColorPickerAlt" Content="Alt"/>
+                                <ToggleButton x:Name="ChkColorPickerWin" Content="Win"/>
                                 <ComboBox x:Name="CmbColorPickerKey" Width="200" VerticalAlignment="Center"/>
                             </DockPanel>
                             
                             <!-- Таймер/Секундомер -->
                             <DockPanel>
                                 <TextBlock Text="{local:Loc ResourceKey=Tool_TimerStopwatch}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkTimerStopwatchCtrl" Content="Ctrl" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkTimerStopwatchShift" Content="Shift" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkTimerStopwatchAlt" Content="Alt" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <CheckBox x:Name="ChkTimerStopwatchWin" Content="Win" Foreground="White" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <ToggleButton x:Name="ChkTimerStopwatchCtrl" Content="Ctrl"/>
+                                <ToggleButton x:Name="ChkTimerStopwatchShift" Content="Shift"/>
+                                <ToggleButton x:Name="ChkTimerStopwatchAlt" Content="Alt"/>
+                                <ToggleButton x:Name="ChkTimerStopwatchWin" Content="Win"/>
                                 <ComboBox x:Name="CmbTimerStopwatchKey" Width="200" VerticalAlignment="Center"/>
                             </DockPanel>
                         </StackPanel>
@@ -237,15 +323,18 @@
                                    TextWrapping="Wrap"
                                    Margin="0,0,0,14"/>
                         <UniformGrid Columns="2">
-                            <CheckBox x:Name="ChkShowPresetSearch" Content="{local:Loc ResourceKey=Tool_Search}" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetScreenshot" Content="{local:Loc ResourceKey=Tool_Screenshot}" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetVideo" Content="{local:Loc ResourceKey=Tool_Video}" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetCalc" Content="{local:Loc ResourceKey=Tool_Calculator}" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetExplorer" Content="{local:Loc ResourceKey=Tool_Explorer}" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetDownloads" Content="{local:Loc ResourceKey=Tool_Downloads}" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetTimerStopwatch" Content="{local:Loc ResourceKey=Tool_TimerStopwatch}" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetColorPicker" Content="{local:Loc ResourceKey=Tool_ColorPicker}" Style="{StaticResource CompactCheckBoxStyle}"/>
-                            <CheckBox x:Name="ChkShowPresetQuickNote" Content="{local:Loc ResourceKey=Tool_QuickNote}" Style="{StaticResource CompactCheckBoxStyle}"/>
+                            <UniformGrid.Resources>
+                                <Style TargetType="CheckBox" BasedOn="{StaticResource CompactCheckBoxStyle}"/>
+                            </UniformGrid.Resources>
+                            <CheckBox x:Name="ChkShowPresetSearch" Content="{local:Loc ResourceKey=Tool_Search}"/>
+                            <CheckBox x:Name="ChkShowPresetScreenshot" Content="{local:Loc ResourceKey=Tool_Screenshot}"/>
+                            <CheckBox x:Name="ChkShowPresetVideo" Content="{local:Loc ResourceKey=Tool_Video}"/>
+                            <CheckBox x:Name="ChkShowPresetCalc" Content="{local:Loc ResourceKey=Tool_Calculator}"/>
+                            <CheckBox x:Name="ChkShowPresetExplorer" Content="{local:Loc ResourceKey=Tool_Explorer}"/>
+                            <CheckBox x:Name="ChkShowPresetDownloads" Content="{local:Loc ResourceKey=Tool_Downloads}"/>
+                            <CheckBox x:Name="ChkShowPresetTimerStopwatch" Content="{local:Loc ResourceKey=Tool_TimerStopwatch}"/>
+                            <CheckBox x:Name="ChkShowPresetColorPicker" Content="{local:Loc ResourceKey=Tool_ColorPicker}"/>
+                            <CheckBox x:Name="ChkShowPresetQuickNote" Content="{local:Loc ResourceKey=Tool_QuickNote}"/>
                         </UniformGrid>
                     </StackPanel>
                 </Border>
@@ -253,8 +342,8 @@
         </TabControl>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
-            <Button Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource SecondaryButtonStyle}" Click="BtnCancel_Click" Height="36" Width="130" Margin="0,0,10,0" FontWeight="SemiBold" IsCancel="True"/>
-            <Button Content="{local:Loc ResourceKey=Common_Save}" Style="{StaticResource ActionButtonStyle}" Click="BtnSave_Click" Height="36" Width="180" FontWeight="Bold" IsDefault="True"/>
+            <Button Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource SecondaryButtonStyle}" Click="BtnCancel_Click" Width="130" Margin="0,0,10,0" IsCancel="True"/>
+            <Button Content="{local:Loc ResourceKey=Common_Save}" Style="{StaticResource ActionButtonStyle}" Click="BtnSave_Click" Width="180" IsDefault="True"/>
         </StackPanel>
     </Grid>
 </local:DarkWindow>

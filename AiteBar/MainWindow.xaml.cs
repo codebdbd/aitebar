@@ -1950,6 +1950,11 @@ public partial class MainWindow : Window
 
         private Button? GetFirstFocusablePanelButton()
         {
+            if (BtnAdd.Visibility == Visibility.Visible)
+            {
+                return BtnAdd;
+            }
+
             if (_userButtons.Count > 0)
             {
                 return _userButtons[0];
@@ -1962,8 +1967,7 @@ public partial class MainWindow : Window
                     return btn;
                 }
             }
-
-            return BtnAdd.Visibility == Visibility.Visible ? BtnAdd : null;
+            return null;
         }
         
         // Get all focusable buttons in order

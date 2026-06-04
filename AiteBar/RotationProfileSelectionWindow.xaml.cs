@@ -56,8 +56,7 @@ public partial class RotationProfileSelectionWindow : DarkWindow
                 Tag = profile.ProfilePath,
                 IsChecked = _selectedProfilePaths.Contains(profile.ProfilePath),
                 ToolTip = profile.ProfilePath,
-                FontWeight = FontWeights.SemiBold,
-                Margin = new Thickness(8, 5, 8, 5)
+                Style = (Style)FindResource("SelectionListCheckBoxStyle")
             };
             checkBox.Checked += ProfileCheckBox_Changed;
             checkBox.Unchecked += ProfileCheckBox_Changed;

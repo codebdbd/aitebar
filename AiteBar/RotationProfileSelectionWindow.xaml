@@ -38,7 +38,7 @@
         </Grid>
 
         <Grid Grid.Row="1" Margin="0,0,0,10">
-            <TextBox x:Name="TxtSearch" TextChanged="TxtSearch_TextChanged" Height="30"/>
+            <TextBox x:Name="TxtSearch" TextChanged="TxtSearch_TextChanged"/>
             <TextBlock x:Name="TxtSearchPlaceholder" Text="{local:Loc ResourceKey=RotationProfiles_SearchPlaceholder}" Margin="10,0" VerticalAlignment="Center" Foreground="#666666" IsHitTestVisible="False"/>
         </Grid>
 

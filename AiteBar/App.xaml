@@ -6,6 +6,16 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="FormControlsResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="{x:Type Control}">
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate/>
+                    </Setter.Value>
+                </Setter>
+            </Style>
             <!-- Colors -->
         <SolidColorBrush x:Key="WindowBackground" Color="#1A1A1C"/>
         <SolidColorBrush x:Key="PanelBackground" Color="#0F1115"/>
@@ -279,7 +289,7 @@
             </MenuItem>
         </ContextMenu>
 
-        <Style TargetType="TextBox">
+        <Style TargetType="TextBox" BasedOn="{StaticResource BaseTextBoxStyle}">
             <Setter Property="ContextMenu" Value="{StaticResource TextEditingContextMenu}"/>
         </Style>
 

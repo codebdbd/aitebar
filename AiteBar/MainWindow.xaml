@@ -11,17 +11,16 @@
         Loaded="Window_Loaded" SourceInitialized="Window_SourceInitialized" PreviewKeyDown="Window_PreviewKeyDown" Left="0" Top="-2000">
     
     <Window.Resources>
-        <!-- Focus visual style for keyboard navigation -->
         <Style x:Key="ButtonFocusVisual">
             <Setter Property="Control.Template">
                 <Setter.Value>
                     <ControlTemplate>
-                        <Border BorderBrush="#2A9CFF" BorderThickness="2" CornerRadius="4" Margin="2"/>
+                        <Border BorderBrush="#2A9CFF" BorderThickness="1" CornerRadius="4" Margin="1"/>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
-        
+
         <Style TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -95,7 +94,7 @@
                                 Foreground="#FFFFFF" Focusable="True">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border Background="Transparent">
+                                    <Border x:Name="FocusChrome" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4">
                                         <Border Width="24" Height="24" Background="#2A9CFF" CornerRadius="12" 
                                                 HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="CircleBorder">
                                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
@@ -107,6 +106,9 @@
                                         </Trigger>
                                         <Trigger Property="IsPressed" Value="True">
                                             <Setter Property="Background" Value="#164C99" TargetName="CircleBorder"/>
+                                        </Trigger>
+                                        <Trigger Property="IsKeyboardFocused" Value="True">
+                                            <Setter TargetName="FocusChrome" Property="BorderBrush" Value="#2A9CFF"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>

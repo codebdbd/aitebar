@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Controls.Primitives;
 using Button = System.Windows.Controls.Button;
 using CheckBox = System.Windows.Controls.CheckBox;
 using ComboBox = System.Windows.Controls.ComboBox;
@@ -219,7 +220,7 @@ public partial class AppSettingsWindow : DarkWindow
         }
     }
 
-    private static void LoadHotkeyBinding(HotkeyBinding binding, CheckBox chkCtrl, CheckBox chkAlt, CheckBox chkShift, CheckBox chkWin, ComboBox cmbKey)
+    private static void LoadHotkeyBinding(HotkeyBinding binding, ToggleButton chkCtrl, ToggleButton chkAlt, ToggleButton chkShift, ToggleButton chkWin, ComboBox cmbKey)
     {
         chkCtrl.IsChecked = binding.Ctrl;
         chkAlt.IsChecked = binding.Alt;
@@ -228,7 +229,7 @@ public partial class AppSettingsWindow : DarkWindow
         SetKeyComboValue(cmbKey, binding.Key);
     }
 
-    private static HotkeyBinding BuildHotkeyBinding(CheckBox chkCtrl, CheckBox chkAlt, CheckBox chkShift, CheckBox chkWin, ComboBox cmbKey)
+    private static HotkeyBinding BuildHotkeyBinding(ToggleButton chkCtrl, ToggleButton chkAlt, ToggleButton chkShift, ToggleButton chkWin, ComboBox cmbKey)
     {
         var binding = new HotkeyBinding();
         binding.Ctrl = chkCtrl.IsChecked ?? false;
@@ -373,7 +374,7 @@ public partial class AppSettingsWindow : DarkWindow
         for (int i = 0; i < contexts.Count; i++)
         {
             PanelContext context = contexts[i];
-            var row = new Grid { Height = 28, Margin = new Thickness(0, 0, 0, 5) };
+            var row = new Grid { Height = 34, Margin = new Thickness(0, 0, 0, 5) };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(34) });
@@ -399,7 +400,7 @@ public partial class AppSettingsWindow : DarkWindow
             Grid.SetColumn(badge, 0);
             row.Children.Add(badge);
 
-            var nameTextBox = new TextBox { Text = context.Name, Height = 26 };
+            var nameTextBox = new TextBox { Text = context.Name };
             Grid.SetColumn(nameTextBox, 1);
             row.Children.Add(nameTextBox);
 
@@ -407,10 +408,7 @@ public partial class AppSettingsWindow : DarkWindow
             {
                 IsChecked = context.IsEnabled,
                 IsEnabled = i != 0,
-                Margin = new Thickness(0),
-                Padding = new Thickness(0),
-                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                VerticalAlignment = VerticalAlignment.Center,
+                Style = (Style)FindResource("CenteredCheckBoxStyle"),
                 ToolTip = i == 0
                     ? LocalizationService.Get("AppSettingsWindow_PrimaryPanelAlwaysEnabled")
                     : LocalizationService.Get("AppSettingsWindow_PanelEnabled")
