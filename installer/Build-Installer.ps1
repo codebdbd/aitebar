@@ -59,13 +59,16 @@ if (-not $iscc) {
 
 New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
 
+# Cleanup any temporary files left by previous Inno Setup runs (before)
+Get-ChildItem -Path $installerDir -Filter "*.tmp" -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
+
 & $iscc "/Qp" "/DAppVersion=$appVersion" $issPath
 if ($LASTEXITCODE -ne 0) {
     throw "ISCC.exe failed with exit code $LASTEXITCODE"
 }
 
-# Cleanup temporary files left by Inno Setup
-Get-ChildItem -Path $installerDir -Filter "*.tmp" -Force | Remove-Item -Force -ErrorAction SilentlyContinue
+# Cleanup any temporary files left by Inno Setup (after)
+Get-ChildItem -Path $installerDir -Filter "*.tmp" -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 
 $installers = Get-ChildItem -Path $installerDir -Filter "*.exe" -File
 if ($installers.Count -ne 1) {

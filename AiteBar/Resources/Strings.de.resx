@@ -164,4 +164,158 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="FileSorter_UndoPartial" xml:space="preserve"><value>{0} Dateien wiederhergestellt, {1} übersprungen.</value></data>
   <data name="FileSorter_ErrorFormat" xml:space="preserve"><value>Die Sortierung konnte nicht abgeschlossen werden.
 {0}</value></data>
+  <data name="SettingsWindow_SelectKey" xml:space="preserve"><value>Taste wählen...</value></data>
+  <data name="SettingsWindow_SelectIconTitle" xml:space="preserve"><value>Symbol wählen</value></data>
+  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Bilder (*.png;*.jpg;*.jpeg;*.bmp;*.ico)|*.png;*.jpg;*.jpeg;*.bmp;*.ico|Alle Dateien (*.*)|*.*</value></data>
+  <data name="SettingsWindow_RequiredWeb" xml:space="preserve"><value>Website-URL einfügen (erforderlich):</value></data>
+  <data name="SettingsWindow_RequiredProgram" xml:space="preserve"><value>Pfad zu Programm oder Verknüpfung angeben (erforderlich):</value></data>
+  <data name="SettingsWindow_RequiredFile" xml:space="preserve"><value>Dateipfad angeben (erforderlich):</value></data>
+  <data name="SettingsWindow_RequiredFolder" xml:space="preserve"><value>Ordnerpfad angeben (erforderlich):</value></data>
+  <data name="SettingsWindow_RequiredCommand" xml:space="preserve"><value>Konsolenbefehl eingeben (erforderlich):</value></data>
+  <data name="SettingsWindow_RequiredScript" xml:space="preserve"><value>Pfad zur Skriptdatei angeben (erforderlich):</value></data>
+  <data name="SettingsWindow_RequiredValue" xml:space="preserve"><value>Wert eingeben (erforderlich):</value></data>
+  <data name="SettingsWindow_PlaceholderUrl" xml:space="preserve"><value>Website-URL einfügen</value></data>
+  <data name="SettingsWindow_PlaceholderProgram" xml:space="preserve"><value>Pfad zu .exe, .lnk oder .appref-ms angeben</value></data>
+  <data name="SettingsWindow_HelpProgram" xml:space="preserve"><value>Für Programme und Verknüpfungen. Unterstützt .exe, .lnk und .appref-ms.</value></data>
+  <data name="SettingsWindow_PlaceholderFile" xml:space="preserve"><value>Pfad zu einer normalen Datei angeben</value></data>
+  <data name="SettingsWindow_HelpFile" xml:space="preserve"><value>Für Dokumente und andere Dateien außer Skripten. Verwenden Sie für Skripte den Typ „Skript“.</value></data>
+  <data name="SettingsWindow_PlaceholderFolder" xml:space="preserve"><value>Ordnerpfad angeben</value></data>
+  <data name="SettingsWindow_HelpFolder" xml:space="preserve"><value>Öffnet den ausgewählten Ordner im Windows-Explorer.</value></data>
+  <data name="SettingsWindow_PlaceholderCommand" xml:space="preserve"><value>Konsolenbefehl eingeben</value></data>
+  <data name="SettingsWindow_HelpCommand" xml:space="preserve"><value>Für erfahrene Benutzer.
+Beispiele:
+cmd, powershell, explorer, control, appwiz.cpl, ncpa.cpl, services.msc, taskmgr, regedit, msconfig
+
+Python-Modul (auf Systemen mit installiertem py):
+cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
+  <data name="SettingsWindow_PlaceholderScript" xml:space="preserve"><value>Pfad zur Skriptdatei angeben</value></data>
+  <data name="SettingsWindow_HelpScript" xml:space="preserve"><value>Für erfahrene Benutzer.
+Unterstützt .bat, .cmd, .ps1 und eigenständige .py-Dateien.
+Verwenden Sie für modulare Python-Projekte den Typ „Befehl“.</value></data>
+  <data name="SettingsWindow_ProgramFilter" xml:space="preserve"><value>Programme (*.exe;*.lnk;*.appref-ms)|*.exe;*.lnk;*.appref-ms|Alle Dateien (*.*)|*.*</value></data>
+  <data name="SettingsWindow_FileFilter" xml:space="preserve"><value>Dateien|*.*</value></data>
+  <data name="SettingsWindow_ScriptFilter" xml:space="preserve"><value>Skripte (*.bat;*.cmd;*.ps1;*.py)|*.bat;*.cmd;*.ps1;*.py</value></data>
+  <data name="SettingsWindow_AllFilesFilter" xml:space="preserve"><value>Alle Dateien (*.*)|*.*</value></data>
+  <data name="SettingsWindow_FieldName" xml:space="preserve"><value>Name</value></data>
+  <data name="SettingsWindow_FieldCommand" xml:space="preserve"><value>Befehl</value></data>
+  <data name="SettingsWindow_FieldFolderPath" xml:space="preserve"><value>Ordnerpfad</value></data>
+  <data name="SettingsWindow_FieldFilePath" xml:space="preserve"><value>Dateipfad</value></data>
+  <data name="SettingsWindow_RequiredFields" xml:space="preserve"><value>Füllen Sie die Pflichtfelder aus: {0}.</value></data>
+  <data name="SettingsWindow_ProgramNotFound" xml:space="preserve"><value>Programmdatei oder Verknüpfung wurde nicht gefunden.</value></data>
+  <data name="SettingsWindow_InvalidProgram" xml:space="preserve"><value>Der Typ „Programm“ unterstützt nur .exe, .lnk und .appref-ms.</value></data>
+  <data name="SettingsWindow_FileNotFound" xml:space="preserve"><value>Datei wurde nicht gefunden.</value></data>
+  <data name="SettingsWindow_InvalidFile" xml:space="preserve"><value>Der Typ „Datei“ akzeptiert normale Dateien außer Programmen und Skripten.</value></data>
+  <data name="SettingsWindow_FolderNotFound" xml:space="preserve"><value>Ordner wurde nicht gefunden.</value></data>
+  <data name="SettingsWindow_ScriptNotFound" xml:space="preserve"><value>Skriptdatei wurde nicht gefunden.</value></data>
+  <data name="SettingsWindow_InvalidScript" xml:space="preserve"><value>Nur .bat, .cmd, .ps1 und .py werden unterstützt.</value></data>
+  <data name="SettingsWindow_PythonNotFound" xml:space="preserve"><value>Zum Ausführen von .py-Dateien muss python.exe im PATH vorhanden sein.</value></data>
+  <data name="SettingsWindow_ErrorFormat" xml:space="preserve"><value>Fehler:
+{0}</value></data>
+  <data name="HotkeyConflictMessage" xml:space="preserve"><value>Es wurden widersprüchliche Tastenkürzel gefunden:
+{0}
+
+Weisen Sie andere Tastenkürzel zu.</value></data>
+  <data name="Main_ColorPickerTooltip" xml:space="preserve"><value>Farbe vom Bildschirm auswählen</value></data>
+  <data name="ColorPicker_Instruction" xml:space="preserve"><value>Klicken Sie an eine beliebige Stelle, um die Farbe zu kopieren. Esc bricht ab.</value></data>
+  <data name="ColorPicker_Copied" xml:space="preserve"><value>Farbe kopiert: {0}</value></data>
+  <data name="Export_Failed" xml:space="preserve"><value>Panel konnte nicht exportiert werden.
+{0}</value></data>
+  <data name="Import_Confirm" xml:space="preserve"><value>{0} Schaltflächen in das aktuelle Panel „{1}“ importieren?
+
+Das Rückgängigmachen des Imports wird in dieser Version nicht unterstützt.</value></data>
+  <data name="Import_Failed" xml:space="preserve"><value>Panel konnte nicht importiert werden.
+{0}</value></data>
+  <data name="Drop_NotSupported" xml:space="preserve"><value>Dieses Objekt kann dem Panel nicht hinzugefügt werden.</value></data>
+  <data name="Drop_ReadFailed" xml:space="preserve"><value>Das gezogene Objekt konnte nicht gelesen werden.</value></data>
+  <data name="Drop_OnlyOne" xml:space="preserve"><value>Es kann jeweils nur ein Objekt gezogen werden.</value></data>
+  <data name="Drop_ExistingFilesFoldersOnly" xml:space="preserve"><value>Nur vorhandene Dateien und Ordner werden unterstützt.</value></data>
+  <data name="Drop_UrlShortcutOnly" xml:space="preserve"><value>Nur .url-Dateien mit http/https-Links werden unterstützt.</value></data>
+  <data name="Drop_FileFolderOrUrlOnly" xml:space="preserve"><value>Es kann nur eine Datei, ein Ordner oder ein http/https-Link gezogen werden.</value></data>
+  <data name="Drop_SupportedTargets" xml:space="preserve"><value>Nur Dateien, Ordner, .url-Dateien und direkte http/https-Links werden unterstützt.</value></data>
+  <data name="Action_ConfirmCommand" xml:space="preserve"><value>Führen Sie diesen Befehl nur aus, wenn Sie ihm vertrauen. Er kann Dateien und Systemeinstellungen ändern:
+{0}
+
+Fortfahren?</value></data>
+  <data name="Action_ConfirmScript" xml:space="preserve"><value>Führen Sie dieses Skript nur aus, wenn Sie ihm vertrauen. Es kann Dateien und Systemeinstellungen ändern:
+{0}
+
+Fortfahren?</value></data>
+  <data name="Action_SearchFailed" xml:space="preserve"><value>Suche fehlgeschlagen</value></data>
+  <data name="Action_LaunchFailed" xml:space="preserve"><value>Start fehlgeschlagen.</value></data>
+  <data name="Action_PythonNotFound" xml:space="preserve"><value>Python wurde nicht gefunden.</value></data>
+  <data name="Action_UnsupportedScript" xml:space="preserve"><value>Nicht unterstütztes Skript.</value></data>
+  <data name="About_VersionFormat" xml:space="preserve"><value>Version {0}.{1}.{2}</value></data>
+  <data name="About_Description" xml:space="preserve"><value>Ausblendbares Schnellzugriffs-Panel für Windows. Startet Websites, Apps, Skripte, Befehle und Tastenkürzel über anpassbare Blöcke.</value></data>
+  <data name="About_Info" xml:space="preserve"><value>Informationen</value></data>
+  <data name="About_Developer" xml:space="preserve"><value>Entwickler: Codebdbd</value></data>
+  <data name="About_License" xml:space="preserve"><value>Lizenz: Proprietär (Alle Rechte vorbehalten)</value></data>
+  <data name="About_Technologies" xml:space="preserve"><value>Technologien</value></data>
+  <data name="About_AppData" xml:space="preserve"><value>Anwendungsdaten</value></data>
+  <data name="About_OpenDataFolder" xml:space="preserve"><value>Datenordner öffnen</value></data>
+  <data name="About_Resources" xml:space="preserve"><value>Ressourcen</value></data>
+  <data name="About_Website" xml:space="preserve"><value>Programmseite</value></data>
+  <data name="About_Repository" xml:space="preserve"><value>GitHub-Repository</value></data>
+  <data name="About_Licenses" xml:space="preserve"><value>Lizenzen</value></data>
+  <data name="About_ProgramFolder" xml:space="preserve"><value>Programmordner</value></data>
+  <data name="About_NoticesMissing" xml:space="preserve"><value>THIRD_PARTY_NOTICES.txt wurde nicht gefunden.</value></data>
+  <data name="About_OpenDataFolderFailed" xml:space="preserve"><value>Datenordner konnte nicht geöffnet werden.
+
+{0}</value></data>
+  <data name="About_ProgramFolderUnknown" xml:space="preserve"><value>Programmordner konnte nicht ermittelt werden.</value></data>
+  <data name="Update_Check" xml:space="preserve"><value>Nach Updates suchen</value></data>
+  <data name="Update_Current" xml:space="preserve"><value>AiteBar {0} ist aktuell.</value></data>
+  <data name="Update_Available" xml:space="preserve"><value>AiteBar {0} ist verfügbar.
+Sie verwenden {1}.
+
+GitHub-Release-Seite öffnen?</value></data>
+  <data name="Update_CheckFailed" xml:space="preserve"><value>Updates konnten nicht geprüft werden.
+
+{0}</value></data>
+  <data name="Update_InvalidRelease" xml:space="preserve"><value>Das neueste GitHub-Release enthält kein gültiges Versions-Tag.</value></data>
+  <data name="Update_InvalidReleaseUrl" xml:space="preserve"><value>Das neueste GitHub-Release enthält einen unerwarteten Release-Link.</value></data>
+  <data name="Update_InvalidResponse" xml:space="preserve"><value>GitHub hat eine Update-Antwort zurückgegeben, die AiteBar nicht lesen konnte.</value></data>
+  <data name="Update_GitHubUnavailable" xml:space="preserve"><value>GitHub kann derzeit keine Update-Informationen liefern. Statuscode: {0}.</value></data>
+  <data name="Update_NetworkUnavailable" xml:space="preserve"><value>Der Update-Dienst konnte nicht erreicht werden. Prüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.</value></data>
+  <data name="Update_Timeout" xml:space="preserve"><value>Die Update-Prüfung hat das Zeitlimit überschritten. Versuchen Sie es später erneut.</value></data>
+  <data name="IconPicker_CustomIcon" xml:space="preserve"><value>Benutzerdefiniertes Symbol</value></data>
+  <data name="IconPicker_SearchCodeHint" xml:space="preserve"><value>Nach Code suchen, zum Beispiel: E000</value></data>
+  <data name="IconPicker_SearchBrandsHint" xml:space="preserve"><value>Nach Markenname (github, twitter) oder Code suchen</value></data>
+  <data name="IconPicker_SearchIconsHint" xml:space="preserve"><value>Nach Symbolname (add, home, search) oder Code suchen</value></data>
+  <data name="IconPicker_ImageFilter" xml:space="preserve"><value>Bilder|*.png;*.jpg;*.jpeg;*.bmp;*.ico</value></data>
+  <data name="IconPicker_CopyFailed" xml:space="preserve"><value>Fehler beim Kopieren der Datei.</value></data>
+  <data name="IconPicker_LoadFailed" xml:space="preserve"><value>Symbolkatalog konnte nicht geladen werden:
+{0}</value></data>
+  <data name="IconPicker_MaterialIcons" xml:space="preserve"><value>Material-Symbole</value></data>
+  <data name="IconPicker_FluentSystem" xml:space="preserve"><value>Fluent-System</value></data>
+  <data name="IconPicker_Brands" xml:space="preserve"><value>Marken</value></data>
+  <data name="TimerStopwatch_Compact" xml:space="preserve"><value>Kompakt</value></data>
+  <data name="TimerStopwatch_Expand" xml:space="preserve"><value>Erweitern</value></data>
+  <data name="Update_UnknownVersion" xml:space="preserve"><value>unbekannt</value></data>
+  <data name="FileSorter_CategoryImages" xml:space="preserve"><value>Bilder</value></data>
+  <data name="FileSorter_CategoryDocuments" xml:space="preserve"><value>Dokumente</value></data>
+  <data name="FileSorter_CategoryVideo" xml:space="preserve"><value>Video</value></data>
+  <data name="FileSorter_CategoryAudio" xml:space="preserve"><value>Audio</value></data>
+  <data name="FileSorter_CategoryArchives" xml:space="preserve"><value>Archive</value></data>
+  <data name="FileSorter_CategoryInstallers" xml:space="preserve"><value>Installationsdateien</value></data>
+  <data name="FileSorter_CategoryProjects" xml:space="preserve"><value>Projekte</value></data>
+  <data name="FileSorter_CategoryWeb" xml:space="preserve"><value>Web</value></data>
+  <data name="FileSorter_CategoryOther" xml:space="preserve"><value>Sonstiges</value></data>
+  <data name="FileSorter_RootPathRequired" xml:space="preserve"><value>Ein Ordnerpfad ist erforderlich.</value></data>
+  <data name="IconPicker_InvalidFluentMetadata" xml:space="preserve"><value>Fluent-Symbolmetadaten konnten nicht gelesen werden.</value></data>
+  <data name="PanelPackage_ExportPathRequired" xml:space="preserve"><value>Ein Pfad für den Panel-Export ist erforderlich.</value></data>
+  <data name="PanelPackage_ActivePanelNotFound" xml:space="preserve"><value>Aktives Panel wurde nicht gefunden.</value></data>
+  <data name="PanelPackage_FileNotFound" xml:space="preserve"><value>Panel-Paketdatei wurde nicht gefunden.</value></data>
+  <data name="PanelPackage_ManifestMissing" xml:space="preserve"><value>Das Paket enthält keine manifest.json.</value></data>
+  <data name="PanelPackage_ManifestInvalid" xml:space="preserve"><value>manifest.json konnte nicht gelesen werden.</value></data>
+  <data name="PanelPackage_FileTooLarge" xml:space="preserve"><value>Datei {0} ist zu groß: {1} Bytes.</value></data>
+  <data name="PanelPackage_TooManyFiles" xml:space="preserve"><value>Das Paket enthält zu viele Dateien: {0}.</value></data>
+  <data name="PanelPackage_InvalidEntryPath" xml:space="preserve"><value>Ungültiger Pfad im Paket: {0}.</value></data>
+  <data name="PanelPackage_EntryTooLarge" xml:space="preserve"><value>Datei im Paket ist zu groß: {0}.</value></data>
+  <data name="PanelPackage_UncompressedTooLarge" xml:space="preserve"><value>Das entpackte Paket ist zu groß: {0} Bytes.</value></data>
+  <data name="PanelPackage_UnsupportedFormat" xml:space="preserve"><value>Nicht unterstützte Paketformatversion: {0}.</value></data>
+  <data name="PanelPackage_ElementsMissing" xml:space="preserve"><value>Das Paket enthält keine Elementliste.</value></data>
+  <data name="PanelPackage_ElementNameMissing" xml:space="preserve"><value>Das Paket enthält ein Element ohne Namen.</value></data>
+  <data name="PanelPackage_UnsupportedActionType" xml:space="preserve"><value>Nicht unterstützter Aktionstyp: {0}.</value></data>
+  <data name="PanelPackage_InvalidIconPath" xml:space="preserve"><value>Ungültiger Symbolpfad: {0}.</value></data>
+  <data name="IconPicker_ResourceNotFound" xml:space="preserve"><value>Ressource wurde nicht gefunden: {0}</value></data>
 </root>

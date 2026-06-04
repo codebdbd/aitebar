@@ -80,15 +80,15 @@
 
         <!-- Вкладки -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Background="#252525">
-            <Button x:Name="BtnTabMaterial" Content="Material Icons"
+            <Button x:Name="BtnTabMaterial" Content="{local:Loc ResourceKey=IconPicker_MaterialIcons}"
                     Margin="6,6,2,0"
                     Style="{StaticResource TabButtonStyle}"
                     Click="BtnTabMaterial_Click"/>
-            <Button x:Name="BtnTabFluent" Content="Fluent System"
+            <Button x:Name="BtnTabFluent" Content="{local:Loc ResourceKey=IconPicker_FluentSystem}"
                     Margin="2,6,2,0"
                     Style="{StaticResource TabButtonStyle}"
                     Click="BtnTabFluent_Click"/>
-            <Button x:Name="BtnTabBrands" Content="Brands"
+            <Button x:Name="BtnTabBrands" Content="{local:Loc ResourceKey=IconPicker_Brands}"
                     Margin="2,6,6,0"
                     Style="{StaticResource TabButtonStyle}"
                     Click="BtnTabBrands_Click"/>

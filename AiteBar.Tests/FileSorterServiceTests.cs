@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Xunit;
@@ -8,18 +9,29 @@ namespace AiteBar.Tests;
 public sealed class FileSorterServiceTests
 {
     [Theory]
-    [InlineData("photo.jpg", "Изображения")]
-    [InlineData("doc.pdf", "Документы")]
-    [InlineData("clip.mp4", "Видео")]
-    [InlineData("track.mp3", "Аудио")]
-    [InlineData("archive.zip", "Архивы")]
-    [InlineData("setup.exe", "Установщики")]
-    [InlineData("scene.blend", "Проекты")]
-    [InlineData("app.tsx", "Веб")]
-    [InlineData("unknown.xyzq", "Прочее")]
+    [InlineData("photo.jpg", "Images")]
+    [InlineData("doc.pdf", "Documents")]
+    [InlineData("clip.mp4", "Video")]
+    [InlineData("track.mp3", "Audio")]
+    [InlineData("archive.zip", "Archives")]
+    [InlineData("setup.exe", "Installers")]
+    [InlineData("scene.blend", "Projects")]
+    [InlineData("app.tsx", "Web")]
+    [InlineData("unknown.xyzq", "Other")]
     public void GetCategoryFolder_MapsExpectedCategory(string fileName, string expectedCategory)
     {
-        Assert.Equal(expectedCategory, FileSorterService.GetCategoryFolder(fileName));
+        Assert.Equal(expectedCategory, FileSorterService.GetCategoryFolder(fileName, CultureInfo.GetCultureInfo("en")));
+    }
+
+    [Theory]
+    [InlineData("de", "Bilder")]
+    [InlineData("uk", "Зображення")]
+    [InlineData("ru", "Изображения")]
+    public void GetCategoryFolder_UsesRequestedCulture(string cultureName, string expectedCategory)
+    {
+        Assert.Equal(
+            expectedCategory,
+            FileSorterService.GetCategoryFolder("photo.jpg", CultureInfo.GetCultureInfo(cultureName)));
     }
 
     [Fact]
@@ -60,7 +72,7 @@ public sealed class FileSorterServiceTests
             FileSortResult result = service.SortFiles(root);
 
             Assert.Equal(1, result.SortedCount);
-            Assert.True(File.Exists(Path.Combine(root, "Изображения", "top.jpg")));
+            Assert.True(File.Exists(Path.Combine(root, LocalizationService.Get("FileSorter_CategoryImages"), "top.jpg")));
             Assert.True(File.Exists(nestedFile));
         }
         finally
@@ -105,7 +117,7 @@ public sealed class FileSorterServiceTests
         string root = CreateTempRoot();
         try
         {
-            string existingTargetDir = Path.Combine(root, "Изображения");
+            string existingTargetDir = Path.Combine(root, LocalizationService.Get("FileSorter_CategoryImages"));
             Directory.CreateDirectory(existingTargetDir);
             File.WriteAllText(Path.Combine(existingTargetDir, "photo.jpg"), "existing");
 

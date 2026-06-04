@@ -126,9 +126,9 @@
                         <Button x:Name="BtnCalc" Content="&#xF06C;" Click="BtnCalc_Click" Foreground="#A3E635" Focusable="True"/>
                         <Button x:Name="BtnExplorer" Content="&#xF42F;" Click="BtnExplorer_Click" Foreground="#F59E0B" Focusable="True"/>
                         <Button x:Name="BtnDownloads" Content="&#xF151;" Click="BtnDownloads_Click" Foreground="#34D399" Focusable="True"/>
-                        <Button x:Name="BtnFileSorter" Content="&#xF17B;" Click="BtnFileSorter_Click" Foreground="#60A5FA" Focusable="True"/>
+                        <Button x:Name="BtnFileSorter" Content="&#xF202;" Click="BtnFileSorter_Click" Foreground="#60A5FA" Focusable="True"/>
                         <Button x:Name="BtnTimerStopwatch" Content="&#xED88;" Click="BtnTimerStopwatch_Click" Foreground="#38BDF8" Focusable="True"/>
-                        <Button x:Name="BtnColorPicker" Content="&#xF2F6;" Click="BtnColorPicker_Click" Foreground="#A855F7" Focusable="True"/>
+                        <Button x:Name="BtnColorPicker" Content="&#xE5FE;" Click="BtnColorPicker_Click" Foreground="#A855F7" Focusable="True"/>
                         <Button x:Name="BtnQuickNote" Content="&#xF56F;" Click="BtnQuickNote_Click" Foreground="#22D3EE" Focusable="True"/>
                     </local:OverflowWrapPanel>
 

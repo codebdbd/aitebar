@@ -101,4 +101,216 @@
   <data name="FileSorter_UndoPartial" xml:space="preserve"><value>Повернуто файлів: {0}, пропущено: {1}.</value></data>
   <data name="FileSorter_ErrorFormat" xml:space="preserve"><value>Не вдалося виконати сортування.
 {0}</value></data>
+  <data name="Common_Info" xml:space="preserve"><value>Інформація</value></data>
+  <data name="Common_OK" xml:space="preserve"><value>Гаразд</value></data>
+  <data name="SettingsWindow_ButtonNamePlaceholder" xml:space="preserve"><value>Наприклад: ChatGPT, Термінал...</value></data>
+  <data name="SettingsWindow_UrlOrPath" xml:space="preserve"><value>URL або шлях</value></data>
+  <data name="SettingsWindow_AppMode" xml:space="preserve"><value>Режим застосунку</value></data>
+  <data name="SettingsWindow_Incognito" xml:space="preserve"><value>Режим інкогніто</value></data>
+  <data name="SettingsWindow_Fullscreen" xml:space="preserve"><value>Відкривати на весь екран</value></data>
+  <data name="SettingsWindow_Rotation" xml:space="preserve"><value>Режим ротації</value></data>
+  <data name="SettingsWindow_HotkeyCombination" xml:space="preserve"><value>Комбінація клавіш</value></data>
+  <data name="SettingsWindow_ChooseFromLibrary" xml:space="preserve"><value>Вибрати з бібліотеки</value></data>
+  <data name="SettingsWindow_IconColor" xml:space="preserve"><value>Колір піктограми</value></data>
+  <data name="SettingsWindow_HexCode" xml:space="preserve"><value>HEX-код</value></data>
+  <data name="SettingsWindow_HexPlaceholder" xml:space="preserve"><value>Наприклад: #FFFFFF</value></data>
+  <data name="SettingsWindow_SelectKey" xml:space="preserve"><value>Виберіть клавішу...</value></data>
+  <data name="SettingsWindow_SelectIconTitle" xml:space="preserve"><value>Виберіть піктограму</value></data>
+  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Зображення (*.png;*.jpg;*.jpeg;*.bmp;*.ico)|*.png;*.jpg;*.jpeg;*.bmp;*.ico|Усі файли (*.*)|*.*</value></data>
+  <data name="SettingsWindow_RequiredWeb" xml:space="preserve"><value>Вставте URL сайту (обов’язково):</value></data>
+  <data name="SettingsWindow_RequiredProgram" xml:space="preserve"><value>Укажіть шлях до програми або ярлика (обов’язково):</value></data>
+  <data name="SettingsWindow_RequiredFile" xml:space="preserve"><value>Укажіть шлях до файлу (обов’язково):</value></data>
+  <data name="SettingsWindow_RequiredFolder" xml:space="preserve"><value>Укажіть шлях до папки (обов’язково):</value></data>
+  <data name="SettingsWindow_RequiredCommand" xml:space="preserve"><value>Введіть консольну команду (обов’язково):</value></data>
+  <data name="SettingsWindow_RequiredScript" xml:space="preserve"><value>Укажіть шлях до файлу скрипту (обов’язково):</value></data>
+  <data name="SettingsWindow_RequiredValue" xml:space="preserve"><value>Введіть значення (обов’язково):</value></data>
+  <data name="SettingsWindow_PlaceholderUrl" xml:space="preserve"><value>Вставте URL сайту</value></data>
+  <data name="SettingsWindow_PlaceholderProgram" xml:space="preserve"><value>Укажіть шлях до .exe, .lnk або .appref-ms</value></data>
+  <data name="SettingsWindow_HelpProgram" xml:space="preserve"><value>Для програм і ярликів. Підтримуються .exe, .lnk та .appref-ms.</value></data>
+  <data name="SettingsWindow_PlaceholderFile" xml:space="preserve"><value>Укажіть шлях до звичайного файлу</value></data>
+  <data name="SettingsWindow_HelpFile" xml:space="preserve"><value>Для документів та інших файлів, крім скриптів. Для скриптів використовуйте тип «Скрипт».</value></data>
+  <data name="SettingsWindow_PlaceholderFolder" xml:space="preserve"><value>Укажіть шлях до папки</value></data>
+  <data name="SettingsWindow_HelpFolder" xml:space="preserve"><value>Відкриває вибрану папку в Провіднику Windows.</value></data>
+  <data name="SettingsWindow_PlaceholderCommand" xml:space="preserve"><value>Введіть консольну команду</value></data>
+  <data name="SettingsWindow_HelpCommand" xml:space="preserve"><value>Для досвідчених користувачів.
+Приклади:
+cmd, powershell, explorer, control, appwiz.cpl, ncpa.cpl, services.msc, taskmgr, regedit, msconfig
+
+Модуль Python (для систем зі встановленим py):
+cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
+  <data name="SettingsWindow_PlaceholderScript" xml:space="preserve"><value>Укажіть шлях до файлу скрипту</value></data>
+  <data name="SettingsWindow_HelpScript" xml:space="preserve"><value>Для досвідчених користувачів.
+Підтримуються .bat, .cmd, .ps1 та окремі .py-файли.
+Для модульних проєктів Python використовуйте тип «Команда».</value></data>
+  <data name="SettingsWindow_ProgramFilter" xml:space="preserve"><value>Програми (*.exe;*.lnk;*.appref-ms)|*.exe;*.lnk;*.appref-ms|Усі файли (*.*)|*.*</value></data>
+  <data name="SettingsWindow_FileFilter" xml:space="preserve"><value>Файли|*.*</value></data>
+  <data name="SettingsWindow_ScriptFilter" xml:space="preserve"><value>Скрипти (*.bat;*.cmd;*.ps1;*.py)|*.bat;*.cmd;*.ps1;*.py</value></data>
+  <data name="SettingsWindow_AllFilesFilter" xml:space="preserve"><value>Усі файли (*.*)|*.*</value></data>
+  <data name="SettingsWindow_FieldName" xml:space="preserve"><value>Назва</value></data>
+  <data name="SettingsWindow_FieldCommand" xml:space="preserve"><value>Команда</value></data>
+  <data name="SettingsWindow_FieldFolderPath" xml:space="preserve"><value>Шлях до папки</value></data>
+  <data name="SettingsWindow_FieldFilePath" xml:space="preserve"><value>Шлях до файлу</value></data>
+  <data name="SettingsWindow_RequiredFields" xml:space="preserve"><value>Заповніть обов’язкові поля: {0}.</value></data>
+  <data name="SettingsWindow_ProgramNotFound" xml:space="preserve"><value>Файл програми або ярлик не знайдено.</value></data>
+  <data name="SettingsWindow_InvalidProgram" xml:space="preserve"><value>Тип «Програма» підтримує лише .exe, .lnk та .appref-ms.</value></data>
+  <data name="SettingsWindow_FileNotFound" xml:space="preserve"><value>Файл не знайдено.</value></data>
+  <data name="SettingsWindow_InvalidFile" xml:space="preserve"><value>Тип «Файл» приймає звичайні файли, крім програм і скриптів.</value></data>
+  <data name="SettingsWindow_FolderNotFound" xml:space="preserve"><value>Папку не знайдено.</value></data>
+  <data name="SettingsWindow_ScriptNotFound" xml:space="preserve"><value>Файл скрипту не знайдено.</value></data>
+  <data name="SettingsWindow_InvalidScript" xml:space="preserve"><value>Підтримуються лише .bat, .cmd, .ps1 та .py.</value></data>
+  <data name="SettingsWindow_PythonNotFound" xml:space="preserve"><value>Для запуску .py-файлів потрібен python.exe у PATH.</value></data>
+  <data name="SettingsWindow_ErrorFormat" xml:space="preserve"><value>Помилка:
+{0}</value></data>
+  <data name="AppSettingsWindow_GeneralHint" xml:space="preserve"><value>Налаштуйте розташування панелі та її поведінку.</value></data>
+  <data name="AppSettingsWindow_PanelSize" xml:space="preserve"><value>Розмір панелі</value></data>
+  <data name="AppSettingsWindow_ActivationZone" xml:space="preserve"><value>Зона активації, %</value></data>
+  <data name="AppSettingsWindow_ActivationZoneTooltip" xml:space="preserve"><value>Розмір області біля краю екрана, яка показує панель під час наведення.</value></data>
+  <data name="AppSettingsWindow_Delay" xml:space="preserve"><value>Затримка появи, мс</value></data>
+  <data name="AppSettingsWindow_ContextNamesTooltip" xml:space="preserve"><value>Ці назви використовуються в меню панелі та налаштуваннях кнопок.</value></data>
+  <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>Ці назви використовуються в меню панелі та під час вибору панелі для кнопок.</value></data>
+  <data name="AppSettingsWindow_QuickToolsHint" xml:space="preserve"><value>Увімкніть вбудовані кнопки, що відображаються на головній панелі.</value></data>
+  <data name="Monitor_Format" xml:space="preserve"><value>Монітор {0}{1}</value></data>
+  <data name="Monitor_PrimarySuffix" xml:space="preserve"><value> (Основний)</value></data>
+  <data name="HotkeyConflictMessage" xml:space="preserve"><value>Виявлено конфліктні гарячі клавіші:
+{0}
+
+Призначте інші комбінації.</value></data>
+  <data name="Main_AddButtonTooltip" xml:space="preserve"><value>Додати кнопку</value></data>
+  <data name="Main_SearchTooltip" xml:space="preserve"><value>Пошук Google (буфер обміну)</value></data>
+  <data name="Main_ScreenshotTooltip" xml:space="preserve"><value>Знімок екрана</value></data>
+  <data name="Main_RecordTooltip" xml:space="preserve"><value>Запис відео</value></data>
+  <data name="Main_CalcTooltip" xml:space="preserve"><value>Калькулятор</value></data>
+  <data name="Main_ExplorerTooltip" xml:space="preserve"><value>Провідник</value></data>
+  <data name="Main_DownloadsTooltip" xml:space="preserve"><value>Завантаження</value></data>
+  <data name="Main_ColorPickerTooltip" xml:space="preserve"><value>Вибрати колір з екрана</value></data>
+  <data name="ColorPicker_Instruction" xml:space="preserve"><value>Клацніть будь-де, щоб скопіювати колір. Esc скасовує дію.</value></data>
+  <data name="ColorPicker_Copied" xml:space="preserve"><value>Колір скопійовано: {0}</value></data>
+  <data name="Menu_ImportPanel" xml:space="preserve"><value>Імпортувати панель...</value></data>
+  <data name="Menu_Help" xml:space="preserve"><value>Довідка</value></data>
+  <data name="Menu_Donate" xml:space="preserve"><value>Підтримати автора</value></data>
+  <data name="Menu_Exit" xml:space="preserve"><value>Закрити та вийти</value></data>
+  <data name="Menu_Unpin" xml:space="preserve"><value>Відкріпити від панелі</value></data>
+  <data name="Menu_Edit" xml:space="preserve"><value>Редагувати</value></data>
+  <data name="Menu_Duplicate" xml:space="preserve"><value>Дублювати</value></data>
+  <data name="Menu_Rename" xml:space="preserve"><value>Перейменувати</value></data>
+  <data name="Menu_Move" xml:space="preserve"><value>Перемістити</value></data>
+  <data name="Menu_OpenLocation" xml:space="preserve"><value>Відкрити розташування</value></data>
+  <data name="Menu_CopyUrl" xml:space="preserve"><value>Копіювати URL</value></data>
+  <data name="Menu_CopyPath" xml:space="preserve"><value>Копіювати шлях</value></data>
+  <data name="Menu_CopyCommand" xml:space="preserve"><value>Копіювати команду</value></data>
+  <data name="Element_NewButton" xml:space="preserve"><value>Нова кнопка</value></data>
+  <data name="Element_CopySuffix" xml:space="preserve"><value>копія</value></data>
+  <data name="Element_CopySuffixFormat" xml:space="preserve"><value>копія {0}</value></data>
+  <data name="Prompt_RenameButtonTitle" xml:space="preserve"><value>Перейменувати кнопку</value></data>
+  <data name="Prompt_NewName" xml:space="preserve"><value>Нова назва</value></data>
+  <data name="Prompt_DefaultTitle" xml:space="preserve"><value>Перейменування</value></data>
+  <data name="Prompt_DefaultLabel" xml:space="preserve"><value>Введіть значення</value></data>
+  <data name="DeleteButtonConfirm" xml:space="preserve"><value>Видалити «{0}»?</value></data>
+  <data name="Export_Title" xml:space="preserve"><value>Експорт поточної панелі</value></data>
+  <data name="Export_Filter" xml:space="preserve"><value>Панель AiteBar (*.aitebarpanel)|*.aitebarpanel</value></data>
+  <data name="Export_Success" xml:space="preserve"><value>Експортовано кнопок: {0}</value></data>
+  <data name="Export_Failed" xml:space="preserve"><value>Не вдалося експортувати панель.
+{0}</value></data>
+  <data name="Import_Title" xml:space="preserve"><value>Імпорт панелі</value></data>
+  <data name="Import_Confirm" xml:space="preserve"><value>Імпортувати {0} кнопок до поточної панелі «{1}»?
+
+Скасування імпорту в цій версії не підтримується.</value></data>
+  <data name="Import_Success" xml:space="preserve"><value>Імпортовано кнопок: {0}</value></data>
+  <data name="Import_Failed" xml:space="preserve"><value>Не вдалося імпортувати панель.
+{0}</value></data>
+  <data name="Action_Failed" xml:space="preserve"><value>Не вдалося виконати дію:
+{0}</value></data>
+  <data name="Drop_NotSupported" xml:space="preserve"><value>Цей об’єкт не можна додати до панелі.</value></data>
+  <data name="Drop_ReadFailed" xml:space="preserve"><value>Не вдалося прочитати перетягнутий об’єкт.</value></data>
+  <data name="Drop_OnlyOne" xml:space="preserve"><value>Одночасно можна перетягувати лише один об’єкт.</value></data>
+  <data name="Drop_ExistingFilesFoldersOnly" xml:space="preserve"><value>Підтримуються лише наявні файли та папки.</value></data>
+  <data name="Drop_UrlShortcutOnly" xml:space="preserve"><value>Підтримуються лише .url-файли з посиланнями http/https.</value></data>
+  <data name="Drop_FileFolderOrUrlOnly" xml:space="preserve"><value>Можна перетягнути лише файл, папку або посилання http/https.</value></data>
+  <data name="Drop_SupportedTargets" xml:space="preserve"><value>Підтримуються лише файли, папки, .url-файли та прямі посилання http/https.</value></data>
+  <data name="Action_ConfirmCommand" xml:space="preserve"><value>Запускайте цю команду, лише якщо довіряєте їй. Вона може змінити файли та системні налаштування:
+{0}
+
+Продовжити?</value></data>
+  <data name="Action_ConfirmScript" xml:space="preserve"><value>Запускайте цей скрипт, лише якщо довіряєте йому. Він може змінити файли та системні налаштування:
+{0}
+
+Продовжити?</value></data>
+  <data name="Action_SearchFailed" xml:space="preserve"><value>Не вдалося виконати пошук</value></data>
+  <data name="Action_LaunchFailed" xml:space="preserve"><value>Не вдалося запустити.</value></data>
+  <data name="Action_PythonNotFound" xml:space="preserve"><value>Python не знайдено.</value></data>
+  <data name="Action_UnsupportedScript" xml:space="preserve"><value>Непідтримуваний скрипт.</value></data>
+  <data name="About_VersionFormat" xml:space="preserve"><value>Версія {0}.{1}.{2}</value></data>
+  <data name="About_Description" xml:space="preserve"><value>Приховувана панель швидкого доступу для Windows. Дає змогу запускати сайти, застосунки, скрипти, команди та гарячі клавіші з налаштовуваних блоків.</value></data>
+  <data name="About_Info" xml:space="preserve"><value>Інформація</value></data>
+  <data name="About_Developer" xml:space="preserve"><value>Розробник: Codebdbd</value></data>
+  <data name="About_License" xml:space="preserve"><value>Ліцензія: пропрієтарна (Усі права захищено)</value></data>
+  <data name="About_Technologies" xml:space="preserve"><value>Технології</value></data>
+  <data name="About_AppData" xml:space="preserve"><value>Дані застосунку</value></data>
+  <data name="About_OpenDataFolder" xml:space="preserve"><value>Відкрити папку даних</value></data>
+  <data name="About_Resources" xml:space="preserve"><value>Ресурси</value></data>
+  <data name="About_Website" xml:space="preserve"><value>Сторінка програми</value></data>
+  <data name="About_Repository" xml:space="preserve"><value>Репозиторій GitHub</value></data>
+  <data name="About_Licenses" xml:space="preserve"><value>Ліцензії</value></data>
+  <data name="About_ProgramFolder" xml:space="preserve"><value>Папка програми</value></data>
+  <data name="About_NoticesMissing" xml:space="preserve"><value>Файл THIRD_PARTY_NOTICES.txt не знайдено.</value></data>
+  <data name="About_OpenDataFolderFailed" xml:space="preserve"><value>Не вдалося відкрити папку даних.
+
+{0}</value></data>
+  <data name="About_ProgramFolderUnknown" xml:space="preserve"><value>Не вдалося визначити папку програми.</value></data>
+  <data name="Update_Check" xml:space="preserve"><value>Перевірити оновлення</value></data>
+  <data name="Update_Current" xml:space="preserve"><value>AiteBar {0} оновлено до актуальної версії.</value></data>
+  <data name="Update_Available" xml:space="preserve"><value>Доступна версія AiteBar {0}.
+Ви використовуєте {1}.
+
+Відкрити сторінку релізу GitHub?</value></data>
+  <data name="Update_CheckFailed" xml:space="preserve"><value>Не вдалося перевірити оновлення.
+
+{0}</value></data>
+  <data name="Update_InvalidRelease" xml:space="preserve"><value>Останній реліз GitHub не містить коректного тегу версії.</value></data>
+  <data name="Update_InvalidReleaseUrl" xml:space="preserve"><value>Останній реліз GitHub містить неочікуване посилання на реліз.</value></data>
+  <data name="Update_InvalidResponse" xml:space="preserve"><value>GitHub повернув відповідь про оновлення, яку AiteBar не вдалося прочитати.</value></data>
+  <data name="Update_GitHubUnavailable" xml:space="preserve"><value>GitHub зараз не може надати відомості про оновлення. Код стану: {0}.</value></data>
+  <data name="Update_NetworkUnavailable" xml:space="preserve"><value>Не вдалося зв’язатися зі службою оновлень. Перевірте підключення до інтернету та повторіть спробу.</value></data>
+  <data name="Update_Timeout" xml:space="preserve"><value>Час очікування перевірки оновлень минув. Повторіть спробу пізніше.</value></data>
+  <data name="IconPicker_CustomIcon" xml:space="preserve"><value>Власна піктограма</value></data>
+  <data name="IconPicker_SearchCodeHint" xml:space="preserve"><value>Пошук за кодом, наприклад: E000</value></data>
+  <data name="IconPicker_SearchBrandsHint" xml:space="preserve"><value>Пошук за назвою бренду (github, twitter) або кодом</value></data>
+  <data name="IconPicker_SearchIconsHint" xml:space="preserve"><value>Пошук за назвою піктограми (add, home, search) або кодом</value></data>
+  <data name="IconPicker_ImageFilter" xml:space="preserve"><value>Зображення|*.png;*.jpg;*.jpeg;*.bmp;*.ico</value></data>
+  <data name="IconPicker_CopyFailed" xml:space="preserve"><value>Помилка копіювання файлу.</value></data>
+  <data name="IconPicker_LoadFailed" xml:space="preserve"><value>Не вдалося завантажити каталог піктограм:
+{0}</value></data>
+  <data name="IconPicker_MaterialIcons" xml:space="preserve"><value>Піктограми Material</value></data>
+  <data name="IconPicker_FluentSystem" xml:space="preserve"><value>Система Fluent</value></data>
+  <data name="IconPicker_Brands" xml:space="preserve"><value>Бренди</value></data>
+  <data name="TimerStopwatch_Compact" xml:space="preserve"><value>Компактний вигляд</value></data>
+  <data name="TimerStopwatch_Expand" xml:space="preserve"><value>Розгорнути</value></data>
+  <data name="Update_UnknownVersion" xml:space="preserve"><value>невідомо</value></data>
+  <data name="FileSorter_CategoryImages" xml:space="preserve"><value>Зображення</value></data>
+  <data name="FileSorter_CategoryDocuments" xml:space="preserve"><value>Документи</value></data>
+  <data name="FileSorter_CategoryVideo" xml:space="preserve"><value>Відео</value></data>
+  <data name="FileSorter_CategoryAudio" xml:space="preserve"><value>Аудіо</value></data>
+  <data name="FileSorter_CategoryArchives" xml:space="preserve"><value>Архіви</value></data>
+  <data name="FileSorter_CategoryInstallers" xml:space="preserve"><value>Інсталятори</value></data>
+  <data name="FileSorter_CategoryProjects" xml:space="preserve"><value>Проєкти</value></data>
+  <data name="FileSorter_CategoryWeb" xml:space="preserve"><value>Веб</value></data>
+  <data name="FileSorter_CategoryOther" xml:space="preserve"><value>Інше</value></data>
+  <data name="FileSorter_RootPathRequired" xml:space="preserve"><value>Потрібно вказати шлях до папки.</value></data>
+  <data name="IconPicker_InvalidFluentMetadata" xml:space="preserve"><value>Не вдалося прочитати метадані піктограм Fluent.</value></data>
+  <data name="PanelPackage_ExportPathRequired" xml:space="preserve"><value>Потрібно вказати шлях для експорту панелі.</value></data>
+  <data name="PanelPackage_ActivePanelNotFound" xml:space="preserve"><value>Активну панель не знайдено.</value></data>
+  <data name="PanelPackage_FileNotFound" xml:space="preserve"><value>Файл пакета панелі не знайдено.</value></data>
+  <data name="PanelPackage_ManifestMissing" xml:space="preserve"><value>У пакеті відсутній manifest.json.</value></data>
+  <data name="PanelPackage_ManifestInvalid" xml:space="preserve"><value>Не вдалося прочитати manifest.json.</value></data>
+  <data name="PanelPackage_FileTooLarge" xml:space="preserve"><value>Файл {0} завеликий: {1} байт.</value></data>
+  <data name="PanelPackage_TooManyFiles" xml:space="preserve"><value>У пакеті забагато файлів: {0}.</value></data>
+  <data name="PanelPackage_InvalidEntryPath" xml:space="preserve"><value>Некоректний шлях у пакеті: {0}.</value></data>
+  <data name="PanelPackage_EntryTooLarge" xml:space="preserve"><value>Файл у пакеті завеликий: {0}.</value></data>
+  <data name="PanelPackage_UncompressedTooLarge" xml:space="preserve"><value>Розпакований пакет завеликий: {0} байт.</value></data>
+  <data name="PanelPackage_UnsupportedFormat" xml:space="preserve"><value>Непідтримувана версія формату пакета: {0}.</value></data>
+  <data name="PanelPackage_ElementsMissing" xml:space="preserve"><value>У пакеті відсутній список елементів.</value></data>
+  <data name="PanelPackage_ElementNameMissing" xml:space="preserve"><value>У пакеті є елемент без назви.</value></data>
+  <data name="PanelPackage_UnsupportedActionType" xml:space="preserve"><value>Непідтримуваний тип дії: {0}.</value></data>
+  <data name="PanelPackage_InvalidIconPath" xml:space="preserve"><value>Некоректний шлях до піктограми: {0}.</value></data>
+  <data name="IconPicker_ResourceNotFound" xml:space="preserve"><value>Ресурс не знайдено: {0}</value></data>
 </root>

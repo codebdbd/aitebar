@@ -279,7 +279,7 @@ namespace AiteBar
             {
                 UseShellExecute = false,
                 ArgumentList = { $"https://www.google.com/search?q={Uri.EscapeDataString(text)}" }
-            }) ?? throw new InvalidOperationException("Search failed");
+            }) ?? throw new InvalidOperationException(LocalizationService.Get("Action_SearchFailed"));
         }
 
         public async Task StartScreenshotAsync(Func<Task>? onBeforeExecute = null)

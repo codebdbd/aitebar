@@ -257,7 +257,7 @@
                     </Border>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button x:Name="BtnCompact" Content="&#xE923;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource IconButtonStyle}" ToolTip="Compact" Click="BtnCompact_Click"/>
+                        <Button x:Name="BtnCompact" Content="&#xE923;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource IconButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Compact}" Click="BtnCompact_Click"/>
                         <Button Content="&#xF369;" Style="{StaticResource IconButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
                     </StackPanel>
                 </Grid>
@@ -341,7 +341,7 @@
                     <TextBlock x:Name="TxtCompactModeIcon" Text="&#xED88;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" Foreground="{StaticResource TimerAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TxtCompactDisplay" Grid.Column="1" Text="00:00" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="23" FontWeight="Regular" Foreground="#FFFFFF" TextAlignment="Left" VerticalAlignment="Center" Margin="8,-2,0,0" LineHeight="28" LineStackingStrategy="BlockLineHeight" Typography.NumeralAlignment="Tabular" TextOptions.TextFormattingMode="Display"/>
                     <Button x:Name="BtnCompactStartPause" Grid.Column="2" Content="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="18" Style="{StaticResource CompactActionButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Start}" Click="BtnStartPause_Click"/>
-                    <Button Grid.Column="4" Content="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource CompactSecondaryButtonStyle}" ToolTip="Expand" Click="BtnCompact_Click"/>
+                    <Button Grid.Column="4" Content="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource CompactSecondaryButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Expand}" Click="BtnCompact_Click"/>
                 </Grid>
             </Border>
         </Border>

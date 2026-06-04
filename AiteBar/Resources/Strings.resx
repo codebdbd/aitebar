@@ -339,4 +339,37 @@ Open the GitHub release page?</value></data>
   <data name="FileSorter_UndoPartial" xml:space="preserve"><value>Restored {0} files, skipped {1}.</value></data>
   <data name="FileSorter_ErrorFormat" xml:space="preserve"><value>Could not complete sorting.
 {0}</value></data>
+  <data name="IconPicker_MaterialIcons" xml:space="preserve"><value>Material Icons</value></data>
+  <data name="IconPicker_FluentSystem" xml:space="preserve"><value>Fluent System</value></data>
+  <data name="IconPicker_Brands" xml:space="preserve"><value>Brands</value></data>
+  <data name="TimerStopwatch_Compact" xml:space="preserve"><value>Compact</value></data>
+  <data name="TimerStopwatch_Expand" xml:space="preserve"><value>Expand</value></data>
+  <data name="Update_UnknownVersion" xml:space="preserve"><value>unknown</value></data>
+  <data name="FileSorter_CategoryImages" xml:space="preserve"><value>Images</value></data>
+  <data name="FileSorter_CategoryDocuments" xml:space="preserve"><value>Documents</value></data>
+  <data name="FileSorter_CategoryVideo" xml:space="preserve"><value>Video</value></data>
+  <data name="FileSorter_CategoryAudio" xml:space="preserve"><value>Audio</value></data>
+  <data name="FileSorter_CategoryArchives" xml:space="preserve"><value>Archives</value></data>
+  <data name="FileSorter_CategoryInstallers" xml:space="preserve"><value>Installers</value></data>
+  <data name="FileSorter_CategoryProjects" xml:space="preserve"><value>Projects</value></data>
+  <data name="FileSorter_CategoryWeb" xml:space="preserve"><value>Web</value></data>
+  <data name="FileSorter_CategoryOther" xml:space="preserve"><value>Other</value></data>
+  <data name="FileSorter_RootPathRequired" xml:space="preserve"><value>Folder path is required.</value></data>
+  <data name="IconPicker_InvalidFluentMetadata" xml:space="preserve"><value>Could not read Fluent icon metadata.</value></data>
+  <data name="PanelPackage_ExportPathRequired" xml:space="preserve"><value>Panel export path is required.</value></data>
+  <data name="PanelPackage_ActivePanelNotFound" xml:space="preserve"><value>Active panel was not found.</value></data>
+  <data name="PanelPackage_FileNotFound" xml:space="preserve"><value>Panel package file was not found.</value></data>
+  <data name="PanelPackage_ManifestMissing" xml:space="preserve"><value>The package does not contain manifest.json.</value></data>
+  <data name="PanelPackage_ManifestInvalid" xml:space="preserve"><value>Could not read manifest.json.</value></data>
+  <data name="PanelPackage_FileTooLarge" xml:space="preserve"><value>File {0} is too large: {1} bytes.</value></data>
+  <data name="PanelPackage_TooManyFiles" xml:space="preserve"><value>The package contains too many files: {0}.</value></data>
+  <data name="PanelPackage_InvalidEntryPath" xml:space="preserve"><value>Invalid path in package: {0}.</value></data>
+  <data name="PanelPackage_EntryTooLarge" xml:space="preserve"><value>File in package is too large: {0}.</value></data>
+  <data name="PanelPackage_UncompressedTooLarge" xml:space="preserve"><value>The uncompressed package is too large: {0} bytes.</value></data>
+  <data name="PanelPackage_UnsupportedFormat" xml:space="preserve"><value>Unsupported package format version: {0}.</value></data>
+  <data name="PanelPackage_ElementsMissing" xml:space="preserve"><value>The package does not contain an element list.</value></data>
+  <data name="PanelPackage_ElementNameMissing" xml:space="preserve"><value>The package contains an element without a name.</value></data>
+  <data name="PanelPackage_UnsupportedActionType" xml:space="preserve"><value>Unsupported action type: {0}.</value></data>
+  <data name="PanelPackage_InvalidIconPath" xml:space="preserve"><value>Invalid icon path: {0}.</value></data>
+  <data name="IconPicker_ResourceNotFound" xml:space="preserve"><value>Resource was not found: {0}</value></data>
 </root>

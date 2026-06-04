@@ -39,14 +39,14 @@ internal sealed class PanelPackageService
     {
         if (string.IsNullOrWhiteSpace(packagePath))
         {
-            throw new ArgumentException("Не указан путь для экспорта панели.", nameof(packagePath));
+            throw new ArgumentException(LocalizationService.Get("PanelPackage_ExportPathRequired"), nameof(packagePath));
         }
 
         AppSettings settings = _settingsService.Settings;
         string activeContextId = settings.ActiveContextId;
 
         PanelContext context = settings.Contexts.FirstOrDefault(x => string.Equals(x.Id, activeContextId, StringComparison.Ordinal))
-            ?? throw new InvalidOperationException("Активная панель не найдена.");
+            ?? throw new InvalidOperationException(LocalizationService.Get("PanelPackage_ActivePanelNotFound"));
 
         List<CustomElement> elements = _settingsService.Elements
             .Where(x => string.Equals(x.ContextId, activeContextId, StringComparison.Ordinal))
@@ -205,7 +205,7 @@ internal sealed class PanelPackageService
     {
         if (string.IsNullOrWhiteSpace(packagePath) || !File.Exists(packagePath))
         {
-            throw new FileNotFoundException("Файл пакета не найден.", packagePath);
+            throw new FileNotFoundException(LocalizationService.Get("PanelPackage_FileNotFound"), packagePath);
         }
 
         EnsurePackageFileSize(packagePath);
@@ -217,14 +217,14 @@ internal sealed class PanelPackageService
             string manifestPath = Path.Combine(tempRoot, ManifestEntryName);
             if (!File.Exists(manifestPath))
             {
-                throw new InvalidDataException("В пакете отсутствует manifest.json.");
+                throw new InvalidDataException(LocalizationService.Get("PanelPackage_ManifestMissing"));
             }
 
             EnsureFileSize(manifestPath, MaxManifestBytes, "manifest.json");
 
             await using FileStream manifestStream = File.OpenRead(manifestPath);
             PanelPackageManifest manifest = await JsonSerializer.DeserializeAsync<PanelPackageManifest>(manifestStream, JsonOptions, cancellationToken)
-                ?? throw new InvalidDataException("Не удалось прочитать manifest.json.");
+                ?? throw new InvalidDataException(LocalizationService.Get("PanelPackage_ManifestInvalid"));
 
             ValidateManifest(manifest);
             return manifest;
@@ -243,7 +243,7 @@ internal sealed class PanelPackageService
         long length = new FileInfo(path).Length;
         if (length > maxBytes)
         {
-            throw new InvalidDataException($"Слишком большой файл {label}: {length} bytes.");
+            throw new InvalidDataException(LocalizationService.Format("PanelPackage_FileTooLarge", label, length));
         }
     }
 
@@ -254,19 +254,19 @@ internal sealed class PanelPackageService
 
         if (archive.Entries.Count > MaxPackageEntryCount)
         {
-            throw new InvalidDataException($"Слишком много файлов в пакете: {archive.Entries.Count}.");
+            throw new InvalidDataException(LocalizationService.Format("PanelPackage_TooManyFiles", archive.Entries.Count));
         }
 
         foreach (ZipArchiveEntry entry in archive.Entries)
         {
             if (!IsArchiveEntryPathSafe(entry.FullName))
             {
-                throw new InvalidDataException($"Некорректный путь в пакете: {entry.FullName}.");
+                throw new InvalidDataException(LocalizationService.Format("PanelPackage_InvalidEntryPath", entry.FullName));
             }
 
             if (entry.Length > MaxPackageEntryBytes)
             {
-                throw new InvalidDataException($"Слишком большой файл в пакете: {entry.FullName}.");
+                throw new InvalidDataException(LocalizationService.Format("PanelPackage_EntryTooLarge", entry.FullName));
             }
 
             checked
@@ -276,7 +276,7 @@ internal sealed class PanelPackageService
 
             if (totalUncompressedBytes > MaxPackageUncompressedBytes)
             {
-                throw new InvalidDataException($"Слишком большой распакованный размер пакета: {totalUncompressedBytes} bytes.");
+                throw new InvalidDataException(LocalizationService.Format("PanelPackage_UncompressedTooLarge", totalUncompressedBytes));
             }
         }
     }
@@ -298,29 +298,29 @@ internal sealed class PanelPackageService
     {
         if (manifest.FormatVersion != CurrentFormatVersion)
         {
-            throw new InvalidDataException($"Неподдерживаемая версия формата: {manifest.FormatVersion}.");
+            throw new InvalidDataException(LocalizationService.Format("PanelPackage_UnsupportedFormat", manifest.FormatVersion));
         }
 
         if (manifest.Elements == null)
         {
-            throw new InvalidDataException("В пакете отсутствует список элементов.");
+            throw new InvalidDataException(LocalizationService.Get("PanelPackage_ElementsMissing"));
         }
 
         foreach (PanelPackageElement element in manifest.Elements)
         {
             if (string.IsNullOrWhiteSpace(element.Name))
             {
-                throw new InvalidDataException("В пакете есть элемент без имени.");
+                throw new InvalidDataException(LocalizationService.Get("PanelPackage_ElementNameMissing"));
             }
 
             if (!Enum.TryParse<ActionType>(element.ActionType, out _))
             {
-                throw new InvalidDataException($"Неподдерживаемый тип действия: {element.ActionType}.");
+                throw new InvalidDataException(LocalizationService.Format("PanelPackage_UnsupportedActionType", element.ActionType));
             }
 
             if (element.Image != null && !PanelPackageMapper.IsPackagedImagePathSafe(element.Image.PackagePath))
             {
-                throw new InvalidDataException($"Некорректный путь к иконке: {element.Image.PackagePath}.");
+                throw new InvalidDataException(LocalizationService.Format("PanelPackage_InvalidIconPath", element.Image.PackagePath));
             }
         }
     }

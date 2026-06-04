@@ -5,7 +5,7 @@ namespace AiteBar;
 public class PanelContext
 {
     public string Id { get; set; } = "context-1";
-    public string Name { get; set; } = "Панель 1";
+    public string Name { get; set; } = LocalizationService.Format("Panel_DefaultNameFormat", 1);
     public string IconGlyph { get; set; } = "\uE8B7"; // Fluent "Folder" по умолчанию
     public bool IsEnabled { get; set; } = true;
 }

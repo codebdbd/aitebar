@@ -1,4 +1,7 @@
 using System.Globalization;
+using System.IO;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using AiteBar;
 using Xunit;
 
@@ -6,6 +9,8 @@ namespace AiteBar.Tests;
 
 public sealed class LocalizationServiceTests
 {
+    private static readonly string[] LocalizedCultures = ["de", "uk", "ru"];
+
     [Fact]
     public void NormalizeCultureName_Null_ReturnsAuto()
     {
@@ -118,5 +123,89 @@ public sealed class LocalizationServiceTests
     {
         var result = LocalizationService.Format("Element_CopySuffixFormat", 2);
         Assert.Contains("2", result);
+    }
+
+    [Fact]
+    public void ResourceFiles_HaveSameKeysAndFormatPlaceholders()
+    {
+        string resourcesDirectory = Path.Combine(FindRepoRoot(), "AiteBar", "Resources");
+        Dictionary<string, string> neutral = LoadResources(Path.Combine(resourcesDirectory, "Strings.resx"));
+
+        foreach (string culture in LocalizedCultures)
+        {
+            Dictionary<string, string> localized = LoadResources(Path.Combine(resourcesDirectory, $"Strings.{culture}.resx"));
+
+            Assert.Equal(neutral.Keys.Order(), localized.Keys.Order());
+            foreach ((string key, string neutralValue) in neutral)
+            {
+                Assert.Equal(
+                    ExtractFormatPlaceholders(neutralValue),
+                    ExtractFormatPlaceholders(localized[key]));
+            }
+        }
+    }
+
+    [Fact]
+    public void XamlTextProperties_DoNotContainTranslatableLiteralText()
+    {
+        string appDirectory = Path.Combine(FindRepoRoot(), "AiteBar");
+        HashSet<string> allowedTechnicalText =
+        [
+            "AiteBar", "© 2026 Codebdbd", ".NET 8", "WPF",
+            "Ctrl", "Shift", "Alt", "Win",
+            "Chrome", "Edge", "Brave", "Yandex", "Firefox",
+            "B", "I", "U", "Tx"
+        ];
+        HashSet<string> textProperties = ["Text", "Content", "Header", "Title", "ToolTip", "Description"];
+
+        var violations = Directory.GetFiles(appDirectory, "*.xaml")
+            .SelectMany(path => XDocument.Load(path).Descendants()
+                .SelectMany(element => element.Attributes()
+                    .Where(attribute => textProperties.Contains(attribute.Name.LocalName))
+                    .Select(attribute => (Path: path, Value: attribute.Value))))
+            .Where(candidate =>
+                !candidate.Value.StartsWith('{') &&
+                Regex.IsMatch(candidate.Value, @"[\p{L}]") &&
+                !allowedTechnicalText.Contains(candidate.Value))
+            .Select(candidate => $"{Path.GetFileName(candidate.Path)}: {candidate.Value}")
+            .ToArray();
+
+        Assert.Empty(violations);
+    }
+
+    private static Dictionary<string, string> LoadResources(string path)
+    {
+        return XDocument.Load(path)
+            .Root!
+            .Elements("data")
+            .ToDictionary(
+                element => element.Attribute("name")!.Value,
+                element => element.Element("value")?.Value ?? string.Empty,
+                StringComparer.Ordinal);
+    }
+
+    private static string[] ExtractFormatPlaceholders(string value)
+    {
+        return Regex.Matches(value, @"\{\d+(?:[^}]*)\}")
+            .Select(match => match.Value)
+            .Order()
+            .ToArray();
+    }
+
+    private static string FindRepoRoot()
+    {
+        string? current = AppContext.BaseDirectory;
+
+        while (!string.IsNullOrEmpty(current))
+        {
+            if (File.Exists(Path.Combine(current, "AiteBar.sln")))
+            {
+                return current;
+            }
+
+            current = Directory.GetParent(current)?.FullName;
+        }
+
+        throw new DirectoryNotFoundException("Repository root with AiteBar.sln was not found.");
     }
 }

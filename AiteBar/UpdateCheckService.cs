@@ -166,7 +166,7 @@ public sealed class UpdateCheckService
     {
         if (version == null)
         {
-            return "unknown";
+            return LocalizationService.Get("Update_UnknownVersion");
         }
 
         var normalized = Normalize(version);

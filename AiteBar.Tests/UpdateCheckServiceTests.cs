@@ -147,7 +147,7 @@ public sealed class UpdateCheckServiceTests
     [Fact]
     public void FormatVersion_NullVersion_ReturnsUnknown()
     {
-        Assert.Equal("unknown", UpdateCheckService.FormatVersion(null));
+        Assert.Equal(LocalizationService.Get("Update_UnknownVersion"), UpdateCheckService.FormatVersion(null));
     }
 
     [Fact]

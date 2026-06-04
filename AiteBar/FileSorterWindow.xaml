@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Width="320" Height="252" MinWidth="320" MinHeight="252"
+        Width="320" SizeToContent="Height" MinWidth="320" MinHeight="200"
         WindowStartupLocation="Manual" WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" Foreground="White" ResizeMode="NoResize"
         ShowInTaskbar="False" Topmost="True"
@@ -11,23 +11,26 @@
 
     <Window.Resources>
         <Style x:Key="HeaderButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="28"/>
-            <Setter Property="Height" Value="28"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
+            <Setter Property="FontSize" Value="18"/>
             <Setter Property="Foreground" Value="#AEB6C1"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize" Value="16"/>
+            <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="6">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
+                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="#25FFFFFF"/>
                                 <Setter Property="Foreground" Value="White"/>
@@ -134,7 +137,7 @@
 
                         <Button x:Name="BtnClose"
                                 Grid.Column="1"
-                                Content="×"
+                                Content="&#xF369;"
                                 Style="{StaticResource HeaderButtonStyle}"
                                 ToolTip="{local:Loc ResourceKey=Common_Close}"
                                 Click="BtnClose_Click"/>

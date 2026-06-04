@@ -635,4 +635,161 @@
     <value>Не удалось выполнить сортировку.
 {0}</value>
   </data>
+  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Изображения (*.png;*.jpg;*.jpeg;*.bmp;*.ico)|*.png;*.jpg;*.jpeg;*.bmp;*.ico|Все файлы (*.*)|*.*</value></data>
+  <data name="SettingsWindow_RequiredWeb" xml:space="preserve"><value>Вставьте URL сайта (обязательно):</value></data>
+  <data name="SettingsWindow_RequiredProgram" xml:space="preserve"><value>Укажите путь к программе или ярлыку (обязательно):</value></data>
+  <data name="SettingsWindow_RequiredFile" xml:space="preserve"><value>Укажите путь к файлу (обязательно):</value></data>
+  <data name="SettingsWindow_RequiredFolder" xml:space="preserve"><value>Укажите путь к папке (обязательно):</value></data>
+  <data name="SettingsWindow_RequiredCommand" xml:space="preserve"><value>Введите консольную команду (обязательно):</value></data>
+  <data name="SettingsWindow_RequiredScript" xml:space="preserve"><value>Укажите путь к файлу скрипта (обязательно):</value></data>
+  <data name="SettingsWindow_RequiredValue" xml:space="preserve"><value>Введите значение (обязательно):</value></data>
+  <data name="SettingsWindow_PlaceholderUrl" xml:space="preserve"><value>Вставьте URL сайта</value></data>
+  <data name="SettingsWindow_PlaceholderProgram" xml:space="preserve"><value>Укажите путь к .exe, .lnk или .appref-ms</value></data>
+  <data name="SettingsWindow_HelpProgram" xml:space="preserve"><value>Для программ и ярлыков. Поддерживаются .exe, .lnk и .appref-ms.</value></data>
+  <data name="SettingsWindow_PlaceholderFile" xml:space="preserve"><value>Укажите путь к обычному файлу</value></data>
+  <data name="SettingsWindow_HelpFile" xml:space="preserve"><value>Для документов и других файлов, кроме скриптов. Для скриптов используйте тип «Скрипт».</value></data>
+  <data name="SettingsWindow_PlaceholderFolder" xml:space="preserve"><value>Укажите путь к папке</value></data>
+  <data name="SettingsWindow_HelpFolder" xml:space="preserve"><value>Открывает выбранную папку в Проводнике Windows.</value></data>
+  <data name="SettingsWindow_PlaceholderCommand" xml:space="preserve"><value>Введите консольную команду</value></data>
+  <data name="SettingsWindow_HelpCommand" xml:space="preserve"><value>Для опытных пользователей.
+Примеры:
+cmd, powershell, explorer, control, appwiz.cpl, ncpa.cpl, services.msc, taskmgr, regedit, msconfig
+
+Модуль Python (для систем с установленным py):
+cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
+  <data name="SettingsWindow_PlaceholderScript" xml:space="preserve"><value>Укажите путь к файлу скрипта</value></data>
+  <data name="SettingsWindow_HelpScript" xml:space="preserve"><value>Для опытных пользователей.
+Поддерживаются .bat, .cmd, .ps1 и отдельные .py-файлы.
+Для модульных проектов Python используйте тип «Команда».</value></data>
+  <data name="SettingsWindow_ProgramFilter" xml:space="preserve"><value>Программы (*.exe;*.lnk;*.appref-ms)|*.exe;*.lnk;*.appref-ms|Все файлы (*.*)|*.*</value></data>
+  <data name="SettingsWindow_FileFilter" xml:space="preserve"><value>Файлы|*.*</value></data>
+  <data name="SettingsWindow_ScriptFilter" xml:space="preserve"><value>Скрипты (*.bat;*.cmd;*.ps1;*.py)|*.bat;*.cmd;*.ps1;*.py</value></data>
+  <data name="SettingsWindow_AllFilesFilter" xml:space="preserve"><value>Все файлы (*.*)|*.*</value></data>
+  <data name="SettingsWindow_FieldName" xml:space="preserve"><value>Название</value></data>
+  <data name="SettingsWindow_FieldCommand" xml:space="preserve"><value>Команда</value></data>
+  <data name="SettingsWindow_FieldFolderPath" xml:space="preserve"><value>Путь к папке</value></data>
+  <data name="SettingsWindow_FieldFilePath" xml:space="preserve"><value>Путь к файлу</value></data>
+  <data name="SettingsWindow_RequiredFields" xml:space="preserve"><value>Заполните обязательные поля: {0}.</value></data>
+  <data name="SettingsWindow_ProgramNotFound" xml:space="preserve"><value>Файл программы или ярлык не найден.</value></data>
+  <data name="SettingsWindow_InvalidProgram" xml:space="preserve"><value>Тип «Программа» поддерживает только .exe, .lnk и .appref-ms.</value></data>
+  <data name="SettingsWindow_FileNotFound" xml:space="preserve"><value>Файл не найден.</value></data>
+  <data name="SettingsWindow_InvalidFile" xml:space="preserve"><value>Тип «Файл» принимает обычные файлы, кроме программ и скриптов.</value></data>
+  <data name="SettingsWindow_FolderNotFound" xml:space="preserve"><value>Папка не найдена.</value></data>
+  <data name="SettingsWindow_ScriptNotFound" xml:space="preserve"><value>Файл скрипта не найден.</value></data>
+  <data name="SettingsWindow_InvalidScript" xml:space="preserve"><value>Поддерживаются только .bat, .cmd, .ps1 и .py.</value></data>
+  <data name="SettingsWindow_PythonNotFound" xml:space="preserve"><value>Для запуска .py-файлов требуется python.exe в PATH.</value></data>
+  <data name="SettingsWindow_ErrorFormat" xml:space="preserve"><value>Ошибка:
+{0}</value></data>
+  <data name="HotkeyConflictMessage" xml:space="preserve"><value>Обнаружены конфликтующие горячие клавиши:
+{0}
+
+Назначьте другие сочетания.</value></data>
+  <data name="Element_NewButton" xml:space="preserve"><value>Новая кнопка</value></data>
+  <data name="Element_CopySuffix" xml:space="preserve"><value>копия</value></data>
+  <data name="Element_CopySuffixFormat" xml:space="preserve"><value>копия {0}</value></data>
+  <data name="Prompt_RenameButtonTitle" xml:space="preserve"><value>Переименовать кнопку</value></data>
+  <data name="Prompt_NewName" xml:space="preserve"><value>Новое название</value></data>
+  <data name="Prompt_DefaultTitle" xml:space="preserve"><value>Переименование</value></data>
+  <data name="Prompt_DefaultLabel" xml:space="preserve"><value>Введите значение</value></data>
+  <data name="DeleteButtonConfirm" xml:space="preserve"><value>Удалить «{0}»?</value></data>
+  <data name="Export_Title" xml:space="preserve"><value>Экспорт текущей панели</value></data>
+  <data name="Export_Filter" xml:space="preserve"><value>Панель AiteBar (*.aitebarpanel)|*.aitebarpanel</value></data>
+  <data name="Export_Success" xml:space="preserve"><value>Экспортировано кнопок: {0}</value></data>
+  <data name="Export_Failed" xml:space="preserve"><value>Не удалось экспортировать панель.
+{0}</value></data>
+  <data name="Import_Title" xml:space="preserve"><value>Импорт панели</value></data>
+  <data name="Import_Confirm" xml:space="preserve"><value>Импортировать {0} кнопок в текущую панель «{1}»?
+
+Отмена импорта в этой версии не поддерживается.</value></data>
+  <data name="Import_Success" xml:space="preserve"><value>Импортировано кнопок: {0}</value></data>
+  <data name="Import_Failed" xml:space="preserve"><value>Не удалось импортировать панель.
+{0}</value></data>
+  <data name="Action_Failed" xml:space="preserve"><value>Не удалось выполнить действие:
+{0}</value></data>
+  <data name="Action_ConfirmCommand" xml:space="preserve"><value>Запускайте эту команду, только если доверяете ей. Она может изменить файлы и системные настройки:
+{0}
+
+Продолжить?</value></data>
+  <data name="Action_ConfirmScript" xml:space="preserve"><value>Запускайте этот скрипт, только если доверяете ему. Он может изменить файлы и системные настройки:
+{0}
+
+Продолжить?</value></data>
+  <data name="Action_SearchFailed" xml:space="preserve"><value>Не удалось выполнить поиск</value></data>
+  <data name="Action_LaunchFailed" xml:space="preserve"><value>Не удалось запустить.</value></data>
+  <data name="Action_PythonNotFound" xml:space="preserve"><value>Python не найден.</value></data>
+  <data name="Action_UnsupportedScript" xml:space="preserve"><value>Неподдерживаемый скрипт.</value></data>
+  <data name="About_VersionFormat" xml:space="preserve"><value>Версия {0}.{1}.{2}</value></data>
+  <data name="About_Description" xml:space="preserve"><value>Скрываемая панель быстрого доступа для Windows. Позволяет запускать сайты, приложения, скрипты, команды и горячие клавиши из настраиваемых блоков.</value></data>
+  <data name="About_Info" xml:space="preserve"><value>Информация</value></data>
+  <data name="About_Developer" xml:space="preserve"><value>Разработчик: Codebdbd</value></data>
+  <data name="About_License" xml:space="preserve"><value>Лицензия: проприетарная (Все права защищены)</value></data>
+  <data name="About_Technologies" xml:space="preserve"><value>Технологии</value></data>
+  <data name="About_AppData" xml:space="preserve"><value>Данные приложения</value></data>
+  <data name="About_OpenDataFolder" xml:space="preserve"><value>Открыть папку данных</value></data>
+  <data name="About_Resources" xml:space="preserve"><value>Ресурсы</value></data>
+  <data name="About_Website" xml:space="preserve"><value>Страница программы</value></data>
+  <data name="About_Repository" xml:space="preserve"><value>Репозиторий GitHub</value></data>
+  <data name="About_Licenses" xml:space="preserve"><value>Лицензии</value></data>
+  <data name="About_ProgramFolder" xml:space="preserve"><value>Папка программы</value></data>
+  <data name="About_NoticesMissing" xml:space="preserve"><value>Файл THIRD_PARTY_NOTICES.txt не найден.</value></data>
+  <data name="About_OpenDataFolderFailed" xml:space="preserve"><value>Не удалось открыть папку данных.
+
+{0}</value></data>
+  <data name="About_ProgramFolderUnknown" xml:space="preserve"><value>Не удалось определить папку программы.</value></data>
+  <data name="Update_Check" xml:space="preserve"><value>Проверить обновления</value></data>
+  <data name="Update_Current" xml:space="preserve"><value>AiteBar {0} обновлен до актуальной версии.</value></data>
+  <data name="Update_Available" xml:space="preserve"><value>Доступна версия AiteBar {0}.
+Вы используете {1}.
+
+Открыть страницу релиза GitHub?</value></data>
+  <data name="Update_CheckFailed" xml:space="preserve"><value>Не удалось проверить обновления.
+
+{0}</value></data>
+  <data name="Update_InvalidRelease" xml:space="preserve"><value>Последний релиз GitHub не содержит корректный тег версии.</value></data>
+  <data name="Update_InvalidReleaseUrl" xml:space="preserve"><value>Последний релиз GitHub содержит неожиданный адрес релиза.</value></data>
+  <data name="Update_InvalidResponse" xml:space="preserve"><value>GitHub вернул ответ об обновлении, который AiteBar не удалось прочитать.</value></data>
+  <data name="Update_GitHubUnavailable" xml:space="preserve"><value>GitHub сейчас не может предоставить сведения об обновлении. Код состояния: {0}.</value></data>
+  <data name="Update_NetworkUnavailable" xml:space="preserve"><value>Не удалось связаться со службой обновлений. Проверьте подключение к интернету и повторите попытку.</value></data>
+  <data name="Update_Timeout" xml:space="preserve"><value>Время ожидания проверки обновлений истекло. Повторите попытку позже.</value></data>
+  <data name="IconPicker_CustomIcon" xml:space="preserve"><value>Пользовательский значок</value></data>
+  <data name="IconPicker_SearchCodeHint" xml:space="preserve"><value>Поиск по коду, например: E000</value></data>
+  <data name="IconPicker_SearchBrandsHint" xml:space="preserve"><value>Поиск по названию бренда (github, twitter) или коду</value></data>
+  <data name="IconPicker_SearchIconsHint" xml:space="preserve"><value>Поиск по названию значка (add, home, search) или коду</value></data>
+  <data name="IconPicker_ImageFilter" xml:space="preserve"><value>Изображения|*.png;*.jpg;*.jpeg;*.bmp;*.ico</value></data>
+  <data name="IconPicker_CopyFailed" xml:space="preserve"><value>Ошибка копирования файла.</value></data>
+  <data name="IconPicker_LoadFailed" xml:space="preserve"><value>Не удалось загрузить каталог значков:
+{0}</value></data>
+  <data name="IconPicker_MaterialIcons" xml:space="preserve"><value>Значки Material</value></data>
+  <data name="IconPicker_FluentSystem" xml:space="preserve"><value>Система Fluent</value></data>
+  <data name="IconPicker_Brands" xml:space="preserve"><value>Бренды</value></data>
+  <data name="TimerStopwatch_Compact" xml:space="preserve"><value>Компактный вид</value></data>
+  <data name="TimerStopwatch_Expand" xml:space="preserve"><value>Развернуть</value></data>
+  <data name="Update_UnknownVersion" xml:space="preserve"><value>неизвестно</value></data>
+  <data name="FileSorter_CategoryImages" xml:space="preserve"><value>Изображения</value></data>
+  <data name="FileSorter_CategoryDocuments" xml:space="preserve"><value>Документы</value></data>
+  <data name="FileSorter_CategoryVideo" xml:space="preserve"><value>Видео</value></data>
+  <data name="FileSorter_CategoryAudio" xml:space="preserve"><value>Аудио</value></data>
+  <data name="FileSorter_CategoryArchives" xml:space="preserve"><value>Архивы</value></data>
+  <data name="FileSorter_CategoryInstallers" xml:space="preserve"><value>Установщики</value></data>
+  <data name="FileSorter_CategoryProjects" xml:space="preserve"><value>Проекты</value></data>
+  <data name="FileSorter_CategoryWeb" xml:space="preserve"><value>Веб</value></data>
+  <data name="FileSorter_CategoryOther" xml:space="preserve"><value>Прочее</value></data>
+  <data name="FileSorter_RootPathRequired" xml:space="preserve"><value>Необходимо указать путь к папке.</value></data>
+  <data name="IconPicker_InvalidFluentMetadata" xml:space="preserve"><value>Не удалось прочитать метаданные значков Fluent.</value></data>
+  <data name="PanelPackage_ExportPathRequired" xml:space="preserve"><value>Необходимо указать путь для экспорта панели.</value></data>
+  <data name="PanelPackage_ActivePanelNotFound" xml:space="preserve"><value>Активная панель не найдена.</value></data>
+  <data name="PanelPackage_FileNotFound" xml:space="preserve"><value>Файл пакета панели не найден.</value></data>
+  <data name="PanelPackage_ManifestMissing" xml:space="preserve"><value>В пакете отсутствует manifest.json.</value></data>
+  <data name="PanelPackage_ManifestInvalid" xml:space="preserve"><value>Не удалось прочитать manifest.json.</value></data>
+  <data name="PanelPackage_FileTooLarge" xml:space="preserve"><value>Файл {0} слишком большой: {1} байт.</value></data>
+  <data name="PanelPackage_TooManyFiles" xml:space="preserve"><value>В пакете слишком много файлов: {0}.</value></data>
+  <data name="PanelPackage_InvalidEntryPath" xml:space="preserve"><value>Некорректный путь в пакете: {0}.</value></data>
+  <data name="PanelPackage_EntryTooLarge" xml:space="preserve"><value>Файл в пакете слишком большой: {0}.</value></data>
+  <data name="PanelPackage_UncompressedTooLarge" xml:space="preserve"><value>Распакованный пакет слишком большой: {0} байт.</value></data>
+  <data name="PanelPackage_UnsupportedFormat" xml:space="preserve"><value>Неподдерживаемая версия формата пакета: {0}.</value></data>
+  <data name="PanelPackage_ElementsMissing" xml:space="preserve"><value>В пакете отсутствует список элементов.</value></data>
+  <data name="PanelPackage_ElementNameMissing" xml:space="preserve"><value>В пакете есть элемент без имени.</value></data>
+  <data name="PanelPackage_UnsupportedActionType" xml:space="preserve"><value>Неподдерживаемый тип действия: {0}.</value></data>
+  <data name="PanelPackage_InvalidIconPath" xml:space="preserve"><value>Некорректный путь к значку: {0}.</value></data>
+  <data name="IconPicker_ResourceNotFound" xml:space="preserve"><value>Ресурс не найден: {0}</value></data>
 </root>

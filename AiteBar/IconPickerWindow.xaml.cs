@@ -215,7 +215,7 @@ namespace AiteBar
             using var reader = new StreamReader(stream);
             var json = reader.ReadToEnd();
             var raw = JsonSerializer.Deserialize<Dictionary<string, int>>(json)
-                ?? throw new InvalidOperationException("Failed to parse Fluent icon metadata.");
+                ?? throw new InvalidOperationException(LocalizationService.Get("IconPicker_InvalidFluentMetadata"));
 
             _fluentMap = raw
                 .Where(kv => kv.Key.EndsWith("_24_regular", StringComparison.Ordinal))
@@ -250,7 +250,7 @@ namespace AiteBar
         {
             var resource = System.Windows.Application.GetResourceStream(new Uri(packUri, UriKind.Absolute));
             if (resource?.Stream == null)
-                throw new FileNotFoundException($"Resource not found: {packUri}");
+                throw new FileNotFoundException(LocalizationService.Format("IconPicker_ResourceNotFound", packUri));
             return resource.Stream;
         }
 

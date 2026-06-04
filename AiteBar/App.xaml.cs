@@ -13,7 +13,7 @@ namespace AiteBar {
             RegisterExceptionHandlers();
 
             LocalizationService.ApplyCulture(LocalizationService.AutoCulture);
-            const string mutexName = "AiteBar_Mutex_Unique_String_123";
+            const string mutexName = "Global\\AiteBar_Mutex_Unique_String_123";
             _mutex = new Mutex(true, mutexName, out bool createdNew);
 
             if (!createdNew)
