@@ -1994,12 +1994,9 @@ public partial class MainWindow : Window
                     Focus();
 
                     var focusTarget = GetFirstFocusablePanelButton();
-                    if (focusTarget != null)
-                    {
-                        focusTarget.Focusable = true;
-                        Keyboard.Focus(focusTarget);
-                        focusTarget.Focus();
-                    }
+                    focusTarget.Focusable = true;
+                    Keyboard.Focus(focusTarget);
+                    focusTarget.Focus();
 
                     if (this.IsKeyboardFocusWithin)
                     {
