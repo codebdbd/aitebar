@@ -99,8 +99,7 @@ namespace AiteBar
                     switch (actionType)
                     {
                         case ActionType.Hotkey:
-                            await ExecuteHotkeyAsync(el);
-                            break;
+                            return await ExecuteHotkeyAsync(el);
                         case ActionType.Web:
                             await ExecuteWebActionAsync(el);
                             break;
@@ -133,77 +132,119 @@ namespace AiteBar
             }
         }
 
-        private async Task ExecuteHotkeyAsync(CustomElement el)
+        private async Task<ActionExecutionResult> ExecuteHotkeyAsync(CustomElement el)
         {
+            const int KeyDelayMs = 30;
+            var pressedModifiers = new List<byte>();
+            byte mainVk = 0;
+            bool mainKeyDown = false;
+
             try
             {
-                const int KeyDelayMs = 30; // Задержка между нажатиями клавиш
                 var downKeys = new List<byte>();
                 if (el.Ctrl) downKeys.Add(NativeMethods.VK_CONTROL);
                 if (el.Shift) downKeys.Add(NativeMethods.VK_SHIFT);
                 if (el.Alt) downKeys.Add(NativeMethods.VK_MENU);
                 if (el.Win) downKeys.Add(NativeMethods.VK_LWIN);
 
-                byte mainVk = 0;
                 if (Enum.TryParse(typeof(Key), el.Key, out var k))
                     mainVk = (byte)KeyInterop.VirtualKeyFromKey((Key)k!);
 
-                var pressedModifiers = new HashSet<byte>();
-
-                // Нажимаем модификаторы по одному с задержкой
                 foreach (var vk in downKeys)
                 {
                     if (!_runtime.IsKeyPressed(vk))
                     {
                         var input = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk } } };
-                        uint sent = _runtime.SendInput([input]);
-                        if (sent != 1)
-                        {
-                            Logger.Log(new InvalidOperationException($"Failed to send modifier key down: VK={vk}"));
-                        }
+                        SendKeyboardInputOrThrow(input, $"modifier key down: VK={vk}");
                         pressedModifiers.Add(vk);
                         await _runtime.DelayAsync(KeyDelayMs);
                     }
                 }
 
-                // Нажимаем и отпускаем основную клавишу
                 if (mainVk != 0)
                 {
-                    // Нажатие основной клавиши
                     var downInput = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk } } };
-                    uint downSent = _runtime.SendInput([downInput]);
-                    if (downSent != 1)
-                    {
-                        Logger.Log(new InvalidOperationException($"Failed to send main key down: VK={mainVk}"));
-                    }
+                    SendKeyboardInputOrThrow(downInput, $"main key down: VK={mainVk}");
+                    mainKeyDown = true;
                     await _runtime.DelayAsync(KeyDelayMs);
 
-                    // Отпускание основной клавиши
                     var upInput = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } };
-                    uint upSent = _runtime.SendInput([upInput]);
-                    if (upSent != 1)
-                    {
-                        Logger.Log(new InvalidOperationException($"Failed to send main key up: VK={mainVk}"));
-                    }
+                    SendKeyboardInputOrThrow(upInput, $"main key up: VK={mainVk}");
+                    mainKeyDown = false;
                     await _runtime.DelayAsync(KeyDelayMs);
                 }
 
-                // Отпускаем модификаторы в обратном порядке с задержкой
-                foreach (var vk in Enumerable.Reverse(pressedModifiers))
-                {
-                    var upInput = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } };
-                    uint sent = _runtime.SendInput([upInput]);
-                    if (sent != 1)
-                    {
-                        Logger.Log(new InvalidOperationException($"Failed to send modifier key up: VK={vk}"));
-                    }
-                    await _runtime.DelayAsync(KeyDelayMs);
-                }
+                await ReleaseInjectedModifiersAsync(pressedModifiers, KeyDelayMs, throwOnFailure: true);
+                return ActionExecutionResult.Ok;
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
                 TelemetryService.CaptureException(ex, "hotkey_execution");
+                return ActionExecutionResult.Failed(ex.Message);
+            }
+            finally
+            {
+                if (mainKeyDown)
+                {
+                    TrySendKeyUp(mainVk, "main key cleanup");
+                }
+
+                await ReleaseInjectedModifiersAsync(pressedModifiers, KeyDelayMs, throwOnFailure: false);
+            }
+        }
+
+        private void SendKeyboardInputOrThrow(NativeMethods.INPUT input, string operation)
+        {
+            uint sent = _runtime.SendInput([input]);
+            if (sent != 1)
+            {
+                throw new InvalidOperationException($"Failed to send {operation}.");
+            }
+        }
+
+        private async Task ReleaseInjectedModifiersAsync(List<byte> pressedModifiers, int delayMs, bool throwOnFailure)
+        {
+            for (int index = pressedModifiers.Count - 1; index >= 0; index--)
+            {
+                byte vk = pressedModifiers[index];
+                var upInput = new NativeMethods.INPUT
+                {
+                    type = NativeMethods.INPUT_KEYBOARD,
+                    U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } }
+                };
+
+                uint sent = _runtime.SendInput([upInput]);
+                if (sent != 1)
+                {
+                    var exception = new InvalidOperationException($"Failed to send modifier key up: VK={vk}.");
+                    Logger.Log(exception);
+                    if (throwOnFailure)
+                    {
+                        throw exception;
+                    }
+                    continue;
+                }
+
+                pressedModifiers.RemoveAt(index);
+                await _runtime.DelayAsync(delayMs);
+            }
+        }
+
+        private void TrySendKeyUp(byte virtualKey, string operation)
+        {
+            try
+            {
+                var input = new NativeMethods.INPUT
+                {
+                    type = NativeMethods.INPUT_KEYBOARD,
+                    U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = virtualKey, dwFlags = NativeMethods.KEYEVENTF_KEYUP } }
+                };
+                SendKeyboardInputOrThrow(input, operation);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
             }
         }
 
@@ -459,7 +500,11 @@ namespace AiteBar
                 }
             ];
 
-            _ = _runtime.SendInput(inputs);
+            uint sent = _runtime.SendInput(inputs);
+            if (sent != inputs.Length)
+            {
+                throw new InvalidOperationException("Failed to send virtual key input.");
+            }
         }
     }
 

@@ -32,6 +32,7 @@ internal static class PanelPackageMapper
             Shift = element.Shift,
             Win = element.Win,
             Key = string.IsNullOrWhiteSpace(element.Key) ? "None" : element.Key,
+            ActivationHotkey = CloneBinding(element.ActivationHotkey),
             Icon = string.IsNullOrWhiteSpace(element.Icon) ? DefaultIcon : element.Icon,
             IconFont = string.IsNullOrWhiteSpace(element.IconFont) ? FontHelper.FluentKey : element.IconFont,
             Color = string.IsNullOrWhiteSpace(element.Color) ? DefaultColor : element.Color,
@@ -50,11 +51,29 @@ internal static class PanelPackageMapper
         string targetContextId,
         Func<PanelPackageImageInfo?, string> resolveImportedImagePath)
     {
+        string actionType = NormalizeActionType(source.ActionType);
+        bool isHotkeyAction = string.Equals(actionType, nameof(ActionType.Hotkey), StringComparison.OrdinalIgnoreCase);
+        HotkeyBinding activationHotkey = CloneBinding(source.ActivationHotkey);
+        if (!isHotkeyAction &&
+            !HotkeyValidationHelper.HasAssignedKey(activationHotkey) &&
+            !string.IsNullOrWhiteSpace(source.Key) &&
+            !string.Equals(source.Key, "None", StringComparison.OrdinalIgnoreCase))
+        {
+            activationHotkey = new HotkeyBinding
+            {
+                Ctrl = source.Ctrl,
+                Alt = source.Alt,
+                Shift = source.Shift,
+                Win = source.Win,
+                Key = source.Key
+            };
+        }
+
         return new CustomElement
         {
             Id = Guid.NewGuid().ToString(),
             Name = source.Name?.Trim() ?? "",
-            ActionType = NormalizeActionType(source.ActionType),
+            ActionType = actionType,
             ActionValue = source.ActionValue ?? "",
             Browser = source.Browser,
             ChromeProfile = source.ChromeProfile ?? "",
@@ -65,11 +84,12 @@ internal static class PanelPackageMapper
             OpenFullscreen = source.OpenFullscreen,
             IsTopmost = source.IsTopmost,
             LastUsedProfile = "",
-            Alt = source.Alt,
-            Ctrl = source.Ctrl,
-            Shift = source.Shift,
-            Win = source.Win,
-            Key = string.IsNullOrWhiteSpace(source.Key) ? "None" : source.Key,
+            Alt = isHotkeyAction && source.Alt,
+            Ctrl = isHotkeyAction && source.Ctrl,
+            Shift = isHotkeyAction && source.Shift,
+            Win = isHotkeyAction && source.Win,
+            Key = isHotkeyAction && !string.IsNullOrWhiteSpace(source.Key) ? source.Key : "None",
+            ActivationHotkey = activationHotkey,
             Icon = string.IsNullOrWhiteSpace(source.Icon) ? DefaultIcon : source.Icon,
             IconFont = string.IsNullOrWhiteSpace(source.IconFont) ? FontHelper.FluentKey : source.IconFont,
             Color = string.IsNullOrWhiteSpace(source.Color) ? DefaultColor : source.Color,
@@ -122,4 +142,13 @@ internal static class PanelPackageMapper
             ? parsed.ToString()
             : nameof(ActionType.Web);
     }
+
+    private static HotkeyBinding CloneBinding(HotkeyBinding? binding) => new()
+    {
+        Ctrl = binding?.Ctrl ?? false,
+        Alt = binding?.Alt ?? false,
+        Shift = binding?.Shift ?? false,
+        Win = binding?.Win ?? false,
+        Key = string.IsNullOrWhiteSpace(binding?.Key) ? "None" : binding.Key
+    };
 }

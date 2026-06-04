@@ -73,13 +73,19 @@ namespace AiteBar
 
         private void LoadKeyList()
         {
-            CmbKey.Items.Clear();
-            CmbKey.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("SettingsWindow_SelectKey"), Tag = "None" });
-            for (char c = 'A'; c <= 'Z'; c++) CmbKey.Items.Add(new ComboBoxItem { Content = c.ToString(), Tag = c.ToString() });
-            for (int i = 0; i <= 9; i++) CmbKey.Items.Add(new ComboBoxItem { Content = i.ToString(), Tag = "D" + i });
-            for (int i = 1; i <= 12; i++) CmbKey.Items.Add(new ComboBoxItem { Content = "F" + i, Tag = "F" + i });
-            CmbKey.Items.Add(new ComboBoxItem { Content = "PrntSc", Tag = "PrintScreen" });
-            CmbKey.SelectedIndex = 0;
+            LoadKeyCombo(CmbKey, HotkeyKeyCatalog.ActionKeys);
+            LoadKeyCombo(CmbActivationKey, HotkeyKeyCatalog.GlobalHotkeyKeys);
+        }
+
+        private static void LoadKeyCombo(ComboBox combo, IReadOnlyList<HotkeyKeyOption> keys)
+        {
+            combo.Items.Clear();
+            combo.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("SettingsWindow_SelectKey"), Tag = "None" });
+            foreach (HotkeyKeyOption key in keys)
+            {
+                combo.Items.Add(new ComboBoxItem { Content = key.DisplayName, Tag = key.Key });
+            }
+            combo.SelectedIndex = 0;
         }
 
         private void LoadContexts()
@@ -124,12 +130,17 @@ namespace AiteBar
             ChkShift.IsChecked = _editingElement.Shift;
             ChkAlt.IsChecked = _editingElement.Alt;
             ChkWin.IsChecked = _editingElement.Win;
+            ChkActivationCtrl.IsChecked = _editingElement.ActivationHotkey?.Ctrl ?? false;
+            ChkActivationShift.IsChecked = _editingElement.ActivationHotkey?.Shift ?? false;
+            ChkActivationAlt.IsChecked = _editingElement.ActivationHotkey?.Alt ?? false;
+            ChkActivationWin.IsChecked = _editingElement.ActivationHotkey?.Win ?? false;
 
             SetComboValue(CmbBrowser, _editingElement.Browser.ToString());
             SetComboValue(CmbActionType, ActionTargetHelper.NormalizeActionType(_editingElement.ActionType, _editingElement.ActionValue));
             SetComboValue(CmbContext, _editingElement.ContextId);
             SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
             SetComboValue(CmbKey, _editingElement.Key);
+            SetComboValue(CmbActivationKey, _editingElement.ActivationHotkey?.Key ?? "None");
 
             UpdatePreview();
             UpdateActionUI();
@@ -412,6 +423,8 @@ namespace AiteBar
 
         private void CmbActionType_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateActionUI();
         private void CmbKey_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateSaveButtonState();
+
+        private void CmbActivationKey_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateSaveButtonState();
         private void TxtName_TextChanged(object sender, TextChangedEventArgs e)
         {
             UpdateNamePlaceholderVisibility();
@@ -600,6 +613,7 @@ namespace AiteBar
                 var actionType = GetSelectedActionType();
                 string typeStr = actionType.ToString();
                 string selectedKey = ((ComboBoxItem)CmbKey.SelectedItem)?.Tag?.ToString() ?? "None";
+                string activationKey = ((ComboBoxItem)CmbActivationKey.SelectedItem)?.Tag?.ToString() ?? "None";
                 string browserStr = ((ComboBoxItem)CmbBrowser.SelectedItem)?.Tag?.ToString() ?? "Chrome";
                 if (!Enum.TryParse<BrowserType>(browserStr, out var browserType)) browserType = BrowserType.Chrome;
 
@@ -628,6 +642,27 @@ namespace AiteBar
                 if (missingHotkeyKey)
                 {
                     new DarkDialog(LocalizationService.Get("SettingsWindow_InvalidHotkey")) { Owner = this }.ShowDialog();
+                    return;
+                }
+
+                var activationHotkey = new HotkeyBinding
+                {
+                    Ctrl = ChkActivationCtrl.IsChecked ?? false,
+                    Shift = ChkActivationShift.IsChecked ?? false,
+                    Alt = ChkActivationAlt.IsChecked ?? false,
+                    Win = ChkActivationWin.IsChecked ?? false,
+                    Key = activationKey
+                };
+                if (HotkeyValidationHelper.HasAssignedKey(activationHotkey) &&
+                    !HotkeyValidationHelper.HasModifier(activationHotkey))
+                {
+                    new DarkDialog(LocalizationService.Get("SettingsWindow_ActivationHotkeyModifierRequired")) { Owner = this }.ShowDialog();
+                    return;
+                }
+                if (HotkeyValidationHelper.HasAssignedKey(activationHotkey) &&
+                    HotkeyValidationHelper.IsReservedHotkey(activationHotkey))
+                {
+                    new DarkDialog(LocalizationService.Get("SettingsWindow_ActivationHotkeyReserved")) { Owner = this }.ShowDialog();
                     return;
                 }
                 _showRequiredValidation = false;
@@ -716,11 +751,20 @@ namespace AiteBar
                     IsAppMode = ChkAppMode.IsChecked ?? false, IsIncognito = ChkIncognito.IsChecked ?? false,
                     UseRotation = ChkRotation.IsChecked ?? false, OpenFullscreen = ChkFullscreen.IsChecked ?? false, IsTopmost = false,
                     LastUsedProfile = _editingElement?.LastUsedProfile ?? "",
-                    Ctrl = ChkCtrl.IsChecked ?? false, Shift = ChkShift.IsChecked ?? false, Alt = ChkAlt.IsChecked ?? false, Win = ChkWin.IsChecked ?? false, Key = selectedKey,
+                    Ctrl = actionType == AiteBar.ActionType.Hotkey && (ChkCtrl.IsChecked ?? false),
+                    Shift = actionType == AiteBar.ActionType.Hotkey && (ChkShift.IsChecked ?? false),
+                    Alt = actionType == AiteBar.ActionType.Hotkey && (ChkAlt.IsChecked ?? false),
+                    Win = actionType == AiteBar.ActionType.Hotkey && (ChkWin.IsChecked ?? false),
+                    Key = actionType == AiteBar.ActionType.Hotkey ? selectedKey : "None",
+                    ActivationHotkey = activationHotkey,
                     ContextId = ((ComboBoxItem)CmbContext.SelectedItem)?.Tag?.ToString() ?? _mainWindow.GetAppSettings().ActiveContextId
                 };
 
-                await _mainWindow.SaveElement(newElement, _editingElement?.Id);
+                IReadOnlyList<string> failedHotkeys = await _mainWindow.SaveElement(newElement, _editingElement?.Id);
+                if (failedHotkeys.Count > 0)
+                {
+                    new DarkDialog(LocalizationService.Format("HotkeyRegistrationFailed", string.Join("\n", failedHotkeys))) { Owner = this }.ShowDialog();
+                }
                 this.DialogResult = true;
                 Close();
             }

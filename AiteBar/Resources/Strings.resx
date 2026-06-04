@@ -318,6 +318,10 @@ Open the GitHub release page?</value></data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Check for updates</value></data>
   <data name="Update_OpenReleasePage" xml:space="preserve"><value>Open GitHub release page</value></data>
   <data name="SettingsWindow_InvalidHotkey" xml:space="preserve"><value>Choose a key for the hotkey action.</value></data>
+  <data name="SettingsWindow_ActivationHotkey" xml:space="preserve"><value>Global shortcut for this button</value></data>
+  <data name="SettingsWindow_ActivationHotkeyHint" xml:space="preserve"><value>Optional. This shortcut launches the button and is separate from a Hotkey action's sent keys.</value></data>
+  <data name="SettingsWindow_ActivationHotkeyModifierRequired" xml:space="preserve"><value>The button shortcut must include Ctrl, Alt, Shift, or Win.</value></data>
+  <data name="SettingsWindow_ActivationHotkeyReserved" xml:space="preserve"><value>This button shortcut is reserved by Windows. Choose another combination.</value></data>
   <data name="HotkeyModifierRequiredMessage" xml:space="preserve"><value>Global hotkeys must include Ctrl, Alt, Shift, or Win:
 {0}</value></data>
   <data name="Tool_FileSorter" xml:space="preserve"><value>File sorter</value></data>

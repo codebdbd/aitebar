@@ -875,7 +875,7 @@ API отсутствует, так как это desktop-приложение б
 - Win (bool) — нажат ли Win
 - Key (string) — основная клавиша
 
-**Использование в системе:** Используется в AppSettings для глобальных горячих клавиш и в CustomElement для горячих клавиш отдельных кнопок.
+**Использование в системе:** Используется в AppSettings для глобальных горячих клавиш и в `CustomElement.ActivationHotkey` для отдельного global shortcut пользовательской кнопки.
 
 ---
 
@@ -899,8 +899,9 @@ API отсутствует, так как это desktop-приложение б
 - OpenFullscreen (bool) — открывать в полноэкранном режиме
 - IsTopmost (bool) — окно поверх всех
 - LastUsedProfile (string) — последний использованный профиль
-- Alt/Ctrl/Shift/Win (bool) — модификаторы для горячей клавиши кнопки
-- Key (string) — клавиша для горячей клавиши кнопки
+- Alt/Ctrl/Shift/Win (bool) — модификаторы payload для действия Hotkey
+- Key (string) — основная клавиша payload для действия Hotkey
+- ActivationHotkey (HotkeyBinding) — отдельная глобальная горячая клавиша запуска кнопки
 - ImagePath (string) — путь к кастомному изображению
 - ContextId (string) — идентификатор контекста, к которому принадлежит кнопка
 
@@ -924,7 +925,7 @@ API отсутствует, так как это desktop-приложение б
 - UiCulture (string) — язык интерфейса
 - Contexts (List<PanelContext>) — список контекстов (8 контекстов)
 - ActiveContextId (string) — активный контекст
-- NextContextHotkey/PreviousContextHotkey/AddButtonHotkey/Context1-4Hotkey (HotkeyBinding) — горячие клавиши
+- NextContextHotkey/PreviousContextHotkey/AddButtonHotkey (HotkeyBinding) — горячие клавиши
 - Elements (List<CustomElement>) — список пользовательских кнопок
 
 **Использование в системе:** Основная модель настроек приложения. Загружается и сохраняется через AppSettingsService.

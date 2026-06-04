@@ -187,6 +187,46 @@ public sealed class PanelPackageMapperTests
     }
 
     [Fact]
+    public void FromCustomElement_WithActivationHotkey_SetsSeparateBinding()
+    {
+        var element = new CustomElement
+        {
+            Name = "Test",
+            ActionType = nameof(ActionType.Hotkey),
+            Ctrl = true,
+            Key = "K",
+            ActivationHotkey = new HotkeyBinding { Alt = true, Key = "J" }
+        };
+
+        PanelPackageElement result = PanelPackageMapper.FromCustomElement(element, _ => null);
+
+        Assert.True(result.Ctrl);
+        Assert.Equal("K", result.Key);
+        Assert.True(result.ActivationHotkey.Alt);
+        Assert.Equal("J", result.ActivationHotkey.Key);
+    }
+
+    [Fact]
+    public void ToImportedCustomElement_LegacyNonHotkeyBindingBecomesActivationHotkey()
+    {
+        var source = new PanelPackageElement
+        {
+            Name = "Legacy",
+            ActionType = nameof(ActionType.Web),
+            ActionValue = "https://example.com",
+            Ctrl = true,
+            Key = "K"
+        };
+
+        CustomElement result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
+
+        Assert.True(result.ActivationHotkey.Ctrl);
+        Assert.Equal("K", result.ActivationHotkey.Key);
+        Assert.False(result.Ctrl);
+        Assert.Equal("None", result.Key);
+    }
+
+    [Fact]
     public void FromCustomElement_WithBrowserSettings_SetsBrowserProperties()
     {
         var element = new CustomElement

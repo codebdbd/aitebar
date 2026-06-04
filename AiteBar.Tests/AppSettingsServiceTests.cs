@@ -131,7 +131,7 @@ public sealed class AppSettingsServiceTests
     }
 
     [Fact]
-    public async Task LoadAsync_OversizedSettingsFile_DoesNotThrow()
+    public async Task LoadAsync_OversizedSettingsFile_IsRejectedAndDefaultsAreUsed()
     {
         string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(root);
@@ -140,18 +140,16 @@ public sealed class AppSettingsServiceTests
 
         try
         {
-            // Создаем файл и делаем его "большим" (но не портим JSON)
-            var testSettings = new AppSettings();
-            testSettings.Elements.Add(new CustomElement { Id = "test", Name = "Test Button", ContextId = "context-1" });
-            string json = System.Text.Json.JsonSerializer.Serialize(testSettings);
-            await File.WriteAllTextAsync(settingsPath, json);
-            
-            // Просто проверяем, что EnsureFileSizeWithinLimit не выбрасывает
+            await using (FileStream stream = File.Create(settingsPath))
+            {
+                stream.SetLength(AppSettingsService.MaxSettingsFileBytes + 1);
+            }
+
             var service = new AppSettingsService(configPath, settingsPath);
             await service.LoadAsync();
-            
-            // Проверяем, что сервис работает
-            Assert.NotNull(service.Settings);
+
+            Assert.Empty(service.Elements);
+            Assert.Equal("context-1", service.Settings.ActiveContextId);
         }
         finally
         {
@@ -493,6 +491,57 @@ public sealed class AppSettingsServiceTests
     }
 
     [Fact]
+    public void NormalizeAppState_MigratesLegacyNonHotkeyElementBindingToActivationHotkey()
+    {
+        var service = new AppSettingsService();
+        service.Settings.Elements =
+        [
+            new CustomElement
+            {
+                Id = "web",
+                ActionType = nameof(ActionType.Web),
+                Ctrl = true,
+                Key = "K",
+                ContextId = "context-1"
+            }
+        ];
+
+        bool changed = service.NormalizeAppState();
+        CustomElement element = Assert.Single(service.Elements);
+
+        Assert.True(changed);
+        Assert.True(element.ActivationHotkey.Ctrl);
+        Assert.Equal("K", element.ActivationHotkey.Key);
+        Assert.False(element.Ctrl);
+        Assert.Equal("None", element.Key);
+        Assert.False(service.NormalizeAppState());
+    }
+
+    [Fact]
+    public void NormalizeAppState_PreservesHotkeyActionPayloadWithoutActivationHotkey()
+    {
+        var service = new AppSettingsService();
+        service.Settings.Elements =
+        [
+            new CustomElement
+            {
+                Id = "hotkey",
+                ActionType = nameof(ActionType.Hotkey),
+                Ctrl = true,
+                Key = "K",
+                ContextId = "context-1"
+            }
+        ];
+
+        service.NormalizeAppState();
+        CustomElement element = Assert.Single(service.Elements);
+
+        Assert.True(element.Ctrl);
+        Assert.Equal("K", element.Key);
+        Assert.False(HotkeyValidationHelper.HasAssignedKey(element.ActivationHotkey));
+    }
+
+    [Fact]
     public void NormalizeAppState_NormalizesUiCultureActiveContextAndElements()
     {
         var service = new AppSettingsService();
@@ -625,21 +674,24 @@ public sealed class AppSettingsServiceTests
     }
 
     [Fact]
-    public void CloneElement_CreatesDeepCopyOfRotationProfiles()
+    public void CloneElement_CreatesDeepCopyOfRotationProfilesAndActivationHotkey()
     {
         var service = new AppSettingsService();
         var source = new CustomElement
         {
             Id = "source",
             RotationProfilePaths = ["Profile A"],
+            ActivationHotkey = new HotkeyBinding { Ctrl = true, Key = "K" },
             ContextId = "context-2"
         };
 
         CustomElement clone = service.CloneElement(source);
         clone.RotationProfilePaths.Add("Profile B");
+        clone.ActivationHotkey.Key = "J";
         clone.ContextId = "context-3";
 
         Assert.Equal(["Profile A"], source.RotationProfilePaths);
+        Assert.Equal("K", source.ActivationHotkey.Key);
         Assert.Equal("context-2", source.ContextId);
     }
 }

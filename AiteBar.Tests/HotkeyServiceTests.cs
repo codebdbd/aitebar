@@ -112,7 +112,7 @@ public sealed class HotkeyServiceTests
 
         Assert.Single(results);
         Assert.False(results[0].Success);
-        Assert.Equal(["Quick note"], failedNames);
+        Assert.Equal(["Quick note: Windows rejected the hotkey registration."], failedNames);
         Assert.Single(registrar.RegisterCalls);
         Assert.Equal(HotkeyService.QuickNoteId, registrar.RegisterCalls[0].Id);
     }
@@ -203,7 +203,7 @@ public sealed class HotkeyServiceTests
         var service = new HotkeyService(new FakeHotkeyRegistrar());
         CustomElement[] elements =
         [
-            new() { Id = "with-hotkey", Name = "With hotkey", Ctrl = true, Key = "K" },
+            new() { Id = "with-hotkey", Name = "With hotkey", ActivationHotkey = new HotkeyBinding { Ctrl = true, Key = "K" } },
             new() { Id = "without-hotkey", Name = "Without hotkey", Key = "None" }
         ];
 
@@ -214,6 +214,27 @@ public sealed class HotkeyServiceTests
         Assert.True(definitions[0].Id >= 10000);
         Assert.True(service.TryGetElementId(definitions[0].Id, out string? elementId));
         Assert.Equal("with-hotkey", elementId);
+    }
+
+    [Fact]
+    public void CreateElementDefinitions_DoesNotRegisterHotkeyActionPayload()
+    {
+        var service = new HotkeyService(new FakeHotkeyRegistrar());
+        CustomElement[] elements =
+        [
+            new()
+            {
+                Id = "hotkey-action",
+                Name = "Send Ctrl+K",
+                ActionType = nameof(ActionType.Hotkey),
+                Ctrl = true,
+                Key = "K"
+            }
+        ];
+
+        IReadOnlyList<HotkeyDefinition> definitions = service.CreateElementDefinitions(elements);
+
+        Assert.Empty(definitions);
     }
 
     [Fact]
@@ -284,7 +305,12 @@ public sealed class HotkeyServiceTests
         var service = new HotkeyService(registrar);
         IReadOnlyList<HotkeyDefinition> definitions = service.CreateElementDefinitions(
         [
-            new CustomElement { Id = "element-1", Name = "Element 1", Alt = true, Key = "J" }
+            new CustomElement
+            {
+                Id = "element-1",
+                Name = "Element 1",
+                ActivationHotkey = new HotkeyBinding { Alt = true, Key = "J" }
+            }
         ]);
         int allocatedId = definitions[0].Id;
 

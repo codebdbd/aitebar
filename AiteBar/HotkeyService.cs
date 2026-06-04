@@ -130,14 +130,7 @@ public sealed class HotkeyService
         var definitions = new List<HotkeyDefinition>();
         foreach (var element in elements)
         {
-            var binding = new HotkeyBinding
-            {
-                Ctrl = element.Ctrl,
-                Alt = element.Alt,
-                Shift = element.Shift,
-                Win = element.Win,
-                Key = element.Key
-            };
+            HotkeyBinding binding = element.ActivationHotkey ?? new();
             if (HotkeyValidationHelper.HasAssignedKey(binding))
             {
                 int id = AllocateElementHotkeyId();
@@ -214,7 +207,9 @@ public sealed class HotkeyService
     public IReadOnlyList<string> GetFailedDisplayNames(IReadOnlyList<HotkeyRegistrationResult> results) =>
         results
             .Where(result => !result.Success)
-            .Select(result => result.DisplayName)
+            .Select(result => string.IsNullOrWhiteSpace(result.FailureReason)
+                ? result.DisplayName
+                : $"{result.DisplayName}: {result.FailureReason}")
             .ToList();
 
     public void UnregisterAll(IntPtr hwnd)

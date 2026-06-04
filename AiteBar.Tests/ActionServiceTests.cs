@@ -369,6 +369,28 @@ public sealed class ActionServiceTests
     }
 
     [Fact]
+    public async Task ExecuteCustomActionAsync_HotkeyAction_SendInputFailureReturnsFailureAndReleasesModifier()
+    {
+        var runtime = new FakeActionServiceRuntime();
+        runtime.SendInputResults.Enqueue(1);
+        runtime.SendInputResults.Enqueue(0);
+        var service = new ActionService(new AppSettingsService(), runtime);
+        var element = new CustomElement
+        {
+            ActionType = nameof(ActionType.Hotkey),
+            Ctrl = true,
+            Key = nameof(Key.K)
+        };
+
+        ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
+
+        Assert.False(result.Success);
+        Assert.Equal(3, runtime.SendInputCalls.Count);
+        Assert.Equal(NativeMethods.VK_CONTROL, runtime.SendInputCalls[2][0].U.ki.wVk);
+        Assert.Equal(NativeMethods.KEYEVENTF_KEYUP, runtime.SendInputCalls[2][0].U.ki.dwFlags);
+    }
+
+    [Fact]
     public async Task ExecuteCustomActionAsync_WebAction_SavesProfileStartsProcessAndEntersFullscreen()
     {
         string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
@@ -714,6 +736,7 @@ public sealed class ActionServiceTests
         public List<IntPtr> ForegroundWindowCalls { get; } = [];
         public Queue<IActionProcessHandle?> ProcessesToReturn { get; } = [];
         public HashSet<byte> PressedKeys { get; } = [];
+        public Queue<uint> SendInputResults { get; } = [];
         public FakeColorPickerDialog ColorPicker { get; } = new();
         public FakeFileSorterToolWindow FileSorterWindow { get; set; } = new();
         public FakeQuickNoteToolWindow QuickNoteWindow { get; set; } = new();
@@ -735,7 +758,7 @@ public sealed class ActionServiceTests
         public uint SendInput(NativeMethods.INPUT[] inputs)
         {
             SendInputCalls.Add(inputs);
-            return (uint)inputs.Length;
+            return SendInputResults.Count > 0 ? SendInputResults.Dequeue() : (uint)inputs.Length;
         }
 
         public bool SetForegroundWindow(IntPtr handle)

@@ -574,8 +574,12 @@
     <value>120 мин</value>
   </data>
   <data name="SettingsWindow_InvalidHotkey" xml:space="preserve">
-    <value>Выберите клавишу для действия горячей клавиши.</value>
-  </data>
+      <value>Выберите клавишу для действия горячей клавиши.</value>
+    </data>
+  <data name="SettingsWindow_ActivationHotkey" xml:space="preserve"><value>Глобальная горячая клавиша кнопки</value></data>
+  <data name="SettingsWindow_ActivationHotkeyHint" xml:space="preserve"><value>Необязательно. Это сочетание запускает кнопку и не связано с клавишами, отправляемыми действием «Горячие клавиши».</value></data>
+  <data name="SettingsWindow_ActivationHotkeyModifierRequired" xml:space="preserve"><value>Горячая клавиша кнопки должна содержать Ctrl, Alt, Shift или Win.</value></data>
+  <data name="SettingsWindow_ActivationHotkeyReserved" xml:space="preserve"><value>Это сочетание зарезервировано Windows. Выберите другую комбинацию.</value></data>
   <data name="HotkeyModifierRequiredMessage" xml:space="preserve">
     <value>Глобальные горячие клавиши должны содержать Ctrl, Alt, Shift или Win:
 {0}</value>

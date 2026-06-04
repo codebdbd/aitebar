@@ -255,7 +255,11 @@ namespace AiteBar
                 changed = true;
             }
 
-            var normalizedElements = NormalizeElements(_appSettings.Elements, GetPrimaryContextId());
+            var normalizedElements = NormalizeElements(_appSettings.Elements, GetPrimaryContextId(), out bool elementsNormalized);
+            if (elementsNormalized)
+            {
+                changed = true;
+            }
             if (_appSettings.Elements.Count != normalizedElements.Count)
             {
                 changed = true;
@@ -283,18 +287,10 @@ namespace AiteBar
 
         private static void EnsureFileSizeWithinLimit(string path, long maxBytes)
         {
-            try
+            long length = new FileInfo(path).Length;
+            if (length > maxBytes)
             {
-                long length = new FileInfo(path).Length;
-                if (length > maxBytes)
-                {
-                    // Логируем предупреждение, но НЕ БРОСАЕМ исключения - загружаем как есть
-                    Logger.Log(new InvalidDataException($"Файл настроек большой ({length} bytes), лимит {maxBytes} bytes. Загружаем как есть."));
-                }
-            }
-            catch
-            {
-                // Если не удалось проверить размер - продолжаем
+                throw new InvalidDataException($"Settings file is too large: {length} bytes. Maximum allowed size is {maxBytes} bytes.");
             }
         }
 
@@ -315,23 +311,79 @@ namespace AiteBar
             return usesWinZ || usesCtrlAltZ;
         }
 
-        private static List<CustomElement> NormalizeElements(IEnumerable<CustomElement> source, string defaultContextId)
+        private static List<CustomElement> NormalizeElements(IEnumerable<CustomElement> source, string defaultContextId, out bool changed)
         {
+            changed = false;
             var result = new List<CustomElement>();
             var seen = new HashSet<string>(StringComparer.Ordinal);
             foreach (var item in source)
             {
-                if (item == null) continue;
+                if (item == null)
+                {
+                    changed = true;
+                    continue;
+                }
                 string id = string.IsNullOrWhiteSpace(item.Id) ? Guid.NewGuid().ToString() : item.Id;
-                if (!seen.Add(id)) continue;
-                
+                if (!seen.Add(id))
+                {
+                    changed = true;
+                    continue;
+                }
+
                 string contextId = string.IsNullOrWhiteSpace(item.ContextId) ? defaultContextId : item.ContextId;
+                if (!string.Equals(item.Id, id, StringComparison.Ordinal) ||
+                    !string.Equals(item.ContextId, contextId, StringComparison.Ordinal) ||
+                    item.RotationProfilePaths == null ||
+                    item.ActivationHotkey == null)
+                {
+                    changed = true;
+                }
                 item.Id = id;
                 item.ContextId = contextId;
                 item.RotationProfilePaths ??= [];
+                item.ActivationHotkey ??= new HotkeyBinding();
+                if (MigrateLegacyElementHotkey(item))
+                {
+                    changed = true;
+                }
                 result.Add(item);
             }
             return result;
+        }
+
+        private static bool MigrateLegacyElementHotkey(CustomElement item)
+        {
+            bool changed = false;
+            bool isHotkeyAction = string.Equals(item.ActionType, nameof(ActionType.Hotkey), StringComparison.OrdinalIgnoreCase);
+            var legacyBinding = new HotkeyBinding
+            {
+                Ctrl = item.Ctrl,
+                Alt = item.Alt,
+                Shift = item.Shift,
+                Win = item.Win,
+                Key = item.Key
+            };
+
+            if (!isHotkeyAction &&
+                !HotkeyValidationHelper.HasAssignedKey(item.ActivationHotkey) &&
+                HotkeyValidationHelper.HasAssignedKey(legacyBinding))
+            {
+                item.ActivationHotkey = legacyBinding;
+                changed = true;
+            }
+
+            if (!isHotkeyAction &&
+                (item.Ctrl || item.Alt || item.Shift || item.Win || HotkeyValidationHelper.HasAssignedKey(legacyBinding)))
+            {
+                item.Ctrl = false;
+                item.Alt = false;
+                item.Shift = false;
+                item.Win = false;
+                item.Key = "None";
+                changed = true;
+            }
+
+            return changed;
         }
 
         private static bool AreElementsEquivalent(CustomElement left, CustomElement right)
@@ -356,8 +408,20 @@ namespace AiteBar
                    left.Shift == right.Shift &&
                    left.Win == right.Win &&
                    left.Key == right.Key &&
+                   AreBindingsEquivalent(left.ActivationHotkey, right.ActivationHotkey) &&
                    left.ImagePath == right.ImagePath &&
                    left.ContextId == right.ContextId;
+        }
+
+        private static bool AreBindingsEquivalent(HotkeyBinding? left, HotkeyBinding? right)
+        {
+            left ??= new HotkeyBinding();
+            right ??= new HotkeyBinding();
+            return left.Ctrl == right.Ctrl &&
+                   left.Alt == right.Alt &&
+                   left.Shift == right.Shift &&
+                   left.Win == right.Win &&
+                   string.Equals(left.Key, right.Key, StringComparison.OrdinalIgnoreCase);
         }
 
         public string GetPrimaryContextId()
@@ -499,6 +563,14 @@ namespace AiteBar
             Shift = s.Shift,
             Win = s.Win,
             Key = s.Key,
+            ActivationHotkey = new HotkeyBinding
+            {
+                Ctrl = s.ActivationHotkey?.Ctrl ?? false,
+                Alt = s.ActivationHotkey?.Alt ?? false,
+                Shift = s.ActivationHotkey?.Shift ?? false,
+                Win = s.ActivationHotkey?.Win ?? false,
+                Key = string.IsNullOrWhiteSpace(s.ActivationHotkey?.Key) ? "None" : s.ActivationHotkey.Key
+            },
             ContextId = s.ContextId
         };
     }

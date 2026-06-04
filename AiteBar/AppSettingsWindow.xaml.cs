@@ -68,18 +68,10 @@ public partial class AppSettingsWindow : DarkWindow
         {
             combo.Items.Clear();
             combo.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Common_NotAssigned"), Tag = "None" });
-            combo.Items.Add(new ComboBoxItem { Content = "Space", Tag = "Space" });
-            combo.Items.Add(new ComboBoxItem { Content = "[", Tag = "Oem4" });
-            combo.Items.Add(new ComboBoxItem { Content = "]", Tag = "Oem6" });
-            for (char c = 'A'; c <= 'Z'; c++) combo.Items.Add(new ComboBoxItem { Content = c.ToString(), Tag = c.ToString() });
-            for (int i = 0; i <= 9; i++) combo.Items.Add(new ComboBoxItem { Content = i.ToString(), Tag = "D" + i });
-            for (int i = 0; i <= 9; i++) combo.Items.Add(new ComboBoxItem { Content = "NumPad " + i, Tag = "NumPad" + i });
-            combo.Items.Add(new ComboBoxItem { Content = "NumPad +", Tag = "Add" });
-            combo.Items.Add(new ComboBoxItem { Content = "NumPad -", Tag = "Subtract" });
-            combo.Items.Add(new ComboBoxItem { Content = "NumPad *", Tag = "Multiply" });
-            combo.Items.Add(new ComboBoxItem { Content = "NumPad /", Tag = "Divide" });
-            combo.Items.Add(new ComboBoxItem { Content = "NumPad .", Tag = "Decimal" });
-            for (int i = 1; i <= 12; i++) combo.Items.Add(new ComboBoxItem { Content = "F" + i, Tag = "F" + i });
+            foreach (HotkeyKeyOption key in HotkeyKeyCatalog.GlobalHotkeyKeys)
+            {
+                combo.Items.Add(new ComboBoxItem { Content = key.DisplayName, Tag = key.Key });
+            }
             combo.SelectedIndex = 0;
         }
     }

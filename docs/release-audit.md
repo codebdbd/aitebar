@@ -1,260 +1,317 @@
-# AiteBar Pre-Release Audit Report
+# AiteBar v1.7.5 Pre-Release Audit
 
-## 1. Executive Summary
-A comprehensive audit of the AiteBar project (v1.6.1) has been conducted. The project is a Windows desktop utility written in .NET 8 using WPF, featuring a dockable edge panel with customizable buttons, browser profiles, quick notes, and system integration.
+**Audit date:** 2026-06-04
+**Base commit:** `73c330a` on `master`
+**Candidate version:** `1.7.5`
+**Verdict:** **READY WITH CONDITIONS**
 
-Overall, the project is well-structured with good test coverage (73 passing tests), successful builds, and proper handling of core functionality. The release audit findings have been addressed or reduced to documented non-blocking maintenance guidance.
+## Executive Summary
 
-## 2. Общая оценка готовности к релизу
-- **Сборка**: Успешная (Release конфигурация)
-- **Тесты**: 73 теста пройдено
-- **Архитектура**: Логичная, разделение на слои (UI, Services, Helpers, Native Integration)
-- **Безопасность**: HIGH-проблемы закрыты; запуск команд и скриптов требует явного подтверждения пользователя
-- **Готовность к релизу**: Готова к релизу
+The release-blocking keyboard defect found during the audit has been fixed in the current working tree. A custom button now has a separate `ActivationHotkey` for its optional global shortcut, while `Ctrl`, `Alt`, `Shift`, `Win`, and `Key` remain the payload sent only by a Hotkey action. `HotkeyService` no longer registers a Hotkey action payload, so the previous self-trigger path is removed.
 
-## 3. Таблица найденных проблем
+The same hardening change also makes `SendInput` failures visible to callers, releases injected modifiers during cleanup, includes registration failure reasons in warnings, immediately re-registers custom-button shortcuts after relevant changes, rejects oversized settings files, and corrects release-document drift.
 
-| Уровень критичности | Количество |
-|---------------------|------------|
-| CRITICAL            | 0          |
-| HIGH                | 0 открытых |
-| MEDIUM              | 0 открытых |
-| LOW                 | 0 блокирующих |
+Release build, tests, dependency vulnerability scan, publish, and installer creation passed. The remaining release condition is a manual keyboard matrix on a Windows desktop. It cannot be claimed as passed from this non-interactive audit environment.
 
-## 4. Critical Issues
-Нет критических проблем.
+## Finding Summary
 
-## 5. High Issues
+| Severity | Open | Closed in candidate | Release blocking |
+| --- | ---: | ---: | --- |
+| CRITICAL | 0 | 0 | No |
+| HIGH | 0 | 1 | No |
+| MEDIUM | 2 | 5 | Conditional |
+| LOW | 3 | 2 | No |
 
-### HIGH-1: Командная инъекция при выполнении Python скриптов
-**Статус**: ✅ ИСПРАВЛЕНО
-**Описание**: В `ActionService.CreateScriptProcessStartInfo()` при запуске Python скриптов использовалась строка аргументов вместо ArgumentList, что создавало потенциальный риск командной инъекции.
-**Последствия**: Возможность выполнения произвольных команд при определенных условиях с использованием вредоносных имен файлов скриптов.
-**Место возникновения**: `ActionService.cs:258-262`
-**Файлы**: `AiteBar/ActionService.cs`
-**Функции**: `CreateScriptProcessStartInfo()`
-**Исправление**: Заменено использование `Arguments` на `ArgumentList` для безопасного запуска Python скриптов напрямую через python.exe, без промежуточного cmd.exe.
+## Findings
 
-### HIGH-2: Выполнение пользовательских скриптов и команд без дополнительной проверки
-**Статус**: ✅ ИСПРАВЛЕНО
-**Описание**: Приложение позволяет пользователю создавать кнопки, которые запускают скрипты (.bat, .cmd, .ps1, .py) и команды. Это потенциальный вектор атаки, если вредоносный скрипт будет добавлен пользователем (или импортирован через панель).
-**Последствия**: Выполнение произвольного кода на машине пользователя при запуске кнопки с вредоносным скриптом.
-**Место возникновения**: `ActionService.cs`
-**Файлы**: `AiteBar/ActionService.cs`
-**Функции**: `ExecuteCustomActionAsync()`, `StartScriptFileAsync()`, `ExecuteCommand()`
-**Доказательства из кода**:
-```csharp
-case ActionType.ScriptFile:
-    await StartScriptFileAsync(el.ActionValue);
-    break;
-case ActionType.Command:
-    ExecuteCommand(el.ActionValue);
-    break;
-```
-**Вероятность возникновения**: Средняя (зависит от действий пользователя)
-**Исправление**: Для команд усилен текст подтверждения с явным предупреждением о риске изменения файлов и системных настроек. Для скриптов добавлено обязательное подтверждение перед каждым запуском. Импортированные кнопки со скриптами также проходят через это подтверждение при выполнении.
+| ID | Severity | Status | Area | Release blocking |
+| --- | --- | --- | --- | --- |
+| HIGH-1 | HIGH | Closed | Keyboard architecture | No |
+| MED-1 | MEDIUM | Closed | Hotkey action reliability | No |
+| MED-2 | MEDIUM | Closed | Hotkey action cleanup | No |
+| MED-3 | MEDIUM | Closed | Registration diagnostics | No |
+| MED-4 | MEDIUM | Open | Keyboard integration coverage | Conditional |
+| MED-5 | MEDIUM | Closed | Settings-file reliability | No |
+| MED-6 | MEDIUM | Open | Test isolation | No |
+| LOW-1 | LOW | Open | `MainWindow` architecture | No |
+| LOW-2 | LOW | Closed | Key catalog duplication | No |
+| LOW-3 | LOW | Open | Installer signing | No |
+| LOW-4 | LOW | Open | Dependency freshness | No |
 
-## 6. Medium Issues
+### HIGH-1: Hotkey actions could trigger themselves
 
-### MED-1: Нет проверки размера файла при десериализации и импорте
-**Статус**: ✅ ИСПРАВЛЕНО
-**Описание**: При импорте панелей и загрузке настроек нет ограничений на размер входных файлов, что может привести к проблемам с памятью при обработке очень больших файлов.
-**Последствия**: Потенциальные проблемы с производительностью или сбои из-за исчерпания памяти при обработке вредоносно больших файлов.
-**Место возникновения**: `AppSettingsService.cs`, `PanelPackageService.cs`
-**Файлы**: `AiteBar/AppSettingsService.cs`, `AiteBar/PanelPackageService.cs`
-**Функции**: `LoadAsync()`, `ReadManifestAsync()`, `ImportIntoCurrentPanelAsync()`
-**Вероятность возникновения**: Низкая
-**Исправление**: Добавлены лимиты размера для settings/config JSON, package-файла, manifest.json и отдельных entries внутри package. Добавлены regression-тесты для oversized settings/package.
+**Status:** Closed
+**Impact:** A Hotkey button could register the same combination that it injected with `SendInput`, creating a repeated execution path.
+**Previous reproduction:** Create a Hotkey action with `Ctrl+K`, save it as a custom-button shortcut, then click it or press `Ctrl+K`.
 
-### MED-2: Потенциальные проблемы с конкурентностью при доступе к _elements в AppSettingsService
-**Статус**: ✅ ИСПРАВЛЕНО
-**Описание**: Список `_elements` в `AppSettingsService` доступен для изменения из разных потоков без синхронизации (кроме сохранения в файл).
-**Последствия**: Потенциальные race condition при одновременном изменении списка элементов из разных потоков.
-**Место возникновения**: `AppSettingsService.cs`
-**Файлы**: `AiteBar/AppSettingsService.cs`
-**Функции**: `ReorderElements()`, `SaveElementAsync()`, `DeleteElementAsync()`, `AddElementsAsync()`
-**Доказательства из кода**:
-```csharp
-public void ReorderElements(int oldIndex, int newIndex, string contextId)
-{
-    var contextElements = _elements.Where(e => e.ContextId == contextId).ToList();
-    // ... операции с _elements без блокировки
-}
-```
-**Вероятность возникновения**: Низкая (большинство операций выполняются в UI-потоке)
-**Исправление**: Добавлена синхронизация доступа к `_elements`, снимки списка для чтения и сервисные методы для изменения элементов вместо прямой мутации из `MainWindow`.
+**Evidence of fix**
 
-### MED-3: Отсутствие очистки старых логов
-**Статус**: ✅ ИСПРАВЛЕНО
-**Описание**: Лог-файл ротируется только когда достигает 1МБ, создавая один .bak файл. Нет механизма очистки старых логов или ограничения количества резервных копий.
-**Последствия**: Потенциальное накопление лог-файлов на диске (хотя и ограничено двумя файлами по 1МБ каждый).
-**Место возникновения**: `Logger.cs`
-**Файлы**: `AiteBar/Logger.cs`
-**Функции**: `Log()`
-**Вероятность возникновения**: Низкая
-**Исправление**: Логи ротируются в timestamped backups, хранится ограниченное количество backup-файлов.
+- `AiteBar/Models.cs:105` adds `CustomElement.ActivationHotkey`.
+- `AiteBar/HotkeyService.cs:128-133` creates element definitions only from `ActivationHotkey`.
+- `AiteBar/SettingsWindow.xaml.cs:644-665` validates the separate activation binding.
+- `AiteBar/SettingsWindow.xaml.cs:751-759` stores Hotkey action payload and activation shortcut separately.
+- `AiteBar/AppSettingsService.cs:350-386` migrates legacy non-Hotkey shortcuts without changing Hotkey action payloads.
+- `AiteBar.Tests/HotkeyServiceTests.cs:220` proves a Hotkey action payload is not registered.
+- `AiteBar.Tests/AppSettingsServiceTests.cs:494` and `:521` cover migration and payload preservation.
 
-## 7. Low Issues
+**Recommendation:** Keep the two persisted concepts separate in all future import, export, editor, and registration changes.
 
-### LOW-1: Магические числа в коде
-**Статус**: ✅ УЛУЧШЕНО
-**Описание**: В коде присутствуют "магические числа" без явных констант.
-**Последствия**: Усложнение поддержки кода.
-**Место возникновения**: Различные файлы
-**Файлы**: `AiteBar/ActionService.cs`, `AiteBar/MainWindow.xaml.cs`
-**Исправление**: Числовые параметры измененной логики и fullscreen-активации вынесены в именованные константы. Оставшиеся числовые значения относятся к Win32 constants, glyph codepoints или layout-тестам и являются документированными локальными значениями.
+### MED-1: Hotkey action input failures were reported as success
 
-### LOW-2: Некоторые исключения перехватываются без логирования (или с пустыми catch)
-**Статус**: ✅ ИСПРАВЛЕНО
-**Описание**: В некоторых местах код содержит пустые блоки catch, что затрудняет отладку.
-**Последствия**: Затрудненная диагностика проблем при возникновении ошибок.
-**Место возникновения**: `PanelPackageService.cs:282-291`, `ActionService.cs:275`
-**Файлы**: `AiteBar/PanelPackageService.cs`, `AiteBar/ActionService.cs`
-**Доказательства из кода**:
-```csharp
-private static void TryDeleteDirectory(string path)
-{
-    try
-    {
-        if (Directory.Exists(path))
-        {
-            Directory.Delete(path, recursive: true);
-        }
-    }
-    catch
-    {
-    }
-}
-```
-**Вероятность возникновения**: Низкая
-**Исправление**: Пустые catch в отмеченных местах заменены на логирование через `Logger.Log()` или diagnostic output для самого logger fallback.
+**Status:** Closed
+**Impact:** Callers could not distinguish successful input delivery from a short or failed `SendInput` call.
 
-### LOW-3: Отсутствие XML-документации для публичных методов
-**Статус**: ✅ НЕ БЛОКИРУЕТ РЕЛИЗ
-**Описание**: Многие публичные методы не имеют XML-документации.
-**Последствия**: Усложнение работы с кодом для новых разработчиков.
-**Место возникновения**: Различные файлы
-**Решение**: Проект является desktop-приложением без публикуемого SDK/API surface; XML documentation не включена как релизный gate. Поддерживающая документация вынесена в `docs/architecture.md`, `docs/functions.md`, `docs/user-manual.md` и этот audit report.
+**Evidence of fix**
 
-## 8. Security Audit
+- `AiteBar/ActionService.cs:102` returns the Hotkey action result.
+- `AiteBar/ActionService.cs:135-186` converts input failures into a failed `ActionExecutionResult`.
+- `AiteBar.Tests/ActionServiceTests.cs:372` verifies failed input is reported.
 
-### Найденные проблемы:
-1. **HIGH-1**: ✅ ИСПРАВЛЕНО — Потенциальная командная инъекция при выполнении Python скриптов
-2. **HIGH-2**: ✅ ИСПРАВЛЕНО — Команды и скрипты требуют явного подтверждения с предупреждением о риске
+**Recommendation:** Keep short `SendInput` results as action failures and preserve the regression test.
 
-### Общие замечания:
-- Отсутствие SQL Injection, XSS, CSRF и других веб-уязвимостей (приложение десктопное)
-- Нет жестко прописанных паролей или секретов в коде
-- Хранение настроек в JSON-файле в AppData (стандартная практика для десктопных приложений)
-- Импорт панелей проверяется на безопасность путей к иконкам (`IsPackagedImagePathSafe`)
+### MED-2: Injected modifiers were not guaranteed to be released
 
-## 9. Performance Audit
+**Status:** Closed
+**Impact:** An exception after a modifier key-down could leave an injected modifier logically pressed.
 
-### Найденные проблемы:
-Нет серьезных проблем с производительностью.
+**Evidence of fix**
 
-### Общие замечания:
-- Используется семафор для предотвращения конкурентной записи настроек
-- Есть кэширование изображений кнопок (`_buttonImageCache`)
-- Отсутствуют тяжелые вычисления или блокирующие операции в UI-потоке (кроме необходимых)
-- Логи ротируются для предотвращения неконтролируемого роста
+- `AiteBar/ActionService.cs:139-193` tracks injected keys and performs cleanup in `finally`.
+- `AiteBar/ActionService.cs:206` releases modifiers in reverse order.
+- `AiteBar.Tests/ActionServiceTests.cs:372-390` verifies cleanup after a failed main-key send.
 
-## 10. Architecture Audit
+**Recommendation:** Continue tracking only keys injected by AiteBar and release them in `finally`.
 
-### Общая архитектура:
-Проект имеет четкую структуру с разделением на слои:
-1. **Windows UI Layer**: Окна WPF (`MainWindow`, `SettingsWindow`, и т.д.)
-2. **Services Layer**: Бизнес-логика (`ActionService`, `AppSettingsService`, `PanelPackageService`, и т.д.)
-3. **Helpers Layer**: Статические вспомогательные классы (`PanelLayoutHelper`, `ContextStateHelper`, и т.д.)
-4. **Native Integration Layer**: Win32 interop (`NativeMethods.cs`, `NativeIntegrationService.cs`)
+### MED-3: Registration warnings discarded failure reasons
 
-### Найденные проблемы:
-- Нет открытых архитектурных блокеров. MED-2 закрыт синхронизацией доступа к элементам и сервисными методами изменения списка.
+**Status:** Closed
+**Impact:** Users could not tell whether a shortcut was unsupported, reserved, conflicting, or rejected by Windows.
 
-### Общие замечания:
-- Нет циклических зависимостей
-- Код организован логично
-- Используются записи (records) для неизменяемых данных где это уместно
-- Интерфейсы не используются активно (большинство сервисов - конкретные классы), но для данного размера проекта это приемлемо
+**Evidence of fix**
 
-## 11. Frontend Audit
-Так как это WPF-приложение, "frontend" - это XAML и код-behind.
+- `AiteBar/HotkeyService.cs:207-212` includes `FailureReason` in displayed failures.
+- `AiteBar/SettingsWindow.xaml.cs:763` shows failures immediately after saving a button.
+- `AiteBar/MainWindow.xaml.cs:1101` reports failures after panel import.
 
-### Найденные проблемы:
-Нет серьезных проблем с UI.
+**Recommendation:** Preserve actionable failure reasons in every future hotkey-editing workflow.
 
-### Общие замечания:
-- Используется темная тема с приглушенными цветами (соответствует UI Contract)
-- Окна компактные, без лишнего скролла
-- Используются современные иконки (Fluent System Icons, Material Icons, Font Awesome Brands)
-- Локализация поддерживается (ru, en, de, uk)
+### MED-4: Critical keyboard integration paths lack automated coverage
 
-## 12. Backend Audit
-Для десктопного приложения "backend" - это сервисы и бизнес-логика.
+**Status:** Open
+**Release blocking:** Conditional until the manual matrix passes.
 
-### Найденные проблемы:
-- **HIGH-1**: ✅ ИСПРАВЛЕНО — Потенциальная командная инъекция при выполнении Python скриптов
-- **HIGH-2**: ✅ ИСПРАВЛЕНО — Выполнение пользовательских скриптов и команд требует явного подтверждения
+**Description and impact**
 
-### Общие замечания:
-- Сервисы реализуют основную бизнес-логику
-- Настройки загружаются и сохраняются асинхронно
-- Используется JSON для сериализации данных
+Service-level tests cover registration, mapping, conflicts, migration, and input cleanup, but WPF focus behavior and end-to-end `WM_HOTKEY` dispatch remain tied to `MainWindow`. Regressions in Tab order, arrow navigation, Enter, Escape, owned-window filtering, or panel orientation can pass CI.
 
-## 13. Database Audit
-База данных не используется - все данные хранятся в JSON-файлах в AppData. Это стандартная практика для небольших десктопных приложений.
+**Evidence**
 
-## 14. Infrastructure Audit
+- `AiteBar/MainWindow.xaml.cs:822-870` owns registration and `WM_HOTKEY` dispatch.
+- `AiteBar/MainWindow.xaml.cs:1982-2134` owns keyboard focus and navigation.
+- No UI automation project exists in the solution.
 
-### Сборка и деплой:
-- **Сборка**: Успешная с использованием `dotnet build`
-- **Тесты**: 73 теста пройдено с использованием xUnit
-- **Инсталлятор**: Создается с помощью Inno Setup через скрипт `Build-Installer.ps1`
+**Recommendation**
 
-### Найденные проблемы:
-Нет проблем с инфраструктурой.
+Run the manual keyboard matrix before release. Longer term, extract navigation and dispatch decisions into testable helpers and add Windows UI automation.
 
-## 15. Missing Tests
-Проект имеет хороший набор тестов для helper-классов и сервисов. Однако можно добавить тесты для:
-- `NativeIntegrationService`
-- Некоторые edge cases в `ActionService`
-- UI-компоненты (хотя это сложно для WPF)
+### MED-5: Settings file-size limit was not enforced
 
-## 16. Technical Debt
-1. Оставшиеся codepoint/Win32/layout constants нужно сохранять рядом с комментариями при будущих изменениях.
-2. XML-документацию можно добавить позже, если проект начнет публиковать SDK/API.
+**Status:** Closed
+**Impact:** A corrupted or maliciously large settings file could cause excessive startup memory use.
 
-## 17. Recommendations
-1. **✅ ИСПРАВЛЕNO HIGH-1**: Заменить `Arguments` на `ArgumentList` в `ActionService.CreateScriptProcessStartInfo()` для Python скриптов.
-2. **✅ ИСПРАВЛЕНО HIGH-2**: Добавлены явные подтверждения и предупреждения для скриптов и команд.
-3. **✅ ИСПРАВЛЕНО MED-1**: Добавлены проверки размера файлов для импорта панелей и настроек.
-4. **✅ ИСПРАВЛЕНО MED-2**: Добавлена синхронизация доступа к `_elements`.
-5. **✅ ИСПРАВЛЕНО MED-3 / LOW-2**: Добавлена политика ротации логов и логирование ранее пустых catch.
-6. **✅ УЛУЧШЕНО LOW-1**: Новые и измененные магические числа вынесены в именованные константы.
+**Evidence of fix**
 
-## 18. Release Readiness Checklist
-- [x] Сборка в Release конфигурации успешна
-- [x] Все unit-тесты пройдены (73 теста)
-- [x] Нет критических ошибок
-- [x] Исправлены HIGH-проблемы (HIGH-1, HIGH-2)
-- [x] Исправлены MED-проблемы
+- `AiteBar/AppSettingsService.cs:54`, `:74`, and `:171` check primary, legacy, and backup files before loading.
+- `AiteBar/AppSettingsService.cs:288-294` rejects files larger than the configured limit.
+- `AiteBar.Tests/AppSettingsServiceTests.cs:134` verifies oversized settings fall back to defaults.
 
-## 19. Verdict
-**READY FOR RELEASE**
+**Recommendation:** Keep size checks before every settings-file read and retain the regression test.
 
-Проект готов к релизу. HIGH- и MEDIUM-проблемы закрыты, LOW-замечания либо исправлены точечно, либо оформлены как не блокирующая документационная рекомендация без влияния на runtime-риск.
+### MED-6: Some tests share real user AppData
 
----
+**Status:** Open
+**Release blocking:** No
 
-## TOP 20 наиболее важных исправлений перед релизом
+**Description and impact**
 
-1. ✅ ИСПРАВЛЕНО — Исправить потенциальную командную инъекцию в ActionService.CreateScriptProcessStartInfo() для Python скриптов
-2. Добавить предупреждения при выполнении пользовательских скриптов и команд
-3. Добавить синхронизацию для доступа к _elements в AppSettingsService
-4. Добавить проверки максимального размера файлов для настроек и импорта панелей
-5. Улучшить логирование в пустых блоках catch
-6. Заменить магические числа на именованные константы
-7. Добавить XML-документацию для публичных методов
-8. Рассмотреть добавление ограничений на количество резервных лог-файлов
-9. Добавить больше тестов для NativeIntegrationService
-10. Добавить тесты для edge cases в ActionService
+The first standard `dotnet test` run failed one `LoggerTests` case because the installed `AiteBar.exe` briefly held the real `%APPDATA%\Codebdbd\Aite Bar\error.log`. A retry passed `411/411`. Other tests also use real browser-profile and AppData locations, which makes local results sensitive to running applications and permissions.
+
+**Evidence**
+
+- `AiteBar.Tests/LoggerTests.cs:77-83` manipulates the application log artifact.
+- `AiteBar.Tests/BrowserHelperTests.cs:143`, `:238`, and `:266` create browser profile directories.
+- `AiteBar.Tests/TelemetryServiceTests.cs:222-250` manipulates the settings file.
+
+**Recommendation**
+
+Inject path providers or isolate `APPDATA` and `LOCALAPPDATA` per test process. Treat persistent CI failures as release blocking.
+
+### LOW-1: `MainWindow` remains an oversized system coordinator
+
+**Status:** Open
+**Evidence:** `AiteBar/MainWindow.xaml.cs` contains 2,544 lines and owns hotkeys, dispatch, focus, navigation, animation, tray behavior, contexts, drag-and-drop, and execution wiring.
+**Impact:** Keyboard changes have a broad regression surface and are difficult to test without WPF.
+**Recommendation:** Move hotkey orchestration and navigation decisions into focused collaborators while keeping WPF event wiring in `MainWindow`.
+
+### LOW-2: Key catalogs were duplicated across settings UIs
+
+**Status:** Closed
+**Evidence:** `AiteBar/HotkeyKeyCatalog.cs` centralizes global-shortcut and Hotkey-action key options; both settings windows consume it.
+**Recommendation:** Keep Win32 mapping and validation tests synchronized with this catalog.
+
+### LOW-3: Installer is not signed
+
+**Status:** Open
+**Evidence:** `artifacts/installer/AiteBar-Setup.exe` has signature status `NotSigned`; installer build reports that signing was skipped.
+**Impact:** Windows SmartScreen and reputation warnings may reduce user trust.
+**Recommendation:** Require a valid signature in release CI when a code-signing certificate is available.
+
+### LOW-4: Some dependencies have newer versions
+
+**Status:** Open
+**Evidence:** `dotnet list .\AiteBar.sln package --outdated --include-transitive` reports `Sentry 6.5.0 -> 6.6.0` and newer transitive test dependencies.
+**Impact:** No current security issue was found, but maintenance drift will grow.
+**Recommendation:** Review updates after v1.7.5 rather than combining them with keyboard hardening.
+
+## Keyboard Subsystem
+
+### Model and storage
+
+- `AppSettings` stores application command shortcuts as `HotkeyBinding`.
+- `CustomElement.ActivationHotkey` stores the optional global shortcut that launches a custom button.
+- `CustomElement.Ctrl`, `Alt`, `Shift`, `Win`, and `Key` store only the payload sent by a Hotkey action.
+- Legacy non-Hotkey element bindings migrate to `ActivationHotkey`; legacy Hotkey actions preserve their payload.
+- Panel package import and export preserve the separate activation binding.
+
+### Settings UI and validation
+
+- `HotkeyKeyCatalog` supplies key options by purpose.
+- Application command hotkeys and button activation hotkeys require a modifier.
+- Reserved Windows combinations are rejected before saving.
+- Runtime registration still detects command-command, command-element, element-element, unsupported-key, and Windows registration failures.
+- Button save and panel import show registration failures with reasons.
+
+### Registration and dispatch
+
+- `HotkeyService` allocates command IDs separately from dynamic custom-element IDs.
+- Commands register before elements and therefore retain priority.
+- Re-registration occurs after button save, delete, duplicate, and panel import.
+- `MainWindow.WndProc` dispatches `WM_HOTKEY`; owned-window filtering remains a manual integration concern.
+
+### Panel navigation
+
+- `MainWindow` handles keyboard mode, focus, Tab/Shift+Tab, arrows, Enter, and Escape.
+- Orientation-aware behavior exists for Top, Bottom, Left, and Right edges.
+- These paths require manual verification because they are not covered by UI automation.
+
+### Input sending
+
+- `ActionService` sends Hotkey action payloads through `SendInput`.
+- Already pressed modifiers are not injected again.
+- Successfully injected modifiers are released in reverse order.
+- Short `SendInput` results fail the action and trigger cleanup.
+- Fullscreen `F11` input now also fails when `SendInput` is incomplete.
+- Normal Win32 limitations remain: foreground-window rules, UIPI/integrity boundaries, reserved shortcuts, and behavior owned by the target application.
+
+## Architecture And Duplication
+
+The principal keyboard architecture defect is closed by separating activation from action payload. The remaining architectural risk is concentration of system behavior in `MainWindow`. Centralized key descriptors reduce UI duplication, but Win32 key mapping, validation rules, and documentation must still be kept aligned through tests and review.
+
+## Security
+
+- NuGet vulnerability scan found no vulnerable direct or transitive packages.
+- Oversized settings files are rejected before `ReadAllText`.
+- Panel package import retains path, size, entry-count, and manifest validation.
+- Script and command execution still require explicit confirmation.
+- Installer signing remains unavailable in the current local build.
+
+## Reliability And Performance
+
+No independent performance blocker was confirmed. The previous repeated hotkey self-trigger risk is removed. Settings-size enforcement reduces startup memory and latency risk from malformed files. There is no benchmark suite or startup-time measurement, so performance conclusions remain static-analysis based.
+
+## Tests And Coverage
+
+The candidate has **411 tests**. New regression tests cover:
+
+- Hotkey action payloads not being globally registered.
+- Legacy non-Hotkey shortcut migration.
+- Hotkey action payload preservation.
+- Panel package mapping of activation shortcuts.
+- `SendInput` failure reporting and modifier cleanup.
+- Oversized settings rejection.
+
+The current documented coverage baseline remains `34.62%` line and `27.36%` branch from `docs/COVERAGE-REPORT-2026-06-02.md`. It was not re-collected during this hardening run. CI enforces only a `19%` line threshold, so WPF keyboard integration remains weakly protected.
+
+## CI/CD And Packaging
+
+- Version `1.7.5` is synchronized across `AiteBar.csproj`, `AssemblyInfo.cs`, installer configuration, and `CHANGELOG.md`.
+- Both projects contain lock files.
+- Build CI restores in locked mode, builds, tests, collects coverage, and uploads artifacts.
+- CodeQL runs on pushes, pull requests, and a schedule.
+- Release CI validates the version, builds, tests, creates the installer, verifies installer version, creates checksums, and publishes artifacts.
+- The local installer was rebuilt at `artifacts/installer/AiteBar-Setup.exe`, ProductVersion `1.7.5`.
+
+## Documentation Drift
+
+The following drift was corrected:
+
+- `docs/release-audit.md` no longer describes v1.6.1 or the pre-fix hotkey model.
+- `docs/technical-reference.md` no longer lists absent `Context1Hotkey`-`Context4Hotkey` fields.
+- `CHANGELOG.md` v1.7.5 Markdown formatting is corrected.
+- `docs/RELEASE-2026-SUMMARY.md` and `docs/RELEASE-HARDENING-CHANGE-PLAN.md` now exist.
+- User, function, architecture, and technical-reference documents distinguish button activation shortcuts from Hotkey action payloads.
+
+## Confirmed Checks
+
+| Command or check | Result |
+| --- | --- |
+| `dotnet build .\AiteBar.sln -c Release` | Passed, 0 warnings, 0 errors |
+| `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release` | Passed, 411 / 411; an earlier run had one transient real-AppData log lock |
+| `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --no-build` | Passed, 411 / 411 |
+| `dotnet vstest .\AiteBar.Tests\bin\Release\net8.0-windows\AiteBar.Tests.dll` | Passed, 411 / 411 |
+| `dotnet list .\AiteBar.sln package --vulnerable --include-transitive` | No vulnerable packages |
+| `dotnet list .\AiteBar.sln package --outdated --include-transitive` | Newer non-security updates available |
+| `.\installer\Build-Installer.ps1` | Passed; publish and installer created |
+| Installer version | `1.7.5` |
+| Installer signature | `NotSigned` |
+
+## Manual Keyboard Matrix
+
+The following scenarios are **not verified** by this audit environment and must be completed before release:
+
+- Show panel hotkey from hidden state and repeated press while visible.
+- Tab and Shift+Tab focus cycling.
+- Arrow navigation, Enter, and Escape on Top, Bottom, Left, and Right edges.
+- Short and long contexts, including context switching.
+- Command-command, command-element, and element-element conflicts.
+- Windows registration rejection and reserved combinations.
+- Custom-button global shortcut for non-Hotkey and Hotkey actions.
+- Hotkey action input delivery to another foreground application.
+- Owned-window filtering for Quick Note, Timer/Stopwatch, and other windows.
+- Post-fix confirmation that a Hotkey action cannot trigger itself.
+
+## Remediation Plan
+
+### Before release
+
+1. Complete and record the manual keyboard matrix.
+2. Run the release workflow dry-run from the final commit.
+3. Verify installer checksum and expected unsigned status, or sign the installer if certificate infrastructure is available.
+
+### Immediately after release
+
+1. Isolate tests from real AppData and browser profile directories.
+2. Add automated coverage for WPF focus, `WM_HOTKEY` dispatch, and owned-window filtering.
+3. Review the available Sentry and test dependency updates.
+
+### Longer-term technical debt
+
+1. Extract hotkey orchestration and keyboard navigation decisions from `MainWindow`.
+2. Raise the CI coverage threshold as non-UI keyboard behavior becomes testable.
+3. Make installer signing mandatory when certificate infrastructure is available.
+
+## Final Verdict
+
+**READY WITH CONDITIONS**
+
+No confirmed code-level release blocker remains in the current candidate. AiteBar v1.7.5 can proceed to release only after the manual keyboard matrix passes and the final release workflow dry-run succeeds.

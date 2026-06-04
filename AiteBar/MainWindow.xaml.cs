@@ -435,8 +435,10 @@ public partial class MainWindow : Window
             duplicate.Id = Guid.NewGuid().ToString();
             duplicate.Name = BuildDuplicateElementName(source.Name);
             duplicate.LastUsedProfile = "";
+            duplicate.ActivationHotkey = new HotkeyBinding();
 
             await _settingsService.InsertElementAfterAsync(source.Id, duplicate);
+            RegisterGlobalHotkey();
             RefreshPanel();
             new SettingsWindow(this, duplicate) { Owner = this }.ShowDialog();
         }
@@ -502,6 +504,7 @@ public partial class MainWindow : Window
             }
 
             await _settingsService.DeleteElementAsync(elementToDelete.Id);
+            RegisterGlobalHotkey();
             RefreshPanel();
         }
 
@@ -1095,8 +1098,13 @@ public partial class MainWindow : Window
                 }
 
                 PanelImportResult result = await _panelPackageService.ImportIntoCurrentPanelAsync(dialog.FileName);
+                IReadOnlyList<string> failedHotkeys = RegisterGlobalHotkey();
                 RefreshPanel();
                 new DarkDialog(LocalizationService.Format("Import_Success", result.ImportedCount), false) { Owner = this }.ShowDialog();
+                if (failedHotkeys.Count > 0)
+                {
+                    new DarkDialog(LocalizationService.Format("HotkeyRegistrationFailed", string.Join("\n", failedHotkeys))) { Owner = this }.ShowDialog();
+                }
             }
             catch (Exception ex)
             {
@@ -1914,10 +1922,11 @@ public partial class MainWindow : Window
             }
         }
 
-        public async Task SaveElement(CustomElement updated, string? removeId = null)
+        public async Task<IReadOnlyList<string>> SaveElement(CustomElement updated, string? removeId = null)
         {
             await _settingsService.SaveElementAsync(updated, removeId);
             RefreshPanel();
+            return RegisterGlobalHotkey();
         }
 
         public IReadOnlyList<CustomElement> GetElementsSnapshot() => _settingsService.Elements.Select(_settingsService.CloneElement).ToList();

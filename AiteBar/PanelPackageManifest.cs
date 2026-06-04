@@ -93,6 +93,9 @@ internal sealed class PanelPackageElement
     [JsonPropertyName("key")]
     public string Key { get; set; } = "None";
 
+    [JsonPropertyName("activationHotkey")]
+    public HotkeyBinding ActivationHotkey { get; set; } = new();
+
     [JsonPropertyName("icon")]
     public string Icon { get; set; } = "\uF45B";
 

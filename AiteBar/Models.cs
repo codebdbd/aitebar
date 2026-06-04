@@ -102,6 +102,7 @@ public class CustomElement
     public bool Shift { get; set; }
     public bool Win { get; set; }
     public string Key { get; set; } = "None";
+    public HotkeyBinding ActivationHotkey { get; set; } = new();
     public string ImagePath { get; set; } = "";
     public string ContextId { get; set; } = "context-1";
 }

@@ -80,6 +80,10 @@
   <data name="TimerStopwatch_Preset120Minutes" xml:space="preserve"><value>120 хв</value></data>
   <data name="TimerStopwatch_StopwatchFormatHint" xml:space="preserve"><value>гг:хх:сс.сс</value></data>
   <data name="SettingsWindow_InvalidHotkey" xml:space="preserve"><value>Виберіть клавішу для дії гарячої клавіші.</value></data>
+  <data name="SettingsWindow_ActivationHotkey" xml:space="preserve"><value>Глобальна гаряча клавіша кнопки</value></data>
+  <data name="SettingsWindow_ActivationHotkeyHint" xml:space="preserve"><value>Необов’язково. Це сполучення запускає кнопку й не пов’язане з клавішами, які надсилає дія «Гарячі клавіші».</value></data>
+  <data name="SettingsWindow_ActivationHotkeyModifierRequired" xml:space="preserve"><value>Гаряча клавіша кнопки має містити Ctrl, Alt, Shift або Win.</value></data>
+  <data name="SettingsWindow_ActivationHotkeyReserved" xml:space="preserve"><value>Це сполучення зарезервоване Windows. Виберіть іншу комбінацію.</value></data>
   <data name="HotkeyModifierRequiredMessage" xml:space="preserve"><value>Глобальні гарячі клавіші мають містити Ctrl, Alt, Shift або Win:
 {0}</value></data>
   <data name="Tool_FileSorter" xml:space="preserve"><value>Сортування файлів</value></data>
