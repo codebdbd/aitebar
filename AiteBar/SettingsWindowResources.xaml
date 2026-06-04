@@ -15,7 +15,7 @@
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="BorderBrush" Value="{StaticResource SettingsControlBorder}"/>
         <Setter Property="Padding" Value="8,0"/>
-        <Setter Property="Height" Value="30"/>
+        <Setter Property="Height" Value="32"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="ContextMenu" Value="{StaticResource TextEditingContextMenu}"/>
         <Setter Property="Template">
@@ -53,7 +53,7 @@
     <Style TargetType="ComboBox">
         <Setter Property="Background" Value="{StaticResource SettingsControlBackground}"/>
         <Setter Property="Foreground" Value="White"/>
-        <Setter Property="Height" Value="30"/>
+        <Setter Property="Height" Value="32"/>
         <Setter Property="Padding" Value="10,0"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Template">

@@ -4,69 +4,16 @@
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
         Title="{local:Loc ResourceKey=Prompt_DefaultTitle}" Width="420" SizeToContent="Height"
-        WindowStartupLocation="CenterOwner" Background="#1E1E1E" Foreground="White"
+        WindowStartupLocation="CenterOwner" Background="#1A1A1C" Foreground="White"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
 
     <Window.Resources>
-        <Style TargetType="TextBox">
-            <Setter Property="Background" Value="#2D2D30"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="BorderBrush" Value="#555555"/>
-            <Setter Property="Padding" Value="8,0"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="ContextMenu" Value="{StaticResource TextEditingContextMenu}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TextBox">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
-                            <ScrollViewer x:Name="PART_ContentHost" Margin="0" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
-                                <Setter TargetName="Bd" Property="BorderThickness" Value="2"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="DialogBtnStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Height" Value="34"/>
-            <Setter Property="MinWidth" Value="110"/>
-            <Setter Property="Padding" Value="16,0"/>
-            <Setter Property="Margin" Value="10,0,0,0"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
-                                <Setter TargetName="Bd" Property="BorderThickness" Value="2"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#555555"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Background" Value="#333333"/>
-                                <Setter Property="Foreground" Value="#777777"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="SettingsWindowResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
     </Window.Resources>
 
     <Grid Margin="20">
@@ -76,12 +23,12 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TextBlock x:Name="TxtLabel" Grid.Row="0" Text="{local:Loc ResourceKey=Prompt_DefaultLabel}" Margin="0,0,0,10" Foreground="#BDBDBD"/>
+        <TextBlock x:Name="TxtLabel" Grid.Row="0" Text="{local:Loc ResourceKey=Prompt_DefaultLabel}" Margin="0,0,0,10" Foreground="{StaticResource MutedText}"/>
         <TextBox x:Name="TxtValue" Grid.Row="1" TextChanged="TxtValue_TextChanged"/>
 
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
-            <Button x:Name="BtnCancel" Content="{local:Loc ResourceKey=Common_Cancel}" Background="#333333" Style="{StaticResource DialogBtnStyle}" Click="BtnCancel_Click" IsCancel="True"/>
-            <Button x:Name="BtnSave" Content="{local:Loc ResourceKey=Common_Save}" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnSave_Click" IsDefault="True"/>
+            <Button x:Name="BtnCancel" Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource SecondaryButtonStyle}" Click="BtnCancel_Click" IsCancel="True" Height="36" MinWidth="110" Padding="16,0"/>
+            <Button x:Name="BtnSave" Content="{local:Loc ResourceKey=Common_Save}" Style="{StaticResource ActionButtonStyle}" Click="BtnSave_Click" IsDefault="True" Height="36" MinWidth="110" Padding="16,0" Margin="10,0,0,0"/>
         </StackPanel>
     </Grid>
 </local:DarkWindow>
