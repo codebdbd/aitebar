@@ -2013,7 +2013,7 @@ public partial class MainWindow : Window
             }, System.Windows.Threading.DispatcherPriority.Input);
         }
 
-        private Button? GetFirstFocusablePanelButton()
+        private Button GetFirstFocusablePanelButton()
         {
             return BtnAdd;
         }
