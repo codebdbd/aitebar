@@ -1982,7 +1982,7 @@ public partial class MainWindow : Window
             int focusRequestVersion = unchecked(++_panelFocusRequestVersion);
             Dispatcher.InvokeAsync(async () =>
             {
-                if (focusRequestVersion != _panelFocusRequestVersion || !_shown || !_panelKeyboardActive || HasVisibleOwnedWindow())
+                if (focusRequestVersion != _panelFocusRequestVersion || HasVisibleOwnedWindow())
                     return;
 
                 var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
@@ -2006,7 +2006,7 @@ public partial class MainWindow : Window
                     if (attempt < 3)
                     {
                         await Task.Delay(50);
-                        if (focusRequestVersion != _panelFocusRequestVersion || !_shown || !_panelKeyboardActive || HasVisibleOwnedWindow())
+                        if (focusRequestVersion != _panelFocusRequestVersion || HasVisibleOwnedWindow())
                             return;
                     }
                 }
