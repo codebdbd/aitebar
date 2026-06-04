@@ -1488,17 +1488,6 @@ public partial class MainWindow : Window
             // Now calculate final metrics with hideControlSeparator
             bool hasUserButtons = UserButtonsPanel.Children.Count > 0;
             bool hideSepControl = isVertical && hasUserButtons && tempMetrics.UserBands == 2;
-            var metrics = PanelLayoutHelper.Calculate(
-                isVertical: isVertical,
-                availablePrimary: isVertical ? availableHeight : availableWidth,
-                panelPercent: _appSettings.PanelSizePercent,
-                visibleSystemButtonCount: visibleSystemButtonCount,
-                controlButtonCount: 1,
-                contextCounts: contextCountsList,
-                activeContextIndex: activeContextIdx,
-                systemContextIndex: 0,
-                trailingControlButtonCount: 1,
-                hideControlSeparator: hideSepControl);
 
             // Разделители
             SepSystem.Visibility = hasUserButtons || hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
@@ -2029,24 +2018,7 @@ public partial class MainWindow : Window
 
         private Button? GetFirstFocusablePanelButton()
         {
-            if (BtnAdd.Visibility == Visibility.Visible)
-            {
-                return BtnAdd;
-            }
-
-            if (_userButtons.Count > 0)
-            {
-                return _userButtons[0];
-            }
-
-            foreach (var child in SystemUtilsPanel.Children)
-            {
-                if (child is Button btn && btn.Visibility == Visibility.Visible)
-                {
-                    return btn;
-                }
-            }
-            return null;
+            return BtnAdd;
         }
         
         // Get all focusable buttons in order
@@ -2054,8 +2026,7 @@ public partial class MainWindow : Window
         {
             var buttons = new List<Button>();
             // Add BtnAdd
-            if (BtnAdd.Visibility == Visibility.Visible)
-                buttons.Add(BtnAdd);
+            buttons.Add(BtnAdd);
             // Add system buttons
             foreach (var child in SystemUtilsPanel.Children)
             {

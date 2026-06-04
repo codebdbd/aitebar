@@ -103,13 +103,11 @@ public static class PanelLayoutHelper
                     maxPrimary - trailingPrimary - PanelChrome - reservedUserPrimary);
                 fixedLayout = CalculateFixedVerticalLayout(systemCount, controlsCount, fixedSeparatorCount, fixedPrimaryLimit);
                 fixedPrimary = fixedLayout.Primary;
-                (userLayout, userLeadingReserve, userOverflowReserve) = isVertical
-                    ? CalculateVerticalUserSection(count, maxPrimary, fixedPrimary, systemCount, controlsCount, hasUserButtons, trailingPrimary)
-                    : CalculateHorizontalUserSection(count, maxPrimary, fixedPrimary, trailingPrimary);
+                (userLayout, userLeadingReserve, userOverflowReserve) = CalculateVerticalUserSection(count, maxPrimary, fixedPrimary, systemCount, controlsCount, hasUserButtons, trailingPrimary);
                 fixedCross = fixedLayout.Cross;
                 panelPrimary = Math.Max(
                     ButtonOuterSize + PanelChrome,
-                    (isVertical && hasUserButtons ? userLayout.Primary : fixedPrimary + userLayout.Primary) + trailingPrimary + PanelChrome);
+                    (hasUserButtons ? userLayout.Primary : fixedPrimary + userLayout.Primary) + trailingPrimary + PanelChrome);
                 panelCross = Math.Max(ButtonOuterSize + PanelChrome, Math.Max(Math.Max(fixedCross, trailingCross), userLayout.Cross) + PanelChrome);
             }
 
