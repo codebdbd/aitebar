@@ -1,0 +1,292 @@
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media.Animation;
+using Forms = System.Windows.Forms;
+
+namespace AiteBar;
+
+[SupportedOSPlatform("windows6.1")]
+public partial class FileSorterWindow : DarkWindow, IFileSorterToolWindow
+{
+    private readonly AppSettingsService _settingsService;
+    private readonly FileSorterService _fileSorterService = new();
+    private string? _selectedCustomPath;
+    private string? _lastRootPath;
+
+    public FileSorterWindow(AppSettingsService settingsService)
+    {
+        InitializeComponent();
+        _settingsService = settingsService;
+        LoadLocationOptions();
+        SetIdleState();
+        StartSpinnerAnimation();
+    }
+
+    public void ShowNearPanel(AppSettingsService settingsService)
+    {
+        var settings = settingsService.Settings;
+        var screens = Forms.Screen.AllScreens;
+        var screen = settings.MonitorIndex >= 0 && settings.MonitorIndex < screens.Length
+            ? screens[settings.MonitorIndex]
+            : Forms.Screen.PrimaryScreen;
+        var work = screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
+
+        var (_, _, shownX, shownY) = QuickNoteLayoutHelper.GetSlideCoordinates(settings.Edge, work, Width, Height);
+        Left = shownX;
+        Top = shownY;
+        Show();
+        Activate();
+    }
+
+    private void LoadLocationOptions()
+    {
+        CmbLocation.Items.Clear();
+        CmbLocation.Items.Add(new ComboBoxItem
+        {
+            Content = LocalizationService.Get("FileSorter_LocationDownloads"),
+            Tag = FileSortLocationKind.Downloads
+        });
+        CmbLocation.Items.Add(new ComboBoxItem
+        {
+            Content = LocalizationService.Get("FileSorter_LocationDesktop"),
+            Tag = FileSortLocationKind.Desktop
+        });
+        CmbLocation.Items.Add(new ComboBoxItem
+        {
+            Content = LocalizationService.Get("FileSorter_SelectFolder"),
+            Tag = FileSortLocationKind.Custom
+        });
+        CmbLocation.SelectedIndex = 0;
+    }
+
+    private void SetIdleState()
+    {
+        Title = LocalizationService.Get("FileSorter_Title");
+        TxtTitle.Text = LocalizationService.Get("FileSorter_Title");
+        IdleStatePanel.Visibility = Visibility.Visible;
+        SortingStatePanel.Visibility = Visibility.Collapsed;
+        CompletedStatePanel.Visibility = Visibility.Collapsed;
+        TxtUndoStatus.Visibility = Visibility.Collapsed;
+        BtnSort.IsEnabled = true;
+    }
+
+    private void SetSortingState()
+    {
+        IdleStatePanel.Visibility = Visibility.Collapsed;
+        SortingStatePanel.Visibility = Visibility.Visible;
+        CompletedStatePanel.Visibility = Visibility.Collapsed;
+        TxtUndoStatus.Visibility = Visibility.Collapsed;
+        BtnSort.IsEnabled = false;
+    }
+
+    private void SetCompletedState(FileSortResult result)
+    {
+        _lastRootPath = result.RootPath;
+        TxtTitle.Text = LocalizationService.Get("FileSorter_Title");
+        TxtResultSummary.Text = LocalizationService.Format("FileSorter_ResultFormat", result.SortedCount);
+        IdleStatePanel.Visibility = Visibility.Collapsed;
+        SortingStatePanel.Visibility = Visibility.Collapsed;
+        CompletedStatePanel.Visibility = Visibility.Visible;
+        TxtUndoStatus.Visibility = Visibility.Collapsed;
+        BtnUndo.IsEnabled = result.UndoState != null;
+    }
+
+    private void CmbLocation_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CmbLocation.SelectedItem is not ComboBoxItem { Tag: FileSortLocationKind kind })
+        {
+            return;
+        }
+
+        if (kind == FileSortLocationKind.Custom)
+        {
+            PickCustomFolder();
+        }
+
+        UpdateCustomPathText();
+    }
+
+    private void UpdateCustomPathText()
+    {
+        if (CmbLocation.SelectedItem is ComboBoxItem { Tag: FileSortLocationKind.Custom } && !string.IsNullOrWhiteSpace(_selectedCustomPath))
+        {
+            TxtCustomPath.Text = _selectedCustomPath;
+            TxtCustomPath.Visibility = Visibility.Visible;
+            return;
+        }
+
+        TxtCustomPath.Visibility = Visibility.Collapsed;
+    }
+
+    private void PickCustomFolder()
+    {
+        using var dialog = new Forms.FolderBrowserDialog
+        {
+            Description = LocalizationService.Get("FileSorter_SelectFolderDialogTitle"),
+            UseDescriptionForTitle = true,
+            ShowNewFolderButton = false,
+            SelectedPath = string.IsNullOrWhiteSpace(_selectedCustomPath) ? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) : _selectedCustomPath
+        };
+
+        if (dialog.ShowDialog() == Forms.DialogResult.OK && !string.IsNullOrWhiteSpace(dialog.SelectedPath))
+        {
+            _selectedCustomPath = dialog.SelectedPath;
+            return;
+        }
+
+        if (CmbLocation.Items.Count > 0)
+        {
+            CmbLocation.SelectedIndex = 0;
+        }
+    }
+
+    private async void BtnSort_Click(object sender, RoutedEventArgs e)
+    {
+        string? rootPath = ResolveSelectedRootPath();
+        if (string.IsNullOrWhiteSpace(rootPath))
+        {
+            return;
+        }
+
+        SetSortingState();
+
+        await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Background);
+
+        try
+        {
+            FileSortResult result = await Task.Run(() => _fileSorterService.SortFiles(rootPath));
+            _settingsService.Settings.LastFileSortOperation = result.UndoState;
+            await _settingsService.SaveAsync();
+            SetCompletedState(result);
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            SetIdleState();
+            new DarkDialog(LocalizationService.Format("FileSorter_ErrorFormat", ex.Message)) { Owner = this }.ShowDialog();
+        }
+    }
+
+    private string? ResolveSelectedRootPath()
+    {
+        if (CmbLocation.SelectedItem is not ComboBoxItem { Tag: FileSortLocationKind kind })
+        {
+            return null;
+        }
+
+        return kind switch
+        {
+            FileSortLocationKind.Downloads => GetDownloadsFolderPath(),
+            FileSortLocationKind.Desktop => Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory),
+            FileSortLocationKind.Custom => _selectedCustomPath,
+            _ => null
+        };
+    }
+
+    private async void BtnUndo_Click(object sender, RoutedEventArgs e)
+    {
+        FileSortUndoState? undoState = _settingsService.Settings.LastFileSortOperation;
+        if (undoState == null)
+        {
+            return;
+        }
+
+        try
+        {
+            FileSortUndoResult result = await Task.Run(() => _fileSorterService.UndoLastSort(undoState));
+            _settingsService.Settings.LastFileSortOperation = result.RemainingUndoState;
+            await _settingsService.SaveAsync();
+
+            TxtUndoStatus.Text = result.SkippedCount == 0
+                ? LocalizationService.Format("FileSorter_UndoCompleted", result.RestoredCount)
+                : LocalizationService.Format("FileSorter_UndoPartial", result.RestoredCount, result.SkippedCount);
+            TxtUndoStatus.Visibility = Visibility.Visible;
+            BtnUndo.IsEnabled = result.RemainingUndoState != null;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            new DarkDialog(LocalizationService.Format("FileSorter_ErrorFormat", ex.Message)) { Owner = this }.ShowDialog();
+        }
+    }
+
+    private void BtnOpenFolder_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_lastRootPath) || !Directory.Exists(_lastRootPath))
+        {
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo(_lastRootPath) { UseShellExecute = true });
+    }
+
+    private void BtnClose_Click(object sender, RoutedEventArgs e)
+    {
+        Close();
+    }
+
+    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape)
+        {
+            Close();
+            e.Handled = true;
+        }
+    }
+
+    private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ButtonState == MouseButtonState.Pressed)
+        {
+            DragMove();
+        }
+    }
+
+    private void StartSpinnerAnimation()
+    {
+        var animation = new DoubleAnimation(0, 360, new Duration(TimeSpan.FromSeconds(1.1)))
+        {
+            RepeatBehavior = RepeatBehavior.Forever
+        };
+        SpinnerRotate.BeginAnimation(System.Windows.Media.RotateTransform.AngleProperty, animation);
+    }
+
+    private static string GetDownloadsFolderPath()
+    {
+        IntPtr pathPtr = IntPtr.Zero;
+        try
+        {
+            int hr = SHGetKnownFolderPath(KnownFolderDownloads, 0, IntPtr.Zero, out pathPtr);
+            if (hr == 0 && pathPtr != IntPtr.Zero)
+            {
+                return Marshal.PtrToStringUni(pathPtr) ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+            }
+        }
+        finally
+        {
+            if (pathPtr != IntPtr.Zero)
+            {
+                Marshal.FreeCoTaskMem(pathPtr);
+            }
+        }
+
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Downloads");
+    }
+
+    private static readonly Guid KnownFolderDownloads = new("374DE290-123F-4565-9164-39C4925E467B");
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int SHGetKnownFolderPath(
+        [MarshalAs(UnmanagedType.LPStruct)] Guid rfid,
+        uint dwFlags,
+        IntPtr hToken,
+        out IntPtr ppszPath);
+}

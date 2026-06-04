@@ -580,4 +580,59 @@
     <value>Глобальные горячие клавиши должны содержать Ctrl, Alt, Shift или Win:
 {0}</value>
   </data>
+  <data name="Tool_FileSorter" xml:space="preserve">
+    <value>Сортировка файлов</value>
+  </data>
+  <data name="Main_FileSorterTooltip" xml:space="preserve">
+    <value>Разложить файлы по папкам</value>
+  </data>
+  <data name="FileSorter_Title" xml:space="preserve">
+    <value>Сортировка файлов</value>
+  </data>
+  <data name="FileSorter_CompletedTitle" xml:space="preserve">
+    <value>Сортировка завершена</value>
+  </data>
+  <data name="FileSorter_LocationLabel" xml:space="preserve">
+    <value>Где сортировать</value>
+  </data>
+  <data name="FileSorter_LocationDownloads" xml:space="preserve">
+    <value>Загрузки</value>
+  </data>
+  <data name="FileSorter_LocationDesktop" xml:space="preserve">
+    <value>Рабочий стол</value>
+  </data>
+  <data name="FileSorter_SelectFolder" xml:space="preserve">
+    <value>Выбрать папку...</value>
+  </data>
+  <data name="FileSorter_SelectFolderDialogTitle" xml:space="preserve">
+    <value>Выберите папку для сортировки</value>
+  </data>
+  <data name="FileSorter_SortButton" xml:space="preserve">
+    <value>Сортировать</value>
+  </data>
+  <data name="FileSorter_OpenFolder" xml:space="preserve">
+    <value>Открыть папку</value>
+  </data>
+  <data name="FileSorter_Undo" xml:space="preserve">
+    <value>Откатить</value>
+  </data>
+  <data name="FileSorter_ResultFormat" xml:space="preserve">
+    <value>{0} файлов разложены по папкам</value>
+  </data>
+  <data name="FileSorter_LoadingTitle" xml:space="preserve">
+    <value>Сортировка файлов...</value>
+  </data>
+  <data name="FileSorter_LoadingSubtitle" xml:space="preserve">
+    <value>Пожалуйста, подождите</value>
+  </data>
+  <data name="FileSorter_UndoCompleted" xml:space="preserve">
+    <value>Возвращено файлов: {0}.</value>
+  </data>
+  <data name="FileSorter_UndoPartial" xml:space="preserve">
+    <value>Возвращено файлов: {0}, пропущено: {1}.</value>
+  </data>
+  <data name="FileSorter_ErrorFormat" xml:space="preserve">
+    <value>Не удалось выполнить сортировку.
+{0}</value>
+  </data>
 </root>

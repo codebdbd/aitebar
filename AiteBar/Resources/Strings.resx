@@ -320,4 +320,23 @@ Open the GitHub release page?</value></data>
   <data name="SettingsWindow_InvalidHotkey" xml:space="preserve"><value>Choose a key for the hotkey action.</value></data>
   <data name="HotkeyModifierRequiredMessage" xml:space="preserve"><value>Global hotkeys must include Ctrl, Alt, Shift, or Win:
 {0}</value></data>
+  <data name="Tool_FileSorter" xml:space="preserve"><value>File sorter</value></data>
+  <data name="Main_FileSorterTooltip" xml:space="preserve"><value>Sort files in a folder</value></data>
+  <data name="FileSorter_Title" xml:space="preserve"><value>File sorter</value></data>
+  <data name="FileSorter_CompletedTitle" xml:space="preserve"><value>Sorting completed</value></data>
+  <data name="FileSorter_LocationLabel" xml:space="preserve"><value>Where to sort</value></data>
+  <data name="FileSorter_LocationDownloads" xml:space="preserve"><value>Downloads</value></data>
+  <data name="FileSorter_LocationDesktop" xml:space="preserve"><value>Desktop</value></data>
+  <data name="FileSorter_SelectFolder" xml:space="preserve"><value>Choose folder...</value></data>
+  <data name="FileSorter_SelectFolderDialogTitle" xml:space="preserve"><value>Select folder to sort</value></data>
+  <data name="FileSorter_SortButton" xml:space="preserve"><value>Sort</value></data>
+  <data name="FileSorter_OpenFolder" xml:space="preserve"><value>Open folder</value></data>
+  <data name="FileSorter_Undo" xml:space="preserve"><value>Undo</value></data>
+  <data name="FileSorter_ResultFormat" xml:space="preserve"><value>{0} files were sorted into folders</value></data>
+  <data name="FileSorter_LoadingTitle" xml:space="preserve"><value>Sorting files...</value></data>
+  <data name="FileSorter_LoadingSubtitle" xml:space="preserve"><value>Please wait a moment</value></data>
+  <data name="FileSorter_UndoCompleted" xml:space="preserve"><value>Restored {0} files.</value></data>
+  <data name="FileSorter_UndoPartial" xml:space="preserve"><value>Restored {0} files, skipped {1}.</value></data>
+  <data name="FileSorter_ErrorFormat" xml:space="preserve"><value>Could not complete sorting.
+{0}</value></data>
 </root>

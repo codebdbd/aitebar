@@ -90,6 +90,7 @@ public partial class AppSettingsWindow : DarkWindow
         yield return CmbNextContextKey;
         yield return CmbPrevContextKey;
         yield return CmbAddButtonKey;
+        yield return CmbFileSorterKey;
         yield return CmbQuickNoteKey;
         yield return CmbColorPickerKey;
         yield return CmbTimerStopwatchKey;
@@ -139,6 +140,7 @@ public partial class AppSettingsWindow : DarkWindow
         string nextContextKey = GetComboTag(CmbNextContextKey) ?? "None";
         string previousContextKey = GetComboTag(CmbPrevContextKey) ?? "None";
         string addButtonKey = GetComboTag(CmbAddButtonKey) ?? "None";
+        string fileSorterKey = GetComboTag(CmbFileSorterKey) ?? "None";
         string quickNoteKey = GetComboTag(CmbQuickNoteKey) ?? "None";
         string colorPickerKey = GetComboTag(CmbColorPickerKey) ?? "None";
         string timerStopwatchKey = GetComboTag(CmbTimerStopwatchKey) ?? "None";
@@ -156,6 +158,7 @@ public partial class AppSettingsWindow : DarkWindow
             SetKeyComboValue(CmbNextContextKey, nextContextKey);
             SetKeyComboValue(CmbPrevContextKey, previousContextKey);
             SetKeyComboValue(CmbAddButtonKey, addButtonKey);
+            SetKeyComboValue(CmbFileSorterKey, fileSorterKey);
             SetKeyComboValue(CmbQuickNoteKey, quickNoteKey);
             SetKeyComboValue(CmbColorPickerKey, colorPickerKey);
             SetKeyComboValue(CmbTimerStopwatchKey, timerStopwatchKey);
@@ -265,6 +268,7 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding nextBinding,
         HotkeyBinding previousBinding,
         HotkeyBinding addButtonBinding,
+        HotkeyBinding fileSorterBinding,
         HotkeyBinding quickNoteBinding,
         HotkeyBinding colorPickerBinding,
         HotkeyBinding timerStopwatchBinding)
@@ -275,6 +279,7 @@ public partial class AppSettingsWindow : DarkWindow
             (LocalizationService.Get("AppSettingsWindow_NextPanel"), nextBinding),
             (LocalizationService.Get("AppSettingsWindow_PreviousPanel"), previousBinding),
             (LocalizationService.Get("AppSettingsWindow_AddButton"), addButtonBinding),
+            (LocalizationService.Get("Tool_FileSorter"), fileSorterBinding),
             (LocalizationService.Get("Tool_QuickNote"), quickNoteBinding),
             (LocalizationService.Get("Tool_ColorPicker"), colorPickerBinding),
             (LocalizationService.Get("Tool_TimerStopwatch"), timerStopwatchBinding)
@@ -325,6 +330,7 @@ public partial class AppSettingsWindow : DarkWindow
         ChkShowPresetCalc.IsChecked = _settings.ShowPresetCalc;
         ChkShowPresetExplorer.IsChecked = _settings.ShowPresetExplorer;
         ChkShowPresetDownloads.IsChecked = _settings.ShowPresetDownloads;
+        ChkShowPresetFileSorter.IsChecked = _settings.ShowPresetFileSorter;
         ChkShowPresetTimerStopwatch.IsChecked = _settings.ShowPresetTimerStopwatch;
         ChkShowPresetColorPicker.IsChecked = _settings.ShowPresetColorPicker;
         ChkShowPresetQuickNote.IsChecked = _settings.ShowPresetQuickNote;
@@ -349,6 +355,7 @@ public partial class AppSettingsWindow : DarkWindow
         LoadHotkeyBinding(_settings.NextContextHotkey, ChkNextContextCtrl, ChkNextContextAlt, ChkNextContextShift, ChkNextContextWin, CmbNextContextKey);
         LoadHotkeyBinding(_settings.PreviousContextHotkey, ChkPrevContextCtrl, ChkPrevContextAlt, ChkPrevContextShift, ChkPrevContextWin, CmbPrevContextKey);
         LoadHotkeyBinding(_settings.AddButtonHotkey, ChkAddButtonCtrl, ChkAddButtonAlt, ChkAddButtonShift, ChkAddButtonWin, CmbAddButtonKey);
+        LoadHotkeyBinding(_settings.FileSorterHotkey, ChkFileSorterCtrl, ChkFileSorterAlt, ChkFileSorterShift, ChkFileSorterWin, CmbFileSorterKey);
         LoadHotkeyBinding(_settings.QuickNoteHotkey, ChkQuickNoteCtrl, ChkQuickNoteAlt, ChkQuickNoteShift, ChkQuickNoteWin, CmbQuickNoteKey);
         LoadHotkeyBinding(_settings.ColorPickerHotkey, ChkColorPickerCtrl, ChkColorPickerAlt, ChkColorPickerShift, ChkColorPickerWin, CmbColorPickerKey);
         LoadHotkeyBinding(_settings.TimerStopwatchHotkey, ChkTimerStopwatchCtrl, ChkTimerStopwatchAlt, ChkTimerStopwatchShift, ChkTimerStopwatchWin, CmbTimerStopwatchKey);
@@ -474,11 +481,12 @@ public partial class AppSettingsWindow : DarkWindow
         var nextBinding = BuildHotkeyBinding(ChkNextContextCtrl, ChkNextContextAlt, ChkNextContextShift, ChkNextContextWin, CmbNextContextKey);
         var previousBinding = BuildHotkeyBinding(ChkPrevContextCtrl, ChkPrevContextAlt, ChkPrevContextShift, ChkPrevContextWin, CmbPrevContextKey);
         var addButtonBinding = BuildHotkeyBinding(ChkAddButtonCtrl, ChkAddButtonAlt, ChkAddButtonShift, ChkAddButtonWin, CmbAddButtonKey);
+        var fileSorterBinding = BuildHotkeyBinding(ChkFileSorterCtrl, ChkFileSorterAlt, ChkFileSorterShift, ChkFileSorterWin, CmbFileSorterKey);
         var quickNoteBinding = BuildHotkeyBinding(ChkQuickNoteCtrl, ChkQuickNoteAlt, ChkQuickNoteShift, ChkQuickNoteWin, CmbQuickNoteKey);
         var colorPickerBinding = BuildHotkeyBinding(ChkColorPickerCtrl, ChkColorPickerAlt, ChkColorPickerShift, ChkColorPickerWin, CmbColorPickerKey);
         var timerStopwatchBinding = BuildHotkeyBinding(ChkTimerStopwatchCtrl, ChkTimerStopwatchAlt, ChkTimerStopwatchShift, ChkTimerStopwatchWin, CmbTimerStopwatchKey);
 
-        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding))
+        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, fileSorterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding))
         {
             return;
         }
@@ -492,6 +500,7 @@ public partial class AppSettingsWindow : DarkWindow
         _settings.NextContextHotkey = nextBinding;
         _settings.PreviousContextHotkey = previousBinding;
         _settings.AddButtonHotkey = addButtonBinding;
+        _settings.FileSorterHotkey = fileSorterBinding;
         _settings.QuickNoteHotkey = quickNoteBinding;
         _settings.ColorPickerHotkey = colorPickerBinding;
         _settings.TimerStopwatchHotkey = timerStopwatchBinding;
@@ -502,6 +511,7 @@ public partial class AppSettingsWindow : DarkWindow
         _settings.ShowPresetCalc = ChkShowPresetCalc.IsChecked ?? false;
         _settings.ShowPresetExplorer = ChkShowPresetExplorer.IsChecked ?? false;
         _settings.ShowPresetDownloads = ChkShowPresetDownloads.IsChecked ?? false;
+        _settings.ShowPresetFileSorter = ChkShowPresetFileSorter.IsChecked ?? false;
         _settings.ShowPresetTimerStopwatch = ChkShowPresetTimerStopwatch.IsChecked ?? false;
         _settings.ShowPresetColorPicker = ChkShowPresetColorPicker.IsChecked ?? false;
         _settings.ShowPresetQuickNote = ChkShowPresetQuickNote.IsChecked ?? false;

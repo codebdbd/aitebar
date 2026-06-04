@@ -145,9 +145,11 @@ public sealed class HotkeyServiceTests
         var service = new HotkeyService(new FakeHotkeyRegistrar());
 
         Assert.True(service.TryGetCommand(HotkeyService.ShowPanelId, out var showPanel));
+        Assert.True(service.TryGetCommand(HotkeyService.FileSorterId, out var fileSorter));
         Assert.True(service.TryGetCommand(HotkeyService.TimerStopwatchId, out var timerStopwatch));
         Assert.False(service.TryGetCommand(123, out _));
         Assert.Equal(HotkeyCommand.ShowPanel, showPanel);
+        Assert.Equal(HotkeyCommand.FileSorter, fileSorter);
         Assert.Equal(HotkeyCommand.TimerStopwatch, timerStopwatch);
     }
 
@@ -171,6 +173,7 @@ public sealed class HotkeyServiceTests
                 HotkeyCommand.NextContext,
                 HotkeyCommand.PreviousContext,
                 HotkeyCommand.AddButton,
+                HotkeyCommand.FileSorter,
                 HotkeyCommand.QuickNote,
                 HotkeyCommand.ColorPicker,
                 HotkeyCommand.TimerStopwatch

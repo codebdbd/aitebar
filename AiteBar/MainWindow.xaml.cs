@@ -95,7 +95,8 @@ public partial class MainWindow : Window
         private int _dragStartMonitorIndex;
         private bool _isElementContextMenuOpen;
         private bool _isBlockingPanelInteraction;
-        private bool _panelKeyboardMode;
+        private bool _panelKeyboardActive;
+        private bool _openedViaKeyboard;
         private List<Button> _userButtons = [];
         private List<CustomElement> _activeContextElements = [];
         private int _pendingContextAnimationDirection;
@@ -166,6 +167,7 @@ public partial class MainWindow : Window
             BtnCalc.ToolTip = LocalizationService.Get("Main_CalcTooltip");
             BtnExplorer.ToolTip = LocalizationService.Get("Main_ExplorerTooltip");
             BtnDownloads.ToolTip = LocalizationService.Get("Main_DownloadsTooltip");
+            BtnFileSorter.ToolTip = LocalizationService.Get("Main_FileSorterTooltip");
             BtnTimerStopwatch.ToolTip = LocalizationService.Get("Main_TimerStopwatchTooltip");
             BtnColorPicker.ToolTip = LocalizationService.Get("Main_ColorPickerTooltip");
             BtnQuickNote.ToolTip = LocalizationService.Get("Main_QuickNoteTooltip");
@@ -181,6 +183,7 @@ public partial class MainWindow : Window
             BtnCalc.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Calculator"), () => _appSettings.ShowPresetCalc = false);
             BtnExplorer.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Explorer"), () => _appSettings.ShowPresetExplorer = false);
             BtnDownloads.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_Downloads"), () => _appSettings.ShowPresetDownloads = false);
+            BtnFileSorter.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_FileSorter"), () => _appSettings.ShowPresetFileSorter = false);
             BtnTimerStopwatch.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_TimerStopwatch"), () => _appSettings.ShowPresetTimerStopwatch = false);
             BtnColorPicker.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_ColorPicker"), () => _appSettings.ShowPresetColorPicker = false);
             BtnQuickNote.ContextMenu = BuildSystemUtilityContextMenu(LocalizationService.Get("Tool_QuickNote"), () => _appSettings.ShowPresetQuickNote = false);
@@ -332,6 +335,9 @@ public partial class MainWindow : Window
         private void BuildPanelContextMenu()
         {
             var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
+            menu.Opened += (s, e) => _isElementContextMenuOpen = true;
+            menu.Closed += (s, e) => _isElementContextMenuOpen = false;
+            
             var panelsMenu = CreateMenuItem(FluentGlyph(MenuIcons.Panels), LocalizationService.Get("Menu_Panels"));
 
             foreach (var context in ContextStateHelper.GetEnabledContexts(_appSettings.Contexts))
@@ -797,6 +803,7 @@ public partial class MainWindow : Window
             if (_appSettings.ShowPresetCalc) count++;
             if (_appSettings.ShowPresetExplorer) count++;
             if (_appSettings.ShowPresetDownloads) count++;
+            if (_appSettings.ShowPresetFileSorter) count++;
             if (_appSettings.ShowPresetTimerStopwatch) count++;
             if (_appSettings.ShowPresetColorPicker) count++;
             if (_appSettings.ShowPresetQuickNote) count++;
@@ -912,7 +919,21 @@ public partial class MainWindow : Window
         {
             IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
             System.Windows.Interop.HwndSource.FromHwnd(hwnd).AddHook(WndProc);
-            RegisterGlobalHotkey();
+        }
+
+        protected override void OnDeactivated(EventArgs e)
+        {
+            base.OnDeactivated(e);
+            _panelKeyboardActive = false;
+        }
+
+        protected override void OnActivated(EventArgs e)
+        {
+            base.OnActivated(e);
+            if (_shown)
+            {
+                _panelKeyboardActive = true;
+            }
         }
 
         private void InitTrayIcon()
@@ -1553,6 +1574,7 @@ public partial class MainWindow : Window
             BtnCalc.Visibility = showSystemUtils && _appSettings.ShowPresetCalc ? Visibility.Visible : Visibility.Collapsed;
             BtnExplorer.Visibility = showSystemUtils && _appSettings.ShowPresetExplorer ? Visibility.Visible : Visibility.Collapsed;
             BtnDownloads.Visibility = showSystemUtils && _appSettings.ShowPresetDownloads ? Visibility.Visible : Visibility.Collapsed;
+            BtnFileSorter.Visibility = showSystemUtils && _appSettings.ShowPresetFileSorter ? Visibility.Visible : Visibility.Collapsed;
             BtnTimerStopwatch.Visibility = showSystemUtils && _appSettings.ShowPresetTimerStopwatch ? Visibility.Visible : Visibility.Collapsed;
             BtnColorPicker.Visibility = showSystemUtils && _appSettings.ShowPresetColorPicker ? Visibility.Visible : Visibility.Collapsed;
             BtnQuickNote.Visibility = showSystemUtils && _appSettings.ShowPresetQuickNote ? Visibility.Visible : Visibility.Collapsed;
@@ -1563,6 +1585,7 @@ public partial class MainWindow : Window
                                   BtnCalc.Visibility == Visibility.Visible ||
                                   BtnExplorer.Visibility == Visibility.Visible ||
                                   BtnDownloads.Visibility == Visibility.Visible ||
+                                  BtnFileSorter.Visibility == Visibility.Visible ||
                                   BtnTimerStopwatch.Visibility == Visibility.Visible ||
                                   BtnColorPicker.Visibility == Visibility.Visible ||
                                   BtnQuickNote.Visibility == Visibility.Visible;
@@ -1906,7 +1929,8 @@ public partial class MainWindow : Window
                 return;
             }
 
-            _panelKeyboardMode = true;
+            _openedViaKeyboard = true;
+            _panelKeyboardActive = true;
             _shown = true;
             _hoverStartTime = null;
             Toggle(false);
@@ -1919,31 +1943,77 @@ public partial class MainWindow : Window
                 return;
             }
 
-            _panelKeyboardMode = true;
+            _openedViaKeyboard = false;
+            _panelKeyboardActive = false;
             _shown = true;
             _hoverStartTime = null;
             Toggle(false);
         }
 
+        private static bool ForceForegroundWindow(IntPtr hwnd)
+        {
+            if (hwnd == IntPtr.Zero) return false;
+
+            IntPtr foregroundHwnd = NativeMethods.GetForegroundWindow();
+            if (foregroundHwnd == hwnd) return true;
+
+            uint foregroundThreadId = NativeMethods.GetWindowThreadProcessId(foregroundHwnd, out _);
+            uint currentThreadId = NativeMethods.GetCurrentThreadId();
+
+            bool attached = false;
+            try
+            {
+                if (foregroundThreadId != 0 && foregroundThreadId != currentThreadId)
+                {
+                    attached = NativeMethods.AttachThreadInput(currentThreadId, foregroundThreadId, true);
+                }
+
+                return NativeMethods.SetForegroundWindow(hwnd);
+            }
+            finally
+            {
+                if (attached)
+                {
+                    NativeMethods.AttachThreadInput(currentThreadId, foregroundThreadId, false);
+                }
+            }
+        }
+
         private void FocusPanelForKeyboard()
         {
             int focusRequestVersion = unchecked(++_panelFocusRequestVersion);
-            Dispatcher.InvokeAsync(() =>
+            Dispatcher.InvokeAsync(async () =>
             {
-                if (focusRequestVersion != _panelFocusRequestVersion || !_shown || !_panelKeyboardMode || HasVisibleOwnedWindow())
+                if (focusRequestVersion != _panelFocusRequestVersion || !_shown || !_panelKeyboardActive || HasVisibleOwnedWindow())
                     return;
 
                 var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-                NativeMethods.SetForegroundWindow(hwnd);
-                Activate();
-                Focus();
 
-                var focusTarget = GetFirstFocusablePanelButton();
-                if (focusTarget != null)
+                for (int attempt = 1; attempt <= 3; attempt++)
                 {
-                    focusTarget.Focusable = true;
-                    Keyboard.Focus(focusTarget);
-                    focusTarget.Focus();
+                    ForceForegroundWindow(hwnd);
+                    Activate();
+                    Focus();
+
+                    var focusTarget = GetFirstFocusablePanelButton();
+                    if (focusTarget != null)
+                    {
+                        focusTarget.Focusable = true;
+                        Keyboard.Focus(focusTarget);
+                        focusTarget.Focus();
+                    }
+
+                    if (this.IsKeyboardFocusWithin)
+                    {
+                        break;
+                    }
+
+                    if (attempt < 3)
+                    {
+                        await Task.Delay(50);
+                        if (focusRequestVersion != _panelFocusRequestVersion || !_shown || !_panelKeyboardActive || HasVisibleOwnedWindow())
+                            return;
+                    }
                 }
             }, System.Windows.Threading.DispatcherPriority.Input);
         }
@@ -1993,8 +2063,10 @@ public partial class MainWindow : Window
         
         private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (!_shown || !_panelKeyboardMode)
+            if (!_shown || !_panelKeyboardActive)
                 return;
+
+            _ = _openedViaKeyboard; // Suppress unused field warning
                 
             var focusableButtons = GetAllFocusableButtons();
             if (focusableButtons.Count == 0)
@@ -2071,7 +2143,7 @@ public partial class MainWindow : Window
 
             if (_shown)
             {
-                if (!_panelKeyboardMode)
+                if (!_panelKeyboardActive)
                 {
                     EnablePanelKeyboardMode();
                     return;
@@ -2092,7 +2164,7 @@ public partial class MainWindow : Window
                 return;
             }
 
-            _panelKeyboardMode = true;
+            _panelKeyboardActive = true;
             _hoverStartTime = null;
             FocusPanelForKeyboard();
         }
@@ -2131,7 +2203,7 @@ public partial class MainWindow : Window
                     _isAnimating = false; 
                     _timer.Start(); 
                     UpdatePanelBounds();
-                    if (!hide && _panelKeyboardMode)
+                    if (!hide && _panelKeyboardActive)
                     {
                         FocusPanelForKeyboard();
                     }
@@ -2160,7 +2232,8 @@ public partial class MainWindow : Window
             }
 
             _shown = false;
-            _panelKeyboardMode = false;
+            _panelKeyboardActive = false;
+            _openedViaKeyboard = false;
             _hoverStartTime = null;
             Keyboard.ClearFocus();
             Toggle(true, fromCurrentPosition: true);
@@ -2269,6 +2342,7 @@ public partial class MainWindow : Window
         private async void BtnCalc_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartCalculatorAsync(HideDock)); }
         private async void BtnExplorer_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartExplorerAsync(HideDock)); }
         private async void BtnDownloads_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartDownloadsAsync(HideDock)); }
+        private async void BtnFileSorter_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartFileSorterAsync(HideDock)); }
         private async void BtnTimerStopwatch_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartTimerStopwatchAsync(HideDock)); }
         private async void BtnColorPicker_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartColorPickerAsync(HideDock)); }
         private async void BtnQuickNote_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartQuickNoteAsync(HideDock)); }

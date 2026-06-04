@@ -21,6 +21,7 @@ namespace AiteBar
         IActionProcessHandle? StartProcess(ProcessStartInfo startInfo);
         IActionProcessHandle? StartProcess(string fileName);
         IColorPickerDialog CreateColorPickerDialog(Window? owner);
+        IFileSorterToolWindow CreateFileSorterWindow(AppSettingsService settingsService, Window? owner);
         IQuickNoteToolWindow CreateQuickNoteWindow(AppSettingsService settingsService, Window? owner);
         ITimerStopwatchToolWindow CreateTimerStopwatchWindow(Window? owner);
         Window? GetMainWindow();
@@ -35,6 +36,14 @@ namespace AiteBar
     internal interface IColorPickerDialog
     {
         bool? ShowDialog();
+    }
+
+    internal interface IFileSorterToolWindow
+    {
+        bool IsVisible { get; }
+        event EventHandler? Closed;
+        bool Activate();
+        void ShowNearPanel(AppSettingsService settingsService);
     }
 
     internal interface IQuickNoteToolWindow
@@ -58,6 +67,7 @@ namespace AiteBar
     {
         private readonly AppSettingsService _settingsService;
         private readonly IActionServiceRuntime _runtime;
+        private IFileSorterToolWindow? _fileSorterWindow;
         private IQuickNoteToolWindow? _quickNoteWindow;
         private ITimerStopwatchToolWindow? _timerStopwatchWindow;
         private const int FullscreenActivationAttempts = 25;
@@ -309,6 +319,24 @@ namespace AiteBar
             _runtime.CreateColorPickerDialog(_runtime.GetMainWindow()).ShowDialog();
         }
 
+        public async Task StartFileSorterAsync(Func<Task>? onBeforeExecute = null)
+        {
+            if (onBeforeExecute != null)
+            {
+                await onBeforeExecute();
+            }
+
+            if (_fileSorterWindow is { IsVisible: true })
+            {
+                _fileSorterWindow.Activate();
+                return;
+            }
+
+            _fileSorterWindow = _runtime.CreateFileSorterWindow(_settingsService, _runtime.GetMainWindow());
+            _fileSorterWindow.Closed += (_, _) => _fileSorterWindow = null;
+            _fileSorterWindow.ShowNearPanel(_settingsService);
+        }
+
         public async Task StartQuickNoteAsync(Func<Task>? onBeforeExecute = null)
         {
             if (onBeforeExecute != null)
@@ -467,6 +495,9 @@ namespace AiteBar
 
         public IColorPickerDialog CreateColorPickerDialog(Window? owner) =>
             new ScreenColorPickerWindow { Owner = owner };
+
+        public IFileSorterToolWindow CreateFileSorterWindow(AppSettingsService settingsService, Window? owner) =>
+            new FileSorterWindow(settingsService) { Owner = owner };
 
         public IQuickNoteToolWindow CreateQuickNoteWindow(AppSettingsService settingsService, Window? owner) =>
             new QuickNoteWindow(new QuickNoteService(), settingsService) { Owner = owner };

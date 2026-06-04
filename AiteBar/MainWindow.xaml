@@ -31,11 +31,11 @@
             <Setter Property="Height" Value="40"/>
             <Setter Property="Margin" Value="2,2"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{StaticResource ButtonFocusVisual}"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                        <Border x:Name="FocusChrome" Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -44,6 +44,7 @@
                             </Trigger>
                             <Trigger Property="IsKeyboardFocused" Value="True">
                                 <Setter Property="Background" Value="#2A2A2C"/>
+                                <Setter TargetName="FocusChrome" Property="BorderBrush" Value="#2A9CFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -125,6 +126,7 @@
                         <Button x:Name="BtnCalc" Content="&#xF06C;" Click="BtnCalc_Click" Foreground="#A3E635" Focusable="True"/>
                         <Button x:Name="BtnExplorer" Content="&#xF42F;" Click="BtnExplorer_Click" Foreground="#F59E0B" Focusable="True"/>
                         <Button x:Name="BtnDownloads" Content="&#xF151;" Click="BtnDownloads_Click" Foreground="#34D399" Focusable="True"/>
+                        <Button x:Name="BtnFileSorter" Content="&#xF17B;" Click="BtnFileSorter_Click" Foreground="#60A5FA" Focusable="True"/>
                         <Button x:Name="BtnTimerStopwatch" Content="&#xED88;" Click="BtnTimerStopwatch_Click" Foreground="#38BDF8" Focusable="True"/>
                         <Button x:Name="BtnColorPicker" Content="&#xF2F6;" Click="BtnColorPicker_Click" Foreground="#A855F7" Focusable="True"/>
                         <Button x:Name="BtnQuickNote" Content="&#xF56F;" Click="BtnQuickNote_Click" Foreground="#22D3EE" Focusable="True"/>

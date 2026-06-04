@@ -12,6 +12,7 @@ public enum HotkeyCommand
     NextContext,
     PreviousContext,
     AddButton,
+    FileSorter,
     QuickNote,
     ColorPicker,
     TimerStopwatch
@@ -50,9 +51,10 @@ public sealed class HotkeyService
     internal const int NextContextId = 9001;
     internal const int PreviousContextId = 9002;
     internal const int AddButtonId = 9003;
-    internal const int QuickNoteId = 9004;
-    internal const int ColorPickerId = 9005;
-    internal const int TimerStopwatchId = 9006;
+    internal const int FileSorterId = 9004;
+    internal const int QuickNoteId = 9005;
+    internal const int ColorPickerId = 9006;
+    internal const int TimerStopwatchId = 9007;
 
     internal const uint ModAlt = 0x0001;
     internal const uint ModControl = 0x0002;
@@ -65,6 +67,7 @@ public sealed class HotkeyService
         new HotkeyDescriptor(HotkeyCommand.NextContext, NextContextId, "AppSettingsWindow_NextPanel"),
         new HotkeyDescriptor(HotkeyCommand.PreviousContext, PreviousContextId, "AppSettingsWindow_PreviousPanel"),
         new HotkeyDescriptor(HotkeyCommand.AddButton, AddButtonId, "AppSettingsWindow_AddButton"),
+        new HotkeyDescriptor(HotkeyCommand.FileSorter, FileSorterId, "Tool_FileSorter"),
         new HotkeyDescriptor(HotkeyCommand.QuickNote, QuickNoteId, "Tool_QuickNote"),
         new HotkeyDescriptor(HotkeyCommand.ColorPicker, ColorPickerId, "Tool_ColorPicker"),
         new HotkeyDescriptor(HotkeyCommand.TimerStopwatch, TimerStopwatchId, "Tool_TimerStopwatch")
@@ -106,6 +109,7 @@ public sealed class HotkeyService
             [HotkeyCommand.NextContext] = settings.NextContextHotkey,
             [HotkeyCommand.PreviousContext] = settings.PreviousContextHotkey,
             [HotkeyCommand.AddButton] = settings.AddButtonHotkey,
+            [HotkeyCommand.FileSorter] = settings.FileSorterHotkey,
             [HotkeyCommand.QuickNote] = settings.QuickNoteHotkey,
             [HotkeyCommand.ColorPicker] = settings.ColorPickerHotkey,
             [HotkeyCommand.TimerStopwatch] = settings.TimerStopwatchHotkey

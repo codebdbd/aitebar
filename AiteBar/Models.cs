@@ -42,6 +42,41 @@ public enum ActionType
     Command
 }
 
+public enum FileSortLocationKind
+{
+    Downloads,
+    Desktop,
+    Custom
+}
+
+public sealed class FileSortOperationEntry
+{
+    public string SourcePath { get; set; } = string.Empty;
+    public string DestinationPath { get; set; } = string.Empty;
+}
+
+public sealed class FileSortUndoState
+{
+    public string RootPath { get; set; } = string.Empty;
+    public DateTime CompletedAtUtc { get; set; } = DateTime.UtcNow;
+    public List<FileSortOperationEntry> Entries { get; set; } = [];
+}
+
+public sealed class FileSortResult
+{
+    public string RootPath { get; set; } = string.Empty;
+    public int SortedCount { get; set; }
+    public int SkippedCount { get; set; }
+    public FileSortUndoState? UndoState { get; set; }
+}
+
+public sealed class FileSortUndoResult
+{
+    public int RestoredCount { get; set; }
+    public int SkippedCount { get; set; }
+    public FileSortUndoState? RemainingUndoState { get; set; }
+}
+
 public class CustomElement
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
@@ -87,6 +122,7 @@ public class AppSettings
     public bool ShowPresetCalc { get; set; } = true;
     public bool ShowPresetExplorer { get; set; } = true;
     public bool ShowPresetDownloads { get; set; } = true;
+    public bool ShowPresetFileSorter { get; set; } = true;
     public bool ShowPresetColorPicker { get; set; } = false;
     public bool ShowPresetQuickNote { get; set; } = false;
     public bool ShowPresetTimerStopwatch { get; set; } = true;
@@ -106,9 +142,11 @@ public class AppSettings
     public HotkeyBinding NextContextHotkey { get; set; } = new();
     public HotkeyBinding PreviousContextHotkey { get; set; } = new();
     public HotkeyBinding AddButtonHotkey { get; set; } = new();
+    public HotkeyBinding FileSorterHotkey { get; set; } = new();
     public HotkeyBinding QuickNoteHotkey { get; set; } = new();
     public HotkeyBinding ColorPickerHotkey { get; set; } = new();
     public HotkeyBinding TimerStopwatchHotkey { get; set; } = new();
+    public FileSortUndoState? LastFileSortOperation { get; set; }
 
     public List<CustomElement> Elements { get; set; } = new();
     public bool CheckForUpdatesEnabled { get; set; } = true;

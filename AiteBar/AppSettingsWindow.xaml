@@ -279,6 +279,15 @@
                                 <ToggleButton x:Name="ChkAddButtonWin" Content="Win"/>
                                 <ComboBox x:Name="CmbAddButtonKey" Width="200" VerticalAlignment="Center"/>
                             </DockPanel>
+
+                            <DockPanel Margin="0,0,0,12">
+                                <TextBlock Text="{local:Loc ResourceKey=Tool_FileSorter}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
+                                <ToggleButton x:Name="ChkFileSorterCtrl" Content="Ctrl"/>
+                                <ToggleButton x:Name="ChkFileSorterShift" Content="Shift"/>
+                                <ToggleButton x:Name="ChkFileSorterAlt" Content="Alt"/>
+                                <ToggleButton x:Name="ChkFileSorterWin" Content="Win"/>
+                                <ComboBox x:Name="CmbFileSorterKey" Width="200" VerticalAlignment="Center"/>
+                            </DockPanel>
                             
                             <!-- Быстрая заметка -->
                             <DockPanel Margin="0,0,0,12">
@@ -332,6 +341,7 @@
                             <CheckBox x:Name="ChkShowPresetCalc" Content="{local:Loc ResourceKey=Tool_Calculator}"/>
                             <CheckBox x:Name="ChkShowPresetExplorer" Content="{local:Loc ResourceKey=Tool_Explorer}"/>
                             <CheckBox x:Name="ChkShowPresetDownloads" Content="{local:Loc ResourceKey=Tool_Downloads}"/>
+                            <CheckBox x:Name="ChkShowPresetFileSorter" Content="{local:Loc ResourceKey=Tool_FileSorter}"/>
                             <CheckBox x:Name="ChkShowPresetTimerStopwatch" Content="{local:Loc ResourceKey=Tool_TimerStopwatch}"/>
                             <CheckBox x:Name="ChkShowPresetColorPicker" Content="{local:Loc ResourceKey=Tool_ColorPicker}"/>
                             <CheckBox x:Name="ChkShowPresetQuickNote" Content="{local:Loc ResourceKey=Tool_QuickNote}"/>

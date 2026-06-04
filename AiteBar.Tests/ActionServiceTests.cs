@@ -521,6 +521,35 @@ public sealed class ActionServiceTests
     }
 
     [Fact]
+    public async Task StartFileSorterAsync_CreatesAndShowsWindowOnceThenReactivates()
+    {
+        var runtime = new FakeActionServiceRuntime();
+        var service = new ActionService(new AppSettingsService(), runtime);
+
+        await service.StartFileSorterAsync();
+        runtime.FileSorterWindow.IsVisible = true;
+        await service.StartFileSorterAsync();
+
+        Assert.Equal(1, runtime.CreateFileSorterWindowCalls);
+        Assert.Equal(1, runtime.FileSorterWindow.ShowNearPanelCalls);
+        Assert.Equal(1, runtime.FileSorterWindow.ActivateCalls);
+    }
+
+    [Fact]
+    public async Task StartFileSorterAsync_AfterWindowClosed_CreatesNewWindow()
+    {
+        var runtime = new FakeActionServiceRuntime();
+        var service = new ActionService(new AppSettingsService(), runtime);
+
+        await service.StartFileSorterAsync();
+        runtime.FileSorterWindow.RaiseClosed();
+        runtime.FileSorterWindow = new FakeFileSorterToolWindow();
+        await service.StartFileSorterAsync();
+
+        Assert.Equal(2, runtime.CreateFileSorterWindowCalls);
+    }
+
+    [Fact]
     public async Task StartTimerStopwatchAsync_CreatesAndShowsWindowOnceThenReactivates()
     {
         var runtime = new FakeActionServiceRuntime();
@@ -686,10 +715,12 @@ public sealed class ActionServiceTests
         public Queue<IActionProcessHandle?> ProcessesToReturn { get; } = [];
         public HashSet<byte> PressedKeys { get; } = [];
         public FakeColorPickerDialog ColorPicker { get; } = new();
+        public FakeFileSorterToolWindow FileSorterWindow { get; set; } = new();
         public FakeQuickNoteToolWindow QuickNoteWindow { get; set; } = new();
         public FakeTimerStopwatchToolWindow TimerWindow { get; set; } = new();
         public List<string> ConfirmMessages { get; } = [];
         public bool ConfirmResult { get; set; } = true;
+        public int CreateFileSorterWindowCalls { get; private set; }
         public int CreateQuickNoteWindowCalls { get; private set; }
         public int CreateTimerWindowCalls { get; private set; }
 
@@ -732,6 +763,12 @@ public sealed class ActionServiceTests
         }
 
         public IColorPickerDialog CreateColorPickerDialog(Window? owner) => ColorPicker;
+
+        public IFileSorterToolWindow CreateFileSorterWindow(AppSettingsService settingsService, Window? owner)
+        {
+            CreateFileSorterWindowCalls++;
+            return FileSorterWindow;
+        }
 
         public IQuickNoteToolWindow CreateQuickNoteWindow(AppSettingsService settingsService, Window? owner)
         {
@@ -810,6 +847,29 @@ public sealed class ActionServiceTests
         {
             ShowSlidingCalls++;
             LastSettings = settings;
+        }
+
+        public void RaiseClosed() => Closed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private sealed class FakeFileSorterToolWindow : IFileSorterToolWindow
+    {
+        public bool IsVisible { get; set; }
+        public int ActivateCalls { get; private set; }
+        public int ShowNearPanelCalls { get; private set; }
+        public AppSettingsService? LastSettingsService { get; private set; }
+        public event EventHandler? Closed;
+
+        public bool Activate()
+        {
+            ActivateCalls++;
+            return true;
+        }
+
+        public void ShowNearPanel(AppSettingsService settingsService)
+        {
+            ShowNearPanelCalls++;
+            LastSettingsService = settingsService;
         }
 
         public void RaiseClosed() => Closed?.Invoke(this, EventArgs.Empty);
