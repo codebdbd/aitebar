@@ -4,9 +4,9 @@
     "net8.0-windows7.0": {
       "Sentry": {
         "type": "Direct",
-        "requested": "[6.5.0, )",
-        "resolved": "6.5.0",
-        "contentHash": "EuC4Da4WcC8eE8d+AHoDGLK0wfyrQ/OYeNghDnR9dc3q/jDUadqXsJtEsq8U9Dt+VG6lCg0K8AoksheCVe3q8w=="
+        "requested": "[6.6.0, )",
+        "resolved": "6.6.0",
+        "contentHash": "1D3xo3P9Y94VQN3RoV/86XqgtylHp1pdeEml3/UB649BrzJeZ/pqO/o8YgJ5g+GqpMQiGI09yjAI7s5ff2A1IA=="
       }
     },
     "net8.0-windows7.0/win-x64": {}
