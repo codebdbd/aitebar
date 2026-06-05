@@ -18,13 +18,12 @@ public enum HotkeyCommand
     TimerStopwatch
 }
 
-public sealed record HotkeyDefinition(HotkeyCommand? Command, string? ElementId, int Id, string DisplayName, HotkeyBinding Binding);
+public sealed record HotkeyDefinition(HotkeyCommand? Command, int Id, string DisplayName, HotkeyBinding Binding);
 
 public sealed record HotkeyRegistrationData(uint Modifiers, uint VirtualKey);
 
 public sealed record HotkeyRegistrationResult(
     HotkeyCommand? Command,
-    string? ElementId,
     string DisplayName,
     bool Success,
     string? FailureReason = null);
@@ -77,9 +76,6 @@ public sealed class HotkeyService
         Descriptors.ToDictionary(descriptor => descriptor.Id, descriptor => descriptor.Command);
 
     private readonly IHotkeyRegistrar _registrar;
-    private int _nextElementHotkeyId = 10000;
-    private readonly HashSet<int> _usedElementIds = new();
-    private readonly Dictionary<int, string> _elementIdsByHotkeyId = new();
 
     [SupportedOSPlatform("windows6.1")]
     public HotkeyService()
@@ -118,32 +114,10 @@ public sealed class HotkeyService
         return Descriptors
             .Select(descriptor => new HotkeyDefinition(
                 descriptor.Command,
-                null,
                 descriptor.Id,
                 getDisplayName(descriptor.DisplayNameKey),
                 bindings[descriptor.Command]))
             .ToList();
-    }
-
-    public IReadOnlyList<HotkeyDefinition> CreateElementDefinitions(IReadOnlyList<CustomElement> elements)
-    {
-        var definitions = new List<HotkeyDefinition>();
-        foreach (var element in elements)
-        {
-            HotkeyBinding binding = element.ActivationHotkey ?? new();
-            if (HotkeyValidationHelper.HasAssignedKey(binding))
-            {
-                int id = AllocateElementHotkeyId();
-                _elementIdsByHotkeyId[id] = element.Id;
-                definitions.Add(new HotkeyDefinition(
-                    null,
-                    element.Id,
-                    id,
-                    element.Name,
-                    binding));
-            }
-        }
-        return definitions;
     }
 
     public IReadOnlyList<HotkeyRegistrationResult> RegisterAll(IntPtr hwnd, IReadOnlyList<HotkeyDefinition> definitions)
@@ -156,13 +130,9 @@ public sealed class HotkeyService
             return results;
         }
 
-        // Разделяем горячие клавиши на командные (приоритет) и пользовательские элементы
-        var commandDefinitions = definitions.Where(d => d.Command.HasValue).ToList();
-        var elementDefinitions = definitions.Where(d => !d.Command.HasValue).ToList();
-
-        // Сначала обрабатываем командные горячие клавиши (приоритет)
+        // Обрабатываем командные горячие клавиши
         var processedBindings = new List<HotkeyBinding>();
-        foreach (var definition in commandDefinitions)
+        foreach (var definition in definitions)
         {
             if (HotkeyValidationHelper.HasAssignedKey(definition.Binding))
             {
@@ -170,30 +140,9 @@ public sealed class HotkeyService
                 {
                     results.Add(new HotkeyRegistrationResult(
                         definition.Command,
-                        definition.ElementId,
                         definition.DisplayName,
                         false,
                         "This hotkey combination conflicts with another command hotkey."));
-                    continue;
-                }
-                processedBindings.Add(definition.Binding);
-            }
-            results.Add(Register(definition, hwnd));
-        }
-
-        // Теперь обрабатываем горячие клавиши элементов (ниже приоритет)
-        foreach (var definition in elementDefinitions)
-        {
-            if (HotkeyValidationHelper.HasAssignedKey(definition.Binding))
-            {
-                if (HotkeyValidationHelper.HasConflicts(definition.Binding, processedBindings))
-                {
-                    results.Add(new HotkeyRegistrationResult(
-                        definition.Command,
-                        definition.ElementId,
-                        definition.DisplayName,
-                        false,
-                        "This hotkey combination conflicts with a command hotkey (which has priority)."));
                     continue;
                 }
                 processedBindings.Add(definition.Binding);
@@ -223,19 +172,10 @@ public sealed class HotkeyService
         {
             _registrar.UnregisterHotkey(hwnd, id);
         }
-
-        foreach (int id in _usedElementIds.ToList())
-        {
-            _registrar.UnregisterHotkey(hwnd, id);
-            FreeElementHotkeyId(id);
-        }
     }
 
     public bool TryGetCommand(int hotkeyId, out HotkeyCommand command) =>
         CommandsById.TryGetValue(hotkeyId, out command);
-
-    public bool TryGetElementId(int hotkeyId, out string? elementId) =>
-        _elementIdsByHotkeyId.TryGetValue(hotkeyId, out elementId);
 
     public static bool TryMapBinding(HotkeyBinding? binding, out HotkeyRegistrationData data, out string? failureReason)
     {
@@ -275,38 +215,22 @@ public sealed class HotkeyService
         return true;
     }
 
-    private int AllocateElementHotkeyId()
-    {
-        int id = _nextElementHotkeyId;
-        while (_usedElementIds.Contains(id))
-            id++;
-        _usedElementIds.Add(id);
-        _nextElementHotkeyId = id + 1;
-        return id;
-    }
-
-    private void FreeElementHotkeyId(int id)
-    {
-        _usedElementIds.Remove(id);
-        _elementIdsByHotkeyId.Remove(id);
-    }
-
     private HotkeyRegistrationResult Register(HotkeyDefinition definition, IntPtr hwnd)
     {
         if (!HotkeyValidationHelper.HasAssignedKey(definition.Binding))
         {
-            return new HotkeyRegistrationResult(definition.Command, definition.ElementId, definition.DisplayName, true);
+            return new HotkeyRegistrationResult(definition.Command, definition.DisplayName, true);
         }
 
         if (!TryMapBinding(definition.Binding, out var data, out var failureReason))
         {
-            return new HotkeyRegistrationResult(definition.Command, definition.ElementId, definition.DisplayName, false, failureReason);
+            return new HotkeyRegistrationResult(definition.Command, definition.DisplayName, false, failureReason);
         }
 
         bool registered = _registrar.RegisterHotkey(hwnd, definition.Id, data.Modifiers, data.VirtualKey);
         return registered
-            ? new HotkeyRegistrationResult(definition.Command, definition.ElementId, definition.DisplayName, true)
-            : new HotkeyRegistrationResult(definition.Command, definition.ElementId, definition.DisplayName, false, "Windows rejected the hotkey registration.");
+            ? new HotkeyRegistrationResult(definition.Command, definition.DisplayName, true)
+            : new HotkeyRegistrationResult(definition.Command, definition.DisplayName, false, "Windows rejected the hotkey registration.");
     }
 
     private sealed record HotkeyDescriptor(HotkeyCommand Command, int Id, string DisplayNameKey);

@@ -74,7 +74,6 @@ namespace AiteBar
         private void LoadKeyList()
         {
             LoadKeyCombo(CmbKey, HotkeyKeyCatalog.ActionKeys);
-            LoadKeyCombo(CmbActivationKey, HotkeyKeyCatalog.GlobalHotkeyKeys);
         }
 
         private static void LoadKeyCombo(ComboBox combo, IReadOnlyList<HotkeyKeyOption> keys)
@@ -130,17 +129,12 @@ namespace AiteBar
             ChkShift.IsChecked = _editingElement.Shift;
             ChkAlt.IsChecked = _editingElement.Alt;
             ChkWin.IsChecked = _editingElement.Win;
-            ChkActivationCtrl.IsChecked = _editingElement.ActivationHotkey?.Ctrl ?? false;
-            ChkActivationShift.IsChecked = _editingElement.ActivationHotkey?.Shift ?? false;
-            ChkActivationAlt.IsChecked = _editingElement.ActivationHotkey?.Alt ?? false;
-            ChkActivationWin.IsChecked = _editingElement.ActivationHotkey?.Win ?? false;
 
             SetComboValue(CmbBrowser, _editingElement.Browser.ToString());
             SetComboValue(CmbActionType, ActionTargetHelper.NormalizeActionType(_editingElement.ActionType, _editingElement.ActionValue));
             SetComboValue(CmbContext, _editingElement.ContextId);
             SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
             SetComboValue(CmbKey, _editingElement.Key);
-            SetComboValue(CmbActivationKey, _editingElement.ActivationHotkey?.Key ?? "None");
 
             UpdatePreview();
             UpdateActionUI();
@@ -613,7 +607,6 @@ namespace AiteBar
                 var actionType = GetSelectedActionType();
                 string typeStr = actionType.ToString();
                 string selectedKey = ((ComboBoxItem)CmbKey.SelectedItem)?.Tag?.ToString() ?? "None";
-                string activationKey = ((ComboBoxItem)CmbActivationKey.SelectedItem)?.Tag?.ToString() ?? "None";
                 string browserStr = ((ComboBoxItem)CmbBrowser.SelectedItem)?.Tag?.ToString() ?? "Chrome";
                 if (!Enum.TryParse<BrowserType>(browserStr, out var browserType)) browserType = BrowserType.Chrome;
 
@@ -642,27 +635,6 @@ namespace AiteBar
                 if (missingHotkeyKey)
                 {
                     new DarkDialog(LocalizationService.Get("SettingsWindow_InvalidHotkey")) { Owner = this }.ShowDialog();
-                    return;
-                }
-
-                var activationHotkey = new HotkeyBinding
-                {
-                    Ctrl = ChkActivationCtrl.IsChecked ?? false,
-                    Shift = ChkActivationShift.IsChecked ?? false,
-                    Alt = ChkActivationAlt.IsChecked ?? false,
-                    Win = ChkActivationWin.IsChecked ?? false,
-                    Key = activationKey
-                };
-                if (HotkeyValidationHelper.HasAssignedKey(activationHotkey) &&
-                    !HotkeyValidationHelper.HasModifier(activationHotkey))
-                {
-                    new DarkDialog(LocalizationService.Get("SettingsWindow_ActivationHotkeyModifierRequired")) { Owner = this }.ShowDialog();
-                    return;
-                }
-                if (HotkeyValidationHelper.HasAssignedKey(activationHotkey) &&
-                    HotkeyValidationHelper.IsReservedHotkey(activationHotkey))
-                {
-                    new DarkDialog(LocalizationService.Get("SettingsWindow_ActivationHotkeyReserved")) { Owner = this }.ShowDialog();
                     return;
                 }
                 _showRequiredValidation = false;
@@ -756,7 +728,6 @@ namespace AiteBar
                     Alt = actionType == AiteBar.ActionType.Hotkey && (ChkAlt.IsChecked ?? false),
                     Win = actionType == AiteBar.ActionType.Hotkey && (ChkWin.IsChecked ?? false),
                     Key = actionType == AiteBar.ActionType.Hotkey ? selectedKey : "None",
-                    ActivationHotkey = activationHotkey,
                     ContextId = ((ComboBoxItem)CmbContext.SelectedItem)?.Tag?.ToString() ?? _mainWindow.GetAppSettings().ActiveContextId
                 };
 

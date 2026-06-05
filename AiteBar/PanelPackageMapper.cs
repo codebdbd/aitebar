@@ -32,7 +32,7 @@ internal static class PanelPackageMapper
             Shift = element.Shift,
             Win = element.Win,
             Key = string.IsNullOrWhiteSpace(element.Key) ? "None" : element.Key,
-            ActivationHotkey = CloneBinding(element.ActivationHotkey),
+            ActivationHotkey = new HotkeyBinding(),
             Icon = string.IsNullOrWhiteSpace(element.Icon) ? DefaultIcon : element.Icon,
             IconFont = string.IsNullOrWhiteSpace(element.IconFont) ? FontHelper.FluentKey : element.IconFont,
             Color = string.IsNullOrWhiteSpace(element.Color) ? DefaultColor : element.Color,
@@ -53,21 +53,6 @@ internal static class PanelPackageMapper
     {
         string actionType = NormalizeActionType(source.ActionType);
         bool isHotkeyAction = string.Equals(actionType, nameof(ActionType.Hotkey), StringComparison.OrdinalIgnoreCase);
-        HotkeyBinding activationHotkey = CloneBinding(source.ActivationHotkey);
-        if (!isHotkeyAction &&
-            !HotkeyValidationHelper.HasAssignedKey(activationHotkey) &&
-            !string.IsNullOrWhiteSpace(source.Key) &&
-            !string.Equals(source.Key, "None", StringComparison.OrdinalIgnoreCase))
-        {
-            activationHotkey = new HotkeyBinding
-            {
-                Ctrl = source.Ctrl,
-                Alt = source.Alt,
-                Shift = source.Shift,
-                Win = source.Win,
-                Key = source.Key
-            };
-        }
 
         return new CustomElement
         {
@@ -89,7 +74,6 @@ internal static class PanelPackageMapper
             Shift = isHotkeyAction && source.Shift,
             Win = isHotkeyAction && source.Win,
             Key = isHotkeyAction && !string.IsNullOrWhiteSpace(source.Key) ? source.Key : "None",
-            ActivationHotkey = activationHotkey,
             Icon = string.IsNullOrWhiteSpace(source.Icon) ? DefaultIcon : source.Icon,
             IconFont = string.IsNullOrWhiteSpace(source.IconFont) ? FontHelper.FluentKey : source.IconFont,
             Color = string.IsNullOrWhiteSpace(source.Color) ? DefaultColor : source.Color,

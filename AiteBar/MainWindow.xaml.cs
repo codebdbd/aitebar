@@ -435,7 +435,6 @@ public partial class MainWindow : Window
             duplicate.Id = Guid.NewGuid().ToString();
             duplicate.Name = BuildDuplicateElementName(source.Name);
             duplicate.LastUsedProfile = "";
-            duplicate.ActivationHotkey = new HotkeyBinding();
 
             await _settingsService.InsertElementAfterAsync(source.Id, duplicate);
             RegisterGlobalHotkey();
@@ -823,9 +822,7 @@ public partial class MainWindow : Window
         {
             IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
             var commandDefinitions = _hotkeyService.CreateDefinitions(_appSettings, LocalizationService.Get);
-            var elementDefinitions = _hotkeyService.CreateElementDefinitions(_elements);
-            var allDefinitions = commandDefinitions.Concat(elementDefinitions).ToList();
-            var results = _hotkeyService.RegisterAll(hwnd, allDefinitions);
+            var results = _hotkeyService.RegisterAll(hwnd, commandDefinitions);
             return _hotkeyService.GetFailedDisplayNames(results);
         }
 
@@ -861,16 +858,6 @@ public partial class MainWindow : Window
                 if (_hotkeyService.TryGetCommand(hotkeyId, out var cmd))
                 {
                     ExecuteHotkeyCommand(cmd);
-                    handled = true;
-                }
-                // Handle element hotkey
-                else if (_hotkeyService.TryGetElementId(hotkeyId, out var elementId))
-                {
-                    var element = _elements.FirstOrDefault(e => e.Id == elementId);
-                    if (element != null)
-                    {
-                        _ = _actionService.ExecuteCustomActionAsync(element, HideDock);
-                    }
                     handled = true;
                 }
             }
