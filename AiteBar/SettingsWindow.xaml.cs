@@ -157,10 +157,13 @@ namespace AiteBar
         {
             string[] colors =
             [
-                "#3ABEFF", "#60A5FA", "#6366F1", "#8B5CF6", "#A855F7",
-                "#22D3EE", "#34D399", "#A3E635", "#F59E0B", "#FB7185"
+                "#F8FAFC", "#94A3B8", "#64748B", "#38BDF8", "#60A5FA",
+                "#2DD4BF", "#22D3EE", "#34D399", "#22C55E", "#A3E635",
+                "#FACC15", "#F59E0B", "#FB923C", "#EF4444", "#FB7185",
+                "#F472B6", "#6366F1", "#8B5CF6", "#A855F7", "#D946EF"
             ];
             GridColors.Children.Clear();
+            GridColors.Columns = 5; // 4 ряда по 5
             foreach (var hex in colors)
             {
                 var border = new Border
