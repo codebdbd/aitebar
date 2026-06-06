@@ -438,34 +438,84 @@ public class ActionService
         {
             case ".bat":
             case ".cmd":
-                var psi = new ProcessStartInfo("cmd.exe") { UseShellExecute = false, WorkingDirectory = workingDirectory };
-                psi.ArgumentList.Add("/c"); psi.ArgumentList.Add(scriptPath); return psi;
+                var psi = new ProcessStartInfo("cmd.exe") 
+                { 
+                    UseShellExecute = false, 
+                    WorkingDirectory = workingDirectory 
+                };
+                psi.ArgumentList.Add("/c");
+                psi.ArgumentList.Add(scriptPath);
+                return psi;
             case ".ps1":
-                string shell = FindExecutableOnPath("pwsh.exe"); if (!File.Exists(shell)) shell = FindExecutableOnPath("powershell.exe");
-                var psiPs = new ProcessStartInfo(shell) { UseShellExecute = false, WorkingDirectory = workingDirectory };
-                psiPs.ArgumentList.Add("-NoProfile"); if (Path.GetFileName(shell).Equals("powershell.exe", StringComparison.OrdinalIgnoreCase))
+                string? shell = FindExecutableOnPath("pwsh.exe");
+                if (shell == null || !File.Exists(shell))
                 {
-                    psiPs.ArgumentList.Add("-ExecutionPolicy"); psiPs.ArgumentList.Add("Bypass");
+                    shell = FindExecutableOnPath("powershell.exe");
                 }
-                psiPs.ArgumentList.Add("-File"); psiPs.ArgumentList.Add(scriptPath); return psiPs;
+                if (shell == null)
+                {
+                    throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
+                }
+                var psiPs = new ProcessStartInfo(shell) 
+                { 
+                    UseShellExecute = false, 
+                    WorkingDirectory = workingDirectory 
+                };
+                psiPs.ArgumentList.Add("-NoProfile");
+                if (Path.GetFileName(shell).Equals("powershell.exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    psiPs.ArgumentList.Add("-ExecutionPolicy");
+                    psiPs.ArgumentList.Add("Bypass");
+                }
+                psiPs.ArgumentList.Add("-File");
+                psiPs.ArgumentList.Add(scriptPath);
+                return psiPs;
             case ".py":
-                string pythonExe = FindExecutableOnPath("python.exe"); if (!File.Exists(pythonExe)) throw new InvalidOperationException(LocalizationService.Get("Action_PythonNotFound"));
-                var psiPy = new ProcessStartInfo(pythonExe) { UseShellExecute = false, WorkingDirectory = workingDirectory };
+                string? pythonExe = FindExecutableOnPath("python.exe");
+                if (pythonExe == null || !File.Exists(pythonExe))
+                {
+                    throw new InvalidOperationException(LocalizationService.Get("Action_PythonNotFound"));
+                }
+                var psiPy = new ProcessStartInfo(pythonExe) 
+                { 
+                    UseShellExecute = false, 
+                    WorkingDirectory = workingDirectory 
+                };
                 psiPy.ArgumentList.Add(scriptPath);
                 return psiPy;
             default: throw new InvalidOperationException(LocalizationService.Get("Action_UnsupportedScript"));
         }
     }
 
-    private static string FindExecutableOnPath(string fileName)
+    private static string? FindExecutableOnPath(string fileName)
     {
-        string? pathValue = Environment.GetEnvironmentVariable("PATH"); if (string.IsNullOrWhiteSpace(pathValue)) return fileName;
-        foreach (string dir in pathValue.Split(';', StringSplitOptions.RemoveEmptyEntries))
+        string? pathValue = Environment.GetEnvironmentVariable("PATH");
+        if (!string.IsNullOrWhiteSpace(pathValue))
         {
-            try { string candidate = Path.Combine(dir.Trim(), fileName); if (File.Exists(candidate)) return candidate; }
-            catch (Exception ex) { Logger.Log(ex); }
+            foreach (string dir in pathValue.Split(';', StringSplitOptions.RemoveEmptyEntries))
+            {
+                try
+                {
+                    string candidate = Path.Combine(dir.Trim(), fileName);
+                    if (File.Exists(candidate))
+                    {
+                        return candidate;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+            }
         }
-        return fileName;
+        
+        // Проверим, существует ли файл в текущем каталоге
+        if (File.Exists(fileName))
+        {
+            return fileName;
+        }
+        
+        return null;
     }
 
     private async Task TryEnterFullscreenAsync(IActionProcessHandle proc)

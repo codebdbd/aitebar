@@ -153,9 +153,9 @@ namespace AiteBar
                     File.Move(_settingsFile, newBackup);
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Если не удалось сделать бэкапы - продолжаем
+                Logger.Log(ex);
             }
         }
 
@@ -178,9 +178,9 @@ namespace AiteBar
                         return true;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Попробуем следующий бэкап
+                    Logger.Log(ex);
                 }
             }
             return false;
@@ -312,38 +312,67 @@ namespace AiteBar
         }
 
         private static List<CustomElement> NormalizeElements(IEnumerable<CustomElement> source, string defaultContextId, out bool changed)
+    {
+        changed = false;
+        var result = new List<CustomElement>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var item in source)
         {
-            changed = false;
-            var result = new List<CustomElement>();
-            var seen = new HashSet<string>(StringComparer.Ordinal);
-            foreach (var item in source)
+            if (item == null)
             {
-                if (item == null)
-                {
-                    changed = true;
-                    continue;
-                }
-                string id = string.IsNullOrWhiteSpace(item.Id) ? Guid.NewGuid().ToString() : item.Id;
-                if (!seen.Add(id))
-                {
-                    changed = true;
-                    continue;
-                }
-
-                string contextId = string.IsNullOrWhiteSpace(item.ContextId) ? defaultContextId : item.ContextId;
-                if (!string.Equals(item.Id, id, StringComparison.Ordinal) ||
-                    !string.Equals(item.ContextId, contextId, StringComparison.Ordinal) ||
-                    item.RotationProfilePaths == null)
-                {
-                    changed = true;
-                }
-                item.Id = id;
-                item.ContextId = contextId;
-                item.RotationProfilePaths ??= [];
-                result.Add(item);
+                changed = true;
+                continue;
             }
-            return result;
+            
+            string id = string.IsNullOrWhiteSpace(item.Id) ? Guid.NewGuid().ToString() : item.Id;
+            if (!seen.Add(id))
+            {
+                changed = true;
+                continue;
+            }
+
+            string contextId = string.IsNullOrWhiteSpace(item.ContextId) ? defaultContextId : item.ContextId;
+            bool needsChange = !string.Equals(item.Id, id, StringComparison.Ordinal) ||
+                               !string.Equals(item.ContextId, contextId, StringComparison.Ordinal) ||
+                               item.RotationProfilePaths == null;
+            
+            if (needsChange)
+            {
+                changed = true;
+            }
+            
+            // Создаем копию объекта, не меняя входной
+            var normalizedItem = new CustomElement
+            {
+                Id = id,
+                Name = item.Name,
+                Icon = item.Icon,
+                IconFont = item.IconFont,
+                Color = item.Color,
+                ActionType = item.ActionType,
+                ActionValue = item.ActionValue,
+                Browser = item.Browser,
+                ChromeProfile = item.ChromeProfile,
+                RotationProfilePaths = item.RotationProfilePaths ?? [],
+                IsAppMode = item.IsAppMode,
+                IsIncognito = item.IsIncognito,
+                UseRotation = item.UseRotation,
+                OpenFullscreen = item.OpenFullscreen,
+                IsTopmost = item.IsTopmost,
+                LastUsedProfile = item.LastUsedProfile,
+                Alt = item.Alt,
+                Ctrl = item.Ctrl,
+                Shift = item.Shift,
+                Win = item.Win,
+                Key = item.Key,
+                ImagePath = item.ImagePath,
+                ContextId = contextId
+            };
+            
+            result.Add(normalizedItem);
         }
+        return result;
+    }
 
         private static bool AreElementsEquivalent(CustomElement left, CustomElement right)
         {
