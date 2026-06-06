@@ -869,7 +869,7 @@ public partial class MainWindow : Window
             switch (command)
             {
                 case HotkeyCommand.ShowPanel:
-                    ToggleDock();
+                    ToggleDock(fromKeyboard: true);
                     break;
                 case HotkeyCommand.NextContext:
                     ActivateContextRelative(1);
@@ -920,10 +920,7 @@ public partial class MainWindow : Window
         protected override void OnActivated(EventArgs e)
         {
             base.OnActivated(e);
-            if (_shown)
-            {
-                _panelKeyboardActive = true;
-            }
+            // Не включаем клавиатурный режим автоматически
         }
 
         private void InitTrayIcon()
@@ -1907,15 +1904,15 @@ public partial class MainWindow : Window
 
         public IReadOnlyList<CustomElement> GetElementsSnapshot() => _settingsService.Elements.Select(_settingsService.CloneElement).ToList();
 
-        private void ShowDock()
+        private void ShowDock(bool fromKeyboard = false)
         {
             if (_shown || _isAnimating)
             {
                 return;
             }
 
-            _openedViaKeyboard = true;
-            _panelKeyboardActive = true;
+            _openedViaKeyboard = fromKeyboard;
+            _panelKeyboardActive = false; // По умолчанию не включаем
             _shown = true;
             _hoverStartTime = null;
             Toggle(false);
@@ -2027,8 +2024,26 @@ public partial class MainWindow : Window
         
         private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
-            if (!_shown || !_panelKeyboardActive)
+            if (!_shown)
                 return;
+
+            // Если клавиатурный режим отключен, включаем при нажатии Tab или стрелок
+            if (!_panelKeyboardActive)
+            {
+                var isNavigationKey = e.Key == Key.Tab || 
+                    e.Key == Key.Left || e.Key == Key.Right || 
+                    e.Key == Key.Up || e.Key == Key.Down;
+
+                if (isNavigationKey)
+                {
+                    EnablePanelKeyboardMode();
+                    // Не возвращаемся, чтобы обработать нажатие клавиши сразу
+                }
+                else
+                {
+                    return;
+                }
+            }
 
             _ = _openedViaKeyboard; // Suppress unused field warning
                 
@@ -2098,7 +2113,7 @@ public partial class MainWindow : Window
             }
         }
 
-        private void ToggleDock()
+        private void ToggleDock(bool fromKeyboard = false)
         {
             if (_isAnimating)
             {
@@ -2117,7 +2132,12 @@ public partial class MainWindow : Window
             }
             else
             {
-                ShowDock();
+                ShowDock(fromKeyboard);
+                // Если открыли через клавиши — сразу включаем режим
+                if (fromKeyboard)
+                {
+                    EnablePanelKeyboardMode();
+                }
             }
         }
 
@@ -2167,9 +2187,18 @@ public partial class MainWindow : Window
                     _isAnimating = false; 
                     _timer.Start(); 
                     UpdatePanelBounds();
-                    if (!hide && _panelKeyboardActive)
+                    if (!hide)
                     {
-                        FocusPanelForKeyboard();
+                        // Активируем окно при любом открытии, чтобы обрабатывать клавиши
+                        var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                        ForceForegroundWindow(hwnd);
+                        Activate();
+                        
+                        // Если клавиатурный режим включен — фокусируем кнопки
+                        if (_panelKeyboardActive)
+                        {
+                            FocusPanelForKeyboard();
+                        }
                     }
                 }
             }
