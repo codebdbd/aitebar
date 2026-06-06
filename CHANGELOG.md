@@ -7,6 +7,28 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-06-06
+
+### 🇷🇺 Удалено | 🇬🇧 Removed
+- **Глобальные горячие клавиши для пользовательских кнопок**: функция была временно удалена для стабилизации
+- **Global hotkeys for custom buttons**: feature was temporarily removed for stabilization
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Рефакторинг системы утилит**: вынесены утилиты в отдельные классы с интерфейсом `IUtility` и `UtilityRegistry`
+- **Utility system refactoring**: utilities extracted to separate classes with `IUtility` interface and `UtilityRegistry`
+- **Поведение фокуса клавиатуры на панели**: клавиатурный режим теперь не включается автоматически, активируется только при нажатии Tab/стрелок
+- **Panel keyboard focus behavior**: keyboard mode no longer activates automatically, only on Tab/arrow keys
+- **Нормализация элементов**: создается копия вместо изменения входного объекта для безопасности
+- **Element normalization**: creates a copy instead of modifying input object for safety
+- **Логирование исключений**: добавлено логирование в `AppSettingsService` и `PathHelper`
+- **Exception logging**: added logging in `AppSettingsService` and `PathHelper`
+- **Поиск исполняемых файлов**: `FindExecutableOnPath` теперь возвращает `null` при отсутствии файла
+- **Executable file search**: `FindExecutableOnPath` now returns `null` when file not found
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Фокус при открытии панели через горячую клавишу**: клавиатурный режим теперь включается правильно
+- **Focus when opening panel via hotkey**: keyboard mode now activates correctly
+
 ## [1.7.5] - 2026-06-04
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added
