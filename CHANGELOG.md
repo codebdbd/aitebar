@@ -7,7 +7,11 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - 2026-06-06
+## [Unreleased] - 2026-06-07
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Палитра цветов в диалоге добавления кнопок**: обновлена палитра до 20 цветов, расположенных в 4 ряда по 5, скрыт произвольный HEX ввод
+- **Color palette in button add dialog**: updated palette to 20 colors arranged in 4 rows of 5, hidden custom HEX input
 
 ### 🇷🇺 Удалено | 🇬🇧 Removed
 - **Глобальные горячие клавиши для пользовательских кнопок**: функция была временно удалена для стабилизации
