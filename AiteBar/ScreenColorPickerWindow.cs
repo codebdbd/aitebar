@@ -12,7 +12,7 @@ using WpfClipboard = System.Windows.Clipboard;
 namespace AiteBar
 {
     [SupportedOSPlatform("windows6.1")]
-    public sealed class ScreenColorPickerWindow : Window, IColorPickerDialog
+    public sealed class ScreenColorPickerWindow : Window
     {
         private readonly Drawing.Bitmap _screen;
         private readonly int _left;

@@ -296,34 +296,72 @@ UI Layer использует Services Layer для выполнения биз�
 - Выполнение команд
 - Выполнение горячих клавиш
 - Запуск системных утилит (поиск, скриншот, калькулятор, и т.д.)
+- Запуск встроенных утилит через UtilityRegistry
 
 **Входящие зависимости:**
 - AppSettingsService
 - BrowserHelper
 - ProfileRotationHelper
 - NativeMethods
+- UtilityRegistry
 
 **Исходящие зависимости:**
 - QuickNoteWindow
 - ScreenColorPickerWindow
+- TimerStopwatchWindow
+- FileSorterWindow
 
 **Основные компоненты:**
 - _quickNoteWindow — экземпляр окна быстрых заметок
+- _timerStopwatchWindow — экземпляр окна таймера/секундомера
+- _fileSorterWindow — экземпляр окна сортировщика файлов
 
 **Основные классы:**
 - ActionService
+- UtilityRegistry
+- IUtility (интерфейс)
 
 **Основные функции:**
 - ExecuteCustomActionAsync()
 - ExecuteWebActionAsync()
 - StartSearchAsync()
 - StartScreenshotAsync()
-- StartQuickNoteAsync()
+- LaunchUtilityAsync() (новый универсальный метод для запуска утилит)
 
 **Потоки данных:**
 - Принимает CustomElement для выполнения действия
 - Использует BrowserHelper для работы с браузерами
 - Использует NativeMethods для отправки горячих клавиш
+- Для запуска утилит использует UtilityRegistry, содержащий все зарегистрированные утилиты
+
+## Utility System
+**Назначение:** Универсальная система для регистрации и запуска встроенных утилит.
+
+**Ответственность:**
+- Регистрация всех утилит в центральном реестре
+- Универсальный запуск утилит по уникальному идентификатору
+- Простое добавление новых утилит без изменения основного кода
+
+**Входящие зависимости:**
+- Нет
+
+**Исходящие зависимости:**
+- ActionService
+- Окна утилит (QuickNoteWindow, TimerStopwatchWindow, и т.д.)
+
+**Основные компоненты:**
+- IUtility — интерфейс для всех утилит
+- UtilityRegistry — статический класс для регистрации и получения утилит
+- Классы утилит: QuickNoteUtility, TimerStopwatchUtility, ColorPickerUtility, FileSorterUtility
+
+**Основные функции:**
+- UtilityRegistry.Register() — регистрация утилиты
+- UtilityRegistry.GetById() — получение утилиты по ID
+- IUtility.Launch() — запуск утилиты
+
+**Потоки данных:**
+- При запуске утилиты ActionService вызывает UtilityRegistry.GetById() для получения экземпляра
+- Затем вызывает IUtility.Launch() для запуска окна утилиты
 
 ## PanelPackageService
 **Назначение:** Импорт и экспорт панелей кнопок в ZIP-архивах .aitebarpanel.

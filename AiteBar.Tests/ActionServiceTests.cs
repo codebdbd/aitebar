@@ -449,17 +449,7 @@ public sealed class ActionServiceTests
         Assert.Equal(["calc.exe"], runtime.StartedFileNames);
     }
 
-    [Fact]
-    public async Task StartColorPickerAsync_WaitsAndShowsDialog()
-    {
-        var runtime = new FakeActionServiceRuntime();
-        var service = new ActionService(new AppSettingsService(), runtime);
 
-        await service.StartColorPickerAsync();
-
-        Assert.Equal([120], runtime.DelayCalls);
-        Assert.Equal(1, runtime.ColorPicker.ShowDialogCalls);
-    }
 
     [Fact]
     public async Task StartScreenshotAsync_LaunchesScreenClipProtocol()
@@ -513,78 +503,7 @@ public sealed class ActionServiceTests
         Assert.True(runtime.StartedProcessInfos[0].UseShellExecute);
     }
 
-    [Fact]
-    public async Task StartQuickNoteAsync_CreatesAndShowsWindowOnceThenReactivates()
-    {
-        var runtime = new FakeActionServiceRuntime();
-        var service = new ActionService(new AppSettingsService(), runtime);
 
-        await service.StartQuickNoteAsync();
-        runtime.QuickNoteWindow.IsVisible = true;
-        await service.StartQuickNoteAsync();
-
-        Assert.Equal(1, runtime.CreateQuickNoteWindowCalls);
-        Assert.Equal(1, runtime.QuickNoteWindow.ShowSlidingCalls);
-        Assert.Equal(1, runtime.QuickNoteWindow.ActivateCalls);
-    }
-
-    [Fact]
-    public async Task StartQuickNoteAsync_AfterWindowClosed_CreatesNewWindow()
-    {
-        var runtime = new FakeActionServiceRuntime();
-        var service = new ActionService(new AppSettingsService(), runtime);
-
-        await service.StartQuickNoteAsync();
-        runtime.QuickNoteWindow.RaiseClosed();
-        runtime.QuickNoteWindow = new FakeQuickNoteToolWindow();
-        await service.StartQuickNoteAsync();
-
-        Assert.Equal(2, runtime.CreateQuickNoteWindowCalls);
-    }
-
-    [Fact]
-    public async Task StartFileSorterAsync_CreatesAndShowsWindowOnceThenReactivates()
-    {
-        var runtime = new FakeActionServiceRuntime();
-        var service = new ActionService(new AppSettingsService(), runtime);
-
-        await service.StartFileSorterAsync();
-        runtime.FileSorterWindow.IsVisible = true;
-        await service.StartFileSorterAsync();
-
-        Assert.Equal(1, runtime.CreateFileSorterWindowCalls);
-        Assert.Equal(1, runtime.FileSorterWindow.ShowNearPanelCalls);
-        Assert.Equal(1, runtime.FileSorterWindow.ActivateCalls);
-    }
-
-    [Fact]
-    public async Task StartFileSorterAsync_AfterWindowClosed_CreatesNewWindow()
-    {
-        var runtime = new FakeActionServiceRuntime();
-        var service = new ActionService(new AppSettingsService(), runtime);
-
-        await service.StartFileSorterAsync();
-        runtime.FileSorterWindow.RaiseClosed();
-        runtime.FileSorterWindow = new FakeFileSorterToolWindow();
-        await service.StartFileSorterAsync();
-
-        Assert.Equal(2, runtime.CreateFileSorterWindowCalls);
-    }
-
-    [Fact]
-    public async Task StartTimerStopwatchAsync_CreatesAndShowsWindowOnceThenReactivates()
-    {
-        var runtime = new FakeActionServiceRuntime();
-        var service = new ActionService(new AppSettingsService(), runtime);
-
-        await service.StartTimerStopwatchAsync();
-        runtime.TimerWindow.IsVisible = true;
-        await service.StartTimerStopwatchAsync();
-
-        Assert.Equal(1, runtime.CreateTimerWindowCalls);
-        Assert.Equal(1, runtime.TimerWindow.ShowNearPanelCalls);
-        Assert.Equal(1, runtime.TimerWindow.ActivateCalls);
-    }
 
     [Fact]
     public void FindExecutableOnPath_SkipsInvalidPathSegmentsAndFindsMatch()
@@ -737,15 +656,8 @@ public sealed class ActionServiceTests
         public Queue<IActionProcessHandle?> ProcessesToReturn { get; } = [];
         public HashSet<byte> PressedKeys { get; } = [];
         public Queue<uint> SendInputResults { get; } = [];
-        public FakeColorPickerDialog ColorPicker { get; } = new();
-        public FakeFileSorterToolWindow FileSorterWindow { get; set; } = new();
-        public FakeQuickNoteToolWindow QuickNoteWindow { get; set; } = new();
-        public FakeTimerStopwatchToolWindow TimerWindow { get; set; } = new();
         public List<string> ConfirmMessages { get; } = [];
         public bool ConfirmResult { get; set; } = true;
-        public int CreateFileSorterWindowCalls { get; private set; }
-        public int CreateQuickNoteWindowCalls { get; private set; }
-        public int CreateTimerWindowCalls { get; private set; }
 
         public Task DelayAsync(int milliseconds)
         {
@@ -785,26 +697,6 @@ public sealed class ActionServiceTests
             return ProcessesToReturn.Count > 0 ? ProcessesToReturn.Dequeue() : new FakeActionProcessHandle();
         }
 
-        public IColorPickerDialog CreateColorPickerDialog(Window? owner) => ColorPicker;
-
-        public IFileSorterToolWindow CreateFileSorterWindow(AppSettingsService settingsService, Window? owner)
-        {
-            CreateFileSorterWindowCalls++;
-            return FileSorterWindow;
-        }
-
-        public IQuickNoteToolWindow CreateQuickNoteWindow(AppSettingsService settingsService, Window? owner)
-        {
-            CreateQuickNoteWindowCalls++;
-            return QuickNoteWindow;
-        }
-
-        public ITimerStopwatchToolWindow CreateTimerStopwatchWindow(Window? owner)
-        {
-            CreateTimerWindowCalls++;
-            return TimerWindow;
-        }
-
         public Window? GetMainWindow() => null;
     }
 
@@ -839,85 +731,5 @@ public sealed class ActionServiceTests
         public void Dispose()
         {
         }
-    }
-
-    private sealed class FakeColorPickerDialog : IColorPickerDialog
-    {
-        public int ShowDialogCalls { get; private set; }
-
-        public bool? ShowDialog()
-        {
-            ShowDialogCalls++;
-            return true;
-        }
-    }
-
-    private sealed class FakeQuickNoteToolWindow : IQuickNoteToolWindow
-    {
-        public bool IsVisible { get; set; }
-        public int ActivateCalls { get; private set; }
-        public int ShowSlidingCalls { get; private set; }
-        public AppSettings? LastSettings { get; private set; }
-        public event EventHandler? Closed;
-
-        public bool Activate()
-        {
-            ActivateCalls++;
-            return true;
-        }
-
-        public void ShowSliding(AppSettings settings)
-        {
-            ShowSlidingCalls++;
-            LastSettings = settings;
-        }
-
-        public void RaiseClosed() => Closed?.Invoke(this, EventArgs.Empty);
-    }
-
-    private sealed class FakeFileSorterToolWindow : IFileSorterToolWindow
-    {
-        public bool IsVisible { get; set; }
-        public int ActivateCalls { get; private set; }
-        public int ShowNearPanelCalls { get; private set; }
-        public AppSettingsService? LastSettingsService { get; private set; }
-        public event EventHandler? Closed;
-
-        public bool Activate()
-        {
-            ActivateCalls++;
-            return true;
-        }
-
-        public void ShowNearPanel(AppSettingsService settingsService)
-        {
-            ShowNearPanelCalls++;
-            LastSettingsService = settingsService;
-        }
-
-        public void RaiseClosed() => Closed?.Invoke(this, EventArgs.Empty);
-    }
-
-    private sealed class FakeTimerStopwatchToolWindow : ITimerStopwatchToolWindow
-    {
-        public bool IsVisible { get; set; }
-        public int ActivateCalls { get; private set; }
-        public int ShowNearPanelCalls { get; private set; }
-        public AppSettingsService? LastSettingsService { get; private set; }
-        public event EventHandler? Closed;
-
-        public bool Activate()
-        {
-            ActivateCalls++;
-            return true;
-        }
-
-        public void ShowNearPanel(AppSettingsService settingsService)
-        {
-            ShowNearPanelCalls++;
-            LastSettingsService = settingsService;
-        }
-
-        public void RaiseClosed() => Closed?.Invoke(this, EventArgs.Empty);
     }
 }

@@ -222,22 +222,9 @@ public partial class MainWindow : Window
         {
             Text = glyph,
             FontFamily = MenuIconFont,
-            FontSize = 16,
             Foreground = accentBrush,
-            VerticalAlignment = VerticalAlignment.Center,
-            HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-            TextAlignment = TextAlignment.Center,
-            Width = 16,
-            Height = 16,
-            LineHeight = 16,
-            LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
-            Padding = new Thickness(0),
-            Margin = new Thickness(0),
-            SnapsToDevicePixels = true,
-            UseLayoutRounding = true
+            Style = (Style)FindResource("ContextMenuIconTextStyle")
         };
-        TextOptions.SetTextFormattingMode(icon, TextFormattingMode.Display);
-        TextOptions.SetTextRenderingMode(icon, TextRenderingMode.ClearType);
 
         MenuItem item = new MenuItem
         {
@@ -883,13 +870,13 @@ public partial class MainWindow : Window
                 _ = OpenAddButtonWindowAsync();
                 break;
             case HotkeyCommand.QuickNote:
-                _ = RunPresetActionAsync(() => _actionService.StartQuickNoteAsync(HideDock));
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("QuickNote", HideDock));
                 break;
             case HotkeyCommand.ColorPicker:
-                _ = RunPresetActionAsync(() => _actionService.StartColorPickerAsync(HideDock));
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("ColorPicker", HideDock));
                 break;
             case HotkeyCommand.TimerStopwatch:
-                _ = RunPresetActionAsync(() => _actionService.StartTimerStopwatchAsync(HideDock));
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("TimerStopwatch", HideDock));
                 break;
         }
     }
@@ -2375,10 +2362,10 @@ public partial class MainWindow : Window
     private async void BtnCalc_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartCalculatorAsync(HideDock)); }
     private async void BtnExplorer_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartExplorerAsync(HideDock)); }
     private async void BtnDownloads_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartDownloadsAsync(HideDock)); }
-    private async void BtnFileSorter_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartFileSorterAsync(HideDock)); }
-    private async void BtnTimerStopwatch_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartTimerStopwatchAsync(HideDock)); }
-    private async void BtnColorPicker_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartColorPickerAsync(HideDock)); }
-    private async void BtnQuickNote_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartQuickNoteAsync(HideDock)); }
+    private async void BtnFileSorter_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("FileSorter", HideDock)); }
+    private async void BtnTimerStopwatch_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("TimerStopwatch", HideDock)); }
+    private async void BtnColorPicker_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("ColorPicker", HideDock)); }
+    private async void BtnQuickNote_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("QuickNote", HideDock)); }
     private async Task OpenAddButtonWindowAsync()
     {
         await HideDock();

@@ -156,7 +156,7 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <CheckBox x:Name="ChkRotation" Content="{local:Loc ResourceKey=SettingsWindow_Rotation}" Checked="ChkRotation_Changed" Unchecked="ChkRotation_Changed"/>
-                                            <Button x:Name="BtnRotationProfiles" Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_RotationProfilesButton}" Click="BtnRotationProfiles_Click" Height="24" MinWidth="90" Margin="10,0,0,0"/>
+                                            <Button x:Name="BtnRotationProfiles" Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_RotationProfilesButton}" Click="BtnRotationProfiles_Click" Margin="10,0,0,0"/>
                                         </Grid>
                                     </Grid>
                                 </StackPanel>

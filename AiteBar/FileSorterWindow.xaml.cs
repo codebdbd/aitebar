@@ -14,7 +14,7 @@ using Forms = System.Windows.Forms;
 namespace AiteBar;
 
 [SupportedOSPlatform("windows6.1")]
-public partial class FileSorterWindow : DarkWindow, IFileSorterToolWindow
+public partial class FileSorterWindow : DarkWindow
 {
     private readonly AppSettingsService _settingsService;
     private readonly FileSorterService _fileSorterService = new();

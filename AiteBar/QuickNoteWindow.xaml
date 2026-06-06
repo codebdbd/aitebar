@@ -148,10 +148,10 @@
                         </Button>
                         <Button Content="&lt;/&gt;" FontFamily="Consolas" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Code}" Click="BtnCode_Click"/>
                         <Rectangle x:Name="FormatSeparator1" Width="0" Height="18" Fill="#30FFFFFF" Margin="0" Visibility="Collapsed"/>
-                        <Button Content="•" MinWidth="34" FontSize="17" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_BulletList}" Click="BtnBullet_Click"/>
-                        <Button Content="1." MinWidth="36" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_NumberedList}" Click="BtnNumbered_Click"/>
+                        <Button Content="&#xECDA;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_BulletList}" Click="BtnBullet_Click"/>
+                        <Button Content="&#xF7FA;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_NumberedList}" Click="BtnNumbered_Click"/>
                         <Rectangle x:Name="FormatSeparator2" Width="0" Height="18" Fill="#30FFFFFF" Margin="0" Visibility="Collapsed"/>
-                        <Button Content="Tx" MinWidth="38" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_ClearFormatting}" Click="BtnClearFormatting_Click"/>
+                        <Button Content="&#xF2C8;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_ClearFormatting}" Click="BtnClearFormatting_Click"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -211,22 +211,22 @@
                             <ContextMenu Style="{StaticResource DarkContextMenu}">
                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_Cut}" Command="ApplicationCommands.Cut" InputGestureText="Ctrl+X">
                                     <MenuItem.Icon>
-                                        <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF332;"/>
+                                        <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14E;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_Copy}" Command="ApplicationCommands.Copy" InputGestureText="Ctrl+C">
                                     <MenuItem.Icon>
-                                        <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF322;"/>
+                                        <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF381;"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_Paste}" Command="ApplicationCommands.Paste" InputGestureText="Ctrl+V">
                                     <MenuItem.Icon>
-                                        <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF2D9;"/>
+                                        <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14F;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_SelectAll}" Command="ApplicationCommands.SelectAll" InputGestureText="Ctrl+A">
                                     <MenuItem.Icon>
-                                        <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xEA66;"/>
+                                        <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE162;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
                             </ContextMenu>

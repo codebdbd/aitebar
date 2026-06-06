@@ -36,7 +36,7 @@
             <Setter Property="Foreground" Value="#EAEAEA"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontWeight" Value="Normal"/>
             <Setter Property="MinWidth" Value="260"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="OverridesDefaultStyle" Value="True"/>
@@ -57,6 +57,22 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <Style x:Key="ContextMenuIconTextStyle" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+            <Setter Property="TextAlignment" Value="Center"/>
+            <Setter Property="Width" Value="24"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="LineHeight" Value="24"/>
+            <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
+            <Setter Property="Padding" Value="0"/>
+            <Setter Property="Margin" Value="0"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="UseLayoutRounding" Value="True"/>
         </Style>
 
         <Style x:Key="DarkMenuItem" TargetType="MenuItem">
@@ -91,16 +107,11 @@
                                                   ContentSource="Icon"
                                                   HorizontalAlignment="Center"
                                                   VerticalAlignment="Center"
-                                                  Width="18"
-                                                  Height="18">
+                                                  Width="24"
+                                                  Height="24">
                                     <ContentPresenter.Resources>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="FontSize" Value="16"/>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource ContextMenuIconTextStyle}">
                                             <Setter Property="Foreground" Value="#E6E6E6"/>
-                                            <Setter Property="VerticalAlignment" Value="Center"/>
-                                            <Setter Property="HorizontalAlignment" Value="Center"/>
-                                            <Setter Property="Padding" Value="0"/>
-                                            <Setter Property="Margin" Value="0"/>
                                         </Style>
                                     </ContentPresenter.Resources>
                                 </ContentPresenter>
@@ -249,42 +260,25 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ContextMenuIconTextStyle" TargetType="TextBlock">
-            <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
-            <Setter Property="FontSize" Value="16"/>
-            <Setter Property="Foreground" Value="#E6E6E6"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="TextAlignment" Value="Center"/>
-            <Setter Property="Width" Value="16"/>
-            <Setter Property="Height" Value="16"/>
-            <Setter Property="LineHeight" Value="16"/>
-            <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="0"/>
-            <Setter Property="SnapsToDevicePixels" Value="True"/>
-            <Setter Property="UseLayoutRounding" Value="True"/>
-        </Style>
-
         <ContextMenu x:Key="TextEditingContextMenu" x:Shared="False" Style="{StaticResource DarkContextMenu}">
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_Cut}" Command="ApplicationCommands.Cut" InputGestureText="Ctrl+X">
                 <MenuItem.Icon>
-                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF332;"/>
+                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14E;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_Copy}" Command="ApplicationCommands.Copy" InputGestureText="Ctrl+C">
                 <MenuItem.Icon>
-                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF322;"/>
+                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF381;"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_Paste}" Command="ApplicationCommands.Paste" InputGestureText="Ctrl+V">
                 <MenuItem.Icon>
-                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF2D9;"/>
+                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14F;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_SelectAll}" Command="ApplicationCommands.SelectAll" InputGestureText="Ctrl+A">
                 <MenuItem.Icon>
-                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xEA66;"/>
+                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE162;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>

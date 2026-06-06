@@ -18,10 +18,6 @@ internal interface IActionServiceRuntime
     bool Confirm(string message, Window? owner);
     IActionProcessHandle? StartProcess(ProcessStartInfo startInfo);
     IActionProcessHandle? StartProcess(string fileName);
-    IColorPickerDialog CreateColorPickerDialog(Window? owner);
-    IFileSorterToolWindow CreateFileSorterWindow(AppSettingsService settingsService, Window? owner);
-    IQuickNoteToolWindow CreateQuickNoteWindow(AppSettingsService settingsService, Window? owner);
-    ITimerStopwatchToolWindow CreateTimerStopwatchWindow(Window? owner);
     Window? GetMainWindow();
 }
 
@@ -31,43 +27,11 @@ internal interface IActionProcessHandle : IDisposable
     void Refresh();
 }
 
-internal interface IColorPickerDialog
-{
-    bool? ShowDialog();
-}
-
-internal interface IFileSorterToolWindow
-{
-    bool IsVisible { get; }
-    event EventHandler? Closed;
-    bool Activate();
-    void ShowNearPanel(AppSettingsService settingsService);
-}
-
-internal interface IQuickNoteToolWindow
-{
-    bool IsVisible { get; }
-    event EventHandler? Closed;
-    bool Activate();
-    void ShowSliding(AppSettings settings);
-}
-
-internal interface ITimerStopwatchToolWindow
-{
-    bool IsVisible { get; }
-    event EventHandler? Closed;
-    bool Activate();
-    void ShowNearPanel(AppSettingsService settingsService);
-}
-
 [SupportedOSPlatform("windows6.1")]
 public class ActionService
 {
     private readonly AppSettingsService _settingsService;
     private readonly IActionServiceRuntime _runtime;
-    private IFileSorterToolWindow? _fileSorterWindow;
-    private IQuickNoteToolWindow? _quickNoteWindow;
-    private ITimerStopwatchToolWindow? _timerStopwatchWindow;
     private const int FullscreenActivationAttempts = 25;
     private const int FullscreenWindowPollDelayMs = 200;
     private const int FullscreenForegroundDelayMs = 100;
@@ -352,65 +316,13 @@ public class ActionService
         _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:Downloads"));
     }
 
-    public async Task StartColorPickerAsync(Func<Task>? onBeforeExecute = null)
+    public async Task LaunchUtilityAsync(string utilityId, Func<Task>? onBeforeExecute = null)
     {
-        if (onBeforeExecute != null) await onBeforeExecute();
-        await _runtime.DelayAsync(120);
-        _runtime.CreateColorPickerDialog(_runtime.GetMainWindow()).ShowDialog();
-    }
-
-    public async Task StartFileSorterAsync(Func<Task>? onBeforeExecute = null)
-    {
-        if (onBeforeExecute != null)
+        var utility = UtilityRegistry.GetById(utilityId);
+        if (utility != null)
         {
-            await onBeforeExecute();
+            await utility.LaunchAsync(_settingsService, _runtime.GetMainWindow(), onBeforeExecute);
         }
-
-        if (_fileSorterWindow is { IsVisible: true })
-        {
-            _fileSorterWindow.Activate();
-            return;
-        }
-
-        _fileSorterWindow = _runtime.CreateFileSorterWindow(_settingsService, _runtime.GetMainWindow());
-        _fileSorterWindow.Closed += (_, _) => _fileSorterWindow = null;
-        _fileSorterWindow.ShowNearPanel(_settingsService);
-    }
-
-    public async Task StartQuickNoteAsync(Func<Task>? onBeforeExecute = null)
-    {
-        if (onBeforeExecute != null)
-        {
-            await onBeforeExecute();
-        }
-
-        if (_quickNoteWindow is { IsVisible: true })
-        {
-            _quickNoteWindow.Activate();
-            return;
-        }
-
-        _quickNoteWindow = _runtime.CreateQuickNoteWindow(_settingsService, _runtime.GetMainWindow());
-        _quickNoteWindow.Closed += (_, _) => _quickNoteWindow = null;
-        _quickNoteWindow.ShowSliding(_settingsService.Settings);
-    }
-
-    public async Task StartTimerStopwatchAsync(Func<Task>? onBeforeExecute = null)
-    {
-        if (onBeforeExecute != null)
-        {
-            await onBeforeExecute();
-        }
-
-        if (_timerStopwatchWindow is { IsVisible: true })
-        {
-            _timerStopwatchWindow.Activate();
-            return;
-        }
-
-        _timerStopwatchWindow = _runtime.CreateTimerStopwatchWindow(_runtime.GetMainWindow());
-        _timerStopwatchWindow.Closed += (_, _) => _timerStopwatchWindow = null;
-        _timerStopwatchWindow.ShowNearPanel(_settingsService);
     }
 
     internal static ProcessStartInfo BuildShellLaunchProcessStartInfo(string target) => new(target)
@@ -586,18 +498,6 @@ internal sealed class ActionServiceRuntime : IActionServiceRuntime
         var process = Process.Start(fileName);
         return process == null ? null : new ActionProcessHandle(process);
     }
-
-    public IColorPickerDialog CreateColorPickerDialog(Window? owner) =>
-        new ScreenColorPickerWindow { Owner = owner };
-
-    public IFileSorterToolWindow CreateFileSorterWindow(AppSettingsService settingsService, Window? owner) =>
-        new FileSorterWindow(settingsService) { Owner = owner };
-
-    public IQuickNoteToolWindow CreateQuickNoteWindow(AppSettingsService settingsService, Window? owner) =>
-        new QuickNoteWindow(new QuickNoteService(), settingsService) { Owner = owner };
-
-    public ITimerStopwatchToolWindow CreateTimerStopwatchWindow(Window? owner) =>
-        new TimerStopwatchWindow { Owner = owner };
 
     public Window? GetMainWindow() => System.Windows.Application.Current?.MainWindow;
 
