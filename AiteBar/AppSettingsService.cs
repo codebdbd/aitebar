@@ -16,7 +16,7 @@ namespace AiteBar
         private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
         private readonly object _stateLock = new();
         internal const long MaxSettingsFileBytes = 100 * 1024 * 1024;
-        
+
         private AppSettings _appSettings = new();
         private List<CustomElement> _elements = new();
 
@@ -103,9 +103,9 @@ namespace AiteBar
                     await SaveAsync();
                 }
             }
-            catch (Exception ex) 
-            { 
-                Logger.Log(ex); 
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
             }
         }
 
@@ -197,20 +197,20 @@ namespace AiteBar
                 }
 
                 string json = JsonSerializer.Serialize(_appSettings, _jsonOptions);
-                
+
                 // Создаём несколько бэкапов перед сохранением
                 RotateBackups();
-                
+
                 await File.WriteAllTextAsync(_settingsFile, json);
                 SettingsChanged?.Invoke(this, EventArgs.Empty);
             }
-            catch (Exception ex) 
-            { 
-                Logger.Log(ex); 
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
             }
-            finally 
-            { 
-                _saveSemaphore.Release(); 
+            finally
+            {
+                _saveSemaphore.Release();
             }
         }
 

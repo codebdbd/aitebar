@@ -8,42 +8,42 @@ public sealed class PanelPackageMapperTests
     [Fact]
     public void BuildPackageImagePath_WithPngExtension_ReturnsCorrectPath()
     {
-        var result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image.png", 5);
+        string result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image.png", 5);
         Assert.Equal("icons/005.png", result);
     }
 
     [Fact]
     public void BuildPackageImagePath_WithJpgExtension_ReturnsCorrectPath()
     {
-        var result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image.jpg", 10);
+        string result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image.jpg", 10);
         Assert.Equal("icons/010.jpg", result);
     }
 
     [Fact]
     public void BuildPackageImagePath_WithoutExtension_AddsPng()
     {
-        var result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image", 1);
+        string result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image", 1);
         Assert.Equal("icons/001.png", result);
     }
 
     [Fact]
     public void BuildPackageImagePath_WithUpperCaseExtension_ConvertsToLower()
     {
-        var result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image.PNG", 3);
+        string result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image.PNG", 3);
         Assert.Equal("icons/003.png", result);
     }
 
     [Fact]
     public void BuildPackageImagePath_ZeroIndex_PadsToThreeDigits()
     {
-        var result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image.png", 0);
+        string result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image.png", 0);
         Assert.Equal("icons/000.png", result);
     }
 
     [Fact]
     public void BuildPackageImagePath_LargeIndex_PadsToThreeDigits()
     {
-        var result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image.png", 999);
+        string result = PanelPackageMapper.BuildPackageImagePath("C:\\path\\to\\image.png", 999);
         Assert.Equal("icons/999.png", result);
     }
 
@@ -117,7 +117,7 @@ public sealed class PanelPackageMapperTests
             ActionValue = "https://example.com"
         };
 
-        var result = PanelPackageMapper.FromCustomElement(element, _ => null);
+        PanelPackageElement result = PanelPackageMapper.FromCustomElement(element, _ => null);
 
         Assert.Equal("Test Button", result.Name);
         Assert.Equal(nameof(ActionType.Web), result.ActionType);
@@ -140,7 +140,7 @@ public sealed class PanelPackageMapperTests
             IconFont = FontHelper.MaterialKey
         };
 
-        var result = PanelPackageMapper.FromCustomElement(element, _ => null);
+        PanelPackageElement result = PanelPackageMapper.FromCustomElement(element, _ => null);
 
         Assert.Equal("\uE8B7", result.Icon);
         Assert.Equal(FontHelper.MaterialKey, result.IconFont);
@@ -157,7 +157,7 @@ public sealed class PanelPackageMapperTests
             Color = "#FF0000"
         };
 
-        var result = PanelPackageMapper.FromCustomElement(element, _ => null);
+        PanelPackageElement result = PanelPackageMapper.FromCustomElement(element, _ => null);
 
         Assert.Equal("#FF0000", result.Color);
     }
@@ -177,7 +177,7 @@ public sealed class PanelPackageMapperTests
             Key = "Delete"
         };
 
-        var result = PanelPackageMapper.FromCustomElement(element, _ => null);
+        PanelPackageElement result = PanelPackageMapper.FromCustomElement(element, _ => null);
 
         Assert.True(result.Alt);
         Assert.True(result.Ctrl);
@@ -186,45 +186,7 @@ public sealed class PanelPackageMapperTests
         Assert.Equal("Delete", result.Key);
     }
 
-    [Fact]
-    public void FromCustomElement_WithActivationHotkey_SetsSeparateBinding()
-    {
-        var element = new CustomElement
-        {
-            Name = "Test",
-            ActionType = nameof(ActionType.Hotkey),
-            Ctrl = true,
-            Key = "K",
-            ActivationHotkey = new HotkeyBinding { Alt = true, Key = "J" }
-        };
 
-        PanelPackageElement result = PanelPackageMapper.FromCustomElement(element, _ => null);
-
-        Assert.True(result.Ctrl);
-        Assert.Equal("K", result.Key);
-        Assert.True(result.ActivationHotkey.Alt);
-        Assert.Equal("J", result.ActivationHotkey.Key);
-    }
-
-    [Fact]
-    public void ToImportedCustomElement_LegacyNonHotkeyBindingBecomesActivationHotkey()
-    {
-        var source = new PanelPackageElement
-        {
-            Name = "Legacy",
-            ActionType = nameof(ActionType.Web),
-            ActionValue = "https://example.com",
-            Ctrl = true,
-            Key = "K"
-        };
-
-        CustomElement result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
-
-        Assert.True(result.ActivationHotkey.Ctrl);
-        Assert.Equal("K", result.ActivationHotkey.Key);
-        Assert.False(result.Ctrl);
-        Assert.Equal("None", result.Key);
-    }
 
     [Fact]
     public void FromCustomElement_WithBrowserSettings_SetsBrowserProperties()
@@ -240,7 +202,7 @@ public sealed class PanelPackageMapperTests
             IsIncognito = true
         };
 
-        var result = PanelPackageMapper.FromCustomElement(element, _ => null);
+        PanelPackageElement result = PanelPackageMapper.FromCustomElement(element, _ => null);
 
         Assert.Equal(BrowserType.Firefox, result.Browser);
         Assert.Equal("Work Profile", result.ChromeProfile);
@@ -258,7 +220,7 @@ public sealed class PanelPackageMapperTests
             ActionValue = "https://example.com"
         };
 
-        var result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
+        CustomElement result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
 
         Assert.NotNull(result.Id);
         Assert.NotEmpty(result.Id);
@@ -274,7 +236,7 @@ public sealed class PanelPackageMapperTests
             ActionValue = "https://example.com"
         };
 
-        var result = PanelPackageMapper.ToImportedCustomElement(source, "context-123", _ => "");
+        CustomElement result = PanelPackageMapper.ToImportedCustomElement(source, "context-123", _ => "");
 
         Assert.Equal("context-123", result.ContextId);
     }
@@ -289,7 +251,7 @@ public sealed class PanelPackageMapperTests
             ActionValue = "https://example.com"
         };
 
-        var result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
+        CustomElement result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
 
         Assert.Equal("", result.LastUsedProfile);
     }
@@ -304,7 +266,7 @@ public sealed class PanelPackageMapperTests
             ActionValue = "https://example.com"
         };
 
-        var result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
+        CustomElement result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
 
         Assert.Equal("Test Button", result.Name);
     }
@@ -319,7 +281,7 @@ public sealed class PanelPackageMapperTests
             ActionValue = "https://example.com"
         };
 
-        var result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
+        CustomElement result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
 
         Assert.Equal("", result.Name);
     }

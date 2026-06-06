@@ -29,9 +29,9 @@ namespace AiteBar
                 using var curModule = curProcess.MainModule ?? throw new InvalidOperationException("MainModule is null");
                 _mouseHook = NativeMethods.SetWindowsHookEx(NativeMethods.WH_MOUSE_LL, _mouseProc, NativeMethods.GetModuleHandle(curModule.ModuleName!), 0);
             }
-            catch (Exception ex) 
-            { 
-                Logger.Log(ex); 
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
             }
         }
 
@@ -52,9 +52,9 @@ namespace AiteBar
                     MouseDownOutside?.Invoke(hookStruct.pt.X, hookStruct.pt.Y);
                 }
             }
-            catch (Exception ex) 
-            { 
-                Logger.Log(ex); 
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
             }
             return NativeMethods.CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }

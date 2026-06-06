@@ -56,10 +56,13 @@ namespace AiteBar
                 TaskContinuationOptions.OnlyOnFaulted);
             LoadKeyList();
 
-            if (_editingElement != null) {
+            if (_editingElement != null)
+            {
                 this.Title = LocalizationService.Get("SettingsWindow_EditTitle");
                 LoadElementData();
-            } else {
+            }
+            else
+            {
                 SetComboValue(CmbActionType, nameof(ActionType.Web));
                 var defaultBrowser = BrowserHelper.GetSystemDefaultBrowser();
                 SetComboValue(CmbBrowser, defaultBrowser.ToString());
@@ -144,7 +147,8 @@ namespace AiteBar
 
         private static void SetComboValue(ComboBox combo, string value)
         {
-            foreach (ComboBoxItem item in combo.Items) {
+            foreach (ComboBoxItem item in combo.Items)
+            {
                 if (item.Tag?.ToString() == value) { combo.SelectedItem = item; return; }
             }
         }
@@ -169,10 +173,11 @@ namespace AiteBar
                     Cursor = System.Windows.Input.Cursors.Hand,
                     ToolTip = hex
                 };
-                border.MouseDown += (s, e) => { 
-                    _selectedColor = hex; 
-                    TxtHexColor.Text = hex; 
-                    UpdatePreview(); 
+                border.MouseDown += (s, e) =>
+                {
+                    _selectedColor = hex;
+                    TxtHexColor.Text = hex;
+                    UpdatePreview();
                 };
                 GridColors.Children.Add(border);
             }
@@ -180,14 +185,17 @@ namespace AiteBar
 
         private void TxtHexColor_TextChanged(object sender, TextChangedEventArgs e)
         {
-            try {
+            try
+            {
                 var colorStr = TxtHexColor.Text.Trim();
                 if (string.IsNullOrEmpty(colorStr)) return;
                 if (!colorStr.StartsWith('#')) colorStr = "#" + colorStr;
-                if (colorStr.Length is 7 or 9) { 
+                if (colorStr.Length is 7 or 9)
+                {
                     if (_brushConverter.ConvertFromString(colorStr) is Brush) { _selectedColor = colorStr; UpdatePreview(); }
                 }
-            } catch (Exception ex) { Logger.Log(ex); }
+            }
+            catch (Exception ex) { Logger.Log(ex); }
         }
 
         private void BorderPreview_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
@@ -230,22 +238,22 @@ namespace AiteBar
         private void UpdatePreview()
         {
             if (!string.IsNullOrEmpty(_selectedImagePath) && File.Exists(_selectedImagePath))
-            { 
+            {
                 PreviewIcon.Visibility = Visibility.Collapsed;
                 PreviewImage.Visibility = Visibility.Visible;
                 try
-                { 
+                {
                     PreviewImage.Source = new BitmapImage(new Uri(_selectedImagePath));
                 }
                 catch (Exception ex) { Logger.Log(ex); }
             }
             else
-            { 
+            {
                 PreviewIcon.Visibility = Visibility.Visible;
-                 PreviewImage.Visibility = Visibility.Collapsed;
-                 PreviewIcon.Text = _selectedIcon;
-                 PreviewIcon.FontFamily = FontHelper.Resolve(_selectedFont);
-                 PreviewIcon.Foreground = _brushConverter.ConvertFromString(_selectedColor) as Brush ?? Brushes.White;
+                PreviewImage.Visibility = Visibility.Collapsed;
+                PreviewIcon.Text = _selectedIcon;
+                PreviewIcon.FontFamily = FontHelper.Resolve(_selectedFont);
+                PreviewIcon.Foreground = _brushConverter.ConvertFromString(_selectedColor) as Brush ?? Brushes.White;
             }
         }
 
@@ -269,7 +277,7 @@ namespace AiteBar
 
             CmbChromeProfile.Items.Clear();
             CmbChromeProfile.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("SettingsWindow_NoProfile"), Tag = "" });
-            
+
             var profileItems = await Task.Run(() => BrowserHelper.GetProfiles(browserType));
             if (loadVersion != _profileLoadVersion || !IsSelectedBrowser(browserType))
             {
@@ -280,7 +288,7 @@ namespace AiteBar
 
             foreach (var profile in profileItems)
                 CmbChromeProfile.Items.Add(new ComboBoxItem { Content = profile.DisplayName, Tag = profile.ProfilePath });
-            
+
             CmbChromeProfile.SelectedIndex = 0;
             if (_editingElement != null && _editingElement.Browser == browserType)
                 SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
@@ -505,7 +513,7 @@ namespace AiteBar
             if (dlg.ShowDialog() == true)
             {
                 TxtActionValue.Text = dlg.FileName;
-                
+
                 // Если имя пустое - подставляем имя файла
                 if (string.IsNullOrWhiteSpace(TxtName.Text))
                 {
@@ -711,17 +719,24 @@ namespace AiteBar
                     }
                 }
 
-                var newElement = new CustomElement {
+                var newElement = new CustomElement
+                {
                     Id = _editingElement?.Id ?? Guid.NewGuid().ToString(),
                     Name = TxtName.Text,
                     Browser = browserType,
-                    ActionType = typeStr, ActionValue = actionValue,
-                    Icon = _selectedIcon, IconFont = _selectedFont, Color = _selectedColor, 
+                    ActionType = typeStr,
+                    ActionValue = actionValue,
+                    Icon = _selectedIcon,
+                    IconFont = _selectedFont,
+                    Color = _selectedColor,
                     ImagePath = _selectedImagePath,
                     ChromeProfile = GetSelectedLaunchProfile(browserType),
                     RotationProfilePaths = [.. _rotationProfilePaths],
-                    IsAppMode = ChkAppMode.IsChecked ?? false, IsIncognito = ChkIncognito.IsChecked ?? false,
-                    UseRotation = ChkRotation.IsChecked ?? false, OpenFullscreen = ChkFullscreen.IsChecked ?? false, IsTopmost = false,
+                    IsAppMode = ChkAppMode.IsChecked ?? false,
+                    IsIncognito = ChkIncognito.IsChecked ?? false,
+                    UseRotation = ChkRotation.IsChecked ?? false,
+                    OpenFullscreen = ChkFullscreen.IsChecked ?? false,
+                    IsTopmost = false,
                     LastUsedProfile = _editingElement?.LastUsedProfile ?? "",
                     Ctrl = actionType == AiteBar.ActionType.Hotkey && (ChkCtrl.IsChecked ?? false),
                     Shift = actionType == AiteBar.ActionType.Hotkey && (ChkShift.IsChecked ?? false),

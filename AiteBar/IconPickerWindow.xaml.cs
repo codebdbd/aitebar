@@ -25,7 +25,7 @@ namespace AiteBar
         private string _activeFont = FontHelper.FluentKey;
         private static Dictionary<int, string>? _fluentMap;
         private static Dictionary<int, string>? _materialMap;
-        
+
         // Маппинг для Font Awesome Brands из старого кода остаётся:
         private static readonly Dictionary<int, string[]> FontAwesomeNameAliases = new()
         {
@@ -100,15 +100,15 @@ namespace AiteBar
 
             BtnTabMaterial.Foreground = fontName == FontHelper.MaterialKey
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
-            BtnTabFluent.Foreground   = fontName == FontHelper.FluentKey
+            BtnTabFluent.Foreground = fontName == FontHelper.FluentKey
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
-            BtnTabBrands.Foreground   = fontName == FontHelper.BrandsKey
+            BtnTabBrands.Foreground = fontName == FontHelper.BrandsKey
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
 
             TxtSearchHint.Text = fontName switch
             {
-                FontHelper.BrandsKey   => LocalizationService.Get("IconPicker_SearchBrandsHint"),
-                FontHelper.FluentKey   => LocalizationService.Get("IconPicker_SearchIconsHint"),
+                FontHelper.BrandsKey => LocalizationService.Get("IconPicker_SearchBrandsHint"),
+                FontHelper.FluentKey => LocalizationService.Get("IconPicker_SearchIconsHint"),
                 FontHelper.MaterialKey => LocalizationService.Get("IconPicker_SearchIconsHint"),
                 _ => LocalizationService.Get("IconPicker_SearchCodeHint")
             };
@@ -133,7 +133,7 @@ namespace AiteBar
                 }
 
                 if (glyphTypeface == null) return;
-                
+
                 var glyphMap = glyphTypeface.CharacterToGlyphMap;
                 var namedIcons = GetNamedIcons(fontName);
                 var codes = GetDisplayCodes(glyphMap, namedIcons);
@@ -160,7 +160,7 @@ namespace AiteBar
                         IconPanel.Children.Add(btn);
                         _allButtons.Add((btn, searchKey));
                     }
-                    
+
                     // Даём UI отрисоваться перед загрузкой следующей пачки
                     await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.Background);
                 }
@@ -274,14 +274,17 @@ namespace AiteBar
                 HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                 VerticalAlignment = System.Windows.VerticalAlignment.Center
             };
-            
+
             var btn = new Button
             {
                 Content = tb,
-                Width = 46, Height = 46, Margin = new Thickness(2),
-                Style = btnStyle, ToolTip = tooltip
+                Width = 46,
+                Height = 46,
+                Margin = new Thickness(2),
+                Style = btnStyle,
+                ToolTip = tooltip
             };
-            
+
             btn.Click += (s, e) =>
             {
                 SelectedIcon = symbol;

@@ -453,7 +453,7 @@ namespace AiteBar
         {
             var sortedOperations = operations.OrderByDescending(op => op.Offset).ToList();
             var builder = new StringBuilder(text);
-            
+
             foreach (var operation in sortedOperations)
             {
                 builder.Remove(operation.Offset, operation.RemoveLength);

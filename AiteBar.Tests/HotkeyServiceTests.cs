@@ -78,7 +78,6 @@ public sealed class HotkeyServiceTests
         {
             new HotkeyDefinition(
                 HotkeyCommand.ShowPanel,
-                null,
                 HotkeyService.ShowPanelId,
                 "Show panel",
                 new HotkeyBinding { Key = "None" })
@@ -101,7 +100,6 @@ public sealed class HotkeyServiceTests
         {
             new HotkeyDefinition(
                 HotkeyCommand.QuickNote,
-                null,
                 HotkeyService.QuickNoteId,
                 "Quick note",
                 new HotkeyBinding { Ctrl = true, Key = "Space" })
@@ -126,7 +124,6 @@ public sealed class HotkeyServiceTests
         {
             new HotkeyDefinition(
                 HotkeyCommand.ColorPicker,
-                null,
                 HotkeyService.ColorPickerId,
                 "Color picker",
                 new HotkeyBinding { Key = "Space" })
@@ -197,45 +194,7 @@ public sealed class HotkeyServiceTests
         Assert.Equal("This hotkey combination is reserved by the system.", failureReason);
     }
 
-    [Fact]
-    public void CreateElementDefinitions_AssignsIdsOnlyToElementsWithHotkeys()
-    {
-        var service = new HotkeyService(new FakeHotkeyRegistrar());
-        CustomElement[] elements =
-        [
-            new() { Id = "with-hotkey", Name = "With hotkey", ActivationHotkey = new HotkeyBinding { Ctrl = true, Key = "K" } },
-            new() { Id = "without-hotkey", Name = "Without hotkey", Key = "None" }
-        ];
 
-        IReadOnlyList<HotkeyDefinition> definitions = service.CreateElementDefinitions(elements);
-
-        Assert.Single(definitions);
-        Assert.Equal("with-hotkey", definitions[0].ElementId);
-        Assert.True(definitions[0].Id >= 10000);
-        Assert.True(service.TryGetElementId(definitions[0].Id, out string? elementId));
-        Assert.Equal("with-hotkey", elementId);
-    }
-
-    [Fact]
-    public void CreateElementDefinitions_DoesNotRegisterHotkeyActionPayload()
-    {
-        var service = new HotkeyService(new FakeHotkeyRegistrar());
-        CustomElement[] elements =
-        [
-            new()
-            {
-                Id = "hotkey-action",
-                Name = "Send Ctrl+K",
-                ActionType = nameof(ActionType.Hotkey),
-                Ctrl = true,
-                Key = "K"
-            }
-        ];
-
-        IReadOnlyList<HotkeyDefinition> definitions = service.CreateElementDefinitions(elements);
-
-        Assert.Empty(definitions);
-    }
 
     [Fact]
     public void RegisterAll_ConflictingCommandBindings_FailsSecondCommandBeforeRegistration()
@@ -246,13 +205,11 @@ public sealed class HotkeyServiceTests
         {
             new HotkeyDefinition(
                 HotkeyCommand.ShowPanel,
-                null,
                 HotkeyService.ShowPanelId,
                 "Show panel",
                 new HotkeyBinding { Ctrl = true, Key = "Space" }),
             new HotkeyDefinition(
                 HotkeyCommand.NextContext,
-                null,
                 HotkeyService.NextContextId,
                 "Next context",
                 new HotkeyBinding { Ctrl = true, Key = "Space" })
@@ -265,60 +222,6 @@ public sealed class HotkeyServiceTests
         Assert.False(results[1].Success);
         Assert.Contains("conflicts", results[1].FailureReason, StringComparison.OrdinalIgnoreCase);
         Assert.Single(registrar.RegisterCalls);
-    }
-
-    [Fact]
-    public void RegisterAll_CommandHotkeyOverridesElementHotkeyConflict()
-    {
-        var registrar = new FakeHotkeyRegistrar();
-        var service = new HotkeyService(registrar);
-        var definitions = new[]
-        {
-            new HotkeyDefinition(
-                HotkeyCommand.ShowPanel,
-                null,
-                HotkeyService.ShowPanelId,
-                "Show panel",
-                new HotkeyBinding { Ctrl = true, Key = "Space" }),
-            new HotkeyDefinition(
-                null,
-                "element-1",
-                10001,
-                "Element 1",
-                new HotkeyBinding { Ctrl = true, Key = "Space" })
-        };
-
-        IReadOnlyList<HotkeyRegistrationResult> results = service.RegisterAll(new IntPtr(42), definitions);
-
-        Assert.Equal(2, results.Count);
-        Assert.True(results[0].Success);
-        Assert.False(results[1].Success);
-        Assert.Contains("command hotkey", results[1].FailureReason, StringComparison.OrdinalIgnoreCase);
-        Assert.Single(registrar.RegisterCalls);
-        Assert.Equal(HotkeyService.ShowPanelId, registrar.RegisterCalls[0].Id);
-    }
-
-    [Fact]
-    public void UnregisterAll_ReleasesAllocatedElementIds()
-    {
-        var registrar = new FakeHotkeyRegistrar();
-        var service = new HotkeyService(registrar);
-        IReadOnlyList<HotkeyDefinition> definitions = service.CreateElementDefinitions(
-        [
-            new CustomElement
-            {
-                Id = "element-1",
-                Name = "Element 1",
-                ActivationHotkey = new HotkeyBinding { Alt = true, Key = "J" }
-            }
-        ]);
-        int allocatedId = definitions[0].Id;
-
-        service.RegisterAll(new IntPtr(42), definitions);
-        service.UnregisterAll(new IntPtr(42));
-
-        Assert.Contains(allocatedId, registrar.UnregisterCalls);
-        Assert.False(service.TryGetElementId(allocatedId, out _));
     }
 
     private sealed class FakeHotkeyRegistrar : IHotkeyRegistrar

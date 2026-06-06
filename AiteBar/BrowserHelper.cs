@@ -26,7 +26,7 @@ namespace AiteBar
         {
             return type switch
             {
-                BrowserType.Chrome => GetPathFromRegistry(@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe") 
+                BrowserType.Chrome => GetPathFromRegistry(@"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\chrome.exe")
                                      ?? SearchCommonPaths("chrome.exe", [
                                          @"C:\Program Files\Google\Chrome\Application\chrome.exe",
                                          @"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
@@ -135,7 +135,7 @@ namespace AiteBar
             {
                 return GetFirefoxProfiles(basePath);
             }
-            
+
             // Standard Chromium profiles
             var profileDirs = Directory.GetDirectories(basePath, "Profile *").ToList();
             if (Directory.Exists(Path.Combine(basePath, "Default")))
@@ -152,7 +152,7 @@ namespace AiteBar
                 if (!Directory.Exists(dir)) continue;
                 string prefFile = Path.Combine(dir, "Preferences");
                 string displayName = Path.GetFileName(dir);
-                if (displayName == "User Data" || displayName == "Opera Stable" || displayName == "Opera GX Stable") 
+                if (displayName == "User Data" || displayName == "Opera Stable" || displayName == "Opera GX Stable")
                     displayName = "Default";
 
                 if (File.Exists(prefFile))

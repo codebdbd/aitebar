@@ -12,7 +12,7 @@ namespace AiteBar.Tests
         {
             var folder = PathHelper.AppDataFolder;
             var roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            
+
             Assert.StartsWith(roaming, folder);
             Assert.Contains(PathHelper.AppCompany, folder);
             Assert.Contains(PathHelper.AppName, folder);

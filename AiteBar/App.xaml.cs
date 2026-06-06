@@ -2,8 +2,9 @@ using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
 
-namespace AiteBar {
-    public partial class App : System.Windows.Application 
+namespace AiteBar
+{
+    public partial class App : System.Windows.Application
     {
         private static Mutex? _mutex;
 

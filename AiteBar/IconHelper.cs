@@ -22,12 +22,12 @@ namespace AiteBar
 
                 // Используем Google Favicon Service как самый надежный и быстрый способ
                 string faviconUrl = $"https://www.google.com/s2/favicons?domain={uri.Host}&sz=64";
-                
+
                 var response = await _httpClient.GetAsync(faviconUrl);
                 if (!response.IsSuccessStatusCode) return null;
 
                 byte[] data = await response.Content.ReadAsByteArrayAsync();
-                
+
                 PathHelper.EnsureDirectories();
                 string fileName = $"web_{Guid.NewGuid()}.png";
                 string destPath = Path.Combine(PathHelper.IconsFolder, fileName);

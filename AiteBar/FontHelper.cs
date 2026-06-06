@@ -8,8 +8,8 @@ namespace AiteBar
     {
         // Ключи, хранящиеся в CustomElement.IconFont
         public const string MaterialKey = "Material Icons";
-        public const string FluentKey   = "Fluent System Icons";
-        public const string BrandsKey   = "Font Awesome Brands";
+        public const string FluentKey = "Fluent System Icons";
+        public const string BrandsKey = "Font Awesome Brands";
         public const string MaterialCodepointsResource = "pack://application:,,,/Resources/MaterialIcons.codepoints";
         public const string FluentCodepointsResource = "pack://application:,,,/Resources/FluentSystemIcons.json";
 
@@ -28,8 +28,8 @@ namespace AiteBar
         public static FontFamily Resolve(string fontName) => fontName switch
         {
             MaterialKey => _materialFont,
-            FluentKey   => _fluentSysFont,
-            BrandsKey   => _brandsFont,
+            FluentKey => _fluentSysFont,
+            BrandsKey => _brandsFont,
             _ when fontName.StartsWith("pack://") => ResolvePack(fontName),
             _ => new FontFamily(fontName)
         };

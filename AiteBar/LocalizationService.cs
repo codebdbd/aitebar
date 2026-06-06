@@ -74,27 +74,27 @@ namespace AiteBar
         }
 
         public static string Get(string key)
-    {
-        return Get(key, CultureInfo.CurrentUICulture);
-    }
-
-    public static string Get(string key, CultureInfo culture)
-    {
-        string? value = Resources.GetString(key, culture);
-        if (!string.IsNullOrEmpty(value))
         {
-            return value;
+            return Get(key, CultureInfo.CurrentUICulture);
         }
 
-        value = Resources.GetString(key, English);
-        return string.IsNullOrEmpty(value) ? $"[[{key}]]" : value;
-    }
+        public static string Get(string key, CultureInfo culture)
+        {
+            string? value = Resources.GetString(key, culture);
+            if (!string.IsNullOrEmpty(value))
+            {
+                return value;
+            }
 
-    public static string Format(string key, params object?[] args) =>
-        Format(key, CultureInfo.CurrentCulture, args);
+            value = Resources.GetString(key, English);
+            return string.IsNullOrEmpty(value) ? $"[[{key}]]" : value;
+        }
 
-    public static string Format(string key, CultureInfo culture, params object?[] args) =>
-        string.Format(culture, Get(key, culture), args);
+        public static string Format(string key, params object?[] args) =>
+            Format(key, CultureInfo.CurrentCulture, args);
+
+        public static string Format(string key, CultureInfo culture, params object?[] args) =>
+            string.Format(culture, Get(key, culture), args);
     }
 
     public sealed class LocalizedStringProvider : INotifyPropertyChanged

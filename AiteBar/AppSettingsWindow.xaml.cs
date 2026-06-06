@@ -514,7 +514,7 @@ public partial class AppSettingsWindow : DarkWindow
         {
             _settings.Edge = edge;
         }
-        
+
         if (CmbMonitor.SelectedItem is ComboBoxItem monitorItem)
             _settings.MonitorIndex = (int)(monitorItem.Tag ?? 0);
 
@@ -531,7 +531,7 @@ public partial class AppSettingsWindow : DarkWindow
             _settings.Contexts[i].IsEnabled = i == 0 || (_contextRows[i].EnabledCheckBox.IsChecked ?? false);
         }
 
-        IReadOnlyList<string> failedHotkeys = await _mainWindow.SaveAppSettings(_settings);
+        IReadOnlyList<string> failedHotkeys = await _mainWindow.SaveAppSettings();
         LocalizationService.ApplyCulture(_settings.UiCulture);
         _mainWindow.ApplyLocalizedText();
         _mainWindow.RefreshPanel();

@@ -4,38 +4,47 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
-namespace AiteBar {
-    public partial class DarkDialog : DarkWindow {
-        public DarkDialog(string message, bool isConfirm = false) {
+namespace AiteBar
+{
+    public partial class DarkDialog : DarkWindow
+    {
+        public DarkDialog(string message, bool isConfirm = false)
+        {
             InitializeComponent();
             TxtMessage.Text = message;
 
-            if (isConfirm) {
+            if (isConfirm)
+            {
                 this.Title = LocalizationService.Get("Common_Confirmation");
                 BtnYes.Visibility = Visibility.Visible;
                 BtnNo.Visibility = Visibility.Visible;
-            } else {
+            }
+            else
+            {
                 BtnOk.Visibility = Visibility.Visible;
             }
 
             Loaded += (_, _) => FocusDefaultButton();
         }
 
-        public DarkDialog(string message, List<DialogButton> buttons, string? title = null) {
+        public DarkDialog(string message, List<DialogButton> buttons, string? title = null)
+        {
             InitializeComponent();
             TxtMessage.Text = message;
-            
-            if (!string.IsNullOrEmpty(title)) {
+
+            if (!string.IsNullOrEmpty(title))
+            {
                 this.Title = title;
             }
-            
+
             // Hide default buttons
             BtnYes.Visibility = Visibility.Collapsed;
             BtnNo.Visibility = Visibility.Collapsed;
             BtnOk.Visibility = Visibility.Collapsed;
-            
+
             // Add custom buttons
-            foreach (var button in buttons) {
+            foreach (var button in buttons)
+            {
                 var btn = new System.Windows.Controls.Button
                 {
                     Content = button.Text,
@@ -44,13 +53,14 @@ namespace AiteBar {
                     IsDefault = button.IsPrimary,
                     IsCancel = !button.IsPrimary
                 };
-                
+
                 var btnCopy = button;
-                btn.Click += (s, e) => {
+                btn.Click += (s, e) =>
+                {
                     this.Tag = btnCopy.Value;
                     this.DialogResult = btnCopy.IsPrimary;
                 };
-                
+
                 ButtonsPanel.Children.Insert(0, btn);
             }
 
@@ -74,15 +84,18 @@ namespace AiteBar {
             }
         }
 
-        private void BtnYes_Click(object sender, RoutedEventArgs e) {
+        private void BtnYes_Click(object sender, RoutedEventArgs e)
+        {
             this.DialogResult = true;
         }
 
-        private void BtnNo_Click(object sender, RoutedEventArgs e) {
+        private void BtnNo_Click(object sender, RoutedEventArgs e)
+        {
             this.DialogResult = false;
         }
 
-        private void BtnOk_Click(object sender, RoutedEventArgs e) {
+        private void BtnOk_Click(object sender, RoutedEventArgs e)
+        {
             this.Close();
         }
     }

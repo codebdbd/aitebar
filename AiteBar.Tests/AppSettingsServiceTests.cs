@@ -170,14 +170,14 @@ public sealed class AppSettingsServiceTests
         Directory.CreateDirectory(root);
         string settingsPath = Path.Combine(root, "settings.json");
         string configPath = Path.Combine(root, "custom_buttons.json");
-        
+
         try
         {
             var service = new AppSettingsService(configPath, settingsPath);
-            
+
             string backup0 = service.GetBackupFilePath(0);
             string backup1 = service.GetBackupFilePath(1);
-            
+
             Assert.Equal(settingsPath + ".backup.0", backup0);
             Assert.Equal(settingsPath + ".backup.1", backup1);
         }
@@ -194,17 +194,17 @@ public sealed class AppSettingsServiceTests
         Directory.CreateDirectory(root);
         string settingsPath = Path.Combine(root, "settings.json");
         string configPath = Path.Combine(root, "custom_buttons.json");
-        
+
         try
         {
             var service = new AppSettingsService(configPath, settingsPath);
-            await service.AddElementsAsync(new[] { new CustomElement { Id = "v1", Name = "Version 1", ContextId = "context-1" } });
+            await service.AddElementsAsync([new CustomElement { Id = "v1", Name = "Version 1", ContextId = "context-1" }]);
             await service.SaveAsync();
-            
+
             // Второй Save создаст бэкап
             await service.UpdateElementAsync("v1", e => e.Name = "Version 2");
             await service.SaveAsync();
-            
+
             Assert.True(File.Exists(settingsPath));
             Assert.True(File.Exists(service.GetBackupFilePath(0)));
         }
@@ -221,25 +221,25 @@ public sealed class AppSettingsServiceTests
         Directory.CreateDirectory(root);
         string settingsPath = Path.Combine(root, "settings.json");
         string configPath = Path.Combine(root, "custom_buttons.json");
-        
+
         try
         {
             var service = new AppSettingsService(configPath, settingsPath);
-            
+
             // Создаем начальный файл
             var initialSettings = new AppSettings();
             initialSettings.Elements.Add(new CustomElement { Id = "test", ContextId = "context-1" });
             await File.WriteAllTextAsync(settingsPath, System.Text.Json.JsonSerializer.Serialize(initialSettings));
-            
+
             // Создаем несколько бэкапов вручную
             for (int i = 0; i < 3; i++)
             {
                 await File.WriteAllTextAsync(service.GetBackupFilePath(i), $"backup-{i}");
             }
-            
+
             // Вызываем RotateBackups
             service.RotateBackups();
-            
+
             // Проверяем, что бэкапы сдвинулись
             Assert.True(File.Exists(service.GetBackupFilePath(0))); // это исходный settings.json
             Assert.True(File.Exists(service.GetBackupFilePath(1))); // был backup-0
@@ -259,21 +259,21 @@ public sealed class AppSettingsServiceTests
         Directory.CreateDirectory(root);
         string settingsPath = Path.Combine(root, "settings.json");
         string configPath = Path.Combine(root, "custom_buttons.json");
-        
+
         try
         {
             var service = new AppSettingsService(configPath, settingsPath);
-            
+
             // Создаем поврежденный backup 0
             await File.WriteAllTextAsync(service.GetBackupFilePath(0), "invalid json");
-            
+
             // Создаем валидный backup 1
             var validSettings = new AppSettings();
             validSettings.Elements.Add(new CustomElement { Id = "from-backup-1", Name = "From Backup 1", ContextId = "context-1" });
             await File.WriteAllTextAsync(service.GetBackupFilePath(1), System.Text.Json.JsonSerializer.Serialize(validSettings));
-            
+
             bool result = service.TryLoadFromBackup();
-            
+
             Assert.True(result);
             Assert.Single(service.Settings.Elements);
             Assert.Equal("from-backup-1", service.Settings.Elements[0].Id);
@@ -291,13 +291,13 @@ public sealed class AppSettingsServiceTests
         Directory.CreateDirectory(root);
         string settingsPath = Path.Combine(root, "settings.json");
         string configPath = Path.Combine(root, "custom_buttons.json");
-        
+
         try
         {
             var service = new AppSettingsService(configPath, settingsPath);
-            
+
             bool result = service.TryLoadFromBackup();
-            
+
             Assert.False(result);
         }
         finally
@@ -313,16 +313,16 @@ public sealed class AppSettingsServiceTests
         Directory.CreateDirectory(root);
         string settingsPath = Path.Combine(root, "settings.json");
         string configPath = Path.Combine(root, "custom_buttons.json");
-        
+
         try
         {
             // Создаем поврежденный файл
             await File.WriteAllTextAsync(settingsPath, "corrupted json");
-            
+
             // Загружаем - не должно выбросить исключение
             var service = new AppSettingsService(configPath, settingsPath);
             await service.LoadAsync();
-            
+
             // Проверим, что сервис работает
             Assert.NotNull(service.Settings);
         }
@@ -490,56 +490,7 @@ public sealed class AppSettingsServiceTests
         Assert.Equal("non-existing-id", result);
     }
 
-    [Fact]
-    public void NormalizeAppState_MigratesLegacyNonHotkeyElementBindingToActivationHotkey()
-    {
-        var service = new AppSettingsService();
-        service.Settings.Elements =
-        [
-            new CustomElement
-            {
-                Id = "web",
-                ActionType = nameof(ActionType.Web),
-                Ctrl = true,
-                Key = "K",
-                ContextId = "context-1"
-            }
-        ];
 
-        bool changed = service.NormalizeAppState();
-        CustomElement element = Assert.Single(service.Elements);
-
-        Assert.True(changed);
-        Assert.True(element.ActivationHotkey.Ctrl);
-        Assert.Equal("K", element.ActivationHotkey.Key);
-        Assert.False(element.Ctrl);
-        Assert.Equal("None", element.Key);
-        Assert.False(service.NormalizeAppState());
-    }
-
-    [Fact]
-    public void NormalizeAppState_PreservesHotkeyActionPayloadWithoutActivationHotkey()
-    {
-        var service = new AppSettingsService();
-        service.Settings.Elements =
-        [
-            new CustomElement
-            {
-                Id = "hotkey",
-                ActionType = nameof(ActionType.Hotkey),
-                Ctrl = true,
-                Key = "K",
-                ContextId = "context-1"
-            }
-        ];
-
-        service.NormalizeAppState();
-        CustomElement element = Assert.Single(service.Elements);
-
-        Assert.True(element.Ctrl);
-        Assert.Equal("K", element.Key);
-        Assert.False(HotkeyValidationHelper.HasAssignedKey(element.ActivationHotkey));
-    }
 
     [Fact]
     public void NormalizeAppState_NormalizesUiCultureActiveContextAndElements()
@@ -674,24 +625,21 @@ public sealed class AppSettingsServiceTests
     }
 
     [Fact]
-    public void CloneElement_CreatesDeepCopyOfRotationProfilesAndActivationHotkey()
+    public void CloneElement_CreatesDeepCopyOfRotationProfiles()
     {
         var service = new AppSettingsService();
         var source = new CustomElement
         {
             Id = "source",
             RotationProfilePaths = ["Profile A"],
-            ActivationHotkey = new HotkeyBinding { Ctrl = true, Key = "K" },
             ContextId = "context-2"
         };
 
         CustomElement clone = service.CloneElement(source);
         clone.RotationProfilePaths.Add("Profile B");
-        clone.ActivationHotkey.Key = "J";
         clone.ContextId = "context-3";
 
         Assert.Equal(["Profile A"], source.RotationProfilePaths);
-        Assert.Equal("K", source.ActivationHotkey.Key);
         Assert.Equal("context-2", source.ContextId);
     }
 }
