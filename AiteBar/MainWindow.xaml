@@ -64,7 +64,7 @@
             TextOptions.TextFormattingMode="Ideal"
             AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel" PreviewMouseDown="RootBorder_PreviewMouseDown">
         <Border.Effect>
-            <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="2" Opacity="0.45"/>
+            <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.25"/>
         </Border.Effect>
         <Border Background="{StaticResource PanelBackground}" CornerRadius="7" SnapsToDevicePixels="True">
         <DockPanel x:Name="MainPanel" HorizontalAlignment="Left" VerticalAlignment="Center" LastChildFill="False" Margin="2">
