@@ -82,17 +82,15 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
-    public void SortFiles_SkipsShortcutsTempFilesAndFreshFiles()
+    public void SortFiles_SkipsShortcutsAndTempFiles()
     {
         string root = CreateTempRoot();
         try
         {
             string shortcut = Path.Combine(root, "app.lnk");
             string temp = Path.Combine(root, "partial.crdownload");
-            string fresh = Path.Combine(root, "fresh.pdf");
             File.WriteAllText(shortcut, "a");
             File.WriteAllText(temp, "b");
-            File.WriteAllText(fresh, "c");
             MakeOld(shortcut);
             MakeOld(temp);
 
@@ -100,10 +98,60 @@ public sealed class FileSorterServiceTests
             FileSortResult result = service.SortFiles(root);
 
             Assert.Equal(0, result.SortedCount);
-            Assert.Equal(3, result.SkippedCount);
+            Assert.Equal(2, result.SkippedCount);
             Assert.True(File.Exists(shortcut));
             Assert.True(File.Exists(temp));
-            Assert.True(File.Exists(fresh));
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void SortFiles_SortsFreshCompletedFiles()
+    {
+        string root = CreateTempRoot();
+        try
+        {
+            string fresh = Path.Combine(root, "fresh.pdf");
+            File.WriteAllText(fresh, "c");
+
+            var service = new FileSorterService();
+            FileSortResult result = service.SortFiles(root);
+
+            Assert.Equal(1, result.SortedCount);
+            Assert.Equal(0, result.SkippedCount);
+            Assert.True(File.Exists(Path.Combine(root, LocalizationService.Get("FileSorter_CategoryDocuments"), "fresh.pdf")));
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void SortFiles_SkipsLockedFileAndContinues()
+    {
+        string root = CreateTempRoot();
+        try
+        {
+            string locked = Path.Combine(root, "locked.jpg");
+            string available = Path.Combine(root, "available.jpg");
+            File.WriteAllText(locked, "a");
+            File.WriteAllText(available, "b");
+            MakeOld(locked);
+            MakeOld(available);
+
+            using var stream = new FileStream(locked, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+
+            var service = new FileSorterService();
+            FileSortResult result = service.SortFiles(root);
+
+            Assert.Equal(1, result.SortedCount);
+            Assert.Equal(1, result.SkippedCount);
+            Assert.True(File.Exists(locked));
+            Assert.True(File.Exists(Path.Combine(root, LocalizationService.Get("FileSorter_CategoryImages"), "available.jpg")));
         }
         finally
         {

@@ -8,7 +8,8 @@ namespace AiteBar;
 
 public sealed class FileSorterService
 {
-    private static readonly TimeSpan FreshnessThreshold = TimeSpan.FromMinutes(2);
+    private const int MoveRetryCount = 4;
+    private static readonly TimeSpan MoveRetryDelay = TimeSpan.FromMilliseconds(150);
 
     private static readonly IReadOnlyDictionary<string, string> CategoryByExtension =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -147,9 +148,9 @@ public sealed class FileSorterService
         int skippedCount = 0;
         var entries = new List<FileSortOperationEntry>();
 
-        foreach (string filePath in Directory.EnumerateFiles(rootPath))
+        foreach (string filePath in Directory.EnumerateFiles(rootPath).ToList())
         {
-            if (ShouldSkipFile(filePath))
+            if (ShouldSkipFile(filePath, out _))
             {
                 skippedCount++;
                 continue;
@@ -166,15 +167,16 @@ public sealed class FileSorterService
                     Path.GetFileNameWithoutExtension(filePath),
                     Path.GetExtension(filePath));
 
-                File.Move(filePath, destinationPath);
+                MoveFileWithRetry(filePath, destinationPath);
                 entries.Add(new FileSortOperationEntry
                 {
                     SourcePath = filePath,
                     DestinationPath = destinationPath
                 });
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.Log(new IOException($"File sorter skipped '{filePath}' while sorting '{rootPath}'.", ex));
                 skippedCount++;
             }
         }
@@ -283,11 +285,17 @@ public sealed class FileSorterService
 
     internal static bool ShouldSkipFile(string filePath)
     {
+        return ShouldSkipFile(filePath, out _);
+    }
+
+    internal static bool ShouldSkipFile(string filePath, out string reason)
+    {
         var fileInfo = new FileInfo(filePath);
         FileAttributes attributes = fileInfo.Attributes;
 
         if (attributes.HasFlag(FileAttributes.Hidden) || attributes.HasFlag(FileAttributes.System))
         {
+            reason = "hidden-or-system";
             return true;
         }
 
@@ -296,30 +304,34 @@ public sealed class FileSorterService
 
         if (extension == ".lnk")
         {
+            reason = "shortcut";
             return true;
         }
 
         if (fileName.StartsWith("~$", StringComparison.Ordinal) ||
             extension is ".tmp" or ".temp" or ".part" or ".partial" or ".download" or ".crdownload" or ".opdownload" or ".!ut")
         {
+            reason = "temporary-or-incomplete";
             return true;
         }
 
-        DateTime nowUtc = DateTime.UtcNow;
-        if (nowUtc - fileInfo.CreationTimeUtc < FreshnessThreshold ||
-            nowUtc - fileInfo.LastWriteTimeUtc < FreshnessThreshold)
-        {
-            return true;
-        }
+        reason = string.Empty;
+        return false;
+    }
 
-        try
+    private static void MoveFileWithRetry(string sourcePath, string destinationPath)
+    {
+        for (int attempt = 1; ; attempt++)
         {
-            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
-            return false;
-        }
-        catch
-        {
-            return true;
+            try
+            {
+                File.Move(sourcePath, destinationPath);
+                return;
+            }
+            catch (Exception) when (attempt < MoveRetryCount)
+            {
+                Thread.Sleep(TimeSpan.FromMilliseconds(MoveRetryDelay.TotalMilliseconds * attempt));
+            }
         }
     }
 }

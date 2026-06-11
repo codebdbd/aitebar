@@ -31,7 +31,7 @@
             <Setter Property="Height" Value="40"/>
             <Setter Property="Margin" Value="2,2"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="FocusVisualStyle" Value="{StaticResource ButtonFocusVisual}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -41,10 +41,6 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="#25FFFFFF"/>
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter Property="Background" Value="#2A2A2C"/>
-                                <Setter TargetName="FocusChrome" Property="BorderBrush" Value="#2A9CFF"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -107,9 +103,6 @@
                                         </Trigger>
                                         <Trigger Property="IsPressed" Value="True">
                                             <Setter Property="Background" Value="#164C99" TargetName="CircleBorder"/>
-                                        </Trigger>
-                                        <Trigger Property="IsKeyboardFocused" Value="True">
-                                            <Setter TargetName="FocusChrome" Property="BorderBrush" Value="#2A9CFF"/>
                                         </Trigger>
                                     </ControlTemplate.Triggers>
                                 </ControlTemplate>

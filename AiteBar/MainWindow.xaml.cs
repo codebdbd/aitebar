@@ -38,6 +38,12 @@ using PlacementMode = System.Windows.Controls.Primitives.PlacementMode;
 
 namespace AiteBar;
 
+public enum PanelInputMode
+{
+    Pointer,
+    Keyboard
+}
+
 [SupportedOSPlatform("windows6.1")]
 public partial class MainWindow : Window
 {
@@ -95,8 +101,7 @@ public partial class MainWindow : Window
     private int _dragStartMonitorIndex;
     private bool _isElementContextMenuOpen;
     private bool _isBlockingPanelInteraction;
-    private bool _panelKeyboardActive;
-    private bool _openedViaKeyboard;
+    private PanelInputMode _panelInputMode = PanelInputMode.Pointer;
     private readonly List<Button> _userButtons = [];
     private List<CustomElement> _activeContextElements = [];
     private int _pendingContextAnimationDirection;
@@ -903,13 +908,37 @@ public partial class MainWindow : Window
     protected override void OnDeactivated(EventArgs e)
     {
         base.OnDeactivated(e);
-        _panelKeyboardActive = false;
+        SetPanelInputMode(PanelInputMode.Pointer, clearFocus: false);
     }
 
     protected override void OnActivated(EventArgs e)
     {
         base.OnActivated(e);
         // Не включаем клавиатурный режим автоматически
+    }
+
+    private bool IsPanelKeyboardMode => _panelInputMode == PanelInputMode.Keyboard;
+
+    private void SetPanelInputMode(PanelInputMode mode, bool clearFocus)
+    {
+        bool modeChanged = _panelInputMode != mode;
+
+        if (modeChanged)
+        {
+            _panelInputMode = mode;
+        }
+
+        if (mode != PanelInputMode.Pointer)
+        {
+            return;
+        }
+
+        unchecked { _panelFocusRequestVersion++; }
+
+        if (clearFocus)
+        {
+            Keyboard.ClearFocus();
+        }
     }
 
     private void InitTrayIcon()
@@ -1934,8 +1963,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _openedViaKeyboard = fromKeyboard;
-        _panelKeyboardActive = false; // По умолчанию не включаем
+        SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
         _shown = true;
         _hoverStartTime = null;
         Toggle(false);
@@ -1948,8 +1976,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _openedViaKeyboard = false;
-        _panelKeyboardActive = false;
+        SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
         _shown = true;
         _hoverStartTime = null;
         Toggle(false);
@@ -1986,10 +2013,15 @@ public partial class MainWindow : Window
 
     private void FocusPanelForKeyboard()
     {
+        if (!_shown || !IsPanelKeyboardMode)
+        {
+            return;
+        }
+
         int focusRequestVersion = unchecked(++_panelFocusRequestVersion);
         Dispatcher.InvokeAsync(async () =>
         {
-            if (focusRequestVersion != _panelFocusRequestVersion || HasVisibleOwnedWindow())
+            if (focusRequestVersion != _panelFocusRequestVersion || !IsPanelKeyboardMode || HasVisibleOwnedWindow())
                 return;
 
             var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
@@ -2001,9 +2033,7 @@ public partial class MainWindow : Window
                 Focus();
 
                 var focusTarget = GetFirstFocusablePanelButton();
-                focusTarget.Focusable = true;
-                Keyboard.Focus(focusTarget);
-                focusTarget.Focus();
+                FocusPanelButton(focusTarget);
 
                 if (this.IsKeyboardFocusWithin)
                 {
@@ -2013,7 +2043,7 @@ public partial class MainWindow : Window
                 if (attempt < 3)
                 {
                     await Task.Delay(50);
-                    if (focusRequestVersion != _panelFocusRequestVersion || HasVisibleOwnedWindow())
+                    if (focusRequestVersion != _panelFocusRequestVersion || !IsPanelKeyboardMode || HasVisibleOwnedWindow())
                         return;
                 }
             }
@@ -2045,13 +2075,22 @@ public partial class MainWindow : Window
         return buttons;
     }
 
+    private static void FocusPanelButton(Button button)
+    {
+        button.Focusable = true;
+        if (!ReferenceEquals(Keyboard.Focus(button), button))
+        {
+            button.Focus();
+        }
+    }
+
     private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (!_shown)
             return;
 
         // Если клавиатурный режим отключен, включаем при нажатии Tab или стрелок
-        if (!_panelKeyboardActive)
+        if (!IsPanelKeyboardMode)
         {
             var isNavigationKey = e.Key == Key.Tab ||
                 e.Key == Key.Left || e.Key == Key.Right ||
@@ -2067,8 +2106,6 @@ public partial class MainWindow : Window
                 return;
             }
         }
-
-        _ = _openedViaKeyboard; // Suppress unused field warning
 
         var focusableButtons = GetAllFocusableButtons();
         if (focusableButtons.Count == 0)
@@ -2087,16 +2124,16 @@ public partial class MainWindow : Window
                 if (Keyboard.Modifiers == ModifierKeys.Shift)
                 {
                     if (currentIndex > 0)
-                        focusableButtons[currentIndex - 1].Focus();
+                        FocusPanelButton(focusableButtons[currentIndex - 1]);
                     else
-                        focusableButtons[focusableButtons.Count - 1].Focus();
+                        FocusPanelButton(focusableButtons[focusableButtons.Count - 1]);
                 }
                 else
                 {
                     if (currentIndex < focusableButtons.Count - 1)
-                        focusableButtons[currentIndex + 1].Focus();
+                        FocusPanelButton(focusableButtons[currentIndex + 1]);
                     else
-                        focusableButtons[0].Focus();
+                        FocusPanelButton(focusableButtons[0]);
                 }
                 break;
             case Key.Left:
@@ -2108,9 +2145,9 @@ public partial class MainWindow : Window
                     break;
 
                 if (currentIndex > 0)
-                    focusableButtons[currentIndex - 1].Focus();
+                    FocusPanelButton(focusableButtons[currentIndex - 1]);
                 else
-                    focusableButtons[focusableButtons.Count - 1].Focus();
+                    FocusPanelButton(focusableButtons[focusableButtons.Count - 1]);
                 break;
             case Key.Right:
             case Key.Down:
@@ -2121,9 +2158,9 @@ public partial class MainWindow : Window
                     break;
 
                 if (currentIndex < focusableButtons.Count - 1)
-                    focusableButtons[currentIndex + 1].Focus();
+                    FocusPanelButton(focusableButtons[currentIndex + 1]);
                 else
-                    focusableButtons[0].Focus();
+                    FocusPanelButton(focusableButtons[0]);
                 break;
             case Key.Enter:
                 e.Handled = true;
@@ -2145,22 +2182,14 @@ public partial class MainWindow : Window
 
         if (_shown)
         {
-            if (!_panelKeyboardActive)
-            {
-                EnablePanelKeyboardMode();
-                return;
-            }
-
             _ = HideDock();
+            return;
         }
-        else
+
+        ShowDock(fromKeyboard);
+        if (fromKeyboard)
         {
-            ShowDock(fromKeyboard);
-            // Если открыли через клавиши — сразу включаем режим
-            if (fromKeyboard)
-            {
-                EnablePanelKeyboardMode();
-            }
+            EnablePanelKeyboardMode();
         }
     }
 
@@ -2171,7 +2200,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _panelKeyboardActive = true;
+        SetPanelInputMode(PanelInputMode.Keyboard, clearFocus: false);
         _hoverStartTime = null;
         FocusPanelForKeyboard();
     }
@@ -2221,8 +2250,7 @@ public partial class MainWindow : Window
                     ForceForegroundWindow(hwnd);
                     Activate();
 
-                    // Если клавиатурный режим включен — фокусируем кнопки
-                    if (_panelKeyboardActive)
+                    if (IsPanelKeyboardMode)
                     {
                         FocusPanelForKeyboard();
                     }
@@ -2239,8 +2267,6 @@ public partial class MainWindow : Window
 
     private async Task HideDock()
     {
-        unchecked { _panelFocusRequestVersion++; }
-
         if (!_shown)
         {
             return;
@@ -2252,10 +2278,8 @@ public partial class MainWindow : Window
         }
 
         _shown = false;
-        _panelKeyboardActive = false;
-        _openedViaKeyboard = false;
+        SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
         _hoverStartTime = null;
-        Keyboard.ClearFocus();
         Toggle(true, fromCurrentPosition: true);
         await Task.Delay(PanelHideAnimationMs);
     }
@@ -2297,6 +2321,8 @@ public partial class MainWindow : Window
 
     private void RootBorder_PreviewMouseDown(object sender, MouseButtonEventArgs e)
     {
+        SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
+
         if (RootBorder.IsMouseCaptured)
         {
             RootBorder.ReleaseMouseCapture();
@@ -2309,6 +2335,7 @@ public partial class MainWindow : Window
         if (e.Delta == 0) return;
 
         e.Handled = true;
+        SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
         CaptureMouseForWheel();
 
         DateTime now = DateTime.UtcNow;
