@@ -71,7 +71,7 @@ namespace AiteBar
 
                 foreach (Inline inline in paragraph.Inlines)
                 {
-                    AppendInlineMarkdown(builder, inline, false, false, false);
+                    AppendInlineMarkdown(builder, inline, false, false, false, false);
                 }
 
                 firstParagraph = false;
@@ -168,6 +168,17 @@ namespace AiteBar
                     continue;
                 }
 
+                if (TryReadHtmlUnderline(line, index, out string underlineText, out int underlineEnd))
+                {
+                    FlushPlain(paragraph, plain);
+                    paragraph.Inlines.Add(new Span(CreateRun(UnescapeMarkdownText(underlineText)))
+                    {
+                        TextDecorations = TextDecorations.Underline
+                    });
+                    index = underlineEnd;
+                    continue;
+                }
+
                 if (TryReadDelimited(line, index, "`", out string codeText, out int codeEnd))
                 {
                     FlushPlain(paragraph, plain);
@@ -232,6 +243,29 @@ namespace AiteBar
             return -1;
         }
 
+        private static bool TryReadHtmlUnderline(string text, int start, out string value, out int end)
+        {
+            const string open = "<u>";
+            const string close = "</u>";
+            value = string.Empty;
+            end = start;
+            if (!text.AsSpan(start).StartsWith(open, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            int contentStart = start + open.Length;
+            int closeIndex = text.IndexOf(close, contentStart, StringComparison.OrdinalIgnoreCase);
+            if (closeIndex <= contentStart)
+            {
+                return false;
+            }
+
+            value = text[contentStart..closeIndex];
+            end = closeIndex + close.Length;
+            return true;
+        }
+
         private static void FlushPlain(Paragraph paragraph, StringBuilder plain)
         {
             if (plain.Length == 0)
@@ -271,15 +305,16 @@ namespace AiteBar
                 TextDecorations = null
             };
 
-        private static void AppendInlineMarkdown(StringBuilder builder, Inline inline, bool bold, bool italic, bool code)
+        private static void AppendInlineMarkdown(StringBuilder builder, Inline inline, bool bold, bool italic, bool code, bool underline)
         {
             bool isBold = bold || inline is Bold || IsLocalValue(inline, TextElement.FontWeightProperty, FontWeights.Bold);
             bool isItalic = italic || inline is Italic || IsLocalValue(inline, TextElement.FontStyleProperty, FontStyles.Italic);
             bool isCode = code || IsCodeInline(inline);
+            bool isUnderline = underline || IsUnderlineInline(inline);
 
             if (inline is Run run)
             {
-                AppendStyledText(builder, run.Text, isBold, isItalic, isCode);
+                AppendStyledText(builder, run.Text, isBold, isItalic, isCode, isUnderline);
                 return;
             }
 
@@ -293,12 +328,12 @@ namespace AiteBar
             {
                 foreach (Inline child in span.Inlines)
                 {
-                    AppendInlineMarkdown(builder, child, isBold, isItalic, isCode);
+                    AppendInlineMarkdown(builder, child, isBold, isItalic, isCode, isUnderline);
                 }
             }
         }
 
-        private static void AppendStyledText(StringBuilder builder, string text, bool bold, bool italic, bool code)
+        private static void AppendStyledText(StringBuilder builder, string text, bool bold, bool italic, bool code, bool underline)
         {
             if (string.IsNullOrEmpty(text))
             {
@@ -306,6 +341,11 @@ namespace AiteBar
             }
 
             string escaped = EscapeMarkdownText(text);
+            if (underline)
+            {
+                builder.Append("<u>");
+            }
+
             if (bold)
             {
                 builder.Append("**");
@@ -336,6 +376,11 @@ namespace AiteBar
             if (bold)
             {
                 builder.Append("**");
+            }
+
+            if (underline)
+            {
+                builder.Append("</u>");
             }
         }
 
@@ -375,6 +420,10 @@ namespace AiteBar
 
         private static bool IsCodeInline(Inline inline) =>
             inline.FontFamily?.Source.Equals("Consolas", StringComparison.OrdinalIgnoreCase) == true;
+
+        private static bool IsUnderlineInline(Inline inline) =>
+            inline.TextDecorations?.Count > 0 ||
+            inline.ReadLocalValue(Inline.TextDecorationsProperty) is TextDecorationCollection { Count: > 0 };
 
         private static bool IsLocalValue(DependencyObject element, DependencyProperty property, object expectedValue)
         {

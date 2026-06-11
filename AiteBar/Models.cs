@@ -127,6 +127,11 @@ public class AppSettings
     public bool ShowPresetQuickNote { get; set; } = false;
     public bool ShowPresetTimerStopwatch { get; set; } = true;
     public string QuickNoteThemeId { get; set; } = "dark";
+    public bool QuickNotePinned { get; set; } = false;
+    public double? QuickNoteLeft { get; set; }
+    public double? QuickNoteTop { get; set; }
+    public double? QuickNoteWidth { get; set; }
+    public double? QuickNoteHeight { get; set; }
     public bool TimerSoundEnabled { get; set; } = true;
     public bool TimerIsStopwatchMode { get; set; } = false;
     public TimeSpan TimerDuration { get; set; } = TimeSpan.FromMinutes(5);

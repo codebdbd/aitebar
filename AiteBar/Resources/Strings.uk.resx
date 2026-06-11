@@ -27,14 +27,20 @@
   <data name="QuickNote_LoadFailed" xml:space="preserve"><value>Не вдалося завантажити нотатку</value></data>
   <data name="QuickNote_OpenFailed" xml:space="preserve"><value>Не вдалося відкрити</value></data>
   <data name="QuickNote_ConflictCopySaved" xml:space="preserve"><value>Виявлено зовнішні зміни. Збережено конфліктну копію.</value></data>
+  <data name="QuickNote_ConflictCopySavedAt" xml:space="preserve"><value>Конфліктну копію збережено: {0}</value></data>
   <data name="QuickNote_SavedAt" xml:space="preserve"><value>Збережено {0}</value></data>
+  <data name="QuickNote_LinkHighlightPaused" xml:space="preserve"><value>підсвічування посилань вимкнено для довгої нотатки</value></data>
   <data name="QuickNote_OpenFile" xml:space="preserve"><value>Відкрити файл нотатки</value></data>
+  <data name="QuickNote_OpenConflictCopy" xml:space="preserve"><value>Відкрити конфліктну копію</value></data>
   <data name="QuickNote_Clear" xml:space="preserve"><value>Очистити нотатку</value></data>
   <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Очистити швидку нотатку?</value></data>
   <data name="QuickNote_Stats" xml:space="preserve"><value>{0} символів - {1} рядків</value></data>
   <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.md</value></data>
   <data name="QuickNote_Menu" xml:space="preserve"><value>Меню нотатки</value></data>
   <data name="QuickNote_Theme" xml:space="preserve"><value>Колір нотатки</value></data>
+  <data name="QuickNote_Pin" xml:space="preserve"><value>Тримати нотатку відкритою</value></data>
+  <data name="QuickNote_Undo" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="QuickNote_Redo" xml:space="preserve"><value>Повторити</value></data>
   <data name="QuickNote_Cut" xml:space="preserve"><value>Вирізати</value></data>
   <data name="QuickNote_Copy" xml:space="preserve"><value>Копіювати</value></data>
   <data name="QuickNote_Paste" xml:space="preserve"><value>Вставити</value></data>

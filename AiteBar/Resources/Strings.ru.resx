@@ -330,11 +330,20 @@
   <data name="QuickNote_ConflictCopySaved" xml:space="preserve">
     <value>Обнаружены внешние изменения. Сохранена конфликтная копия.</value>
   </data>
+  <data name="QuickNote_ConflictCopySavedAt" xml:space="preserve">
+    <value>Конфликтная копия сохранена: {0}</value>
+  </data>
   <data name="QuickNote_SavedAt" xml:space="preserve">
     <value>Сохранено {0}</value>
   </data>
+  <data name="QuickNote_LinkHighlightPaused" xml:space="preserve">
+    <value>подсветка ссылок отключена для длинной заметки</value>
+  </data>
   <data name="QuickNote_OpenFile" xml:space="preserve">
     <value>Открыть файл заметки</value>
+  </data>
+  <data name="QuickNote_OpenConflictCopy" xml:space="preserve">
+    <value>Открыть конфликтную копию</value>
   </data>
   <data name="QuickNote_Clear" xml:space="preserve">
     <value>Очистить заметку</value>
@@ -353,6 +362,15 @@
   </data>
   <data name="QuickNote_Theme" xml:space="preserve">
     <value>Цвет заметки</value>
+  </data>
+  <data name="QuickNote_Pin" xml:space="preserve">
+    <value>Оставлять заметку открытой</value>
+  </data>
+  <data name="QuickNote_Undo" xml:space="preserve">
+    <value>Отменить</value>
+  </data>
+  <data name="QuickNote_Redo" xml:space="preserve">
+    <value>Повторить</value>
   </data>
   <data name="QuickNote_Cut" xml:space="preserve">
     <value>Вырезать</value>

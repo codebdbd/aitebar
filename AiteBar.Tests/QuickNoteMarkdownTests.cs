@@ -1,4 +1,5 @@
 using System.Threading;
+using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
 using AiteBar;
@@ -96,6 +97,35 @@ public sealed class QuickNoteMarkdownTests
         });
 
         Assert.Equal("plain **bold** *italic* `code`", markdown);
+    }
+
+    [Fact]
+    public void ToMarkdown_PreservesUnderlineWithHtmlUnderlineMarker()
+    {
+        string markdown = RunSta(() =>
+        {
+            var span = new Span(new Run("underlined"))
+            {
+                TextDecorations = TextDecorations.Underline
+            };
+            var document = new FlowDocument(new Paragraph(span));
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("<u>underlined</u>", markdown);
+    }
+
+    [Fact]
+    public void LoadMarkdown_RendersHtmlUnderlineMarker()
+    {
+        string markdown = RunSta(() =>
+        {
+            var document = new FlowDocument();
+            QuickNoteMarkdown.LoadMarkdown(document, "plain <u>underlined</u>");
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("plain <u>underlined</u>", markdown);
     }
 
     [Fact]

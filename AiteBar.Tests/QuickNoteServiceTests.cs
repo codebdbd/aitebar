@@ -127,6 +127,36 @@ public sealed class QuickNoteServiceTests : IDisposable
         Assert.Contains("QuickNote.conflict-", Path.GetFileName(conflictPath));
         Assert.Equal("conflict text", await File.ReadAllTextAsync(conflictPath));
         Assert.Equal("original", await File.ReadAllTextAsync(_service.NotePath));
+        Assert.Equal(conflictPath, _service.LastConflictCopyPath);
+    }
+
+    [Fact]
+    public async Task OpenConflictCopy_OpensLastConflictCopy()
+    {
+        var dispatcher = new FakeQuickNoteProcessStartDispatcher();
+        var service = new QuickNoteService(Path.Combine(_tempDir, "QuickNote.md"), dispatcher);
+
+        string conflictPath = await RunStaAsync(async () =>
+        {
+            var document = new FlowDocument(new Paragraph(new Run("conflict text")));
+            return await service.SaveConflictCopyAsync(document);
+        });
+
+        service.OpenConflictCopy();
+
+        Assert.Single(dispatcher.StartCalls);
+        Assert.Equal(conflictPath, dispatcher.StartCalls[0].FileName);
+        Assert.True(dispatcher.StartCalls[0].UseShellExecute);
+    }
+
+    [Fact]
+    public void OpenConflictCopy_WhenNoConflictCopyExists_Throws()
+    {
+        var dispatcher = new FakeQuickNoteProcessStartDispatcher();
+        var service = new QuickNoteService(Path.Combine(_tempDir, "QuickNote.md"), dispatcher);
+
+        Assert.Throws<FileNotFoundException>(service.OpenConflictCopy);
+        Assert.Empty(dispatcher.StartCalls);
     }
 
     [Fact]

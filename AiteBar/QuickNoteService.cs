@@ -39,6 +39,7 @@ namespace AiteBar
         }
 
         public string NotePath => _notePath;
+        public string? LastConflictCopyPath { get; private set; }
 
         public bool HasExternalChanges()
         {
@@ -91,6 +92,7 @@ namespace AiteBar
                 Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder,
                 $"QuickNote.conflict-{DateTime.Now:yyyyMMdd-HHmmss}.md");
             await File.WriteAllTextAsync(conflictPath, QuickNoteMarkdown.ToMarkdown(document));
+            LastConflictCopyPath = conflictPath;
             return conflictPath;
         }
 
@@ -103,6 +105,16 @@ namespace AiteBar
             }
 
             _processStartDispatcher.Start(new ProcessStartInfo(NotePath) { UseShellExecute = true });
+        }
+
+        public void OpenConflictCopy()
+        {
+            if (string.IsNullOrWhiteSpace(LastConflictCopyPath) || !File.Exists(LastConflictCopyPath))
+            {
+                throw new FileNotFoundException("No Quick Note conflict copy is available.", LastConflictCopyPath);
+            }
+
+            _processStartDispatcher.Start(new ProcessStartInfo(LastConflictCopyPath) { UseShellExecute = true });
         }
 
         private void EnsureNoteDirectory()

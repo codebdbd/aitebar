@@ -70,4 +70,35 @@ public sealed class QuickNoteLayoutHelperTests
         Assert.Equal(650, coordinates.ShownX);
         Assert.Equal(1370, coordinates.HiddenX);
     }
+
+    [Fact]
+    public void ClampBoundsToWorkArea_UsesDefaultsWhenBoundsAreMissing()
+    {
+        var bounds = QuickNoteLayoutHelper.ClampBoundsToWorkArea(WorkArea, null, null, null, null);
+
+        Assert.Equal(410, bounds.Left);
+        Assert.Equal(385, bounds.Top);
+        Assert.Equal(QuickNoteLayoutHelper.DefaultWidth, bounds.Width);
+        Assert.Equal(QuickNoteLayoutHelper.DefaultHeight, bounds.Height);
+    }
+
+    [Fact]
+    public void ClampBoundsToWorkArea_KeepsWindowInsideWorkArea()
+    {
+        var bounds = QuickNoteLayoutHelper.ClampBoundsToWorkArea(WorkArea, left: 2000, top: -100, width: 700, height: 500);
+
+        Assert.Equal(600, bounds.Left);
+        Assert.Equal(200, bounds.Top);
+        Assert.Equal(700, bounds.Width);
+        Assert.Equal(500, bounds.Height);
+    }
+
+    [Fact]
+    public void ClampBoundsToWorkArea_EnforcesMinimumSize()
+    {
+        var bounds = QuickNoteLayoutHelper.ClampBoundsToWorkArea(WorkArea, left: 100, top: 200, width: 100, height: 100);
+
+        Assert.Equal(QuickNoteLayoutHelper.MinWidth, bounds.Width);
+        Assert.Equal(QuickNoteLayoutHelper.MinHeight, bounds.Height);
+    }
 }

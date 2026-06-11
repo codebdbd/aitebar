@@ -8,7 +8,8 @@
         WindowStartupLocation="CenterOwner" WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" Foreground="White" ResizeMode="CanResize"
         ShowInTaskbar="False" Topmost="True"
-        Loaded="Window_Loaded" Closing="Window_Closing" Deactivated="Window_Deactivated">
+        Loaded="Window_Loaded" Closing="Window_Closing" Deactivated="Window_Deactivated"
+        LocationChanged="Window_LocationChanged" SizeChanged="Window_SizeChanged">
 
     <Window.Resources>
         <SolidColorBrush x:Key="QuickNoteHoverBrush" Color="#303238"/>
@@ -50,6 +51,39 @@
                     <Setter Property="Foreground" Value="#FF7272"/>
                 </Trigger>
             </Style.Triggers>
+        </Style>
+
+        <Style x:Key="IconToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="Margin" Value="2,0,0,0"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Foreground" Value="#AFAFB7"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Focusable" Value="False"/>
+            <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="FormatButtonStyle" TargetType="Button">
@@ -141,6 +175,9 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="↶" FontSize="17" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Undo}" Click="BtnUndo_Click"/>
+                        <Button Content="↷" FontSize="17" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Redo}" Click="BtnRedo_Click"/>
+                        <Rectangle Width="1" Height="18" Fill="#30FFFFFF" Margin="2,0,7,0"/>
                         <Button Content="B" FontWeight="Bold" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Bold}" Click="BtnBold_Click"/>
                         <Button Content="I" FontStyle="Italic" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Italic}" Click="BtnItalic_Click"/>
                         <Button Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Underline}" Click="BtnUnderline_Click">
@@ -155,6 +192,14 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <ToggleButton x:Name="BtnPin"
+                                      Content="📌"
+                                      FontFamily="Segoe UI Emoji"
+                                      FontSize="15"
+                                      Style="{StaticResource IconToggleButtonStyle}"
+                                      ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
+                                      Checked="BtnPin_Checked"
+                                      Unchecked="BtnPin_Checked"/>
                         <Button Content="⋯" FontFamily="Segoe UI" FontSize="22" Style="{StaticResource IconButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Menu}" Click="BtnMenu_Click">
                             <Button.ContextMenu>
                                 <ContextMenu Style="{StaticResource DarkContextMenu}">
@@ -166,6 +211,11 @@
                                     <MenuItem Header="{local:Loc ResourceKey=QuickNote_OpenFile}" Click="BtnOpenFile_Click">
                                         <MenuItem.Icon>
                                             <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF42E;"/>
+                                        </MenuItem.Icon>
+                                    </MenuItem>
+                                    <MenuItem x:Name="MenuOpenConflictCopy" Header="{local:Loc ResourceKey=QuickNote_OpenConflictCopy}" Click="BtnOpenConflictCopy_Click" IsEnabled="False">
+                                        <MenuItem.Icon>
+                                            <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE7BA;"/>
                                         </MenuItem.Icon>
                                     </MenuItem>
                                     <MenuItem Header="{local:Loc ResourceKey=QuickNote_Clear}" Click="BtnClear_Click">
@@ -209,6 +259,17 @@
                         </RichTextBox.Resources>
                         <RichTextBox.ContextMenu>
                             <ContextMenu Style="{StaticResource DarkContextMenu}">
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Undo}" Click="BtnUndo_Click" InputGestureText="Ctrl+Z">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="↶" FontFamily="Segoe UI"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Redo}" Click="BtnRedo_Click" InputGestureText="Ctrl+Y">
+                                    <MenuItem.Icon>
+                                        <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="↷" FontFamily="Segoe UI"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator/>
                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_Cut}" Command="ApplicationCommands.Cut" InputGestureText="Ctrl+X">
                                     <MenuItem.Icon>
                                         <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14E;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>

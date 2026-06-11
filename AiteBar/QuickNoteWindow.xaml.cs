@@ -29,22 +29,19 @@ namespace AiteBar
         private const int WMSZ_BOTTOM = 6;
         private const int WMSZ_BOTTOMLEFT = 7;
         private const int WMSZ_BOTTOMRIGHT = 8;
-        private const int MaxInlineLinkHighlightLength = 20000;
-
         private readonly QuickNoteService _noteService;
         private readonly AppSettingsService _settingsService;
         private readonly DispatcherTimer _saveTimer;
+        private readonly DispatcherTimer _geometrySaveTimer;
         private QuickNoteTheme _theme;
         private bool _loaded;
         private bool _hasPendingChanges;
         private readonly System.Threading.SemaphoreSlim _saveSemaphore = new(1, 1);
         private bool _saveAgainAfterCurrent;
-        private bool _isFormattingLinks;
         private bool _allowClose;
         private bool _isSlidingClosed;
-        private bool _linkHighlightQueued;
+        private bool _suppressGeometrySave;
         private long _changeVersion;
-        private readonly List<(int Start, int Length)> _highlightedLinkRanges = new();
         private DockEdge _edge = DockEdge.Top;
         private int _monitorIndex;
 
@@ -56,6 +53,8 @@ namespace AiteBar
             _theme = QuickNoteThemeCatalog.Find(_settingsService.Settings.QuickNoteThemeId);
             _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
             _saveTimer.Tick += async (_, _) => await SaveNowAsync();
+            _geometrySaveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
+            _geometrySaveTimer.Tick += async (_, _) => await SaveGeometryNowAsync();
             BuildThemePalette();
             ApplyTheme(_theme);
         }
@@ -75,6 +74,11 @@ namespace AiteBar
             }
 
             _loaded = true;
+            if (FindName("BtnPin") is System.Windows.Controls.Primitives.ToggleButton pinButton)
+            {
+                pinButton.IsChecked = _settingsService.Settings.QuickNotePinned;
+            }
+            UpdateConflictMenuState();
             ApplyTheme(_theme);
             UpdatePlaceholderAndStats();
             if (TxtSaveStatus.Text != LocalizationService.Get("QuickNote_LoadFailed"))
@@ -85,12 +89,14 @@ namespace AiteBar
             TxtNote.Focus();
             TxtNote.CaretPosition = TxtNote.Document.ContentEnd;
             ResetCaretFormatting();
+            TxtNote.IsUndoEnabled = false;
+            TxtNote.IsUndoEnabled = true;
         }
 
         private async void Window_Deactivated(object? sender, EventArgs e)
         {
             await Dispatcher.Yield(DispatcherPriority.Background);
-            if (!_allowClose && !_isSlidingClosed && !IsActive && !IsTransientUiOpen())
+            if (!_settingsService.Settings.QuickNotePinned && !_allowClose && !_isSlidingClosed && !IsActive && !IsTransientUiOpen())
             {
                 _ = CloseSlidingAsync();
             }
@@ -112,11 +118,6 @@ namespace AiteBar
 
         private void TxtNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
-            if (_isFormattingLinks)
-            {
-                return;
-            }
-
             UpdatePlaceholderAndStats();
             if (!_loaded)
             {
@@ -126,7 +127,6 @@ namespace AiteBar
             _changeVersion++;
             _hasPendingChanges = true;
             ScheduleSave();
-            QueueLinkHighlight();
         }
 
         private void TxtNote_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -134,6 +134,16 @@ namespace AiteBar
             if (e.Key == Key.Escape)
             {
                 Close();
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Z)
+            {
+                UndoEditor();
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y)
+            {
+                RedoEditor();
                 e.Handled = true;
             }
             else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.C)
@@ -145,7 +155,9 @@ namespace AiteBar
 
         private void TxtNote_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (Keyboard.Modifiers == ModifierKeys.Control && TryOpenUrlAtMouse(e))
+            if ((Keyboard.Modifiers == ModifierKeys.Control || Keyboard.Modifiers == ModifierKeys.None) &&
+                e.ClickCount == 1 &&
+                TryOpenUrlAtMouse(e))
             {
                 e.Handled = true;
             }
@@ -153,7 +165,8 @@ namespace AiteBar
 
         private void TxtNote_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
-            TxtNote.Cursor = Keyboard.Modifiers == ModifierKeys.Control && FindUrlAtMouse(e.GetPosition(TxtNote)) != null
+            TxtNote.Cursor = (Keyboard.Modifiers == ModifierKeys.Control || Keyboard.Modifiers == ModifierKeys.None) &&
+                             FindUrlAtMouse(e.GetPosition(TxtNote)) != null
                 ? System.Windows.Input.Cursors.Hand
                 : System.Windows.Input.Cursors.IBeam;
         }
@@ -181,10 +194,11 @@ namespace AiteBar
             {
                 if (_noteService.HasExternalChanges())
                 {
-                    await _noteService.SaveConflictCopyAsync(TxtNote.Document);
+                    string conflictPath = await _noteService.SaveConflictCopyAsync(TxtNote.Document);
                     _hasPendingChanges = false;
                     _saveAgainAfterCurrent = false;
-                    TxtSaveStatus.Text = LocalizationService.Get("QuickNote_ConflictCopySaved");
+                    TxtSaveStatus.Text = LocalizationService.Format("QuickNote_ConflictCopySavedAt", System.IO.Path.GetFileName(conflictPath));
+                    UpdateConflictMenuState();
                     return true;
                 }
 
@@ -263,6 +277,13 @@ namespace AiteBar
             ThemePopup.IsOpen = true;
         }
 
+        private async void BtnPin_Checked(object sender, RoutedEventArgs e)
+        {
+            _settingsService.Settings.QuickNotePinned = sender is System.Windows.Controls.Primitives.ToggleButton { IsChecked: true };
+            await _settingsService.SaveAsync();
+            TxtNote.Focus();
+        }
+
         private void BtnMenu_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not System.Windows.Controls.Button button || button.ContextMenu == null)
@@ -284,6 +305,31 @@ namespace AiteBar
                 TxtNote.Document.Blocks.Add(new Paragraph(new Run(string.Empty)));
                 MarkChangedAndScheduleSave();
                 UpdatePlaceholderAndStats();
+            }
+        }
+
+        private void BtnUndo_Click(object sender, RoutedEventArgs e)
+        {
+            UndoEditor();
+            TxtNote.Focus();
+        }
+
+        private void BtnRedo_Click(object sender, RoutedEventArgs e)
+        {
+            RedoEditor();
+            TxtNote.Focus();
+        }
+
+        private void BtnOpenConflictCopy_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                _noteService.OpenConflictCopy();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                TxtSaveStatus.Text = LocalizationService.Get("QuickNote_OpenFailed");
             }
         }
 
@@ -337,7 +383,6 @@ namespace AiteBar
             object current = TxtNote.Selection.GetPropertyValue(property);
             TxtNote.Selection.ApplyPropertyValue(property, IsFormattingEnabled(current, enabledValue) ? disabledValue : enabledValue);
             MarkChangedAndScheduleSave();
-            HighlightLinks(resetAllText: false);
             TxtNote.Focus();
         }
 
@@ -370,7 +415,6 @@ namespace AiteBar
             ApplyTextOperations(operations);
             SetCaretOffset(edit.CaretOffset);
             ResetCaretFormatting();
-            HighlightLinks(resetAllText: false);
             MarkChangedAndScheduleSave();
             UpdatePlaceholderAndStats();
             TxtNote.Focus();
@@ -440,7 +484,6 @@ namespace AiteBar
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, new System.Windows.Media.FontFamily("Segoe UI"));
             TxtNote.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
             MarkChangedAndScheduleSave();
-            HighlightLinks(resetAllText: true);
             TxtNote.Focus();
         }
 
@@ -470,11 +513,50 @@ namespace AiteBar
             _edge = settings.Edge;
             _monitorIndex = settings.MonitorIndex;
             WindowStartupLocation = WindowStartupLocation.Manual;
-            var (hiddenX, hiddenY, shownX, shownY) = GetSlideCoordinates(hidden: true);
+            _suppressGeometrySave = true;
+            var work = GetWorkArea();
+            var bounds = QuickNoteLayoutHelper.ClampBoundsToWorkArea(
+                work,
+                settings.QuickNoteLeft,
+                settings.QuickNoteTop,
+                settings.QuickNoteWidth,
+                settings.QuickNoteHeight);
+            Width = bounds.Width;
+            Height = bounds.Height;
+
+            var (hiddenX, hiddenY, shownX, shownY) = HasSavedBounds(settings)
+                ? GetSlideCoordinatesForShownBounds(work, bounds.Left, bounds.Top, bounds.Width, bounds.Height)
+                : GetSlideCoordinates(hidden: true);
             Left = hiddenX;
             Top = hiddenY;
             Show();
-            AnimateTo(shownX, shownY, null);
+            AnimateTo(shownX, shownY, () =>
+            {
+                _suppressGeometrySave = false;
+                _ = SaveGeometryNowAsync();
+            });
+        }
+
+        private static bool HasSavedBounds(AppSettings settings) =>
+            settings.QuickNoteLeft.HasValue ||
+            settings.QuickNoteTop.HasValue ||
+            settings.QuickNoteWidth.HasValue ||
+            settings.QuickNoteHeight.HasValue;
+
+        private (double hiddenX, double hiddenY, double shownX, double shownY) GetSlideCoordinatesForShownBounds(
+            System.Drawing.Rectangle work,
+            double shownX,
+            double shownY,
+            double width,
+            double height)
+        {
+            return _edge switch
+            {
+                DockEdge.Bottom => (shownX, work.Bottom + QuickNoteLayoutHelper.EdgeClearance, shownX, shownY),
+                DockEdge.Left => (work.Left - width - QuickNoteLayoutHelper.EdgeClearance, shownY, shownX, shownY),
+                DockEdge.Right => (work.Right + QuickNoteLayoutHelper.EdgeClearance, shownY, shownX, shownY),
+                _ => (shownX, work.Top - height - QuickNoteLayoutHelper.EdgeClearance, shownX, shownY)
+            };
         }
 
         private bool IsTransientUiOpen()
@@ -596,26 +678,10 @@ namespace AiteBar
                 button.Foreground = text;
             }
 
-            HighlightLinks(resetAllText: true);
         }
 
         private static SolidColorBrush Brush(string color) =>
             new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
-
-        private void QueueLinkHighlight()
-        {
-            if (_linkHighlightQueued)
-            {
-                return;
-            }
-
-            _linkHighlightQueued = true;
-            Dispatcher.BeginInvoke(() =>
-            {
-                _linkHighlightQueued = false;
-                HighlightLinks(resetAllText: false);
-            }, DispatcherPriority.ContextIdle);
-        }
 
         private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
         {
@@ -648,6 +714,8 @@ namespace AiteBar
                 return;
             }
 
+            await SaveGeometryNowAsync();
+            _suppressGeometrySave = true;
             var (hiddenX, hiddenY, _, _) = GetSlideCoordinates(hidden: false);
             AnimateTo(hiddenX, hiddenY, () =>
             {
@@ -686,15 +754,59 @@ namespace AiteBar
         [SupportedOSPlatform("windows6.1")]
         private (double hiddenX, double hiddenY, double shownX, double shownY) GetSlideCoordinates(bool hidden)
         {
-            var screens = Forms.Screen.AllScreens;
-            var screen = (_monitorIndex >= 0 && _monitorIndex < screens.Length)
-                ? screens[_monitorIndex]
-                : Forms.Screen.PrimaryScreen;
-            var work = screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
+            var work = GetWorkArea();
 
             double width = ActualWidth > 0 ? ActualWidth : Width;
             double height = ActualHeight > 0 ? ActualHeight : Height;
             return QuickNoteLayoutHelper.GetSlideCoordinates(_edge, work, width, height);
+        }
+
+        private System.Drawing.Rectangle GetWorkArea()
+        {
+            var screens = Forms.Screen.AllScreens;
+            var screen = (_monitorIndex >= 0 && _monitorIndex < screens.Length)
+                ? screens[_monitorIndex]
+                : Forms.Screen.PrimaryScreen;
+            return screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
+        }
+
+        private void Window_LocationChanged(object? sender, EventArgs e)
+        {
+            ScheduleGeometrySave();
+        }
+
+        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ScheduleGeometrySave();
+        }
+
+        private void ScheduleGeometrySave()
+        {
+            if (!_loaded || _suppressGeometrySave || _isSlidingClosed || !IsVisible)
+            {
+                return;
+            }
+
+            _geometrySaveTimer.Stop();
+            _geometrySaveTimer.Start();
+        }
+
+        private async Task SaveGeometryNowAsync()
+        {
+            _geometrySaveTimer.Stop();
+            if (!_loaded || _suppressGeometrySave || double.IsNaN(Left) || double.IsNaN(Top))
+            {
+                return;
+            }
+
+            double width = ActualWidth > 0 ? ActualWidth : Width;
+            double height = ActualHeight > 0 ? ActualHeight : Height;
+            var bounds = QuickNoteLayoutHelper.ClampBoundsToWorkArea(GetWorkArea(), Left, Top, width, height);
+            _settingsService.Settings.QuickNoteLeft = bounds.Left;
+            _settingsService.Settings.QuickNoteTop = bounds.Top;
+            _settingsService.Settings.QuickNoteWidth = bounds.Width;
+            _settingsService.Settings.QuickNoteHeight = bounds.Height;
+            await _settingsService.SaveAsync();
         }
 
         private bool TryOpenUrlAtMouse(MouseButtonEventArgs e)
@@ -754,80 +866,43 @@ namespace AiteBar
             return text.EndsWith('\n') ? text[..^1] : text;
         }
 
-        private void HighlightLinks(bool resetAllText)
+        private void UndoEditor()
         {
-            if (!_loaded && TxtNote.Document.Blocks.Count == 0)
+            if (!TxtNote.CanUndo)
             {
                 return;
             }
 
-            string text = GetEditorText();
-            if (text.Length > MaxInlineLinkHighlightLength)
+            TxtNote.Undo();
+        }
+
+        private void RedoEditor()
+        {
+            if (!TxtNote.CanRedo)
             {
-                ClearHighlightedLinkRanges(resetAllText);
                 return;
             }
 
-            var matches = QuickNoteMarkdown.MatchUrls(text)
-                .Cast<System.Text.RegularExpressions.Match>()
-                .Select(match => (match.Index, Length: match.Value.TrimEnd('.', ',', ';', ':', '!', '?', ')', ']').Length))
-                .Where(match => match.Length > 0)
-                .ToArray();
+            TxtNote.Redo();
+        }
 
-            _isFormattingLinks = true;
-            try
+        private void UpdateConflictMenuState()
+        {
+            bool hasConflict = !string.IsNullOrWhiteSpace(_noteService.LastConflictCopyPath);
+            if (FindConflictCopyMenuItem() is { } menuItem)
             {
-                if (resetAllText)
-                {
-                    new TextRange(TxtNote.Document.ContentStart, TxtNote.Document.ContentEnd)
-                        .ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
-                }
-
-                ClearHighlightedLinkRanges(resetAllText: false);
-
-                foreach (var match in matches)
-                {
-                    TextPointer? start = GetTextPointerAtOffset(match.Index);
-                    TextPointer? end = GetTextPointerAtOffset(match.Index + match.Length);
-                    if (start == null || end == null)
-                    {
-                        continue;
-                    }
-
-                    var range = new TextRange(start, end);
-                    range.ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Accent));
-                    range.ApplyPropertyValue(Inline.TextDecorationsProperty, null);
-                    _highlightedLinkRanges.Add((match.Index, match.Length));
-                }
-
-            }
-            finally
-            {
-                _isFormattingLinks = false;
+                menuItem.IsEnabled = hasConflict;
+                menuItem.ToolTip = hasConflict ? _noteService.LastConflictCopyPath : null;
             }
         }
 
-        private void ClearHighlightedLinkRanges(bool resetAllText)
+        private MenuItem? FindConflictCopyMenuItem()
         {
-            if (resetAllText)
-            {
-                new TextRange(TxtNote.Document.ContentStart, TxtNote.Document.ContentEnd)
-                    .ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
-            }
-
-            foreach (var oldRange in _highlightedLinkRanges)
-            {
-                TextPointer? oldStart = GetTextPointerAtOffset(oldRange.Start);
-                TextPointer? oldEnd = GetTextPointerAtOffset(oldRange.Start + oldRange.Length);
-                if (oldStart != null && oldEnd != null)
-                {
-                    var oldText = new TextRange(oldStart, oldEnd);
-                    oldText.ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
-                    oldText.ApplyPropertyValue(Inline.TextDecorationsProperty, null);
-                }
-            }
-
-            _highlightedLinkRanges.Clear();
+            return FindVisualChildren<System.Windows.Controls.Button>(this)
+                .Select(button => button.ContextMenu)
+                .Where(contextMenu => contextMenu != null)
+                .SelectMany(contextMenu => contextMenu!.Items.OfType<MenuItem>())
+                .FirstOrDefault(item => string.Equals(item.Name, "MenuOpenConflictCopy", StringComparison.Ordinal));
         }
 
         private int GetTextOffset(TextPointer pointer)

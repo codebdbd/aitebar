@@ -161,14 +161,20 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_LoadFailed" xml:space="preserve"><value>Could not load note</value></data>
   <data name="QuickNote_OpenFailed" xml:space="preserve"><value>Could not open</value></data>
   <data name="QuickNote_ConflictCopySaved" xml:space="preserve"><value>External changes detected. Saved a conflict copy.</value></data>
+  <data name="QuickNote_ConflictCopySavedAt" xml:space="preserve"><value>Conflict copy saved: {0}</value></data>
   <data name="QuickNote_SavedAt" xml:space="preserve"><value>Saved {0}</value></data>
+  <data name="QuickNote_LinkHighlightPaused" xml:space="preserve"><value>link highlighting paused for long note</value></data>
   <data name="QuickNote_OpenFile" xml:space="preserve"><value>Open note file</value></data>
+  <data name="QuickNote_OpenConflictCopy" xml:space="preserve"><value>Open conflict copy</value></data>
   <data name="QuickNote_Clear" xml:space="preserve"><value>Clear note</value></data>
   <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Clear the quick note?</value></data>
   <data name="QuickNote_Stats" xml:space="preserve"><value>{0} chars - {1} lines</value></data>
   <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.md</value></data>
   <data name="QuickNote_Menu" xml:space="preserve"><value>Note menu</value></data>
   <data name="QuickNote_Theme" xml:space="preserve"><value>Note color</value></data>
+  <data name="QuickNote_Pin" xml:space="preserve"><value>Keep note open</value></data>
+  <data name="QuickNote_Undo" xml:space="preserve"><value>Undo</value></data>
+  <data name="QuickNote_Redo" xml:space="preserve"><value>Redo</value></data>
   <data name="QuickNote_Cut" xml:space="preserve"><value>Cut</value></data>
   <data name="QuickNote_Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="QuickNote_Paste" xml:space="preserve"><value>Paste</value></data>
