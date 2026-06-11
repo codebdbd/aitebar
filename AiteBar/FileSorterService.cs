@@ -9,7 +9,19 @@ namespace AiteBar;
 public sealed class FileSorterService
 {
     private const int MoveRetryCount = 4;
+    internal const long DefaultMaxMovableFileBytes = 10L * 1024 * 1024 * 1024;
     private static readonly TimeSpan MoveRetryDelay = TimeSpan.FromMilliseconds(150);
+    private readonly long _maxMovableFileBytes;
+
+    public FileSorterService(long maxMovableFileBytes = DefaultMaxMovableFileBytes)
+    {
+        if (maxMovableFileBytes <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxMovableFileBytes));
+        }
+
+        _maxMovableFileBytes = maxMovableFileBytes;
+    }
 
     private static readonly IReadOnlyDictionary<string, string> CategoryByExtension =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -140,7 +152,9 @@ public sealed class FileSorterService
             throw new ArgumentException(LocalizationService.Get("FileSorter_RootPathRequired"), nameof(rootPath));
         }
 
-        if (!Directory.Exists(rootPath))
+        string rootFullPath = GetRootFullPath(rootPath);
+
+        if (!Directory.Exists(rootFullPath))
         {
             throw new DirectoryNotFoundException(rootPath);
         }
@@ -148,9 +162,11 @@ public sealed class FileSorterService
         int skippedCount = 0;
         var entries = new List<FileSortOperationEntry>();
 
-        foreach (string filePath in Directory.EnumerateFiles(rootPath).ToList())
+        foreach (string filePath in Directory.EnumerateFiles(rootFullPath).ToList())
         {
-            if (ShouldSkipFile(filePath, out _))
+            if (ShouldSkipFile(filePath, out _) ||
+                !IsPathWithinRoot(filePath, rootFullPath) ||
+                IsFileTooLarge(filePath, _maxMovableFileBytes))
             {
                 skippedCount++;
                 continue;
@@ -159,13 +175,15 @@ public sealed class FileSorterService
             try
             {
                 string categoryFolder = GetCategoryFolder(filePath);
-                string destinationDirectory = Path.Combine(rootPath, categoryFolder);
+                string destinationDirectory = GetSafeDestinationDirectory(rootFullPath, categoryFolder);
                 Directory.CreateDirectory(destinationDirectory);
+                EnsureDirectoryWritable(destinationDirectory);
 
                 string destinationPath = GetUniquePath(
                     destinationDirectory,
                     Path.GetFileNameWithoutExtension(filePath),
                     Path.GetExtension(filePath));
+                EnsurePathWithinRoot(destinationPath, rootFullPath);
 
                 MoveFileWithRetry(filePath, destinationPath);
                 entries.Add(new FileSortOperationEntry
@@ -203,11 +221,19 @@ public sealed class FileSorterService
 
         int restoredCount = 0;
         var remainingEntries = new List<FileSortOperationEntry>();
+        string rootFullPath = GetRootFullPath(undoState.RootPath);
 
         foreach (FileSortOperationEntry entry in Enumerable.Reverse(undoState.Entries))
         {
             try
             {
+                if (!IsPathWithinRoot(entry.SourcePath, rootFullPath) ||
+                    !IsPathWithinRoot(entry.DestinationPath, rootFullPath))
+                {
+                    remainingEntries.Add(entry);
+                    continue;
+                }
+
                 if (!File.Exists(entry.DestinationPath))
                 {
                     remainingEntries.Add(entry);
@@ -215,12 +241,15 @@ public sealed class FileSorterService
                 }
 
                 string originalDirectory = Path.GetDirectoryName(entry.SourcePath) ?? undoState.RootPath;
+                EnsurePathWithinRoot(originalDirectory, rootFullPath);
                 Directory.CreateDirectory(originalDirectory);
+                EnsureDirectoryWritable(originalDirectory);
 
                 string restorePath = GetUniquePath(
                     originalDirectory,
                     Path.GetFileNameWithoutExtension(entry.SourcePath),
                     Path.GetExtension(entry.SourcePath));
+                EnsurePathWithinRoot(restorePath, rootFullPath);
 
                 File.Move(entry.DestinationPath, restorePath);
                 restoredCount++;
@@ -299,6 +328,12 @@ public sealed class FileSorterService
             return true;
         }
 
+        if (attributes.HasFlag(FileAttributes.ReparsePoint))
+        {
+            reason = "reparse-point";
+            return true;
+        }
+
         string extension = fileInfo.Extension.ToLowerInvariant();
         string fileName = fileInfo.Name.ToLowerInvariant();
 
@@ -317,6 +352,70 @@ public sealed class FileSorterService
 
         reason = string.Empty;
         return false;
+    }
+
+    internal static string GetRootFullPath(string rootPath)
+    {
+        return Path.TrimEndingDirectorySeparator(Path.GetFullPath(rootPath));
+    }
+
+    internal static bool IsPathWithinRoot(string path, string rootFullPath)
+    {
+        string fullPath = Path.GetFullPath(path);
+        string root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(rootFullPath));
+
+        return string.Equals(fullPath, root, StringComparison.OrdinalIgnoreCase) ||
+            fullPath.StartsWith(root + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase) ||
+            fullPath.StartsWith(root + Path.AltDirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+    }
+
+    internal static string GetSafeDestinationDirectory(string rootFullPath, string categoryFolder)
+    {
+        if (string.IsNullOrWhiteSpace(categoryFolder) ||
+            Path.IsPathRooted(categoryFolder) ||
+            categoryFolder.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+            categoryFolder.Contains(Path.DirectorySeparatorChar) ||
+            categoryFolder.Contains(Path.AltDirectorySeparatorChar))
+        {
+            throw new InvalidOperationException("Unsafe file sorter category folder.");
+        }
+
+        string destinationDirectory = Path.Combine(rootFullPath, categoryFolder);
+        EnsurePathWithinRoot(destinationDirectory, rootFullPath);
+        return destinationDirectory;
+    }
+
+    private static void EnsurePathWithinRoot(string path, string rootFullPath)
+    {
+        if (!IsPathWithinRoot(path, rootFullPath))
+        {
+            throw new InvalidOperationException("File sorter path is outside the selected folder.");
+        }
+    }
+
+    private static bool IsFileTooLarge(string filePath, long maxMovableFileBytes)
+    {
+        try
+        {
+            return new FileInfo(filePath).Length > maxMovableFileBytes;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(new IOException($"File sorter could not inspect '{filePath}'.", ex));
+            return true;
+        }
+    }
+
+    private static void EnsureDirectoryWritable(string directoryPath)
+    {
+        string probePath = Path.Combine(directoryPath, $".aitebar-write-check-{Guid.NewGuid():N}.tmp");
+        using var stream = new FileStream(
+            probePath,
+            FileMode.CreateNew,
+            FileAccess.Write,
+            FileShare.None,
+            1,
+            FileOptions.DeleteOnClose);
     }
 
     private static void MoveFileWithRetry(string sourcePath, string destinationPath)

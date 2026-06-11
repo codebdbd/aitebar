@@ -187,6 +187,46 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
+    public void SortFiles_SkipsFilesAboveConfiguredSizeLimit()
+    {
+        string root = CreateTempRoot();
+        try
+        {
+            string oversized = Path.Combine(root, "large.zip");
+            File.WriteAllBytes(oversized, new byte[16]);
+            MakeOld(oversized);
+
+            var service = new FileSorterService(maxMovableFileBytes: 8);
+            FileSortResult result = service.SortFiles(root);
+
+            Assert.Equal(0, result.SortedCount);
+            Assert.Equal(1, result.SkippedCount);
+            Assert.True(File.Exists(oversized));
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Theory]
+    [InlineData(@"..\Outside")]
+    [InlineData(@"Nested\Images")]
+    public void GetSafeDestinationDirectory_RejectsUnsafeCategoryFolder(string categoryFolder)
+    {
+        string root = FileSorterService.GetRootFullPath(CreateTempRoot());
+        try
+        {
+            Assert.Throws<InvalidOperationException>(() =>
+                FileSorterService.GetSafeDestinationDirectory(root, categoryFolder));
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
     public void UndoLastSort_RestoresFilesInReverseOrder()
     {
         string root = CreateTempRoot();
@@ -211,6 +251,45 @@ public sealed class FileSorterServiceTests
         finally
         {
             Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public void UndoLastSort_SkipsEntriesOutsideRoot()
+    {
+        string root = CreateTempRoot();
+        string outside = CreateTempRoot();
+        try
+        {
+            string destination = Path.Combine(root, LocalizationService.Get("FileSorter_CategoryImages"), "photo.jpg");
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            File.WriteAllText(destination, "1");
+
+            var undoState = new FileSortUndoState
+            {
+                RootPath = root,
+                Entries =
+                [
+                    new FileSortOperationEntry
+                    {
+                        SourcePath = Path.Combine(outside, "photo.jpg"),
+                        DestinationPath = destination
+                    }
+                ]
+            };
+
+            var service = new FileSorterService();
+            FileSortUndoResult result = service.UndoLastSort(undoState);
+
+            Assert.Equal(0, result.RestoredCount);
+            Assert.Equal(1, result.SkippedCount);
+            Assert.True(File.Exists(destination));
+            Assert.False(File.Exists(Path.Combine(outside, "photo.jpg")));
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+            Directory.Delete(outside, true);
         }
     }
 
