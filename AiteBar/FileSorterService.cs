@@ -399,6 +399,11 @@ public sealed class FileSorterService
         {
             return new FileInfo(filePath).Length > maxMovableFileBytes;
         }
+        catch (IOException)
+        {
+            // Could not access file due to lock or other IO issue - don't skip for size, let move retry handle it
+            return false;
+        }
         catch (Exception ex)
         {
             Logger.Log(new IOException($"File sorter could not inspect '{filePath}'.", ex));

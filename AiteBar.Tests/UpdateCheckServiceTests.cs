@@ -141,7 +141,7 @@ public sealed class UpdateCheckServiceTests
     {
         Version version = UpdateCheckService.GetCurrentVersion();
 
-        Assert.Equal(new Version(1, 7, 6, 0), version);
+        Assert.Equal(new Version(1, 7, 7, 0), version);
     }
 
     [Fact]

@@ -617,7 +617,7 @@ public sealed class IconConverterService
 
     private static SKBitmap ApplyEncodedOrigin(SKBitmap bitmap, SKEncodedOrigin origin)
     {
-        if (origin == SKEncodedOrigin.Default || origin == SKEncodedOrigin.TopLeft)
+        if (origin == SKEncodedOrigin.TopLeft)
         {
             return bitmap;
         }
