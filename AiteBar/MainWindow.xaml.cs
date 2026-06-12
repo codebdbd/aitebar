@@ -77,7 +77,7 @@ public partial class MainWindow : Window
         public const int Update = 59548; // ic_fluent_arrow_sync_16_regular
     }
 
-    private readonly AppSettingsService _settingsService = new();
+    private readonly AppSettingsService _settingsService;
     private readonly ActionService _actionService;
     private readonly HotkeyService _hotkeyService = new();
     private readonly PanelPackageService _panelPackageService;
@@ -107,6 +107,7 @@ public partial class MainWindow : Window
     private int _pendingContextAnimationDirection;
     private bool _startupInfrastructureInitialized;
     private bool _deferredStartupCompleted;
+    private readonly bool _settingsPreloaded;
     private int _panelRefreshVersion;
     private int _panelFocusRequestVersion;
     private int _contextWheelDelta;
@@ -123,8 +124,20 @@ public partial class MainWindow : Window
     private static readonly TimeSpan ContextWheelSwitchCooldown = TimeSpan.FromMilliseconds(220);
 
     public MainWindow()
+        : this(new AppSettingsService(), settingsPreloaded: false)
+    {
+    }
+
+    public MainWindow(AppSettingsService settingsService)
+        : this(settingsService, settingsPreloaded: true)
+    {
+    }
+
+    private MainWindow(AppSettingsService settingsService, bool settingsPreloaded)
     {
         InitializeComponent();
+        _settingsService = settingsService;
+        _settingsPreloaded = settingsPreloaded;
         _actionService = new ActionService(_settingsService);
         _panelPackageService = new PanelPackageService(_settingsService);
         Top = -2000;
@@ -1220,6 +1233,12 @@ public partial class MainWindow : Window
             RefreshPanel();
             PositionWindowImmediately(_shown);
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+            if (_settingsPreloaded)
+            {
+                _deferredStartupCompleted = true;
+                RegisterGlobalHotkey();
+                return;
+            }
             _ = CompleteDeferredStartupAsync();
         }
         catch (Exception ex) { Logger.Log(ex); }

@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AiteBar for Windows | Your Workflow Command Center at the Edge of the Screen</title>
+  <meta name="description" content="AiteBar is a hidden Windows edge panel for people who jump between AI tools, browser profiles, projects, scripts, folders, and fast utilities all day.">
+  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+  <meta name="theme-color" content="#111318">
+  <meta name="color-scheme" content="dark">
+  <link rel="canonical" href="https://codebdbd.github.io/products/aitebar/">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="site.webmanifest">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="AiteBar">
+  <meta property="og:title" content="AiteBar for Windows | Your Workflow Command Center">
+  <meta property="og:description" content="Turn the edge of your screen into a launch surface for websites, apps, files, scripts, browser profiles, Quick Note, and daily utilities.">
+  <meta property="og:url" content="https://codebdbd.github.io/products/aitebar/">
+  <meta property="og:image" content="https://codebdbd.github.io/products/aitebar/assets/og-image.svg">
+  <meta property="og:image:alt" content="AiteBar product preview showing workflow contexts and quick-launch controls">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AiteBar for Windows">
+  <meta name="twitter:description" content="A hidden edge panel for power users who want faster access to tools, profiles, folders, scripts, and notes.">
+  <meta name="twitter:image" content="https://codebdbd.github.io/products/aitebar/assets/og-image.svg">
+  <link rel="stylesheet" href="assets/styles.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "AiteBar",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "Windows 10, Windows 11",
+    "description": "A hidden Windows edge panel for launching websites, programs, files, folders, scripts, commands, hotkeys, and built-in utilities from one compact workflow hub.",
+    "url": "https://codebdbd.github.io/products/aitebar/",
+    "downloadUrl": "https://github.com/codebdbd/aitebar/releases",
+    "codeRepository": "https://github.com/codebdbd/aitebar",
+    "author": {
+      "@type": "Person",
+      "name": "codebdbd"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "softwareHelp": "https://github.com/codebdbd/aitebar/blob/main/docs/USER_MANUAL.md",
+    "featureList": [
+      "Hidden edge panel for Windows",
+      "Up to 8 workflow contexts",
+      "Browser profile launch and profile rotation",
+      "Drag and drop button creation",
+      "Global hotkeys",
+      "Quick Note",
+      "Built-in screenshot, recording, calculator, explorer, downloads, timer and color picker utilities",
+      "Import and export of context panels"
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "What does AiteBar replace?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "AiteBar replaces scattered bookmarks, desktop shortcuts, launch folders, repeated browser profile switching, and small utility hopping with one hidden launch surface."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Who is AiteBar for?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "It is built for Windows users who repeatedly jump between web tools, local apps, files, scripts, profiles, and workflow contexts such as marketing, development, design, and operations."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does AiteBar support browser profiles?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. AiteBar supports browser selection, specific profiles, private or incognito launch, app mode for supported browsers, fullscreen launch, and profile rotation."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Does it store my data in the cloud?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No cloud account is required. AiteBar stores configuration locally in the user's Windows profile and Sentry crash reporting is disabled by default."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I share my setup between computers?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. AiteBar can import and export context panels through .aitebarpanel files, including the related icons needed by those buttons."
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="page-shell">
+    <header class="site-header" data-header>
+      <div class="container header-inner">
+        <a class="brand" href="./" aria-label="AiteBar home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-copy">
+            <strong>AiteBar</strong>
+            <span>Workflow command center for Windows</span>
+          </span>
+        </a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
+          <span></span>
+          <span></span>
+          <span></span>
+          <span class="sr-only">Toggle navigation</span>
+        </button>
+        <nav class="site-nav" id="site-nav" data-nav>
+          <a href="#features">Features</a>
+          <a href="#use-cases">Use cases</a>
+          <a href="#trust">Trust</a>
+          <a href="#faq">FAQ</a>
+          <a href="donate/">Donate</a>
+          <a class="button button-ghost" href="https://github.com/codebdbd/aitebar" target="_blank" rel="noreferrer">Repository</a>
+          <a class="button button-primary" href="https://github.com/codebdbd/aitebar/releases" target="_blank" rel="noreferrer">Download</a>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero section">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <span class="hero-badge">AiteBar for Windows</span>
+            <h1><span class="hero-line">Your workflow</span> opens from <span class="hero-line">the <span class="hero-accent">edge.</span></span></h1>
+            <p class="hero-lead">
+              Launch apps, files, scripts, browser profiles, and built-in utilities from a compact edge panel that stays out of your way.
+            </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="https://github.com/codebdbd/aitebar/releases" target="_blank" rel="noreferrer">Download for Windows</a>
+              <a class="button button-secondary" href="#tour">See how it works</a>
+            </div>
+            <ul class="hero-points" aria-label="Key advantages">
+              <li>Hidden edge panel that stays out of the way</li>
+              <li>Browser profiles, scripts, files, notes, and utilities in one surface</li>
+              <li>Up to 8 contexts for work, AI, personal, and ops</li>
+            </ul>
+          </div>
+
+          <div class="hero-visual reveal" data-reveal>
+            <div class="hero-aura hero-aura-a"></div>
+            <div class="hero-aura hero-aura-b"></div>
+            <figure class="hero-shot" aria-label="AiteBar panel preview">
+              <img src="assets/aitebar-panel.png" alt="AiteBar edge panel with colorful quick-launch icons">
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section class="section stat-strip">
+        <div class="container stat-grid">
+          <article class="stat-card reveal" data-reveal>
+            <strong data-counter="8">8</strong>
+            <span>workflow contexts for separate launch surfaces</span>
+          </article>
+          <article class="stat-card reveal" data-reveal>
+            <strong data-counter="8">8</strong>
+            <span>supported browser families for web launch targets</span>
+          </article>
+          <article class="stat-card reveal" data-reveal>
+            <strong data-counter="5">5</strong>
+            <span>built-in tools: Quick Note, color picker, file sorter, icon maker, and timer stopwatch</span>
+          </article>
+          <article class="stat-card reveal" data-reveal>
+            <strong>4</strong>
+            <span>panel positions across top, bottom, left, and right edges</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="tour">
+        <div class="container section-heading">
+          <span class="eyebrow">Why people keep it open all day</span>
+          <h2>It closes the gap between “I need that tool” and “it is already open.”</h2>
+          <p>
+            Most workflow friction is not hard work. It is repeated micro-hunting: the right browser profile, the right folder,
+            the right dashboard, the same admin script, the quick note you do not want to lose. AiteBar keeps those actions one hover away.
+          </p>
+        </div>
+        <div class="container narrative-grid">
+          <article class="narrative-card reveal" data-reveal>
+            <h3>One surface for web and desktop</h3>
+            <p>Launch URLs, programs, files, folders, scripts, commands, and hotkeys from the same compact panel.</p>
+          </article>
+          <article class="narrative-card reveal" data-reveal>
+            <h3>Built for multi-account reality</h3>
+            <p>Choose the browser, pick the profile, rotate across profiles, or open a site in app mode or private mode.</p>
+          </article>
+          <article class="narrative-card reveal" data-reveal>
+            <h3>Designed for context switching</h3>
+            <p>Split your launch surface into up to 8 contexts so “marketing,” “AI,” “dev,” and “personal” stop stepping on each other.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="container section-heading">
+          <span class="eyebrow">Feature architecture</span>
+          <h2>Everything on the landing page is grounded in the product that ships.</h2>
+        </div>
+        <div class="container feature-grid">
+          <article class="feature-card feature-card-large reveal" data-reveal>
+            <span class="feature-kicker">Launch control</span>
+            <h3>Turn any repetitive click path into one button.</h3>
+            <p>Create buttons for websites, apps, files, folders, PowerShell scripts, Python scripts, commands, and even keyboard shortcuts. Drag and drop files, folders, `.url` files, or direct links to seed a new button even faster.</p>
+          </article>
+          <article class="feature-card reveal" data-reveal>
+            <span class="feature-kicker">Edge-first UX</span>
+            <h3>Hidden until needed</h3>
+            <p>The panel lives on the screen edge, appears on hover, and can move to any side or monitor by dragging its handle.</p>
+          </article>
+          <article class="feature-card reveal" data-reveal>
+            <span class="feature-kicker">Browser intelligence</span>
+            <h3>Use the exact profile and mode</h3>
+            <p>Chrome, Edge, Brave, Yandex, Opera, Opera GX, Vivaldi, and Firefox support means your button can launch the right account, private mode, fullscreen, or app window.</p>
+          </article>
+          <article class="feature-card reveal" data-reveal>
+            <span class="feature-kicker">Fast utilities</span>
+            <h3>Keep daily tools within reach</h3>
+            <p>Open screenshot, screen recording, calculator, explorer, downloads, timer and stopwatch, color picker, Google search from clipboard, and Quick Note from the same surface.</p>
+          </article>
+          <article class="feature-card reveal" data-reveal>
+            <span class="feature-kicker">Global access</span>
+            <h3>Hotkeys that work beyond the panel</h3>
+            <p>Show the panel, move between contexts, add a button, or give individual buttons their own global shortcut.</p>
+          </article>
+          <article class="feature-card reveal" data-reveal>
+            <span class="feature-kicker">Portable setup</span>
+            <h3>Share and restore your working layout</h3>
+            <p>Export a context as `.aitebarpanel`, import it elsewhere, and keep the icons that make your setup recognizable.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section section-accent" id="use-cases">
+        <div class="container section-heading">
+          <span class="eyebrow">Use cases</span>
+          <h2>Made for people whose work lives in tools, accounts, and context shifts.</h2>
+        </div>
+        <div class="container use-case-grid">
+          <article class="use-case-card reveal" data-reveal>
+            <h3>Marketing</h3>
+            <p>Keep Telegram, Ads Manager, Google Ads, Looker Studio, analytics dashboards, client docs, and profile-specific logins one gesture away.</p>
+            <ul>
+              <li>Separate client contexts</li>
+              <li>Profile rotation for multi-account work</li>
+              <li>Quick access to reporting and creative tools</li>
+            </ul>
+          </article>
+          <article class="use-case-card reveal" data-reveal>
+            <h3>Development</h3>
+            <p>Open the repo folder, VS Code, terminals, GitHub pages, build scripts, staging URLs, and frequently used admin commands without leaving flow.</p>
+            <ul>
+              <li>Script and command launch with confirmation</li>
+              <li>Hotkeys for repetitive actions</li>
+              <li>Separate contexts for client, ops, and personal projects</li>
+            </ul>
+          </article>
+          <article class="use-case-card reveal" data-reveal>
+            <h3>Design and research</h3>
+            <p>Move between Figma, asset folders, Quick Note, the color picker, browser references, and feedback docs without drowning in tabs.</p>
+            <ul>
+              <li>Color picker built in</li>
+              <li>Quick Note for transient ideas</li>
+              <li>Compact launch surface instead of desktop clutter</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container split-panel">
+          <div class="split-copy">
+            <span class="eyebrow">Quick Note</span>
+            <h2>Catch ideas before they dissolve in the next context switch.</h2>
+            <p>
+              Quick Note is built into the same workflow surface. Open it from the panel, write in a lightweight Markdown-ready note,
+              use formatting, keep the window pinned if you want it to stay open, and let AiteBar remember size and position.
+            </p>
+            <p>
+              It is small on purpose: less ceremony, more capture.
+            </p>
+          </div>
+          <div class="split-visual reveal" data-reveal>
+            <div class="note-window">
+              <div class="note-header">
+                <span>Quick Note</span>
+                <span class="note-dot"></span>
+              </div>
+              <div class="note-editor">
+                <p><strong>Launch checklist</strong></p>
+                <p>Open staging profile</p>
+                <p>Check release notes</p>
+                <p>Save client links into Marketing context</p>
+                <p><u>Do not lose the ad account shortcut again</u></p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="trust">
+        <div class="container section-heading">
+          <span class="eyebrow">Trust and safety</span>
+          <h2>Useful power tools should be explicit about what they do.</h2>
+        </div>
+        <div class="container trust-grid">
+          <article class="trust-card reveal" data-reveal>
+            <h3>Local-first storage</h3>
+            <p>Settings and data live in the Windows user profile at `%AppData%\Codebdbd\Aite Bar`.</p>
+          </article>
+          <article class="trust-card reveal" data-reveal>
+            <h3>Command awareness</h3>
+            <p>Commands and scripts require confirmation before launch, which matters when your launcher can automate real system actions.</p>
+          </article>
+          <article class="trust-card reveal" data-reveal>
+            <h3>Privacy posture</h3>
+            <p>Sentry crash reporting is disabled by default. It only turns on when explicitly configured for support or development scenarios.</p>
+          </article>
+          <article class="trust-card reveal" data-reveal>
+            <h3>Transparent updates</h3>
+            <p>Update checks point to GitHub releases. AiteBar can open the release page when a newer version is available, without forced auto-install behavior.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section cta-section">
+        <div class="container cta-panel">
+          <div>
+            <span class="eyebrow">Free to try. Worth supporting.</span>
+            <h2>Use it daily, then help shape what ships next.</h2>
+            <p>AiteBar already solves the annoying part of knowledge work: repeated launch friction. If it saves you time, you can support continued development directly.</p>
+          </div>
+          <div class="cta-actions">
+            <a class="button button-primary" href="https://github.com/codebdbd/aitebar/releases" target="_blank" rel="noreferrer">Get the latest release</a>
+            <a class="button button-secondary" href="donate/">Open donation screen</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="faq">
+        <div class="container section-heading">
+          <span class="eyebrow">FAQ</span>
+          <h2>Questions people ask before adding another tool to their desktop.</h2>
+        </div>
+        <div class="container faq-list">
+          <details class="faq-item reveal" data-reveal>
+            <summary>What does AiteBar replace?</summary>
+            <p>It replaces scattered bookmarks, desktop shortcuts, launch folders, profile-switching routines, and repeated visits to the same Windows utilities.</p>
+          </details>
+          <details class="faq-item reveal" data-reveal>
+            <summary>Can it launch browser profiles and private windows?</summary>
+            <p>Yes. Web buttons support browser choice, profile selection, app mode where supported, incognito or private mode, fullscreen launch, and profile rotation.</p>
+          </details>
+          <details class="faq-item reveal" data-reveal>
+            <summary>Is this only for developers?</summary>
+            <p>No. The documented use cases already cover marketing, development, design, personal workflows, and any setup where the same destinations need to be reached repeatedly.</p>
+          </details>
+          <details class="faq-item reveal" data-reveal>
+            <summary>Does it work with multiple monitors?</summary>
+            <p>Yes. The panel can be positioned on different edges and different monitors, and that positioning is part of the product behavior described in the app docs.</p>
+          </details>
+          <details class="faq-item reveal" data-reveal>
+            <summary>Can I share my setup?</summary>
+            <p>Yes. Export a context panel as `.aitebarpanel`, then import it on another computer or into another setup.</p>
+          </details>
+          <details class="faq-item reveal" data-reveal>
+            <summary>Where do I get updates?</summary>
+            <p>The latest builds are distributed through the GitHub releases page. The app can also check for updates and open the release page when a newer version exists.</p>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-grid">
+        <div>
+          <a class="brand brand-footer" href="./">
+            <span class="brand-mark" aria-hidden="true"></span>
+            <span class="brand-copy">
+              <strong>AiteBar</strong>
+              <span>Hidden edge panel for Windows workflows</span>
+            </span>
+          </a>
+          <p class="footer-copy">Built for people who work across web apps, browser profiles, local files, scripts, and fast notes.</p>
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/codebdbd/aitebar/releases" target="_blank" rel="noreferrer">Download</a>
+          <a href="https://github.com/codebdbd/aitebar" target="_blank" rel="noreferrer">Repository</a>
+          <a href="https://github.com/codebdbd/aitebar/blob/main/docs/USER_MANUAL.md" target="_blank" rel="noreferrer">User Manual</a>
+          <a href="donate/">Donate</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <script src="assets/app.js" defer></script>
+</body>
+</html>

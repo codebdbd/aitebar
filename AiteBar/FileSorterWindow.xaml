@@ -28,9 +28,6 @@
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
-                            </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="#25FFFFFF"/>
                                 <Setter Property="Foreground" Value="White"/>
@@ -118,7 +115,7 @@
             <Border CornerRadius="7" Background="{StaticResource PanelBackground}">
                 <Grid Margin="16">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="30"/>
+                        <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
                     </Grid.RowDefinitions>
 
@@ -139,6 +136,7 @@
                                 Grid.Column="1"
                                 Content="&#xF369;"
                                 Style="{StaticResource HeaderButtonStyle}"
+                                VerticalAlignment="Center"
                                 ToolTip="{local:Loc ResourceKey=Common_Close}"
                                 Click="BtnClose_Click"/>
                     </Grid>

@@ -37,6 +37,7 @@ public partial class AppSettingsWindow : DarkWindow
     private readonly AppSettings _settings;
     private readonly List<(CheckBox EnabledCheckBox, TextBox NameTextBox)> _contextRows = new();
     private bool _isLoadingSettings;
+    private string _selectedUiCulture = LocalizationService.AutoCulture;
 
     public AppSettingsWindow(MainWindow mainWindow)
     {
@@ -127,7 +128,7 @@ public partial class AppSettingsWindow : DarkWindow
 
     private void ReloadLocalizedChoiceLists()
     {
-        string language = GetComboTag(CmbLanguage) ?? LocalizationService.AutoCulture;
+        string language = _selectedUiCulture;
         string showPanelKey = GetComboTag(CmbShowPanelKey) ?? "None";
         string nextContextKey = GetComboTag(CmbNextContextKey) ?? "None";
         string previousContextKey = GetComboTag(CmbPrevContextKey) ?? "None";
@@ -328,7 +329,8 @@ public partial class AppSettingsWindow : DarkWindow
         ChkShowPresetColorPicker.IsChecked = _settings.ShowPresetColorPicker;
         ChkShowPresetQuickNote.IsChecked = _settings.ShowPresetQuickNote;
         ChkCheckForUpdatesEnabled.IsChecked = _settings.CheckForUpdatesEnabled;
-        SetComboValue(CmbLanguage, LocalizationService.NormalizeCultureName(_settings.UiCulture));
+        _selectedUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
+        SetComboValue(CmbLanguage, _selectedUiCulture);
 
         LoadHotkeyBinding(
             new HotkeyBinding
@@ -454,7 +456,7 @@ public partial class AppSettingsWindow : DarkWindow
         if (TxtDelay != null) TxtDelay.Text = $"{(int)e.NewValue}";
     }
 
-    private void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isLoadingSettings)
         {
@@ -462,9 +464,13 @@ public partial class AppSettingsWindow : DarkWindow
         }
 
         string selectedCulture = (CmbLanguage.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? LocalizationService.AutoCulture;
-        LocalizationService.ApplyCulture(selectedCulture);
-        _settings.UiCulture = selectedCulture;
+        _selectedUiCulture = LocalizationService.NormalizeCultureName(selectedCulture);
+        LocalizationService.ApplyCulture(_selectedUiCulture);
+        _settings.UiCulture = _selectedUiCulture;
+        _mainWindow.GetSettingsService().NormalizeAppState();
+        await _mainWindow.GetSettingsService().SaveAsync();
         ReloadLocalizedChoiceLists();
+        LocalizationService.RefreshLocalizedBindings(this);
         _mainWindow.ApplyLocalizedText();
     }
 
@@ -510,7 +516,7 @@ public partial class AppSettingsWindow : DarkWindow
         _settings.ShowPresetColorPicker = ChkShowPresetColorPicker.IsChecked ?? false;
         _settings.ShowPresetQuickNote = ChkShowPresetQuickNote.IsChecked ?? false;
         _settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;
-        _settings.UiCulture = (CmbLanguage.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? LocalizationService.AutoCulture;
+        _settings.UiCulture = _selectedUiCulture;
 
         if (CmbEdge.SelectedItem is ComboBoxItem edgeItem && edgeItem.Tag is DockEdge edge)
         {
@@ -535,6 +541,7 @@ public partial class AppSettingsWindow : DarkWindow
 
         IReadOnlyList<string> failedHotkeys = await _mainWindow.SaveAppSettings();
         LocalizationService.ApplyCulture(_settings.UiCulture);
+        LocalizationService.RefreshLocalizedBindings(this);
         _mainWindow.ApplyLocalizedText();
         _mainWindow.RefreshPanel();
 

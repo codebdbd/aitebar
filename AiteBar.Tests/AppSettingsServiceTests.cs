@@ -215,6 +215,32 @@ public sealed class AppSettingsServiceTests
     }
 
     [Fact]
+    public async Task SaveAsync_PersistsUiCultureAcrossReload()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string settingsPath = Path.Combine(root, "settings.json");
+        string configPath = Path.Combine(root, "custom_buttons.json");
+
+        try
+        {
+            var writer = new AppSettingsService(configPath, settingsPath);
+            writer.Settings.UiCulture = "de";
+
+            await writer.SaveAsync();
+
+            var reader = new AppSettingsService(configPath, settingsPath);
+            await reader.LoadAsync();
+
+            Assert.Equal("de", reader.Settings.UiCulture);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task RotateBackups_RotatesMultipleBackups()
     {
         string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));

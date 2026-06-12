@@ -1,0 +1,18 @@
+# AiteBar
+
+> AiteBar is a Windows desktop utility with a hidden edge panel for launching websites, browser profiles, apps, files, folders, scripts, commands, hotkeys, and built-in workflow tools.
+
+- Canonical URL: https://codebdbd.github.io/products/aitebar/
+- Donate URL: https://codebdbd.github.io/products/aitebar/donate/
+- Repository: https://github.com/codebdbd/aitebar
+- Releases: https://github.com/codebdbd/aitebar/releases
+- Support URL: https://suvorov.pp.ua/donate/
+
+## Product summary
+
+AiteBar is designed for Windows 10 and Windows 11 users who switch constantly between web apps, browser profiles, project folders, scripts, dashboards, notes, and utility tools. It provides a hidden edge panel, up to 8 contexts, drag-and-drop button creation, global hotkeys, built-in quick utilities, import and export of context panels, and a lightweight Quick Note.
+
+## Key pages
+
+- / : main product landing page
+- /donate/ : donation and support screen

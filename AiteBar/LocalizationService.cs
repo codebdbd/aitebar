@@ -1,11 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Resources;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Markup;
+using System.Windows.Media;
 
 namespace AiteBar
 {
@@ -71,6 +75,64 @@ namespace AiteBar
             CultureInfo.DefaultThreadCurrentUICulture = culture;
             Strings.Refresh();
             CultureChanged?.Invoke(null, EventArgs.Empty);
+        }
+
+        public static void RefreshLocalizedBindings(DependencyObject root)
+        {
+            var visited = new HashSet<DependencyObject>();
+            RefreshLocalizedBindings(root, visited);
+        }
+
+        private static void RefreshLocalizedBindings(DependencyObject root, HashSet<DependencyObject> visited)
+        {
+            if (!visited.Add(root))
+            {
+                return;
+            }
+
+            if (root is FrameworkElement frameworkElement)
+            {
+                UpdateBinding(frameworkElement, FrameworkElement.ToolTipProperty);
+            }
+
+            switch (root)
+            {
+                case Window window:
+                    UpdateBinding(window, Window.TitleProperty);
+                    break;
+                case TextBlock textBlock:
+                    UpdateBinding(textBlock, TextBlock.TextProperty);
+                    break;
+                case HeaderedContentControl headeredContentControl:
+                    UpdateBinding(headeredContentControl, HeaderedContentControl.HeaderProperty);
+                    UpdateBinding(headeredContentControl, ContentControl.ContentProperty);
+                    break;
+                case ContentControl contentControl:
+                    UpdateBinding(contentControl, ContentControl.ContentProperty);
+                    break;
+            }
+
+            if (root is Visual or System.Windows.Media.Media3D.Visual3D)
+            {
+                int visualChildren = VisualTreeHelper.GetChildrenCount(root);
+                for (int i = 0; i < visualChildren; i++)
+                {
+                    RefreshLocalizedBindings(VisualTreeHelper.GetChild(root, i), visited);
+                }
+            }
+
+            foreach (object child in LogicalTreeHelper.GetChildren(root))
+            {
+                if (child is DependencyObject dependencyObject)
+                {
+                    RefreshLocalizedBindings(dependencyObject, visited);
+                }
+            }
+        }
+
+        private static void UpdateBinding(DependencyObject target, DependencyProperty property)
+        {
+            BindingOperations.GetBindingExpressionBase(target, property)?.UpdateTarget();
         }
 
         public static string Get(string key)

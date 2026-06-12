@@ -1,0 +1,17 @@
+{
+  "name": "AiteBar",
+  "short_name": "AiteBar",
+  "description": "A workflow command center for Windows that lives on the edge of your screen.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#111318",
+  "theme_color": "#111318",
+  "icons": [
+    {
+      "src": "assets/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 using System.Runtime.Versioning;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -10,30 +11,52 @@ public partial class App : System.Windows.Application
 {
     private static Mutex? _mutex;
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
+        base.OnStartup(e);
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
+
         TelemetryService.Initialize();
         RegisterExceptionHandlers();
         RegisterUtilities();
 
-        LocalizationService.ApplyCulture(LocalizationService.AutoCulture);
-        const string mutexName = "Global\\AiteBar_Mutex_Unique_String_123";
-        _mutex = new Mutex(true, mutexName, out bool createdNew);
-
-        if (!createdNew)
+        try
         {
-            // Приложение уже запущено
-            System.Windows.MessageBox.Show(
-                LocalizationService.Get("App_AlreadyRunning"),
-                LocalizationService.Get("Common_Info"),
-                System.Windows.MessageBoxButton.OK,
-                System.Windows.MessageBoxImage.Information);
-            System.Windows.Application.Current.Shutdown();
-            return;
-        }
+            AppSettingsService settingsService = await LoadSettingsAndApplyCultureAsync();
+            const string mutexName = "Global\\AiteBar_Mutex_Unique_String_123";
+            _mutex = new Mutex(true, mutexName, out bool createdNew);
 
-        TelemetryService.CaptureMessage("AiteBar started.");
-        base.OnStartup(e);
+            if (!createdNew)
+            {
+                System.Windows.MessageBox.Show(
+                    LocalizationService.Get("App_AlreadyRunning"),
+                    LocalizationService.Get("Common_Info"),
+                    System.Windows.MessageBoxButton.OK,
+                    System.Windows.MessageBoxImage.Information);
+                System.Windows.Application.Current.Shutdown();
+                return;
+            }
+
+            TelemetryService.CaptureMessage("AiteBar started.");
+            var mainWindow = new MainWindow(settingsService);
+            MainWindow = mainWindow;
+            ShutdownMode = ShutdownMode.OnLastWindowClose;
+            mainWindow.Show();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            System.Windows.Application.Current.Shutdown();
+        }
+    }
+
+    private static async Task<AppSettingsService> LoadSettingsAndApplyCultureAsync()
+    {
+        PathHelper.EnsureDirectories();
+        var settingsService = new AppSettingsService();
+        await settingsService.LoadAsync();
+        LocalizationService.ApplyCulture(settingsService.Settings.UiCulture);
+        return settingsService;
     }
 
     private static void RegisterUtilities()
