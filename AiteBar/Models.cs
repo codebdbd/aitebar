@@ -123,6 +123,7 @@ public class AppSettings
     public bool ShowPresetExplorer { get; set; } = true;
     public bool ShowPresetDownloads { get; set; } = true;
     public bool ShowPresetFileSorter { get; set; } = true;
+    public bool ShowPresetIconConverter { get; set; } = true;
     public bool ShowPresetColorPicker { get; set; } = false;
     public bool ShowPresetQuickNote { get; set; } = false;
     public bool ShowPresetTimerStopwatch { get; set; } = true;

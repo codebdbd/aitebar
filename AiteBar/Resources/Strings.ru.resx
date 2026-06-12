@@ -814,4 +814,43 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="PanelPackage_UnsupportedActionType" xml:space="preserve"><value>Неподдерживаемый тип действия: {0}.</value></data>
   <data name="PanelPackage_InvalidIconPath" xml:space="preserve"><value>Некорректный путь к значку: {0}.</value></data>
   <data name="IconPicker_ResourceNotFound" xml:space="preserve"><value>Ресурс не найден: {0}</value></data>
+  <data name="Tool_IconConverter" xml:space="preserve"><value>ICO-конвертер</value></data>
+  <data name="Main_IconConverterTooltip" xml:space="preserve"><value>Конвертировать изображение в ICO</value></data>
+  <data name="IconConverter_Title" xml:space="preserve"><value>ICO-конвертер</value></data>
+  <data name="IconConverter_DropHint" xml:space="preserve"><value>Перетащите изображение сюда</value></data>
+  <data name="IconConverter_NoFile" xml:space="preserve"><value>PNG, JPG, WEBP, BMP, TIFF, SVG.</value></data>
+  <data name="IconConverter_ChooseImage" xml:space="preserve"><value>Выбрать изображение</value></data>
+  <data name="IconConverter_SaveIco" xml:space="preserve"><value>Сохранить ICO</value></data>
+  <data name="IconConverter_Sizes" xml:space="preserve"><value>Размеры</value></data>
+  <data name="IconConverter_PracticalPreset" xml:space="preserve"><value>Практичный</value></data>
+  <data name="IconConverter_WindowsPreset" xml:space="preserve"><value>Windows DPI</value></data>
+  <data name="IconConverter_Padding" xml:space="preserve"><value>Отступ</value></data>
+  <data name="IconConverter_FitMode" xml:space="preserve"><value>Режим</value></data>
+  <data name="IconConverter_Fit" xml:space="preserve"><value>Вписать</value></data>
+  <data name="IconConverter_Fill" xml:space="preserve"><value>Заполнить</value></data>
+  <data name="IconConverter_Background" xml:space="preserve"><value>Фон</value></data>
+  <data name="IconConverter_BackgroundTransparent" xml:space="preserve"><value>Прозрачный</value></data>
+  <data name="IconConverter_BackgroundSolid" xml:space="preserve"><value>Цветной</value></data>
+  <data name="IconConverter_Color" xml:space="preserve"><value>Цвет</value></data>
+  <data name="IconConverter_Ready" xml:space="preserve"><value>Выберите или перетащите изображение для предпросмотра.</value></data>
+  <data name="IconConverter_Generating" xml:space="preserve"><value>Создание предпросмотра...</value></data>
+  <data name="IconConverter_SourceFormat" xml:space="preserve"><value>{0} - {1}x{2}</value></data>
+  <data name="IconConverter_WarningSourceTooSmall" xml:space="preserve"><value>Источник {0}x{1}; увеличение до {2}x{2} может ухудшить качество.</value></data>
+  <data name="IconConverter_ErrorUnsupportedFormat" xml:space="preserve"><value>Неподдерживаемый формат изображения.</value></data>
+  <data name="IconConverter_ErrorSvgUnsupported" xml:space="preserve"><value>Не удалось импортировать SVG.</value></data>
+  <data name="IconConverter_ErrorInvalidSvg" xml:space="preserve"><value>Не удалось прочитать содержимое SVG.</value></data>
+  <data name="IconConverter_ErrorInvalidImage" xml:space="preserve"><value>Не удалось прочитать содержимое изображения.</value></data>
+  <data name="IconConverter_ErrorRenderFailed" xml:space="preserve"><value>Не удалось отрисовать изображение значка.</value></data>
+  <data name="IconConverter_ErrorFileTooLarge" xml:space="preserve"><value>Файл изображения слишком большой. Максимальный размер: {0} МБ.</value></data>
+  <data name="IconConverter_ErrorImageTooLarge" xml:space="preserve"><value>Изображение слишком большое: {0}x{1}.</value></data>
+  <data name="IconConverter_ErrorUnsafeSvg" xml:space="preserve"><value>SVG содержит неподдерживаемый внешний или скриптовый контент.</value></data>
+  <data name="IconConverter_ErrorInvalidColor" xml:space="preserve"><value>Введите корректный цвет фона.</value></data>
+  <data name="IconConverter_ErrorNoSizesSelected" xml:space="preserve"><value>Выберите хотя бы один размер значка.</value></data>
+  <data name="IconConverter_ErrorInvalidSize" xml:space="preserve"><value>Размеры значков должны быть от 1 до 256.</value></data>
+  <data name="IconConverter_ErrorFileNotFound" xml:space="preserve"><value>Файл изображения не найден.</value></data>
+  <data name="IconConverter_OverwriteConfirm" xml:space="preserve"><value>Перезаписать существующий файл? {0}</value></data>
+  <data name="IconConverter_OpenFilter" xml:space="preserve"><value>Изображения|*.png;*.jpg;*.jpeg;*.webp;*.bmp;*.tif;*.tiff;*.svg|Все файлы|*.*</value></data>
+  <data name="IconConverter_SaveFilter" xml:space="preserve"><value>Значок Windows|*.ico</value></data>
+  <data name="IconConverter_SavedFormat" xml:space="preserve"><value>Сохранено: {0}</value></data>
+  <data name="IconConverter_SaveFailed" xml:space="preserve"><value>Не удалось сохранить ICO: {0}</value></data>
 </root>

@@ -342,6 +342,7 @@
                             <CheckBox x:Name="ChkShowPresetExplorer" Content="{local:Loc ResourceKey=Tool_Explorer}"/>
                             <CheckBox x:Name="ChkShowPresetDownloads" Content="{local:Loc ResourceKey=Tool_Downloads}"/>
                             <CheckBox x:Name="ChkShowPresetFileSorter" Content="{local:Loc ResourceKey=Tool_FileSorter}"/>
+                            <CheckBox x:Name="ChkShowPresetIconConverter" Content="{local:Loc ResourceKey=Tool_IconConverter}"/>
                             <CheckBox x:Name="ChkShowPresetTimerStopwatch" Content="{local:Loc ResourceKey=Tool_TimerStopwatch}"/>
                             <CheckBox x:Name="ChkShowPresetColorPicker" Content="{local:Loc ResourceKey=Tool_ColorPicker}"/>
                             <CheckBox x:Name="ChkShowPresetQuickNote" Content="{local:Loc ResourceKey=Tool_QuickNote}"/>

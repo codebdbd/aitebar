@@ -9,6 +9,42 @@
 
 ## [Unreleased]
 
+## [1.7.7] - 2026-06-12
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Утилита конвертации иконок**: Встроенная утилита для конвертации изображений и SVG в формат ICO с поддержкой нескольких размеров и настроек
+- **Icon converter utility**: Built-in utility for converting images and SVG to ICO format with multi-size support and customization options
+- **Помощник по разметке QuickNote**: Реализован QuickNoteLayoutHelper для расчета позиций окна и работы с геометрией
+- **QuickNote layout helper**: Implemented QuickNoteLayoutHelper for calculating window positions and geometry
+- **Новые тесты**: Добавлены тесты для FileSorterService, QuickNoteService, QuickNoteLayoutHelper и QuickNoteMarkdown
+- **New tests**: Added tests for FileSorterService, QuickNoteService, QuickNoteLayoutHelper, and QuickNoteMarkdown
+- **Документация**: Добавлены документы AiteBar Panel Exec Plan и Contract Clean
+- **Documentation**: Added AiteBar Panel Exec Plan and Contract Clean documentation
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Улучшено качество масштабирования иконок**: Использован высококачественный кубический ресемплер (Mitchell) вместо линейного фильтра
+- **Improved icon scaling quality**: Used high-quality cubic resampler (Mitchell) instead of linear filter
+- **Рефакторинг IconConverterService**: Устранено дублирование кода, улучшена управляемость ресурсами
+- **IconConverterService refactoring**: Removed code duplication, improved resource management
+- **Исправлены тесты WPF**: Добавлен WpfTestCollection для корректной инициализации приложения в тестах
+- **Fixed WPF tests**: Added WpfTestCollection for proper app initialization in tests
+- **Рефакторинг QuickNote**: Извлечена логика разметки в QuickNoteLayoutHelper, улучшена стабильность
+- **QuickNote refactoring**: Extracted layout logic to QuickNoteLayoutHelper, improved stability
+- **Безопасность FileSorter**: Добавлены ограничения по размеру файлов, проверки путей, подтверждение записи и повторные попытки
+- **FileSorter security**: Added file size limits, path checks, write verification, and retry logic
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Размытые иконки в конвертере**: Исправлено качество масштабирования при создании иконок
+- **Blurry icons in converter**: Fixed scaling quality when generating icons
+- **Проблемы с многопоточностью в тестах MainWindow**: Устранены ошибки доступа к Application.Current из разных потоков
+- **Multi-threading issues in MainWindow tests**: Fixed errors accessing Application.Current from different threads
+- **Сохранение геометрии QuickNote**: Добавлено отслеживание позиции и размера окна QuickNote, сохранение между сессиями
+- **QuickNote geometry saving**: Added tracking of QuickNote window position and size, persisted across sessions
+- **UX QuickNote**: Исправлено взаимодействие с окном, отмена/повтор действий, обновление состояния меню конфликтов
+- **QuickNote UX**: Fixed window interaction, undo/redo actions, conflict menu state updates
+- **Безопасность FileSorter**: Добавлена защита от символических ссылок, повторные попытки при ошибках доступа
+- **FileSorter security**: Added protection against symlinks, retries on access errors
+
 ## [1.7.6] - 2026-06-07
 
 ### 🇷🇺 Изменено | 🇬🇧 Changed

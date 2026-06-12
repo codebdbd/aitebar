@@ -323,4 +323,43 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="PanelPackage_UnsupportedActionType" xml:space="preserve"><value>Непідтримуваний тип дії: {0}.</value></data>
   <data name="PanelPackage_InvalidIconPath" xml:space="preserve"><value>Некоректний шлях до піктограми: {0}.</value></data>
   <data name="IconPicker_ResourceNotFound" xml:space="preserve"><value>Ресурс не знайдено: {0}</value></data>
+  <data name="Tool_IconConverter" xml:space="preserve"><value>ICO-конвертер</value></data>
+  <data name="Main_IconConverterTooltip" xml:space="preserve"><value>Конвертувати зображення в ICO</value></data>
+  <data name="IconConverter_Title" xml:space="preserve"><value>ICO-конвертер</value></data>
+  <data name="IconConverter_DropHint" xml:space="preserve"><value>Перетягніть зображення сюди</value></data>
+  <data name="IconConverter_NoFile" xml:space="preserve"><value>PNG, JPG, WEBP, BMP, TIFF, SVG.</value></data>
+  <data name="IconConverter_ChooseImage" xml:space="preserve"><value>Вибрати зображення</value></data>
+  <data name="IconConverter_SaveIco" xml:space="preserve"><value>Зберегти ICO</value></data>
+  <data name="IconConverter_Sizes" xml:space="preserve"><value>Розміри</value></data>
+  <data name="IconConverter_PracticalPreset" xml:space="preserve"><value>Практичний</value></data>
+  <data name="IconConverter_WindowsPreset" xml:space="preserve"><value>Windows DPI</value></data>
+  <data name="IconConverter_Padding" xml:space="preserve"><value>Відступ</value></data>
+  <data name="IconConverter_FitMode" xml:space="preserve"><value>Режим</value></data>
+  <data name="IconConverter_Fit" xml:space="preserve"><value>Вписати</value></data>
+  <data name="IconConverter_Fill" xml:space="preserve"><value>Заповнити</value></data>
+  <data name="IconConverter_Background" xml:space="preserve"><value>Фон</value></data>
+  <data name="IconConverter_BackgroundTransparent" xml:space="preserve"><value>Прозорий</value></data>
+  <data name="IconConverter_BackgroundSolid" xml:space="preserve"><value>Кольоровий</value></data>
+  <data name="IconConverter_Color" xml:space="preserve"><value>Колір</value></data>
+  <data name="IconConverter_Ready" xml:space="preserve"><value>Виберіть або перетягніть зображення для попереднього перегляду.</value></data>
+  <data name="IconConverter_Generating" xml:space="preserve"><value>Створення перегляду...</value></data>
+  <data name="IconConverter_SourceFormat" xml:space="preserve"><value>{0} - {1}x{2}</value></data>
+  <data name="IconConverter_WarningSourceTooSmall" xml:space="preserve"><value>Джерело {0}x{1}; збільшення до {2}x{2} може погіршити якість.</value></data>
+  <data name="IconConverter_ErrorUnsupportedFormat" xml:space="preserve"><value>Непідтримуваний формат зображення.</value></data>
+  <data name="IconConverter_ErrorSvgUnsupported" xml:space="preserve"><value>Не вдалося імпортувати SVG.</value></data>
+  <data name="IconConverter_ErrorInvalidSvg" xml:space="preserve"><value>Не вдалося прочитати вміст SVG.</value></data>
+  <data name="IconConverter_ErrorInvalidImage" xml:space="preserve"><value>Не вдалося прочитати вміст зображення.</value></data>
+  <data name="IconConverter_ErrorRenderFailed" xml:space="preserve"><value>Не вдалося відрендерити зображення піктограми.</value></data>
+  <data name="IconConverter_ErrorFileTooLarge" xml:space="preserve"><value>Файл зображення завеликий. Максимальний розмір: {0} МБ.</value></data>
+  <data name="IconConverter_ErrorImageTooLarge" xml:space="preserve"><value>Зображення завелике: {0}x{1}.</value></data>
+  <data name="IconConverter_ErrorUnsafeSvg" xml:space="preserve"><value>SVG містить непідтримуваний зовнішній або скриптовий вміст.</value></data>
+  <data name="IconConverter_ErrorInvalidColor" xml:space="preserve"><value>Введіть коректний колір фону.</value></data>
+  <data name="IconConverter_ErrorNoSizesSelected" xml:space="preserve"><value>Виберіть хоча б один розмір піктограми.</value></data>
+  <data name="IconConverter_ErrorInvalidSize" xml:space="preserve"><value>Розміри піктограм мають бути від 1 до 256.</value></data>
+  <data name="IconConverter_ErrorFileNotFound" xml:space="preserve"><value>Файл зображення не знайдено.</value></data>
+  <data name="IconConverter_OverwriteConfirm" xml:space="preserve"><value>Перезаписати наявний файл? {0}</value></data>
+  <data name="IconConverter_OpenFilter" xml:space="preserve"><value>Зображення|*.png;*.jpg;*.jpeg;*.webp;*.bmp;*.tif;*.tiff;*.svg|Усі файли|*.*</value></data>
+  <data name="IconConverter_SaveFilter" xml:space="preserve"><value>Піктограма Windows|*.ico</value></data>
+  <data name="IconConverter_SavedFormat" xml:space="preserve"><value>Збережено: {0}</value></data>
+  <data name="IconConverter_SaveFailed" xml:space="preserve"><value>Не вдалося зберегти ICO: {0}</value></data>
 </root>

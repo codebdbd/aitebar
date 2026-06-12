@@ -144,13 +144,6 @@ public partial class MainWindow : Window
 
         // Subscribe to settings changes for auto-re-registration
         _settingsService.SettingsChanged += OnSettingsChanged;
-
-        Application.Current.Exit += (_, _) =>
-        {
-            _nativeService?.Dispose();
-            _settingsService.SettingsChanged -= OnSettingsChanged;
-            UnregisterGlobalHotkey();
-        };
     }
 
     private void OnSettingsChanged(object? sender, EventArgs e)
@@ -175,6 +168,7 @@ public partial class MainWindow : Window
         BtnExplorer.ToolTip = LocalizationService.Get("Main_ExplorerTooltip");
         BtnDownloads.ToolTip = LocalizationService.Get("Main_DownloadsTooltip");
         BtnFileSorter.ToolTip = LocalizationService.Get("Main_FileSorterTooltip");
+        BtnIconConverter.ToolTip = LocalizationService.Get("Main_IconConverterTooltip");
         BtnTimerStopwatch.ToolTip = LocalizationService.Get("Main_TimerStopwatchTooltip");
         BtnColorPicker.ToolTip = LocalizationService.Get("Main_ColorPickerTooltip");
         BtnQuickNote.ToolTip = LocalizationService.Get("Main_QuickNoteTooltip");
@@ -191,6 +185,7 @@ public partial class MainWindow : Window
         BtnExplorer.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetExplorer = false);
         BtnDownloads.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetDownloads = false);
         BtnFileSorter.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetFileSorter = false);
+        BtnIconConverter.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetIconConverter = false);
         BtnTimerStopwatch.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetTimerStopwatch = false);
         BtnColorPicker.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetColorPicker = false);
         BtnQuickNote.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetQuickNote = false);
@@ -800,6 +795,7 @@ public partial class MainWindow : Window
         if (AppSettings.ShowPresetExplorer) count++;
         if (AppSettings.ShowPresetDownloads) count++;
         if (AppSettings.ShowPresetFileSorter) count++;
+        if (AppSettings.ShowPresetIconConverter) count++;
         if (AppSettings.ShowPresetTimerStopwatch) count++;
         if (AppSettings.ShowPresetColorPicker) count++;
         if (AppSettings.ShowPresetQuickNote) count++;
@@ -1569,6 +1565,8 @@ public partial class MainWindow : Window
         yield return BtnCalc;
         yield return BtnExplorer;
         yield return BtnDownloads;
+        yield return BtnFileSorter;
+        yield return BtnIconConverter;
         yield return BtnTimerStopwatch;
         yield return BtnColorPicker;
         yield return BtnQuickNote;
@@ -1598,6 +1596,7 @@ public partial class MainWindow : Window
         BtnExplorer.Visibility = showSystemUtils && AppSettings.ShowPresetExplorer ? Visibility.Visible : Visibility.Collapsed;
         BtnDownloads.Visibility = showSystemUtils && AppSettings.ShowPresetDownloads ? Visibility.Visible : Visibility.Collapsed;
         BtnFileSorter.Visibility = showSystemUtils && AppSettings.ShowPresetFileSorter ? Visibility.Visible : Visibility.Collapsed;
+        BtnIconConverter.Visibility = showSystemUtils && AppSettings.ShowPresetIconConverter ? Visibility.Visible : Visibility.Collapsed;
         BtnTimerStopwatch.Visibility = showSystemUtils && AppSettings.ShowPresetTimerStopwatch ? Visibility.Visible : Visibility.Collapsed;
         BtnColorPicker.Visibility = showSystemUtils && AppSettings.ShowPresetColorPicker ? Visibility.Visible : Visibility.Collapsed;
         BtnQuickNote.Visibility = showSystemUtils && AppSettings.ShowPresetQuickNote ? Visibility.Visible : Visibility.Collapsed;
@@ -1609,6 +1608,7 @@ public partial class MainWindow : Window
                               BtnExplorer.Visibility == Visibility.Visible ||
                               BtnDownloads.Visibility == Visibility.Visible ||
                               BtnFileSorter.Visibility == Visibility.Visible ||
+                              BtnIconConverter.Visibility == Visibility.Visible ||
                               BtnTimerStopwatch.Visibility == Visibility.Visible ||
                               BtnColorPicker.Visibility == Visibility.Visible ||
                               BtnQuickNote.Visibility == Visibility.Visible;
@@ -2390,6 +2390,7 @@ public partial class MainWindow : Window
     private async void BtnExplorer_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartExplorerAsync(HideDock)); }
     private async void BtnDownloads_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.StartDownloadsAsync(HideDock)); }
     private async void BtnFileSorter_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("FileSorter", HideDock)); }
+    private async void BtnIconConverter_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("IconConverter", HideDock)); }
     private async void BtnTimerStopwatch_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("TimerStopwatch", HideDock)); }
     private async void BtnColorPicker_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("ColorPicker", HideDock)); }
     private async void BtnQuickNote_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("QuickNote", HideDock)); }
@@ -2584,7 +2585,14 @@ public partial class MainWindow : Window
         }
         catch (Exception ex) { Logger.Log(ex); }
     }
-    protected override void OnClosed(EventArgs e) { _nativeService?.Dispose(); _notifyIcon?.Dispose(); base.OnClosed(e); }
+    protected override void OnClosed(EventArgs e) 
+    { 
+        _nativeService?.Dispose(); 
+        _notifyIcon?.Dispose();
+        _settingsService.SettingsChanged -= OnSettingsChanged;
+        UnregisterGlobalHotkey();
+        base.OnClosed(e); 
+    }
 }
 
 

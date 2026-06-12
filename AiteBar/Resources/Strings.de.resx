@@ -328,4 +328,43 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="PanelPackage_UnsupportedActionType" xml:space="preserve"><value>Nicht unterstützter Aktionstyp: {0}.</value></data>
   <data name="PanelPackage_InvalidIconPath" xml:space="preserve"><value>Ungültiger Symbolpfad: {0}.</value></data>
   <data name="IconPicker_ResourceNotFound" xml:space="preserve"><value>Ressource wurde nicht gefunden: {0}</value></data>
+  <data name="Tool_IconConverter" xml:space="preserve"><value>ICO-Konverter</value></data>
+  <data name="Main_IconConverterTooltip" xml:space="preserve"><value>Bild in Windows-ICO konvertieren</value></data>
+  <data name="IconConverter_Title" xml:space="preserve"><value>ICO-Konverter</value></data>
+  <data name="IconConverter_DropHint" xml:space="preserve"><value>Bild hier ablegen</value></data>
+  <data name="IconConverter_NoFile" xml:space="preserve"><value>PNG, JPG, WEBP, BMP, TIFF, SVG.</value></data>
+  <data name="IconConverter_ChooseImage" xml:space="preserve"><value>Bild wählen</value></data>
+  <data name="IconConverter_SaveIco" xml:space="preserve"><value>ICO speichern</value></data>
+  <data name="IconConverter_Sizes" xml:space="preserve"><value>Größen</value></data>
+  <data name="IconConverter_PracticalPreset" xml:space="preserve"><value>Praktisch</value></data>
+  <data name="IconConverter_WindowsPreset" xml:space="preserve"><value>Windows DPI</value></data>
+  <data name="IconConverter_Padding" xml:space="preserve"><value>Abstand</value></data>
+  <data name="IconConverter_FitMode" xml:space="preserve"><value>Modus</value></data>
+  <data name="IconConverter_Fit" xml:space="preserve"><value>Einpassen</value></data>
+  <data name="IconConverter_Fill" xml:space="preserve"><value>Füllen</value></data>
+  <data name="IconConverter_Background" xml:space="preserve"><value>Hintergrund</value></data>
+  <data name="IconConverter_BackgroundTransparent" xml:space="preserve"><value>Transparent</value></data>
+  <data name="IconConverter_BackgroundSolid" xml:space="preserve"><value>Einfarbig</value></data>
+  <data name="IconConverter_Color" xml:space="preserve"><value>Farbe</value></data>
+  <data name="IconConverter_Ready" xml:space="preserve"><value>Bild wählen oder ablegen, um Vorschauen zu erzeugen.</value></data>
+  <data name="IconConverter_Generating" xml:space="preserve"><value>Vorschauen werden erzeugt...</value></data>
+  <data name="IconConverter_SourceFormat" xml:space="preserve"><value>{0} - {1}x{2}</value></data>
+  <data name="IconConverter_WarningSourceTooSmall" xml:space="preserve"><value>Quelle ist {0}x{1}; Hochskalieren auf {2}x{2} kann Qualität kosten.</value></data>
+  <data name="IconConverter_ErrorUnsupportedFormat" xml:space="preserve"><value>Nicht unterstütztes Bildformat.</value></data>
+  <data name="IconConverter_ErrorSvgUnsupported" xml:space="preserve"><value>SVG-Import fehlgeschlagen.</value></data>
+  <data name="IconConverter_ErrorInvalidSvg" xml:space="preserve"><value>SVG-Inhalt konnte nicht gelesen werden.</value></data>
+  <data name="IconConverter_ErrorInvalidImage" xml:space="preserve"><value>Bildinhalt konnte nicht gelesen werden.</value></data>
+  <data name="IconConverter_ErrorRenderFailed" xml:space="preserve"><value>Symbolbild konnte nicht gerendert werden.</value></data>
+  <data name="IconConverter_ErrorFileTooLarge" xml:space="preserve"><value>Bilddatei ist zu groß. Maximale Größe: {0} MB.</value></data>
+  <data name="IconConverter_ErrorImageTooLarge" xml:space="preserve"><value>Bild ist zu groß: {0}x{1}.</value></data>
+  <data name="IconConverter_ErrorUnsafeSvg" xml:space="preserve"><value>SVG enthält nicht unterstützte externe oder Skriptinhalte.</value></data>
+  <data name="IconConverter_ErrorInvalidColor" xml:space="preserve"><value>Eine gültige Hintergrundfarbe eingeben.</value></data>
+  <data name="IconConverter_ErrorNoSizesSelected" xml:space="preserve"><value>Mindestens eine Symbolgröße auswählen.</value></data>
+  <data name="IconConverter_ErrorInvalidSize" xml:space="preserve"><value>Symbolgrößen müssen zwischen 1 und 256 liegen.</value></data>
+  <data name="IconConverter_ErrorFileNotFound" xml:space="preserve"><value>Bilddatei wurde nicht gefunden.</value></data>
+  <data name="IconConverter_OverwriteConfirm" xml:space="preserve"><value>Vorhandene Datei überschreiben? {0}</value></data>
+  <data name="IconConverter_OpenFilter" xml:space="preserve"><value>Bilder|*.png;*.jpg;*.jpeg;*.webp;*.bmp;*.tif;*.tiff;*.svg|Alle Dateien|*.*</value></data>
+  <data name="IconConverter_SaveFilter" xml:space="preserve"><value>Windows-Symbol|*.ico</value></data>
+  <data name="IconConverter_SavedFormat" xml:space="preserve"><value>Gespeichert: {0}</value></data>
+  <data name="IconConverter_SaveFailed" xml:space="preserve"><value>ICO konnte nicht gespeichert werden: {0}</value></data>
 </root>

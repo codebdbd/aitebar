@@ -323,6 +323,7 @@ public partial class AppSettingsWindow : DarkWindow
         ChkShowPresetExplorer.IsChecked = _settings.ShowPresetExplorer;
         ChkShowPresetDownloads.IsChecked = _settings.ShowPresetDownloads;
         ChkShowPresetFileSorter.IsChecked = _settings.ShowPresetFileSorter;
+        ChkShowPresetIconConverter.IsChecked = _settings.ShowPresetIconConverter;
         ChkShowPresetTimerStopwatch.IsChecked = _settings.ShowPresetTimerStopwatch;
         ChkShowPresetColorPicker.IsChecked = _settings.ShowPresetColorPicker;
         ChkShowPresetQuickNote.IsChecked = _settings.ShowPresetQuickNote;
@@ -504,6 +505,7 @@ public partial class AppSettingsWindow : DarkWindow
         _settings.ShowPresetExplorer = ChkShowPresetExplorer.IsChecked ?? false;
         _settings.ShowPresetDownloads = ChkShowPresetDownloads.IsChecked ?? false;
         _settings.ShowPresetFileSorter = ChkShowPresetFileSorter.IsChecked ?? false;
+        _settings.ShowPresetIconConverter = ChkShowPresetIconConverter.IsChecked ?? false;
         _settings.ShowPresetTimerStopwatch = ChkShowPresetTimerStopwatch.IsChecked ?? false;
         _settings.ShowPresetColorPicker = ChkShowPresetColorPicker.IsChecked ?? false;
         _settings.ShowPresetQuickNote = ChkShowPresetQuickNote.IsChecked ?? false;

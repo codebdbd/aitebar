@@ -1,119 +1,69 @@
 # Добавление новых утилит в AiteBar
 
-Этот документ описывает, как добавлять новые быстрые утилиты в AiteBar.
+Этот документ описывает фактическую схему подключения быстрых встроенных утилит в AiteBar.
 
 ## Архитектура
 
-Для управления утилитами используется центральный `UtilityRegistry` и интерфейс `IUtility`. Все утилиты реализуют этот интерфейс и регистрируются в реестре.
+Утилиты регистрируются через `UtilityRegistry` и реализуют `IUtility` из `AiteBar/UtilityRegistry.cs`. Для обычной утилиты с отдельным WPF-окном предпочтительно наследоваться от `UtilityBase<TWindow>`: базовый класс уже умеет активировать открытое окно, вызывать `onBeforeExecute`, создавать окно и очищать ссылку после закрытия.
 
-## Шаги добавления новой утилиты
-
-### 1. Создайте класс утилиты
-
-Создайте новый класс в корне проекта AiteBar, реализующий интерфейс `IUtility`:
+Минимальный класс утилиты:
 
 ```csharp
-using System;
 using System.Runtime.Versioning;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace AiteBar;
 
 [SupportedOSPlatform("windows6.1")]
-public class MyNewUtility : IUtility
+public sealed class MyNewUtility : UtilityBase<MyNewUtilityWindow>
 {
-    private MyNewUtilityWindow? _window;
+    public override string Id => "MyNewUtility";
+    public override string DisplayNameKey => "Tool_MyNewUtility";
+    public override string IconGlyph => "\uE946";
+    public override string IconColor => "#007ACC";
 
-    // Уникальный идентификатор утилиты
-    public string Id => "MyNewUtility";
-
-    // Ключ локализованного имени (из Strings.resx)
-    public string DisplayNameKey => "Tool_MyNewUtility";
-
-    // Иконка (из Fluent System Icons)
-    public string IconGlyph => "\uE946"; // Пример: иконка для новой утилиты
-
-    // Цвет иконки
-    public string IconColor => "#007ACC";
-
-    public async void Launch(AppSettingsService settingsService, Window? owner, Func<Task>? onBeforeExecute = null)
+    protected override MyNewUtilityWindow CreateWindow(AppSettingsService settingsService, Window? owner)
     {
-        if (onBeforeExecute != null)
-        {
-            await onBeforeExecute();
-        }
+        return new MyNewUtilityWindow(settingsService) { Owner = owner };
+    }
 
-        // Если окно уже открыто — активируем его
-        if (_window is { IsVisible: true })
-        {
-            _window.Activate();
-            return;
-        }
-
-        // Создаём новое окно
-        _window = new MyNewUtilityWindow
-        {
-            Owner = owner
-        };
-
-        // Очищаем ссылку при закрытии окна
-        _window.Closed += (s, e) => _window = null;
-
-        // Показываем окно (с анимацией или рядом с панелью)
-        _window.Show();
+    protected override void ShowWindow(MyNewUtilityWindow window, AppSettingsService settingsService)
+    {
+        window.ShowNearPanel(settingsService);
     }
 }
 ```
 
-### 2. Создайте окно для утилиты
+Если утилита не имеет постоянного окна, можно реализовать `IUtility` напрямую. Пример: `ColorPickerUtility`.
 
-Создайте WPF-окно для новой утилиты (например, `MyNewUtilityWindow.xaml` и `MyNewUtilityWindow.xaml.cs`).
+## Подключение
 
-### 3. Зарегистрируйте утилиту в реестре
-
-В файле `App.xaml.cs` добавьте регистрацию новой утилиты в методе `RegisterUtilities`:
+1. Создайте WPF-окно утилиты: `MyNewUtilityWindow.xaml` и `MyNewUtilityWindow.xaml.cs`.
+2. Создайте класс `MyNewUtility`.
+3. Зарегистрируйте класс в `App.xaml.cs` внутри `RegisterUtilities()`:
 
 ```csharp
-private void RegisterUtilities()
-{
-    // Существующие утилиты
-    UtilityRegistry.Register(new QuickNoteUtility());
-    UtilityRegistry.Register(new TimerStopwatchUtility());
-    UtilityRegistry.Register(new ColorPickerUtility());
-    UtilityRegistry.Register(new FileSorterUtility());
-
-    // Новая утилита
-    UtilityRegistry.Register(new MyNewUtility());
-}
+UtilityRegistry.Register(new MyNewUtility());
 ```
 
-### 4. Добавьте локализованные строки
+4. Добавьте локализацию во все ресурсы:
+   - `AiteBar/Resources/Strings.resx`
+   - `AiteBar/Resources/Strings.ru.resx`
+   - `AiteBar/Resources/Strings.uk.resx`
+   - `AiteBar/Resources/Strings.de.resx`
 
-В файлы ресурсов (`Strings.resx`, `Strings.ru.resx` и т.д.) добавьте ключ для отображения имени утилиты в настройках:
+Тест `LocalizationServiceTests.ResourceFiles_HaveSameKeysAndFormatPlaceholders` требует одинаковый набор ключей во всех ресурсных файлах.
 
-| Ключ               | Значение (RU) |
-|--------------------|---------------|
-| Tool_MyNewUtility  | Моя утилита   |
+## Кнопка на панели
 
-### 5. Добавьте кнопку на панель
+Пока системные утилиты на панели подключаются явно. Для новой кнопки нужно обновить:
 
-В файле `MainWindow.xaml` добавьте новую кнопку:
-
-```xaml
-<Button
-    x:Name="BtnMyNewUtility"
-    Click="BtnMyNewUtility_Click"
-    Style="{StaticResource PanelActionButtonStyle}"
-    ToolTip="{Loc Tool_MyNewUtility}">
-    <TextBlock
-        FontFamily="{StaticResource FluentSystemIcons}"
-        Foreground="#007ACC"
-        Text="\uE946" />
-</Button>
-```
-
-В файле `MainWindow.xaml.cs` добавьте обработчик клика:
+- `AiteBar/MainWindow.xaml`: добавить `Button` в `SystemUtilsPanel`.
+- `AiteBar/MainWindow.xaml.cs`: добавить tooltip в `ApplyLocalizedText()`.
+- `AiteBar/MainWindow.xaml.cs`: добавить context menu в `AttachSystemUtilityContextMenus()`.
+- `AiteBar/MainWindow.xaml.cs`: добавить настройку в `GetVisibleSystemButtonCount()`.
+- `AiteBar/MainWindow.xaml.cs`: добавить кнопку в `ApplySystemUtilityVisibility()` и расчет `hasSystemUtils`.
+- `AiteBar/MainWindow.xaml.cs`: добавить обработчик клика:
 
 ```csharp
 private async void BtnMyNewUtility_Click(object sender, RoutedEventArgs e)
@@ -122,17 +72,37 @@ private async void BtnMyNewUtility_Click(object sender, RoutedEventArgs e)
 }
 ```
 
-### 6. (Опционально) Добавьте поддержку горячих клавиш
+Если кнопка должна участвовать в keyboard focus traversal, добавьте ее в `EnumeratePanelButtons()`.
 
-Чтобы новая утилита могла вызываться по горячей клавише, обновите:
-1. Перечисление `HotkeyCommand` в `Models.cs`
-2. Метод `HandleHotkeyPressed` в `HotkeyService.cs`
-3. Окно настроек `SettingsWindow.xaml` и `SettingsWindow.xaml.cs`
+## Настройка видимости
+
+Добавьте boolean-настройку в `AppSettings`:
+
+```csharp
+public bool ShowPresetMyNewUtility { get; set; } = true;
+```
+
+Затем подключите ее в:
+
+- `AiteBar/AppSettingsWindow.xaml`: чекбокс во вкладке быстрых утилит.
+- `AiteBar/AppSettingsWindow.xaml.cs`: загрузка значения в `LoadSettings()`.
+- `AiteBar/AppSettingsWindow.xaml.cs`: сохранение значения в `BtnSave_Click()`.
+
+## Горячие клавиши
+
+Хоткеи для утилит не создаются автоматически. Если утилите нужен глобальный хоткей, обновите:
+
+- `AiteBar/Models.cs`: новое свойство `HotkeyBinding`.
+- `AiteBar/HotkeyService.cs`: `HotkeyCommand`, уникальный ID, descriptor и binding mapping.
+- `AiteBar/AppSettingsWindow.xaml`: controls для выбора hotkey.
+- `AiteBar/AppSettingsWindow.xaml.cs`: загрузка, валидация и сохранение.
+- `AiteBar/MainWindow.xaml.cs`: запуск в `ExecuteHotkeyCommand()`.
+- `AiteBar.Tests/HotkeyServiceTests.cs`: ожидаемый список команд и mapping.
 
 ## Примеры
 
-Посмотрите реализацию существующих утилит для примера:
-- `QuickNoteUtility.cs` (быстрые заметки)
-- `TimerStopwatchUtility.cs` (таймер/секундомер)
-- `ColorPickerUtility.cs` (пипетка для цвета)
-- `FileSorterUtility.cs` (сортировщик файлов)
+- `QuickNoteUtility.cs`: окно со своим позиционированием и сохранением состояния.
+- `TimerStopwatchUtility.cs`: окно рядом с панелью.
+- `ColorPickerUtility.cs`: modal/dialog-like одноразовый запуск без `UtilityBase<TWindow>`.
+- `FileSorterUtility.cs`: сервисная логика отдельно от окна.
+- `IconConverterUtility.cs`: конвертация PNG/JPG/WEBP/BMP/TIFF/SVG в Windows ICO через SkiaSharp/Svg.Skia, отдельный сервис и encoder; preview работает отдельно от финальной сборки ICO, входные файлы валидируются по размеру/безопасности.

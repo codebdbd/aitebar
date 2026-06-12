@@ -43,6 +43,7 @@ public partial class App : System.Windows.Application
         UtilityRegistry.Register(new TimerStopwatchUtility());
         UtilityRegistry.Register(new ColorPickerUtility());
         UtilityRegistry.Register(new FileSorterUtility());
+        UtilityRegistry.Register(new IconConverterUtility());
         
         // Чтобы добавить новую утилиту, просто создайте класс, реализующий IUtility,
         // и добавьте его сюда: UtilityRegistry.Register(new YourNewUtility());
