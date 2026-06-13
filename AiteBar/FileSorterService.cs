@@ -279,7 +279,11 @@ public sealed class FileSorterService
 
     internal static string GetCategoryFolder(string filePath)
     {
-        return GetCategoryFolder(filePath, CultureInfo.CurrentUICulture);
+        string extension = Path.GetExtension(filePath).TrimStart('.');
+        string resourceKey = CategoryByExtension.TryGetValue(extension, out string? category)
+            ? category
+            : "FileSorter_CategoryOther";
+        return LocalizationService.Get(resourceKey);
     }
 
     internal static string GetCategoryFolder(string filePath, CultureInfo culture)

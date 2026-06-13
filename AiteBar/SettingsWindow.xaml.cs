@@ -65,6 +65,7 @@ namespace AiteBar
             }
             else
             {
+                this.Title = LocalizationService.Get("SettingsWindow_AddTitle");
                 SetComboValue(CmbActionType, nameof(ActionType.Web));
                 var defaultBrowser = BrowserHelper.GetSystemDefaultBrowser();
                 SetComboValue(CmbBrowser, defaultBrowser.ToString());
@@ -338,6 +339,10 @@ namespace AiteBar
             if (_editingElement != null)
             {
                 Title = LocalizationService.Get("SettingsWindow_EditTitle");
+            }
+            else
+            {
+                Title = LocalizationService.Get("SettingsWindow_AddTitle");
             }
 
             LoadKeyList();

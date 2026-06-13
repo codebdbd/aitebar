@@ -78,6 +78,9 @@
   <data name="SettingsWindow_EditTitle" xml:space="preserve">
     <value>Редактировать кнопку</value>
   </data>
+  <data name="SettingsWindow_AddTitle" xml:space="preserve">
+    <value>Добавить кнопку</value>
+  </data>
   <data name="SettingsWindow_ButtonName" xml:space="preserve">
     <value>Название кнопки</value>
   </data>

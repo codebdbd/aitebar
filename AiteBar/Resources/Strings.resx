@@ -26,6 +26,7 @@
   <data name="Action_Hotkey" xml:space="preserve"><value>Hotkeys</value></data>
   <data name="SettingsWindow_Title" xml:space="preserve"><value>Settings</value></data>
   <data name="SettingsWindow_EditTitle" xml:space="preserve"><value>Edit button</value></data>
+  <data name="SettingsWindow_AddTitle" xml:space="preserve"><value>Add button</value></data>
   <data name="SettingsWindow_ButtonName" xml:space="preserve"><value>Button name</value></data>
   <data name="SettingsWindow_ButtonNamePlaceholder" xml:space="preserve"><value>Example: ChatGPT, Terminal...</value></data>
   <data name="SettingsWindow_ActionType" xml:space="preserve"><value>Action type</value></data>

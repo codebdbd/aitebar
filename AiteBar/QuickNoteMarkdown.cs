@@ -17,16 +17,57 @@ namespace AiteBar
         private static readonly MediaFontFamily DefaultFont = new("Segoe UI");
         private static readonly MediaFontFamily CodeFont = new("Consolas");
         private static readonly Regex UrlRegex = new(@"(?i)\b(?:https?://|www\.)[^\s<>()""']+", RegexOptions.Compiled);
+        private static readonly Regex EmailRegex = new(@"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", RegexOptions.Compiled);
+        private static readonly Regex PhoneRegex = new(@"(?i)\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b", RegexOptions.Compiled);
         private static readonly Regex BulletMarkerRegex = new(@"^\s*[-*]\s+", RegexOptions.Compiled);
         private static readonly Regex NumberMarkerRegex = new(@"^\s*\d+\.\s+", RegexOptions.Compiled);
         private static readonly Regex AnyListMarkerRegex = new(@"^(?<indent>\s*)(?:[-*]\s+|\d+\.\s+)", RegexOptions.Compiled);
 
-        public static IEnumerable<Match> MatchUrls(string text) => UrlRegex.Matches(text);
+        public enum LinkType
+        {
+            Url,
+            Email,
+            Phone
+        }
+
+        public static IEnumerable<(Match Match, LinkType Type)> MatchLinks(string text)
+        {
+            var matches = new List<(Match Match, LinkType Type)>();
+            foreach (Match match in UrlRegex.Matches(text))
+            {
+                matches.Add((match, LinkType.Url));
+            }
+            foreach (Match match in EmailRegex.Matches(text))
+            {
+                matches.Add((match, LinkType.Email));
+            }
+            foreach (Match match in PhoneRegex.Matches(text))
+            {
+                matches.Add((match, LinkType.Phone));
+            }
+            return matches.OrderBy(m => m.Match.Index);
+        }
+
+        public static string NormalizeLinkForOpen(string matchedText, LinkType type)
+        {
+            string text = matchedText.TrimEnd('.', ',', ';', ':', '!', '?', ')', ']');
+            return type switch
+            {
+                LinkType.Url => text.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? "https://" + text : text,
+                LinkType.Email => "mailto:" + text,
+                LinkType.Phone => "tel:" + text,
+                _ => text
+            };
+        }
+
+        public static IEnumerable<Match> MatchUrls(string text)
+        {
+            return UrlRegex.Matches(text);
+        }
 
         public static string NormalizeUrlForOpen(string matchedUrl)
         {
-            string url = matchedUrl.TrimEnd('.', ',', ';', ':', '!', '?', ')', ']');
-            return url.StartsWith("www.", StringComparison.OrdinalIgnoreCase) ? "https://" + url : url;
+            return NormalizeLinkForOpen(matchedUrl, LinkType.Url);
         }
 
         public static void LoadMarkdown(FlowDocument document, string markdown)
@@ -182,7 +223,11 @@ namespace AiteBar
                 if (TryReadDelimited(line, index, "`", out string codeText, out int codeEnd))
                 {
                     FlushPlain(paragraph, plain);
-                    paragraph.Inlines.Add(CreateRun(UnescapeMarkdownText(codeText), CodeFont));
+                    var codeSpan = new Span(CreateRun(UnescapeMarkdownText(codeText), CodeFont))
+                    {
+                        Tag = "code"
+                    };
+                    paragraph.Inlines.Add(codeSpan);
                     index = codeEnd;
                     continue;
                 }
@@ -419,7 +464,8 @@ namespace AiteBar
         }
 
         private static bool IsCodeInline(Inline inline) =>
-            inline.FontFamily?.Source.Equals("Consolas", StringComparison.OrdinalIgnoreCase) == true;
+            inline.FontFamily?.Source.Equals("Consolas", StringComparison.OrdinalIgnoreCase) == true ||
+            (inline is Span span && span.Tag?.ToString() == "code");
 
         private static bool IsUnderlineInline(Inline inline) =>
             inline.TextDecorations?.Count > 0 ||

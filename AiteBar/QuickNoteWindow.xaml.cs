@@ -168,7 +168,7 @@ namespace AiteBar
         private void TxtNote_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
         {
             TxtNote.Cursor = (Keyboard.Modifiers == ModifierKeys.Control || Keyboard.Modifiers == ModifierKeys.None) &&
-                             FindUrlAtMouse(e.GetPosition(TxtNote)) != null
+                             FindLinkAtMouse(e.GetPosition(TxtNote)) != null
                 ? System.Windows.Input.Cursors.Hand
                 : System.Windows.Input.Cursors.IBeam;
         }
@@ -643,6 +643,9 @@ namespace AiteBar
             var text = Brush(theme.Text);
             var muted = Brush(theme.MutedText);
             var accent = Brush(theme.Accent);
+            var codeBackground = Brush(theme.CodeBackground);
+            var codeText = Brush(theme.CodeText);
+            var link = Brush(theme.Link);
 
             if (Content is Grid root && root.Children.OfType<Border>().FirstOrDefault() is { } shell)
             {
@@ -680,6 +683,48 @@ namespace AiteBar
                 button.Foreground = text;
             }
 
+            ApplyDocumentStyles(TxtNote.Document, codeBackground, codeText, link);
+        }
+
+        private void ApplyDocumentStyles(FlowDocument document, System.Windows.Media.Brush codeBackground, System.Windows.Media.Brush codeText, System.Windows.Media.Brush linkBrush)
+        {
+            foreach (Block block in document.Blocks)
+            {
+                if (block is Paragraph paragraph)
+                {
+                    ApplyInlineStyles(paragraph.Inlines, codeBackground, codeText, linkBrush);
+                }
+            }
+        }
+
+        private void ApplyInlineStyles(InlineCollection inlines, System.Windows.Media.Brush codeBackground, System.Windows.Media.Brush codeText, System.Windows.Media.Brush linkBrush)
+        {
+            foreach (Inline inline in inlines.ToList())
+            {
+                if (inline is Span span)
+                {
+                    if (span.Tag?.ToString() == "code")
+                    {
+                        span.Background = codeBackground;
+                        span.Foreground = codeText;
+                        span.FontFamily = new System.Windows.Media.FontFamily("Consolas");
+                    }
+                    ApplyInlineStyles(span.Inlines, codeBackground, codeText, linkBrush);
+                }
+                else if (inline is Bold bold)
+                {
+                    ApplyInlineStyles(bold.Inlines, codeBackground, codeText, linkBrush);
+                }
+                else if (inline is Italic italic)
+                {
+                    ApplyInlineStyles(italic.Inlines, codeBackground, codeText, linkBrush);
+                }
+                else if (inline is Run run && run.FontFamily?.Source == "Consolas")
+                {
+                    run.Background = codeBackground;
+                    run.Foreground = codeText;
+                }
+            }
         }
 
         private static SolidColorBrush Brush(string color) =>
@@ -813,15 +858,16 @@ namespace AiteBar
 
         private bool TryOpenUrlAtMouse(MouseButtonEventArgs e)
         {
-            string? url = FindUrlAtMouse(e.GetPosition(TxtNote));
-            if (url == null)
+            (string Link, QuickNoteMarkdown.LinkType Type)? link = FindLinkAtMouse(e.GetPosition(TxtNote));
+            if (link == null)
             {
                 return false;
             }
 
             try
             {
-                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+                string normalized = QuickNoteMarkdown.NormalizeLinkForOpen(link.Value.Link, link.Value.Type);
+                Process.Start(new ProcessStartInfo(normalized) { UseShellExecute = true });
             }
             catch (Exception ex)
             {
@@ -833,7 +879,7 @@ namespace AiteBar
             return true;
         }
 
-        private string? FindUrlAtMouse(System.Windows.Point position)
+        private (string Link, QuickNoteMarkdown.LinkType Type)? FindLinkAtMouse(System.Windows.Point position)
         {
             TextPointer? pointer = TxtNote.GetPositionFromPoint(position, true);
             if (pointer == null)
@@ -848,14 +894,14 @@ namespace AiteBar
             }
 
             string text = GetEditorText();
-            foreach (var match in QuickNoteMarkdown.MatchUrls(text))
+            foreach (var (match, type) in QuickNoteMarkdown.MatchLinks(text))
             {
                 if (index < match.Index || index >= match.Index + match.Length)
                 {
                     continue;
                 }
 
-                return QuickNoteMarkdown.NormalizeUrlForOpen(match.Value);
+                return (match.Value, type);
             }
 
             return null;

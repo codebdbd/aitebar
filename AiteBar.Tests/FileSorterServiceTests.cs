@@ -35,6 +35,26 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
+    public void GetCategoryFolder_UsesAppliedLocalizationCultureForRuntimeCalls()
+    {
+        string originalPreference = LocalizationService.NormalizeCultureName(CultureInfo.CurrentUICulture.Name);
+        CultureInfo originalUiCulture = CultureInfo.CurrentUICulture;
+
+        try
+        {
+            LocalizationService.ApplyCulture("ru");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en");
+
+            Assert.Equal("Изображения", FileSorterService.GetCategoryFolder("photo.jpg"));
+        }
+        finally
+        {
+            LocalizationService.ApplyCulture(originalPreference);
+            CultureInfo.CurrentUICulture = originalUiCulture;
+        }
+    }
+
+    [Fact]
     public void GetUniquePath_AppendsNumberWhenNameExists()
     {
         string root = CreateTempRoot();

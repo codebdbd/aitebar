@@ -960,6 +960,7 @@ public partial class MainWindow : Window
         if (modeChanged)
         {
             _panelInputMode = mode;
+            UpdateAllButtonsFocusVisualStyle();
         }
 
         if (mode != PanelInputMode.Pointer)
@@ -972,6 +973,18 @@ public partial class MainWindow : Window
         if (clearFocus)
         {
             Keyboard.ClearFocus();
+        }
+    }
+
+    private void UpdateAllButtonsFocusVisualStyle()
+    {
+        Style? focusVisualStyle = _panelInputMode == PanelInputMode.Keyboard 
+            ? (Style)FindResource("ButtonFocusVisual") 
+            : null;
+
+        foreach (var button in EnumeratePanelButtons())
+        {
+            button.FocusVisualStyle = focusVisualStyle;
         }
     }
 
@@ -1014,7 +1027,10 @@ public partial class MainWindow : Window
             Content = content,
             ToolTip = tooltip,
             Style = (Style)FindResource("PanelButtonStyle"),
-            Focusable = true
+            Focusable = true,
+            FocusVisualStyle = _panelInputMode == PanelInputMode.Keyboard 
+                ? (Style)FindResource("ButtonFocusVisual") 
+                : null
         };
 
         if (foreground != null)
@@ -1258,6 +1274,7 @@ public partial class MainWindow : Window
             ApplyLocalizedText();
             EnsureStartupInfrastructure();
             RefreshPanel();
+            UpdateAllButtonsFocusVisualStyle();
             PositionWindowImmediately(_shown);
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
             if (_settingsPreloaded)
