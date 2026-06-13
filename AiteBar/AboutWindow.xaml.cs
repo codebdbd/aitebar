@@ -15,10 +15,14 @@ public partial class AboutWindow : DarkWindow
     public AboutWindow()
     {
         InitializeComponent();
+        _dataDirectory = PathHelper.AppDataFolder;
+        UpdateVersionText();
+    }
 
+    private void UpdateVersionText()
+    {
         Version? version = Assembly.GetExecutingAssembly().GetName().Version;
         TxtVersion.Text = LocalizationService.Format("About_VersionFormat", version?.Major, version?.Minor, version?.Build);
-        _dataDirectory = PathHelper.AppDataFolder;
     }
 
     private static void OpenTarget(string target)
@@ -86,5 +90,10 @@ public partial class AboutWindow : DarkWindow
     private void BtnClose_Click(object sender, RoutedEventArgs e)
     {
         Close();
+    }
+
+    protected override void OnLocalizationChanged()
+    {
+        UpdateVersionText();
     }
 }

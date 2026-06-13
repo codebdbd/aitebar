@@ -20,6 +20,8 @@ public partial class FileSorterWindow : DarkWindow
     private readonly FileSorterService _fileSorterService = new();
     private string? _selectedCustomPath;
     private string? _lastRootPath;
+    private FileSortResult? _lastCompletedResult;
+    private FileSorterUndoStatus? _lastUndoStatus;
 
     public FileSorterWindow(AppSettingsService settingsService)
     {
@@ -69,6 +71,8 @@ public partial class FileSorterWindow : DarkWindow
 
     private void SetIdleState()
     {
+        _lastCompletedResult = null;
+        _lastUndoStatus = null;
         Title = LocalizationService.Get("FileSorter_Title");
         TxtTitle.Text = LocalizationService.Get("FileSorter_Title");
         IdleStatePanel.Visibility = Visibility.Visible;
@@ -80,6 +84,7 @@ public partial class FileSorterWindow : DarkWindow
 
     private void SetSortingState()
     {
+        _lastUndoStatus = null;
         IdleStatePanel.Visibility = Visibility.Collapsed;
         SortingStatePanel.Visibility = Visibility.Visible;
         CompletedStatePanel.Visibility = Visibility.Collapsed;
@@ -89,7 +94,10 @@ public partial class FileSorterWindow : DarkWindow
 
     private void SetCompletedState(FileSortResult result)
     {
+        _lastCompletedResult = result;
         _lastRootPath = result.RootPath;
+        _lastUndoStatus = null;
+        Title = LocalizationService.Get("FileSorter_Title");
         TxtTitle.Text = LocalizationService.Get("FileSorter_Title");
         TxtResultSummary.Text = LocalizationService.Format("FileSorter_ResultFormat", result.SortedCount);
         IdleStatePanel.Visibility = Visibility.Collapsed;
@@ -97,6 +105,45 @@ public partial class FileSorterWindow : DarkWindow
         CompletedStatePanel.Visibility = Visibility.Visible;
         TxtUndoStatus.Visibility = Visibility.Collapsed;
         BtnUndo.IsEnabled = result.UndoState != null;
+    }
+
+    private void RefreshLocalizedUi()
+    {
+        FileSortLocationKind? selectedKind = CmbLocation.SelectedItem is ComboBoxItem { Tag: FileSortLocationKind kind }
+            ? kind
+            : null;
+
+        LoadLocationOptions();
+
+        if (selectedKind != null)
+        {
+            foreach (ComboBoxItem item in CmbLocation.Items)
+            {
+                if (item.Tag is FileSortLocationKind itemKind && itemKind == selectedKind.Value)
+                {
+                    CmbLocation.SelectedItem = item;
+                    break;
+                }
+            }
+        }
+
+        UpdateCustomPathText();
+
+        if (CompletedStatePanel.Visibility == Visibility.Visible && _lastCompletedResult != null)
+        {
+            SetCompletedState(_lastCompletedResult);
+            ApplyUndoStatus();
+            return;
+        }
+
+        if (SortingStatePanel.Visibility == Visibility.Visible)
+        {
+            Title = LocalizationService.Get("FileSorter_Title");
+            TxtTitle.Text = LocalizationService.Get("FileSorter_Title");
+            return;
+        }
+
+        SetIdleState();
     }
 
     private void CmbLocation_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -205,10 +252,8 @@ public partial class FileSorterWindow : DarkWindow
             _settingsService.Settings.LastFileSortOperation = result.RemainingUndoState;
             await _settingsService.SaveAsync();
 
-            TxtUndoStatus.Text = result.SkippedCount == 0
-                ? LocalizationService.Format("FileSorter_UndoCompleted", result.RestoredCount)
-                : LocalizationService.Format("FileSorter_UndoPartial", result.RestoredCount, result.SkippedCount);
-            TxtUndoStatus.Visibility = Visibility.Visible;
+            _lastUndoStatus = new FileSorterUndoStatus(result.RestoredCount, result.SkippedCount);
+            ApplyUndoStatus();
             BtnUndo.IsEnabled = result.RemainingUndoState != null;
         }
         catch (Exception ex)
@@ -283,6 +328,25 @@ public partial class FileSorterWindow : DarkWindow
 
     private static readonly Guid KnownFolderDownloads = new("374DE290-123F-4565-9164-39C4925E467B");
 
+    protected override void OnLocalizationChanged()
+    {
+        RefreshLocalizedUi();
+    }
+
+    private void ApplyUndoStatus()
+    {
+        if (_lastUndoStatus == null)
+        {
+            TxtUndoStatus.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        TxtUndoStatus.Text = _lastUndoStatus.SkippedCount == 0
+            ? LocalizationService.Format("FileSorter_UndoCompleted", _lastUndoStatus.RestoredCount)
+            : LocalizationService.Format("FileSorter_UndoPartial", _lastUndoStatus.RestoredCount, _lastUndoStatus.SkippedCount);
+        TxtUndoStatus.Visibility = Visibility.Visible;
+    }
+
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     private static extern int SHGetKnownFolderPath(
         [MarshalAs(UnmanagedType.LPStruct)] Guid rfid,
@@ -290,3 +354,5 @@ public partial class FileSorterWindow : DarkWindow
         IntPtr hToken,
         out IntPtr ppszPath);
 }
+
+internal sealed record FileSorterUndoStatus(int RestoredCount, int SkippedCount);

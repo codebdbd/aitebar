@@ -9,6 +9,13 @@ namespace AiteBar
     {
         public const int FixedContextCount = 8;
         public const string DefaultContextPrefix = "Panel ";
+        private static readonly CultureInfo[] LocalizedCultures =
+        [
+            CultureInfo.GetCultureInfo("en"),
+            CultureInfo.GetCultureInfo("de"),
+            CultureInfo.GetCultureInfo("uk"),
+            CultureInfo.GetCultureInfo("ru")
+        ];
 
         public static string GetDefaultContextId(int index) => $"context-{index + 1}";
 
@@ -30,7 +37,10 @@ namespace AiteBar
             {
                 PanelContext? existing = source != null && i < source.Count ? source[i] : null;
                 string id = string.IsNullOrWhiteSpace(existing?.Id) ? GetDefaultContextId(i) : existing!.Id;
-                string name = string.IsNullOrWhiteSpace(existing?.Name) ? GetDefaultContextName(i, culture) : existing!.Name.Trim();
+                bool isNameCustomized = DetermineIsNameCustomized(existing, i);
+                string name = isNameCustomized
+                    ? existing!.Name.Trim()
+                    : GetDefaultContextName(i, culture);
 
                 if (!usedIds.Add(id) || !string.Equals(id, GetDefaultContextId(i), StringComparison.Ordinal))
                 {
@@ -42,6 +52,7 @@ namespace AiteBar
                 {
                     Id = id,
                     Name = string.IsNullOrWhiteSpace(name) ? GetDefaultContextName(i, culture) : name,
+                    IsNameCustomized = isNameCustomized,
                     IconGlyph = string.IsNullOrWhiteSpace(existing?.IconGlyph) ? "\uE8B7" : existing.IconGlyph,
                     IsEnabled = i == 0 || (existing?.IsEnabled ?? false)
                 });
@@ -93,6 +104,36 @@ namespace AiteBar
 
             int wrapped = index % count;
             return wrapped < 0 ? wrapped + count : wrapped;
+        }
+
+        public static bool IsDefaultContextName(string? name, int index)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return true;
+            }
+
+            string trimmed = name.Trim();
+            return LocalizedCultures.Any(culture =>
+                string.Equals(trimmed, GetDefaultContextName(index, culture), StringComparison.CurrentCulture));
+        }
+
+        public static bool IsCustomizedContextNameInput(string? name, int index) =>
+            !string.IsNullOrWhiteSpace(name) && !IsDefaultContextName(name, index);
+
+        private static bool DetermineIsNameCustomized(PanelContext? existing, int index)
+        {
+            if (existing == null)
+            {
+                return false;
+            }
+
+            if (existing.IsNameCustomized)
+            {
+                return !string.IsNullOrWhiteSpace(existing.Name);
+            }
+
+            return IsCustomizedContextNameInput(existing.Name, index);
         }
     }
 }

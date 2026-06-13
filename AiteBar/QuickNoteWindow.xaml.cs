@@ -44,6 +44,8 @@ namespace AiteBar
         private long _changeVersion;
         private DockEdge _edge = DockEdge.Top;
         private int _monitorIndex;
+        private QuickNoteStatusKind _statusKind;
+        private string? _statusArgument;
 
         public QuickNoteWindow(QuickNoteService noteService, AppSettingsService settingsService)
         {
@@ -70,7 +72,7 @@ namespace AiteBar
                 Logger.Log(ex);
                 TxtNote.Document.Blocks.Clear();
                 TxtNote.Document.Blocks.Add(new Paragraph(new Run(string.Empty)));
-                TxtSaveStatus.Text = LocalizationService.Get("QuickNote_LoadFailed");
+                SetStatus(QuickNoteStatusKind.LoadFailed);
             }
 
             _loaded = true;
@@ -81,7 +83,7 @@ namespace AiteBar
             UpdateConflictMenuState();
             ApplyTheme(_theme);
             UpdatePlaceholderAndStats();
-            if (TxtSaveStatus.Text != LocalizationService.Get("QuickNote_LoadFailed"))
+            if (_statusKind != QuickNoteStatusKind.LoadFailed)
             {
                 UpdateStatusSaved();
             }
@@ -189,7 +191,7 @@ namespace AiteBar
                 return await SaveNowAsync(force);
             }
 
-            TxtSaveStatus.Text = LocalizationService.Get("QuickNote_Saving");
+            SetStatus(QuickNoteStatusKind.Saving);
             try
             {
                 if (_noteService.HasExternalChanges())
@@ -197,7 +199,7 @@ namespace AiteBar
                     string conflictPath = await _noteService.SaveConflictCopyAsync(TxtNote.Document);
                     _hasPendingChanges = false;
                     _saveAgainAfterCurrent = false;
-                    TxtSaveStatus.Text = LocalizationService.Format("QuickNote_ConflictCopySavedAt", System.IO.Path.GetFileName(conflictPath));
+                    SetStatus(QuickNoteStatusKind.ConflictCopySaved, System.IO.Path.GetFileName(conflictPath));
                     UpdateConflictMenuState();
                     return true;
                 }
@@ -225,7 +227,7 @@ namespace AiteBar
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                TxtSaveStatus.Text = LocalizationService.Get("QuickNote_SaveFailed");
+                SetStatus(QuickNoteStatusKind.SaveFailed);
                 return false;
             }
             finally
@@ -236,12 +238,12 @@ namespace AiteBar
 
         private void UpdateStatusSaved()
         {
-            TxtSaveStatus.Text = LocalizationService.Format("QuickNote_SavedAt", DateTime.Now.ToString("HH:mm"));
+            SetStatus(QuickNoteStatusKind.SavedAt);
         }
 
         private void ScheduleSave()
         {
-            TxtSaveStatus.Text = LocalizationService.Get("QuickNote_Saving");
+            SetStatus(QuickNoteStatusKind.Saving);
             _saveTimer.Stop();
             _saveTimer.Start();
         }
@@ -268,7 +270,7 @@ namespace AiteBar
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                TxtSaveStatus.Text = LocalizationService.Get("QuickNote_OpenFailed");
+                SetStatus(QuickNoteStatusKind.OpenFailed);
             }
         }
 
@@ -329,7 +331,7 @@ namespace AiteBar
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                TxtSaveStatus.Text = LocalizationService.Get("QuickNote_OpenFailed");
+                SetStatus(QuickNoteStatusKind.OpenFailed);
             }
         }
 
@@ -824,7 +826,7 @@ namespace AiteBar
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                TxtSaveStatus.Text = LocalizationService.Get("QuickNote_OpenFailed");
+                SetStatus(QuickNoteStatusKind.OpenFailed);
                 return false;
             }
 
@@ -896,6 +898,22 @@ namespace AiteBar
             }
         }
 
+        private void SetStatus(QuickNoteStatusKind kind, string? argument = null)
+        {
+            _statusKind = kind;
+            _statusArgument = argument;
+            TxtSaveStatus.Text = kind switch
+            {
+                QuickNoteStatusKind.Saving => LocalizationService.Get("QuickNote_Saving"),
+                QuickNoteStatusKind.SavedAt => LocalizationService.Format("QuickNote_SavedAt", DateTime.Now.ToString("HH:mm")),
+                QuickNoteStatusKind.LoadFailed => LocalizationService.Get("QuickNote_LoadFailed"),
+                QuickNoteStatusKind.SaveFailed => LocalizationService.Get("QuickNote_SaveFailed"),
+                QuickNoteStatusKind.OpenFailed => LocalizationService.Get("QuickNote_OpenFailed"),
+                QuickNoteStatusKind.ConflictCopySaved => LocalizationService.Format("QuickNote_ConflictCopySavedAt", argument ?? string.Empty),
+                _ => string.Empty
+            };
+        }
+
         private MenuItem? FindConflictCopyMenuItem()
         {
             return FindVisualChildren<System.Windows.Controls.Button>(this)
@@ -928,10 +946,28 @@ namespace AiteBar
             return (Math.Min(start, end), Math.Max(start, end));
         }
 
+        protected override void OnLocalizationChanged()
+        {
+            UpdatePlaceholderAndStats();
+            SetStatus(_statusKind, _statusArgument);
+            UpdateConflictMenuState();
+        }
+
         [DllImport("user32.dll")]
         private static extern bool ReleaseCapture();
 
         [DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wParam, IntPtr lParam);
+    }
+
+    internal enum QuickNoteStatusKind
+    {
+        None,
+        Saving,
+        SavedAt,
+        LoadFailed,
+        SaveFailed,
+        OpenFailed,
+        ConflictCopySaved
     }
 }

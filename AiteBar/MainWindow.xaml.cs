@@ -114,6 +114,7 @@ public partial class MainWindow : Window
     private Button? _suppressUserButtonClickFor;
     private DateTime _lastContextWheelSwitchUtc = DateTime.MinValue;
     private readonly Dictionary<string, CachedButtonImage> _buttonImageCache = new(StringComparer.OrdinalIgnoreCase);
+    private bool _isLocalizationSubscribed;
 
     private const double PanelScreenPadding = 20;
     private const double ButtonPitch = PanelLayoutHelper.ButtonOuterSize;
@@ -154,6 +155,7 @@ public partial class MainWindow : Window
 
         PathHelper.EnsureDirectories();
         InitTrayIcon();
+        SubscribeToLocalizationChanges();
 
         // Subscribe to settings changes for auto-re-registration
         _settingsService.SettingsChanged += OnSettingsChanged;
@@ -168,6 +170,30 @@ public partial class MainWindow : Window
     public AppSettings GetAppSettings() => _settingsService.Settings;
     public AppSettingsService GetSettingsService() => _settingsService;
     public ActionService GetActionService() => _actionService;
+
+    private void SubscribeToLocalizationChanges()
+    {
+        if (_isLocalizationSubscribed)
+        {
+            return;
+        }
+
+        LocalizationService.CultureChanged += HandleCultureChanged;
+        _isLocalizationSubscribed = true;
+    }
+
+    private void HandleCultureChanged(object? sender, EventArgs e)
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.Invoke(() => HandleCultureChanged(sender, e));
+            return;
+        }
+
+        LocalizationService.RefreshLocalizedBindings(this);
+        ApplyLocalizedText();
+        RefreshPanel();
+    }
 
     public void ApplyLocalizedText()
     {
@@ -342,7 +368,7 @@ public partial class MainWindow : Window
 
         MenuItem panelsMenu = CreateMenuItem(FluentGlyph(MenuIcons.Panels), LocalizationService.Get("Menu_Panels"));
 
-        foreach (PanelContext context in ContextStateHelper.GetEnabledContexts(AppSettings.Contexts))
+        foreach (PanelContext context in GetContextsSnapshot())
         {
             bool isActive = string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal);
             string targetContextId = context.Id;
@@ -391,8 +417,7 @@ public partial class MainWindow : Window
             await RunPanelInteractionAsync(() => RenameElementAsync(element));
         }));
 
-        List<MenuItem> moveTargets = AppSettings.Contexts
-            .Where(context => context.IsEnabled)
+        List<MenuItem> moveTargets = GetContextsSnapshot()
             .Where(context => !string.Equals(context.Id, element.ContextId, StringComparison.Ordinal))
             .Select(context => CreateMenuItem(FluentGlyph(MenuIcons.Move), context.Name, async (s, e) =>
             {
@@ -462,7 +487,7 @@ public partial class MainWindow : Window
         CustomElement? elementToRename = Elements.FirstOrDefault(x => string.Equals(x.Id, source.Id, StringComparison.Ordinal));
         if (elementToRename == null) return;
 
-        TextPromptDialog dialog = new TextPromptDialog(LocalizationService.Get("Prompt_RenameButtonTitle"), LocalizationService.Get("Prompt_NewName"), elementToRename.Name) { Owner = this };
+        TextPromptDialog dialog = new TextPromptDialog("Prompt_RenameButtonTitle", "Prompt_NewName", elementToRename.Name, treatAsResourceKeys: true) { Owner = this };
         if (dialog.ShowDialog() != true)
         {
             return;
@@ -1003,6 +1028,7 @@ public partial class MainWindow : Window
 
     private void ShowTrayContextMenu()
     {
+        LocalizationService.EnsureAppliedCulture();
         var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
 
         menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Open), LocalizationService.Get("Menu_Open"), (s, e) => ShowDock()));
@@ -1056,8 +1082,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            var activeContext = AppSettings.Contexts.FirstOrDefault(context =>
-                string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
+            string activeContextName = GetContextDisplayName(AppSettings.ActiveContextId);
 
             var dialog = new Microsoft.Win32.SaveFileDialog
             {
@@ -1066,7 +1091,7 @@ public partial class MainWindow : Window
                 DefaultExt = PanelPackageService.PackageExtension,
                 AddExtension = true,
                 OverwritePrompt = true,
-                FileName = BuildPanelPackageFileName(activeContext?.Name ?? LocalizationService.Format("Panel_DefaultNameFormat", 1))
+                FileName = BuildPanelPackageFileName(activeContextName)
             };
 
             if (dialog.ShowDialog(this) != true)
@@ -1228,6 +1253,8 @@ public partial class MainWindow : Window
     {
         try
         {
+            LocalizationService.EnsureAppliedCulture();
+            LocalizationService.RefreshLocalizedBindings(this);
             ApplyLocalizedText();
             EnsureStartupInfrastructure();
             RefreshPanel();
@@ -1497,7 +1524,7 @@ public partial class MainWindow : Window
 
             btn.MouseRightButtonUp += (s, e) =>
             {
-                btn.ContextMenu ??= BuildElementContextMenu(capturedElement);
+                btn.ContextMenu = BuildElementContextMenu(capturedElement);
             };
             UserButtonsPanel.Children.Add(btn);
             _userButtons.Add(btn);
@@ -2609,6 +2636,11 @@ public partial class MainWindow : Window
         _nativeService?.Dispose(); 
         _notifyIcon?.Dispose();
         _settingsService.SettingsChanged -= OnSettingsChanged;
+        if (_isLocalizationSubscribed)
+        {
+            LocalizationService.CultureChanged -= HandleCultureChanged;
+            _isLocalizationSubscribed = false;
+        }
         UnregisterGlobalHotkey();
         base.OnClosed(e); 
     }

@@ -86,6 +86,47 @@ public sealed class ContextStateHelperTests : IDisposable
     }
 
     [Fact]
+    public void NormalizeContexts_LocalizesLegacyDefaultNamesToCurrentCulture()
+    {
+        List<PanelContext> contexts =
+        [
+            new() { Id = "context-1", Name = "Panel 1", IsEnabled = true },
+            new() { Id = "context-2", Name = "Panel 2", IsEnabled = true }
+        ];
+
+        List<PanelContext> normalized = ContextStateHelper.NormalizeContexts(contexts, CultureInfo.GetCultureInfo("ru"));
+
+        Assert.Equal("Панель 1", normalized[0].Name);
+        Assert.Equal("Панель 2", normalized[1].Name);
+        Assert.False(normalized[0].IsNameCustomized);
+        Assert.False(normalized[1].IsNameCustomized);
+    }
+
+    [Fact]
+    public void NormalizeContexts_PreservesCustomNamesAcrossCultures()
+    {
+        List<PanelContext> contexts =
+        [
+            new() { Id = "context-1", Name = "Work", IsNameCustomized = true, IsEnabled = true }
+        ];
+
+        List<PanelContext> normalized = ContextStateHelper.NormalizeContexts(contexts, CultureInfo.GetCultureInfo("ru"));
+
+        Assert.Equal("Work", normalized[0].Name);
+        Assert.True(normalized[0].IsNameCustomized);
+    }
+
+    [Theory]
+    [InlineData("Panel 1", 0, true)]
+    [InlineData("Панель 1", 0, true)]
+    [InlineData("Leiste 1", 0, true)]
+    [InlineData("Work", 0, false)]
+    public void IsDefaultContextName_DetectsLocalizedDefaults(string value, int index, bool expected)
+    {
+        Assert.Equal(expected, ContextStateHelper.IsDefaultContextName(value, index));
+    }
+
+    [Fact]
     public void GetRelativeEnabledContextId_SkipsDisabledContexts()
     {
         List<PanelContext> contexts =

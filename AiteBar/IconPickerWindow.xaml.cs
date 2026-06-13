@@ -105,15 +105,20 @@ namespace AiteBar
             BtnTabBrands.Foreground = fontName == FontHelper.BrandsKey
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
 
-            TxtSearchHint.Text = fontName switch
+            UpdateSearchHint();
+
+            LoadIcons(fontName);
+        }
+
+        private void UpdateSearchHint()
+        {
+            TxtSearchHint.Text = _activeFont switch
             {
                 FontHelper.BrandsKey => LocalizationService.Get("IconPicker_SearchBrandsHint"),
                 FontHelper.FluentKey => LocalizationService.Get("IconPicker_SearchIconsHint"),
                 FontHelper.MaterialKey => LocalizationService.Get("IconPicker_SearchIconsHint"),
                 _ => LocalizationService.Get("IconPicker_SearchCodeHint")
             };
-
-            LoadIcons(fontName);
         }
 
         private async void LoadIcons(string fontName)
@@ -311,6 +316,11 @@ namespace AiteBar
             {
                 btn.Visibility = searchKey.Contains(query) ? Visibility.Visible : Visibility.Collapsed;
             }
+        }
+
+        protected override void OnLocalizationChanged()
+        {
+            UpdateSearchHint();
         }
     }
 }

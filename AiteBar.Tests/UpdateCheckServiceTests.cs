@@ -140,8 +140,9 @@ public sealed class UpdateCheckServiceTests
     public void GetCurrentVersion_ReturnsInformationalVersion()
     {
         Version version = UpdateCheckService.GetCurrentVersion();
+        Version expected = typeof(UpdateCheckService).Assembly.GetName().Version ?? new Version(0, 0);
 
-        Assert.Equal(new Version(1, 7, 7, 0), version);
+        Assert.Equal(expected, version);
     }
 
     [Fact]

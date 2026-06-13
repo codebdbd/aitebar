@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Xml.Linq;
 using AiteBar;
 using Xunit;
@@ -97,6 +98,52 @@ public sealed class LocalizationServiceTests
     }
 
     [Fact]
+    public void ApplyCulture_SetsCurrentAndDefaultThreadCultures()
+    {
+        string originalPreference = LocalizationService.NormalizeCultureName(CultureInfo.CurrentUICulture.Name);
+
+        try
+        {
+            LocalizationService.ApplyCulture("de");
+
+            Assert.Equal("de", CultureInfo.CurrentCulture.TwoLetterISOLanguageName);
+            Assert.Equal("de", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+            Assert.Equal("de", CultureInfo.DefaultThreadCurrentCulture?.TwoLetterISOLanguageName);
+            Assert.Equal("de", CultureInfo.DefaultThreadCurrentUICulture?.TwoLetterISOLanguageName);
+        }
+        finally
+        {
+            LocalizationService.ApplyCulture(originalPreference);
+        }
+    }
+
+    [Fact]
+    public void ApplyCulture_SameCulture_DoesNotRaiseCultureChangedTwice()
+    {
+        string originalPreference = LocalizationService.NormalizeCultureName(CultureInfo.CurrentUICulture.Name);
+        int eventCount = 0;
+
+        void Handler(object? sender, EventArgs e) => Interlocked.Increment(ref eventCount);
+
+        LocalizationService.CultureChanged += Handler;
+        try
+        {
+            LocalizationService.ApplyCulture("en");
+            eventCount = 0;
+
+            LocalizationService.ApplyCulture("ru");
+            LocalizationService.ApplyCulture("ru");
+
+            Assert.Equal(1, eventCount);
+        }
+        finally
+        {
+            LocalizationService.CultureChanged -= Handler;
+            LocalizationService.ApplyCulture(originalPreference);
+        }
+    }
+
+    [Fact]
     public void Get_ExistingKey_ReturnsValue()
     {
         var result = LocalizationService.Get("Common_Cancel");
@@ -130,6 +177,7 @@ public sealed class LocalizationServiceTests
     {
         string resourcesDirectory = Path.Combine(FindRepoRoot(), "AiteBar", "Resources");
         Dictionary<string, string> neutral = LoadResources(Path.Combine(resourcesDirectory, "Strings.resx"));
+        Assert.All(neutral, entry => Assert.False(string.IsNullOrWhiteSpace(entry.Value), $"Neutral resource '{entry.Key}' is empty."));
 
         foreach (string culture in LocalizedCultures)
         {
@@ -138,6 +186,7 @@ public sealed class LocalizationServiceTests
             Assert.Equal(neutral.Keys.Order(), localized.Keys.Order());
             foreach ((string key, string neutralValue) in neutral)
             {
+                Assert.False(string.IsNullOrWhiteSpace(localized[key]), $"Localized resource '{culture}:{key}' is empty.");
                 Assert.Equal(
                     ExtractFormatPlaceholders(neutralValue),
                     ExtractFormatPlaceholders(localized[key]));

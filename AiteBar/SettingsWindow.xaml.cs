@@ -50,6 +50,8 @@ namespace AiteBar
 
             LoadColors();
             LoadContexts();
+            LoadActionTypeList();
+            LoadBrowserList();
 
             _ = LoadProfilesAsync().ContinueWith(
                 t => Logger.Log(t.Exception!.GetBaseException()),
@@ -72,6 +74,28 @@ namespace AiteBar
 
             UpdateSaveButtonState();
             UpdatePreview();
+        }
+
+        private void LoadActionTypeList()
+        {
+            CmbActionType.Items.Clear();
+            CmbActionType.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Action_Web"), Tag = "Web" });
+            CmbActionType.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Action_Program"), Tag = "Program" });
+            CmbActionType.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Action_File"), Tag = "File" });
+            CmbActionType.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Action_Folder"), Tag = "Folder" });
+            CmbActionType.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Action_ScriptFile"), Tag = "ScriptFile" });
+            CmbActionType.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Action_Command"), Tag = "Command" });
+            CmbActionType.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Action_Hotkey"), Tag = "Hotkey" });
+        }
+
+        private void LoadBrowserList()
+        {
+            CmbBrowser.Items.Clear();
+            CmbBrowser.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Browser_Chrome"), Tag = "Chrome" });
+            CmbBrowser.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Browser_Edge"), Tag = "Edge" });
+            CmbBrowser.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Browser_Brave"), Tag = "Brave" });
+            CmbBrowser.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Browser_Yandex"), Tag = "Yandex" });
+            CmbBrowser.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Browser_Firefox"), Tag = "Firefox" });
         }
 
         private void LoadKeyList()
@@ -270,7 +294,7 @@ namespace AiteBar
             await LoadProfilesAsync();
         }
 
-        private async Task LoadProfilesAsync()
+        private async Task LoadProfilesAsync(string? preferredProfile = null)
         {
             if (CmbBrowser == null || CmbChromeProfile == null) return;
 
@@ -293,10 +317,51 @@ namespace AiteBar
                 CmbChromeProfile.Items.Add(new ComboBoxItem { Content = profile.DisplayName, Tag = profile.ProfilePath });
 
             CmbChromeProfile.SelectedIndex = 0;
-            if (_editingElement != null && _editingElement.Browser == browserType)
+            if (!string.IsNullOrWhiteSpace(preferredProfile))
+                SetComboValue(CmbChromeProfile, preferredProfile);
+            else if (_editingElement != null && _editingElement.Browser == browserType)
                 SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
 
             UpdateRotationProfilesUi();
+        }
+
+        private void RefreshLocalizedUi()
+        {
+            string selectedContextId = (CmbContext.SelectedItem as ComboBoxItem)?.Tag?.ToString()
+                ?? _editingElement?.ContextId
+                ?? _mainWindow.GetAppSettings().ActiveContextId;
+            string selectedKey = (CmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? _editingElement?.Key ?? "None";
+            string selectedProfile = (CmbChromeProfile.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? _editingElement?.ChromeProfile ?? "";
+            string selectedActionType = (CmbActionType.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? _editingElement?.ActionType ?? "Web";
+            string selectedBrowser = (CmbBrowser.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? _editingElement?.Browser.ToString() ?? "Chrome";
+
+            if (_editingElement != null)
+            {
+                Title = LocalizationService.Get("SettingsWindow_EditTitle");
+            }
+
+            LoadKeyList();
+            SetComboValue(CmbKey, selectedKey);
+
+            LoadContexts();
+            SetComboValue(CmbContext, selectedContextId);
+
+            LoadActionTypeList();
+            SetComboValue(CmbActionType, selectedActionType);
+
+            LoadBrowserList();
+            SetComboValue(CmbBrowser, selectedBrowser);
+
+            UpdateActionUI();
+            UpdateNamePlaceholderVisibility();
+            UpdateActionPlaceholderVisibility();
+            UpdateSaveButtonState();
+            UpdateRequiredFieldsVisuals();
+            UpdateRotationProfilesUi();
+
+            _ = LoadProfilesAsync(selectedProfile).ContinueWith(
+                t => Logger.Log(t.Exception!.GetBaseException()),
+                TaskContinuationOptions.OnlyOnFaulted);
         }
 
         private bool IsSelectedBrowser(BrowserType browserType)
@@ -772,6 +837,11 @@ namespace AiteBar
         {
             this.DialogResult = false;
             Close();
+        }
+
+        protected override void OnLocalizationChanged()
+        {
+            RefreshLocalizedUi();
         }
 
     }

@@ -23,6 +23,7 @@ namespace AiteBar
         private readonly System.Windows.Controls.Image _magnifier;
         private readonly TextBlock _hexText;
         private readonly TextBlock _rgbText;
+        private readonly TextBlock _instructionText;
 
         private const int ZoomPixels = 11;
         private const int ZoomSize = 110;
@@ -31,6 +32,8 @@ namespace AiteBar
 
         public ScreenColorPickerWindow()
         {
+            LocalizationService.CultureChanged += HandleCultureChanged;
+
             var bounds = Forms.SystemInformation.VirtualScreen;
             _left = bounds.Left;
             _top = bounds.Top;
@@ -136,14 +139,14 @@ namespace AiteBar
                                 CreateValuePanel()
                             }
                         },
-                        new TextBlock
+                        (_instructionText = new TextBlock
                         {
                             Text = LocalizationService.Get("ColorPicker_Instruction"),
                             Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(150, 150, 156)),
                             FontSize = 10,
                             Margin = new Thickness(0, 10, 0, 0),
                             TextWrapping = TextWrapping.Wrap
-                        }
+                        })
                     }
                 }
             };
@@ -268,8 +271,20 @@ namespace AiteBar
 
         protected override void OnClosed(EventArgs e)
         {
+            LocalizationService.CultureChanged -= HandleCultureChanged;
             _screen.Dispose();
             base.OnClosed(e);
+        }
+
+        private void HandleCultureChanged(object? sender, EventArgs e)
+        {
+            if (!Dispatcher.CheckAccess())
+            {
+                Dispatcher.Invoke(() => HandleCultureChanged(sender, e));
+                return;
+            }
+
+            _instructionText.Text = LocalizationService.Get("ColorPicker_Instruction");
         }
     }
 }

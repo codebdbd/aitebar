@@ -228,6 +228,12 @@ namespace AiteBar
                 changed = true;
             }
 
+            // Set default value for old settings files that don't have UiCulture at all
+            if (string.IsNullOrWhiteSpace(_appSettings.UiCulture))
+            {
+                _appSettings.UiCulture = LocalizationService.AutoCulture;
+                changed = true;
+            }
             string normalizedUiCulture = LocalizationService.NormalizeCultureName(_appSettings.UiCulture);
             if (!string.Equals(_appSettings.UiCulture, normalizedUiCulture, StringComparison.Ordinal))
             {
@@ -241,6 +247,7 @@ namespace AiteBar
                 originalContexts.Zip(normalizedContexts, (left, right) =>
                     left.Id != right.Id ||
                     left.Name != right.Name ||
+                    left.IsNameCustomized != right.IsNameCustomized ||
                     left.IconGlyph != right.IconGlyph ||
                     left.IsEnabled != right.IsEnabled).Any(hasDifference => hasDifference))
             {
@@ -407,26 +414,48 @@ namespace AiteBar
 
         public string GetContextDisplayName(string contextId)
         {
-            return _appSettings.Contexts.FirstOrDefault(context => string.Equals(context.Id, contextId, StringComparison.Ordinal))?.Name
-                ?? contextId;
+            for (int i = 0; i < _appSettings.Contexts.Count; i++)
+            {
+                PanelContext context = _appSettings.Contexts[i];
+                if (string.Equals(context.Id, contextId, StringComparison.Ordinal))
+                {
+                    return ResolveContextDisplayName(context, i);
+                }
+            }
+
+            return contextId;
         }
 
         public IReadOnlyList<PanelContext> GetContextsSnapshot() =>
             [.. GetEnabledContextsSnapshot()];
 
         public IReadOnlyList<PanelContext> GetAllContextsSnapshot() =>
-            [.. _appSettings.Contexts.Select(CloneContext)];
+            [.. _appSettings.Contexts.Select((context, index) => CloneContext(context, index))];
 
         public IReadOnlyList<PanelContext> GetEnabledContextsSnapshot() =>
-            [.. ContextStateHelper.GetEnabledContexts(_appSettings.Contexts).Select(CloneContext)];
+            [.. _appSettings.Contexts
+                .Select((context, index) => new { context, index })
+                .Where(entry => entry.context.IsEnabled)
+                .Select(entry => CloneContext(entry.context, entry.index))];
 
-        private static PanelContext CloneContext(PanelContext context) => new()
+        private static PanelContext CloneContext(PanelContext context, int index) => new()
         {
             Id = context.Id,
-            Name = context.Name,
+            Name = ResolveContextDisplayName(context, index),
+            IsNameCustomized = context.IsNameCustomized,
             IconGlyph = context.IconGlyph,
             IsEnabled = context.IsEnabled
         };
+
+        private static string ResolveContextDisplayName(PanelContext context, int index)
+        {
+            if (context.IsNameCustomized)
+            {
+                return context.Name;
+            }
+
+            return ContextStateHelper.GetDefaultContextName(index);
+        }
 
         public async Task SaveElementAsync(CustomElement updated, string? removeId = null)
         {

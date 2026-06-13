@@ -577,4 +577,9 @@ public partial class TimerStopwatchWindow : DarkWindow
             }
         }
     }
+
+    protected override void OnLocalizationChanged()
+    {
+        UpdateDisplay();
+    }
 }

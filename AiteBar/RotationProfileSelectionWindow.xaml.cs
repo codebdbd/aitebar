@@ -144,4 +144,10 @@ public partial class RotationProfileSelectionWindow : DarkWindow
             TxtSelectionCount.Text = LocalizationService.Format("RotationProfiles_SelectedFormat", selectedCount, _profiles.Count);
         }
     }
+
+    protected override void OnLocalizationChanged()
+    {
+        RenderProfiles();
+        UpdateSaveButtonState();
+    }
 }

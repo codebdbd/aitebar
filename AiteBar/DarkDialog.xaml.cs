@@ -8,9 +8,12 @@ namespace AiteBar
 {
     public partial class DarkDialog : DarkWindow
     {
+        private readonly bool _isConfirmDialog;
+
         public DarkDialog(string message, bool isConfirm = false)
         {
             InitializeComponent();
+            _isConfirmDialog = isConfirm;
             TxtMessage.Text = message;
 
             if (isConfirm)
@@ -97,6 +100,14 @@ namespace AiteBar
         private void BtnOk_Click(object sender, RoutedEventArgs e)
         {
             this.Close();
+        }
+
+        protected override void OnLocalizationChanged()
+        {
+            if (_isConfirmDialog)
+            {
+                Title = LocalizationService.Get("Common_Confirmation");
+            }
         }
     }
 

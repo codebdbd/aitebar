@@ -33,6 +33,8 @@ public class ColorBrushConverter : IValueConverter
 [SupportedOSPlatform("windows6.1")]
 public partial class AppSettingsWindow : DarkWindow
 {
+    private sealed record ContextRowDraft(string Name, bool IsEnabled, bool IsNameCustomized);
+
     private readonly MainWindow _mainWindow;
     private readonly AppSettings _settings;
     private readonly List<(CheckBox EnabledCheckBox, TextBox NameTextBox)> _contextRows = new();
@@ -42,6 +44,8 @@ public partial class AppSettingsWindow : DarkWindow
     public AppSettingsWindow(MainWindow mainWindow)
     {
         InitializeComponent();
+        LocalizationService.EnsureAppliedCulture();
+        LocalizationService.RefreshLocalizedBindings(this);
         _mainWindow = mainWindow;
         _settings = _mainWindow.GetAppSettings();
 
@@ -50,6 +54,7 @@ public partial class AppSettingsWindow : DarkWindow
         LoadKeyList();
         LoadSettings();
         _isLoadingSettings = false;
+        RefreshLocalizedUi();
     }
 
     private void LoadLanguageList()
@@ -162,6 +167,53 @@ public partial class AppSettingsWindow : DarkWindow
         finally
         {
             _isLoadingSettings = false;
+        }
+    }
+
+    private void RefreshLocalizedUi()
+    {
+        List<ContextRowDraft> drafts = CaptureContextRowDrafts();
+        ReloadLocalizedChoiceLists();
+        BuildContextRows(_mainWindow.GetAllContextsSnapshot());
+        ApplyContextRowDrafts(drafts);
+        RefreshContextRowTooltips();
+    }
+
+    private List<ContextRowDraft> CaptureContextRowDrafts()
+    {
+        var drafts = new List<ContextRowDraft>(_contextRows.Count);
+        for (int i = 0; i < _contextRows.Count; i++)
+        {
+            string draftName = _contextRows[i].NameTextBox.Text;
+            drafts.Add(new ContextRowDraft(
+                draftName,
+                _contextRows[i].EnabledCheckBox.IsChecked ?? false,
+                ContextStateHelper.IsCustomizedContextNameInput(draftName, i)));
+        }
+
+        return drafts;
+    }
+
+    private void ApplyContextRowDrafts(IReadOnlyList<ContextRowDraft> drafts)
+    {
+        for (int i = 0; i < _contextRows.Count && i < drafts.Count; i++)
+        {
+            if (drafts[i].IsNameCustomized)
+            {
+                _contextRows[i].NameTextBox.Text = drafts[i].Name.Trim();
+            }
+
+            _contextRows[i].EnabledCheckBox.IsChecked = i == 0 || drafts[i].IsEnabled;
+        }
+    }
+
+    private void RefreshContextRowTooltips()
+    {
+        for (int i = 0; i < _contextRows.Count; i++)
+        {
+            _contextRows[i].EnabledCheckBox.ToolTip = i == 0
+                ? LocalizationService.Get("AppSettingsWindow_PrimaryPanelAlwaysEnabled")
+                : LocalizationService.Get("AppSettingsWindow_PanelEnabled");
         }
     }
 
@@ -469,9 +521,7 @@ public partial class AppSettingsWindow : DarkWindow
         _settings.UiCulture = _selectedUiCulture;
         _mainWindow.GetSettingsService().NormalizeAppState();
         await _mainWindow.GetSettingsService().SaveAsync();
-        ReloadLocalizedChoiceLists();
-        LocalizationService.RefreshLocalizedBindings(this);
-        _mainWindow.ApplyLocalizedText();
+        RefreshLocalizedUi();
     }
 
     private async void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -533,16 +583,16 @@ public partial class AppSettingsWindow : DarkWindow
         for (int i = 0; i < _settings.Contexts.Count && i < _contextRows.Count; i++)
         {
             string contextName = _contextRows[i].NameTextBox.Text;
-            _settings.Contexts[i].Name = string.IsNullOrWhiteSpace(contextName)
-                ? LocalizationService.Format("Panel_DefaultNameFormat", i + 1)
-                : contextName.Trim();
+            bool isNameCustomized = ContextStateHelper.IsCustomizedContextNameInput(contextName, i);
+            _settings.Contexts[i].Name = isNameCustomized
+                ? contextName.Trim()
+                : ContextStateHelper.GetDefaultContextName(i);
+            _settings.Contexts[i].IsNameCustomized = isNameCustomized;
             _settings.Contexts[i].IsEnabled = i == 0 || (_contextRows[i].EnabledCheckBox.IsChecked ?? false);
         }
 
         IReadOnlyList<string> failedHotkeys = await _mainWindow.SaveAppSettings();
         LocalizationService.ApplyCulture(_settings.UiCulture);
-        LocalizationService.RefreshLocalizedBindings(this);
-        _mainWindow.ApplyLocalizedText();
         _mainWindow.RefreshPanel();
 
         if (failedHotkeys.Count > 0)
@@ -559,6 +609,11 @@ public partial class AppSettingsWindow : DarkWindow
     private void BtnCancel_Click(object sender, RoutedEventArgs e)
     {
         this.Close();
+    }
+
+    protected override void OnLocalizationChanged()
+    {
+        RefreshLocalizedUi();
     }
 }
 

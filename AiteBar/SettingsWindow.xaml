@@ -88,14 +88,7 @@
                             <StackPanel Margin="0,0,10,0">
                                 <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_ActionType}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
                                 <ComboBox x:Name="CmbActionType" SelectionChanged="CmbActionType_SelectionChanged">
-                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_Web}" Tag="Web"/>
-                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_Program}" Tag="Program"/>
-                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_File}" Tag="File"/>
-                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_Folder}" Tag="Folder"/>
-                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_ScriptFile}" Tag="ScriptFile"/>
-                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_Command}" Tag="Command"/>
-                                    <ComboBoxItem Content="{local:Loc ResourceKey=Action_Hotkey}" Tag="Hotkey"/>
-                                </ComboBox>
+                        </ComboBox>
                             </StackPanel>
                             <StackPanel Margin="10,0,0,0">
                                 <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Panel}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
@@ -127,11 +120,6 @@
                                         <StackPanel Margin="0,0,5,0">
                                             <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Browser}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="11"/>
                                             <ComboBox x:Name="CmbBrowser" SelectionChanged="CmbBrowser_SelectionChanged">
-                                                <ComboBoxItem Content="Chrome" Tag="Chrome"/>
-                                                <ComboBoxItem Content="Edge" Tag="Edge"/>
-                                                <ComboBoxItem Content="Brave" Tag="Brave"/>
-                                                <ComboBoxItem Content="Yandex" Tag="Yandex"/>
-                                                <ComboBoxItem Content="Firefox" Tag="Firefox"/>
                                             </ComboBox>
                                         </StackPanel>
                                         <StackPanel Grid.Column="1" Margin="5,0,0,0">

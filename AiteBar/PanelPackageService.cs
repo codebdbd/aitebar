@@ -45,7 +45,8 @@ internal sealed class PanelPackageService
         AppSettings settings = _settingsService.Settings;
         string activeContextId = settings.ActiveContextId;
 
-        PanelContext context = settings.Contexts.FirstOrDefault(x => string.Equals(x.Id, activeContextId, StringComparison.Ordinal))
+        IReadOnlyList<PanelContext> contexts = _settingsService.GetAllContextsSnapshot();
+        PanelContext context = contexts.FirstOrDefault(x => string.Equals(x.Id, activeContextId, StringComparison.Ordinal))
             ?? throw new InvalidOperationException(LocalizationService.Get("PanelPackage_ActivePanelNotFound"));
 
         List<CustomElement> elements = _settingsService.Elements

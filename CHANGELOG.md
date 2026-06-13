@@ -9,6 +9,26 @@
 
 ## [Unreleased]
 
+## [1.7.9] - 2026-06-13
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Единый runtime-механизм локализации**: `LocalizationService` теперь хранит активную культуру приложения и выдает строки независимо от культурного состояния вызывающего потока.
+- **Unified runtime localization mechanism**: `LocalizationService` now keeps the active app culture and resolves strings independently from the caller thread culture.
+- **Обновление локализуемых окон и списков**: окна настроек, утилиты и динамические списки перестраивают локализованные элементы через общий механизм `CultureChanged`.
+- **Localized window and list refresh**: settings windows, utility windows and dynamic lists now rebuild localized elements through the shared `CultureChanged` mechanism.
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Tray-меню и контекстные меню**: перевод теперь применяется сразу после смены языка без перезапуска, включая меню в трее, контекстные меню кнопок, панелей и встроенных инструментов.
+- **Tray menu and context menus**: translations now switch immediately after a language change without restart, including tray, button, panel and built-in tool context menus.
+- **Новые окна после смены языка**: диалоги и окна, открытые после переключения языка, теперь создаются сразу в выбранной культуре.
+- **New windows after language switch**: dialogs and windows opened after changing language now start directly in the selected culture.
+- **Имена панелей по умолчанию и экспорт**: отображаемые имена панелей локализуются в UI и export/import сценариях без записи переведенного текста в настройки.
+- **Default panel names and export**: panel display names are localized in UI and export/import flows without storing translated text in settings.
+
+### 🇷🇺 Тесты | 🇬🇧 Tests
+- **Регрессия локализации**: добавлены проверки межпоточной локализации, обновления detached `ContextMenu`, целостности `.resx`-ключей и поведения `ApplyCulture`.
+- **Localization regression coverage**: added checks for cross-thread localization, detached `ContextMenu` refresh, `.resx` key integrity and `ApplyCulture` behavior.
+
 ## [1.7.7] - 2026-06-12
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

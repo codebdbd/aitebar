@@ -102,6 +102,21 @@
   <data name="SettingsWindow_NoProfile" xml:space="preserve">
     <value>Без профиля</value>
   </data>
+  <data name="Browser_Chrome" xml:space="preserve">
+    <value>Chrome</value>
+  </data>
+  <data name="Browser_Edge" xml:space="preserve">
+    <value>Edge</value>
+  </data>
+  <data name="Browser_Brave" xml:space="preserve">
+    <value>Brave</value>
+  </data>
+  <data name="Browser_Yandex" xml:space="preserve">
+    <value>Yandex</value>
+  </data>
+  <data name="Browser_Firefox" xml:space="preserve">
+    <value>Firefox</value>
+  </data>
   <data name="SettingsWindow_AppMode" xml:space="preserve">
     <value>В режиме приложений</value>
   </data>

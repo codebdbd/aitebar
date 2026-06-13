@@ -3,7 +3,7 @@
 #define AppPublisher "Codebdbd"
 #define AppExeName "AiteBar.exe"
 #ifndef AppVersion
-  #define AppVersion "1.7.7"
+  #define AppVersion "1.7.9"
 #endif
 #define PublishDir "..\artifacts\publish\win-x64"
 

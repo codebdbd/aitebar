@@ -351,6 +351,20 @@ public partial class IconConverterWindow : DarkWindow
         TxtStatus.Text = message;
     }
 
+    private void RefreshLocalizedUi()
+    {
+        UpdateBackgroundColorState();
+        TxtPadding.Text = $"{SldPadding.Value:0}%";
+
+        if (string.IsNullOrWhiteSpace(_sourcePath))
+        {
+            SetStatus(LocalizationService.Get("IconConverter_Ready"));
+            return;
+        }
+
+        _ = QueuePreviewRefreshAsync(debounce: false);
+    }
+
     private void BtnClose_Click(object sender, RoutedEventArgs e)
     {
         Close();
@@ -380,5 +394,10 @@ public partial class IconConverterWindow : DarkWindow
         _previewRequestCts?.Cancel();
         _previewRequestCts?.Dispose();
         base.OnClosed(e);
+    }
+
+    protected override void OnLocalizationChanged()
+    {
+        RefreshLocalizedUi();
     }
 }

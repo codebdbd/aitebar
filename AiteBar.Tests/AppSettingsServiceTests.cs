@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -500,10 +501,38 @@ public sealed class AppSettingsServiceTests
         var service = new AppSettingsService();
         service.NormalizeAppState();
         service.Settings.Contexts[0].Name = "Test Panel";
+        service.Settings.Contexts[0].IsNameCustomized = true;
 
         var result = service.GetContextDisplayName("context-1");
 
         Assert.Equal("Test Panel", result);
+    }
+
+    [Fact]
+    public void GetContextDisplayName_NonCustomizedDefaultContext_ReturnsCurrentCultureDisplayName()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo originalUiCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de");
+
+            var service = new AppSettingsService();
+            service.Settings.Contexts =
+            [
+                new() { Id = "context-1", Name = "Panel 1", IsNameCustomized = false, IsEnabled = true }
+            ];
+
+            var result = service.GetContextDisplayName("context-1");
+
+            Assert.Equal("Leiste 1", result);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUiCulture;
+        }
     }
 
     [Fact]
@@ -648,6 +677,96 @@ public sealed class AppSettingsServiceTests
         Assert.Equal(["context-1", "context-3"], snapshot.Select(context => context.Id).ToArray());
         snapshot[0].Name = "Changed";
         Assert.Equal("Main", service.Settings.Contexts[0].Name);
+    }
+
+    [Fact]
+    public void GetEnabledContextsSnapshot_LocalizesNonCustomizedDefaultNamesAtReadTime()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo originalUiCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("uk");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("uk");
+
+            var service = new AppSettingsService();
+            service.Settings.Contexts =
+            [
+                new() { Id = "context-1", Name = "Panel 1", IsNameCustomized = false, IsEnabled = true },
+                new() { Id = "context-2", Name = "Work", IsNameCustomized = true, IsEnabled = true }
+            ];
+
+            IReadOnlyList<PanelContext> snapshot = service.GetEnabledContextsSnapshot();
+
+            Assert.Equal("Панель 1", snapshot[0].Name);
+            Assert.Equal("Work", snapshot[1].Name);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUiCulture;
+        }
+    }
+
+    [Fact]
+    public void GetAllContextsSnapshot_LocalizesNonCustomizedDefaultNamesAtReadTime()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo originalUiCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de");
+
+            var service = new AppSettingsService();
+            service.Settings.Contexts =
+            [
+                new() { Id = "context-1", Name = "Panel 1", IsNameCustomized = false, IsEnabled = true },
+                new() { Id = "context-2", Name = "Work", IsNameCustomized = true, IsEnabled = false }
+            ];
+
+            IReadOnlyList<PanelContext> snapshot = service.GetAllContextsSnapshot();
+
+            Assert.Equal("Leiste 1", snapshot[0].Name);
+            Assert.Equal("Work", snapshot[1].Name);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUiCulture;
+        }
+    }
+
+    [Fact]
+    public void NormalizeAppState_LocalizesNonCustomizedDefaultContextNamesToCurrentCulture()
+    {
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo originalUiCulture = CultureInfo.CurrentUICulture;
+        try
+        {
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ru");
+            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("ru");
+
+            var service = new AppSettingsService();
+            service.Settings.Contexts =
+            [
+                new() { Id = "context-1", Name = "Panel 1", IsEnabled = true },
+                new() { Id = "context-2", Name = "Work", IsNameCustomized = true, IsEnabled = true }
+            ];
+
+            bool changed = service.NormalizeAppState();
+
+            Assert.True(changed);
+            Assert.Equal("Панель 1", service.Settings.Contexts[0].Name);
+            Assert.False(service.Settings.Contexts[0].IsNameCustomized);
+            Assert.Equal("Work", service.Settings.Contexts[1].Name);
+            Assert.True(service.Settings.Contexts[1].IsNameCustomized);
+        }
+        finally
+        {
+            CultureInfo.CurrentCulture = originalCulture;
+            CultureInfo.CurrentUICulture = originalUiCulture;
+        }
     }
 
     [Fact]

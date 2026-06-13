@@ -22,6 +22,8 @@ namespace AiteBar
         private static readonly ResourceManager Resources = new("AiteBar.Resources.Strings", Assembly.GetExecutingAssembly());
         private static readonly CultureInfo English = CultureInfo.GetCultureInfo(NeutralCulture);
         private static readonly CultureInfo OperatingSystemCulture = CultureInfo.CurrentUICulture;
+        private static string _appliedCulturePreference = AutoCulture;
+        private static CultureInfo _resolvedCulture = ResolveCulture(AutoCulture);
 
         public static LocalizedStringProvider Strings { get; } = new();
         public static event EventHandler? CultureChanged;
@@ -68,13 +70,26 @@ namespace AiteBar
 
         public static void ApplyCulture(string? savedCulture)
         {
-            CultureInfo culture = ResolveCulture(savedCulture);
-            CultureInfo.CurrentCulture = culture;
-            CultureInfo.CurrentUICulture = culture;
-            CultureInfo.DefaultThreadCurrentCulture = culture;
-            CultureInfo.DefaultThreadCurrentUICulture = culture;
+            string normalizedPreference = NormalizeCultureName(savedCulture);
+            CultureInfo resolvedCulture = ResolveCulture(normalizedPreference);
+
+            if (string.Equals(_appliedCulturePreference, normalizedPreference, StringComparison.Ordinal) &&
+                string.Equals(_resolvedCulture.Name, resolvedCulture.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                ApplyResolvedCulture(_resolvedCulture);
+                return;
+            }
+
+            _appliedCulturePreference = normalizedPreference;
+            _resolvedCulture = resolvedCulture;
+            ApplyResolvedCulture(_resolvedCulture);
             Strings.Refresh();
             CultureChanged?.Invoke(null, EventArgs.Empty);
+        }
+
+        public static void EnsureAppliedCulture()
+        {
+            ApplyResolvedCulture(_resolvedCulture);
         }
 
         public static void RefreshLocalizedBindings(DependencyObject root)
@@ -93,6 +108,11 @@ namespace AiteBar
             if (root is FrameworkElement frameworkElement)
             {
                 UpdateBinding(frameworkElement, FrameworkElement.ToolTipProperty);
+
+                if (frameworkElement.ContextMenu != null)
+                {
+                    RefreshLocalizedBindings(frameworkElement.ContextMenu, visited);
+                }
             }
 
             switch (root)
@@ -100,8 +120,17 @@ namespace AiteBar
                 case Window window:
                     UpdateBinding(window, Window.TitleProperty);
                     break;
+                case HeaderedItemsControl headeredItemsControl:
+                    UpdateBinding(headeredItemsControl, HeaderedItemsControl.HeaderProperty);
+                    break;
                 case TextBlock textBlock:
                     UpdateBinding(textBlock, TextBlock.TextProperty);
+                    break;
+                case System.Windows.Controls.CheckBox checkBox:
+                    UpdateBinding(checkBox, ContentControl.ContentProperty);
+                    break;
+                case System.Windows.Controls.RadioButton radioButton:
+                    UpdateBinding(radioButton, ContentControl.ContentProperty);
                     break;
                 case HeaderedContentControl headeredContentControl:
                     UpdateBinding(headeredContentControl, HeaderedContentControl.HeaderProperty);
@@ -137,7 +166,7 @@ namespace AiteBar
 
         public static string Get(string key)
         {
-            return Get(key, CultureInfo.CurrentUICulture);
+            return Get(key, _resolvedCulture);
         }
 
         public static string Get(string key, CultureInfo culture)
@@ -153,10 +182,18 @@ namespace AiteBar
         }
 
         public static string Format(string key, params object?[] args) =>
-            Format(key, CultureInfo.CurrentCulture, args);
+            Format(key, _resolvedCulture, args);
 
         public static string Format(string key, CultureInfo culture, params object?[] args) =>
             string.Format(culture, Get(key, culture), args);
+
+        private static void ApplyResolvedCulture(CultureInfo culture)
+        {
+            CultureInfo.CurrentCulture = culture;
+            CultureInfo.CurrentUICulture = culture;
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+        }
     }
 
     public sealed class LocalizedStringProvider : INotifyPropertyChanged

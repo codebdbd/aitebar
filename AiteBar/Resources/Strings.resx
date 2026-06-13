@@ -34,6 +34,11 @@
   <data name="SettingsWindow_Browser" xml:space="preserve"><value>Browser</value></data>
   <data name="SettingsWindow_Profile" xml:space="preserve"><value>Profile</value></data>
   <data name="SettingsWindow_NoProfile" xml:space="preserve"><value>No profile</value></data>
+  <data name="Browser_Chrome" xml:space="preserve"><value>Chrome</value></data>
+  <data name="Browser_Edge" xml:space="preserve"><value>Edge</value></data>
+  <data name="Browser_Brave" xml:space="preserve"><value>Brave</value></data>
+  <data name="Browser_Yandex" xml:space="preserve"><value>Yandex</value></data>
+  <data name="Browser_Firefox" xml:space="preserve"><value>Firefox</value></data>
   <data name="SettingsWindow_AppMode" xml:space="preserve"><value>App mode</value></data>
   <data name="SettingsWindow_Incognito" xml:space="preserve"><value>Incognito mode</value></data>
   <data name="SettingsWindow_Fullscreen" xml:space="preserve"><value>Open fullscreen</value></data>
