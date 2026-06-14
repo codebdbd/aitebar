@@ -11,33 +11,22 @@ public sealed class IconConverterIntegrationTests
     {
         string repoRoot = FindRepoRoot();
         string appXaml = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "App.xaml.cs"));
-        string mainWindowCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.xaml.cs"));
+        string unifiedButtonServiceCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "UnifiedButtonService.cs"));
         string settingsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "AppSettingsWindow.xaml.cs"));
         string modelsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "Models.cs"));
 
         Assert.Contains("UtilityRegistry.Register(new IconConverterUtility())", appXaml);
         Assert.Contains("public bool ShowPresetIconConverter { get; set; } = true;", modelsCode);
-        Assert.Contains("BtnIconConverter.ToolTip = LocalizationService.Get(\"Main_IconConverterTooltip\")", mainWindowCode);
-        Assert.Contains("BtnIconConverter.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetIconConverter = false)", mainWindowCode);
-        Assert.Contains("if (AppSettings.ShowPresetIconConverter) count++", mainWindowCode);
-        Assert.Contains("yield return BtnIconConverter", mainWindowCode);
-        Assert.Contains("BtnIconConverter.Visibility = showSystemUtils && AppSettings.ShowPresetIconConverter ? Visibility.Visible : Visibility.Collapsed", mainWindowCode);
-        Assert.Contains("BtnIconConverter.Visibility == Visibility.Visible", mainWindowCode);
-        Assert.Contains("_actionService.LaunchUtilityAsync(\"IconConverter\", HideDock)", mainWindowCode);
+        Assert.Contains("ShowPresetIconConverter", unifiedButtonServiceCode);
         Assert.Contains("ChkShowPresetIconConverter.IsChecked = _settings.ShowPresetIconConverter", settingsCode);
         Assert.Contains("_settings.ShowPresetIconConverter = ChkShowPresetIconConverter.IsChecked ?? false", settingsCode);
     }
 
     [Fact]
-    public void IconConverter_ButtonAndSettingsCheckboxExistInXaml()
+    public void IconConverter_SettingsCheckboxExistInXaml()
     {
         string repoRoot = FindRepoRoot();
-        XDocument mainWindow = XDocument.Load(Path.Combine(repoRoot, "AiteBar", "MainWindow.xaml"));
         XDocument settingsWindow = XDocument.Load(Path.Combine(repoRoot, "AiteBar", "AppSettingsWindow.xaml"));
-
-        XElement panelButton = FindNamedElement(mainWindow, "BtnIconConverter");
-        Assert.Equal("BtnIconConverter_Click", panelButton.Attribute("Click")?.Value);
-        Assert.Equal("\uF12F", panelButton.Attribute("Content")?.Value);
 
         XElement settingsCheckbox = FindNamedElement(settingsWindow, "ChkShowPresetIconConverter");
         Assert.Equal("{local:Loc ResourceKey=Tool_IconConverter}", settingsCheckbox.Attribute("Content")?.Value);

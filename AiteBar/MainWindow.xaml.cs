@@ -89,7 +89,6 @@ public partial class MainWindow : Window
     private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
 
     private Button? _draggedButton = null;
-    private CustomElement? _draggedElement = null;
     private const string DonatePageUrl = "https://suvorov.pp.ua/donate/";
     private const double TopPanelVisibleOffset = 12;
     private Point _dragStartPos;
@@ -102,9 +101,11 @@ public partial class MainWindow : Window
     private bool _isElementContextMenuOpen;
     private bool _isBlockingPanelInteraction;
     private PanelInputMode _panelInputMode = PanelInputMode.Pointer;
-    private readonly List<Button> _userButtons = [];
+    private readonly List<Button> _unifiedButtons = [];
+    private List<UnifiedButton> _currentUnifiedButtons = [];
     private List<CustomElement> _activeContextElements = [];
     private int _pendingContextAnimationDirection;
+    private readonly UnifiedButtonService _unifiedButtonService;
     private bool _startupInfrastructureInitialized;
     private bool _deferredStartupCompleted;
     private readonly bool _settingsPreloaded;
@@ -140,6 +141,7 @@ public partial class MainWindow : Window
         _settingsPreloaded = settingsPreloaded;
         _actionService = new ActionService(_settingsService);
         _panelPackageService = new PanelPackageService(_settingsService);
+        _unifiedButtonService = new UnifiedButtonService(_settingsService);
         Top = -2000;
 
         SizeChanged += (s, e) =>
@@ -198,35 +200,7 @@ public partial class MainWindow : Window
     {
         BtnAdd.ToolTip = LocalizationService.Get("Main_AddButtonTooltip");
         BtnAppSettings.ToolTip = LocalizationService.Get("Menu_ProgramSettings");
-
-        BtnSearch.ToolTip = LocalizationService.Get("Main_SearchTooltip");
-        BtnScreenshot.ToolTip = LocalizationService.Get("Main_ScreenshotTooltip");
-        BtnRecord.ToolTip = LocalizationService.Get("Main_RecordTooltip");
-        BtnCalc.ToolTip = LocalizationService.Get("Main_CalcTooltip");
-        BtnExplorer.ToolTip = LocalizationService.Get("Main_ExplorerTooltip");
-        BtnDownloads.ToolTip = LocalizationService.Get("Main_DownloadsTooltip");
-        BtnFileSorter.ToolTip = LocalizationService.Get("Main_FileSorterTooltip");
-        BtnIconConverter.ToolTip = LocalizationService.Get("Main_IconConverterTooltip");
-        BtnTimerStopwatch.ToolTip = LocalizationService.Get("Main_TimerStopwatchTooltip");
-        BtnColorPicker.ToolTip = LocalizationService.Get("Main_ColorPickerTooltip");
-        BtnQuickNote.ToolTip = LocalizationService.Get("Main_QuickNoteTooltip");
-        AttachSystemUtilityContextMenus();
         BuildPanelContextMenu();
-    }
-
-    private void AttachSystemUtilityContextMenus()
-    {
-        BtnSearch.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetSearch = false);
-        BtnScreenshot.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetScreenshot = false);
-        BtnRecord.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetVideo = false);
-        BtnCalc.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetCalc = false);
-        BtnExplorer.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetExplorer = false);
-        BtnDownloads.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetDownloads = false);
-        BtnFileSorter.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetFileSorter = false);
-        BtnIconConverter.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetIconConverter = false);
-        BtnTimerStopwatch.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetTimerStopwatch = false);
-        BtnColorPicker.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetColorPicker = false);
-        BtnQuickNote.ContextMenu = BuildSystemUtilityContextMenu(() => AppSettings.ShowPresetQuickNote = false);
     }
 
     private ContextMenu BuildSystemUtilityContextMenu(Action detachAction)
@@ -299,12 +273,6 @@ public partial class MainWindow : Window
     public string GetContextDisplayName(string contextId) => _settingsService.GetContextDisplayName(contextId);
 
     private string GetPrimaryContextId() => _settingsService.GetPrimaryContextId();
-
-    private bool ShouldShowSystemUtilsForContext(string? contextId = null)
-    {
-        string targetContextId = string.IsNullOrWhiteSpace(contextId) ? AppSettings.ActiveContextId : contextId;
-        return string.Equals(targetContextId, GetPrimaryContextId(), System.StringComparison.Ordinal);
-    }
 
     private async Task SwitchActiveContextAsync(int direction)
     {
@@ -720,38 +688,15 @@ public partial class MainWindow : Window
         double availableWidth,
         double availableHeight)
     {
-        int visibleSystemButtonCount = GetVisibleSystemButtonCount();
-        var enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts).ToList();
-        List<int> contextCountsList = enabledContexts
-            .Select(context => Elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal)))
-            .ToList();
-        int activeContextIdx = Math.Max(0, enabledContexts.FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal)));
-
-        var tempMetrics = PanelLayoutHelper.Calculate(
-            isVertical: isVertical,
-            availablePrimary: isVertical ? availableHeight : availableWidth,
-            panelPercent: AppSettings.PanelSizePercent,
-            visibleSystemButtonCount: visibleSystemButtonCount,
-            controlButtonCount: 1,
-            contextCounts: contextCountsList,
-            activeContextIndex: activeContextIdx,
-            systemContextIndex: 0,
-            trailingControlButtonCount: 1);
-
-        bool hasUserButtons = contextCountsList.Any(c => c > 0);
-        bool hideSepControl = isVertical && hasUserButtons && tempMetrics.UserBands == 2;
+        int totalButtonCount = _unifiedButtons.Count;
 
         return PanelLayoutHelper.Calculate(
             isVertical: isVertical,
             availablePrimary: isVertical ? availableHeight : availableWidth,
             panelPercent: AppSettings.PanelSizePercent,
-            visibleSystemButtonCount: visibleSystemButtonCount,
+            totalButtonCount: totalButtonCount,
             controlButtonCount: 1,
-            contextCounts: contextCountsList,
-            activeContextIndex: activeContextIdx,
-            systemContextIndex: 0,
-            trailingControlButtonCount: 1,
-            hideControlSeparator: hideSepControl);
+            trailingControlButtonCount: 1);
     }
 
     private void ApplyPanelSizeConstraints(PanelLayoutHelper.PanelLayoutMetrics metrics)
@@ -772,20 +717,16 @@ public partial class MainWindow : Window
         FixedPanel.Height = double.NaN;
         ControlBlock.Width = double.NaN;
         ControlBlock.Height = double.NaN;
-        SystemUtilsPanel.Width = double.NaN;
-        SystemUtilsPanel.Height = double.NaN;
         AppSettingsBlock.MaxWidth = double.PositiveInfinity;
         AppSettingsBlock.MaxHeight = double.PositiveInfinity;
         AppSettingsBlock.Width = double.NaN;
         AppSettingsBlock.Height = double.NaN;
-        UserButtonsPanel.MaxWidth = double.PositiveInfinity;
-        UserButtonsPanel.MaxHeight = double.PositiveInfinity;
-        UserButtonsPanel.MinWidth = 0;
-        UserButtonsPanel.MinHeight = 0;
-        UserButtonsPanel.Width = double.NaN;
-        UserButtonsPanel.Height = double.NaN;
-
-        int visibleSystemButtonCount = GetVisibleSystemButtonCount();
+        UnifiedButtonsPanel.MaxWidth = double.PositiveInfinity;
+        UnifiedButtonsPanel.MaxHeight = double.PositiveInfinity;
+        UnifiedButtonsPanel.MinWidth = 0;
+        UnifiedButtonsPanel.MinHeight = 0;
+        UnifiedButtonsPanel.Width = double.NaN;
+        UnifiedButtonsPanel.Height = double.NaN;
 
         // Apply layout rounding to avoid sub‑pixel values (prevents flicker & phantom scroll)
         RootBorder.MinWidth = Math.Round(metrics.PanelWidth);
@@ -816,21 +757,16 @@ public partial class MainWindow : Window
         ControlBlock.Width = isVertical ? contentWidth : double.NaN;
         AppSettingsBlock.Width = Math.Round(metrics.TrailingWidth);
         AppSettingsBlock.Height = Math.Round(metrics.TrailingHeight);
-        if (isVertical && visibleSystemButtonCount > 1)
-        {
-            SystemUtilsPanel.Width = Math.Round(metrics.SystemWidth);
-            SystemUtilsPanel.Height = Math.Round(metrics.SystemHeight);
-        }
 
-        UserButtonsPanel.Width = Math.Round(metrics.UserWidth);
-        UserButtonsPanel.Height = Math.Round(metrics.UserHeight);
-        UserButtonsPanel.MaxWidth = Math.Round(metrics.UserWidth);
-        UserButtonsPanel.MaxHeight = Math.Round(metrics.UserHeight);
-        UserButtonsPanel.MinWidth = Math.Round(metrics.UserWidth);
-        UserButtonsPanel.MinHeight = Math.Round(metrics.UserHeight);
-        UserButtonsPanel.LeadingPrimaryReserve = isVertical ? Math.Round(metrics.UserLeadingReserve) : 0;
-        UserButtonsPanel.OverflowPrimaryReserve = isVertical ? Math.Round(metrics.UserOverflowReserve) : 0;
-        UserButtonsPanel.Margin = isVertical && metrics.UserLeadingReserve > 0
+        UnifiedButtonsPanel.Width = Math.Round(metrics.UserWidth);
+        UnifiedButtonsPanel.Height = Math.Round(metrics.UserHeight);
+        UnifiedButtonsPanel.MaxWidth = Math.Round(metrics.UserWidth);
+        UnifiedButtonsPanel.MaxHeight = Math.Round(metrics.UserHeight);
+        UnifiedButtonsPanel.MinWidth = Math.Round(metrics.UserWidth);
+        UnifiedButtonsPanel.MinHeight = Math.Round(metrics.UserHeight);
+        UnifiedButtonsPanel.LeadingPrimaryReserve = isVertical ? Math.Round(metrics.UserLeadingReserve) : 0;
+        UnifiedButtonsPanel.OverflowPrimaryReserve = isVertical ? Math.Round(metrics.UserOverflowReserve) : 0;
+        UnifiedButtonsPanel.Margin = isVertical && metrics.UserLeadingReserve > 0
             ? new Thickness(0, -Math.Round(metrics.UserLeadingReserve), 0, 0)
             : new Thickness(0);
     }
@@ -1406,24 +1342,20 @@ public partial class MainWindow : Window
         System.Windows.Controls.DockPanel.SetDock(DragHandle, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
         FixedPanel.Orientation = orientation;
         AppSettingsBlock.Orientation = orientation;
-        UserButtonsPanel.Orientation = isVertical
-            ? System.Windows.Controls.Orientation.Vertical
-            : System.Windows.Controls.Orientation.Horizontal;
-        SystemUtilsPanel.Orientation = isVertical
+        UnifiedButtonsPanel.Orientation = isVertical
             ? System.Windows.Controls.Orientation.Vertical
             : System.Windows.Controls.Orientation.Horizontal;
         ControlBlock.Orientation = orientation;
         System.Windows.Controls.DockPanel.SetDock(FixedPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
-        System.Windows.Controls.DockPanel.SetDock(UserButtonsPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
+        System.Windows.Controls.DockPanel.SetDock(UnifiedButtonsPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
         System.Windows.Controls.DockPanel.SetDock(AppSettingsBlock, isVertical ? System.Windows.Controls.Dock.Bottom : System.Windows.Controls.Dock.Right);
         FixedPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
-        UserButtonsPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
+        UnifiedButtonsPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
         AppSettingsBlock.VerticalAlignment = isVertical ? VerticalAlignment.Bottom : VerticalAlignment.Center;
         FixedPanel.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Left : System.Windows.HorizontalAlignment.Left;
         ControlBlock.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Stretch : System.Windows.HorizontalAlignment.Left;
         BtnAdd.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Stretch;
-        SystemUtilsPanel.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Left : System.Windows.HorizontalAlignment.Left;
-        UserButtonsPanel.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Left : System.Windows.HorizontalAlignment.Left;
+        UnifiedButtonsPanel.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Left : System.Windows.HorizontalAlignment.Left;
         AppSettingsBlock.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Right;
 
         if (isVertical)
@@ -1443,7 +1375,7 @@ public partial class MainWindow : Window
             DragHandleGrip.Height = 18;
         }
 
-        var separators = new[] { SepSystem, SepControl, SepAppSettings };
+        var separators = new[] { SepSystem, SepAppSettings };
         foreach (var sep in separators)
         {
             if (isVertical) { sep.Width = 20; sep.Height = 1; sep.Margin = new Thickness(0, 4, 0, 4); }
@@ -1470,115 +1402,28 @@ public partial class MainWindow : Window
         _settingsService.NormalizeAppState();
         BuildPanelContextMenu();
         string activeContextId = AppSettings.ActiveContextId;
-        bool hasSystemUtils = ApplySystemUtilityVisibility(activeContextId);
 
         UpdateOrientation(reposition: false, applySizeConstraints: false);
-        UserButtonsPanel.Children.Clear();
-        _userButtons.Clear();
+        UnifiedButtonsPanel.Children.Clear();
+        _unifiedButtons.Clear();
 
-        _activeContextElements = Elements
-            .Where(element => string.Equals(element.ContextId, activeContextId, StringComparison.Ordinal))
-            .ToList();
+        _currentUnifiedButtons = _unifiedButtonService.BuildUnifiedList(activeContextId);
 
-        foreach (var el in _activeContextElements)
+        foreach (var item in _currentUnifiedButtons)
         {
-            var capturedElement = el;
-            var btn = CreatePanelButton(string.Empty, el.Name, async (s, e) =>
-            {
-                if (ReferenceEquals(s, _suppressUserButtonClickFor))
-                {
-                    _suppressUserButtonClickFor = null;
-                    return;
-                }
-
-                await ExecuteUserButtonActionAsync(capturedElement);
-            }, (Brush)_brushConverter.ConvertFromString(el.Color ?? "#E3E3E3")!);
-
-            btn.RenderTransform = new TranslateTransform();
-            btn.Tag = el.Id;
-
-            ApplyButtonIcon(btn, el, panelVersion);
-
-            btn.PreviewMouseDown += (s, e) =>
-            {
-                if (e.ChangedButton != MouseButton.Left) return;
-                _draggedButton = s as Button;
-                _draggedElement = capturedElement;
-                _dragStartPos = e.GetPosition(this);
-                _isReordering = false;
-                _draggedOriginalIndex = _userButtons.IndexOf(_draggedButton!);
-            };
-
-            btn.PreviewMouseMove += (s, e) =>
-            {
-                if (_draggedButton == null || e.LeftButton != MouseButtonState.Pressed) return;
-
-                Point currentPos = e.GetPosition(this);
-                double deltaX = currentPos.X - _dragStartPos.X;
-                double deltaY = currentPos.Y - _dragStartPos.Y;
-
-                if (!_isReordering && (Math.Abs(deltaX) > 10 || Math.Abs(deltaY) > 10))
-                {
-                    _isReordering = true;
-                    _draggedButton.Opacity = 0.7;
-                    Panel.SetZIndex(_draggedButton, 100);
-                    _draggedButton.CaptureMouse();
-                }
-
-                if (_isReordering)
-                {
-                    bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
-                    var tt = (TranslateTransform)_draggedButton.RenderTransform;
-                    if (isVertical) tt.Y = deltaY; else tt.X = deltaX;
-
-                    UpdateReorderPositions(currentPos);
-                }
-            };
-
-            btn.PreviewMouseUp += async (s, e) =>
-            {
-                if (_draggedButton == null) return;
-
-                if (_isReordering)
-                {
-                    if (_draggedButton.IsMouseCaptured)
-                    {
-                        _draggedButton.ReleaseMouseCapture();
-                    }
-
-                    _suppressUserButtonClickFor = _draggedButton;
-                    e.Handled = true;
-                    _draggedButton.Opacity = 1.0;
-                    int newIndex = CalculateTargetIndex(e.GetPosition(this));
-                    if (newIndex >= 0 && newIndex < _activeContextElements.Count && newIndex != _draggedOriginalIndex)
-                    {
-                        _settingsService.ReorderElements(_draggedOriginalIndex, newIndex, AppSettings.ActiveContextId);
-                        await _settingsService.SaveAsync();
-                    }
-                    RefreshPanel();
-                }
-
-                _draggedButton = null; _draggedElement = null; _isReordering = false;
-            };
-
-            btn.MouseRightButtonUp += (s, e) =>
-            {
-                btn.ContextMenu = BuildElementContextMenu(capturedElement);
-            };
-            UserButtonsPanel.Children.Add(btn);
-            _userButtons.Add(btn);
+            var btn = CreateUnifiedButton(item, panelVersion);
+            UnifiedButtonsPanel.Children.Add(btn);
+            _unifiedButtons.Add(btn);
         }
 
         bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
         var (availableWidth, availableHeight) = CalculateAvailableSize();
         var metrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight);
-        bool hasUserButtons = UserButtonsPanel.Children.Count > 0;
-        bool hideSepControl = isVertical && hasUserButtons && metrics.UserBands == 2;
+        bool hasUnifiedButtons = UnifiedButtonsPanel.Children.Count > 0;
 
         // Разделители
-        SepSystem.Visibility = hasUserButtons || hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
-        SepControl.Visibility = hasUserButtons && !hideSepControl && hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
-        SepAppSettings.Visibility = hasUserButtons ? Visibility.Visible : Visibility.Collapsed;
+        SepSystem.Visibility = hasUnifiedButtons ? Visibility.Visible : Visibility.Collapsed;
+        SepAppSettings.Visibility = hasUnifiedButtons ? Visibility.Visible : Visibility.Collapsed;
 
         ApplyPanelSizeConstraints(metrics);
         AnimateContextTransitionIfNeeded();
@@ -1587,105 +1432,187 @@ public partial class MainWindow : Window
         PositionWindowImmediately(_shown);
     }
 
-    private async Task ExecuteUserButtonActionAsync(CustomElement element)
+    private Button CreateUnifiedButton(UnifiedButton item, int panelVersion)
     {
-        var result = await _actionService.ExecuteCustomActionAsync(element, HideDock);
-        if (!result.Success)
+        var btn = CreatePanelButton(string.Empty, item.Name, async (s, e) =>
         {
-            new DarkDialog(LocalizationService.Format("Action_Failed", result.ErrorMessage)) { Owner = this }.ShowDialog();
-        }
-    }
+            if (ReferenceEquals(s, _suppressUserButtonClickFor))
+            {
+                _suppressUserButtonClickFor = null;
+                return;
+            }
+            await ExecuteUnifiedButtonActionAsync(item);
+        }, (Brush)_brushConverter.ConvertFromString(item.Color)!);
 
-    private void ApplyPanelToolTipPlacement()
-    {
-        var placement = GetPanelToolTipPlacement(AppSettings.Edge);
-        var horizontalOffset = AppSettings.Edge switch
+        btn.RenderTransform = new TranslateTransform();
+        btn.Tag = item.Id;
+
+        // Drag-and-drop handlers
+        btn.PreviewMouseDown += (s, e) =>
         {
-            DockEdge.Left => 8,
-            DockEdge.Right => -8,
-            _ => 0
+            if (e.ChangedButton != MouseButton.Left) return;
+            _draggedButton = s as Button;
+            _dragStartPos = e.GetPosition(this);
+            _isReordering = false;
+            _draggedOriginalIndex = _unifiedButtons.IndexOf(_draggedButton!);
         };
-        var verticalOffset = AppSettings.Edge switch
+
+        btn.PreviewMouseMove += (s, e) =>
         {
-            DockEdge.Top => 8,
-            DockEdge.Bottom => -8,
-            _ => 0
+            if (_draggedButton == null || e.LeftButton != MouseButtonState.Pressed) return;
+
+            Point currentPos = e.GetPosition(this);
+            double deltaX = currentPos.X - _dragStartPos.X;
+            double deltaY = currentPos.Y - _dragStartPos.Y;
+
+            if (!_isReordering && (Math.Abs(deltaX) > 10 || Math.Abs(deltaY) > 10))
+            {
+                _isReordering = true;
+                _draggedButton.Opacity = 0.7;
+                Panel.SetZIndex(_draggedButton, 100);
+                _draggedButton.CaptureMouse();
+            }
+
+            if (_isReordering)
+            {
+                bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
+                var tt = (TranslateTransform)_draggedButton.RenderTransform;
+                if (isVertical) tt.Y = deltaY; else tt.X = deltaX;
+
+                UpdateUnifiedReorderPositions(currentPos);
+            }
         };
 
-        foreach (var button in EnumeratePanelButtons())
+        btn.PreviewMouseUp += async (s, e) =>
         {
-            ToolTipService.SetPlacement(button, placement);
-            ToolTipService.SetHorizontalOffset(button, horizontalOffset);
-            ToolTipService.SetVerticalOffset(button, verticalOffset);
-        }
+            if (_draggedButton == null) return;
+
+            if (_isReordering)
+            {
+                if (_draggedButton.IsMouseCaptured)
+                {
+                    _draggedButton.ReleaseMouseCapture();
+                }
+
+                _suppressUserButtonClickFor = _draggedButton;
+                e.Handled = true;
+                _draggedButton.Opacity = 1.0;
+                int newIndex = CalculateUnifiedTargetIndex(e.GetPosition(this));
+                if (newIndex >= 0 && newIndex < _currentUnifiedButtons.Count && newIndex != _draggedOriginalIndex)
+                {
+                    // Reorder logic
+                    var draggedItem = _currentUnifiedButtons[_draggedOriginalIndex];
+
+                    if (draggedItem.Type == UnifiedButtonType.User)
+                    {
+                        // Reorder user elements in current context
+                        var contextId = AppSettings.ActiveContextId;
+                        // Calculate original index within context-specific user elements
+                        var contextUserElements = _settingsService.Elements.Where(el => el.ContextId == contextId).ToList();
+                        var originalUserIndex = contextUserElements.FindIndex(el => el.Id == draggedItem.Id);
+                        // Calculate new index within context-specific user elements
+                        var targetItemInNewIndex = _currentUnifiedButtons[newIndex];
+                        if (targetItemInNewIndex.Type == UnifiedButtonType.User)
+                        {
+                            var targetUserElement = contextUserElements.FirstOrDefault(el => el.Id == targetItemInNewIndex.Id);
+                            if (targetUserElement != null)
+                            {
+                                var newUserIndex = contextUserElements.IndexOf(targetUserElement);
+                                _settingsService.ReorderElements(originalUserIndex, newUserIndex, contextId);
+                                await _settingsService.SaveAsync();
+                            }
+                        }
+                    }
+                    else if (draggedItem.Type == UnifiedButtonType.Utility)
+                    {
+                        // Reorder utility buttons
+                        var newOrder = new List<string>();
+                        var visibleUtilityIds = _currentUnifiedButtons
+                            .Where(b => b.Type == UnifiedButtonType.Utility)
+                            .Select(b => b.Id)
+                            .ToList();
+                        
+                        // Remove the dragged one from current position
+                        visibleUtilityIds.RemoveAt(_draggedOriginalIndex);
+                        
+                        // Determine where to insert in visible utility list
+                        int insertIndexInVisible = newIndex;
+                        // Count how many utilities are before newIndex
+                        for (int i = 0; i < newIndex; i++)
+                        {
+                            if (_currentUnifiedButtons[i].Type == UnifiedButtonType.Utility)
+                            {
+                                // Do nothing, just count
+                            }
+                            else
+                            {
+                                insertIndexInVisible--;
+                            }
+                        }
+                        
+                        // Insert the dragged one in the new position
+                        visibleUtilityIds.Insert(insertIndexInVisible, draggedItem.Id);
+                        
+                        // Now build the full UtilityButtonOrder including possibly hidden ones
+                        var fullOrder = new List<string>();
+                        foreach (var id in AppSettings.UtilityButtonOrder)
+                        {
+                            if (id != draggedItem.Id)
+                            {
+                                fullOrder.Add(id);
+                            }
+                        }
+                        
+                        // Merge visible order with full order, keeping hidden ones in their original positions
+                        var finalOrder = new List<string>();
+                        int visibleIndex = 0;
+                        foreach (var id in fullOrder)
+                        {
+                            if (visibleUtilityIds.Contains(id))
+                            {
+                                // If it's a visible button, take the next from visible order
+                                finalOrder.Add(visibleUtilityIds[visibleIndex]);
+                                visibleIndex++;
+                            }
+                            else
+                            {
+                                // Keep hidden buttons in their original position
+                                finalOrder.Add(id);
+                            }
+                        }
+                        
+                        // Add any remaining visible buttons at the end
+                        while (visibleIndex < visibleUtilityIds.Count)
+                        {
+                            finalOrder.Add(visibleUtilityIds[visibleIndex]);
+                            visibleIndex++;
+                        }
+                        
+                        AppSettings.UtilityButtonOrder = finalOrder;
+                        await _settingsService.SaveAsync();
+                    }
+                }
+                RefreshPanel();
+            }
+
+            _draggedButton = null; _isReordering = false;
+        };
+
+        btn.MouseRightButtonUp += (s, e) =>
+        {
+            btn.ContextMenu = BuildUnifiedButtonContextMenu(item);
+        };
+
+        ApplyUnifiedButtonIcon(btn, item, panelVersion);
+        return btn;
     }
 
-    private IEnumerable<Button> EnumeratePanelButtons()
+    private void ApplyUnifiedButtonIcon(Button button, UnifiedButton item, int panelVersion)
     {
-        yield return BtnAdd;
-        yield return BtnSearch;
-        yield return BtnScreenshot;
-        yield return BtnRecord;
-        yield return BtnCalc;
-        yield return BtnExplorer;
-        yield return BtnDownloads;
-        yield return BtnFileSorter;
-        yield return BtnIconConverter;
-        yield return BtnTimerStopwatch;
-        yield return BtnColorPicker;
-        yield return BtnQuickNote;
-        yield return BtnAppSettings;
-
-        foreach (var button in _userButtons)
+        if (item.Type == UnifiedButtonType.User && !string.IsNullOrWhiteSpace(item.ImagePath) && System.IO.File.Exists(item.ImagePath))
         {
-            yield return button;
-        }
-    }
-
-    private static PlacementMode GetPanelToolTipPlacement(DockEdge edge) => edge switch
-    {
-        DockEdge.Bottom => PlacementMode.Top,
-        DockEdge.Left => PlacementMode.Right,
-        DockEdge.Right => PlacementMode.Left,
-        _ => PlacementMode.Bottom
-    };
-
-    private bool ApplySystemUtilityVisibility(string activeContextId)
-    {
-        bool showSystemUtils = ShouldShowSystemUtilsForContext(activeContextId);
-        BtnSearch.Visibility = showSystemUtils && AppSettings.ShowPresetSearch ? Visibility.Visible : Visibility.Collapsed;
-        BtnScreenshot.Visibility = showSystemUtils && AppSettings.ShowPresetScreenshot ? Visibility.Visible : Visibility.Collapsed;
-        BtnRecord.Visibility = showSystemUtils && AppSettings.ShowPresetVideo ? Visibility.Visible : Visibility.Collapsed;
-        BtnCalc.Visibility = showSystemUtils && AppSettings.ShowPresetCalc ? Visibility.Visible : Visibility.Collapsed;
-        BtnExplorer.Visibility = showSystemUtils && AppSettings.ShowPresetExplorer ? Visibility.Visible : Visibility.Collapsed;
-        BtnDownloads.Visibility = showSystemUtils && AppSettings.ShowPresetDownloads ? Visibility.Visible : Visibility.Collapsed;
-        BtnFileSorter.Visibility = showSystemUtils && AppSettings.ShowPresetFileSorter ? Visibility.Visible : Visibility.Collapsed;
-        BtnIconConverter.Visibility = showSystemUtils && AppSettings.ShowPresetIconConverter ? Visibility.Visible : Visibility.Collapsed;
-        BtnTimerStopwatch.Visibility = showSystemUtils && AppSettings.ShowPresetTimerStopwatch ? Visibility.Visible : Visibility.Collapsed;
-        BtnColorPicker.Visibility = showSystemUtils && AppSettings.ShowPresetColorPicker ? Visibility.Visible : Visibility.Collapsed;
-        BtnQuickNote.Visibility = showSystemUtils && AppSettings.ShowPresetQuickNote ? Visibility.Visible : Visibility.Collapsed;
-
-        bool hasSystemUtils = BtnSearch.Visibility == Visibility.Visible ||
-                              BtnScreenshot.Visibility == Visibility.Visible ||
-                              BtnRecord.Visibility == Visibility.Visible ||
-                              BtnCalc.Visibility == Visibility.Visible ||
-                              BtnExplorer.Visibility == Visibility.Visible ||
-                              BtnDownloads.Visibility == Visibility.Visible ||
-                              BtnFileSorter.Visibility == Visibility.Visible ||
-                              BtnIconConverter.Visibility == Visibility.Visible ||
-                              BtnTimerStopwatch.Visibility == Visibility.Visible ||
-                              BtnColorPicker.Visibility == Visibility.Visible ||
-                              BtnQuickNote.Visibility == Visibility.Visible;
-        SystemUtilsPanel.Visibility = hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
-        return hasSystemUtils;
-    }
-
-    private void ApplyButtonIcon(Button button, CustomElement element, int panelVersion)
-    {
-        if (!string.IsNullOrWhiteSpace(element.ImagePath) && System.IO.File.Exists(element.ImagePath))
-        {
-            DateTime lastWriteUtc = File.GetLastWriteTimeUtc(element.ImagePath);
-            if (_buttonImageCache.TryGetValue(element.ImagePath, out var cached) &&
+            DateTime lastWriteUtc = File.GetLastWriteTimeUtc(item.ImagePath);
+            if (_buttonImageCache.TryGetValue(item.ImagePath, out var cached) &&
                 cached.LastWriteUtc == lastWriteUtc)
             {
                 button.Content = CreateButtonImage(cached.Source);
@@ -1694,15 +1621,15 @@ public partial class MainWindow : Window
 
             // Avoid flashing the fallback glyph while custom icons are being decoded.
             button.Content = null;
-            _ = LoadButtonImageAsync(button, element.Id, element.ImagePath, lastWriteUtc, element.Icon, element.IconFont, panelVersion);
+            _ = LoadUnifiedButtonImageAsync(button, item.Id, item.ImagePath, lastWriteUtc, item.Icon, item.IconFont, panelVersion);
             return;
         }
 
-        button.Content = element.Icon;
-        button.FontFamily = FontHelper.Resolve(element.IconFont);
+        button.Content = item.Icon;
+        button.FontFamily = FontHelper.Resolve(item.IconFont);
     }
 
-    private async Task LoadButtonImageAsync(
+    private async Task LoadUnifiedButtonImageAsync(
         Button button,
         string elementId,
         string imagePath,
@@ -1754,6 +1681,206 @@ public partial class MainWindow : Window
             });
         }
     }
+
+    private ContextMenu BuildUnifiedButtonContextMenu(UnifiedButton item)
+    {
+        if (item.Type == UnifiedButtonType.Utility)
+        {
+            return BuildSystemUtilityContextMenu(async () =>
+            {
+                await RunPanelInteractionAsync(async () =>
+                {
+                    if (item.SettingsKey != null)
+                    {
+                        switch (item.SettingsKey)
+                        {
+                            case "ShowPresetSearch": AppSettings.ShowPresetSearch = false; break;
+                            case "ShowPresetScreenshot": AppSettings.ShowPresetScreenshot = false; break;
+                            case "ShowPresetVideo": AppSettings.ShowPresetVideo = false; break;
+                            case "ShowPresetCalc": AppSettings.ShowPresetCalc = false; break;
+                            case "ShowPresetExplorer": AppSettings.ShowPresetExplorer = false; break;
+                            case "ShowPresetDownloads": AppSettings.ShowPresetDownloads = false; break;
+                            case "ShowPresetFileSorter": AppSettings.ShowPresetFileSorter = false; break;
+                            case "ShowPresetIconConverter": AppSettings.ShowPresetIconConverter = false; break;
+                            case "ShowPresetTimerStopwatch": AppSettings.ShowPresetTimerStopwatch = false; break;
+                            case "ShowPresetColorPicker": AppSettings.ShowPresetColorPicker = false; break;
+                            case "ShowPresetQuickNote": AppSettings.ShowPresetQuickNote = false; break;
+                        }
+                        await _settingsService.SaveAsync();
+                        RefreshPanel();
+                    }
+                });
+            });
+        }
+        else
+        {
+            return BuildElementContextMenu(item.SourceElement!);
+        }
+    }
+
+    private async Task ExecuteUnifiedButtonActionAsync(UnifiedButton item)
+    {
+        if (item.Type == UnifiedButtonType.Utility)
+        {
+            await RunPresetActionAsync(async () =>
+            {
+                switch (item.Id)
+                {
+                    case "Search":
+                        string t = Clipboard.ContainsText() ? Clipboard.GetText().Trim() : "";
+                        if (!string.IsNullOrEmpty(t))
+                            await _actionService.StartSearchAsync(t, HideDock);
+                        break;
+                    case "Screenshot":
+                        await _actionService.StartScreenshotAsync(HideDock);
+                        break;
+                    case "Record":
+                        await _actionService.StartRecordVideoAsync(HideDock);
+                        break;
+                    case "Calc":
+                        await _actionService.StartCalculatorAsync(HideDock);
+                        break;
+                    case "Explorer":
+                        await _actionService.StartExplorerAsync(HideDock);
+                        break;
+                    case "Downloads":
+                        await _actionService.StartDownloadsAsync(HideDock);
+                        break;
+                    case "FileSorter":
+                        await _actionService.LaunchUtilityAsync("FileSorter", HideDock);
+                        break;
+                    case "IconConverter":
+                        await _actionService.LaunchUtilityAsync("IconConverter", HideDock);
+                        break;
+                    case "TimerStopwatch":
+                        await _actionService.LaunchUtilityAsync("TimerStopwatch", HideDock);
+                        break;
+                    case "ColorPicker":
+                        await _actionService.LaunchUtilityAsync("ColorPicker", HideDock);
+                        break;
+                    case "QuickNote":
+                        await _actionService.LaunchUtilityAsync("QuickNote", HideDock);
+                        break;
+                }
+            });
+        }
+        else
+        {
+            await ExecuteUserButtonActionAsync(item.SourceElement!);
+        }
+    }
+
+    private int CalculateUnifiedTargetIndex(Point currentPos)
+    {
+        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
+        for (int i = 0; i < _unifiedButtons.Count; i++)
+        {
+            if (_unifiedButtons[i] == _draggedButton) continue;
+            var pos = _unifiedButtons[i].TransformToAncestor(this).Transform(new Point(0, 0));
+            var size = new System.Windows.Size(_unifiedButtons[i].ActualWidth, _unifiedButtons[i].ActualHeight);
+            if (isVertical)
+            {
+                if (currentPos.Y < pos.Y + size.Height / 2) return i > _draggedOriginalIndex ? i - 1 : i;
+            }
+            else
+            {
+                if (currentPos.X < pos.X + size.Width / 2) return i > _draggedOriginalIndex ? i - 1 : i;
+            }
+        }
+        return _unifiedButtons.Count - 1;
+    }
+
+    private void UpdateUnifiedReorderPositions(Point currentPos)
+    {
+        if (_unifiedButtons.Count < 2) return;
+        int targetIndex = CalculateUnifiedTargetIndex(currentPos);
+        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
+
+        var buttonMargin = _unifiedButtons[0].Margin;
+        double offset = isVertical
+            ? _unifiedButtons[0].ActualHeight + buttonMargin.Top + buttonMargin.Bottom
+            : _unifiedButtons[0].ActualWidth + buttonMargin.Left + buttonMargin.Right;
+
+        for (int i = 0; i < _unifiedButtons.Count; i++)
+        {
+            if (_unifiedButtons[i] == _draggedButton) continue;
+
+            double targetOffset = 0;
+            if (_draggedOriginalIndex < targetIndex)
+            {
+                if (i > _draggedOriginalIndex && i <= targetIndex) targetOffset = -offset;
+            }
+            else if (_draggedOriginalIndex > targetIndex)
+            {
+                if (i >= targetIndex && i < _draggedOriginalIndex) targetOffset = offset;
+            }
+
+            var tt = (TranslateTransform)_unifiedButtons[i].RenderTransform;
+            double currentOffset = isVertical ? tt.Y : tt.X;
+
+            if (Math.Abs(currentOffset - targetOffset) > 0.1)
+            {
+                var anim = new DoubleAnimation(targetOffset, TimeSpan.FromMilliseconds(Constants.AnimationSlideMs))
+                {
+                    EasingFunction = EasingHelper.DefaultEasing
+                };
+                tt.BeginAnimation(isVertical ? TranslateTransform.YProperty : TranslateTransform.XProperty, anim);
+            }
+        }
+    }
+
+    private async Task ExecuteUserButtonActionAsync(CustomElement element)
+    {
+        var result = await _actionService.ExecuteCustomActionAsync(element, HideDock);
+        if (!result.Success)
+        {
+            new DarkDialog(LocalizationService.Format("Action_Failed", result.ErrorMessage)) { Owner = this }.ShowDialog();
+        }
+    }
+
+    private void ApplyPanelToolTipPlacement()
+    {
+        var placement = GetPanelToolTipPlacement(AppSettings.Edge);
+        var horizontalOffset = AppSettings.Edge switch
+        {
+            DockEdge.Left => 8,
+            DockEdge.Right => -8,
+            _ => 0
+        };
+        var verticalOffset = AppSettings.Edge switch
+        {
+            DockEdge.Top => 8,
+            DockEdge.Bottom => -8,
+            _ => 0
+        };
+
+        foreach (var button in EnumeratePanelButtons())
+        {
+            ToolTipService.SetPlacement(button, placement);
+            ToolTipService.SetHorizontalOffset(button, horizontalOffset);
+            ToolTipService.SetVerticalOffset(button, verticalOffset);
+        }
+    }
+
+    private IEnumerable<Button> EnumeratePanelButtons()
+    {
+        yield return BtnAdd;
+
+        foreach (var button in _unifiedButtons)
+        {
+            yield return button;
+        }
+
+        yield return BtnAppSettings;
+    }
+
+    private static PlacementMode GetPanelToolTipPlacement(DockEdge edge) => edge switch
+    {
+        DockEdge.Bottom => PlacementMode.Top,
+        DockEdge.Left => PlacementMode.Right,
+        DockEdge.Right => PlacementMode.Left,
+        _ => PlacementMode.Bottom
+    };
 
     private static System.Windows.Controls.Image CreateButtonImage(System.Windows.Media.Imaging.BitmapSource source) => new()
     {
@@ -1885,7 +2012,7 @@ public partial class MainWindow : Window
 
     private void AnimateContextTransitionIfNeeded()
     {
-        if (_pendingContextAnimationDirection == 0 || UserButtonsPanel.Children.Count == 0)
+        if (_pendingContextAnimationDirection == 0 || UnifiedButtonsPanel.Children.Count == 0)
         {
             _pendingContextAnimationDirection = 0;
             return;
@@ -1895,10 +2022,10 @@ public partial class MainWindow : Window
         _pendingContextAnimationDirection = 0;
         bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
 
-        if (UserButtonsPanel.RenderTransform is not TranslateTransform transform)
+        if (UnifiedButtonsPanel.RenderTransform is not TranslateTransform transform)
         {
             transform = new TranslateTransform();
-            UserButtonsPanel.RenderTransform = transform;
+            UnifiedButtonsPanel.RenderTransform = transform;
         }
 
         double initialOffset = direction * 8d;
@@ -1913,7 +2040,7 @@ public partial class MainWindow : Window
             transform.Y = 0;
         }
 
-        UserButtonsPanel.Opacity = 0.55;
+        UnifiedButtonsPanel.Opacity = 0.55;
 
         var fadeAnimation = new DoubleAnimation(1, TimeSpan.FromMilliseconds(Constants.AnimationFadeMs))
         {
@@ -1925,67 +2052,8 @@ public partial class MainWindow : Window
             EasingFunction = EasingHelper.DefaultEasing
         };
 
-        UserButtonsPanel.BeginAnimation(OpacityProperty, fadeAnimation);
+        UnifiedButtonsPanel.BeginAnimation(OpacityProperty, fadeAnimation);
         transform.BeginAnimation(isVertical ? TranslateTransform.YProperty : TranslateTransform.XProperty, slideAnimation);
-    }
-
-    private int CalculateTargetIndex(Point currentPos)
-    {
-        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
-        for (int i = 0; i < _userButtons.Count; i++)
-        {
-            if (_userButtons[i] == _draggedButton) continue;
-            var pos = _userButtons[i].TransformToAncestor(this).Transform(new Point(0, 0));
-            var size = new System.Windows.Size(_userButtons[i].ActualWidth, _userButtons[i].ActualHeight);
-            if (isVertical)
-            {
-                if (currentPos.Y < pos.Y + size.Height / 2) return i > _draggedOriginalIndex ? i - 1 : i;
-            }
-            else
-            {
-                if (currentPos.X < pos.X + size.Width / 2) return i > _draggedOriginalIndex ? i - 1 : i;
-            }
-        }
-        return _userButtons.Count - 1;
-    }
-
-    private void UpdateReorderPositions(Point currentPos)
-    {
-        if (_userButtons.Count < 2) return;
-        int targetIndex = CalculateTargetIndex(currentPos);
-        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
-
-        var buttonMargin = _userButtons[0].Margin;
-        double offset = isVertical
-            ? _userButtons[0].ActualHeight + buttonMargin.Top + buttonMargin.Bottom
-            : _userButtons[0].ActualWidth + buttonMargin.Left + buttonMargin.Right;
-
-        for (int i = 0; i < _userButtons.Count; i++)
-        {
-            if (_userButtons[i] == _draggedButton) continue;
-
-            double targetOffset = 0;
-            if (_draggedOriginalIndex < targetIndex)
-            {
-                if (i > _draggedOriginalIndex && i <= targetIndex) targetOffset = -offset;
-            }
-            else if (_draggedOriginalIndex > targetIndex)
-            {
-                if (i >= targetIndex && i < _draggedOriginalIndex) targetOffset = offset;
-            }
-
-            var tt = (TranslateTransform)_userButtons[i].RenderTransform;
-            double currentOffset = isVertical ? tt.Y : tt.X;
-
-            if (Math.Abs(currentOffset - targetOffset) > 0.1)
-            {
-                var anim = new DoubleAnimation(targetOffset, TimeSpan.FromMilliseconds(Constants.AnimationSlideMs))
-                {
-                    EasingFunction = EasingHelper.DefaultEasing
-                };
-                tt.BeginAnimation(isVertical ? TranslateTransform.YProperty : TranslateTransform.XProperty, anim);
-            }
-        }
     }
 
     public async Task<IReadOnlyList<string>> SaveElement(CustomElement updated, string? removeId = null)
@@ -2102,14 +2170,8 @@ public partial class MainWindow : Window
         var buttons = new List<Button>();
         // Add BtnAdd
         buttons.Add(BtnAdd);
-        // Add system buttons
-        foreach (var child in SystemUtilsPanel.Children)
-        {
-            if (child is Button btn && btn.Visibility == Visibility.Visible)
-                buttons.Add(btn);
-        }
-        // Add user buttons
-        buttons.AddRange(_userButtons);
+        // Add unified buttons
+        buttons.AddRange(_unifiedButtons);
         // Add BtnAppSettings
         if (BtnAppSettings.Visibility == Visibility.Visible)
             buttons.Add(BtnAppSettings);

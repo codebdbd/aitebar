@@ -111,25 +111,9 @@
                     </StackPanel>
 
                     <Rectangle x:Name="SepSystem" Width="1" Height="20" Fill="#332A9CFF" Margin="2,0" VerticalAlignment="Center"/>
-
-                    <local:OverflowWrapPanel x:Name="SystemUtilsPanel" Orientation="Horizontal">
-                        <Button x:Name="BtnSearch" Content="&#xEA7C;" Click="BtnSearch_Click" Foreground="#3ABEFF" Focusable="True"/>
-                        <Button x:Name="BtnScreenshot" Content="&#xF68E;" Click="BtnScreenshotRegion_Click" Foreground="#60A5FA" Focusable="True"/>
-                        <Button x:Name="BtnRecord" Content="&#xF535;" Click="BtnRecordVideo_Click" Foreground="#FB7185" Focusable="True"/>
-                        <Button x:Name="BtnCalc" Content="&#xF06C;" Click="BtnCalc_Click" Foreground="#A3E635" Focusable="True"/>
-                        <Button x:Name="BtnExplorer" Content="&#xF42F;" Click="BtnExplorer_Click" Foreground="#F59E0B" Focusable="True"/>
-                        <Button x:Name="BtnDownloads" Content="&#xF151;" Click="BtnDownloads_Click" Foreground="#34D399" Focusable="True"/>
-                        <Button x:Name="BtnFileSorter" Content="&#xF202;" Click="BtnFileSorter_Click" Foreground="#60A5FA" Focusable="True"/>
-                        <Button x:Name="BtnIconConverter" Content="&#xF12F;" Click="BtnIconConverter_Click" Foreground="#2DD4BF" Focusable="True"/>
-                        <Button x:Name="BtnTimerStopwatch" Content="&#xED88;" Click="BtnTimerStopwatch_Click" Foreground="#38BDF8" Focusable="True"/>
-                        <Button x:Name="BtnColorPicker" Content="&#xE5FE;" Click="BtnColorPicker_Click" Foreground="#A855F7" Focusable="True"/>
-                        <Button x:Name="BtnQuickNote" Content="&#xF56F;" Click="BtnQuickNote_Click" Foreground="#22D3EE" Focusable="True"/>
-                    </local:OverflowWrapPanel>
-
-                    <Rectangle x:Name="SepControl" Width="1" Height="20" Fill="#332A9CFF" Margin="4,0" VerticalAlignment="Center"/>
                 </StackPanel>
 
-                <local:OverflowWrapPanel x:Name="UserButtonsPanel" Orientation="Horizontal" ClipToBounds="True" VerticalAlignment="Center"/>
+                <local:OverflowWrapPanel x:Name="UnifiedButtonsPanel" Orientation="Horizontal" ClipToBounds="True" VerticalAlignment="Center"/>
 
                 <StackPanel x:Name="AppSettingsBlock" Orientation="Horizontal" DockPanel.Dock="Right" VerticalAlignment="Center">
                     <Rectangle x:Name="SepAppSettings" Width="1" Height="20" Fill="#332A9CFF" Margin="4,0" VerticalAlignment="Center"/>

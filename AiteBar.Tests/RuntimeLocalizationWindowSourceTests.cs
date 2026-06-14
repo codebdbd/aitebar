@@ -37,7 +37,7 @@ public sealed class RuntimeLocalizationWindowSourceTests
         Assert.Contains("foreach (PanelContext context in GetContextsSnapshot())", mainWindowCode);
         Assert.Contains("List<MenuItem> moveTargets = GetContextsSnapshot()", mainWindowCode);
         Assert.Contains("string activeContextName = GetContextDisplayName(AppSettings.ActiveContextId);", mainWindowCode);
-        Assert.Contains("btn.ContextMenu = BuildElementContextMenu(capturedElement);", mainWindowCode);
+        Assert.Contains("BuildUnifiedButtonContextMenu", mainWindowCode);
     }
 
     [Fact]

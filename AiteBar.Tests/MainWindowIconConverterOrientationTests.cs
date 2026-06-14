@@ -40,18 +40,18 @@ public sealed class MainWindowIconConverterOrientationTests
                     LayoutWindow(window);
 
                     var root = Assert.IsAssignableFrom<FrameworkElement>(window.FindName("RootBorder"));
-                    var iconButton = Assert.IsType<Button>(window.FindName("BtnIconConverter"));
-                    var systemUtilsPanel = Assert.IsAssignableFrom<Panel>(window.FindName("SystemUtilsPanel"));
+                    var unifiedPanel = Assert.IsAssignableFrom<OverflowWrapPanel>(window.FindName("UnifiedButtonsPanel"));
                     var appSettingsBlock = Assert.IsAssignableFrom<FrameworkElement>(window.FindName("AppSettingsBlock"));
                     var dragHandle = Assert.IsAssignableFrom<FrameworkElement>(window.FindName("DragHandle"));
 
+                    Assert.Single(unifiedPanel.Children);
+                    var iconButton = Assert.IsType<Button>(unifiedPanel.Children[0]);
                     Assert.Equal(Visibility.Visible, iconButton.Visibility);
-                    Assert.Equal(Visibility.Visible, systemUtilsPanel.Visibility);
-                    Assert.Equal(expected.Orientation, ((OverflowWrapPanel)systemUtilsPanel).Orientation);
+                    Assert.Equal(expected.Orientation, unifiedPanel.Orientation);
                     Assert.Equal(expected.AppSettingsDock, DockPanel.GetDock(appSettingsBlock));
                     Assert.Equal(expected.DragHandleDock, DockPanel.GetDock(dragHandle));
                     Assert.Equal(expected.ToolTipPlacement, ToolTipService.GetPlacement(iconButton));
-                    AssertWithinRoot(root, iconButton, $"BtnIconConverter ({edge})");
+                    AssertWithinRoot(root, iconButton, $"IconConverter ({edge})");
                 }
             }
             finally
@@ -79,11 +79,8 @@ public sealed class MainWindowIconConverterOrientationTests
                 window.RefreshPanel();
                 LayoutWindow(window);
 
-                var iconButton = Assert.IsType<Button>(window.FindName("BtnIconConverter"));
-                var systemUtilsPanel = Assert.IsAssignableFrom<FrameworkElement>(window.FindName("SystemUtilsPanel"));
-
-                Assert.Equal(Visibility.Collapsed, iconButton.Visibility);
-                Assert.Equal(Visibility.Collapsed, systemUtilsPanel.Visibility);
+                var unifiedPanel = Assert.IsAssignableFrom<OverflowWrapPanel>(window.FindName("UnifiedButtonsPanel"));
+                Assert.Empty(unifiedPanel.Children);
             }
             finally
             {
