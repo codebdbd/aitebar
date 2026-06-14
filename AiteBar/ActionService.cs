@@ -311,12 +311,31 @@ public class ActionService
 
         if (onBeforeExecute != null) await onBeforeExecute();
 
-        ProcessStartInfo psi = new ProcessStartInfo(BrowserHelper.GetExecutablePath(BrowserType.Chrome))
+        // Try Chrome first, then Edge, then system default browser
+        var browserPath = BrowserHelper.GetExecutablePath(BrowserType.Chrome);
+        if (!File.Exists(browserPath))
         {
-            UseShellExecute = false,
-            ArgumentList = { $"https://www.google.com/search?q={Uri.EscapeDataString(text)}" }
-        };
-        using var proc = _runtime.StartProcess(psi) ?? throw new InvalidOperationException(LocalizationService.Get("Action_SearchFailed"));
+            browserPath = BrowserHelper.GetExecutablePath(BrowserType.Edge);
+        }
+
+        if (File.Exists(browserPath))
+        {
+            ProcessStartInfo psi = new ProcessStartInfo(browserPath)
+            {
+                UseShellExecute = false,
+                ArgumentList = { $"https://www.google.com/search?q={Uri.EscapeDataString(text)}" }
+            };
+            using var proc = _runtime.StartProcess(psi) ?? throw new InvalidOperationException(LocalizationService.Get("Action_SearchFailed"));
+        }
+        else
+        {
+            // Fallback to system default browser
+            ProcessStartInfo psi = new ProcessStartInfo($"https://www.google.com/search?q={Uri.EscapeDataString(text)}")
+            {
+                UseShellExecute = true
+            };
+            using var proc = _runtime.StartProcess(psi) ?? throw new InvalidOperationException(LocalizationService.Get("Action_SearchFailed"));
+        }
     }
 
     public async Task StartScreenshotAsync(Func<Task>? onBeforeExecute = null)
