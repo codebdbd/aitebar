@@ -90,22 +90,30 @@ internal static class TelemetryService
 
     private static SentrySettings? LoadSettingsFromFile()
     {
-        try
-        {
-            string settingsPath = PathHelper.SettingsFile;
-            if (!File.Exists(settingsPath))
-            {
-                return null;
-            }
-
-            string json = File.ReadAllText(settingsPath);
-            var settings = JsonSerializer.Deserialize<AppSettings>(json);
-            return settings?.Sentry;
-        }
-        catch
+        string settingsPath = PathHelper.SettingsFile;
+        if (!File.Exists(settingsPath))
         {
             return null;
         }
+
+        for (int attempt = 0; attempt < 3; attempt++)
+        {
+            try
+            {
+                string json = File.ReadAllText(settingsPath);
+                var settings = JsonSerializer.Deserialize<AppSettings>(json);
+                return settings?.Sentry;
+            }
+            catch (IOException)
+            {
+                System.Threading.Thread.Sleep(100 * (1 << attempt));
+            }
+            catch
+            {
+                return null;
+            }
+        }
+        return null;
     }
 
     public static void CaptureMessage(string message)

@@ -55,12 +55,12 @@
         </Style>
     </Window.Resources>
 
-    <Border x:Name="RootBorder" Background="{StaticResource BorderColor}" CornerRadius="8" BorderBrush="#332A9CFF" BorderThickness="0.7" Margin="3"
+    <Border x:Name="RootBorder" Background="{StaticResource BorderColor}" CornerRadius="8" BorderBrush="#24FFFFFF" BorderThickness="0.7" Margin="3"
             SnapsToDevicePixels="True"
             TextOptions.TextFormattingMode="Ideal"
             AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel" PreviewMouseDown="RootBorder_PreviewMouseDown">
         <Border.Effect>
-            <DropShadowEffect Color="#000000" BlurRadius="8" ShadowDepth="1" Opacity="0.25"/>
+            <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="1" Opacity="0.32"/>
         </Border.Effect>
         <Border Background="{StaticResource PanelBackground}" CornerRadius="7" SnapsToDevicePixels="True">
         <DockPanel x:Name="MainPanel" HorizontalAlignment="Left" VerticalAlignment="Center" LastChildFill="False" Margin="2">

@@ -135,12 +135,26 @@ public sealed class OverflowWrapPanel : WpfPanel
             return new WpfSize(itemSize.Width, leadingReserve + (count * itemSize.Height));
         }
 
-        int overflowCount = count - firstColumnCapacity;
-        double height = Math.Max(
-            leadingReserve + (firstColumnCapacity * itemSize.Height),
-            overflowReserve + (overflowCount * itemSize.Height));
+        int firstColumnCount = Math.Max(0, firstColumnCapacity);
+        int remainingAfterFirst = count - firstColumnCount;
+        int secondColumnCapacity = GetCapacity(availableSize.Height - overflowReserve, itemSize.Height, remainingAfterFirst);
+        if (remainingAfterFirst <= secondColumnCapacity)
+        {
+            double height = Math.Max(
+                leadingReserve + (firstColumnCount * itemSize.Height),
+                overflowReserve + (remainingAfterFirst * itemSize.Height));
+            return new WpfSize(2 * itemSize.Width, height);
+        }
 
-        return new WpfSize(PanelLayoutHelper.MaxUserBands * itemSize.Width, height);
+        int secondColumnCount = Math.Max(0, secondColumnCapacity);
+        int thirdColumnCount = remainingAfterFirst - secondColumnCount;
+        double totalHeight = Math.Max(
+            leadingReserve + (firstColumnCount * itemSize.Height),
+            Math.Max(
+                overflowReserve + (secondColumnCount * itemSize.Height),
+                thirdColumnCount * itemSize.Height));
+
+        return new WpfSize(3 * itemSize.Width, totalHeight);
     }
 
     private static WpfSize MeasureHorizontal(WpfSize availableSize, WpfSize itemSize, int count)
@@ -161,15 +175,39 @@ public sealed class OverflowWrapPanel : WpfPanel
         double overflowReserve = Math.Max(0, OverflowPrimaryReserve);
         int firstColumnCapacity = GetCapacity(finalSize.Height - leadingReserve, itemSize.Height, count);
 
+        int firstColumnCount = Math.Min(count, firstColumnCapacity);
+        int remainingAfterFirst = count - firstColumnCount;
+        int secondColumnCapacity = GetCapacity(finalSize.Height - overflowReserve, itemSize.Height, remainingAfterFirst);
+        int secondColumnCount = Math.Min(remainingAfterFirst, secondColumnCapacity);
+
         for (int index = 0; index < count; index++)
         {
-            bool isOverflow = index >= firstColumnCapacity;
-            int column = isOverflow ? 1 : 0;
-            int row = isOverflow ? index - firstColumnCapacity : index;
+            int column;
+            int row;
+            double verticalOffset;
+
+            if (index < firstColumnCount)
+            {
+                column = 0;
+                row = index;
+                verticalOffset = leadingReserve;
+            }
+            else if (index < firstColumnCount + secondColumnCount)
+            {
+                column = 1;
+                row = index - firstColumnCount;
+                verticalOffset = overflowReserve;
+            }
+            else
+            {
+                column = 2;
+                row = index - firstColumnCount - secondColumnCount;
+                verticalOffset = 0;
+            }
 
             children[index].Arrange(new Rect(
                 column * itemSize.Width,
-                (isOverflow ? overflowReserve : leadingReserve) + (row * itemSize.Height),
+                verticalOffset + (row * itemSize.Height),
                 itemSize.Width,
                 itemSize.Height));
         }

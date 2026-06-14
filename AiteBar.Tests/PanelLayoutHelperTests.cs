@@ -54,7 +54,7 @@ public sealed class PanelLayoutHelperTests
             trailingControlButtonCount: 0);
 
         Assert.Equal(52, metrics.PanelWidth);
-        Assert.Equal(369, metrics.PanelHeight); // 53 + 7*44 + 8 = 369
+        Assert.Equal(369, metrics.PanelHeight);
         Assert.Equal(44, metrics.UserWidth);
         Assert.Equal(361, metrics.UserHeight);
         Assert.Equal(1, metrics.UserBands);
@@ -86,15 +86,15 @@ public sealed class PanelLayoutHelperTests
         var metrics = PanelLayoutHelper.Calculate(
             isVertical: true,
             availablePrimary: 800,
-            panelPercent: 40,
+            panelPercent: 50, // Минимально допустимое значение
             totalButtonCount: 12,
             controlButtonCount: 1,
             trailingControlButtonCount: 0);
 
         Assert.Equal(96, metrics.PanelWidth);
-        Assert.Equal(320, metrics.PanelHeight);
+        Assert.Equal(369, metrics.PanelHeight);
         Assert.Equal(88, metrics.UserWidth);
-        Assert.Equal(312, metrics.UserHeight);
+        Assert.Equal(361, metrics.UserHeight);
         Assert.Equal(2, metrics.UserBands);
         Assert.Equal(53, metrics.UserLeadingReserve);
         Assert.Equal(metrics.UserLeadingReserve, metrics.UserOverflowReserve);
@@ -164,8 +164,42 @@ public sealed class PanelLayoutHelperTests
 
         Assert.Equal(53, metrics.FixedHeight);
         Assert.Equal(53, metrics.TrailingHeight);
-        Assert.Equal(229, metrics.UserHeight);
-        Assert.Equal(237, metrics.PanelHeight);
+        Assert.Equal(53 + 4 * 44, metrics.UserHeight);
+        Assert.Equal(290, metrics.PanelHeight);
+        Assert.Equal(53, metrics.UserLeadingReserve);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_KeepsTrailingSettingsButtonWhenPanelIsEmpty()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 600,
+            panelPercent: 100,
+            totalButtonCount: 0,
+            controlButtonCount: 1,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(44, metrics.TrailingHeight);
+        Assert.Equal(44, metrics.UserHeight);
+        Assert.Equal(96, metrics.PanelHeight);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_WithManyButtons_ReservesTrailingSettingsButtonAtBottom()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 1200,
+            panelPercent: 100,
+            totalButtonCount: 20,
+            controlButtonCount: 1,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(53, metrics.FixedHeight);
+        Assert.Equal(53, metrics.TrailingHeight);
+        Assert.Equal(53 + 20*44, metrics.UserHeight);
+        Assert.Equal(994, metrics.PanelHeight);
         Assert.Equal(53, metrics.UserLeadingReserve);
     }
 }

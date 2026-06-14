@@ -318,13 +318,21 @@ namespace AiteBar
             _appSettings.Contexts = normalizedContexts;
 
             string normalizedActiveContextId = ContextStateHelper.NormalizeActiveContextId(_appSettings.ActiveContextId, _appSettings.Contexts);
-            if (!string.Equals(_appSettings.ActiveContextId, normalizedActiveContextId, StringComparison.Ordinal))
-            {
-                _appSettings.ActiveContextId = normalizedActiveContextId;
-                changed = true;
-            }
+        if (!string.Equals(_appSettings.ActiveContextId, normalizedActiveContextId, StringComparison.Ordinal))
+        {
+            _appSettings.ActiveContextId = normalizedActiveContextId;
+            changed = true;
+        }
 
-            var normalizedElements = NormalizeElements(_appSettings.Elements, GetPrimaryContextId(), out bool elementsNormalized);
+        // Ограничиваем размер панели минимум 50%
+        double oldPanelSizePercent = _appSettings.PanelSizePercent;
+        _appSettings.PanelSizePercent = Math.Clamp(_appSettings.PanelSizePercent, 50, 100);
+        if (Math.Abs(oldPanelSizePercent - _appSettings.PanelSizePercent) > 0.001)
+        {
+            changed = true;
+        }
+
+        var normalizedElements = NormalizeElements(_appSettings.Elements, GetPrimaryContextId(), out bool elementsNormalized);
             if (elementsNormalized)
             {
                 changed = true;
@@ -444,30 +452,31 @@ namespace AiteBar
     }
 
         private static bool AreElementsEquivalent(CustomElement left, CustomElement right)
-        {
-            return left.Id == right.Id &&
-                   left.Name == right.Name &&
-                   left.Icon == right.Icon &&
-                   left.IconFont == right.IconFont &&
-                   left.Color == right.Color &&
-                   left.ActionType == right.ActionType &&
-                   left.ActionValue == right.ActionValue &&
-                   left.Browser == right.Browser &&
-                   left.ChromeProfile == right.ChromeProfile &&
-                   (left.RotationProfilePaths ?? []).SequenceEqual(right.RotationProfilePaths ?? []) &&
-                   left.IsAppMode == right.IsAppMode &&
-                   left.IsIncognito == right.IsIncognito &&
-                   left.UseRotation == right.UseRotation &&
-                   left.OpenFullscreen == right.OpenFullscreen &&
-                   left.LastUsedProfile == right.LastUsedProfile &&
-                   left.Alt == right.Alt &&
-                   left.Ctrl == right.Ctrl &&
-                   left.Shift == right.Shift &&
-                   left.Win == right.Win &&
-                   left.Key == right.Key &&
-                   left.ImagePath == right.ImagePath &&
-                   left.ContextId == right.ContextId;
-        }
+    {
+        return left.Id == right.Id &&
+               left.Name == right.Name &&
+               left.Icon == right.Icon &&
+               left.IconFont == right.IconFont &&
+               left.Color == right.Color &&
+               left.ActionType == right.ActionType &&
+               left.ActionValue == right.ActionValue &&
+               left.Browser == right.Browser &&
+               left.ChromeProfile == right.ChromeProfile &&
+               (left.RotationProfilePaths ?? []).SequenceEqual(right.RotationProfilePaths ?? []) &&
+               left.IsAppMode == right.IsAppMode &&
+               left.IsIncognito == right.IsIncognito &&
+               left.UseRotation == right.UseRotation &&
+               left.OpenFullscreen == right.OpenFullscreen &&
+               left.IsTopmost == right.IsTopmost &&
+               left.LastUsedProfile == right.LastUsedProfile &&
+               left.Alt == right.Alt &&
+               left.Ctrl == right.Ctrl &&
+               left.Shift == right.Shift &&
+               left.Win == right.Win &&
+               left.Key == right.Key &&
+               left.ImagePath == right.ImagePath &&
+               left.ContextId == right.ContextId;
+    }
 
         public string GetPrimaryContextId()
         {

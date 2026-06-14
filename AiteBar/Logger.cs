@@ -55,6 +55,8 @@ namespace AiteBar
         }
 
         private static void RotateLogFile()
+    {
+        try
         {
             string directory = Path.GetDirectoryName(LogPath) ?? PathHelper.AppDataFolder;
             string fileName = Path.GetFileName(LogPath);
@@ -68,5 +70,11 @@ namespace AiteBar
                 File.Delete(oldBackup);
             }
         }
+        catch
+        {
+            // Fallback: truncate the file
+            File.WriteAllText(LogPath, string.Empty);
+        }
+    }
     }
 }

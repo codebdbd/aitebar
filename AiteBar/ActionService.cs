@@ -301,7 +301,7 @@ public class ActionService
 
         return Regex.IsMatch(
             command,
-            @"(^|[\s;&|])(?:del|erase|rd|rmdir|rm|remove-item|format|shutdown|restart-computer|stop-computer|bcdedit|diskpart|cipher)(?:\.exe|\.com|\.ps1|\.bat|\.cmd)?($|[\s;&|:/\\-])",
+            @"(^|[\s;&|])(?:del|erase|rd|rmdir|rm|remove-item|format|shutdown|restart-computer|stop-computer|bcdedit|diskpart|cipher|taskkill|stop-process|reg\s+delete|takeown|ri)(?:\.exe|\.com|\.ps1|\.bat|\.cmd)?($|[\s;&|:/\\-])",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     }
 
@@ -452,12 +452,6 @@ public class ActionService
                     Logger.Log(ex);
                 }
             }
-        }
-        
-        // Проверим, существует ли файл в текущем каталоге
-        if (File.Exists(fileName))
-        {
-            return fileName;
         }
         
         return null;

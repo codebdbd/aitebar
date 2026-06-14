@@ -183,7 +183,7 @@
                                 <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PanelSize}" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
                                 <TextBlock x:Name="TxtPanelSize" DockPanel.Dock="Right" Foreground="White" FontSize="12" Margin="8,0,0,0"/>
                             </DockPanel>
-                            <Slider x:Name="SldPanelSize" Minimum="20" Maximum="100" Value="80" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldPanelSize_ValueChanged"/>
+                            <Slider x:Name="SldPanelSize" Minimum="50" Maximum="100" Value="80" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldPanelSize_ValueChanged"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,0,0,12">

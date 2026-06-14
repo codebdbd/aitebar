@@ -307,7 +307,7 @@ public partial class MainWindow : Window
         AppSettings.ActiveContextId = nextContextId;
         _pendingContextAnimationDirection = Math.Sign(direction);
         RefreshPanel();
-        _ = _settingsService.SaveAsync();
+        _ = _settingsService.SaveAsync().ContinueWith(t => { if (t.Exception != null) Logger.Log(t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
     }
 
     private void ActivateContextByIndex(int index)
@@ -324,7 +324,7 @@ public partial class MainWindow : Window
         AppSettings.ActiveContextId = nextContextId;
         _pendingContextAnimationDirection = index >= currentIndex ? 1 : -1;
         RefreshPanel();
-        _ = _settingsService.SaveAsync();
+        _ = _settingsService.SaveAsync().ContinueWith(t => { if (t.Exception != null) Logger.Log(t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
     }
 
     private void BuildPanelContextMenu()
@@ -658,7 +658,7 @@ public partial class MainWindow : Window
         AppSettings.ActiveContextId = contextId;
         _pendingContextAnimationDirection = index >= currentIndex ? 1 : -1;
         RefreshPanel();
-        _ = _settingsService.SaveAsync();
+        _ = _settingsService.SaveAsync().ContinueWith(t => { if (t.Exception != null) Logger.Log(t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
     }
 
     private Screen? GetTargetScreen()
@@ -1038,7 +1038,15 @@ public partial class MainWindow : Window
 
     private static void OpenUrl(string url)
     {
-        try { Process.Start(new ProcessStartInfo(url) { UseShellExecute = true }); }
+        try 
+        {
+            // Validate URL scheme to only allow http/https
+            if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && 
+                (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            }
+        }
         catch (Exception ex) { Logger.Log(ex); }
     }
 
@@ -1290,7 +1298,7 @@ public partial class MainWindow : Window
                     if (_hoverStartTime == null) _hoverStartTime = DateTime.Now;
                     else if ((DateTime.Now - _hoverStartTime.Value).TotalMilliseconds >= delayMs)
                     {
-                        ShowDockFromHover();
+                        ShowDock();
                     }
                 }
                 else _hoverStartTime = null;
@@ -1327,6 +1335,10 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             _ = Logger.LogAsync(ex);
+        }
+        finally
+        {
+            _startupCts.Dispose();
         }
     }
 
@@ -1399,6 +1411,7 @@ public partial class MainWindow : Window
     public void RefreshPanel()
     {
         int panelVersion = unchecked(++_panelRefreshVersion);
+        _buttonImageCache.Clear();
         _settingsService.NormalizeAppState();
         BuildPanelContextMenu();
         string activeContextId = AppSettings.ActiveContextId;
@@ -1946,7 +1959,7 @@ public partial class MainWindow : Window
 
         if (_panelDragChanged)
         {
-            _ = _settingsService.SaveAsync();
+            _ = _settingsService.SaveAsync().ContinueWith(t => { if (t.Exception != null) Logger.Log(t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
         }
         else
         {
@@ -2078,18 +2091,7 @@ public partial class MainWindow : Window
         Toggle(false);
     }
 
-    private void ShowDockFromHover()
-    {
-        if (_shown || _isAnimating)
-        {
-            return;
-        }
 
-        SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
-        _shown = true;
-        _hoverStartTime = null;
-        Toggle(false);
-    }
 
     private static bool ForceForegroundWindow(IntPtr hwnd)
     {
@@ -2448,34 +2450,41 @@ public partial class MainWindow : Window
 
     private async void RootBorder_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
-        if (_isAnimating || !_shown) return;
-        if (e.Delta == 0) return;
-
-        e.Handled = true;
-        SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
-        CaptureMouseForWheel();
-
-        DateTime now = DateTime.UtcNow;
-        if (now - _lastContextWheelSwitchUtc < ContextWheelSwitchCooldown)
+        try
         {
-            return;
-        }
+            if (_isAnimating || !_shown) return;
+            if (e.Delta == 0) return;
 
-        if (_contextWheelDelta != 0 && Math.Sign(_contextWheelDelta) != Math.Sign(e.Delta))
-        {
+            e.Handled = true;
+            SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
+            CaptureMouseForWheel();
+
+            DateTime now = DateTime.UtcNow;
+            if (now - _lastContextWheelSwitchUtc < ContextWheelSwitchCooldown)
+            {
+                return;
+            }
+
+            if (_contextWheelDelta != 0 && Math.Sign(_contextWheelDelta) != Math.Sign(e.Delta))
+            {
+                _contextWheelDelta = 0;
+            }
+
+            _contextWheelDelta += e.Delta;
+            if (Math.Abs(_contextWheelDelta) < WheelDeltaPerContextSwitch)
+            {
+                return;
+            }
+
+            int direction = _contextWheelDelta > 0 ? -1 : 1;
             _contextWheelDelta = 0;
+            _lastContextWheelSwitchUtc = now;
+            await SwitchActiveContextAsync(direction);
         }
-
-        _contextWheelDelta += e.Delta;
-        if (Math.Abs(_contextWheelDelta) < WheelDeltaPerContextSwitch)
+        catch (Exception ex)
         {
-            return;
+            Logger.Log(ex);
         }
-
-        int direction = _contextWheelDelta > 0 ? -1 : 1;
-        _contextWheelDelta = 0;
-        _lastContextWheelSwitchUtc = now;
-        await SwitchActiveContextAsync(direction);
     }
 
     private async Task RunPresetActionAsync(Func<Task> action)
@@ -2757,7 +2766,6 @@ public partial class MainWindow : Window
             }
 
             UnregisterGlobalHotkey();
-            _startupCts.Dispose();
         }
         finally
         {
