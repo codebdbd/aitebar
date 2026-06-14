@@ -7,7 +7,7 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.8.0] - 2026-06-14
 
 ### 🇷🇺 Изменено | 🇬🇧 Changed
 - **Расчет геометрии панели**: размеры панели теперь проходят через единый путь `CalculateAvailableSize()` / `ComputePanelMetrics()`, чтобы `RefreshPanel()` и смена ориентации использовали одинаковые входные ограничения.
@@ -26,10 +26,14 @@
 - **Application shutdown**: Sentry flush no longer blocks exit with synchronous waiting, and panel cleanup is more resilient to hook/tray disposal failures.
 - **Профили браузеров**: Chromium `Preferences` читаются с `FileShare.ReadWrite`, чтобы открытый браузер реже мешал отображению профилей.
 - **Browser profiles**: Chromium `Preferences` are read with `FileShare.ReadWrite`, so a running browser is less likely to block profile display.
+- **Вертикальный режим панели**: кнопка настроек теперь отображается корректно в вертикальном положении, устранено лишнее пустое пространство.
+- **Vertical panel mode**: settings button now appears correctly in vertical orientation, removed extra empty space.
 
 ### 🇷🇺 Тесты | 🇬🇧 Tests
 - **Регрессии надежности**: добавлены проверки предупреждений для опасных команд, безопасного backup-сохранения настроек, async logging и чтения browser preferences при параллельном доступе.
 - **Reliability regressions**: added checks for dangerous-command warnings, safe backup-based settings persistence, async logging, and browser preference reads under concurrent access.
+- **Вертикальный режим панели**: обновлены тесты `PanelLayoutHelperTests` для нового поведения.
+- **Vertical panel mode**: updated `PanelLayoutHelperTests` for new behavior.
 
 ## [1.7.9] - 2026-06-13
 
