@@ -2,7 +2,7 @@
 
 AiteBar - скрываемая панель быстрого доступа для Windows. Она появляется у края экрана и запускает сайты, программы, файлы, папки, команды, скрипты, горячие клавиши и встроенные инструменты.
 
-Это руководство написано для пользователей. Технические детали вынесены в [docs/technical-reference.md](docs/technical-reference.md), а проверочный список для релиза - в [docs/documentation-qa-checklist.md](docs/documentation-qa-checklist.md).
+Это руководство написано для пользователей. Технические детали вынесены в [technical-reference.md](technical-reference.md).
 
 ## Содержание
 

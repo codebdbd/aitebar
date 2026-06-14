@@ -53,7 +53,6 @@ AiteBar — Your Personal Command Center for Windows. Turn the edge of your scre
 - [User Manual](docs/USER_MANUAL.md)
 - [Features Map](docs/functions.md)
 - [Architecture](docs/architecture.md)
-- [Pre-release Audit](docs/release-audit.md)
 
 ### Requirements
 - OS: Windows 10 / Windows 11
@@ -114,7 +113,6 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 - [Руководство пользователя](docs/USER_MANUAL.md)
 - [Карта функций](docs/functions.md)
 - [Архитектура](docs/architecture.md)
-- [Предрелизный аудит](docs/release-audit.md)
 
 ### Требования
 - ОС: Windows 10 / Windows 11
