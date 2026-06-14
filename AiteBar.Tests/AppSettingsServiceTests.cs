@@ -280,6 +280,38 @@ public sealed class AppSettingsServiceTests
     }
 
     [Fact]
+    public async Task SaveAsync_ReplacesSettingsAfterTempWriteAndKeepsPreviousVersionAsBackup()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string settingsPath = Path.Combine(root, "settings.json");
+        string configPath = Path.Combine(root, "custom_buttons.json");
+
+        try
+        {
+            var service = new AppSettingsService(configPath, settingsPath);
+            service.Settings.UiCulture = "en";
+            await service.SaveAsync();
+
+            service.Settings.UiCulture = "de";
+            await service.SaveAsync();
+
+            string currentJson = await File.ReadAllTextAsync(settingsPath);
+            string backupJson = await File.ReadAllTextAsync(service.GetBackupFilePath(0));
+            var current = System.Text.Json.JsonSerializer.Deserialize<AppSettings>(currentJson);
+            var backup = System.Text.Json.JsonSerializer.Deserialize<AppSettings>(backupJson);
+
+            Assert.Equal("de", current?.UiCulture);
+            Assert.Equal("en", backup?.UiCulture);
+            Assert.Empty(Directory.GetFiles(root, "*.tmp"));
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task TryLoadFromBackup_LoadsFromFirstValidBackup()
     {
         string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));

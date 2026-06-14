@@ -114,6 +114,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `BrowserHelper` — работа с браузерами (поиск exe, получение профилей)
 - `PathHelper` — пути к файлам конфигурации и данных
 - `PanelLayoutHelper` — расчет геометрии панели
+- `PanelPositionHelper` — расчет координат панели и ближайшего края при drag handle
 - `ContextStateHelper` — работа с контекстами (8 фиксированных контекстов)
 - `FontHelper`, `IconHelper` — работа с иконками и шрифтами
 - `ProfileRotationHelper` — ротация профилей браузера
@@ -270,6 +271,8 @@ UI Layer использует Services Layer для выполнения биз�
 - _appSettings — текущие настройки
 - _elements — список пользовательских кнопок
 - _saveSemaphore — семафор для потокобезопасного сохранения
+- WriteSettingsWithBackupAsync() — запись `settings.json` через временный файл и замену текущего файла с сохранением предыдущей версии в `settings.json.backup.0`
+- RotateBackups() / RotateExistingBackupsOnly() — ротация резервных копий настроек
 
 **Основные классы:**
 - AppSettingsService
@@ -277,6 +280,7 @@ UI Layer использует Services Layer для выполнения биз�
 **Основные функции:**
 - LoadAsync()
 - SaveAsync()
+- WriteSettingsWithBackupAsync()
 - NormalizeAppState()
 - SaveElementAsync()
 - ReorderElements()
@@ -284,7 +288,8 @@ UI Layer использует Services Layer для выполнения биз�
 
 **Потоки данных:**
 - Загружает данные из SettingsFile (settings.json)
-- Сохраняет данные в SettingsFile (settings.json)
+- При сохранении сериализует AppSettings в JSON, записывает данные во временный файл рядом с SettingsFile, затем заменяет SettingsFile через файловую операцию replace/move
+- Если SettingsFile уже существовал, предыдущая версия сохраняется как `settings.json.backup.0`, а старые бэкапы сдвигаются до лимита MaxBackupCount
 
 ## ActionService
 **Назначение:** Выполнение пользовательских действий и системных утилит.
@@ -531,6 +536,12 @@ UI Layer использует Services Layer для выполнения биз�
 - Расчет расположения системных и пользовательских кнопок
 - Расчет количества полос (bands) для пользовательских кнопок (максимум 2)
 
+**Интеграция с MainWindow:**
+- `MainWindow.CalculateAvailableSize()` получает рабочую область целевого монитора, учитывает DPI и единый `PanelScreenPadding`.
+- `MainWindow.ComputePanelMetrics()` собирает количество системных кнопок, количество кнопок по активным контекстам и вызывает `PanelLayoutHelper.Calculate()` сначала для определения `UserBands`, затем для финальных размеров с учетом скрытия separator между системным и пользовательским блоком.
+- `MainWindow.ApplyPanelSizeConstraints(metrics)` только применяет готовые `PanelLayoutMetrics` к XAML-элементам. Он не должен заново считать доступную область или вызывать `PanelLayoutHelper.Calculate()`.
+- `RefreshPanel()` и `UpdateOrientation()` используют один и тот же путь вычисления metrics, чтобы размеры панели и содержимого не расходились между обновлениями.
+
 **Входящие зависимости:**
 - Нет
 
@@ -551,6 +562,28 @@ UI Layer использует Services Layer для выполнения биз�
 **Основные функции:**
 - Calculate()
 - CalculateUserLayout()
+
+## PanelPositionHelper
+**Назначение:** Чистая математика позиционирования панели без зависимости от XAML-элементов `MainWindow`.
+
+**Ответственность:**
+- Расчет координат панели для сторон `Top`, `Bottom`, `Left`, `Right` в показанном и скрытом состоянии
+- Центрирование панели в рабочей области монитора
+- Выбор ближайшего края при перетаскивании drag handle с hysteresis для текущего края, чтобы панель не прыгала около углов
+- Поиск индекса монитора по `DeviceName`
+
+**Входящие зависимости:**
+- `DockEdge`
+- `System.Windows.Rect`
+- `System.Drawing.Rectangle`
+
+**Исходящие зависимости:**
+- Нет
+
+**Основные функции:**
+- GetDockCoordinates()
+- GetClosestDockEdge()
+- FindScreenIndex()
 
 ---
 

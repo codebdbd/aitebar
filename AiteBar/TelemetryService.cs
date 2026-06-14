@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading.Tasks;
 using Sentry;
 
 namespace AiteBar;
@@ -172,7 +173,13 @@ internal static class TelemetryService
 
         try
         {
-            SentrySdk.FlushAsync(timeout).GetAwaiter().GetResult();
+            _ = SentrySdk.FlushAsync(timeout).ContinueWith(task =>
+            {
+                if (task.Exception != null)
+                {
+                    Logger.Log(task.Exception);
+                }
+            }, TaskContinuationOptions.OnlyOnFaulted);
         }
         catch (Exception ex)
         {

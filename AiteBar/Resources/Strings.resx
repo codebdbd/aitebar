@@ -266,6 +266,7 @@ Import rollback is not supported in this version.</value></data>
 {0}
 
 Continue?</value></data>
+  <data name="Action_CommandDangerWarning" xml:space="preserve"><value>Warning: this command contains command chaining, redirection, or a destructive system command. Review it carefully before continuing.</value></data>
   <data name="Action_ConfirmScript" xml:space="preserve"><value>Run this script only if you trust it. It can change files and system settings:
 {0}
 

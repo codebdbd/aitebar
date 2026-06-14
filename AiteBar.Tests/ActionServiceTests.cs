@@ -47,6 +47,38 @@ public sealed class ActionServiceTests
         Assert.True(psi.UseShellExecute);
     }
 
+    [Theory]
+    [InlineData("calc.exe", false)]
+    [InlineData("explorer.exe shell:Downloads", false)]
+    [InlineData("calc.exe && del settings.json", true)]
+    [InlineData("dir | more", true)]
+    [InlineData("shutdown /s /t 0", true)]
+    [InlineData("Remove-Item $env:TEMP -Recurse", true)]
+    public void ContainsPotentiallyDangerousCommandSyntax_FlagsShellChainingAndDestructiveCommands(string command, bool expected)
+    {
+        Assert.Equal(expected, ActionService.ContainsPotentiallyDangerousCommandSyntax(command));
+    }
+
+    [Fact]
+    public async Task ExecuteCustomActionAsync_CommandWithDangerousSyntax_AddsWarningToConfirmation()
+    {
+        var runtime = new FakeActionServiceRuntime { ConfirmResult = true };
+        var service = new ActionService(new AppSettingsService(), runtime);
+        var element = new CustomElement
+        {
+            ActionType = nameof(ActionType.Command),
+            ActionValue = "calc.exe && del settings.json"
+        };
+
+        ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
+
+        Assert.True(result.Success);
+        Assert.Single(runtime.ConfirmMessages);
+        Assert.Contains(LocalizationService.Get("Action_CommandDangerWarning"), runtime.ConfirmMessages[0]);
+        Assert.Single(runtime.StartedProcessInfos);
+        Assert.Equal("cmd.exe", runtime.StartedProcessInfos[0].FileName);
+    }
+
     [Fact]
     public void CreateScriptProcessStartInfo_PythonScript_UsesArgumentListWithoutCmdShell()
     {

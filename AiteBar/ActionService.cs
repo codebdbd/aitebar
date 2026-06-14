@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
@@ -261,7 +262,7 @@ public class ActionService
 
     private void ExecuteCommand(string command)
     {
-        if (_runtime.Confirm(LocalizationService.Format("Action_ConfirmCommand", command), _runtime.GetMainWindow()))
+        if (_runtime.Confirm(BuildCommandConfirmationMessage(command), _runtime.GetMainWindow()))
         {
             _runtime.StartProcess(new ProcessStartInfo("cmd.exe")
             {
@@ -270,6 +271,38 @@ public class ActionService
                 Arguments = $"/c {command}"
             });
         }
+    }
+
+    internal static string BuildCommandConfirmationMessage(string command)
+    {
+        string message = LocalizationService.Format("Action_ConfirmCommand", command);
+        if (ContainsPotentiallyDangerousCommandSyntax(command))
+        {
+            message += Environment.NewLine + Environment.NewLine + LocalizationService.Get("Action_CommandDangerWarning");
+        }
+
+        return message;
+    }
+
+    internal static bool ContainsPotentiallyDangerousCommandSyntax(string command)
+    {
+        if (string.IsNullOrWhiteSpace(command))
+        {
+            return false;
+        }
+
+        if (command.IndexOf('&') >= 0 ||
+            command.IndexOf('|') >= 0 ||
+            command.IndexOf('>') >= 0 ||
+            command.IndexOf('<') >= 0)
+        {
+            return true;
+        }
+
+        return Regex.IsMatch(
+            command,
+            @"(^|[\s;&|])(?:del|erase|rd|rmdir|rm|remove-item|format|shutdown|restart-computer|stop-computer|bcdedit|diskpart|cipher)(?:\.exe|\.com|\.ps1|\.bat|\.cmd)?($|[\s;&|:/\\-])",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
     }
 
     public async Task StartSearchAsync(string text, Func<Task>? onBeforeExecute = null)

@@ -175,6 +175,32 @@ public sealed class BrowserHelperTests
     }
 
     [Fact]
+    public void GetProfiles_ChromiumPreferences_AllowsConcurrentWriter()
+    {
+        string basePath = BrowserHelper.GetUserDataPath(BrowserType.Yandex);
+        string profilePath = Path.Combine(basePath, "Profile 900004");
+        string preferencesPath = Path.Combine(profilePath, "Preferences");
+
+        try
+        {
+            Directory.CreateDirectory(profilePath);
+            File.WriteAllText(preferencesPath, """{"profile":{"name":"zzzz-aitebar-locked"}}""");
+
+            using var lockedPreferences = File.Open(preferencesPath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+            var result = BrowserHelper.GetProfiles(BrowserType.Yandex);
+
+            Assert.Contains(result, profile =>
+                profile.ProfilePath == profilePath &&
+                profile.DisplayName == "zzzz-aitebar-locked");
+        }
+        finally
+        {
+            TryDeleteDirectory(profilePath);
+        }
+    }
+
+    [Fact]
     public void GetExecutablePath_UnknownBrowserType_FallsBackToChrome()
     {
         var result = BrowserHelper.GetExecutablePath((BrowserType)9999);

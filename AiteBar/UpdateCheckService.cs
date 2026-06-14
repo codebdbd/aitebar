@@ -39,11 +39,12 @@ public sealed class UpdateCheckService
     private const string GitHubHost = "github.com";
     private const string RepositoryPathPrefix = "/codebdbd/aitebar/";
     private static readonly Uri LatestReleaseUri = new(LatestReleaseApiUrl);
+    private static readonly HttpClient SharedHttpClient = CreateHttpClient();
     private readonly HttpClient _httpClient;
     private readonly IProcessStartDispatcher _processStartDispatcher;
 
     public UpdateCheckService()
-        : this(CreateHttpClient(), new ProcessStartDispatcher())
+        : this(SharedHttpClient, new ProcessStartDispatcher())
     {
     }
 

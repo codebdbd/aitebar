@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace AiteBar
 {
@@ -18,22 +19,39 @@ namespace AiteBar
             {
                 lock (_lockObj)
                 {
-                    string? dir = Path.GetDirectoryName(LogPath);
-                    if (dir != null && !Directory.Exists(dir))
-                        Directory.CreateDirectory(dir);
-
-                    if (File.Exists(LogPath) && new FileInfo(LogPath).Length > MaxLogSizeBytes)
-                    {
-                        RotateLogFile();
-                    }
-
-                    File.AppendAllText(LogPath, $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {ex}\n\n");
+                    EnsureLogFileReady();
+                    File.AppendAllText(LogPath, BuildLogEntry(ex));
                 }
             }
             catch (Exception logEx)
             {
                 Debug.WriteLine(logEx);
             }
+        }
+
+        public static Task LogAsync(Exception ex) =>
+            Task.Run(() => Log(ex));
+
+        private static void EnsureLogFileReady()
+        {
+            string? dir = Path.GetDirectoryName(LogPath);
+            if (dir != null && !Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            if (File.Exists(LogPath) && new FileInfo(LogPath).Length > MaxLogSizeBytes)
+            {
+                RotateLogFile();
+            }
+        }
+
+        private static string BuildLogEntry(Exception ex)
+        {
+            string safeExceptionText = ex.ToString()
+                .Replace("\r\n", "\n", StringComparison.Ordinal)
+                .Replace('\r', '\n')
+                .Replace("\n", " | ", StringComparison.Ordinal);
+
+            return $"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {safeExceptionText}\n\n";
         }
 
         private static void RotateLogFile()

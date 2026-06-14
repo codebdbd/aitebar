@@ -750,6 +750,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
 {0}
 
 Продолжить?</value></data>
+  <data name="Action_CommandDangerWarning" xml:space="preserve"><value>Внимание: команда содержит объединение команд, перенаправление или потенциально разрушительную системную команду. Внимательно проверьте её перед продолжением.</value></data>
   <data name="Action_ConfirmScript" xml:space="preserve"><value>Запускайте этот скрипт, только если доверяете ему. Он может изменить файлы и системные настройки:
 {0}
 

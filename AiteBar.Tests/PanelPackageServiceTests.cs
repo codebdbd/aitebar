@@ -19,6 +19,79 @@ public sealed class PanelPackageServiceTests : IDisposable
     }
 
     [Fact]
+    public void PanelPackageManifest_JsonRoundTrip_PreservesPackageMetadataAndElements()
+    {
+        var exportedAt = new DateTime(2026, 6, 14, 12, 30, 0, DateTimeKind.Utc);
+        var manifest = new PanelPackageManifest
+        {
+            FormatVersion = 1,
+            ExportedAt = exportedAt,
+            App = new PanelPackageAppInfo { Name = "AiteBar", Version = "1.7.9" },
+            Panel = new PanelPackagePanelInfo { Id = "context-1", Name = "Main", IconGlyph = "\uE80F" },
+            Elements =
+            [
+                new PanelPackageElement
+                {
+                    Name = "Example",
+                    ActionType = nameof(ActionType.Web),
+                    ActionValue = "https://example.com",
+                    Browser = BrowserType.Edge,
+                    ChromeProfile = "Profile 1",
+                    RotationProfilePaths = ["Profile 1", "Profile 2"],
+                    IsAppMode = true,
+                    IsIncognito = true,
+                    UseRotation = true,
+                    OpenFullscreen = true,
+                    IsTopmost = true,
+                    Ctrl = true,
+                    Alt = true,
+                    Key = "K",
+                    ActivationHotkey = new HotkeyBinding { Ctrl = true, Shift = true, Key = "F9" },
+                    Icon = "\uE8A7",
+                    IconFont = FontHelper.FluentKey,
+                    Color = "#123456",
+                    Image = new PanelPackageImageInfo { PackagePath = "images/example.png", Kind = "file" }
+                }
+            ]
+        };
+
+        string json = JsonSerializer.Serialize(manifest);
+        PanelPackageManifest restored = JsonSerializer.Deserialize<PanelPackageManifest>(json)
+            ?? throw new InvalidOperationException("Manifest was not deserialized.");
+
+        Assert.Equal(1, restored.FormatVersion);
+        Assert.Equal(exportedAt, restored.ExportedAt);
+        Assert.Equal("AiteBar", restored.App.Name);
+        Assert.Equal("1.7.9", restored.App.Version);
+        Assert.Equal("context-1", restored.Panel.Id);
+        Assert.Equal("Main", restored.Panel.Name);
+        Assert.Equal("\uE80F", restored.Panel.IconGlyph);
+
+        PanelPackageElement element = Assert.Single(restored.Elements);
+        Assert.Equal("Example", element.Name);
+        Assert.Equal(nameof(ActionType.Web), element.ActionType);
+        Assert.Equal("https://example.com", element.ActionValue);
+        Assert.Equal(BrowserType.Edge, element.Browser);
+        Assert.Equal(["Profile 1", "Profile 2"], element.RotationProfilePaths);
+        Assert.True(element.IsAppMode);
+        Assert.True(element.IsIncognito);
+        Assert.True(element.UseRotation);
+        Assert.True(element.OpenFullscreen);
+        Assert.True(element.IsTopmost);
+        Assert.True(element.Ctrl);
+        Assert.True(element.Alt);
+        Assert.Equal("K", element.Key);
+        Assert.True(element.ActivationHotkey.Ctrl);
+        Assert.True(element.ActivationHotkey.Shift);
+        Assert.Equal("F9", element.ActivationHotkey.Key);
+        Assert.Equal("\uE8A7", element.Icon);
+        Assert.Equal(FontHelper.FluentKey, element.IconFont);
+        Assert.Equal("#123456", element.Color);
+        Assert.NotNull(element.Image);
+        Assert.Equal("images/example.png", element.Image.PackagePath);
+    }
+
+    [Fact]
     public async Task ExportCurrentPanel_EmptyPanel_CreatesValidPackage()
     {
         using TestEnvironment env = CreateEnvironment();

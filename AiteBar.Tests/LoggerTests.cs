@@ -22,6 +22,31 @@ public sealed class LoggerTests
     }
 
     [Fact]
+    public void Log_NormalizesEmbeddedNewlinesInExceptionText()
+    {
+        using var scope = new LogArtifactScope();
+
+        Logger.Log(new InvalidOperationException("first line\nsecond line"));
+
+        string content = File.ReadAllText(PathHelper.LogFile);
+
+        Assert.Contains("first line | second line", content, StringComparison.Ordinal);
+        Assert.DoesNotContain("first line\nsecond line", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task LogAsync_WritesExceptionTextToLogFile()
+    {
+        using var scope = new LogArtifactScope();
+
+        await Logger.LogAsync(new InvalidOperationException("async logger smoke"));
+
+        Assert.True(File.Exists(PathHelper.LogFile));
+        string content = File.ReadAllText(PathHelper.LogFile);
+        Assert.Contains("async logger smoke", content, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Log_RotatesOversizedLogAndKeepsAtMostThreeBackups()
     {
         using var scope = new LogArtifactScope();

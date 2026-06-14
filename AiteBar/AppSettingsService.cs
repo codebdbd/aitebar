@@ -198,10 +198,7 @@ namespace AiteBar
 
                 string json = JsonSerializer.Serialize(_appSettings, _jsonOptions);
 
-                // Создаём несколько бэкапов перед сохранением
-                RotateBackups();
-
-                await File.WriteAllTextAsync(_settingsFile, json);
+                await WriteSettingsWithBackupAsync(json);
                 SettingsChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
@@ -211,6 +208,71 @@ namespace AiteBar
             finally
             {
                 _saveSemaphore.Release();
+            }
+        }
+
+        private async Task WriteSettingsWithBackupAsync(string json)
+        {
+            string? settingsDirectory = Path.GetDirectoryName(_settingsFile);
+            if (!string.IsNullOrEmpty(settingsDirectory))
+            {
+                Directory.CreateDirectory(settingsDirectory);
+            }
+
+            string tempFile = $"{_settingsFile}.{Guid.NewGuid():N}.tmp";
+            await File.WriteAllTextAsync(tempFile, json);
+
+            try
+            {
+                RotateExistingBackupsOnly();
+
+                if (File.Exists(_settingsFile))
+                {
+                    string newestBackup = GetBackupFilePath(0);
+                    if (File.Exists(newestBackup))
+                    {
+                        File.Delete(newestBackup);
+                    }
+
+                    File.Replace(tempFile, _settingsFile, newestBackup);
+                }
+                else
+                {
+                    File.Move(tempFile, _settingsFile);
+                }
+            }
+            finally
+            {
+                if (File.Exists(tempFile))
+                {
+                    File.Delete(tempFile);
+                }
+            }
+        }
+
+        private void RotateExistingBackupsOnly()
+        {
+            string oldestBackup = GetBackupFilePath(MaxBackupCount - 1);
+            if (File.Exists(oldestBackup))
+            {
+                File.Delete(oldestBackup);
+            }
+
+            for (int i = MaxBackupCount - 2; i >= 0; i--)
+            {
+                string source = GetBackupFilePath(i);
+                string destination = GetBackupFilePath(i + 1);
+                if (!File.Exists(source))
+                {
+                    continue;
+                }
+
+                if (File.Exists(destination))
+                {
+                    File.Delete(destination);
+                }
+
+                File.Move(source, destination);
             }
         }
 

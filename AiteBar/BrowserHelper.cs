@@ -159,7 +159,7 @@ namespace AiteBar
                 {
                     try
                     {
-                        using var stream = File.OpenRead(prefFile);
+                        using var stream = File.Open(prefFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                         using var doc = JsonDocument.Parse(stream);
                         var root = doc.RootElement;
 

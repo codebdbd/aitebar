@@ -9,6 +9,28 @@
 
 ## [Unreleased]
 
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Расчет геометрии панели**: размеры панели теперь проходят через единый путь `CalculateAvailableSize()` / `ComputePanelMetrics()`, чтобы `RefreshPanel()` и смена ориентации использовали одинаковые входные ограничения.
+- **Panel layout calculation**: panel sizing now flows through the shared `CalculateAvailableSize()` / `ComputePanelMetrics()` path so `RefreshPanel()` and orientation changes use the same available-size constraints.
+- **Позиционирование панели**: чистая математика координат панели и выбора ближайшего края вынесена в `PanelPositionHelper` и покрыта unit-тестами.
+- **Panel positioning**: pure panel-coordinate math and nearest-edge selection were extracted to `PanelPositionHelper` and covered with unit tests.
+- **Логирование и фоновые операции**: добавлен неблокирующий `Logger.LogAsync()`, deferred startup получил cancellation/fault handling, а проверка обновлений использует общий `HttpClient`.
+- **Logging and background work**: added non-blocking `Logger.LogAsync()`, deferred startup now has cancellation/fault handling, and update checks use a shared `HttpClient`.
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Безопасность команд**: подтверждение команд теперь дополнительно предупреждает о chaining/redirection и потенциально разрушительных командах вроде `del`, `format`, `shutdown`, `diskpart`.
+- **Command safety**: command confirmation now adds an extra warning for chaining/redirection and potentially destructive commands such as `del`, `format`, `shutdown`, and `diskpart`.
+- **Надежность сохранения настроек**: `settings.json` записывается через временный файл и замену с бэкапом предыдущей версии, снижая риск повреждения настроек при ошибке записи.
+- **Settings persistence reliability**: `settings.json` is written through a temporary file and replacement with a backup of the previous version, reducing the risk of corrupt settings after write failures.
+- **Завершение приложения**: Sentry flush больше не блокирует поток выхода синхронным ожиданием, а cleanup панели устойчивее к ошибкам освобождения hook/tray ресурсов.
+- **Application shutdown**: Sentry flush no longer blocks exit with synchronous waiting, and panel cleanup is more resilient to hook/tray disposal failures.
+- **Профили браузеров**: Chromium `Preferences` читаются с `FileShare.ReadWrite`, чтобы открытый браузер реже мешал отображению профилей.
+- **Browser profiles**: Chromium `Preferences` are read with `FileShare.ReadWrite`, so a running browser is less likely to block profile display.
+
+### 🇷🇺 Тесты | 🇬🇧 Tests
+- **Регрессии надежности**: добавлены проверки предупреждений для опасных команд, безопасного backup-сохранения настроек, async logging и чтения browser preferences при параллельном доступе.
+- **Reliability regressions**: added checks for dangerous-command warnings, safe backup-based settings persistence, async logging, and browser preference reads under concurrent access.
+
 ## [1.7.9] - 2026-06-13
 
 ### 🇷🇺 Изменено | 🇬🇧 Changed

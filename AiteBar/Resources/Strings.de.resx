@@ -247,6 +247,7 @@ Das Rückgängigmachen des Imports wird in dieser Version nicht unterstützt.</v
 {0}
 
 Fortfahren?</value></data>
+  <data name="Action_CommandDangerWarning" xml:space="preserve"><value>Warnung: Dieser Befehl enthält Befehlsverkettung, Umleitung oder einen potenziell destruktiven Systembefehl. Prüfen Sie ihn sorgfältig, bevor Sie fortfahren.</value></data>
   <data name="Action_ConfirmScript" xml:space="preserve"><value>Führen Sie dieses Skript nur aus, wenn Sie ihm vertrauen. Es kann Dateien und Systemeinstellungen ändern:
 {0}
 

@@ -111,6 +111,7 @@ public partial class MainWindow : Window
     private int _panelRefreshVersion;
     private int _panelFocusRequestVersion;
     private int _contextWheelDelta;
+    private readonly CancellationTokenSource _startupCts = new();
     private Button? _suppressUserButtonClickFor;
     private DateTime _lastContextWheelSwitchUtc = DateTime.MinValue;
     private readonly Dictionary<string, CachedButtonImage> _buttonImageCache = new(StringComparer.OrdinalIgnoreCase);
@@ -120,8 +121,6 @@ public partial class MainWindow : Window
     private const double ButtonPitch = PanelLayoutHelper.ButtonOuterSize;
     private const double DragHandleSpan = 18;
     private const int WheelDeltaPerContextSwitch = 120;
-    private const int PanelShowAnimationMs = 175;
-    private const int PanelHideAnimationMs = 140;
     private static readonly TimeSpan ContextWheelSwitchCooldown = TimeSpan.FromMilliseconds(220);
 
     public MainWindow()
@@ -702,11 +701,62 @@ public partial class MainWindow : Window
             : Screen.PrimaryScreen;
     }
 
-    private void ApplyPanelSizeConstraints()
+    private (double AvailableWidth, double AvailableHeight) CalculateAvailableSize()
     {
-        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
         Screen? screen = GetTargetScreen();
         Rectangle? workArea = screen?.WorkingArea;
+        double availableWidth = workArea.HasValue
+            ? Math.Max(150, (workArea.Value.Width / _cachedDpi) - PanelScreenPadding)
+            : 150;
+        double availableHeight = workArea.HasValue
+            ? Math.Max(150, (workArea.Value.Height / _cachedDpi) - PanelScreenPadding)
+            : 150;
+
+        return (availableWidth, availableHeight);
+    }
+
+    private PanelLayoutHelper.PanelLayoutMetrics ComputePanelMetrics(
+        bool isVertical,
+        double availableWidth,
+        double availableHeight)
+    {
+        int visibleSystemButtonCount = GetVisibleSystemButtonCount();
+        var enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts).ToList();
+        List<int> contextCountsList = enabledContexts
+            .Select(context => Elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal)))
+            .ToList();
+        int activeContextIdx = Math.Max(0, enabledContexts.FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal)));
+
+        var tempMetrics = PanelLayoutHelper.Calculate(
+            isVertical: isVertical,
+            availablePrimary: isVertical ? availableHeight : availableWidth,
+            panelPercent: AppSettings.PanelSizePercent,
+            visibleSystemButtonCount: visibleSystemButtonCount,
+            controlButtonCount: 1,
+            contextCounts: contextCountsList,
+            activeContextIndex: activeContextIdx,
+            systemContextIndex: 0,
+            trailingControlButtonCount: 1);
+
+        bool hasUserButtons = contextCountsList.Any(c => c > 0);
+        bool hideSepControl = isVertical && hasUserButtons && tempMetrics.UserBands == 2;
+
+        return PanelLayoutHelper.Calculate(
+            isVertical: isVertical,
+            availablePrimary: isVertical ? availableHeight : availableWidth,
+            panelPercent: AppSettings.PanelSizePercent,
+            visibleSystemButtonCount: visibleSystemButtonCount,
+            controlButtonCount: 1,
+            contextCounts: contextCountsList,
+            activeContextIndex: activeContextIdx,
+            systemContextIndex: 0,
+            trailingControlButtonCount: 1,
+            hideControlSeparator: hideSepControl);
+    }
+
+    private void ApplyPanelSizeConstraints(PanelLayoutHelper.PanelLayoutMetrics metrics)
+    {
+        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
 
         RootBorder.MaxWidth = double.PositiveInfinity;
         RootBorder.MaxHeight = double.PositiveInfinity;
@@ -735,45 +785,7 @@ public partial class MainWindow : Window
         UserButtonsPanel.Width = double.NaN;
         UserButtonsPanel.Height = double.NaN;
 
-        if (workArea == null)
-        {
-            return;
-        }
-
-        double availableWidth = Math.Max(150, (workArea.Value.Width / _cachedDpi) - PanelScreenPadding);
-        double availableHeight = Math.Max(150, (workArea.Value.Height / _cachedDpi) - PanelScreenPadding);
         int visibleSystemButtonCount = GetVisibleSystemButtonCount();
-        List<int> contextCountsList = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts)
-            .Select(context => Elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal))).ToList();
-        int activeContextIdx = Math.Max(0, ContextStateHelper.GetEnabledContexts(AppSettings.Contexts).ToList().FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal)));
-
-        // First calculate metrics to check UserBands
-        var tempMetrics = PanelLayoutHelper.Calculate(
-            isVertical: isVertical,
-            availablePrimary: isVertical ? availableHeight : availableWidth,
-            panelPercent: AppSettings.PanelSizePercent,
-            visibleSystemButtonCount: visibleSystemButtonCount,
-            controlButtonCount: 1,
-            contextCounts: contextCountsList,
-            activeContextIndex: activeContextIdx,
-            systemContextIndex: 0,
-            trailingControlButtonCount: 1);
-
-        bool hasUserButtons = contextCountsList.Count > 0 && contextCountsList.Any(c => c > 0);
-        bool hideSepControl = isVertical && hasUserButtons && tempMetrics.UserBands == 2;
-
-        // Now calculate final metrics with hideControlSeparator
-        var metrics = PanelLayoutHelper.Calculate(
-            isVertical: isVertical,
-            availablePrimary: isVertical ? availableHeight : availableWidth,
-            panelPercent: AppSettings.PanelSizePercent,
-            visibleSystemButtonCount: visibleSystemButtonCount,
-            controlButtonCount: 1,
-            contextCounts: contextCountsList,
-            activeContextIndex: activeContextIdx,
-            systemContextIndex: 0,
-            trailingControlButtonCount: 1,
-            hideControlSeparator: hideSepControl);
 
         // Apply layout rounding to avoid sub‑pixel values (prevents flicker & phantom scroll)
         RootBorder.MinWidth = Math.Round(metrics.PanelWidth);
@@ -1233,17 +1245,14 @@ public partial class MainWindow : Window
         if (width <= 0) width = 200;
         if (height <= 0) height = 50;
 
-        double centeredX = workArea.Left + Math.Max(0, (workArea.Width - width) / 2);
-        double centeredY = workArea.Top + Math.Max(0, (workArea.Height - height) / 2);
-
-        return AppSettings.Edge switch
-        {
-            DockEdge.Top => (centeredX, hide ? bounds.Top - height : workArea.Top + TopPanelVisibleOffset),
-            DockEdge.Bottom => (centeredX, hide ? bounds.Bottom : workArea.Bottom - height),
-            DockEdge.Left => (hide ? bounds.Left - width : workArea.Left, centeredY),
-            DockEdge.Right => (hide ? bounds.Right : workArea.Right - width, centeredY),
-            _ => (workArea.Left, workArea.Top)
-        };
+        return PanelPositionHelper.GetDockCoordinates(
+            AppSettings.Edge,
+            workArea,
+            bounds,
+            width,
+            height,
+            TopPanelVisibleOffset,
+            hide);
     }
 
     private bool _isPositioning = false;
@@ -1283,7 +1292,9 @@ public partial class MainWindow : Window
                 RegisterGlobalHotkey();
                 return;
             }
-            _ = CompleteDeferredStartupAsync();
+            _ = CompleteDeferredStartupAsync().ContinueWith(
+                task => _ = Logger.LogAsync(task.Exception!.GetBaseException()),
+                TaskContinuationOptions.OnlyOnFaulted);
         }
         catch (Exception ex) { Logger.Log(ex); }
     }
@@ -1362,9 +1373,11 @@ public partial class MainWindow : Window
             return;
         }
 
+        CancellationToken token = _startupCts.Token;
         try
         {
-            await Task.Run(async () => await _settingsService.LoadAsync());
+            await Task.Run(async () => await _settingsService.LoadAsync(), token);
+            token.ThrowIfCancellationRequested();
             LocalizationService.ApplyCulture(AppSettings.UiCulture);
             _deferredStartupCompleted = true;
             ApplyLocalizedText();
@@ -1372,13 +1385,16 @@ public partial class MainWindow : Window
             RefreshPanel();
             PositionWindowImmediately(_shown);
         }
+        catch (OperationCanceledException)
+        {
+        }
         catch (Exception ex)
         {
-            Logger.Log(ex);
+            _ = Logger.LogAsync(ex);
         }
     }
 
-    private void UpdateOrientation(bool reposition = true)
+    private void UpdateOrientation(bool reposition = true, bool applySizeConstraints = true)
     {
         bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
         var orientation = System.Windows.Controls.Orientation.Horizontal;
@@ -1434,7 +1450,13 @@ public partial class MainWindow : Window
             else { sep.Width = 1; sep.Height = 20; sep.Margin = new Thickness(4, 0, 4, 0); }
         }
 
-        ApplyPanelSizeConstraints();
+        if (applySizeConstraints)
+        {
+            var (availableWidth, availableHeight) = CalculateAvailableSize();
+            var metrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight);
+            ApplyPanelSizeConstraints(metrics);
+        }
+
         ApplyPanelToolTipPlacement();
         if (reposition)
         {
@@ -1450,7 +1472,7 @@ public partial class MainWindow : Window
         string activeContextId = AppSettings.ActiveContextId;
         bool hasSystemUtils = ApplySystemUtilityVisibility(activeContextId);
 
-        UpdateOrientation(reposition: false);
+        UpdateOrientation(reposition: false, applySizeConstraints: false);
         UserButtonsPanel.Children.Clear();
         _userButtons.Clear();
 
@@ -1547,39 +1569,18 @@ public partial class MainWindow : Window
             _userButtons.Add(btn);
         }
 
-        // Calculate metrics to check UserBands
         bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
-        var screen = GetTargetScreen();
-        var workArea = screen?.WorkingArea;
-        double availableWidth = workArea.HasValue ? Math.Max(150, (workArea.Value.Width / _cachedDpi) - PanelLayoutHelper.PanelChrome) : 150;
-        double availableHeight = workArea.HasValue ? Math.Max(150, (workArea.Value.Height / _cachedDpi) - PanelLayoutHelper.PanelChrome) : 150;
-        int visibleSystemButtonCount = GetVisibleSystemButtonCount();
-        var contextCountsList = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts)
-            .Select(context => Elements.Count(element => string.Equals(element.ContextId, context.Id, StringComparison.Ordinal))).ToList();
-        int activeContextIdx = Math.Max(0, ContextStateHelper.GetEnabledContexts(AppSettings.Contexts).ToList().FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal)));
-
-        // First calculate metrics to check UserBands
-        var tempMetrics = PanelLayoutHelper.Calculate(
-            isVertical: isVertical,
-            availablePrimary: isVertical ? availableHeight : availableWidth,
-            panelPercent: AppSettings.PanelSizePercent,
-            visibleSystemButtonCount: visibleSystemButtonCount,
-            controlButtonCount: 1,
-            contextCounts: contextCountsList,
-            activeContextIndex: activeContextIdx,
-            systemContextIndex: 0,
-            trailingControlButtonCount: 1);
-
-        // Now calculate final metrics with hideControlSeparator
+        var (availableWidth, availableHeight) = CalculateAvailableSize();
+        var metrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight);
         bool hasUserButtons = UserButtonsPanel.Children.Count > 0;
-        bool hideSepControl = isVertical && hasUserButtons && tempMetrics.UserBands == 2;
+        bool hideSepControl = isVertical && hasUserButtons && metrics.UserBands == 2;
 
         // Разделители
         SepSystem.Visibility = hasUserButtons || hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
         SepControl.Visibility = hasUserButtons && !hideSepControl && hasSystemUtils ? Visibility.Visible : Visibility.Collapsed;
         SepAppSettings.Visibility = hasUserButtons ? Visibility.Visible : Visibility.Collapsed;
 
-        ApplyPanelSizeConstraints();
+        ApplyPanelSizeConstraints(metrics);
         AnimateContextTransitionIfNeeded();
         ApplyPanelToolTipPlacement();
 
@@ -1764,35 +1765,12 @@ public partial class MainWindow : Window
 
     private sealed record CachedButtonImage(System.Windows.Media.Imaging.BitmapSource Source, DateTime LastWriteUtc);
 
-    private static DockEdge GetClosestDockEdge(System.Drawing.Rectangle workArea, int cursorX, int cursorY, DockEdge currentEdge)
-    {
-        var distances = new Dictionary<DockEdge, int>
-        {
-            [DockEdge.Top] = Math.Abs(cursorY - workArea.Top),
-            [DockEdge.Bottom] = Math.Abs(workArea.Bottom - cursorY),
-            [DockEdge.Left] = Math.Abs(cursorX - workArea.Left),
-            [DockEdge.Right] = Math.Abs(workArea.Right - cursorX)
-        };
-
-        // Применяем небольшой гистерезис (смещение), чтобы панель не "прыгала" 
-        // слишком легко между краями при движении рядом с углами.
-        distances[currentEdge] -= 60;
-
-        return distances.OrderBy(pair => pair.Value).First().Key;
-    }
-
     private static int FindScreenIndex(Screen targetScreen)
     {
         var screens = Screen.AllScreens;
-        for (int index = 0; index < screens.Length; index++)
-        {
-            if (string.Equals(screens[index].DeviceName, targetScreen.DeviceName, StringComparison.OrdinalIgnoreCase))
-            {
-                return index;
-            }
-        }
-
-        return 0;
+        return PanelPositionHelper.FindScreenIndex(
+            screens.Select(screen => screen.DeviceName).ToArray(),
+            targetScreen.DeviceName);
     }
 
     private void SetDragHandleActive(bool isActive)
@@ -1866,7 +1844,7 @@ public partial class MainWindow : Window
 
         var targetScreen = Screen.FromPoint(new System.Drawing.Point(pt.X, pt.Y));
         int nextMonitorIndex = FindScreenIndex(targetScreen);
-        DockEdge nextEdge = GetClosestDockEdge(targetScreen.WorkingArea, pt.X, pt.Y, AppSettings.Edge);
+        DockEdge nextEdge = PanelPositionHelper.GetClosestDockEdge(targetScreen.WorkingArea, pt.X, pt.Y, AppSettings.Edge);
 
         if (AppSettings.MonitorIndex == nextMonitorIndex && AppSettings.Edge == nextEdge)
         {
@@ -2296,8 +2274,7 @@ public partial class MainWindow : Window
         int completedCount = 0;
         void onCompleted(object? s, EventArgs ev)
         {
-            completedCount++;
-            if (completedCount == 2)
+            if (Interlocked.Increment(ref completedCount) == 2)
             {
                 this.BeginAnimation(LeftProperty, null);
                 this.BeginAnimation(TopProperty, null);
@@ -2344,7 +2321,7 @@ public partial class MainWindow : Window
         SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
         _hoverStartTime = null;
         Toggle(true, fromCurrentPosition: true);
-        await Task.Delay(PanelHideAnimationMs);
+        await Task.Delay(Constants.PanelHideAnimationMs);
     }
 
     private void StopPanelAnimationAtCurrentPosition()
@@ -2367,11 +2344,22 @@ public partial class MainWindow : Window
             RootBorder.CaptureMouse();
         }
         int currentToken = ++_mouseWheelCaptureToken;
-        Task.Delay(500).ContinueWith(t =>
+        _ = ReleaseMouseCaptureAfterDelayAsync(currentToken);
+    }
+
+    private async Task ReleaseMouseCaptureAfterDelayAsync(int captureToken)
+    {
+        try
         {
-            Dispatcher.Invoke(() =>
+            await Task.Delay(500);
+            if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
             {
-                if (_mouseWheelCaptureToken == currentToken)
+                return;
+            }
+
+            await Dispatcher.InvokeAsync(() =>
+            {
+                if (_mouseWheelCaptureToken == captureToken)
                 {
                     if (RootBorder.IsMouseCaptured)
                     {
@@ -2379,7 +2367,11 @@ public partial class MainWindow : Window
                     }
                 }
             });
-        });
+        }
+        catch (Exception ex)
+        {
+            _ = Logger.LogAsync(ex);
+        }
     }
 
     private void RootBorder_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -2623,6 +2615,8 @@ public partial class MainWindow : Window
 
                 if (isWeb && string.IsNullOrEmpty(iconPath))
                 {
+                    string elementId = newElement.Id;
+                    string elementActionValue = newElement.ActionValue;
                     _ = Task.Run(async () =>
                     {
                         try
@@ -2630,14 +2624,22 @@ public partial class MainWindow : Window
                             string? webIcon = await IconHelper.DownloadFaviconAsync(val);
                             if (!string.IsNullOrEmpty(webIcon))
                             {
-                                await Dispatcher.InvokeAsync(async () =>
+                                if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
                                 {
-                                    var el = Elements.FirstOrDefault(x => x.Id == newElement.Id);
-                                    if (el != null)
+                                    return;
+                                }
+
+                                await Dispatcher.InvokeAsync(() =>
+                                {
+                                    var el = Elements.FirstOrDefault(x =>
+                                        string.Equals(x.Id, elementId, StringComparison.Ordinal) &&
+                                        string.Equals(x.ActionValue, elementActionValue, StringComparison.Ordinal));
+                                    if (el == null)
                                     {
-                                        await _settingsService.UpdateElementAsync(el.Id, element => element.ImagePath = webIcon);
-                                        RefreshPanel();
+                                        return;
                                     }
+
+                                    _ = UpdateDownloadedFaviconAsync(el.Id, webIcon);
                                 });
                             }
                         }
@@ -2648,18 +2650,57 @@ public partial class MainWindow : Window
         }
         catch (Exception ex) { Logger.Log(ex); }
     }
-    protected override void OnClosed(EventArgs e) 
-    { 
-        _nativeService?.Dispose(); 
-        _notifyIcon?.Dispose();
-        _settingsService.SettingsChanged -= OnSettingsChanged;
-        if (_isLocalizationSubscribed)
+
+    private async Task UpdateDownloadedFaviconAsync(string elementId, string webIcon)
+    {
+        try
         {
-            LocalizationService.CultureChanged -= HandleCultureChanged;
-            _isLocalizationSubscribed = false;
+            await _settingsService.UpdateElementAsync(elementId, element => element.ImagePath = webIcon);
+            RefreshPanel();
         }
-        UnregisterGlobalHotkey();
-        base.OnClosed(e); 
+        catch (Exception ex)
+        {
+            _ = Logger.LogAsync(ex);
+        }
+    }
+
+    protected override void OnClosed(EventArgs e) 
+    {
+        try
+        {
+            _startupCts.Cancel();
+            try
+            {
+                _nativeService?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+
+            try
+            {
+                _notifyIcon?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+
+            _settingsService.SettingsChanged -= OnSettingsChanged;
+            if (_isLocalizationSubscribed)
+            {
+                LocalizationService.CultureChanged -= HandleCultureChanged;
+                _isLocalizationSubscribed = false;
+            }
+
+            UnregisterGlobalHotkey();
+            _startupCts.Dispose();
+        }
+        finally
+        {
+            base.OnClosed(e);
+        }
     }
 }
 
