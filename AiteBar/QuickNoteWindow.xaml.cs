@@ -369,7 +369,7 @@ namespace AiteBar
         {
             while (source != null && source != HeaderBar)
             {
-                if (source is System.Windows.Controls.Button or MenuItem)
+                if (source is System.Windows.Controls.Button or System.Windows.Controls.MenuItem)
                 {
                     return true;
                 }
@@ -960,12 +960,12 @@ namespace AiteBar
             };
         }
 
-        private MenuItem? FindConflictCopyMenuItem()
+        private System.Windows.Controls.MenuItem? FindConflictCopyMenuItem()
         {
             return FindVisualChildren<System.Windows.Controls.Button>(this)
                 .Select(button => button.ContextMenu)
                 .Where(contextMenu => contextMenu != null)
-                .SelectMany(contextMenu => contextMenu!.Items.OfType<MenuItem>())
+                .SelectMany(contextMenu => contextMenu!.Items.OfType<System.Windows.Controls.MenuItem>())
                 .FirstOrDefault(item => string.Equals(item.Name, "MenuOpenConflictCopy", StringComparison.Ordinal));
         }
 

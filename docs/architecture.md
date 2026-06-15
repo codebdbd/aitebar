@@ -138,7 +138,7 @@ UI Layer использует Services Layer для выполнения биз�
 
 | Технология | Назначение | Где используется |
 |------------|------------|-------------------|
-| .NET 8 | Платформа приложения | Весь проект |
+| .NET 10 | Платформа приложения | Весь проект |
 | WPF | Пользовательский интерфейс | Все окна и элементы UI |
 | Windows Forms | NotifyIcon (трей) | MainWindow.xaml.cs |
 | System.Text.Json | Сериализация/десериализация настроек | AppSettingsService, PanelPackageService |
@@ -1178,12 +1178,12 @@ API отсутствует, так как это desktop-приложение б
 # 19. Сборка и запуск
 
 ## Установка зависимостей
-Зависимости являются частью .NET 8 SDK и WPF, дополнительных пакетов NuGet не требуется. Требуется установленный .NET 8 SDK.
+Зависимости являются частью .NET 10 SDK и WPF, дополнительных пакетов NuGet не требуется. Требуется установленный .NET 10 SDK.
 
 ## Настройка окружения
 Требуется:
 - Windows 10 или Windows 11
-- .NET 8 SDK
+- .NET 10 SDK
 
 ## Сборка
 ```powershell
@@ -1194,7 +1194,7 @@ dotnet build .\AiteBar.sln -c Release
 ```powershell
 dotnet run --project .\AiteBar\AiteBar.csproj
 ```
-Или запустите скомпилированный exe-файл из bin\Release\net8.0-windows\.
+Или запустите скомпилированный exe-файл из bin\Release\net10.0-windows\.
 
 ## Тестирование
 Основной вариант:
@@ -1204,7 +1204,7 @@ dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release
 
 Fallback для случаев с WPF temp-файлами:
 ```powershell
-dotnet vstest .\AiteBar.Tests\bin\Release\net8.0-windows\AiteBar.Tests.dll
+dotnet vstest .\AiteBar.Tests\bin\Release\net10.0-windows\AiteBar.Tests.dll
 ```
 
 ## Production deployment
