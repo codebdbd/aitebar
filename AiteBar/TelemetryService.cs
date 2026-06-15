@@ -16,7 +16,14 @@ internal static class TelemetryService
 
     public static bool IsEnabled { get; private set; }
 
+    [Obsolete("Use InitializeAsync instead for better async behavior.")]
     public static void Initialize()
+    {
+        // Обратная совместимость для тестов
+        InitializeAsync().GetAwaiter().GetResult();
+    }
+
+    public static async Task InitializeAsync()
     {
         lock (SyncRoot)
         {
@@ -26,69 +33,69 @@ internal static class TelemetryService
             }
 
             _initialized = true;
-
-            SentrySettings? settingsFromFile = LoadSettingsFromFile();
-            string? dsn = null;
-            string? environment = null;
-            double tracesSampleRate = 0.0;
-            bool sendDefaultPii = false;
-
-            // Приоритет: сначала переменные окружения, потом файл настроек
-            dsn = Environment.GetEnvironmentVariable("AITEBAR_SENTRY_DSN");
-            if (string.IsNullOrWhiteSpace(dsn))
-            {
-                dsn = Environment.GetEnvironmentVariable("SENTRY_DSN");
-            }
-
-            if (string.IsNullOrWhiteSpace(dsn) && settingsFromFile?.IsEnabled == true)
-            {
-                dsn = settingsFromFile.Dsn;
-            }
-
-            if (string.IsNullOrWhiteSpace(dsn))
-            {
-                return;
-            }
-
-            // Дополнительные опции из переменных окружения
-            environment = Environment.GetEnvironmentVariable("AITEBAR_ENVIRONMENT");
-            if (string.IsNullOrWhiteSpace(environment))
-            {
-                environment = settingsFromFile?.Environment ?? "production";
-            }
-
-            if (double.TryParse(Environment.GetEnvironmentVariable("AITEBAR_TRACES_SAMPLE_RATE"), out double envTracesRate))
-            {
-                tracesSampleRate = envTracesRate;
-            }
-            else if (settingsFromFile != null)
-            {
-                tracesSampleRate = settingsFromFile.TracesSampleRate;
-            }
-
-            if (bool.TryParse(Environment.GetEnvironmentVariable("AITEBAR_SEND_PII"), out bool envSendPii))
-            {
-                sendDefaultPii = envSendPii;
-            }
-            else if (settingsFromFile != null)
-            {
-                sendDefaultPii = settingsFromFile.SendDefaultPii;
-            }
-
-            _sentryHandle = SentrySdk.Init(options =>
-            {
-                options.Dsn = dsn;
-                options.Release = $"aitebar@{GetAppVersion()}";
-                options.Environment = environment;
-                options.SendDefaultPii = sendDefaultPii;
-                options.TracesSampleRate = tracesSampleRate;
-            });
-
-            IsEnabled = true;
         }
+
+        SentrySettings? settingsFromFile = await LoadSettingsFromFileAsync();
+        string? dsn = null;
+        string? environment = null;
+        double tracesSampleRate = 0.0;
+        bool sendDefaultPii = false;
+
+        // Приоритет: сначала переменные окружения, потом файл настроек
+        dsn = Environment.GetEnvironmentVariable("AITEBAR_SENTRY_DSN");
+        if (string.IsNullOrWhiteSpace(dsn))
+        {
+            dsn = Environment.GetEnvironmentVariable("SENTRY_DSN");
+        }
+
+        if (string.IsNullOrWhiteSpace(dsn) && settingsFromFile?.IsEnabled == true)
+        {
+            dsn = settingsFromFile.Dsn;
+        }
+
+        if (string.IsNullOrWhiteSpace(dsn))
+        {
+            return;
+        }
+
+        // Дополнительные опции из переменных окружения
+        environment = Environment.GetEnvironmentVariable("AITEBAR_ENVIRONMENT");
+        if (string.IsNullOrWhiteSpace(environment))
+        {
+            environment = settingsFromFile?.Environment ?? "production";
+        }
+
+        if (double.TryParse(Environment.GetEnvironmentVariable("AITEBAR_TRACES_SAMPLE_RATE"), out double envTracesRate))
+        {
+            tracesSampleRate = envTracesRate;
+        }
+        else if (settingsFromFile != null)
+        {
+            tracesSampleRate = settingsFromFile.TracesSampleRate;
+        }
+
+        if (bool.TryParse(Environment.GetEnvironmentVariable("AITEBAR_SEND_PII"), out bool envSendPii))
+        {
+            sendDefaultPii = envSendPii;
+        }
+        else if (settingsFromFile != null)
+        {
+            sendDefaultPii = settingsFromFile.SendDefaultPii;
+        }
+
+        _sentryHandle = SentrySdk.Init(options =>
+        {
+            options.Dsn = dsn;
+            options.Release = $"aitebar@{GetAppVersion()}";
+            options.Environment = environment;
+            options.SendDefaultPii = sendDefaultPii;
+            options.TracesSampleRate = tracesSampleRate;
+        });
+
+        IsEnabled = true;
     }
 
-    private static SentrySettings? LoadSettingsFromFile()
+    private static async Task<SentrySettings?> LoadSettingsFromFileAsync()
     {
         string settingsPath = PathHelper.SettingsFile;
         if (!File.Exists(settingsPath))
@@ -100,13 +107,13 @@ internal static class TelemetryService
         {
             try
             {
-                string json = File.ReadAllText(settingsPath);
+                string json = await File.ReadAllTextAsync(settingsPath);
                 var settings = JsonSerializer.Deserialize<AppSettings>(json);
                 return settings?.Sentry;
             }
             catch (IOException)
             {
-                System.Threading.Thread.Sleep(100 * (1 << attempt));
+                await Task.Delay(100 * (1 << attempt));
             }
             catch
             {

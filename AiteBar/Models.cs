@@ -1,6 +1,15 @@
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace AiteBar;
+
+public interface ISettingsWindowContext
+{
+    IReadOnlyList<PanelContext> GetContextsSnapshot();
+    AppSettings GetAppSettings();
+    Task<IReadOnlyList<string>> SaveElement(CustomElement updated, string? removeId = null);
+}
 
 public class PanelContext
 {

@@ -339,6 +339,10 @@
   <data name="QuickNote_SaveFailed" xml:space="preserve">
     <value>Ошибка сохранения</value>
   </data>
+  <data name="Settings_SaveFailed" xml:space="preserve">
+    <value>Не удалось сохранить настройки:
+{0}</value>
+  </data>
   <data name="QuickNote_LoadFailed" xml:space="preserve">
     <value>Не удалось загрузить заметку</value>
   </data>

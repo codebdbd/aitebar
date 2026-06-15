@@ -55,26 +55,27 @@ namespace AiteBar
         }
 
         private static void RotateLogFile()
-    {
-        try
         {
-            string directory = Path.GetDirectoryName(LogPath) ?? PathHelper.AppDataFolder;
-            string fileName = Path.GetFileName(LogPath);
-            string backupPath = Path.Combine(directory, $"{fileName}.{DateTime.Now:yyyyMMddHHmmss}.bak");
-            File.Move(LogPath, backupPath, overwrite: false);
-
-            foreach (var oldBackup in Directory.GetFiles(directory, $"{fileName}.*.bak")
-                         .OrderByDescending(File.GetCreationTimeUtc)
-                         .Skip(MaxBackupLogFiles))
+            try
             {
-                File.Delete(oldBackup);
+                string directory = Path.GetDirectoryName(LogPath) ?? PathHelper.AppDataFolder;
+                string fileName = Path.GetFileName(LogPath);
+                string backupPath = Path.Combine(directory, $"{fileName}.{DateTime.Now:yyyyMMddHHmmss}.bak");
+                File.Move(LogPath, backupPath, overwrite: false);
+
+                foreach (var oldBackup in Directory.GetFiles(directory, $"{fileName}.*.bak")
+                             .OrderByDescending(File.GetCreationTimeUtc)
+                             .Skip(MaxBackupLogFiles))
+                {
+                    File.Delete(oldBackup);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+                // Fallback: truncate the file
+                File.WriteAllText(LogPath, string.Empty);
             }
         }
-        catch
-        {
-            // Fallback: truncate the file
-            File.WriteAllText(LogPath, string.Empty);
-        }
-    }
     }
 }

@@ -45,7 +45,7 @@ public enum PanelInputMode
 }
 
 [SupportedOSPlatform("windows6.1")]
-public partial class MainWindow : Window
+public partial class MainWindow : Window, ISettingsWindowContext
 {
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
     private DateTime? _hoverStartTime;
@@ -103,7 +103,6 @@ public partial class MainWindow : Window
     private PanelInputMode _panelInputMode = PanelInputMode.Pointer;
     private readonly List<Button> _unifiedButtons = [];
     private List<UnifiedButton> _currentUnifiedButtons = [];
-    private List<CustomElement> _activeContextElements = [];
     private int _pendingContextAnimationDirection;
     private readonly UnifiedButtonService _unifiedButtonService;
     private bool _startupInfrastructureInitialized;
@@ -116,6 +115,7 @@ public partial class MainWindow : Window
     private Button? _suppressUserButtonClickFor;
     private DateTime _lastContextWheelSwitchUtc = DateTime.MinValue;
     private readonly Dictionary<string, CachedButtonImage> _buttonImageCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, Brush> _brushCache = new(StringComparer.OrdinalIgnoreCase);
     private bool _isLocalizationSubscribed;
 
     private const double PanelScreenPadding = 20;
@@ -214,7 +214,7 @@ public partial class MainWindow : Window
             await RunPanelInteractionAsync(async () =>
             {
                 detachAction();
-                await _settingsService.SaveAsync();
+                await SaveSettingsWithNotificationAsync();
                 RefreshPanel();
             });
         }));
@@ -266,6 +266,28 @@ public partial class MainWindow : Window
         return RegisterGlobalHotkey();
     }
 
+    private async Task SaveSettingsWithNotificationAsync()
+    {
+        try
+        {
+            await _settingsService.SaveAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            // Show error dialog on UI thread
+            await Dispatcher.InvokeAsync(() =>
+            {
+                new DarkDialog(LocalizationService.Format("Settings_SaveFailed", ex.Message)).ShowDialog();
+            });
+        }
+    }
+
+    private async void SaveSettingsWithNotification()
+    {
+        await SaveSettingsWithNotificationAsync();
+    }
+
     public IReadOnlyList<PanelContext> GetContextsSnapshot() => _settingsService.GetContextsSnapshot();
 
     public IReadOnlyList<PanelContext> GetAllContextsSnapshot() => _settingsService.GetAllContextsSnapshot();
@@ -274,57 +296,121 @@ public partial class MainWindow : Window
 
     private string GetPrimaryContextId() => _settingsService.GetPrimaryContextId();
 
+    private (bool changed, int animationDirection) TryActivateContext(string contextId)
+    {
+        if (string.IsNullOrWhiteSpace(contextId) || string.Equals(AppSettings.ActiveContextId, contextId, StringComparison.Ordinal))
+        {
+            return (false, 0);
+        }
+
+        IReadOnlyList<PanelContext> enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
+        int targetIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, contextId, StringComparison.Ordinal));
+        if (targetIndex < 0)
+        {
+            return (false, 0);
+        }
+
+        int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
+        if (currentIndex < 0)
+        {
+            currentIndex = 0;
+        }
+
+        // Get settings from service, modify, update service!
+        var settings = _settingsService.Settings;
+        settings.ActiveContextId = contextId;
+        _settingsService.Settings = settings;
+        
+        int animationDirection = targetIndex >= currentIndex ? 1 : -1;
+        _pendingContextAnimationDirection = animationDirection;
+        RefreshPanel();
+        return (true, animationDirection);
+    }
+
+    private string? GetNextContextId(int direction)
+    {
+        IReadOnlyList<PanelContext> enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
+        if (enabledContexts.Count == 0)
+        {
+            return null;
+        }
+
+        int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
+        if (currentIndex < 0)
+        {
+            currentIndex = 0;
+        }
+
+        int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, enabledContexts.Count);
+        return enabledContexts[nextIndex].Id;
+    }
+
+    private string? GetContextIdByIndex(int index)
+    {
+        IReadOnlyList<PanelContext> enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
+        if (index < 0 || index >= enabledContexts.Count)
+        {
+            return null;
+        }
+
+        return enabledContexts[index].Id;
+    }
+
+    private Brush GetCachedBrush(string colorHex)
+    {
+        if (_brushCache.TryGetValue(colorHex, out var brush))
+        {
+            return brush;
+        }
+
+        brush = (Brush)_brushConverter.ConvertFromString(colorHex)!;
+        _brushCache[colorHex] = brush;
+        return brush;
+    }
+
     private async Task SwitchActiveContextAsync(int direction)
     {
-        IReadOnlyList<PanelContext> enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
-        if (enabledContexts.Count == 0) return;
+        string? nextContextId = GetNextContextId(direction);
+        if (nextContextId == null)
+        {
+            return;
+        }
 
-        int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
-        if (currentIndex < 0) currentIndex = 0;
-
-        int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, enabledContexts.Count);
-        string nextContextId = enabledContexts[nextIndex].Id;
-        if (string.Equals(AppSettings.ActiveContextId, nextContextId, StringComparison.Ordinal)) return;
-
-        AppSettings.ActiveContextId = nextContextId;
-        _pendingContextAnimationDirection = Math.Sign(direction);
-        RefreshPanel();
-        await _settingsService.SaveAsync();
+        var result = TryActivateContext(nextContextId);
+        if (result.changed)
+        {
+            await SaveSettingsWithNotificationAsync();
+        }
     }
 
-    private void ActivateContextRelative(int direction)
+    private async void ActivateContextRelative(int direction)
     {
-        IReadOnlyList<PanelContext> enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
-        if (enabledContexts.Count == 0) return;
+        string? nextContextId = GetNextContextId(direction);
+        if (nextContextId == null)
+        {
+            return;
+        }
 
-        int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
-        if (currentIndex < 0) currentIndex = 0;
-
-        int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, enabledContexts.Count);
-        string nextContextId = enabledContexts[nextIndex].Id;
-        if (string.Equals(AppSettings.ActiveContextId, nextContextId, StringComparison.Ordinal)) return;
-
-        AppSettings.ActiveContextId = nextContextId;
-        _pendingContextAnimationDirection = Math.Sign(direction);
-        RefreshPanel();
-        _ = _settingsService.SaveAsync().ContinueWith(t => { if (t.Exception != null) Logger.Log(t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+        var result = TryActivateContext(nextContextId);
+        if (result.changed)
+        {
+            await SaveSettingsWithNotificationAsync();
+        }
     }
 
-    private void ActivateContextByIndex(int index)
+    private async void ActivateContextByIndex(int index)
     {
-        IReadOnlyList<PanelContext> enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
-        if (index < 0 || index >= enabledContexts.Count) return;
+        string? nextContextId = GetContextIdByIndex(index);
+        if (nextContextId == null)
+        {
+            return;
+        }
 
-        int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
-        if (currentIndex < 0) currentIndex = 0;
-
-        string nextContextId = enabledContexts[index].Id;
-        if (string.Equals(AppSettings.ActiveContextId, nextContextId, StringComparison.Ordinal)) return;
-
-        AppSettings.ActiveContextId = nextContextId;
-        _pendingContextAnimationDirection = index >= currentIndex ? 1 : -1;
-        RefreshPanel();
-        _ = _settingsService.SaveAsync().ContinueWith(t => { if (t.Exception != null) Logger.Log(t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+        var result = TryActivateContext(nextContextId);
+        if (result.changed)
+        {
+            await SaveSettingsWithNotificationAsync();
+        }
     }
 
     private void BuildPanelContextMenu()
@@ -442,11 +528,13 @@ public partial class MainWindow : Window
         string firstCandidate = $"{baseName} ({LocalizationService.Get("Element_CopySuffix")})";
         if (Elements.All(x => !string.Equals(x.Name, firstCandidate, StringComparison.OrdinalIgnoreCase))) return firstCandidate;
 
-        for (int index = 2; ; index++)
+        for (int index = 2; index < 10000; index++)
         {
             string candidate = $"{baseName} ({LocalizationService.Format("Element_CopySuffixFormat", index)})";
             if (Elements.All(x => !string.Equals(x.Name, candidate, StringComparison.OrdinalIgnoreCase))) return candidate;
         }
+        // Fallback if all 9999 names are taken (extremely unlikely)
+        return $"{baseName} ({Guid.NewGuid()})";
     }
 
     private async Task RenameElementAsync(CustomElement source)
@@ -636,29 +724,13 @@ public partial class MainWindow : Window
         }
     }
 
-    private void ActivateContextById(string contextId)
+    private async void ActivateContextById(string contextId)
     {
-        if (string.IsNullOrWhiteSpace(contextId) || string.Equals(AppSettings.ActiveContextId, contextId, StringComparison.Ordinal))
+        var result = TryActivateContext(contextId);
+        if (result.changed)
         {
-            return;
+            await SaveSettingsWithNotificationAsync();
         }
-
-        IReadOnlyList<PanelContext> enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
-        if (!enabledContexts.Any(context => string.Equals(context.Id, contextId, StringComparison.Ordinal)))
-        {
-            return;
-        }
-
-        int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
-        if (currentIndex < 0) currentIndex = 0;
-
-        int index = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, contextId, StringComparison.Ordinal));
-        if (index < 0) return;
-
-        AppSettings.ActiveContextId = contextId;
-        _pendingContextAnimationDirection = index >= currentIndex ? 1 : -1;
-        RefreshPanel();
-        _ = _settingsService.SaveAsync().ContinueWith(t => { if (t.Exception != null) Logger.Log(t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
     }
 
     private Screen? GetTargetScreen()
@@ -926,8 +998,8 @@ public partial class MainWindow : Window
 
     private void UpdateAllButtonsFocusVisualStyle()
     {
-        Style? focusVisualStyle = _panelInputMode == PanelInputMode.Keyboard 
-            ? (Style)FindResource("ButtonFocusVisual") 
+        Style? focusVisualStyle = _panelInputMode == PanelInputMode.Keyboard
+            ? (Style)FindResource("ButtonFocusVisual")
             : null;
 
         foreach (var button in EnumeratePanelButtons())
@@ -976,8 +1048,8 @@ public partial class MainWindow : Window
             ToolTip = tooltip,
             Style = (Style)FindResource("PanelButtonStyle"),
             Focusable = true,
-            FocusVisualStyle = _panelInputMode == PanelInputMode.Keyboard 
-                ? (Style)FindResource("ButtonFocusVisual") 
+            FocusVisualStyle = _panelInputMode == PanelInputMode.Keyboard
+                ? (Style)FindResource("ButtonFocusVisual")
                 : null
         };
 
@@ -1038,10 +1110,10 @@ public partial class MainWindow : Window
 
     private static void OpenUrl(string url)
     {
-        try 
+        try
         {
             // Validate URL scheme to only allow http/https
-            if (Uri.TryCreate(url, UriKind.Absolute, out var uri) && 
+            if (Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
                 (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
             {
                 Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
@@ -1455,7 +1527,7 @@ public partial class MainWindow : Window
                 return;
             }
             await ExecuteUnifiedButtonActionAsync(item);
-        }, (Brush)_brushConverter.ConvertFromString(item.Color)!);
+        }, GetCachedBrush(item.Color));
 
         btn.RenderTransform = new TranslateTransform();
         btn.Tag = item.Id;
@@ -1532,7 +1604,7 @@ public partial class MainWindow : Window
                             {
                                 var newUserIndex = contextUserElements.IndexOf(targetUserElement);
                                 _settingsService.ReorderElements(originalUserIndex, newUserIndex, contextId);
-                                await _settingsService.SaveAsync();
+                                await SaveSettingsWithNotificationAsync();
                             }
                         }
                     }
@@ -1543,10 +1615,10 @@ public partial class MainWindow : Window
                             .Where(b => b.Type == UnifiedButtonType.Utility)
                             .Select(b => b.Id)
                             .ToList();
-                        
+
                         // Remove the dragged one from current position
                         visibleUtilityIds.RemoveAt(_draggedOriginalIndex);
-                        
+
                         // Determine where to insert in visible utility list
                         int insertIndexInVisible = newIndex;
                         // Count how many utilities are before newIndex
@@ -1561,10 +1633,10 @@ public partial class MainWindow : Window
                                 insertIndexInVisible--;
                             }
                         }
-                        
+
                         // Insert the dragged one in the new position
                         visibleUtilityIds.Insert(insertIndexInVisible, draggedItem.Id);
-                        
+
                         // Now build the full UtilityButtonOrder including possibly hidden ones
                         var fullOrder = new List<string>();
                         foreach (var id in AppSettings.UtilityButtonOrder)
@@ -1574,7 +1646,7 @@ public partial class MainWindow : Window
                                 fullOrder.Add(id);
                             }
                         }
-                        
+
                         // Merge visible order with full order, keeping hidden ones in their original positions
                         var finalOrder = new List<string>();
                         int visibleIndex = 0;
@@ -1592,16 +1664,16 @@ public partial class MainWindow : Window
                                 finalOrder.Add(id);
                             }
                         }
-                        
+
                         // Add any remaining visible buttons at the end
                         while (visibleIndex < visibleUtilityIds.Count)
                         {
                             finalOrder.Add(visibleUtilityIds[visibleIndex]);
                             visibleIndex++;
                         }
-                        
+
                         AppSettings.UtilityButtonOrder = finalOrder;
-                        await _settingsService.SaveAsync();
+                        await SaveSettingsWithNotificationAsync();
                     }
                 }
                 RefreshPanel();
@@ -1704,21 +1776,28 @@ public partial class MainWindow : Window
                 {
                     if (item.SettingsKey != null)
                     {
+                        // 1. Get the full settings from the service (which returns a clone
+                        var settings = _settingsService.Settings;
+                        
                         switch (item.SettingsKey)
                         {
-                            case "ShowPresetSearch": AppSettings.ShowPresetSearch = false; break;
-                            case "ShowPresetScreenshot": AppSettings.ShowPresetScreenshot = false; break;
-                            case "ShowPresetVideo": AppSettings.ShowPresetVideo = false; break;
-                            case "ShowPresetCalc": AppSettings.ShowPresetCalc = false; break;
-                            case "ShowPresetExplorer": AppSettings.ShowPresetExplorer = false; break;
-                            case "ShowPresetDownloads": AppSettings.ShowPresetDownloads = false; break;
-                            case "ShowPresetFileSorter": AppSettings.ShowPresetFileSorter = false; break;
-                            case "ShowPresetIconConverter": AppSettings.ShowPresetIconConverter = false; break;
-                            case "ShowPresetTimerStopwatch": AppSettings.ShowPresetTimerStopwatch = false; break;
-                            case "ShowPresetColorPicker": AppSettings.ShowPresetColorPicker = false; break;
-                            case "ShowPresetQuickNote": AppSettings.ShowPresetQuickNote = false; break;
+                            case "ShowPresetSearch": settings.ShowPresetSearch = false; break;
+                            case "ShowPresetScreenshot": settings.ShowPresetScreenshot = false; break;
+                            case "ShowPresetVideo": settings.ShowPresetVideo = false; break;
+                            case "ShowPresetCalc": settings.ShowPresetCalc = false; break;
+                            case "ShowPresetExplorer": settings.ShowPresetExplorer = false; break;
+                            case "ShowPresetDownloads": settings.ShowPresetDownloads = false; break;
+                            case "ShowPresetFileSorter": settings.ShowPresetFileSorter = false; break;
+                            case "ShowPresetIconConverter": settings.ShowPresetIconConverter = false; break;
+                            case "ShowPresetTimerStopwatch": settings.ShowPresetTimerStopwatch = false; break;
+                            case "ShowPresetColorPicker": settings.ShowPresetColorPicker = false; break;
+                            case "ShowPresetQuickNote": settings.ShowPresetQuickNote = false; break;
                         }
-                        await _settingsService.SaveAsync();
+
+                        // 2. Update the service with the modified settings in the service!
+                        _settingsService.Settings = settings;
+                        
+                        await SaveSettingsWithNotificationAsync();
                         RefreshPanel();
                     }
                 });
@@ -1945,7 +2024,7 @@ public partial class MainWindow : Window
         e.Handled = true;
     }
 
-    private void DragHandle_LostMouseCapture(object sender, System.Windows.Input.MouseEventArgs e)
+    private async Task EndPanelDragAsync()
     {
         if (!_isPanelDragging)
         {
@@ -1958,14 +2037,23 @@ public partial class MainWindow : Window
 
         if (_panelDragChanged)
         {
-            _ = _settingsService.SaveAsync().ContinueWith(t => { if (t.Exception != null) Logger.Log(t.Exception); }, TaskContinuationOptions.OnlyOnFaulted);
+            await SaveSettingsWithNotificationAsync();
         }
         else
         {
-            AppSettings.Edge = _dragStartEdge;
-            AppSettings.MonitorIndex = _dragStartMonitorIndex;
+            // Reset settings via service
+            var settings = _settingsService.Settings;
+            settings.Edge = _dragStartEdge;
+            settings.MonitorIndex = _dragStartMonitorIndex;
+            _settingsService.Settings = settings;
+            
             UpdateOrientation();
         }
+    }
+
+    private void DragHandle_LostMouseCapture(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        _ = EndPanelDragAsync();
     }
 
     private void DragHandle_MouseMove(object sender, System.Windows.Input.MouseEventArgs e)
@@ -1990,35 +2078,20 @@ public partial class MainWindow : Window
             return;
         }
 
-        AppSettings.MonitorIndex = nextMonitorIndex;
-        AppSettings.Edge = nextEdge;
+        // Update settings via service
+        var settings = _settingsService.Settings;
+        settings.MonitorIndex = nextMonitorIndex;
+        settings.Edge = nextEdge;
+        _settingsService.Settings = settings;
+        
         _panelDragChanged = true;
         UpdateOrientation();
-        // PositionWindowImmediately(shown: true); // Удалено, так как UpdateOrientation уже вызывает PositionWindowImmediately
+        PositionWindowImmediately(shown: true);
     }
 
-    private async void DragHandle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    private void DragHandle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        if (!_isPanelDragging)
-        {
-            return;
-        }
-
         DragHandle.ReleaseMouseCapture();
-        _isPanelDragging = false;
-        SetDragHandleActive(false);
-        SetPanelDragRenderingActive(false);
-
-        if (_panelDragChanged)
-        {
-            await _settingsService.SaveAsync();
-        }
-        else
-        {
-            AppSettings.Edge = _dragStartEdge;
-            AppSettings.MonitorIndex = _dragStartMonitorIndex;
-        }
-
         e.Handled = true;
     }
 
@@ -2734,7 +2807,7 @@ public partial class MainWindow : Window
         }
     }
 
-    protected override void OnClosed(EventArgs e) 
+    protected override void OnClosed(EventArgs e)
     {
         try
         {

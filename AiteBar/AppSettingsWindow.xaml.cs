@@ -591,6 +591,7 @@ public partial class AppSettingsWindow : DarkWindow
             _settings.Contexts[i].IsEnabled = i == 0 || (_contextRows[i].EnabledCheckBox.IsChecked ?? false);
         }
 
+        _mainWindow.GetSettingsService().Settings = _settings;
         IReadOnlyList<string> failedHotkeys = await _mainWindow.SaveAppSettings();
         LocalizationService.ApplyCulture(_settings.UiCulture);
         _mainWindow.RefreshPanel();

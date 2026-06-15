@@ -88,7 +88,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 ## Описание каждого уровня системы
 
 ### Windows UI Layer
-Слой пользовательского интерфейса на базе WPF. Основные окна:
+Слой пользовательского интерфейса на базе WPF. Основные окна и компоненты:
 - `MainWindow` — основная панель с кнопками
 - `SettingsWindow` — редактирование отдельной кнопки
 - `AppSettingsWindow` — общие настройки приложения
@@ -99,6 +99,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `TextPromptDialog` — диалоговое окно для ввода текста
 - `RotationProfileSelectionWindow` — выбор профилей для ротации
 - `ScreenColorPickerWindow` — цветовой пикер
+- `OverflowWrapPanel` — кастомная WPF панель для многострочного (multi-band) расположения кнопок
 
 ### Services Layer
 Сервисы, реализующие бизнес-логику:
@@ -106,6 +107,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `AppSettingsService` — загрузка, сохранение и нормализация настроек
 - `PanelPackageService` — импорт и экспорт панелей (ZIP-архивирование)
 - `QuickNoteService` — управление быстрыми заметками
+- `UpdateCheckService` — проверка обновлений приложения
 - `NativeIntegrationService` — низкоуровневая интеграция с Windows (mouse hooks)
 - `LocalizationService` — локализация интерфейса (ru, en, de, uk)
 
@@ -156,11 +158,15 @@ UI Layer использует Services Layer для выполнения биз�
 
 **Ключевые файлы:**
 - Models.cs — модели данных (AppSettings, CustomElement, PanelContext, и т.д.)
+- UnifiedButton.cs — модель унифицированной кнопки (для пользовательских и системных кнопок)
 - MainWindow.xaml / MainWindow.xaml.cs — основное окно приложения
+- OverflowWrapPanel.cs — кастомная WPF панель для многострочного (multi-band) расположения кнопок
 - AppSettingsService.cs — управление настройками
 - ActionService.cs — выполнение действий
 - PanelPackageService.cs — импорт/экспорт панелей
 - QuickNoteService.cs — управление быстрыми заметками
+- UpdateCheckService.cs — проверка обновлений
+- UpdateCheckUi.cs — UI хелпер для проверки обновлений
 - NativeMethods.cs — Win32 interop
 - PathHelper.cs — пути к данным
 - Logger.cs — логирование ошибок
@@ -229,7 +235,7 @@ UI Layer использует Services Layer для выполнения биз�
 - RootBorder — корневой контейнер панели
 - MainPanel — основная панель
 - FixedPanel — панель с системными кнопками
-- UserButtonsPanel — панель с пользовательскими кнопками
+- UnifiedButtonsPanel (OverflowWrapPanel) — панель с пользовательскими кнопками (кастомная панель для многострочного расположения)
 - ControlBlock — блок с кнопкой добавления
 - AppSettingsBlock — блок с кнопкой настроек
 
@@ -317,9 +323,7 @@ UI Layer использует Services Layer для выполнения биз�
 - FileSorterWindow
 
 **Основные компоненты:**
-- _quickNoteWindow — экземпляр окна быстрых заметок
-- _timerStopwatchWindow — экземпляр окна таймера/секундомера
-- _fileSorterWindow — экземпляр окна сортировщика файлов
+- Использует UtilityRegistry для получения и запуска утилит (не хранит экземпляры окон напрямую)
 
 **Основные классы:**
 - ActionService
@@ -534,7 +538,7 @@ UI Layer использует Services Layer для выполнения биз�
 **Ответственность:**
 - Расчет размеров панели в зависимости от ориентации (вертикальная/горизонтальная)
 - Расчет расположения системных и пользовательских кнопок
-- Расчет количества полос (bands) для пользовательских кнопок (максимум 2)
+- Расчет количества полос (bands) для пользовательских кнопок (максимум 3)
 
 **Интеграция с MainWindow:**
 - `MainWindow.CalculateAvailableSize()` получает рабочую область целевого монитора, учитывает DPI и единый `PanelScreenPadding`.
@@ -552,7 +556,7 @@ UI Layer использует Services Layer для выполнения биз�
 - ButtonOuterSize = 44
 - SeparatorSize = 9
 - PanelChrome = 8
-- MaxUserBands = 2
+- MaxUserBands = 3
 
 **Основные классы:**
 - PanelLayoutHelper (static)

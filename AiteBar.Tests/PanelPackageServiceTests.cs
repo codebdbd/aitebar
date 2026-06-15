@@ -355,14 +355,18 @@ public sealed class PanelPackageServiceTests : IDisposable
         string configPath = Path.Combine(dataPath, "custom_buttons.json");
 
         var settingsService = new AppSettingsService(configPath, settingsPath);
-        settingsService.Settings.Contexts =
-        [
-            new PanelContext { Id = "context-1", Name = "Panel 1", IconGlyph = "\uE8B7" },
-            new PanelContext { Id = "context-2", Name = "Panel 2", IconGlyph = "\uE8B7" },
-            new PanelContext { Id = "context-3", Name = "Panel 3", IconGlyph = "\uE8B7" },
-            new PanelContext { Id = "context-4", Name = "Panel 4", IconGlyph = "\uE8B7" }
-        ];
-        settingsService.Settings.ActiveContextId = activeContextId;
+        var appSettings = new AppSettings
+        {
+            Contexts =
+            [
+                new PanelContext { Id = "context-1", Name = "Panel 1", IconGlyph = "\uE8B7" },
+                new PanelContext { Id = "context-2", Name = "Panel 2", IconGlyph = "\uE8B7" },
+                new PanelContext { Id = "context-3", Name = "Panel 3", IconGlyph = "\uE8B7" },
+                new PanelContext { Id = "context-4", Name = "Panel 4", IconGlyph = "\uE8B7" }
+            ],
+            ActiveContextId = activeContextId
+        };
+        settingsService.Settings = appSettings;
         settingsService.NormalizeAppState();
 
         return new TestEnvironment(

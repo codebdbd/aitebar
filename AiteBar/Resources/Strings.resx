@@ -164,6 +164,8 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_SavedInitial" xml:space="preserve"><value>Saved</value></data>
   <data name="QuickNote_Saving" xml:space="preserve"><value>Saving...</value></data>
   <data name="QuickNote_SaveFailed" xml:space="preserve"><value>Save failed</value></data>
+  <data name="Settings_SaveFailed" xml:space="preserve"><value>Could not save settings:
+{0}</value></data>
   <data name="QuickNote_LoadFailed" xml:space="preserve"><value>Could not load note</value></data>
   <data name="QuickNote_OpenFailed" xml:space="preserve"><value>Could not open</value></data>
   <data name="QuickNote_ConflictCopySaved" xml:space="preserve"><value>External changes detected. Saved a conflict copy.</value></data>

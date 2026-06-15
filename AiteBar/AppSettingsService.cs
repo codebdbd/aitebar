@@ -15,7 +15,7 @@ namespace AiteBar
         private readonly string _settingsFile;
         private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
         private readonly object _stateLock = new();
-        internal const long MaxSettingsFileBytes = 100 * 1024 * 1024;
+        internal const long MaxSettingsFileBytes = 10 * 1024 * 1024;
 
         private AppSettings _appSettings = new();
         private List<CustomElement> _elements = new();
@@ -28,7 +28,25 @@ namespace AiteBar
             _settingsFile = string.IsNullOrWhiteSpace(settingsFile) ? PathHelper.SettingsFile : settingsFile;
         }
 
-        public AppSettings Settings => _appSettings;
+        public AppSettings Settings
+        {
+            get
+            {
+                lock (_stateLock)
+                {
+                    return CloneAppSettings(_appSettings);
+                }
+            }
+            set
+            {
+                lock (_stateLock)
+                {
+                    _appSettings = CloneAppSettings(value);
+                    _elements = _appSettings.Elements;
+                }
+                SettingsChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
         public IReadOnlyList<CustomElement> Elements
         {
             get
@@ -38,6 +56,146 @@ namespace AiteBar
                     return [.. _elements];
                 }
             }
+        }
+
+        private static AppSettings CloneAppSettings(AppSettings original)
+        {
+            return new AppSettings
+            {
+                GlobalHotkeyCtrl = original.GlobalHotkeyCtrl,
+                GlobalHotkeyAlt = original.GlobalHotkeyAlt,
+                GlobalHotkeyShift = original.GlobalHotkeyShift,
+                GlobalHotkeyWin = original.GlobalHotkeyWin,
+                GlobalHotkeyKey = original.GlobalHotkeyKey,
+                ShowPresetSearch = original.ShowPresetSearch,
+                ShowPresetScreenshot = original.ShowPresetScreenshot,
+                ShowPresetVideo = original.ShowPresetVideo,
+                ShowPresetCalc = original.ShowPresetCalc,
+                ShowPresetExplorer = original.ShowPresetExplorer,
+                ShowPresetDownloads = original.ShowPresetDownloads,
+                ShowPresetFileSorter = original.ShowPresetFileSorter,
+                ShowPresetIconConverter = original.ShowPresetIconConverter,
+                ShowPresetColorPicker = original.ShowPresetColorPicker,
+                ShowPresetQuickNote = original.ShowPresetQuickNote,
+                ShowPresetTimerStopwatch = original.ShowPresetTimerStopwatch,
+                QuickNoteThemeId = original.QuickNoteThemeId,
+                QuickNotePinned = original.QuickNotePinned,
+                QuickNoteLeft = original.QuickNoteLeft,
+                QuickNoteTop = original.QuickNoteTop,
+                QuickNoteWidth = original.QuickNoteWidth,
+                QuickNoteHeight = original.QuickNoteHeight,
+                TimerSoundEnabled = original.TimerSoundEnabled,
+                TimerIsStopwatchMode = original.TimerIsStopwatchMode,
+                TimerDuration = original.TimerDuration,
+                Edge = original.Edge,
+                MonitorIndex = original.MonitorIndex,
+                ActivationZoneSizePercent = original.ActivationZoneSizePercent,
+                PanelSizePercent = original.PanelSizePercent,
+                ActivationDelayMs = original.ActivationDelayMs,
+                UiCulture = original.UiCulture,
+                Contexts = original.Contexts.Select(c => new PanelContext
+                {
+                    Id = c.Id,
+                    Name = c.Name,
+                    IsNameCustomized = c.IsNameCustomized,
+                    IconGlyph = c.IconGlyph,
+                    IsEnabled = c.IsEnabled
+                }).ToList(),
+                ActiveContextId = original.ActiveContextId,
+                NextContextHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.NextContextHotkey.Ctrl,
+                    Alt = original.NextContextHotkey.Alt,
+                    Shift = original.NextContextHotkey.Shift,
+                    Win = original.NextContextHotkey.Win,
+                    Key = original.NextContextHotkey.Key
+                },
+                PreviousContextHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.PreviousContextHotkey.Ctrl,
+                    Alt = original.PreviousContextHotkey.Alt,
+                    Shift = original.PreviousContextHotkey.Shift,
+                    Win = original.PreviousContextHotkey.Win,
+                    Key = original.PreviousContextHotkey.Key
+                },
+                AddButtonHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.AddButtonHotkey.Ctrl,
+                    Alt = original.AddButtonHotkey.Alt,
+                    Shift = original.AddButtonHotkey.Shift,
+                    Win = original.AddButtonHotkey.Win,
+                    Key = original.AddButtonHotkey.Key
+                },
+                FileSorterHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.FileSorterHotkey.Ctrl,
+                    Alt = original.FileSorterHotkey.Alt,
+                    Shift = original.FileSorterHotkey.Shift,
+                    Win = original.FileSorterHotkey.Win,
+                    Key = original.FileSorterHotkey.Key
+                },
+                QuickNoteHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.QuickNoteHotkey.Ctrl,
+                    Alt = original.QuickNoteHotkey.Alt,
+                    Shift = original.QuickNoteHotkey.Shift,
+                    Win = original.QuickNoteHotkey.Win,
+                    Key = original.QuickNoteHotkey.Key
+                },
+                ColorPickerHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.ColorPickerHotkey.Ctrl,
+                    Alt = original.ColorPickerHotkey.Alt,
+                    Shift = original.ColorPickerHotkey.Shift,
+                    Win = original.ColorPickerHotkey.Win,
+                    Key = original.ColorPickerHotkey.Key
+                },
+                TimerStopwatchHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.TimerStopwatchHotkey.Ctrl,
+                    Alt = original.TimerStopwatchHotkey.Alt,
+                    Shift = original.TimerStopwatchHotkey.Shift,
+                    Win = original.TimerStopwatchHotkey.Win,
+                    Key = original.TimerStopwatchHotkey.Key
+                },
+                LastFileSortOperation = original.LastFileSortOperation,
+                Elements = original.Elements.Select(e => new CustomElement
+                {
+                    Id = e.Id,
+                    Name = e.Name,
+                    Icon = e.Icon,
+                    IconFont = e.IconFont,
+                    Color = e.Color,
+                    ActionType = e.ActionType,
+                    ActionValue = e.ActionValue,
+                    Browser = e.Browser,
+                    ChromeProfile = e.ChromeProfile,
+                    RotationProfilePaths = [.. (e.RotationProfilePaths ?? [])],
+                    IsAppMode = e.IsAppMode,
+                    IsIncognito = e.IsIncognito,
+                    UseRotation = e.UseRotation,
+                    OpenFullscreen = e.OpenFullscreen,
+                    IsTopmost = e.IsTopmost,
+                    LastUsedProfile = e.LastUsedProfile,
+                    Alt = e.Alt,
+                    Ctrl = e.Ctrl,
+                    Shift = e.Shift,
+                    Win = e.Win,
+                    Key = e.Key,
+                    ImagePath = e.ImagePath,
+                    ContextId = e.ContextId
+                }).ToList(),
+                UtilityButtonOrder = [.. original.UtilityButtonOrder],
+                CheckForUpdatesEnabled = original.CheckForUpdatesEnabled,
+                Sentry = original.Sentry == null ? null : new SentrySettings
+                {
+                    Dsn = original.Sentry.Dsn,
+                    IsEnabled = original.Sentry.IsEnabled,
+                    Environment = original.Sentry.Environment,
+                    TracesSampleRate = original.Sentry.TracesSampleRate,
+                    SendDefaultPii = original.Sentry.SendDefaultPii
+                }
+            };
         }
 
         public async Task LoadAsync()
@@ -53,7 +211,10 @@ namespace AiteBar
                     {
                         EnsureFileSizeWithinLimit(_settingsFile, MaxSettingsFileBytes);
                         string json = await File.ReadAllTextAsync(_settingsFile);
-                        _appSettings = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions) ?? new();
+                        lock (_stateLock)
+                        {
+                            _appSettings = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions) ?? new();
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -62,7 +223,10 @@ namespace AiteBar
                         loadedFromBackup = TryLoadFromBackup();
                         if (!loadedFromBackup)
                         {
-                            _appSettings = new AppSettings();
+                            lock (_stateLock)
+                            {
+                                _appSettings = new AppSettings();
+                            }
                         }
                     }
                     changed = NormalizeAppState();
@@ -73,7 +237,10 @@ namespace AiteBar
                     {
                         EnsureFileSizeWithinLimit(_configFile, MaxSettingsFileBytes);
                         string json = await File.ReadAllTextAsync(_configFile);
-                        _appSettings.Elements = JsonSerializer.Deserialize<List<CustomElement>>(json, _jsonOptions) ?? [];
+                        lock (_stateLock)
+                        {
+                            _appSettings.Elements = JsonSerializer.Deserialize<List<CustomElement>>(json, _jsonOptions) ?? [];
+                        }
                         changed = NormalizeAppState();
                         await SaveAsync();
                     }
@@ -83,7 +250,10 @@ namespace AiteBar
                         loadedFromBackup = TryLoadFromBackup();
                         if (!loadedFromBackup)
                         {
-                            _appSettings = new AppSettings();
+                            lock (_stateLock)
+                            {
+                                _appSettings = new AppSettings();
+                            }
                             changed = NormalizeAppState();
                         }
                     }
@@ -173,7 +343,10 @@ namespace AiteBar
                     var loadedSettings = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions);
                     if (loadedSettings != null)
                     {
-                        _appSettings = loadedSettings;
+                        lock (_stateLock)
+                        {
+                            _appSettings = loadedSettings;
+                        }
                         Logger.Log(new Exception($"Restored settings from backup {i}"));
                         return true;
                     }
@@ -191,12 +364,14 @@ namespace AiteBar
             await _saveSemaphore.WaitAsync();
             try
             {
+                AppSettings snapshot;
                 lock (_stateLock)
                 {
                     _appSettings.Elements = [.. _elements];
+                    snapshot = _appSettings;
                 }
 
-                string json = JsonSerializer.Serialize(_appSettings, _jsonOptions);
+                string json = JsonSerializer.Serialize(snapshot, _jsonOptions);
 
                 await WriteSettingsWithBackupAsync(json);
                 SettingsChanged?.Invoke(this, EventArgs.Empty);
@@ -280,81 +455,81 @@ namespace AiteBar
         {
             bool changed = false;
 
-            if (UsesPreviousDefaultShowHotkey(_appSettings))
-            {
-                _appSettings.GlobalHotkeyCtrl = false;
-                _appSettings.GlobalHotkeyAlt = true;
-                _appSettings.GlobalHotkeyShift = false;
-                _appSettings.GlobalHotkeyWin = false;
-                _appSettings.GlobalHotkeyKey = "D4";
-                changed = true;
-            }
-
-            // Set default value for old settings files that don't have UiCulture at all
-            if (string.IsNullOrWhiteSpace(_appSettings.UiCulture))
-            {
-                _appSettings.UiCulture = LocalizationService.AutoCulture;
-                changed = true;
-            }
-            string normalizedUiCulture = LocalizationService.NormalizeCultureName(_appSettings.UiCulture);
-            if (!string.Equals(_appSettings.UiCulture, normalizedUiCulture, StringComparison.Ordinal))
-            {
-                _appSettings.UiCulture = normalizedUiCulture;
-                changed = true;
-            }
-
-            var originalContexts = _appSettings.Contexts ?? [];
-            var normalizedContexts = ContextStateHelper.NormalizeContexts(originalContexts);
-            if (originalContexts.Count != normalizedContexts.Count ||
-                originalContexts.Zip(normalizedContexts, (left, right) =>
-                    left.Id != right.Id ||
-                    left.Name != right.Name ||
-                    left.IsNameCustomized != right.IsNameCustomized ||
-                    left.IconGlyph != right.IconGlyph ||
-                    left.IsEnabled != right.IsEnabled).Any(hasDifference => hasDifference))
-            {
-                changed = true;
-            }
-            _appSettings.Contexts = normalizedContexts;
-
-            string normalizedActiveContextId = ContextStateHelper.NormalizeActiveContextId(_appSettings.ActiveContextId, _appSettings.Contexts);
-        if (!string.Equals(_appSettings.ActiveContextId, normalizedActiveContextId, StringComparison.Ordinal))
-        {
-            _appSettings.ActiveContextId = normalizedActiveContextId;
-            changed = true;
-        }
-
-        // Ограничиваем размер панели минимум 50%
-        double oldPanelSizePercent = _appSettings.PanelSizePercent;
-        _appSettings.PanelSizePercent = Math.Clamp(_appSettings.PanelSizePercent, 50, 100);
-        if (Math.Abs(oldPanelSizePercent - _appSettings.PanelSizePercent) > 0.001)
-        {
-            changed = true;
-        }
-
-        var normalizedElements = NormalizeElements(_appSettings.Elements, GetPrimaryContextId(), out bool elementsNormalized);
-            if (elementsNormalized)
-            {
-                changed = true;
-            }
-            if (_appSettings.Elements.Count != normalizedElements.Count)
-            {
-                changed = true;
-            }
-            else
-            {
-                for (int i = 0; i < normalizedElements.Count; i++)
-                {
-                    if (!AreElementsEquivalent(_appSettings.Elements[i], normalizedElements[i]))
-                    {
-                        changed = true;
-                        break;
-                    }
-                }
-            }
-
             lock (_stateLock)
             {
+                if (UsesPreviousDefaultShowHotkey(_appSettings))
+                {
+                    _appSettings.GlobalHotkeyCtrl = false;
+                    _appSettings.GlobalHotkeyAlt = true;
+                    _appSettings.GlobalHotkeyShift = false;
+                    _appSettings.GlobalHotkeyWin = false;
+                    _appSettings.GlobalHotkeyKey = "D4";
+                    changed = true;
+                }
+
+                // Set default value for old settings files that don't have UiCulture at all
+                if (string.IsNullOrWhiteSpace(_appSettings.UiCulture))
+                {
+                    _appSettings.UiCulture = LocalizationService.AutoCulture;
+                    changed = true;
+                }
+                string normalizedUiCulture = LocalizationService.NormalizeCultureName(_appSettings.UiCulture);
+                if (!string.Equals(_appSettings.UiCulture, normalizedUiCulture, StringComparison.Ordinal))
+                {
+                    _appSettings.UiCulture = normalizedUiCulture;
+                    changed = true;
+                }
+
+                var originalContexts = _appSettings.Contexts ?? [];
+                var normalizedContexts = ContextStateHelper.NormalizeContexts(originalContexts);
+                if (originalContexts.Count != normalizedContexts.Count ||
+                    originalContexts.Zip(normalizedContexts, (left, right) =>
+                        left.Id != right.Id ||
+                        left.Name != right.Name ||
+                        left.IsNameCustomized != right.IsNameCustomized ||
+                        left.IconGlyph != right.IconGlyph ||
+                        left.IsEnabled != right.IsEnabled).Any(hasDifference => hasDifference))
+                {
+                    changed = true;
+                }
+                _appSettings.Contexts = normalizedContexts;
+
+                string normalizedActiveContextId = ContextStateHelper.NormalizeActiveContextId(_appSettings.ActiveContextId, _appSettings.Contexts);
+                if (!string.Equals(_appSettings.ActiveContextId, normalizedActiveContextId, StringComparison.Ordinal))
+                {
+                    _appSettings.ActiveContextId = normalizedActiveContextId;
+                    changed = true;
+                }
+
+                // Ограничиваем размер панели минимум 50%
+                double oldPanelSizePercent = _appSettings.PanelSizePercent;
+                _appSettings.PanelSizePercent = Math.Clamp(_appSettings.PanelSizePercent, 50, 100);
+                if (Math.Abs(oldPanelSizePercent - _appSettings.PanelSizePercent) > 0.001)
+                {
+                    changed = true;
+                }
+
+                var normalizedElements = NormalizeElements(_appSettings.Elements, GetPrimaryContextId(), out bool elementsNormalized);
+                if (elementsNormalized)
+                {
+                    changed = true;
+                }
+                if (_appSettings.Elements.Count != normalizedElements.Count)
+                {
+                    changed = true;
+                }
+                else
+                {
+                    for (int i = 0; i < normalizedElements.Count; i++)
+                    {
+                        if (!AreElementsEquivalent(_appSettings.Elements[i], normalizedElements[i]))
+                        {
+                            changed = true;
+                            break;
+                        }
+                    }
+                }
+
                 _elements = normalizedElements;
                 _appSettings.Elements = [.. normalizedElements];
             }
@@ -389,125 +564,146 @@ namespace AiteBar
         }
 
         private static List<CustomElement> NormalizeElements(IEnumerable<CustomElement> source, string defaultContextId, out bool changed)
-    {
-        changed = false;
-        var result = new List<CustomElement>();
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var item in source)
         {
-            if (item == null)
+            changed = false;
+            var result = new List<CustomElement>();
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var item in source)
             {
-                changed = true;
-                continue;
-            }
-            
-            string id = string.IsNullOrWhiteSpace(item.Id) ? Guid.NewGuid().ToString() : item.Id;
-            if (!seen.Add(id))
-            {
-                changed = true;
-                continue;
-            }
+                if (item == null)
+                {
+                    changed = true;
+                    continue;
+                }
 
-            string contextId = string.IsNullOrWhiteSpace(item.ContextId) ? defaultContextId : item.ContextId;
-            bool needsChange = !string.Equals(item.Id, id, StringComparison.Ordinal) ||
-                               !string.Equals(item.ContextId, contextId, StringComparison.Ordinal) ||
-                               item.RotationProfilePaths == null;
-            
-            if (needsChange)
-            {
-                changed = true;
+                string id = string.IsNullOrWhiteSpace(item.Id) ? Guid.NewGuid().ToString() : item.Id;
+                if (!seen.Add(id))
+                {
+                    changed = true;
+                    continue;
+                }
+
+                string contextId = string.IsNullOrWhiteSpace(item.ContextId) ? defaultContextId : item.ContextId;
+                bool needsChange = !string.Equals(item.Id, id, StringComparison.Ordinal) ||
+                                   !string.Equals(item.ContextId, contextId, StringComparison.Ordinal) ||
+                                   item.RotationProfilePaths == null;
+
+                if (needsChange)
+                {
+                    changed = true;
+                }
+
+                // Создаем копию объекта, не меняя входной
+                var normalizedItem = new CustomElement
+                {
+                    Id = id,
+                    Name = item.Name,
+                    Icon = item.Icon,
+                    IconFont = item.IconFont,
+                    Color = item.Color,
+                    ActionType = item.ActionType,
+                    ActionValue = item.ActionValue,
+                    Browser = item.Browser,
+                    ChromeProfile = item.ChromeProfile,
+                    RotationProfilePaths = item.RotationProfilePaths ?? [],
+                    IsAppMode = item.IsAppMode,
+                    IsIncognito = item.IsIncognito,
+                    UseRotation = item.UseRotation,
+                    OpenFullscreen = item.OpenFullscreen,
+                    IsTopmost = item.IsTopmost,
+                    LastUsedProfile = item.LastUsedProfile,
+                    Alt = item.Alt,
+                    Ctrl = item.Ctrl,
+                    Shift = item.Shift,
+                    Win = item.Win,
+                    Key = item.Key,
+                    ImagePath = item.ImagePath,
+                    ContextId = contextId
+                };
+
+                result.Add(normalizedItem);
             }
-            
-            // Создаем копию объекта, не меняя входной
-            var normalizedItem = new CustomElement
-            {
-                Id = id,
-                Name = item.Name,
-                Icon = item.Icon,
-                IconFont = item.IconFont,
-                Color = item.Color,
-                ActionType = item.ActionType,
-                ActionValue = item.ActionValue,
-                Browser = item.Browser,
-                ChromeProfile = item.ChromeProfile,
-                RotationProfilePaths = item.RotationProfilePaths ?? [],
-                IsAppMode = item.IsAppMode,
-                IsIncognito = item.IsIncognito,
-                UseRotation = item.UseRotation,
-                OpenFullscreen = item.OpenFullscreen,
-                IsTopmost = item.IsTopmost,
-                LastUsedProfile = item.LastUsedProfile,
-                Alt = item.Alt,
-                Ctrl = item.Ctrl,
-                Shift = item.Shift,
-                Win = item.Win,
-                Key = item.Key,
-                ImagePath = item.ImagePath,
-                ContextId = contextId
-            };
-            
-            result.Add(normalizedItem);
+            return result;
         }
-        return result;
-    }
 
         private static bool AreElementsEquivalent(CustomElement left, CustomElement right)
-    {
-        return left.Id == right.Id &&
-               left.Name == right.Name &&
-               left.Icon == right.Icon &&
-               left.IconFont == right.IconFont &&
-               left.Color == right.Color &&
-               left.ActionType == right.ActionType &&
-               left.ActionValue == right.ActionValue &&
-               left.Browser == right.Browser &&
-               left.ChromeProfile == right.ChromeProfile &&
-               (left.RotationProfilePaths ?? []).SequenceEqual(right.RotationProfilePaths ?? []) &&
-               left.IsAppMode == right.IsAppMode &&
-               left.IsIncognito == right.IsIncognito &&
-               left.UseRotation == right.UseRotation &&
-               left.OpenFullscreen == right.OpenFullscreen &&
-               left.IsTopmost == right.IsTopmost &&
-               left.LastUsedProfile == right.LastUsedProfile &&
-               left.Alt == right.Alt &&
-               left.Ctrl == right.Ctrl &&
-               left.Shift == right.Shift &&
-               left.Win == right.Win &&
-               left.Key == right.Key &&
-               left.ImagePath == right.ImagePath &&
-               left.ContextId == right.ContextId;
-    }
+        {
+            return left.Id == right.Id &&
+                   left.Name == right.Name &&
+                   left.Icon == right.Icon &&
+                   left.IconFont == right.IconFont &&
+                   left.Color == right.Color &&
+                   left.ActionType == right.ActionType &&
+                   left.ActionValue == right.ActionValue &&
+                   left.Browser == right.Browser &&
+                   left.ChromeProfile == right.ChromeProfile &&
+                   (left.RotationProfilePaths ?? []).SequenceEqual(right.RotationProfilePaths ?? []) &&
+                   left.IsAppMode == right.IsAppMode &&
+                   left.IsIncognito == right.IsIncognito &&
+                   left.UseRotation == right.UseRotation &&
+                   left.OpenFullscreen == right.OpenFullscreen &&
+                   left.IsTopmost == right.IsTopmost &&
+                   left.LastUsedProfile == right.LastUsedProfile &&
+                   left.Alt == right.Alt &&
+                   left.Ctrl == right.Ctrl &&
+                   left.Shift == right.Shift &&
+                   left.Win == right.Win &&
+                   left.Key == right.Key &&
+                   left.ImagePath == right.ImagePath &&
+                   left.ContextId == right.ContextId;
+        }
 
         public string GetPrimaryContextId()
         {
-            return _appSettings.Contexts.FirstOrDefault()?.Id ?? ContextStateHelper.GetDefaultContextId(0);
+            lock (_stateLock)
+            {
+                return _appSettings.Contexts.FirstOrDefault()?.Id ?? ContextStateHelper.GetDefaultContextId(0);
+            }
         }
 
         public string GetContextDisplayName(string contextId)
         {
-            for (int i = 0; i < _appSettings.Contexts.Count; i++)
+            lock (_stateLock)
             {
-                PanelContext context = _appSettings.Contexts[i];
-                if (string.Equals(context.Id, contextId, StringComparison.Ordinal))
+                for (int i = 0; i < _appSettings.Contexts.Count; i++)
                 {
-                    return ResolveContextDisplayName(context, i);
+                    PanelContext context = _appSettings.Contexts[i];
+                    if (string.Equals(context.Id, contextId, StringComparison.Ordinal))
+                    {
+                        return ResolveContextDisplayName(context, i);
+                    }
                 }
-            }
 
-            return contextId;
+                return contextId;
+            }
         }
 
-        public IReadOnlyList<PanelContext> GetContextsSnapshot() =>
-            [.. GetEnabledContextsSnapshot()];
+        public IReadOnlyList<PanelContext> GetContextsSnapshot()
+        {
+            lock (_stateLock)
+            {
+                return [.. GetEnabledContextsSnapshot()];
+            }
+        }
 
-        public IReadOnlyList<PanelContext> GetAllContextsSnapshot() =>
-            [.. _appSettings.Contexts.Select((context, index) => CloneContext(context, index))];
+        public IReadOnlyList<PanelContext> GetAllContextsSnapshot()
+        {
+            lock (_stateLock)
+            {
+                return [.. _appSettings.Contexts.Select((context, index) => CloneContext(context, index))];
+            }
+        }
 
-        public IReadOnlyList<PanelContext> GetEnabledContextsSnapshot() =>
-            [.. _appSettings.Contexts
-                .Select((context, index) => new { context, index })
-                .Where(entry => entry.context.IsEnabled)
-                .Select(entry => CloneContext(entry.context, entry.index))];
+        public IReadOnlyList<PanelContext> GetEnabledContextsSnapshot()
+        {
+            lock (_stateLock)
+            {
+                return [.. _appSettings.Contexts
+                    .Select((context, index) => new { context, index })
+                    .Where(entry => entry.context.IsEnabled)
+                    .Select(entry => CloneContext(entry.context, entry.index))];
+            }
+        }
 
         private static PanelContext CloneContext(PanelContext context, int index) => new()
         {

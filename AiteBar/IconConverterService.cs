@@ -562,7 +562,7 @@ public sealed class IconConverterService
     private static void RenderSvgPicture(SKCanvas canvas, SKPicture picture, SKRect bounds, SKRect target)
     {
         canvas.Save();
-        
+
         float scale = Math.Min(target.Width / bounds.Width, target.Height / bounds.Height);
         canvas.Translate(target.Left - (bounds.Left * scale), target.Top - (bounds.Top * scale));
         canvas.Scale(scale);

@@ -12,7 +12,17 @@ namespace AiteBar
     [SupportedOSPlatform("windows")]
     internal static class IconHelper
     {
-        private static readonly HttpClient _httpClient = new();
+        private static readonly HttpClient _httpClient = CreateHttpClient();
+
+        private static HttpClient CreateHttpClient()
+        {
+            var handler = new HttpClientHandler
+            {
+                AllowAutoRedirect = false
+            };
+
+            return new HttpClient(handler);
+        }
 
         public static async Task<string?> DownloadFaviconAsync(string url)
         {
@@ -22,18 +32,57 @@ namespace AiteBar
 
                 // Используем Google Favicon Service как самый надежный и быстрый способ
                 string faviconUrl = $"https://www.google.com/s2/favicons?domain={uri.Host}&sz=64";
+                var currentUrl = new Uri(faviconUrl);
 
-                var response = await _httpClient.GetAsync(faviconUrl);
-                if (!response.IsSuccessStatusCode) return null;
+                // Ограничим количество редиректов, чтобы избежать циклов
+                const int maxRedirects = 5;
+                for (int i = 0; i < maxRedirects; i++)
+                {
+                    // Всегда проверяем, что текущий URL — HTTPS
+                    if (!string.Equals(currentUrl.Scheme, "https", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return null;
+                    }
 
-                byte[] data = await response.Content.ReadAsByteArrayAsync();
+                    var response = await _httpClient.GetAsync(currentUrl);
 
-                PathHelper.EnsureDirectories();
-                string fileName = $"web_{Guid.NewGuid()}.png";
-                string destPath = Path.Combine(PathHelper.IconsFolder, fileName);
+                    // Если это успешный ответ (не редирект), обрабатываем его
+                    if (response.IsSuccessStatusCode)
+                    {
+                        byte[] data = await response.Content.ReadAsByteArrayAsync();
 
-                await File.WriteAllBytesAsync(destPath, data);
-                return destPath;
+                        PathHelper.EnsureDirectories();
+                        string fileName = $"web_{Guid.NewGuid()}.png";
+                        string destPath = Path.Combine(PathHelper.IconsFolder, fileName);
+
+                        await File.WriteAllBytesAsync(destPath, data);
+                        return destPath;
+                    }
+
+                    // Проверяем, является ли ответ редиректом
+                    if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently ||
+                        response.StatusCode == System.Net.HttpStatusCode.Found ||
+                        response.StatusCode == System.Net.HttpStatusCode.SeeOther ||
+                        response.StatusCode == System.Net.HttpStatusCode.TemporaryRedirect ||
+                        response.StatusCode == System.Net.HttpStatusCode.PermanentRedirect)
+                    {
+                        var locationHeader = response.Headers.Location;
+                        if (locationHeader == null)
+                        {
+                            return null;
+                        }
+
+                        // Разрешаем относительный URL относительно текущего
+                        currentUrl = new Uri(currentUrl, locationHeader);
+                        continue;
+                    }
+
+                    // Если ответ не успешный и не редирект — возвращаем null
+                    return null;
+                }
+
+                // Превышено максимальное количество редиректов
+                return null;
             }
             catch (Exception ex)
             {

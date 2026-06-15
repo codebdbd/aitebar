@@ -9,9 +9,29 @@
 
 ## [Unreleased]
 
+## [1.9.1] - 2026-06-15
+
 ### 🇷🇺 Изменено | 🇬🇧 Changed
-- **Миграция на .NET 10**: Переведен проект с .NET 8 на .NET 10 LTS для продолжения получения обновлений безопасности и исправлений.
-- **Migrated to .NET 10**: Project migrated from .NET 8 to .NET 10 LTS for continued security updates and bug fixes.
+- **Снижение лимита размера настроек**: уменьшено максимальное допустимое значение settings.json с 100MB до 10MB для более быстрой работы и защиты от потенциально опасных больших файлов.
+- **Reduced settings file size limit**: changed maximum allowed size of settings.json from 100MB to 10MB for faster performance and protection from potentially dangerous large files.
+- **Форматирование кода**: запущен `dotnet format` для исправления mixed whitespace и end-of-line.
+- **Code formatting**: ran `dotnet format` to fix mixed whitespace and end-of-line issues.
+- **Обновление документации**: исправлены данные в `docs/architecture.md` (MaxUserBands, ActionService, добавлены новые компоненты).
+- **Updated documentation**: fixed information in `docs/architecture.md` (MaxUserBands, ActionService, added new components).
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Извлечение иконок при добавлении программ**: исправлено извлечение иконок, проблема в неправильном символе для проверки значения по умолчанию.
+- **Icon extraction when adding programs**: fixed icon extraction by checking for correct default icon glyph.
+- **Функция открепления/скрытия утилит**: исправлено сохранение настроек, изменения видимости теперь сохраняются и применяются правильно.
+- **Unpin/hide utility function**: fixed settings persistence so utility visibility changes are saved and applied correctly.
+- **Переключение панелей**: исправлено сохранение активной панели, переключение контекстов теперь правильно сохраняется.
+- **Panel switching**: fixed active panel persistence so context switches are saved correctly.
+- **Перетаскивание панели**: исправлено сохранение нового края и монитора при перетаскивании панели.
+- **Panel dragging**: fixed saving of new edge and monitor when dragging the panel.
+- **Настройки приложения**: исправлено сохранение настроек из окна настроек (включая видимость панелей и другие параметры).
+- **App settings**: fixed saving changes from settings window (including panel visibility and other options).
+- **Генерация дублирующих имен**: добавлен guard на бесконечный цикл в `BuildDuplicateElementName` и fallback на GUID.
+- **Duplicate name generation**: added infinite loop guard in `BuildDuplicateElementName` and GUID fallback.
 
 ## [1.8.0] - 2026-06-14
 

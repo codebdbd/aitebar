@@ -31,17 +31,17 @@ namespace AiteBar
         private static readonly BrushConverter _brushConverter = new();
         private Brush _defaultInputBorderBrush = Brushes.Gray;
         private Brush _requiredErrorBorderBrush = Brushes.OrangeRed;
-        private readonly MainWindow _mainWindow;
+        private readonly ISettingsWindowContext _context;
         private readonly CustomElement? _editingElement = null;
         private bool _showRequiredValidation;
         private List<BrowserProfileInfo> _availableProfiles = [];
         private List<string> _rotationProfilePaths = [];
         private int _profileLoadVersion;
 
-        public SettingsWindow(MainWindow main, CustomElement? el = null)
+        public SettingsWindow(ISettingsWindowContext context, CustomElement? el = null)
         {
             InitializeComponent();
-            _mainWindow = main;
+            _context = context;
             _editingElement = el;
             _defaultInputBorderBrush = TryFindResource("FormControlBorderBrush") as Brush
                 ?? (_brushConverter.ConvertFromString("#3A3A3E") as Brush ?? Brushes.Gray);
@@ -118,7 +118,7 @@ namespace AiteBar
         private void LoadContexts()
         {
             CmbContext.Items.Clear();
-            foreach (var context in _mainWindow.GetContextsSnapshot())
+            foreach (var context in _context.GetContextsSnapshot())
             {
                 CmbContext.Items.Add(new ComboBoxItem { Content = context.Name, Tag = context.Id });
             }
@@ -130,7 +130,7 @@ namespace AiteBar
 
             if (CmbContext.SelectedIndex < 0)
             {
-                SetComboValue(CmbContext, _mainWindow.GetAppSettings().ActiveContextId);
+                SetComboValue(CmbContext, _context.GetAppSettings().ActiveContextId);
             }
 
             if (CmbContext.SelectedIndex < 0 && CmbContext.Items.Count > 0)
@@ -330,7 +330,7 @@ namespace AiteBar
         {
             string selectedContextId = (CmbContext.SelectedItem as ComboBoxItem)?.Tag?.ToString()
                 ?? _editingElement?.ContextId
-                ?? _mainWindow.GetAppSettings().ActiveContextId;
+                ?? _context.GetAppSettings().ActiveContextId;
             string selectedKey = (CmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? _editingElement?.Key ?? "None";
             string selectedProfile = (CmbChromeProfile.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? _editingElement?.ChromeProfile ?? "";
             string selectedActionType = (CmbActionType.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? _editingElement?.ActionType ?? "Web";
@@ -596,7 +596,7 @@ namespace AiteBar
                 // Если иконка еще не выбрана (пустое изображение и дефолтный шрифт) - пытаемся извлечь
                 if ((typeStr == nameof(AiteBar.ActionType.Program) || typeStr == nameof(AiteBar.ActionType.ScriptFile)) &&
                     string.IsNullOrEmpty(_selectedImagePath) &&
-                    (_selectedIcon == "\uEF0D" || string.IsNullOrEmpty(_selectedIcon)))
+                    (_selectedIcon == "\uF45B" || string.IsNullOrEmpty(_selectedIcon)))
                 {
                     string? extracted = IconHelper.ExtractAndSaveIcon(dlg.FileName);
                     if (!string.IsNullOrEmpty(extracted))
@@ -816,10 +816,10 @@ namespace AiteBar
                     Alt = actionType == AiteBar.ActionType.Hotkey && (ChkAlt.IsChecked ?? false),
                     Win = actionType == AiteBar.ActionType.Hotkey && (ChkWin.IsChecked ?? false),
                     Key = actionType == AiteBar.ActionType.Hotkey ? selectedKey : "None",
-                    ContextId = ((ComboBoxItem)CmbContext.SelectedItem)?.Tag?.ToString() ?? _mainWindow.GetAppSettings().ActiveContextId
+                    ContextId = ((ComboBoxItem)CmbContext.SelectedItem)?.Tag?.ToString() ?? _context.GetAppSettings().ActiveContextId
                 };
 
-                IReadOnlyList<string> failedHotkeys = await _mainWindow.SaveElement(newElement, _editingElement?.Id);
+                IReadOnlyList<string> failedHotkeys = await _context.SaveElement(newElement, _editingElement?.Id);
                 if (failedHotkeys.Count > 0)
                 {
                     new DarkDialog(LocalizationService.Format("HotkeyRegistrationFailed", string.Join("\n", failedHotkeys))) { Owner = this }.ShowDialog();

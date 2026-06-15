@@ -14,62 +14,65 @@ public sealed class AppSettingsServiceTests
     public void NormalizeAppState_MigratesLegacyWinZShowHotkeyToAlt4()
     {
         var settingsService = new AppSettingsService();
-        AppSettings settings = settingsService.Settings;
+        var settings = settingsService.Settings;
         settings.GlobalHotkeyCtrl = false;
         settings.GlobalHotkeyAlt = false;
         settings.GlobalHotkeyShift = false;
         settings.GlobalHotkeyWin = true;
         settings.GlobalHotkeyKey = "Z";
+        settingsService.Settings = settings;
 
         bool changed = settingsService.NormalizeAppState();
 
         Assert.True(changed);
-        Assert.False(settings.GlobalHotkeyCtrl);
-        Assert.True(settings.GlobalHotkeyAlt);
-        Assert.False(settings.GlobalHotkeyShift);
-        Assert.False(settings.GlobalHotkeyWin);
-        Assert.Equal("D4", settings.GlobalHotkeyKey);
+        Assert.False(settingsService.Settings.GlobalHotkeyCtrl);
+        Assert.True(settingsService.Settings.GlobalHotkeyAlt);
+        Assert.False(settingsService.Settings.GlobalHotkeyShift);
+        Assert.False(settingsService.Settings.GlobalHotkeyWin);
+        Assert.Equal("D4", settingsService.Settings.GlobalHotkeyKey);
     }
 
     [Fact]
     public void NormalizeAppState_MigratesCtrlAltZShowHotkeyToAlt4()
     {
         var settingsService = new AppSettingsService();
-        AppSettings settings = settingsService.Settings;
+        var settings = settingsService.Settings;
         settings.GlobalHotkeyCtrl = true;
         settings.GlobalHotkeyAlt = true;
         settings.GlobalHotkeyShift = false;
         settings.GlobalHotkeyWin = false;
         settings.GlobalHotkeyKey = "Z";
+        settingsService.Settings = settings;
 
         bool changed = settingsService.NormalizeAppState();
 
         Assert.True(changed);
-        Assert.False(settings.GlobalHotkeyCtrl);
-        Assert.True(settings.GlobalHotkeyAlt);
-        Assert.False(settings.GlobalHotkeyShift);
-        Assert.False(settings.GlobalHotkeyWin);
-        Assert.Equal("D4", settings.GlobalHotkeyKey);
+        Assert.False(settingsService.Settings.GlobalHotkeyCtrl);
+        Assert.True(settingsService.Settings.GlobalHotkeyAlt);
+        Assert.False(settingsService.Settings.GlobalHotkeyShift);
+        Assert.False(settingsService.Settings.GlobalHotkeyWin);
+        Assert.Equal("D4", settingsService.Settings.GlobalHotkeyKey);
     }
 
     [Fact]
     public void NormalizeAppState_PreservesCustomShowHotkey()
     {
         var settingsService = new AppSettingsService();
-        AppSettings settings = settingsService.Settings;
+        var settings = settingsService.Settings;
         settings.GlobalHotkeyCtrl = true;
         settings.GlobalHotkeyAlt = false;
         settings.GlobalHotkeyShift = true;
         settings.GlobalHotkeyWin = false;
         settings.GlobalHotkeyKey = "Space";
+        settingsService.Settings = settings;
 
         settingsService.NormalizeAppState();
 
-        Assert.True(settings.GlobalHotkeyCtrl);
-        Assert.False(settings.GlobalHotkeyAlt);
-        Assert.True(settings.GlobalHotkeyShift);
-        Assert.False(settings.GlobalHotkeyWin);
-        Assert.Equal("Space", settings.GlobalHotkeyKey);
+        Assert.True(settingsService.Settings.GlobalHotkeyCtrl);
+        Assert.False(settingsService.Settings.GlobalHotkeyAlt);
+        Assert.True(settingsService.Settings.GlobalHotkeyShift);
+        Assert.False(settingsService.Settings.GlobalHotkeyWin);
+        Assert.Equal("Space", settingsService.Settings.GlobalHotkeyKey);
     }
 
     [Fact]
@@ -89,12 +92,14 @@ public sealed class AppSettingsServiceTests
     public void NormalizeAppState_PreservesExistingContextNamesIconsAndEnabledState()
     {
         var settingsService = new AppSettingsService();
-        settingsService.Settings.Contexts =
+        var settings = settingsService.Settings;
+        settings.Contexts =
         [
             new() { Id = "context-1", Name = "Main", IconGlyph = "\uE111", IsEnabled = true },
             new() { Id = "context-2", Name = "Work", IconGlyph = "\uE222", IsEnabled = true },
             new() { Id = "context-3", Name = "Hidden", IconGlyph = "\uE333", IsEnabled = false }
         ];
+        settingsService.Settings = settings;
 
         settingsService.NormalizeAppState();
 
@@ -114,15 +119,17 @@ public sealed class AppSettingsServiceTests
     public void NormalizeAppState_KeepsElementsAssignedToDisabledPanels()
     {
         var settingsService = new AppSettingsService();
-        settingsService.Settings.Contexts =
+        var settings = settingsService.Settings;
+        settings.Contexts =
         [
             new() { Id = "context-1", Name = "Main", IsEnabled = true },
             new() { Id = "context-2", Name = "Hidden", IsEnabled = false }
         ];
-        settingsService.Settings.Elements =
+        settings.Elements =
         [
             new() { Id = "button-1", Name = "Hidden button", ContextId = "context-2" }
         ];
+        settingsService.Settings = settings;
 
         settingsService.NormalizeAppState();
 
@@ -226,7 +233,9 @@ public sealed class AppSettingsServiceTests
         try
         {
             var writer = new AppSettingsService(configPath, settingsPath);
-            writer.Settings.UiCulture = "de";
+            var settings = writer.Settings;
+            settings.UiCulture = "de";
+            writer.Settings = settings;
 
             await writer.SaveAsync();
 
@@ -290,10 +299,14 @@ public sealed class AppSettingsServiceTests
         try
         {
             var service = new AppSettingsService(configPath, settingsPath);
-            service.Settings.UiCulture = "en";
+            var settings1 = service.Settings;
+            settings1.UiCulture = "en";
+            service.Settings = settings1;
             await service.SaveAsync();
 
-            service.Settings.UiCulture = "de";
+            var settings2 = service.Settings;
+            settings2.UiCulture = "de";
+            service.Settings = settings2;
             await service.SaveAsync();
 
             string currentJson = await File.ReadAllTextAsync(settingsPath);
@@ -532,8 +545,10 @@ public sealed class AppSettingsServiceTests
     {
         var service = new AppSettingsService();
         service.NormalizeAppState();
-        service.Settings.Contexts[0].Name = "Test Panel";
-        service.Settings.Contexts[0].IsNameCustomized = true;
+        var settings = service.Settings;
+        settings.Contexts[0].Name = "Test Panel";
+        settings.Contexts[0].IsNameCustomized = true;
+        service.Settings = settings;
 
         var result = service.GetContextDisplayName("context-1");
 
@@ -551,10 +566,12 @@ public sealed class AppSettingsServiceTests
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de");
 
             var service = new AppSettingsService();
-            service.Settings.Contexts =
+            var settings = service.Settings;
+            settings.Contexts =
             [
                 new() { Id = "context-1", Name = "Panel 1", IsNameCustomized = false, IsEnabled = true }
             ];
+            service.Settings = settings;
 
             var result = service.GetContextDisplayName("context-1");
 
@@ -583,19 +600,21 @@ public sealed class AppSettingsServiceTests
     public void NormalizeAppState_NormalizesUiCultureActiveContextAndElements()
     {
         var service = new AppSettingsService();
-        service.Settings.UiCulture = "de-DE";
-        service.Settings.ActiveContextId = "missing-context";
-        service.Settings.Contexts =
+        var settings = service.Settings;
+        settings.UiCulture = "de-DE";
+        settings.ActiveContextId = "missing-context";
+        settings.Contexts =
         [
             new() { Id = "context-1", Name = "Main", IsEnabled = true },
             new() { Id = "context-2", Name = "Work", IsEnabled = true }
         ];
-        service.Settings.Elements =
+        settings.Elements =
         [
             new() { Id = "", Name = "Needs Id", ContextId = "", RotationProfilePaths = null! },
             new() { Id = "dup", Name = "First", ContextId = "context-2" },
             new() { Id = "dup", Name = "Duplicate", ContextId = "context-2" }
         ];
+        service.Settings = settings;
 
         bool changed = service.NormalizeAppState();
 
@@ -697,12 +716,14 @@ public sealed class AppSettingsServiceTests
     public void GetEnabledContextsSnapshot_ReturnsClonedEnabledContexts()
     {
         var service = new AppSettingsService();
-        service.Settings.Contexts =
+        var settings = service.Settings;
+        settings.Contexts =
         [
             new() { Id = "context-1", Name = "Main", IsEnabled = true },
             new() { Id = "context-2", Name = "Disabled", IsEnabled = false },
             new() { Id = "context-3", Name = "Work", IsEnabled = true }
         ];
+        service.Settings = settings;
 
         IReadOnlyList<PanelContext> snapshot = service.GetEnabledContextsSnapshot();
 
@@ -722,11 +743,13 @@ public sealed class AppSettingsServiceTests
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("uk");
 
             var service = new AppSettingsService();
-            service.Settings.Contexts =
+            var settings = service.Settings;
+            settings.Contexts =
             [
                 new() { Id = "context-1", Name = "Panel 1", IsNameCustomized = false, IsEnabled = true },
                 new() { Id = "context-2", Name = "Work", IsNameCustomized = true, IsEnabled = true }
             ];
+            service.Settings = settings;
 
             IReadOnlyList<PanelContext> snapshot = service.GetEnabledContextsSnapshot();
 
@@ -751,11 +774,13 @@ public sealed class AppSettingsServiceTests
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de");
 
             var service = new AppSettingsService();
-            service.Settings.Contexts =
+            var settings = service.Settings;
+            settings.Contexts =
             [
                 new() { Id = "context-1", Name = "Panel 1", IsNameCustomized = false, IsEnabled = true },
                 new() { Id = "context-2", Name = "Work", IsNameCustomized = true, IsEnabled = false }
             ];
+            service.Settings = settings;
 
             IReadOnlyList<PanelContext> snapshot = service.GetAllContextsSnapshot();
 
@@ -780,11 +805,13 @@ public sealed class AppSettingsServiceTests
             CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("ru");
 
             var service = new AppSettingsService();
-            service.Settings.Contexts =
+            var settings = service.Settings;
+            settings.Contexts =
             [
                 new() { Id = "context-1", Name = "Panel 1", IsEnabled = true },
                 new() { Id = "context-2", Name = "Work", IsNameCustomized = true, IsEnabled = true }
             ];
+            service.Settings = settings;
 
             bool changed = service.NormalizeAppState();
 

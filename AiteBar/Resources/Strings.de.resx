@@ -88,6 +88,8 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="QuickNote_SavedInitial" xml:space="preserve"><value>Gespeichert</value></data>
   <data name="QuickNote_Saving" xml:space="preserve"><value>Speichern...</value></data>
   <data name="QuickNote_SaveFailed" xml:space="preserve"><value>Speichern fehlgeschlagen</value></data>
+  <data name="Settings_SaveFailed" xml:space="preserve"><value>Konnte Einstellungen nicht speichern:
+{0}</value></data>
   <data name="QuickNote_LoadFailed" xml:space="preserve"><value>Notiz konnte nicht geladen werden</value></data>
   <data name="QuickNote_OpenFailed" xml:space="preserve"><value>Öffnen fehlgeschlagen</value></data>
   <data name="QuickNote_ConflictCopySaved" xml:space="preserve"><value>Externe Änderungen erkannt. Konfliktkopie gespeichert.</value></data>

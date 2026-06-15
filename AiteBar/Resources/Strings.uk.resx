@@ -25,6 +25,8 @@
   <data name="QuickNote_SavedInitial" xml:space="preserve"><value>Збережено</value></data>
   <data name="QuickNote_Saving" xml:space="preserve"><value>Збереження...</value></data>
   <data name="QuickNote_SaveFailed" xml:space="preserve"><value>Помилка збереження</value></data>
+  <data name="Settings_SaveFailed" xml:space="preserve"><value>Не вдалося зберегти налаштування:
+{0}</value></data>
   <data name="QuickNote_LoadFailed" xml:space="preserve"><value>Не вдалося завантажити нотатку</value></data>
   <data name="QuickNote_OpenFailed" xml:space="preserve"><value>Не вдалося відкрити</value></data>
   <data name="QuickNote_ConflictCopySaved" xml:space="preserve"><value>Виявлено зовнішні зміни. Збережено конфліктну копію.</value></data>

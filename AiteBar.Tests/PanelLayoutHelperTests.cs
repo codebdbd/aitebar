@@ -198,7 +198,7 @@ public sealed class PanelLayoutHelperTests
 
         Assert.Equal(53, metrics.FixedHeight);
         Assert.Equal(53, metrics.TrailingHeight);
-        Assert.Equal(53 + 20*44, metrics.UserHeight);
+        Assert.Equal(53 + 20 * 44, metrics.UserHeight);
         Assert.Equal(994, metrics.PanelHeight);
         Assert.Equal(53, metrics.UserLeadingReserve);
     }

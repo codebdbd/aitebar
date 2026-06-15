@@ -402,10 +402,10 @@ public class ActionService
         {
             case ".bat":
             case ".cmd":
-                var psi = new ProcessStartInfo("cmd.exe") 
-                { 
-                    UseShellExecute = false, 
-                    WorkingDirectory = workingDirectory 
+                var psi = new ProcessStartInfo("cmd.exe")
+                {
+                    UseShellExecute = false,
+                    WorkingDirectory = workingDirectory
                 };
                 psi.ArgumentList.Add("/c");
                 psi.ArgumentList.Add(scriptPath);
@@ -420,10 +420,10 @@ public class ActionService
                 {
                     throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
                 }
-                var psiPs = new ProcessStartInfo(shell) 
-                { 
-                    UseShellExecute = false, 
-                    WorkingDirectory = workingDirectory 
+                var psiPs = new ProcessStartInfo(shell)
+                {
+                    UseShellExecute = false,
+                    WorkingDirectory = workingDirectory
                 };
                 psiPs.ArgumentList.Add("-NoProfile");
                 if (Path.GetFileName(shell).Equals("powershell.exe", StringComparison.OrdinalIgnoreCase))
@@ -440,10 +440,10 @@ public class ActionService
                 {
                     throw new InvalidOperationException(LocalizationService.Get("Action_PythonNotFound"));
                 }
-                var psiPy = new ProcessStartInfo(pythonExe) 
-                { 
-                    UseShellExecute = false, 
-                    WorkingDirectory = workingDirectory 
+                var psiPy = new ProcessStartInfo(pythonExe)
+                {
+                    UseShellExecute = false,
+                    WorkingDirectory = workingDirectory
                 };
                 psiPy.ArgumentList.Add(scriptPath);
                 return psiPy;
@@ -472,7 +472,7 @@ public class ActionService
                 }
             }
         }
-        
+
         return null;
     }
 

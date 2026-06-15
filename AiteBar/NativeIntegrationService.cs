@@ -59,9 +59,15 @@ namespace AiteBar
             return NativeMethods.CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }
 
+        ~NativeIntegrationService()
+        {
+            UninstallMouseHook();
+        }
+
         public void Dispose()
         {
             UninstallMouseHook();
+            GC.SuppressFinalize(this);
         }
     }
 }

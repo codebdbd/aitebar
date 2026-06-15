@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Threading.Tasks;
 using AiteBar;
 using Xunit;
 
@@ -30,9 +31,9 @@ public sealed class TelemetryServiceTests : IDisposable
     }
 
     [Fact]
-    public void Initialize_WithoutDsn_DoesNotEnable()
+    public async Task Initialize_WithoutDsn_DoesNotEnable()
     {
-        TelemetryService.Initialize();
+        await TelemetryService.InitializeAsync();
         Assert.False(TelemetryService.IsEnabled);
     }
 
@@ -96,55 +97,55 @@ public sealed class TelemetryServiceTests : IDisposable
     }
 
     [Fact]
-    public void Initialize_CanBeCalledMultipleTimes()
+    public async Task Initialize_CanBeCalledMultipleTimes()
     {
-        TelemetryService.Initialize();
-        TelemetryService.Initialize();
-        TelemetryService.Initialize();
+        await TelemetryService.InitializeAsync();
+        await TelemetryService.InitializeAsync();
+        await TelemetryService.InitializeAsync();
         Assert.False(TelemetryService.IsEnabled);
     }
 
     [Fact]
-    public void Initialize_WithEnvironmentDsn_EnablesTelemetry()
+    public async Task Initialize_WithEnvironmentDsn_EnablesTelemetry()
     {
         Environment.SetEnvironmentVariable("AITEBAR_SENTRY_DSN", "https://public@example.com/1");
         Environment.SetEnvironmentVariable("AITEBAR_ENVIRONMENT", "qa");
         Environment.SetEnvironmentVariable("AITEBAR_TRACES_SAMPLE_RATE", "0.5");
         Environment.SetEnvironmentVariable("AITEBAR_SEND_PII", "true");
 
-        TelemetryService.Initialize();
+        await TelemetryService.InitializeAsync();
 
         Assert.True(TelemetryService.IsEnabled);
     }
 
     [Fact]
-    public void Shutdown_AllowsTelemetryToBeInitializedAgain()
+    public async Task Shutdown_AllowsTelemetryToBeInitializedAgain()
     {
-        TelemetryService.Initialize();
+        await TelemetryService.InitializeAsync();
         Assert.False(TelemetryService.IsEnabled);
 
         TelemetryService.Shutdown();
         Environment.SetEnvironmentVariable("AITEBAR_SENTRY_DSN", "https://public@example.com/1");
 
-        TelemetryService.Initialize();
+        await TelemetryService.InitializeAsync();
 
         Assert.True(TelemetryService.IsEnabled);
     }
 
     [Fact]
-    public void Initialize_UsesLegacySentryDsnEnvironmentVariable()
+    public async Task Initialize_UsesLegacySentryDsnEnvironmentVariable()
     {
         Environment.SetEnvironmentVariable("SENTRY_DSN", "https://public@example.com/1");
 
-        TelemetryService.Initialize();
+        await TelemetryService.InitializeAsync();
 
         Assert.True(TelemetryService.IsEnabled);
     }
 
     [Fact]
-    public void Initialize_UsesSettingsFileWhenEnabled()
+    public async Task Initialize_UsesSettingsFileWhenEnabled()
     {
-        WithSettingsFile(
+        await WithSettingsFile(
             new AppSettings
             {
                 Sentry = new SentrySettings
@@ -156,30 +157,30 @@ public sealed class TelemetryServiceTests : IDisposable
                     SendDefaultPii = true
                 }
             },
-            () =>
+            async () =>
             {
-                TelemetryService.Initialize();
+                await TelemetryService.InitializeAsync();
 
                 Assert.True(TelemetryService.IsEnabled);
             });
     }
 
     [Fact]
-    public void Initialize_WithInvalidSettingsFile_DoesNotEnable()
+    public async Task Initialize_WithInvalidSettingsFile_DoesNotEnable()
     {
-        WithRawSettingsFile("{ not valid json", () =>
+        await WithRawSettingsFile("{ not valid json", async () =>
         {
-            TelemetryService.Initialize();
+            await TelemetryService.InitializeAsync();
 
             Assert.False(TelemetryService.IsEnabled);
         });
     }
 
     [Fact]
-    public void CaptureMessage_WhenEnabled_DoesNotThrow()
+    public async Task CaptureMessage_WhenEnabled_DoesNotThrow()
     {
         Environment.SetEnvironmentVariable("AITEBAR_SENTRY_DSN", "https://public@example.com/1");
-        TelemetryService.Initialize();
+        await TelemetryService.InitializeAsync();
 
         Exception? ex = Record.Exception(() => TelemetryService.CaptureMessage("enabled message"));
 
@@ -187,10 +188,10 @@ public sealed class TelemetryServiceTests : IDisposable
     }
 
     [Fact]
-    public void CaptureException_WhenEnabled_WithSparseContext_DoesNotThrow()
+    public async Task CaptureException_WhenEnabled_WithSparseContext_DoesNotThrow()
     {
         Environment.SetEnvironmentVariable("AITEBAR_SENTRY_DSN", "https://public@example.com/1");
-        TelemetryService.Initialize();
+        await TelemetryService.InitializeAsync();
 
         var context = new Dictionary<string, string?>
         {
@@ -208,20 +209,20 @@ public sealed class TelemetryServiceTests : IDisposable
     }
 
     [Fact]
-    public void Flush_WhenEnabled_DoesNotThrow()
+    public async Task Flush_WhenEnabled_DoesNotThrow()
     {
         Environment.SetEnvironmentVariable("AITEBAR_SENTRY_DSN", "https://public@example.com/1");
-        TelemetryService.Initialize();
+        await TelemetryService.InitializeAsync();
 
         Exception? ex = Record.Exception(() => TelemetryService.Flush(TimeSpan.Zero));
 
         Assert.Null(ex);
     }
 
-    private static void WithSettingsFile(AppSettings settings, Action assertion) =>
-        WithRawSettingsFile(JsonSerializer.Serialize(settings), assertion);
+    private static async Task WithSettingsFile(AppSettings settings, Func<Task> assertion) =>
+        await WithRawSettingsFile(JsonSerializer.Serialize(settings), assertion);
 
-    private static void WithRawSettingsFile(string content, Action assertion)
+    private static async Task WithRawSettingsFile(string content, Func<Task> assertion)
     {
         string settingsPath = PathHelper.SettingsFile;
         string directory = Path.GetDirectoryName(settingsPath)!;
@@ -239,7 +240,7 @@ public sealed class TelemetryServiceTests : IDisposable
             }
 
             File.WriteAllText(settingsPath, content);
-            assertion();
+            await assertion();
         }
         finally
         {

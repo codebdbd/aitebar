@@ -35,7 +35,9 @@ public sealed class MainWindowIconConverterOrientationTests
 
                 foreach ((DockEdge edge, var expected) in expectations)
                 {
-                    window.GetAppSettings().Edge = edge;
+                    var settings = window.GetAppSettings();
+                    settings.Edge = edge;
+                    window.GetSettingsService().Settings = settings;
                     window.RefreshPanel();
                     LayoutWindow(window);
 
@@ -75,6 +77,7 @@ public sealed class MainWindowIconConverterOrientationTests
                 AppSettings settings = window.GetAppSettings();
                 settings.Contexts[1].IsEnabled = true;
                 settings.ActiveContextId = settings.Contexts[1].Id;
+                window.GetSettingsService().Settings = settings;
 
                 window.RefreshPanel();
                 LayoutWindow(window);
@@ -105,6 +108,7 @@ public sealed class MainWindowIconConverterOrientationTests
         settings.ShowPresetColorPicker = false;
         settings.ShowPresetQuickNote = false;
         settings.ShowPresetIconConverter = true;
+        window.GetSettingsService().Settings = settings;
     }
 
     private static void LayoutWindow(Window window)

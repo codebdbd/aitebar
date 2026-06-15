@@ -16,7 +16,7 @@ public partial class App : System.Windows.Application
         base.OnStartup(e);
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
-        TelemetryService.Initialize();
+        await TelemetryService.InitializeAsync();
         RegisterExceptionHandlers();
         RegisterUtilities();
 
@@ -67,7 +67,7 @@ public partial class App : System.Windows.Application
         UtilityRegistry.Register(new ColorPickerUtility());
         UtilityRegistry.Register(new FileSorterUtility());
         UtilityRegistry.Register(new IconConverterUtility());
-        
+
         // Чтобы добавить новую утилиту, просто создайте класс, реализующий IUtility,
         // и добавьте его сюда: UtilityRegistry.Register(new YourNewUtility());
     }
@@ -100,7 +100,7 @@ public partial class App : System.Windows.Application
         {
             TelemetryService.CaptureException(args.Exception, "dispatcher_unhandled");
             TelemetryService.Flush(TimeSpan.FromSeconds(2));
-            args.Handled = false;
+            args.Handled = true;
         };
     }
 }

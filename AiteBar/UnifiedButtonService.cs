@@ -38,11 +38,11 @@ internal sealed class UnifiedButtonService
         {
             // Get visible utility definitions, ordered by UtilityButtonOrder, then the rest
             var visibleUtilityDefs = UtilityButtons.Where(def => GetUtilityVisibility(def.SettingsKey)).ToList();
-            
+
             // Order by UtilityButtonOrder if exists
             var orderedUtilityDefs = new List<UtilityButtonDef>();
             var remainingUtilityDefs = new List<UtilityButtonDef>(visibleUtilityDefs);
-            
+
             foreach (var id in _settingsService.Settings.UtilityButtonOrder)
             {
                 var def = remainingUtilityDefs.FirstOrDefault(d => d.Id == id);
@@ -52,7 +52,7 @@ internal sealed class UnifiedButtonService
                     remainingUtilityDefs.Remove(def);
                 }
             }
-            
+
             orderedUtilityDefs.AddRange(remainingUtilityDefs);
 
             foreach (var def in orderedUtilityDefs)
