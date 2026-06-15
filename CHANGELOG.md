@@ -7,6 +7,12 @@
 Формат основан на [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/),
 проект придерживается [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Миграция на .NET 10**: Переведен проект с .NET 8 на .NET 10 LTS для продолжения получения обновлений безопасности и исправлений.
+- **Migrated to .NET 10**: Project migrated from .NET 8 to .NET 10 LTS for continued security updates and bug fixes.
+
 ## [1.8.0] - 2026-06-14
 
 ### 🇷🇺 Изменено | 🇬🇧 Changed
