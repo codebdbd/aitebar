@@ -4,6 +4,7 @@ using System.Windows;
 namespace AiteBar;
 
 [SupportedOSPlatform("windows6.1")]
+[Utility]
 public sealed class IconConverterUtility : UtilityBase<IconConverterWindow>
 {
     public override string Id => "IconConverter";

@@ -1,10 +1,12 @@
 using System.Windows;
 using System.Threading.Tasks;
 using System.Runtime.Versioning;
+using System.Collections.Generic;
 
 namespace AiteBar;
 
 [SupportedOSPlatform("windows6.1")]
+[Utility]
 public class ColorPickerUtility : IUtility
 {
     public string Id => "ColorPicker";
@@ -14,12 +16,29 @@ public class ColorPickerUtility : IUtility
 
     public async Task LaunchAsync(AppSettingsService settingsService, Window? owner, Func<Task>? onBeforeExecute = null)
     {
-        if (onBeforeExecute != null)
+        try
         {
-            await onBeforeExecute();
-        }
+            if (onBeforeExecute != null)
+            {
+                await onBeforeExecute();
+            }
 
-        await Task.Delay(120);
-        new ScreenColorPickerWindow() { Owner = owner }.ShowDialog();
+            await Task.Delay(120);
+            new ScreenColorPickerWindow() { Owner = owner }.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            TelemetryService.CaptureException(ex, "utility_crash", 
+                new Dictionary<string, string?> { ["utility_id"] = Id });
+            
+            if (System.Windows.Application.Current != null)
+            {
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    new DarkDialog($"Утилита {Id} временно недоступна").ShowDialog();
+                });
+            }
+        }
     }
 }

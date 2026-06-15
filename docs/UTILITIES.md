@@ -4,7 +4,18 @@
 
 ## Архитектура
 
-Утилиты регистрируются через `UtilityRegistry` и реализуют `IUtility` из `AiteBar/UtilityRegistry.cs`. Для обычной утилиты с отдельным WPF-окном предпочтительно наследоваться от `UtilityBase<TWindow>`: базовый класс уже умеет активировать открытое окно, вызывать `onBeforeExecute`, создавать окно и очищать ссылку после закрытия.
+Утилиты автоматически регистрируются через `UtilityRegistry` и реализуют `IUtility` из `AiteBar/UtilityRegistry.cs`. Для обычной утилиты с отдельным WPF-окном предпочтительно наследоваться от `UtilityBase<TWindow>`: базовый класс уже умеет активировать открытое окно, вызывать `onBeforeExecute`, создавать окно и очищать ссылку после закрытия.
+
+Каждая утилита должна быть помечена атрибутом `[Utility]` для автоматической регистрации.
+
+### Версионирование контрактов:
+- `ContractVersion`: версия контракта утилиты (по умолчанию 1.0)
+- `IsCompatibleWith(Version coreVersion)`: проверка совместимости с ядром (по умолчанию true)
+
+### Изоляция ошибок:
+- Крах утилиты не крашит всё приложение
+- Логирование и телеметрия отправляется
+- Пользователь видит понятное сообщение вместо краш
 
 Минимальный класс утилиты:
 
@@ -15,12 +26,17 @@ using System.Windows;
 namespace AiteBar;
 
 [SupportedOSPlatform("windows6.1")]
+[Utility]
 public sealed class MyNewUtility : UtilityBase<MyNewUtilityWindow>
 {
     public override string Id => "MyNewUtility";
     public override string DisplayNameKey => "Tool_MyNewUtility";
     public override string IconGlyph => "\uE946";
     public override string IconColor => "#007ACC";
+
+    // Опционально: можно переопределить версию контракта и проверку совместимости
+    public override Version ContractVersion => new(1, 0);
+    public override bool IsCompatibleWith(Version coreVersion) => true;
 
     protected override MyNewUtilityWindow CreateWindow(AppSettingsService settingsService, Window? owner)
     {
@@ -39,13 +55,8 @@ public sealed class MyNewUtility : UtilityBase<MyNewUtilityWindow>
 ## Подключение
 
 1. Создайте WPF-окно утилиты: `MyNewUtilityWindow.xaml` и `MyNewUtilityWindow.xaml.cs`.
-2. Создайте класс `MyNewUtility`.
-3. Зарегистрируйте класс в `App.xaml.cs` внутри `RegisterUtilities()`:
-
-```csharp
-UtilityRegistry.Register(new MyNewUtility());
-```
-
+2. Создайте класс `MyNewUtility` с атрибутом `[Utility]`.
+3. Утилита будет автоматически зарегистрирована из текущей сборки через `UtilityRegistry.RegisterAllFromAssembly()`.
 4. Добавьте локализацию во все ресурсы:
    - `AiteBar/Resources/Strings.resx`
    - `AiteBar/Resources/Strings.ru.resx`

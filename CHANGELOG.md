@@ -9,6 +9,28 @@
 
 ## [Unreleased]
 
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Атрибут [Utility]**: Добавлен атрибут для маркировки утилит для автоматической регистрации.
+- **Utility attribute**: Added attribute to mark utilities for automatic registration.
+- **Метод RegisterAllFromAssembly()**: Автоматическая регистрация всех утилит с атрибутом [Utility] из указанной сборки.
+- **RegisterAllFromAssembly() method**: Automatic registration of all [Utility]-marked utilities from an assembly.
+- **Версионирование контрактов**: Добавлены `ContractVersion` и `IsCompatibleWith()` в `IUtility` для проверки совместимости.
+- **Contract versioning**: Added `ContractVersion` and `IsCompatibleWith()` in `IUtility` for compatibility checks.
+- **Изоляция ошибок утилит**: Обернуты `LaunchAsync()` в `UtilityBase` и `ColorPickerUtility` в try/catch с логированием, телеметрией и показом пользователю сообщения вместо падения приложения.
+- **Utility error isolation**: Wrapped `LaunchAsync()` in `UtilityBase` and `ColorPickerUtility` with try/catch, logging, telemetry, and user message instead of crashing the app.
+- **Тесты UtilityRegistry**: Добавлены 4 теста для проверки регистрации, совместимости, автоматической регистрации и обработки ошибок.
+- **UtilityRegistry tests**: Added 4 tests to check registration, compatibility, auto-registration, and error handling.
+- **Метод Clear() для тестов**: Добавлен в `UtilityRegistry` для сброса состояния между тестами.
+- **Clear() method for testing**: Added to `UtilityRegistry` to reset state between tests.
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Регистрация утилит**: Заменена ручная регистрация в `App.xaml.cs` на автоматическую через `RegisterAllFromAssembly()`.
+- **Utility registration**: Replaced manual registration in `App.xaml.cs` with automatic via `RegisterAllFromAssembly()`.
+- **Все утилиты**: Добавлены атрибуты [Utility] к `QuickNoteUtility`, `TimerStopwatchUtility`, `ColorPickerUtility`, `FileSorterUtility`, `IconConverterUtility`.
+- **All utilities**: Added [Utility] attributes to `QuickNoteUtility`, `TimerStopwatchUtility`, `ColorPickerUtility`, `FileSorterUtility`, `IconConverterUtility`.
+- **Документация**: Обновлена `docs/UTILITIES.md` с описанием новых механизмов.
+- **Documentation**: Updated `docs/UTILITIES.md` with new mechanisms.
+
 ## [1.9.1] - 2026-06-15
 
 ### 🇷🇺 Изменено | 🇬🇧 Changed

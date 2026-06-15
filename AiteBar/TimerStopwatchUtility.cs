@@ -4,6 +4,7 @@ using System.Runtime.Versioning;
 namespace AiteBar;
 
 [SupportedOSPlatform("windows6.1")]
+[Utility]
 public class TimerStopwatchUtility : UtilityBase<TimerStopwatchWindow>
 {
     public override string Id => "TimerStopwatch";

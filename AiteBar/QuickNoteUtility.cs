@@ -4,6 +4,7 @@ using System.Runtime.Versioning;
 namespace AiteBar;
 
 [SupportedOSPlatform("windows6.1")]
+[Utility]
 public class QuickNoteUtility : UtilityBase<QuickNoteWindow>
 {
     public override string Id => "QuickNote";

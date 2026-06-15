@@ -14,8 +14,10 @@ public sealed class IconConverterIntegrationTests
         string unifiedButtonServiceCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "UnifiedButtonService.cs"));
         string settingsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "AppSettingsWindow.xaml.cs"));
         string modelsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "Models.cs"));
+        string iconConverterUtilityCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "IconConverterUtility.cs"));
 
-        Assert.Contains("UtilityRegistry.Register(new IconConverterUtility())", appXaml);
+        Assert.Contains("RegisterAllFromAssembly", appXaml);
+        Assert.Contains("[Utility]", iconConverterUtilityCode);
         Assert.Contains("public bool ShowPresetIconConverter { get; set; } = true;", modelsCode);
         Assert.Contains("ShowPresetIconConverter", unifiedButtonServiceCode);
         Assert.Contains("ChkShowPresetIconConverter.IsChecked = _settings.ShowPresetIconConverter", settingsCode);

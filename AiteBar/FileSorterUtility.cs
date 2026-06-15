@@ -4,6 +4,7 @@ using System.Runtime.Versioning;
 namespace AiteBar;
 
 [SupportedOSPlatform("windows6.1")]
+[Utility]
 public class FileSorterUtility : UtilityBase<FileSorterWindow>
 {
     public override string Id => "FileSorter";
