@@ -200,7 +200,7 @@ public sealed class LocalizationServiceTests
         string appDirectory = Path.Combine(FindRepoRoot(), "AiteBar");
         HashSet<string> allowedTechnicalText =
         [
-            "AiteBar", "© 2026 Codebdbd", " .NET 10", "WPF",
+            "AiteBar", "© 2026 Codebdbd", ".NET 10", "WPF",
             "Ctrl", "Shift", "Alt", "Win",
             "Chrome", "Edge", "Brave", "Yandex", "Firefox",
             "B", "I", "U", "Tx"
@@ -215,8 +215,8 @@ public sealed class LocalizationServiceTests
             .Where(candidate =>
                 !candidate.Value.StartsWith('{') &&
                 Regex.IsMatch(candidate.Value, @"[\p{L}]") &&
-                !allowedTechnicalText.Contains(candidate.Value))
-            .Select(candidate => $"{Path.GetFileName(candidate.Path)}: {candidate.Value}")
+                !allowedTechnicalText.Contains(candidate.Value.Trim()))
+            .Select(candidate => $"{Path.GetFileName(candidate.Path)}: {candidate.Value.Trim()}")
             .ToArray();
 
         Assert.Empty(violations);
