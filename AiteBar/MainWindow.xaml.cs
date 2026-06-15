@@ -1539,7 +1539,6 @@ public partial class MainWindow : Window
                     else if (draggedItem.Type == UnifiedButtonType.Utility)
                     {
                         // Reorder utility buttons
-                        var newOrder = new List<string>();
                         var visibleUtilityIds = _currentUnifiedButtons
                             .Where(b => b.Type == UnifiedButtonType.Utility)
                             .Select(b => b.Id)
