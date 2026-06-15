@@ -101,7 +101,7 @@
             <TextBlock Style="{StaticResource MutedTextStyle}" Text="{local:Loc ResourceKey=About_License}"/>
 
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{local:Loc ResourceKey=About_Technologies}"/>
-            <TextBlock Style="{StaticResource MutedTextStyle}" Text=".NET 8"/>
+            <TextBlock Style="{StaticResource MutedTextStyle}" Text=".NET 10"/>
             <TextBlock Style="{StaticResource MutedTextStyle}" Text="WPF"/>
 
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{local:Loc ResourceKey=About_AppData}"/>

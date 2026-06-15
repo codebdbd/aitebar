@@ -22,11 +22,11 @@ Application license: Proprietary (All rights reserved)
    License for font files: SIL Open Font License 1.1
    Notes: The application uses the bundled Font Awesome Brands OTF font.
 
-4. .NET 8 / WPF
+4. .NET 10 / WPF
    Copyright (c) Microsoft and contributors
    Project: https://dotnet.microsoft.com/
    Open-source information: https://dotnet.microsoft.com/en-us/platform/open-source
-   Notes: This application is built with .NET 8 and WPF.
+   Notes: This application is built with .NET 10 and WPF.
 
 5. Sentry .NET SDK
    Copyright (c) Functional Software, Inc. dba Sentry

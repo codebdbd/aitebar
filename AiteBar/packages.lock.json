@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dependencies": {
-    "net8.0-windows7.0": {
+    "net10.0-windows7.0": {
       "Sentry": {
         "type": "Direct",
         "requested": "[6.6.0, )",
@@ -119,7 +119,7 @@
         }
       }
     },
-    "net8.0-windows7.0/win-x64": {
+    "net10.0-windows7.0/win-x64": {
       "SkiaSharp.NativeAssets.Win32": {
         "type": "Direct",
         "requested": "[3.119.2, )",

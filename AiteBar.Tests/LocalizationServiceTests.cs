@@ -200,7 +200,7 @@ public sealed class LocalizationServiceTests
         string appDirectory = Path.Combine(FindRepoRoot(), "AiteBar");
         HashSet<string> allowedTechnicalText =
         [
-            "AiteBar", "© 2026 Codebdbd", ".NET 8", "WPF",
+            "AiteBar", "© 2026 Codebdbd", " .NET 10", "WPF",
             "Ctrl", "Shift", "Alt", "Win",
             "Chrome", "Edge", "Brave", "Yandex", "Firefox",
             "B", "I", "U", "Tx"

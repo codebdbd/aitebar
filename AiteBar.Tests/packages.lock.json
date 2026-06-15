@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dependencies": {
-    "net8.0-windows7.0": {
+    "net10.0-windows7.0": {
       "coverlet.collector": {
         "type": "Direct",
         "requested": "[10.0.1, )",
@@ -72,10 +72,7 @@
       "Microsoft.TestPlatform.ObjectModel": {
         "type": "Transitive",
         "resolved": "18.6.0",
-        "contentHash": "gQTW4BIfM2ZLxixo9ITXoulLKjn20FiiHtqTsx9PENqTrX7368ZeJ5L0QZJyReXDWORPRV8jXwZR6Aar8JOyaA==",
-        "dependencies": {
-          "System.Reflection.Metadata": "8.0.0"
-        }
+        "contentHash": "gQTW4BIfM2ZLxixo9ITXoulLKjn20FiiHtqTsx9PENqTrX7368ZeJ5L0QZJyReXDWORPRV8jXwZR6Aar8JOyaA=="
       },
       "Microsoft.TestPlatform.TestHost": {
         "type": "Transitive",
@@ -98,8 +95,8 @@
       },
       "ShimSkiaSharp": {
         "type": "Transitive",
-        "resolved": "5.0.0",
-        "contentHash": "JLNnt0QME9zcqJMdxdNRLkXVwUSgJdzVykHO+GsXc8OQj8dBpziLp+Pwezye0z4MiduXgsJHlMWl1ci6+79JDA=="
+        "resolved": "5.1.0",
+        "contentHash": "b0/c/CZsBCo0mAbxuSy+yZlyTxCScNHSnG37UU3pgzHXlcDpnUrGeHqjAoovPpqorH7WnPDoLmkof44RM+ftdA=="
       },
       "SkiaSharp": {
         "type": "Transitive",
@@ -122,69 +119,56 @@
       },
       "Svg.Animation": {
         "type": "Transitive",
-        "resolved": "5.0.0",
-        "contentHash": "17UFfTLEoLDuam4lyyCAz9ta6BFBoJzFoBkv1sWVtFO8MTNom3qleyMGDDhGJ8nTNoQDj9hElUpQUJXHNsDAfw==",
+        "resolved": "5.1.0",
+        "contentHash": "InD+cLJaUIaGt3ENJbXLI9uT8t5p7bE0NuKpg8rRqqRGfjLCgiVIyk6vZfCAeew1U2FR93tm4n2hoib4UO10qg==",
         "dependencies": {
-          "ShimSkiaSharp": "5.0.0",
+          "ShimSkiaSharp": "5.1.0",
           "SkiaSharp": "3.119.2",
-          "Svg.Custom": "5.0.0",
-          "Svg.Model": "5.0.0"
+          "Svg.Custom": "5.1.0",
+          "Svg.Model": "5.1.0"
         }
       },
       "Svg.Custom": {
         "type": "Transitive",
-        "resolved": "5.0.0",
-        "contentHash": "LQ79IO0dEp1e5KIkcKi87DDB2lm9g+wzHIYI0ARM+yXOpW7/9bnEXBUNAGNSnxhUpUIAxxUe5K+XU/sb9Nes/A==",
+        "resolved": "5.1.0",
+        "contentHash": "zA5HDNuax9ilv0pstGJyRL00dPAjLhl5qHcP0kbbYxi8fHwoGHnhIh2Wjjc0nz6hXCNdyYAlGyX8yBHxbIn4yg==",
         "dependencies": {
           "ExCSS": "4.3.1"
         }
       },
       "Svg.Model": {
         "type": "Transitive",
-        "resolved": "5.0.0",
-        "contentHash": "uNih9t+4XOw0ssLm7S8rSuSXFzhhOgYimRXD9bYG50+s1rnrRwHU0IybKbA/xO2pl+/Z/NddJHIdYpZfd23kWw==",
+        "resolved": "5.1.0",
+        "contentHash": "Ln90RMb/nZhVoGdHhhMqBAkz0gniL9GM2163B1+TEDOIxcEu7c8g+7nmPvoxtHZv3J6Pa6A0flp4OCrIRn1sCQ==",
         "dependencies": {
-          "ShimSkiaSharp": "5.0.0",
-          "Svg.Custom": "5.0.0"
+          "ShimSkiaSharp": "5.1.0",
+          "Svg.Custom": "5.1.0"
         }
       },
       "Svg.SceneGraph": {
         "type": "Transitive",
-        "resolved": "5.0.0",
-        "contentHash": "/erVvnLb27MRunTzm7trAbMj5Z8InhbHM5k5K+sraFMVeMq9e0pNOomKhzoCgsjnAzVBYq6G8v3AkcL7eM5Gpg==",
+        "resolved": "5.1.0",
+        "contentHash": "TAy+TzuVXeBeeeEb5MjMwRIxl1OhoR2ozQqsh4Q60wBrr5+LoE0Rzfsn3clWSxb6VYTOJ3ozsEtsNjlYkDNG9w==",
         "dependencies": {
-          "ShimSkiaSharp": "5.0.0",
-          "Svg.Custom": "5.0.0",
-          "Svg.Model": "5.0.0"
+          "ShimSkiaSharp": "5.1.0",
+          "Svg.Custom": "5.1.0",
+          "Svg.Model": "5.1.0"
         }
       },
       "Svg.Skia": {
         "type": "Transitive",
-        "resolved": "5.0.0",
-        "contentHash": "O5UGxW7Ci5a0GhJ2rDo8RF4BY/pMG5k3/cSimJmZFcAAgRf7xhTnGSuDyA9EqfFEwIaVHJTJg6knIk0AaMJ1FQ==",
+        "resolved": "5.1.0",
+        "contentHash": "vxAkMhPbQJbENvtHxM/SqbhN1HcGB8sq/BM7QANKci3kfyMURSCvCkCI/DQzU0zPHiVxBcIZv/jSOSRrA6Ccfw==",
         "dependencies": {
           "HarfBuzzSharp": "8.3.1.3",
           "HarfBuzzSharp.NativeAssets.Linux": "8.3.1.3",
           "HarfBuzzSharp.NativeAssets.Win32": "8.3.1.3",
           "HarfBuzzSharp.NativeAssets.macOS": "8.3.1.3",
           "SkiaSharp": "3.119.2",
-          "Svg.Animation": "5.0.0",
-          "Svg.Custom": "5.0.0",
-          "Svg.Model": "5.0.0",
-          "Svg.SceneGraph": "5.0.0"
-        }
-      },
-      "System.Collections.Immutable": {
-        "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "AurL6Y5BA1WotzlEvVaIDpqzpIPvYnnldxru8oXJU2yFxFUy3+pNXjXd1ymO+RA0rq0+590Q8gaz2l3Sr7fmqg=="
-      },
-      "System.Reflection.Metadata": {
-        "type": "Transitive",
-        "resolved": "8.0.0",
-        "contentHash": "ptvgrFh7PvWI8bcVqG5rsA/weWM09EnthFHR5SCnS6IN+P4mj6rE1lBDC4U8HL9/57htKAqy4KQ3bBj84cfYyQ==",
-        "dependencies": {
-          "System.Collections.Immutable": "8.0.0"
+          "Svg.Animation": "5.1.0",
+          "Svg.Custom": "5.1.0",
+          "Svg.Model": "5.1.0",
+          "Svg.SceneGraph": "5.1.0"
         }
       },
       "xunit.abstractions": {
@@ -233,7 +217,7 @@
           "Sentry": "[6.6.0, )",
           "SkiaSharp": "[3.119.2, )",
           "SkiaSharp.NativeAssets.Win32": "[3.119.2, )",
-          "Svg.Skia": "[5.0.0, )"
+          "Svg.Skia": "[5.1.0, )"
         }
       }
     }

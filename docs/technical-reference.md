@@ -4,12 +4,12 @@
 
 ## Назначение
 
-AiteBar - Windows desktop-утилита на `.NET 8` и WPF. Приложение показывает скрываемую edge-панель, работает в фоне, использует tray-значок, глобальные hotkey, Win32 interop и локальное хранилище настроек в профиле пользователя.
+AiteBar - Windows desktop-утилита на `.NET 10` и WPF. Приложение показывает скрываемую edge-панель, работает в фоне, использует tray-значок, глобальные hotkey, Win32 interop и локальное хранилище настроек в профиле пользователя.
 
 ## Платформа
 
-- Runtime: `.NET 8`
-- Target: `net8.0-windows`
+- Runtime: `.NET 10`
+- Target: `net10.0-windows`
 - UI: WPF
 - Tray: Windows Forms `NotifyIcon`
 - Системная интеграция: Win32 API для hotkey, mouse hook, позиционирования окон и отправки клавиатурного ввода
@@ -277,7 +277,7 @@ dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release
 Fallback для WPF/MSBuild temp-проблем:
 
 ```powershell
-dotnet vstest .\AiteBar.Tests\bin\Release\net8.0-windows\AiteBar.Tests.dll
+dotnet vstest .\AiteBar.Tests\bin\Release\net10.0-windows\AiteBar.Tests.dll
 ```
 
 Сборка инсталлятора:
