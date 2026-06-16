@@ -1,17 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Text.Json;
-
-using Button = System.Windows.Controls.Button;
-using FontFamily = System.Windows.Media.FontFamily;
-using Brushes = System.Windows.Media.Brushes;
-using Cursors = System.Windows.Input.Cursors;
 
 namespace AiteBar
 {

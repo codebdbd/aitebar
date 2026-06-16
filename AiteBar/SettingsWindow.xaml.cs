@@ -1,23 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Runtime.Versioning;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-
-// Псевдонимы для устранения неоднозначности
-using ComboBox = System.Windows.Controls.ComboBox;
-using ComboBoxItem = System.Windows.Controls.ComboBoxItem;
-using Button = System.Windows.Controls.Button;
-using Brush = System.Windows.Media.Brush;
-using Brushes = System.Windows.Media.Brushes;
-using Image = System.Windows.Controls.Image;
-using Orientation = System.Windows.Controls.Orientation;
 
 namespace AiteBar
 {

@@ -1,19 +1,6 @@
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Runtime.Versioning;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Input;
-using System.Windows.Controls.Primitives;
-using Button = System.Windows.Controls.Button;
-using CheckBox = System.Windows.Controls.CheckBox;
-using ComboBox = System.Windows.Controls.ComboBox;
-using ListBox = System.Windows.Controls.ListBox;
-using TextBox = System.Windows.Controls.TextBox;
 
 namespace AiteBar;
 

@@ -1,0 +1,50 @@
+
+// Общие using для всего проекта AiteBar
+global using System;
+global using System.Collections.Generic;
+global using System.Diagnostics;
+global using System.IO;
+global using System.Linq;
+global using System.Runtime.InteropServices;
+global using System.Text.Json;
+global using System.Threading;
+global using System.Threading.Tasks;
+global using System.Windows;
+global using System.Windows.Controls;
+global using System.Windows.Controls.Primitives;
+global using System.Windows.Input;
+global using System.Windows.Media;
+global using System.Windows.Media.Animation;
+global using System.Windows.Threading;
+global using System.Drawing;
+global using System.Windows.Forms;
+
+// Псевдонимы для устранения неоднозначности (WPF vs WinForms)
+global using ContextMenu = System.Windows.Controls.ContextMenu;
+global using Application = System.Windows.Application;
+global using Button = System.Windows.Controls.Button;
+global using Panel = System.Windows.Controls.Panel;
+global using MenuItem = System.Windows.Controls.MenuItem;
+global using Separator = System.Windows.Controls.Separator;
+global using ToolTipService = System.Windows.Controls.ToolTipService;
+global using Clipboard = System.Windows.Clipboard;
+global using Brush = System.Windows.Media.Brush;
+global using Brushes = System.Windows.Media.Brushes;
+global using DragEventArgs = System.Windows.DragEventArgs;
+global using DataFormats = System.Windows.DataFormats;
+global using DragDropEffects = System.Windows.DragDropEffects;
+global using Point = System.Windows.Point;
+global using FontFamily = System.Windows.Media.FontFamily;
+global using MediaColor = System.Windows.Media.Color;
+global using MediaColorConverter = System.Windows.Media.ColorConverter;
+global using PlacementMode = System.Windows.Controls.Primitives.PlacementMode;
+global using KeyEventArgs = System.Windows.Input.KeyEventArgs;
+global using MouseEventArgs = System.Windows.Input.MouseEventArgs;
+global using MouseButtonEventArgs = System.Windows.Input.MouseButtonEventArgs;
+global using ComboBox = System.Windows.Controls.ComboBox;
+global using ComboBoxItem = System.Windows.Controls.ComboBoxItem;
+global using CheckBox = System.Windows.Controls.CheckBox;
+global using TextBox = System.Windows.Controls.TextBox;
+global using Image = System.Windows.Controls.Image;
+global using Orientation = System.Windows.Controls.Orientation;
+global using ListBox = System.Windows.Controls.ListBox;
