@@ -93,12 +93,15 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `SettingsWindow` — редактирование отдельной кнопки
 - `AppSettingsWindow` — общие настройки приложения
 - `QuickNoteWindow` — быстрые заметки с Markdown
+- `TimerStopwatchWindow` — таймер и секундомер
+- `ScreenColorPickerWindow` — цветовой пикер
+- `FileSorterWindow` — окно утилиты сортировки файлов
+- `IconConverterWindow` — окно утилиты конвертации иконок
 - `IconPickerWindow` — выбор иконки
 - `AboutWindow` — окно "О программе"
 - `DarkDialog` — диалоговое окно с подтверждением
 - `TextPromptDialog` — диалоговое окно для ввода текста
 - `RotationProfileSelectionWindow` — выбор профилей для ротации
-- `ScreenColorPickerWindow` — цветовой пикер
 - `OverflowWrapPanel` — кастомная WPF панель для многострочного (multi-band) расположения кнопок
 
 ### Services Layer
@@ -110,6 +113,12 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `UpdateCheckService` — проверка обновлений приложения
 - `NativeIntegrationService` — низкоуровневая интеграция с Windows (mouse hooks)
 - `LocalizationService` — локализация интерфейса (ru, en, de, uk)
+- `UnifiedButtonService` — построение списка унифицированных кнопок (пользовательские + системные)
+- `FileSorterService` — сервис для работы FileSorter утилиты
+- `IconConverterService` — сервис для работы IconConverter утилиты
+- `HotkeyService` — регистрация и управление глобальными горячими клавишами
+- `TelemetryService` — телеметрия (Sentry)
+- `Logger` — логирование ошибок и событий
 
 ### Helpers Layer
 Статические классы-помощники для различных задач:
@@ -123,6 +132,19 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `ActionTargetHelper` — валидация целей действий
 - `QuickNoteMarkdown` — парсинг и генерация Markdown для быстрых заметок
 - `PanelPackageMapper` — маппинг между CustomElement и PanelPackageElement
+- `ActivationZoneHelper` — проверка, находится ли курсор в зоне активации панели
+- `QuickNoteLayoutHelper` — расчет геометрии окна Quick Note
+- `QuickNoteDocumentHelper` — работа с документом Quick Note
+- `QuickNoteTheme` — темы для Quick Note
+- `TimerStopwatchLayoutHelper` — расчет геометрии окна таймера/секундомера
+- `TimerStopwatchFormatter` — форматирование времени для таймера/секундомера
+- `IcoEncoder` — кодирование изображений в ICO формат
+- `IconConverterModels` — модели данных для конвертации иконок
+- `EasingHelper` — вспомогательные функции для анимаций
+- `Constants` — константы приложения
+- `HotkeyValidationHelper` — валидация горячих клавиш
+- `HotkeyKeyCatalog` — каталог доступных клавиш для горячих клавиш
+- `PanelPackageManifest` — модель манифеста пакета панелей
 
 ### Native Integration Layer
 Низкоуровневая интеграция с Windows API через `NativeMethods.cs`, содержащий P/Invoke объявления для Win32 функций:
@@ -361,7 +383,7 @@ UI Layer использует Services Layer для выполнения биз�
 **Основные компоненты:**
 - IUtility — интерфейс для всех утилит
 - UtilityRegistry — статический класс для регистрации и получения утилит
-- Классы утилит: QuickNoteUtility, TimerStopwatchUtility, ColorPickerUtility, FileSorterUtility
+- Классы утилит: QuickNoteUtility, TimerStopwatchUtility, ColorPickerUtility, FileSorterUtility, IconConverterUtility
 
 **Основные функции:**
 - UtilityRegistry.Register() — регистрация утилиты
