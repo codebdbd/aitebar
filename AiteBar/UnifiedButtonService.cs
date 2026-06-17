@@ -96,24 +96,9 @@ internal sealed class UnifiedButtonService
     }
 
     private bool GetUtilityVisibility(string settingsKey)
-    {
-        var settings = _settingsService.Settings;
-        return settingsKey switch
         {
-            "ShowPresetSearch" => settings.ShowPresetSearch,
-            "ShowPresetScreenshot" => settings.ShowPresetScreenshot,
-            "ShowPresetVideo" => settings.ShowPresetVideo,
-            "ShowPresetCalc" => settings.ShowPresetCalc,
-            "ShowPresetExplorer" => settings.ShowPresetExplorer,
-            "ShowPresetDownloads" => settings.ShowPresetDownloads,
-            "ShowPresetFileSorter" => settings.ShowPresetFileSorter,
-            "ShowPresetIconConverter" => settings.ShowPresetIconConverter,
-            "ShowPresetTimerStopwatch" => settings.ShowPresetTimerStopwatch,
-            "ShowPresetColorPicker" => settings.ShowPresetColorPicker,
-            "ShowPresetQuickNote" => settings.ShowPresetQuickNote,
-            _ => false
-        };
-    }
+            return _settingsService.GetUtilityVisibility(settingsKey);
+        }
 }
 
 public record UtilityButtonDef(string Id, string Icon, string Color, string SettingsKey, string TooltipKey);

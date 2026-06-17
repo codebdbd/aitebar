@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -11,17 +12,16 @@ namespace AiteBar
         private static readonly string LogPath = PathHelper.LogFile;
         private const long MaxLogSizeBytes = 1 * 1024 * 1024;
         private const int MaxBackupLogFiles = 3;
-        private static readonly object _lockObj = new();
+        private static readonly ConcurrentQueue<string> _logQueue = new();
+        private static readonly object _flushLock = new();
+        private static bool _isFlushing = false;
 
         public static void Log(Exception ex)
         {
             try
             {
-                lock (_lockObj)
-                {
-                    EnsureLogFileReady();
-                    File.AppendAllText(LogPath, BuildLogEntry(ex));
-                }
+                _logQueue.Enqueue(BuildLogEntry(ex));
+                FlushQueue();
             }
             catch (Exception logEx)
             {
@@ -31,6 +31,46 @@ namespace AiteBar
 
         public static Task LogAsync(Exception ex) =>
             Task.Run(() => Log(ex));
+
+        private static void FlushQueue()
+        {
+            lock (_flushLock)
+            {
+                if (_isFlushing) return;
+                _isFlushing = true;
+            }
+
+            Task.Run(async () =>
+            {
+                try
+                {
+                    while (_logQueue.TryDequeue(out string? logEntry))
+                    {
+                        await WriteLogEntryAsync(logEntry);
+                    }
+                }
+                finally
+                {
+                    lock (_flushLock)
+                    {
+                        _isFlushing = false;
+                    }
+                }
+            });
+        }
+
+        private static async Task WriteLogEntryAsync(string logEntry)
+        {
+            try
+            {
+                EnsureLogFileReady();
+                await File.AppendAllTextAsync(LogPath, logEntry);
+            }
+            catch (Exception logEx)
+            {
+                Debug.WriteLine(logEx);
+            }
+        }
 
         private static void EnsureLogFileReady()
         {

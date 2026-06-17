@@ -264,12 +264,14 @@ public class ActionService
     {
         if (_runtime.Confirm(BuildCommandConfirmationMessage(command), _runtime.GetMainWindow()))
         {
-            _runtime.StartProcess(new ProcessStartInfo("cmd.exe")
+            var psi = new ProcessStartInfo("cmd.exe")
             {
                 CreateNoWindow = true,
-                UseShellExecute = false,
-                Arguments = $"/c {command}"
-            });
+                UseShellExecute = false
+            };
+            psi.ArgumentList.Add("/c");
+            psi.ArgumentList.Add(command);
+            _runtime.StartProcess(psi);
         }
     }
 

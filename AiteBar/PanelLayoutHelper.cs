@@ -6,9 +6,9 @@ namespace AiteBar;
 
 public static class PanelLayoutHelper
 {
-    public const double ButtonOuterSize = 44;
-    public const double SeparatorSize = 9;
-    public const double PanelChrome = 8;
+    public const double ButtonOuterSize = Constants.ButtonOuterSize;
+    public const double SeparatorSize = Constants.SeparatorSize;
+    public const double PanelChrome = Constants.PanelChrome;
     public const int MaxUserBands = 3;
 
     public readonly record struct UserLayout(double Primary, double Cross, int Bands);

@@ -63,19 +63,21 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private bool _deferredStartupCompleted;
     private readonly bool _settingsPreloaded;
     private int _panelRefreshVersion;
-    private int _panelFocusRequestVersion;
-    private int _contextWheelDelta;
+        private int _panelFocusRequestVersion;
+        private int _contextWheelDelta;
+        private int _lastElementsVersion = -1;
+        private int _mouseWheelCaptureToken = 0;
     private readonly CancellationTokenSource _startupCts = new();
     private DateTime _lastContextWheelSwitchUtc = DateTime.MinValue;
     private readonly Dictionary<string, CachedButtonImage> _buttonImageCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Brush> _brushCache = new(StringComparer.OrdinalIgnoreCase);
     private bool _isLocalizationSubscribed;
 
-    private const double PanelScreenPadding = 20;
-    private const double ButtonPitch = PanelLayoutHelper.ButtonOuterSize;
-    private const double DragHandleSpan = 18;
-    private const int WheelDeltaPerContextSwitch = 120;
-    private static readonly TimeSpan ContextWheelSwitchCooldown = TimeSpan.FromMilliseconds(220);
+    private const double PanelScreenPadding = Constants.PanelScreenPadding;
+    private const double ButtonPitch = Constants.ButtonOuterSize;
+    private const double DragHandleSpan = Constants.DragHandleSpan;
+    private const int WheelDeltaPerContextSwitch = Constants.WheelDeltaPerContextSwitch;
+    private static readonly TimeSpan ContextWheelSwitchCooldown = TimeSpan.FromMilliseconds(Constants.ContextWheelSwitchCooldownMs);
 
     public MainWindow()
         : this(new AppSettingsService(), settingsPreloaded: false)
@@ -256,14 +258,14 @@ public partial class MainWindow : Window, ISettingsWindowContext
             return (false, 0);
         }
 
-        IReadOnlyList<PanelContext> enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
-        int targetIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, contextId, StringComparison.Ordinal));
+        List<PanelContext> enabledContextsList = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts).ToList();
+        int targetIndex = enabledContextsList.FindIndex(context => string.Equals(context.Id, contextId, StringComparison.Ordinal));
         if (targetIndex < 0)
         {
             return (false, 0);
         }
 
-        int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
+        int currentIndex = enabledContextsList.FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
         if (currentIndex < 0)
         {
             currentIndex = 0;
@@ -282,13 +284,22 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private string? GetNextContextId(int direction)
     {
-        IReadOnlyList<PanelContext> enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
+        var enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
         if (enabledContexts.Count == 0)
         {
             return null;
         }
 
-        int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
+        int currentIndex = -1;
+        for (int i = 0; i < enabledContexts.Count; i++)
+        {
+            if (string.Equals(enabledContexts[i].Id, AppSettings.ActiveContextId, StringComparison.Ordinal))
+            {
+                currentIndex = i;
+                break;
+            }
+        }
+        
         if (currentIndex < 0)
         {
             currentIndex = 0;
@@ -337,34 +348,48 @@ public partial class MainWindow : Window, ISettingsWindowContext
     }
 
     private async void ActivateContextRelative(int direction)
-    {
-        string? nextContextId = GetNextContextId(direction);
-        if (nextContextId == null)
         {
-            return;
+            try
+            {
+                string? nextContextId = GetNextContextId(direction);
+                if (nextContextId == null)
+                {
+                    return;
+                }
+
+                var result = TryActivateContext(nextContextId);
+                if (result.changed)
+                {
+                    await SaveSettingsWithNotificationAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
         }
 
-        var result = TryActivateContext(nextContextId);
-        if (result.changed)
+        private async void ActivateContextByIndex(int index)
         {
-            await SaveSettingsWithNotificationAsync();
-        }
-    }
+            try
+            {
+                string? nextContextId = GetContextIdByIndex(index);
+                if (nextContextId == null)
+                {
+                    return;
+                }
 
-    private async void ActivateContextByIndex(int index)
-    {
-        string? nextContextId = GetContextIdByIndex(index);
-        if (nextContextId == null)
-        {
-            return;
+                var result = TryActivateContext(nextContextId);
+                if (result.changed)
+                {
+                    await SaveSettingsWithNotificationAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
         }
-
-        var result = TryActivateContext(nextContextId);
-        if (result.changed)
-        {
-            await SaveSettingsWithNotificationAsync();
-        }
-    }
 
     private void BuildPanelContextMenu()
     {
@@ -630,7 +655,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 case ActionType.Folder:
                     if (Directory.Exists(target))
                     {
-                        Process.Start(new ProcessStartInfo("explorer.exe", $"\"{target}\"") { UseShellExecute = true });
+                        var psi = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
+                        psi.ArgumentList.Add(target);
+                        Process.Start(psi);
                     }
                     break;
 
@@ -639,7 +666,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 case ActionType.ScriptFile:
                     if (File.Exists(target))
                     {
-                        Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{target}\"") { UseShellExecute = true });
+                        var psi = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
+                        psi.ArgumentList.Add("/select," + target);
+                        Process.Start(psi);
                     }
                     break;
             }
@@ -678,13 +707,20 @@ public partial class MainWindow : Window, ISettingsWindowContext
     }
 
     private async void ActivateContextById(string contextId)
-    {
-        var result = TryActivateContext(contextId);
-        if (result.changed)
         {
-            await SaveSettingsWithNotificationAsync();
+            try
+            {
+                var result = TryActivateContext(contextId);
+                if (result.changed)
+                {
+                    await SaveSettingsWithNotificationAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
         }
-    }
 
     private Screen? GetTargetScreen()
     {
@@ -1069,7 +1105,13 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 return;
             }
             _ = CompleteDeferredStartupAsync().ContinueWith(
-                task => _ = Logger.LogAsync(task.Exception!.GetBaseException()),
+                task =>
+                {
+                    if (task.Exception != null)
+                    {
+                        _ = Logger.LogAsync(task.Exception.GetBaseException());
+                    }
+                },
                 TaskContinuationOptions.OnlyOnFaulted);
         }
         catch (Exception ex) { Logger.Log(ex); }
@@ -1243,7 +1285,20 @@ public partial class MainWindow : Window, ISettingsWindowContext
     public void RefreshPanel()
     {
         int panelVersion = unchecked(++_panelRefreshVersion);
-        _buttonImageCache.Clear();
+        
+        // Calculate a simple hash of current elements to detect changes
+        int currentElementsVersion = 0;
+        foreach (var element in Elements)
+        {
+            currentElementsVersion = unchecked(currentElementsVersion * 397 + (element.Id?.GetHashCode() ?? 0));
+        }
+        
+        if (currentElementsVersion != _lastElementsVersion)
+        {
+            _buttonImageCache.Clear();
+            _lastElementsVersion = currentElementsVersion;
+        }
+        
         _settingsService.NormalizeAppState();
         BuildPanelContextMenu();
         string activeContextId = AppSettings.ActiveContextId;
@@ -1362,27 +1417,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 {
                     if (item.SettingsKey != null)
                     {
-                        // 1. Get the full settings from the service (which returns a clone
-                        var settings = _settingsService.Settings;
-                        
-                        switch (item.SettingsKey)
-                        {
-                            case "ShowPresetSearch": settings.ShowPresetSearch = false; break;
-                            case "ShowPresetScreenshot": settings.ShowPresetScreenshot = false; break;
-                            case "ShowPresetVideo": settings.ShowPresetVideo = false; break;
-                            case "ShowPresetCalc": settings.ShowPresetCalc = false; break;
-                            case "ShowPresetExplorer": settings.ShowPresetExplorer = false; break;
-                            case "ShowPresetDownloads": settings.ShowPresetDownloads = false; break;
-                            case "ShowPresetFileSorter": settings.ShowPresetFileSorter = false; break;
-                            case "ShowPresetIconConverter": settings.ShowPresetIconConverter = false; break;
-                            case "ShowPresetTimerStopwatch": settings.ShowPresetTimerStopwatch = false; break;
-                            case "ShowPresetColorPicker": settings.ShowPresetColorPicker = false; break;
-                            case "ShowPresetQuickNote": settings.ShowPresetQuickNote = false; break;
-                        }
-
-                        // 2. Update the service with the modified settings in the service!
-                        _settingsService.Settings = settings;
-                        
+                        _settingsService.SetUtilityVisibility(item.SettingsKey, false);
                         await SaveSettingsWithNotificationAsync();
                         RefreshPanel();
                     }
@@ -1692,8 +1727,6 @@ public partial class MainWindow : Window, ISettingsWindowContext
         _timer.Start();
     }
 
-    private int _mouseWheelCaptureToken = 0;
-
     private async Task RunPresetActionAsync(Func<Task> action)
     {
         try
@@ -1734,7 +1767,18 @@ public partial class MainWindow : Window, ISettingsWindowContext
     }
 
     private async void BtnAdd_Click(object sender, RoutedEventArgs e) { await OpenAddButtonWindowAsync(); }
-    private async void BtnAppSettings_Click(object sender, RoutedEventArgs e) { await HideDock(); new AppSettingsWindow(this).ShowDialog(); }
+    private async void BtnAppSettings_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                await HideDock();
+                new AppSettingsWindow(this).ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+        }
 
     private static T? FindParent<T>(DependencyObject child) where T : DependencyObject
     {

@@ -60,142 +60,9 @@ namespace AiteBar
 
         private static AppSettings CloneAppSettings(AppSettings original)
         {
-            return new AppSettings
-            {
-                GlobalHotkeyCtrl = original.GlobalHotkeyCtrl,
-                GlobalHotkeyAlt = original.GlobalHotkeyAlt,
-                GlobalHotkeyShift = original.GlobalHotkeyShift,
-                GlobalHotkeyWin = original.GlobalHotkeyWin,
-                GlobalHotkeyKey = original.GlobalHotkeyKey,
-                ShowPresetSearch = original.ShowPresetSearch,
-                ShowPresetScreenshot = original.ShowPresetScreenshot,
-                ShowPresetVideo = original.ShowPresetVideo,
-                ShowPresetCalc = original.ShowPresetCalc,
-                ShowPresetExplorer = original.ShowPresetExplorer,
-                ShowPresetDownloads = original.ShowPresetDownloads,
-                ShowPresetFileSorter = original.ShowPresetFileSorter,
-                ShowPresetIconConverter = original.ShowPresetIconConverter,
-                ShowPresetColorPicker = original.ShowPresetColorPicker,
-                ShowPresetQuickNote = original.ShowPresetQuickNote,
-                ShowPresetTimerStopwatch = original.ShowPresetTimerStopwatch,
-                QuickNoteThemeId = original.QuickNoteThemeId,
-                QuickNotePinned = original.QuickNotePinned,
-                QuickNoteLeft = original.QuickNoteLeft,
-                QuickNoteTop = original.QuickNoteTop,
-                QuickNoteWidth = original.QuickNoteWidth,
-                QuickNoteHeight = original.QuickNoteHeight,
-                TimerSoundEnabled = original.TimerSoundEnabled,
-                TimerIsStopwatchMode = original.TimerIsStopwatchMode,
-                TimerDuration = original.TimerDuration,
-                Edge = original.Edge,
-                MonitorIndex = original.MonitorIndex,
-                ActivationZoneSizePercent = original.ActivationZoneSizePercent,
-                PanelSizePercent = original.PanelSizePercent,
-                ActivationDelayMs = original.ActivationDelayMs,
-                UiCulture = original.UiCulture,
-                Contexts = original.Contexts.Select(c => new PanelContext
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    IsNameCustomized = c.IsNameCustomized,
-                    IconGlyph = c.IconGlyph,
-                    IsEnabled = c.IsEnabled
-                }).ToList(),
-                ActiveContextId = original.ActiveContextId,
-                NextContextHotkey = new HotkeyBinding
-                {
-                    Ctrl = original.NextContextHotkey.Ctrl,
-                    Alt = original.NextContextHotkey.Alt,
-                    Shift = original.NextContextHotkey.Shift,
-                    Win = original.NextContextHotkey.Win,
-                    Key = original.NextContextHotkey.Key
-                },
-                PreviousContextHotkey = new HotkeyBinding
-                {
-                    Ctrl = original.PreviousContextHotkey.Ctrl,
-                    Alt = original.PreviousContextHotkey.Alt,
-                    Shift = original.PreviousContextHotkey.Shift,
-                    Win = original.PreviousContextHotkey.Win,
-                    Key = original.PreviousContextHotkey.Key
-                },
-                AddButtonHotkey = new HotkeyBinding
-                {
-                    Ctrl = original.AddButtonHotkey.Ctrl,
-                    Alt = original.AddButtonHotkey.Alt,
-                    Shift = original.AddButtonHotkey.Shift,
-                    Win = original.AddButtonHotkey.Win,
-                    Key = original.AddButtonHotkey.Key
-                },
-                FileSorterHotkey = new HotkeyBinding
-                {
-                    Ctrl = original.FileSorterHotkey.Ctrl,
-                    Alt = original.FileSorterHotkey.Alt,
-                    Shift = original.FileSorterHotkey.Shift,
-                    Win = original.FileSorterHotkey.Win,
-                    Key = original.FileSorterHotkey.Key
-                },
-                QuickNoteHotkey = new HotkeyBinding
-                {
-                    Ctrl = original.QuickNoteHotkey.Ctrl,
-                    Alt = original.QuickNoteHotkey.Alt,
-                    Shift = original.QuickNoteHotkey.Shift,
-                    Win = original.QuickNoteHotkey.Win,
-                    Key = original.QuickNoteHotkey.Key
-                },
-                ColorPickerHotkey = new HotkeyBinding
-                {
-                    Ctrl = original.ColorPickerHotkey.Ctrl,
-                    Alt = original.ColorPickerHotkey.Alt,
-                    Shift = original.ColorPickerHotkey.Shift,
-                    Win = original.ColorPickerHotkey.Win,
-                    Key = original.ColorPickerHotkey.Key
-                },
-                TimerStopwatchHotkey = new HotkeyBinding
-                {
-                    Ctrl = original.TimerStopwatchHotkey.Ctrl,
-                    Alt = original.TimerStopwatchHotkey.Alt,
-                    Shift = original.TimerStopwatchHotkey.Shift,
-                    Win = original.TimerStopwatchHotkey.Win,
-                    Key = original.TimerStopwatchHotkey.Key
-                },
-                LastFileSortOperation = original.LastFileSortOperation,
-                Elements = original.Elements.Select(e => new CustomElement
-                {
-                    Id = e.Id,
-                    Name = e.Name,
-                    Icon = e.Icon,
-                    IconFont = e.IconFont,
-                    Color = e.Color,
-                    ActionType = e.ActionType,
-                    ActionValue = e.ActionValue,
-                    Browser = e.Browser,
-                    ChromeProfile = e.ChromeProfile,
-                    RotationProfilePaths = [.. (e.RotationProfilePaths ?? [])],
-                    IsAppMode = e.IsAppMode,
-                    IsIncognito = e.IsIncognito,
-                    UseRotation = e.UseRotation,
-                    OpenFullscreen = e.OpenFullscreen,
-                    IsTopmost = e.IsTopmost,
-                    LastUsedProfile = e.LastUsedProfile,
-                    Alt = e.Alt,
-                    Ctrl = e.Ctrl,
-                    Shift = e.Shift,
-                    Win = e.Win,
-                    Key = e.Key,
-                    ImagePath = e.ImagePath,
-                    ContextId = e.ContextId
-                }).ToList(),
-                UtilityButtonOrder = [.. original.UtilityButtonOrder],
-                CheckForUpdatesEnabled = original.CheckForUpdatesEnabled,
-                Sentry = original.Sentry == null ? null : new SentrySettings
-                {
-                    Dsn = original.Sentry.Dsn,
-                    IsEnabled = original.Sentry.IsEnabled,
-                    Environment = original.Sentry.Environment,
-                    TracesSampleRate = original.Sentry.TracesSampleRate,
-                    SendDefaultPii = original.Sentry.SendDefaultPii
-                }
-            };
+            // Use JSON serialization for deep clone to avoid manual duplication
+            string json = JsonSerializer.Serialize(original, _jsonOptions);
+            return JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions) ?? new AppSettings();
         }
 
         public async Task LoadAsync()
@@ -374,7 +241,6 @@ namespace AiteBar
                 string json = JsonSerializer.Serialize(snapshot, _jsonOptions);
 
                 await WriteSettingsWithBackupAsync(json);
-                SettingsChanged?.Invoke(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -744,6 +610,7 @@ namespace AiteBar
                 }
             }
 
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
             await SaveAsync();
         }
 
@@ -774,6 +641,7 @@ namespace AiteBar
                 _elements.RemoveAll(x => x.Id == id);
             }
 
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
             await SaveAsync();
         }
 
@@ -784,6 +652,7 @@ namespace AiteBar
                 _elements.AddRange(elements);
             }
 
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
             await SaveAsync();
         }
 
@@ -796,6 +665,7 @@ namespace AiteBar
                 else _elements.Add(element);
             }
 
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
             await SaveAsync();
         }
 
@@ -808,6 +678,7 @@ namespace AiteBar
                 update(element);
             }
 
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
             await SaveAsync();
         }
 
@@ -837,5 +708,45 @@ namespace AiteBar
             Key = s.Key,
             ContextId = s.ContextId
         };
+
+        public bool GetUtilityVisibility(string key)
+        {
+            var settings = Settings;
+            return key switch
+            {
+                "ShowPresetSearch" => settings.ShowPresetSearch,
+                "ShowPresetScreenshot" => settings.ShowPresetScreenshot,
+                "ShowPresetVideo" => settings.ShowPresetVideo,
+                "ShowPresetCalc" => settings.ShowPresetCalc,
+                "ShowPresetExplorer" => settings.ShowPresetExplorer,
+                "ShowPresetDownloads" => settings.ShowPresetDownloads,
+                "ShowPresetFileSorter" => settings.ShowPresetFileSorter,
+                "ShowPresetIconConverter" => settings.ShowPresetIconConverter,
+                "ShowPresetTimerStopwatch" => settings.ShowPresetTimerStopwatch,
+                "ShowPresetColorPicker" => settings.ShowPresetColorPicker,
+                "ShowPresetQuickNote" => settings.ShowPresetQuickNote,
+                _ => false
+            };
+        }
+
+        public void SetUtilityVisibility(string key, bool visible)
+        {
+            var settings = Settings;
+            switch (key)
+            {
+                case "ShowPresetSearch": settings.ShowPresetSearch = visible; break;
+                case "ShowPresetScreenshot": settings.ShowPresetScreenshot = visible; break;
+                case "ShowPresetVideo": settings.ShowPresetVideo = visible; break;
+                case "ShowPresetCalc": settings.ShowPresetCalc = visible; break;
+                case "ShowPresetExplorer": settings.ShowPresetExplorer = visible; break;
+                case "ShowPresetDownloads": settings.ShowPresetDownloads = visible; break;
+                case "ShowPresetFileSorter": settings.ShowPresetFileSorter = visible; break;
+                case "ShowPresetIconConverter": settings.ShowPresetIconConverter = visible; break;
+                case "ShowPresetTimerStopwatch": settings.ShowPresetTimerStopwatch = visible; break;
+                case "ShowPresetColorPicker": settings.ShowPresetColorPicker = visible; break;
+                case "ShowPresetQuickNote": settings.ShowPresetQuickNote = visible; break;
+            }
+            Settings = settings;
+        }
     }
 }
