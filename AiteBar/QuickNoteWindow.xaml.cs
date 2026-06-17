@@ -281,7 +281,9 @@ namespace AiteBar
 
         private async void BtnPin_Checked(object sender, RoutedEventArgs e)
         {
-            _settingsService.Settings.QuickNotePinned = sender is System.Windows.Controls.Primitives.ToggleButton { IsChecked: true };
+            var s = _settingsService.Settings;
+            s.QuickNotePinned = sender is System.Windows.Controls.Primitives.ToggleButton { IsChecked: true };
+            _settingsService.Settings = s;
             await _settingsService.SaveAsync();
             TxtNote.Focus();
         }
@@ -616,7 +618,9 @@ namespace AiteBar
                 button.Click += async (_, _) =>
                 {
                     _theme = theme;
-                    _settingsService.Settings.QuickNoteThemeId = theme.Id;
+                    var s = _settingsService.Settings;
+                    s.QuickNoteThemeId = theme.Id;
+                    _settingsService.Settings = s;
                     ApplyTheme(theme);
                     BuildThemePalette();
                     ThemePopup.IsOpen = false;
@@ -849,10 +853,12 @@ namespace AiteBar
             double width = ActualWidth > 0 ? ActualWidth : Width;
             double height = ActualHeight > 0 ? ActualHeight : Height;
             var bounds = QuickNoteLayoutHelper.ClampBoundsToWorkArea(GetWorkArea(), Left, Top, width, height);
-            _settingsService.Settings.QuickNoteLeft = bounds.Left;
-            _settingsService.Settings.QuickNoteTop = bounds.Top;
-            _settingsService.Settings.QuickNoteWidth = bounds.Width;
-            _settingsService.Settings.QuickNoteHeight = bounds.Height;
+            var s = _settingsService.Settings;
+            s.QuickNoteLeft = bounds.Left;
+            s.QuickNoteTop = bounds.Top;
+            s.QuickNoteWidth = bounds.Width;
+            s.QuickNoteHeight = bounds.Height;
+            _settingsService.Settings = s;
             await _settingsService.SaveAsync();
         }
 

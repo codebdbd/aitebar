@@ -1767,8 +1767,15 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private async void BtnQuickNote_Click(object sender, RoutedEventArgs e) { await RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("QuickNote", HideDock)); }
     private async Task OpenAddButtonWindowAsync()
     {
-        await HideDock();
-        new SettingsWindow(this).ShowDialog();
+        try
+        {
+            await HideDock();
+            new SettingsWindow(this).ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
     }
 
     private async void BtnAdd_Click(object sender, RoutedEventArgs e) { await OpenAddButtonWindowAsync(); }
