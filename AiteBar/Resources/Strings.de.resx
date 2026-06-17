@@ -35,6 +35,16 @@
   <data name="AppSettingsWindow_NextPanel" xml:space="preserve"><value>Nächste Leiste</value></data>
   <data name="AppSettingsWindow_PreviousPanel" xml:space="preserve"><value>Vorherige Leiste</value></data>
   <data name="AppSettingsWindow_AddButton" xml:space="preserve"><value>Schaltfläche hinzufügen</value></data>
+  <data name="AppSettingsWindow_ShowTaskbarPositionIndicator" xml:space="preserve"><value>Position der Leiste anzeigen</value></data>
+  <data name="ShowPanel" xml:space="preserve"><value>Leiste anzeigen</value></data>
+  <data name="HideIndicator" xml:space="preserve"><value>Anzeige ausblenden</value></data>
+  <data name="TaskbarIndicator_TooltipFormat" xml:space="preserve"><value>AiteBar - Leiste {0}, {1}</value></data>
+  <data name="TaskbarIndicator_EdgeTop" xml:space="preserve"><value>oben</value></data>
+  <data name="TaskbarIndicator_EdgeBottom" xml:space="preserve"><value>unten</value></data>
+  <data name="TaskbarIndicator_EdgeLeft" xml:space="preserve"><value>links</value></data>
+  <data name="TaskbarIndicator_EdgeRight" xml:space="preserve"><value>rechts</value></data>
+  <data name="TaskbarIndicator_MonitorPrimary" xml:space="preserve"><value>Primärmonitor</value></data>
+  <data name="TaskbarIndicator_MonitorFormat" xml:space="preserve"><value>Monitor {0}</value></data>
   <data name="AppSettingsWindow_QuickToolsHint" xml:space="preserve"><value>Integrierte Schaltflächen aktivieren, die auf der Hauptleiste angezeigt werden.</value></data>
   <data name="Monitor_Format" xml:space="preserve"><value>Monitor {0}{1}</value></data>
   <data name="Monitor_PrimarySuffix" xml:space="preserve"><value> (Primär)</value></data>
@@ -371,4 +381,5 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="IconConverter_SaveFilter" xml:space="preserve"><value>Windows-Symbol|*.ico</value></data>
   <data name="IconConverter_SavedFormat" xml:space="preserve"><value>Gespeichert: {0}</value></data>
   <data name="IconConverter_SaveFailed" xml:space="preserve"><value>ICO konnte nicht gespeichert werden: {0}</value></data>
+  <data name="Utility_Unavailable" xml:space="preserve"><value>Dienstprogramm {0} ist vorübergehend nicht verfügbar.</value></data>
 </root>

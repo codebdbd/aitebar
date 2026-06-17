@@ -122,6 +122,16 @@ For modular Python projects use the "Command" type.</value></data>
   <data name="AppSettingsWindow_NextPanel" xml:space="preserve"><value>Next panel</value></data>
   <data name="AppSettingsWindow_PreviousPanel" xml:space="preserve"><value>Previous panel</value></data>
   <data name="AppSettingsWindow_AddButton" xml:space="preserve"><value>Add button</value></data>
+  <data name="AppSettingsWindow_ShowTaskbarPositionIndicator" xml:space="preserve"><value>Show panel position indicator</value></data>
+  <data name="ShowPanel" xml:space="preserve"><value>Show panel</value></data>
+  <data name="HideIndicator" xml:space="preserve"><value>Hide indicator</value></data>
+  <data name="TaskbarIndicator_TooltipFormat" xml:space="preserve"><value>AiteBar - panel {0}, {1}</value></data>
+  <data name="TaskbarIndicator_EdgeTop" xml:space="preserve"><value>top</value></data>
+  <data name="TaskbarIndicator_EdgeBottom" xml:space="preserve"><value>bottom</value></data>
+  <data name="TaskbarIndicator_EdgeLeft" xml:space="preserve"><value>left</value></data>
+  <data name="TaskbarIndicator_EdgeRight" xml:space="preserve"><value>right</value></data>
+  <data name="TaskbarIndicator_MonitorPrimary" xml:space="preserve"><value>primary monitor</value></data>
+  <data name="TaskbarIndicator_MonitorFormat" xml:space="preserve"><value>monitor {0}</value></data>
   <data name="AppSettingsWindow_QuickTools" xml:space="preserve"><value>Quick tools</value></data>
   <data name="AppSettingsWindow_QuickToolsHint" xml:space="preserve"><value>Enable built-in buttons shown on the main panel.</value></data>
   <data name="Tool_Search" xml:space="preserve"><value>Search</value></data>
@@ -430,4 +440,5 @@ Open the GitHub release page?</value></data>
   <data name="IconConverter_SaveFilter" xml:space="preserve"><value>Windows icon|*.ico</value></data>
   <data name="IconConverter_SavedFormat" xml:space="preserve"><value>Saved: {0}</value></data>
   <data name="IconConverter_SaveFailed" xml:space="preserve"><value>Could not save ICO: {0}</value></data>
+  <data name="Utility_Unavailable" xml:space="preserve"><value>Utility {0} is temporarily unavailable.</value></data>
 </root>

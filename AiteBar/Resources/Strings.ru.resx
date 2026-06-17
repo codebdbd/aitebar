@@ -231,6 +231,36 @@
   <data name="AppSettingsWindow_AddButton" xml:space="preserve">
     <value>Добавить кнопку</value>
   </data>
+  <data name="AppSettingsWindow_ShowTaskbarPositionIndicator" xml:space="preserve">
+    <value>Показывать указатель положения панели</value>
+  </data>
+  <data name="ShowPanel" xml:space="preserve">
+    <value>Показать панель</value>
+  </data>
+  <data name="HideIndicator" xml:space="preserve">
+    <value>Скрыть указатель</value>
+  </data>
+  <data name="TaskbarIndicator_TooltipFormat" xml:space="preserve">
+    <value>AiteBar — панель {0}, {1}</value>
+  </data>
+  <data name="TaskbarIndicator_EdgeTop" xml:space="preserve">
+    <value>сверху</value>
+  </data>
+  <data name="TaskbarIndicator_EdgeBottom" xml:space="preserve">
+    <value>снизу</value>
+  </data>
+  <data name="TaskbarIndicator_EdgeLeft" xml:space="preserve">
+    <value>слева</value>
+  </data>
+  <data name="TaskbarIndicator_EdgeRight" xml:space="preserve">
+    <value>справа</value>
+  </data>
+  <data name="TaskbarIndicator_MonitorPrimary" xml:space="preserve">
+    <value>основной монитор</value>
+  </data>
+  <data name="TaskbarIndicator_MonitorFormat" xml:space="preserve">
+    <value>монитор {0}</value>
+  </data>
   <data name="AppSettingsWindow_QuickTools" xml:space="preserve">
     <value>Быстрые инструменты</value>
   </data>
@@ -876,4 +906,5 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="IconConverter_SaveFilter" xml:space="preserve"><value>Значок Windows|*.ico</value></data>
   <data name="IconConverter_SavedFormat" xml:space="preserve"><value>Сохранено: {0}</value></data>
   <data name="IconConverter_SaveFailed" xml:space="preserve"><value>Не удалось сохранить ICO: {0}</value></data>
+  <data name="Utility_Unavailable" xml:space="preserve"><value>Утилита {0} временно недоступна.</value></data>
 </root>

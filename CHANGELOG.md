@@ -10,6 +10,8 @@
 ## [Unreleased]
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Индикатор положения панели**: Добавлен индикатор положения панели на панели задач, показывающий направление панели с помощью стрелки и контекстное меню.
+- **Panel position indicator**: Added panel position indicator on taskbar showing panel direction with arrow and context menu.
 - **Атрибут [Utility]**: Добавлен атрибут для маркировки утилит для автоматической регистрации.
 - **Utility attribute**: Added attribute to mark utilities for automatic registration.
 - **Метод RegisterAllFromAssembly()**: Автоматическая регистрация всех утилит с атрибутом [Utility] из указанной сборки.
@@ -24,12 +26,20 @@
 - **Clear() method for testing**: Added to `UtilityRegistry` to reset state between tests.
 
 ### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Иконка утилиты конвертации иконок**: Изменена иконка IconConverterUtility на новый глиф.
+- **Icon converter utility icon**: Changed IconConverterUtility icon to new glyph.
 - **Регистрация утилит**: Заменена ручная регистрация в `App.xaml.cs` на автоматическую через `RegisterAllFromAssembly()`.
 - **Utility registration**: Replaced manual registration in `App.xaml.cs` with automatic via `RegisterAllFromAssembly()`.
 - **Все утилиты**: Добавлены атрибуты [Utility] к `QuickNoteUtility`, `TimerStopwatchUtility`, `ColorPickerUtility`, `FileSorterUtility`, `IconConverterUtility`.
 - **All utilities**: Added [Utility] attributes to `QuickNoteUtility`, `TimerStopwatchUtility`, `ColorPickerUtility`, `FileSorterUtility`, `IconConverterUtility`.
 - **Документация**: Обновлена `docs/UTILITIES.md` с описанием новых механизмов.
 - **Documentation**: Updated `docs/UTILITIES.md` with new mechanisms.
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Завершение приложения**: Исправлено зависание процесса при закрытии приложения из-за индикатора положения панели.
+- **App shutdown**: Fixed process hanging on app exit due to panel position indicator.
+- **Отображение индикатора**: Исправлено не отображение индикатора при включении в настройках и его исчезновение.
+- **Indicator visibility**: Fixed indicator not appearing when enabled in settings and its disappearance.
 
 ## [1.9.1] - 2026-06-15
 

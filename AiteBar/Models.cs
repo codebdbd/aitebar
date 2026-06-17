@@ -167,6 +167,7 @@ public class AppSettings
     public List<CustomElement> Elements { get; set; } = new();
     public List<string> UtilityButtonOrder { get; set; } = new();
     public bool CheckForUpdatesEnabled { get; set; } = true;
+    public bool? ShowTaskbarPositionIndicator { get; set; } = true;
     public SentrySettings? Sentry { get; set; }
 }
 

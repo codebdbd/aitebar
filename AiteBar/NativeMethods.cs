@@ -37,6 +37,17 @@ namespace AiteBar
         [DllImport("user32.dll")]
         internal static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
+        // Taskbar API
+        [DllImport("shell32.dll", SetLastError = true)]
+        internal static extern IntPtr SHAppBarMessage(uint dwMessage, ref APPBARDATA pData);
+
+        // Monitor API
+        [DllImport("user32.dll")]
+        internal static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
+
+        [DllImport("user32.dll")]
+        internal static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
         [StructLayout(LayoutKind.Sequential)]
         internal struct Win32Point { public int X; public int Y; }
 
@@ -108,6 +119,53 @@ namespace AiteBar
         [DllImport("kernel32.dll")]
         internal static extern uint GetCurrentThreadId();
 
+        // APPBARDATA for SHAppBarMessage
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct APPBARDATA
+        {
+            public uint cbSize;
+            public IntPtr hWnd;
+            public uint uCallbackMessage;
+            public uint uEdge;
+            public RECT rc;
+            public IntPtr lParam;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct RECT
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+        internal class MONITORINFO
+        {
+            public int cbSize = Marshal.SizeOf(typeof(MONITORINFO));
+            public RECT rcMonitor = new RECT();
+            public RECT rcWork = new RECT();
+            public uint dwFlags = 0;
+        }
+
+        // Constants for SHAppBarMessage
+        internal const uint ABM_GETTASKBARPOS = 0x00000005;
+        internal const uint ABM_NEW = 0x00000000;
+        internal const uint ABM_REMOVE = 0x00000001;
+        internal const uint ABM_QUERYPOS = 0x00000002;
+        internal const uint ABM_SETPOS = 0x00000003;
+
+        // Constants for MonitorFromWindow
+        internal const uint MONITOR_DEFAULTTONEAREST = 0x00000002;
+        internal const uint MONITOR_DEFAULTTOPRIMARY = 0x00000001;
+
+        // Taskbar edges
+        internal const uint ABE_LEFT = 0;
+        internal const uint ABE_TOP = 1;
+        internal const uint ABE_RIGHT = 2;
+        internal const uint ABE_BOTTOM = 3;
+
         internal const byte VK_LWIN = 0x5B;
         internal const byte VK_SHIFT = 0x10;
         internal const byte VK_CONTROL = 0x11;
@@ -117,11 +175,21 @@ namespace AiteBar
         internal const uint KEYEVENTF_KEYUP = 0x0002;
 
         internal static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+        internal static readonly IntPtr HWND_NOTOPMOST = new IntPtr(-2);
+        internal static readonly IntPtr HWND_TOP = new IntPtr(0);
+        internal static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
         internal const uint SWP_NOSIZE = 0x0001;
         internal const uint SWP_NOMOVE = 0x0002;
+        internal const uint SWP_NOACTIVATE = 0x0010;
+        internal const uint SWP_SHOWWINDOW = 0x0040;
 
         internal const int WH_MOUSE_LL = 14;
         internal const int WM_LBUTTONDOWN = 0x0201;
+        internal const int WM_LBUTTONUP = 0x0202;
+        internal const int WM_RBUTTONDOWN = 0x0204;
+        internal const int WM_RBUTTONUP = 0x0205;
         internal const int WM_HOTKEY = 0x0312;
+        internal const int WM_SETTINGCHANGE = 0x001A;
+        internal const int WM_DPICHANGED = 0x02E0;
     }
 }

@@ -367,6 +367,7 @@ public partial class AppSettingsWindow : DarkWindow
         ChkShowPresetTimerStopwatch.IsChecked = _settings.ShowPresetTimerStopwatch;
         ChkShowPresetColorPicker.IsChecked = _settings.ShowPresetColorPicker;
         ChkShowPresetQuickNote.IsChecked = _settings.ShowPresetQuickNote;
+        ChkShowTaskbarPositionIndicator.IsChecked = _settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
         ChkCheckForUpdatesEnabled.IsChecked = _settings.CheckForUpdatesEnabled;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
         SetComboValue(CmbLanguage, _selectedUiCulture);
@@ -552,6 +553,7 @@ public partial class AppSettingsWindow : DarkWindow
         _settings.ShowPresetTimerStopwatch = ChkShowPresetTimerStopwatch.IsChecked ?? false;
         _settings.ShowPresetColorPicker = ChkShowPresetColorPicker.IsChecked ?? false;
         _settings.ShowPresetQuickNote = ChkShowPresetQuickNote.IsChecked ?? false;
+        _settings.ShowTaskbarPositionIndicator = ChkShowTaskbarPositionIndicator.IsChecked ?? true;
         _settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;
         _settings.UiCulture = _selectedUiCulture;
 

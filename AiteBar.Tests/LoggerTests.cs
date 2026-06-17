@@ -10,11 +10,12 @@ namespace AiteBar.Tests;
 public sealed class LoggerTests
 {
     [Fact]
-    public void Log_WritesExceptionTextToLogFile()
+    public async Task Log_WritesExceptionTextToLogFile()
     {
         using var scope = new LogArtifactScope();
 
         Logger.Log(new InvalidOperationException("logger smoke"));
+        await Logger.WaitForFlushAsync();
 
         Assert.True(File.Exists(PathHelper.LogFile));
         string content = File.ReadAllText(PathHelper.LogFile);
@@ -22,11 +23,12 @@ public sealed class LoggerTests
     }
 
     [Fact]
-    public void Log_NormalizesEmbeddedNewlinesInExceptionText()
+    public async Task Log_NormalizesEmbeddedNewlinesInExceptionText()
     {
         using var scope = new LogArtifactScope();
 
         Logger.Log(new InvalidOperationException("first line\nsecond line"));
+        await Logger.WaitForFlushAsync();
 
         string content = File.ReadAllText(PathHelper.LogFile);
 
@@ -40,6 +42,7 @@ public sealed class LoggerTests
         using var scope = new LogArtifactScope();
 
         await Logger.LogAsync(new InvalidOperationException("async logger smoke"));
+        await Logger.WaitForFlushAsync();
 
         Assert.True(File.Exists(PathHelper.LogFile));
         string content = File.ReadAllText(PathHelper.LogFile);
@@ -47,7 +50,7 @@ public sealed class LoggerTests
     }
 
     [Fact]
-    public void Log_RotatesOversizedLogAndKeepsAtMostThreeBackups()
+    public async Task Log_RotatesOversizedLogAndKeepsAtMostThreeBackups()
     {
         using var scope = new LogArtifactScope();
         Directory.CreateDirectory(PathHelper.AppDataFolder);
@@ -64,6 +67,7 @@ public sealed class LoggerTests
         }
 
         Logger.Log(new InvalidOperationException("rotation"));
+        await Logger.WaitForFlushAsync();
 
         string[] backups = Directory.GetFiles(directory, $"{fileName}.*.bak");
 

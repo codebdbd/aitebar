@@ -90,6 +90,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 ### Windows UI Layer
 Слой пользовательского интерфейса на базе WPF. Основные окна и компоненты:
 - `MainWindow` — основная панель с кнопками
+- `TaskbarPositionIndicatorWindow` — индикатор положения панели на панели задач
 - `SettingsWindow` — редактирование отдельной кнопки
 - `AppSettingsWindow` — общие настройки приложения
 - `QuickNoteWindow` — быстрые заметки с Markdown
@@ -108,6 +109,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 Сервисы, реализующие бизнес-логику:
 - `ActionService` — выполнение пользовательских действий и системных утилит
 - `AppSettingsService` — загрузка, сохранение и нормализация настроек
+- `TaskbarPositionIndicatorService` — управление индикатором положения панели
 - `PanelPackageService` — импорт и экспорт панелей (ZIP-архивирование)
 - `QuickNoteService` — управление быстрыми заметками
 - `UpdateCheckService` — проверка обновлений приложения
@@ -126,6 +128,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `PathHelper` — пути к файлам конфигурации и данных
 - `PanelLayoutHelper` — расчет геометрии панели
 - `PanelPositionHelper` — расчет координат панели и ближайшего края при drag handle
+- `TaskbarGeometryHelper` — расчет положения индикатора на панели задач
 - `ContextStateHelper` — работа с контекстами (8 фиксированных контекстов)
 - `FontHelper`, `IconHelper` — работа с иконками и шрифтами
 - `ProfileRotationHelper` — ротация профилей браузера

@@ -61,7 +61,7 @@ public abstract class UtilityBase<TWindow> : IUtility where TWindow : Window
             {
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    new DarkDialog($"Утилита {Id} временно недоступна").ShowDialog();
+                    new DarkDialog(LocalizationService.Format("Utility_Unavailable", Id)).ShowDialog();
                 });
             }
         }

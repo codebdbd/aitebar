@@ -39,6 +39,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private readonly ActionService _actionService;
     private readonly HotkeyService _hotkeyService = new();
     private readonly PanelPackageService _panelPackageService;
+    private readonly TaskbarPositionIndicatorService _positionIndicatorService = new();
     private NativeIntegrationService? _nativeService;
 
     private AppSettings AppSettings => _settingsService.Settings;
@@ -917,6 +918,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
             case HotkeyCommand.AddButton:
                 _ = OpenAddButtonWindowAsync();
                 break;
+            case HotkeyCommand.FileSorter:
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("FileSorter", HideDock));
+                break;
             case HotkeyCommand.QuickNote:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("QuickNote", HideDock));
                 break;
@@ -1102,17 +1106,17 @@ public partial class MainWindow : Window, ISettingsWindowContext
             {
                 _deferredStartupCompleted = true;
                 RegisterGlobalHotkey();
+                _positionIndicatorService.Initialize(_settingsService, this);
                 return;
             }
-            _ = CompleteDeferredStartupAsync().ContinueWith(
-                task =>
-                {
-                    if (task.Exception != null)
-                    {
-                        _ = Logger.LogAsync(task.Exception.GetBaseException());
-                    }
-                },
-                TaskContinuationOptions.OnlyOnFaulted);
+            try
+            {
+                await CompleteDeferredStartupAsync();
+            }
+            catch (Exception ex)
+            {
+                _ = Logger.LogAsync(ex.GetBaseException());
+            }
         }
         catch (Exception ex) { Logger.Log(ex); }
     }
@@ -1202,6 +1206,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             RegisterGlobalHotkey();
             RefreshPanel();
             PositionWindowImmediately(_shown);
+            _positionIndicatorService.Initialize(_settingsService, this);
         }
         catch (OperationCanceledException)
         {
@@ -1617,7 +1622,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
 
 
-    private void ToggleDock(bool fromKeyboard = false)
+    public void ToggleDock(bool fromKeyboard = false)
     {
         if (_isAnimating)
         {
@@ -1767,6 +1772,19 @@ public partial class MainWindow : Window, ISettingsWindowContext
     }
 
     private async void BtnAdd_Click(object sender, RoutedEventArgs e) { await OpenAddButtonWindowAsync(); }
+    public async Task ShowAppSettingsWindow()
+    {
+        try
+        {
+            await HideDock();
+            new AppSettingsWindow(this).ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+    }
+
     private async void BtnAppSettings_Click(object sender, RoutedEventArgs e)
         {
             try
@@ -1805,6 +1823,15 @@ public partial class MainWindow : Window, ISettingsWindowContext
             try
             {
                 _notifyIcon?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+
+            try
+            {
+                _positionIndicatorService?.Dispose();
             }
             catch (Exception ex)
             {

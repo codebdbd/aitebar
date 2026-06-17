@@ -24,7 +24,15 @@ public sealed class RuntimeLocalizationWindowSourceTests
     public void SettingsWindow_RebuildsDynamicListsOnCultureChange()
     {
         string code = ReadCode("AiteBar", "SettingsWindow.xaml.cs");
+        // Собираем код из всех partial-классов MainWindow
+        string repoRoot = FindRepoRoot();
         string mainWindowCode = ReadCode("AiteBar", "MainWindow.xaml.cs");
+        mainWindowCode += File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.PanelDragHandler.cs"));
+        mainWindowCode += File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.DragAndDropHandler.cs"));
+        mainWindowCode += File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.ImportExportHandler.cs"));
+        mainWindowCode += File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.DropHandler.cs"));
+        mainWindowCode += File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.KeyboardNavigationHandler.cs"));
+        mainWindowCode += File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.TrayMenuHandler.cs"));
 
         Assert.Contains("private void RefreshLocalizedUi()", code);
         Assert.Contains("LoadKeyList();", code);

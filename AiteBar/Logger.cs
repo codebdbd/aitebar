@@ -15,6 +15,8 @@ namespace AiteBar
         private static readonly ConcurrentQueue<string> _logQueue = new();
         private static readonly object _flushLock = new();
         private static bool _isFlushing = false;
+        // For testing purposes
+        private static TaskCompletionSource<bool>? _flushCompleteTcs;
 
         public static void Log(Exception ex)
         {
@@ -32,11 +34,25 @@ namespace AiteBar
         public static Task LogAsync(Exception ex) =>
             Task.Run(() => Log(ex));
 
+        // For testing
+        internal static Task WaitForFlushAsync()
+        {
+            lock (_flushLock)
+            {
+                if (!_isFlushing)
+                    return Task.CompletedTask;
+
+                _flushCompleteTcs ??= new TaskCompletionSource<bool>();
+                return _flushCompleteTcs.Task;
+            }
+        }
+
         private static void FlushQueue()
         {
             lock (_flushLock)
             {
-                if (_isFlushing) return;
+                if (_isFlushing)
+                    return;
                 _isFlushing = true;
             }
 
@@ -44,16 +60,30 @@ namespace AiteBar
             {
                 try
                 {
-                    while (_logQueue.TryDequeue(out string? logEntry))
+                    bool hasMore;
+                    do
                     {
-                        await WriteLogEntryAsync(logEntry);
-                    }
+                        hasMore = false;
+                        while (_logQueue.TryDequeue(out string? logEntry))
+                        {
+                            await WriteLogEntryAsync(logEntry);
+                            hasMore = true;
+                        }
+                    } while (hasMore);
                 }
                 finally
                 {
                     lock (_flushLock)
                     {
                         _isFlushing = false;
+                        if (_flushCompleteTcs != null)
+                        {
+                            _flushCompleteTcs.SetResult(true);
+                            _flushCompleteTcs = null;
+                        }
+                        // Double-check if new items were added after we finished
+                        if (!_logQueue.IsEmpty)
+                            FlushQueue();
                     }
                 }
             });

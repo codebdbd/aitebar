@@ -13,6 +13,16 @@
   <data name="AppSettingsWindow_NextPanel" xml:space="preserve"><value>Наступна панель</value></data>
   <data name="AppSettingsWindow_PreviousPanel" xml:space="preserve"><value>Попередня панель</value></data>
   <data name="AppSettingsWindow_AddButton" xml:space="preserve"><value>Додати кнопку</value></data>
+  <data name="AppSettingsWindow_ShowTaskbarPositionIndicator" xml:space="preserve"><value>Показувати покажчик позиції панелі</value></data>
+  <data name="ShowPanel" xml:space="preserve"><value>Показати панель</value></data>
+  <data name="HideIndicator" xml:space="preserve"><value>Сховати покажчик</value></data>
+  <data name="TaskbarIndicator_TooltipFormat" xml:space="preserve"><value>AiteBar - панель {0}, {1}</value></data>
+  <data name="TaskbarIndicator_EdgeTop" xml:space="preserve"><value>зверху</value></data>
+  <data name="TaskbarIndicator_EdgeBottom" xml:space="preserve"><value>знизу</value></data>
+  <data name="TaskbarIndicator_EdgeLeft" xml:space="preserve"><value>зліва</value></data>
+  <data name="TaskbarIndicator_EdgeRight" xml:space="preserve"><value>справа</value></data>
+  <data name="TaskbarIndicator_MonitorPrimary" xml:space="preserve"><value>основний монітор</value></data>
+  <data name="TaskbarIndicator_MonitorFormat" xml:space="preserve"><value>монітор {0}</value></data>
   <data name="SettingsWindow_InvalidUrl" xml:space="preserve"><value>Введіть коректну адресу сайту http або https.</value></data>
   <data name="HotkeyRegistrationFailed" xml:space="preserve"><value>Ці гарячі клавіші не вдалося зареєструвати, і вони не працюватимуть до зміни:
 {0}
@@ -365,5 +375,6 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="IconConverter_OpenFilter" xml:space="preserve"><value>Зображення|*.png;*.jpg;*.jpeg;*.webp;*.bmp;*.tif;*.tiff;*.svg|Усі файли|*.*</value></data>
   <data name="IconConverter_SaveFilter" xml:space="preserve"><value>Піктограма Windows|*.ico</value></data>
   <data name="IconConverter_SavedFormat" xml:space="preserve"><value>Збережено: {0}</value></data>
-  <data name="IconConverter_SaveFailed" xml:space="preserve"><value>Не вдалося зберегти ICO: {0}</value></data>
+  <data name="IconConverter_SaveFailed" xml:space="preserve"><value>Не удалось зберегти ICO: {0}</value></data>
+  <data name="Utility_Unavailable" xml:space="preserve"><value>Утиліта {0} тимчасово недоступна.</value></data>
 </root>

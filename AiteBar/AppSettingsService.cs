@@ -138,6 +138,7 @@ namespace AiteBar
                 if (changed || loadedFromBackup)
                 {
                     await SaveAsync();
+                    SettingsChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
             catch (Exception ex)
@@ -333,8 +334,15 @@ namespace AiteBar
                     changed = true;
                 }
 
+                // Set default value for old settings files that don't have ShowTaskbarPositionIndicator at all
+                if (_appSettings.ShowTaskbarPositionIndicator == null)
+                {
+                    _appSettings.ShowTaskbarPositionIndicator = true;
+                    changed = true;
+                }
+                
                 // Set default value for old settings files that don't have UiCulture at all
-                if (string.IsNullOrWhiteSpace(_appSettings.UiCulture))
+                if (_appSettings.UiCulture == null)
                 {
                     _appSettings.UiCulture = LocalizationService.AutoCulture;
                     changed = true;

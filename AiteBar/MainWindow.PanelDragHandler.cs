@@ -100,14 +100,15 @@ public partial class MainWindow
         }
 
         // Update settings via service
-        var settings = _settingsService.Settings;
-        settings.MonitorIndex = nextMonitorIndex;
-        settings.Edge = nextEdge;
-        _settingsService.Settings = settings;
+            var settings = _settingsService.Settings;
+            settings.MonitorIndex = nextMonitorIndex;
+            settings.Edge = nextEdge;
+            _settingsService.Settings = settings;
 
-        _panelDragChanged = true;
-        UpdateOrientation();
-        PositionWindowImmediately(shown: true);
+            _panelDragChanged = true;
+            UpdateOrientation();
+            PositionWindowImmediately(shown: true);
+            _positionIndicatorService.Refresh();
     }
 
     private void DragHandle_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
