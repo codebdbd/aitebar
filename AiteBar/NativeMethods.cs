@@ -46,7 +46,12 @@ namespace AiteBar
         internal static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
 
         [DllImport("user32.dll")]
-        internal static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+        internal static extern bool GetMonitorInfo(IntPtr hMonitor, MONITORINFO lpmi);
+
+        [DllImport("user32.dll")]
+        internal static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, EnumMonitorsProc lpfnEnum, IntPtr dwData);
+
+        internal delegate bool EnumMonitorsProc(IntPtr hMonitor, IntPtr hdcMonitor, ref NativeMethods.RECT lprcMonitor, IntPtr dwData);
 
         [StructLayout(LayoutKind.Sequential)]
         internal struct Win32Point { public int X; public int Y; }
@@ -111,7 +116,24 @@ namespace AiteBar
         internal static extern IntPtr GetForegroundWindow();
 
         [DllImport("user32.dll")]
+        internal static extern bool EnumWindows(EnumWindowsProc enumProc, IntPtr lParam);
+
+        internal delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        internal static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+        [DllImport("user32.dll")]
+        internal static extern bool GetWindowPlacement(IntPtr hWnd, out WINDOWPLACEMENT lpwndpl);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll")]
         internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        [DllImport("user32.dll")]
+        internal static extern bool IsWindowVisible(IntPtr hWnd);
 
         [DllImport("user32.dll")]
         internal static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
@@ -138,6 +160,17 @@ namespace AiteBar
             public int Top;
             public int Right;
             public int Bottom;
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        internal struct WINDOWPLACEMENT
+        {
+            public int length;
+            public int flags;
+            public int showCmd;
+            public RECT ptMinPosition;
+            public RECT ptMaxPosition;
+            public RECT rcNormalPosition;
         }
 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
@@ -191,5 +224,14 @@ namespace AiteBar
         internal const int WM_HOTKEY = 0x0312;
         internal const int WM_SETTINGCHANGE = 0x001A;
         internal const int WM_DPICHANGED = 0x02E0;
+        internal const int GWL_STYLE = -16;
+        internal const int GWL_EXSTYLE = -20;
+        internal const int WS_POPUP = unchecked((int)0x80000000);
+        internal const int WS_CAPTION = 0x00C00000;
+        internal const int WS_VISIBLE = 0x10000000;
+        internal const int WS_EX_TOOLWINDOW = 0x00000080;
+        internal const int WS_EX_NOACTIVATE = 0x08000000;
+        internal const int SW_SHOWMAXIMIZED = 3;
+        internal const int SW_SHOWMINIMIZED = 2;
     }
 }

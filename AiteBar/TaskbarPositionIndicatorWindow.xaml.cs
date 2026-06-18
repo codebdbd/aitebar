@@ -114,12 +114,12 @@ public partial class TaskbarPositionIndicatorWindow : Window
     protected override void OnMouseEnter(MouseEventArgs e)
     {
         base.OnMouseEnter(e);
-        ArrowText.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x00, 0x7A, 0xCC));
+        IndicatorBorder.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x00, 0x5A, 0x9E));
     }
 
     protected override void OnMouseLeave(MouseEventArgs e)
     {
         base.OnMouseLeave(e);
-        ArrowText.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE0, 0xE0, 0xE0));
+        IndicatorBorder.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x00, 0x7A, 0xCC));
     }
 }

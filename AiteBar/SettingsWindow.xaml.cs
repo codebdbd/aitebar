@@ -495,28 +495,6 @@ namespace AiteBar
             UpdateRequiredFieldsVisuals();
             UpdateSaveButtonState();
         }
-
-        private static string? FindExecutableOnPath(string fileName)
-        {
-            string? pathValue = Environment.GetEnvironmentVariable("PATH");
-            if (string.IsNullOrWhiteSpace(pathValue))
-                return null;
-
-            foreach (string dir in pathValue.Split(';', StringSplitOptions.RemoveEmptyEntries))
-            {
-                try
-                {
-                    string candidate = Path.Combine(dir.Trim(), fileName);
-                    if (File.Exists(candidate))
-                        return candidate;
-                }
-                catch
-                {
-                }
-            }
-
-            return null;
-        }
         private void BtnBrowse_Click(object sender, RoutedEventArgs e)
         {
             string typeStr = ((ComboBoxItem)CmbActionType.SelectedItem).Tag?.ToString() ?? "Web";
@@ -758,7 +736,7 @@ namespace AiteBar
                     }
 
                     if (string.Equals(Path.GetExtension(TxtActionValue.Text), ".py", StringComparison.OrdinalIgnoreCase) &&
-                        FindExecutableOnPath("python.exe") == null)
+                        PathHelper.FindExecutableOnPath("python.exe") == null)
                     {
                         new DarkDialog(LocalizationService.Get("SettingsWindow_PythonNotFound")) { Owner = this }.ShowDialog();
                         return;

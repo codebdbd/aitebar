@@ -549,9 +549,8 @@ public sealed class ActionServiceTests
         {
             File.WriteAllText(matchingExe, string.Empty);
             Environment.SetEnvironmentVariable("PATH", "|;" + tempRoot);
-            MethodInfo method = typeof(ActionService).GetMethod("FindExecutableOnPath", BindingFlags.NonPublic | BindingFlags.Static)!;
 
-            string resolved = (string)method.Invoke(null, ["tool.exe"])!;
+            string? resolved = PathHelper.FindExecutableOnPath("tool.exe");
 
             Assert.Equal(matchingExe, resolved);
         }

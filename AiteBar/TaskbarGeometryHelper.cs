@@ -155,4 +155,26 @@ internal static class TaskbarGeometryHelper
             _ => "→"
         };
     }
+
+    public static IntPtr GetMonitorFromIndex(int monitorIndex)
+    {
+        var monitors = new System.Collections.Generic.List<IntPtr>();
+        NativeMethods.EnumDisplayMonitors(
+            IntPtr.Zero, 
+            IntPtr.Zero, 
+            (IntPtr hMonitor, IntPtr hdcMonitor, ref NativeMethods.RECT rect, IntPtr data) =>
+            {
+                monitors.Add(hMonitor);
+                return true;
+            }, 
+            IntPtr.Zero);
+
+        if (monitorIndex >= 0 && monitorIndex < monitors.Count)
+        {
+            return monitors[monitorIndex];
+        }
+
+        // Fallback to primary monitor
+        return monitors.Count > 0 ? monitors[0] : IntPtr.Zero;
+    }
 }

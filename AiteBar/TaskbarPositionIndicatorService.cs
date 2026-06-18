@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Interop;
@@ -208,11 +209,102 @@ internal class TaskbarPositionIndicatorService : IDisposable
         Debug.WriteLine("TaskbarPositionIndicatorService.VisibilityTimer_Tick");
         if (_appSettingsService?.Settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true) == true)
         {
-            ShowIndicator();
+            if (IsFullscreenAppRunning())
+            {
+                HideIndicator();
+            }
+            else
+            {
+                ShowIndicator();
+            }
         }
         else
         {
             HideIndicator();
+        }
+    }
+
+    private bool IsFullscreenAppRunning()
+    {
+        try
+        {
+            if (_appSettingsService == null || _mainWindow == null)
+                return false;
+
+            var settings = _appSettingsService.Settings;
+            var targetMonitor = TaskbarGeometryHelper.GetMonitorFromIndex(settings.MonitorIndex);
+            if (targetMonitor == IntPtr.Zero)
+                return false;
+
+            var monitorInfo = new NativeMethods.MONITORINFO();
+            if (!NativeMethods.GetMonitorInfo(targetMonitor, monitorInfo))
+                return false;
+
+            bool[] foundFullscreen = new bool[] { false };
+
+            NativeMethods.EnumWindows((hWnd, lParam) =>
+            {
+                // Skip our own windows
+                NativeMethods.GetWindowThreadProcessId(hWnd, out var processId);
+                var currentProcessId = Process.GetCurrentProcess().Id;
+                if (processId == currentProcessId)
+                    return true;
+
+                // Skip invisible windows
+                if (!NativeMethods.IsWindowVisible(hWnd))
+                    return true;
+
+                // Skip minimized windows
+                var placement = new NativeMethods.WINDOWPLACEMENT { length = Marshal.SizeOf<NativeMethods.WINDOWPLACEMENT>() };
+                if (!NativeMethods.GetWindowPlacement(hWnd, out placement))
+                    return true;
+                if (placement.showCmd == NativeMethods.SW_SHOWMINIMIZED)
+                    return true;
+
+                // Check if window is on target monitor
+                var windowMonitor = NativeMethods.MonitorFromWindow(hWnd, NativeMethods.MONITOR_DEFAULTTONEAREST);
+                if (windowMonitor != targetMonitor)
+                    return true;
+
+                // Skip tool windows and other non-main windows
+                var exStyle = NativeMethods.GetWindowLong(hWnd, NativeMethods.GWL_EXSTYLE);
+                if ((exStyle & NativeMethods.WS_EX_TOOLWINDOW) != 0)
+                    return true;
+                if ((exStyle & NativeMethods.WS_EX_NOACTIVATE) != 0)
+                    return true;
+
+                // Check if window is a popup window without a caption
+                var style = NativeMethods.GetWindowLong(hWnd, NativeMethods.GWL_STYLE);
+                if ((style & NativeMethods.WS_POPUP) != 0 && (style & NativeMethods.WS_CAPTION) == 0)
+                    return true;
+
+                // Get window rect
+                if (!NativeMethods.GetWindowRect(hWnd, out var windowRect))
+                    return true;
+
+                // Check if window covers entire monitor (including taskbar area)
+                bool coversFullMonitor =
+                    windowRect.Left <= monitorInfo.rcMonitor.Left &&
+                    windowRect.Top <= monitorInfo.rcMonitor.Top &&
+                    windowRect.Right >= monitorInfo.rcMonitor.Right &&
+                    windowRect.Bottom >= monitorInfo.rcMonitor.Bottom;
+
+                if (coversFullMonitor)
+                {
+                    foundFullscreen[0] = true;
+                    return false; // Stop enumeration
+                }
+
+                return true;
+            }, IntPtr.Zero);
+
+            return foundFullscreen[0];
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"IsFullscreenAppRunning exception: {ex}");
+            Logger.Log(ex);
+            return false;
         }
     }
 

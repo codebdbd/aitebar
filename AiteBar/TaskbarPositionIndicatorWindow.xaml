@@ -57,14 +57,22 @@
         </Style>
     </Window.Resources>
     <Grid>
-        <Border CornerRadius="8" Background="#333333" Padding="2">
+        <Border x:Name="IndicatorBorder" 
+                CornerRadius="4" 
+                Background="#007ACC" 
+                Padding="0">
             <TextBlock x:Name="ArrowText" 
                    Text="→" 
                    FontSize="18"
+                   FontWeight="Bold"
                    Foreground="#FFFFFF"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"
-                   ToolTipService.ShowDuration="3000"/>
+                   ToolTipService.ShowDuration="3000">
+                <TextBlock.RenderTransform>
+                    <TranslateTransform Y="-1" />
+                </TextBlock.RenderTransform>
+            </TextBlock>
         </Border>
     </Grid>
 </Window>

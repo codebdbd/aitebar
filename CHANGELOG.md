@@ -9,6 +9,8 @@
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-06-17
+
 ### 🇷🇺 Добавлено | 🇬🇧 Added
 - **Индикатор положения панели**: Добавлен индикатор положения панели на панели задач, показывающий направление панели с помощью стрелки и контекстное меню.
 - **Panel position indicator**: Added panel position indicator on taskbar showing panel direction with arrow and context menu.
@@ -34,12 +36,18 @@
 - **All utilities**: Added [Utility] attributes to `QuickNoteUtility`, `TimerStopwatchUtility`, `ColorPickerUtility`, `FileSorterUtility`, `IconConverterUtility`.
 - **Документация**: Обновлена `docs/UTILITIES.md` с описанием новых механизмов.
 - **Documentation**: Updated `docs/UTILITIES.md` with new mechanisms.
+- **Централизация FindExecutableOnPath**: Метод `FindExecutableOnPath` перенесен в `PathHelper` для избежания дублирования кода между `ActionService` и `SettingsWindow`.
+- **Centralize FindExecutableOnPath**: Moved `FindExecutableOnPath` to `PathHelper` to avoid code duplication between `ActionService` and `SettingsWindow`.
+- **Индикатор положения панели**: Индикатор теперь автоматически скрывается при запуске приложения в полноэкранном режиме.
+- **Panel position indicator**: Indicator now automatically hides when an app is running in fullscreen mode.
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
 - **Завершение приложения**: Исправлено зависание процесса при закрытии приложения из-за индикатора положения панели.
 - **App shutdown**: Fixed process hanging on app exit due to panel position indicator.
 - **Отображение индикатора**: Исправлено не отображение индикатора при включении в настройках и его исчезновение.
 - **Indicator visibility**: Fixed indicator not appearing when enabled in settings and its disappearance.
+- **Очистка старых conflict copies в Quick Note**: Добавлена автоматическая очистка старых файлов conflict copies (хранятся только последние 5).
+- **Cleanup old Quick Note conflict copies**: Added automatic cleanup of old conflict copy files (only last 5 are kept).
 
 ## [1.9.1] - 2026-06-15
 

@@ -413,10 +413,10 @@ public class ActionService
                 psi.ArgumentList.Add(scriptPath);
                 return psi;
             case ".ps1":
-                string? shell = FindExecutableOnPath("pwsh.exe");
+                string? shell = PathHelper.FindExecutableOnPath("pwsh.exe");
                 if (shell == null || !File.Exists(shell))
                 {
-                    shell = FindExecutableOnPath("powershell.exe");
+                    shell = PathHelper.FindExecutableOnPath("powershell.exe");
                 }
                 if (shell == null)
                 {
@@ -437,7 +437,7 @@ public class ActionService
                 psiPs.ArgumentList.Add(scriptPath);
                 return psiPs;
             case ".py":
-                string? pythonExe = FindExecutableOnPath("python.exe");
+                string? pythonExe = PathHelper.FindExecutableOnPath("python.exe");
                 if (pythonExe == null || !File.Exists(pythonExe))
                 {
                     throw new InvalidOperationException(LocalizationService.Get("Action_PythonNotFound"));
@@ -451,31 +451,6 @@ public class ActionService
                 return psiPy;
             default: throw new InvalidOperationException(LocalizationService.Get("Action_UnsupportedScript"));
         }
-    }
-
-    private static string? FindExecutableOnPath(string fileName)
-    {
-        string? pathValue = Environment.GetEnvironmentVariable("PATH");
-        if (!string.IsNullOrWhiteSpace(pathValue))
-        {
-            foreach (string dir in pathValue.Split(';', StringSplitOptions.RemoveEmptyEntries))
-            {
-                try
-                {
-                    string candidate = Path.Combine(dir.Trim(), fileName);
-                    if (File.Exists(candidate))
-                    {
-                        return candidate;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logger.Log(ex);
-                }
-            }
-        }
-
-        return null;
     }
 
     private async Task TryEnterFullscreenAsync(IActionProcessHandle proc)

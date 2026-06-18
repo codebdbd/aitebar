@@ -22,5 +22,30 @@ namespace AiteBar
             if (!Directory.Exists(AppDataFolder)) Directory.CreateDirectory(AppDataFolder);
             if (!Directory.Exists(IconsFolder)) Directory.CreateDirectory(IconsFolder);
         }
+
+        public static string? FindExecutableOnPath(string fileName)
+        {
+            string? pathValue = Environment.GetEnvironmentVariable("PATH");
+            if (!string.IsNullOrWhiteSpace(pathValue))
+            {
+                foreach (string dir in pathValue.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                {
+                    try
+                    {
+                        string candidate = Path.Combine(dir.Trim(), fileName);
+                        if (File.Exists(candidate))
+                        {
+                            return candidate;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                    }
+                }
+            }
+
+            return null;
+        }
     }
 }

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 
@@ -93,7 +95,42 @@ namespace AiteBar
                 $"QuickNote.conflict-{DateTime.Now:yyyyMMdd-HHmmss}.md");
             await File.WriteAllTextAsync(conflictPath, QuickNoteMarkdown.ToMarkdown(document));
             LastConflictCopyPath = conflictPath;
+            CleanupOldConflictCopies();
             return conflictPath;
+        }
+
+        private void CleanupOldConflictCopies()
+        {
+            try
+            {
+                string directory = Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder;
+                Directory.CreateDirectory(directory);
+
+                List<string> conflictFiles = Directory.GetFiles(directory, "QuickNote.conflict-*.md")
+                    .OrderByDescending(File.GetLastWriteTimeUtc)
+                    .ToList();
+
+                // Keep last 5 conflict copies
+                const int maxConflictCopies = 5;
+                if (conflictFiles.Count > maxConflictCopies)
+                {
+                    foreach (string file in conflictFiles.Skip(maxConflictCopies))
+                    {
+                        try
+                        {
+                            File.Delete(file);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.Log(ex);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
         }
 
         public void OpenInEditor()
