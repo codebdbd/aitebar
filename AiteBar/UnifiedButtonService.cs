@@ -17,7 +17,7 @@ internal sealed class UnifiedButtonService
         new("Explorer", "\uF42F", "#F59E0B", "ShowPresetExplorer", "Main_ExplorerTooltip"),
         new("Downloads", "\uF151", "#34D399", "ShowPresetDownloads", "Main_DownloadsTooltip"),
         new("FileSorter", "\uF202", "#60A5FA", "ShowPresetFileSorter", "Main_FileSorterTooltip"),
-        new("IconConverter", "\uF12F", "#2DD4BF", "ShowPresetIconConverter", "Main_IconConverterTooltip"),
+        new("IconConverter", "\uE721", "#2DD4BF", "ShowPresetIconConverter", "Main_IconConverterTooltip"),
         new("TimerStopwatch", "\uED88", "#38BDF8", "ShowPresetTimerStopwatch", "Main_TimerStopwatchTooltip"),
         new("ColorPicker", "\uE5FE", "#A855F7", "ShowPresetColorPicker", "Main_ColorPickerTooltip"),
         new("QuickNote", "\uF56F", "#22D3EE", "ShowPresetQuickNote", "Main_QuickNoteTooltip"),
