@@ -1343,11 +1343,13 @@ public partial class MainWindow : Window, ISettingsWindowContext
             );
             if (isVertical)
             {
-                if (contextMetrics.PanelWidth > maxPanelSize) maxPanelSize = contextMetrics.PanelWidth;
+                // For vertical panels, track max height
+                if (contextMetrics.PanelHeight > maxPanelSize) maxPanelSize = contextMetrics.PanelHeight;
             }
             else
             {
-                if (contextMetrics.PanelHeight > maxPanelSize) maxPanelSize = contextMetrics.PanelHeight;
+                // For horizontal panels, track max width
+                if (contextMetrics.PanelWidth > maxPanelSize) maxPanelSize = contextMetrics.PanelWidth;
             }
         }
 
@@ -1355,12 +1357,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
         // Apply maximum size to last metrics
         if (isVertical)
         {
-            if (maxPanelSize > _lastMetrics.PanelWidth)
+            if (maxPanelSize > _lastMetrics.PanelHeight)
             {
                 _lastMetrics = new PanelLayoutHelper.PanelLayoutMetrics(
                     IsVertical: _lastMetrics.IsVertical,
-                    PanelWidth: maxPanelSize,
-                    PanelHeight: _lastMetrics.PanelHeight,
+                    PanelWidth: _lastMetrics.PanelWidth,
+                    PanelHeight: maxPanelSize,
                     FixedWidth: _lastMetrics.FixedWidth,
                     FixedHeight: _lastMetrics.FixedHeight,
                     TrailingWidth: _lastMetrics.TrailingWidth,
@@ -1378,12 +1380,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
         }
         else
         {
-            if (maxPanelSize > _lastMetrics.PanelHeight)
+            if (maxPanelSize > _lastMetrics.PanelWidth)
             {
                 _lastMetrics = new PanelLayoutHelper.PanelLayoutMetrics(
                     IsVertical: _lastMetrics.IsVertical,
-                    PanelWidth: _lastMetrics.PanelWidth,
-                    PanelHeight: maxPanelSize,
+                    PanelWidth: maxPanelSize,
+                    PanelHeight: _lastMetrics.PanelHeight,
                     FixedWidth: _lastMetrics.FixedWidth,
                     FixedHeight: _lastMetrics.FixedHeight,
                     TrailingWidth: _lastMetrics.TrailingWidth,
