@@ -524,7 +524,7 @@ public partial class TimerStopwatchWindow : DarkWindow
 
         TimerProgressTicks.Children.Clear();
 
-        var accent = (System.Windows.Media.Brush)FindResource("TimerAccent");
+        var accent = (System.Windows.Media.Brush)FindResource("AccentColor");
         var tickMetrics = TimerStopwatchLayoutHelper.GetProgressTickMetrics(segmentCount, TimerProgressTicks.ActualWidth);
 
         for (int i = 0; i < segmentCount; i++)
@@ -565,14 +565,14 @@ public partial class TimerStopwatchWindow : DarkWindow
             bool selected = _timerDuration == duration;
             if (selected)
             {
-                button.Background = (System.Windows.Media.Brush)FindResource("TimerAccent");
-                button.BorderBrush = (System.Windows.Media.Brush)FindResource("TimerAccent");
+                button.Background = (System.Windows.Media.Brush)FindResource("AccentColor");
+                button.BorderBrush = (System.Windows.Media.Brush)FindResource("AccentColor");
                 button.Foreground = System.Windows.Media.Brushes.White;
             }
             else
             {
-                button.SetResourceReference(System.Windows.Controls.Control.BackgroundProperty, "TimerSurface");
-                button.SetResourceReference(System.Windows.Controls.Control.BorderBrushProperty, "TimerControlBorder");
+                button.SetResourceReference(System.Windows.Controls.Control.BackgroundProperty, "FormControlBackground");
+                button.SetResourceReference(System.Windows.Controls.Control.BorderBrushProperty, "FormControlBorderBrush");
                 button.Foreground = (System.Windows.Media.Brush)FindResource("PrimaryText");
             }
         }

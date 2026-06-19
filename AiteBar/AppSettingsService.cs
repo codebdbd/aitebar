@@ -735,6 +735,7 @@ namespace AiteBar
                 "ShowPresetTimerStopwatch" => settings.ShowPresetTimerStopwatch,
                 "ShowPresetColorPicker" => settings.ShowPresetColorPicker,
                 "ShowPresetQuickNote" => settings.ShowPresetQuickNote,
+                "ShowPresetQRCodeGenerator" => settings.ShowPresetQRCodeGenerator,
                 _ => false
             };
         }
@@ -755,6 +756,7 @@ namespace AiteBar
                 case "ShowPresetTimerStopwatch": settings.ShowPresetTimerStopwatch = visible; break;
                 case "ShowPresetColorPicker": settings.ShowPresetColorPicker = visible; break;
                 case "ShowPresetQuickNote": settings.ShowPresetQuickNote = visible; break;
+                case "ShowPresetQRCodeGenerator": settings.ShowPresetQRCodeGenerator = visible; break;
             }
             Settings = settings;
         }

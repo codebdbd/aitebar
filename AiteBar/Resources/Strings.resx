@@ -440,5 +440,28 @@ Open the GitHub release page?</value></data>
   <data name="IconConverter_SaveFilter" xml:space="preserve"><value>Windows icon|*.ico</value></data>
   <data name="IconConverter_SavedFormat" xml:space="preserve"><value>Saved: {0}</value></data>
   <data name="IconConverter_SaveFailed" xml:space="preserve"><value>Could not save ICO: {0}</value></data>
+  <data name="Tool_QRCodeGenerator" xml:space="preserve"><value>QR code generator</value></data>
+  <data name="Main_QRCodeGeneratorTooltip" xml:space="preserve"><value>Generate QR code from text</value></data>
+  <data name="QRCodeGenerator_Title" xml:space="preserve"><value>QR code generator</value></data>
+  <data name="QRCodeGenerator_InputLabel" xml:space="preserve"><value>Text or URL</value></data>
+  <data name="QRCodeGenerator_InputPlaceholder" xml:space="preserve"><value>Enter text or URL...</value></data>
+  <data name="QRCodeGenerator_EmptyHint" xml:space="preserve"><value>Type something to generate a QR code</value></data>
+  <data name="QRCodeGenerator_EccLevel" xml:space="preserve"><value>Error correction</value></data>
+  <data name="QRCodeGenerator_EccLevelL" xml:space="preserve"><value>L - 7%</value></data>
+  <data name="QRCodeGenerator_EccLevelM" xml:space="preserve"><value>M - 15%</value></data>
+  <data name="QRCodeGenerator_EccLevelQ" xml:space="preserve"><value>Q - 25%</value></data>
+  <data name="QRCodeGenerator_EccLevelH" xml:space="preserve"><value>H - 30%</value></data>
+  <data name="QRCodeGenerator_PixelSize" xml:space="preserve"><value>Pixel size</value></data>
+  <data name="QRCodeGenerator_CopyPng" xml:space="preserve"><value>Copy PNG</value></data>
+  <data name="QRCodeGenerator_SavePng" xml:space="preserve"><value>Save PNG</value></data>
+  <data name="QRCodeGenerator_SaveSvg" xml:space="preserve"><value>Save SVG</value></data>
+  <data name="QRCodeGenerator_Status" xml:space="preserve"><value>QR version {0}, {1}x{1} modules</value></data>
+  <data name="QRCodeGenerator_ErrorEmptyText" xml:space="preserve"><value>Text cannot be empty</value></data>
+  <data name="QRCodeGenerator_ErrorTextTooLong" xml:space="preserve"><value>Text exceeds maximum length ({0} characters)</value></data>
+  <data name="QRCodeGenerator_Copied" xml:space="preserve"><value>QR code copied to clipboard</value></data>
+  <data name="QRCodeGenerator_SavePngTitle" xml:space="preserve"><value>Save QR code as PNG</value></data>
+  <data name="QRCodeGenerator_SaveSvgTitle" xml:space="preserve"><value>Save QR code as SVG</value></data>
+  <data name="QRCodeGenerator_SaveSuccess" xml:space="preserve"><value>QR code saved successfully</value></data>
+  <data name="QRCodeGenerator_SaveFailed" xml:space="preserve"><value>Failed to save: {0}</value></data>
   <data name="Utility_Unavailable" xml:space="preserve"><value>Utility {0} is temporarily unavailable.</value></data>
 </root>

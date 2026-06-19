@@ -319,6 +319,15 @@
                                 <ToggleButton x:Name="ChkTimerStopwatchWin" Content="Win"/>
                                 <ComboBox x:Name="CmbTimerStopwatchKey" Width="200" VerticalAlignment="Center"/>
                             </DockPanel>
+
+                            <DockPanel Margin="0,12,0,0">
+                                <TextBlock Text="{local:Loc ResourceKey=Tool_QRCodeGenerator}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
+                                <ToggleButton x:Name="ChkQRCodeGeneratorCtrl" Content="Ctrl"/>
+                                <ToggleButton x:Name="ChkQRCodeGeneratorShift" Content="Shift"/>
+                                <ToggleButton x:Name="ChkQRCodeGeneratorAlt" Content="Alt"/>
+                                <ToggleButton x:Name="ChkQRCodeGeneratorWin" Content="Win"/>
+                                <ComboBox x:Name="CmbQRCodeGeneratorKey" Width="200" VerticalAlignment="Center"/>
+                            </DockPanel>
                         </StackPanel>
                     </ScrollViewer>
                 </Border>
@@ -347,6 +356,7 @@
                             <CheckBox x:Name="ChkShowPresetTimerStopwatch" Content="{local:Loc ResourceKey=Tool_TimerStopwatch}"/>
                             <CheckBox x:Name="ChkShowPresetColorPicker" Content="{local:Loc ResourceKey=Tool_ColorPicker}"/>
                             <CheckBox x:Name="ChkShowPresetQuickNote" Content="{local:Loc ResourceKey=Tool_QuickNote}"/>
+                            <CheckBox x:Name="ChkShowPresetQRCodeGenerator" Content="{local:Loc ResourceKey=Tool_QRCodeGenerator}"/>
                         </UniformGrid>
                     </StackPanel>
                 </Border>

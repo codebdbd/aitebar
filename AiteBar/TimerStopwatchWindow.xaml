@@ -12,15 +12,7 @@
         PreviewKeyDown="Window_PreviewKeyDown">
 
     <Window.Resources>
-        <SolidColorBrush x:Key="TimerAccent" Color="#007ACC"/>
-        <SolidColorBrush x:Key="TimerPanel" Color="#0F1115"/>
-        <SolidColorBrush x:Key="TimerSurface" Color="#151922"/>
-        <SolidColorBrush x:Key="TimerSurfaceHover" Color="#1B2330"/>
-        <SolidColorBrush x:Key="TimerBorder" Color="#16202A"/>
-        <SolidColorBrush x:Key="TimerControlBorder" Color="#273344"/>
-        <SolidColorBrush x:Key="TimerMuted" Color="#9BA1A6"/>
-
-        <Style x:Key="IconButtonStyle" TargetType="Button">
+        <Style x:Key="HeaderButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="32"/>
             <Setter Property="Height" Value="32"/>
             <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
@@ -54,9 +46,9 @@
         <Style x:Key="CompactActionButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="32"/>
             <Setter Property="Height" Value="32"/>
-            <Setter Property="Foreground" Value="{StaticResource TimerAccent}"/>
-            <Setter Property="Background" Value="{StaticResource TimerSurface}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource TimerControlBorder}"/>
+            <Setter Property="Foreground" Value="{StaticResource AccentColor}"/>
+            <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
@@ -71,7 +63,7 @@
                                 <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource TimerSurfaceHover}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                                 <Setter Property="Foreground" Value="#38BDF8"/>
                             </Trigger>
                             <Trigger Property="IsPressed" Value="True">
@@ -89,7 +81,7 @@
 
         <Style x:Key="ModeButtonStyle" TargetType="RadioButton">
             <Setter Property="Height" Value="32"/>
-            <Setter Property="Foreground" Value="{StaticResource TimerMuted}"/>
+            <Setter Property="Foreground" Value="{StaticResource MutedText}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="1"/>
@@ -107,11 +99,11 @@
                                 <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
                             </Trigger>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource TimerAccent}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentColor}"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource TimerSurfaceHover}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                             </Trigger>
                             <MultiTrigger>
                                 <MultiTrigger.Conditions>
@@ -130,8 +122,8 @@
             <Setter Property="Height" Value="34"/>
             <Setter Property="Margin" Value="4"/>
             <Setter Property="Foreground" Value="#D8DEE6"/>
-            <Setter Property="Background" Value="{StaticResource TimerSurface}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource TimerControlBorder}"/>
+            <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontSize" Value="13"/>
@@ -147,7 +139,7 @@
                                 <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource TimerSurfaceHover}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -161,8 +153,8 @@
             <Setter Property="MinWidth" Value="150"/>
             <Setter Property="Padding" Value="18,0"/>
             <Setter Property="Foreground" Value="#E8EDF2"/>
-            <Setter Property="Background" Value="{StaticResource TimerSurface}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource TimerControlBorder}"/>
+            <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontSize" Value="14"/>
@@ -178,7 +170,7 @@
                                 <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource TimerSurfaceHover}"/>
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
@@ -192,8 +184,8 @@
             <Setter Property="MinWidth" Value="150"/>
             <Setter Property="Padding" Value="18,0"/>
             <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="{StaticResource TimerAccent}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource TimerAccent}"/>
+            <Setter Property="Background" Value="{StaticResource AccentColor}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource AccentColor}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontSize" Value="14"/>
@@ -218,7 +210,7 @@
         </Style>
 
         <Style x:Key="TimeInputStyle" TargetType="TextBox" BasedOn="{StaticResource BaseTextBoxStyle}">
-            <Setter Property="CaretBrush" Value="{StaticResource TimerAccent}"/>
+            <Setter Property="CaretBrush" Value="{StaticResource AccentColor}"/>
             <Setter Property="HorizontalContentAlignment" Value="Center"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Setter Property="TextAlignment" Value="Center"/>
@@ -227,12 +219,12 @@
     </Window.Resources>
 
     <Grid>
-        <Border x:Name="RootBorder" Margin="8" CornerRadius="8" Background="{StaticResource TimerBorder}" BorderBrush="#332A9CFF" BorderThickness="0.7">
+        <Border x:Name="RootBorder" Margin="8" CornerRadius="8" Background="{StaticResource BorderColor}" BorderBrush="#332A9CFF" BorderThickness="0.7">
             <Border.Effect>
                 <DropShadowEffect Color="#000000" BlurRadius="14" ShadowDepth="2" Direction="270" Opacity="0.45"/>
             </Border.Effect>
 
-            <Border x:Name="InnerBorder" CornerRadius="7" Background="{StaticResource TimerPanel}">
+            <Border x:Name="InnerBorder" CornerRadius="7" Background="{StaticResource PanelBackground}">
             <Grid x:Name="ContentGrid" Margin="20">
                 <Grid.RowDefinitions>
                     <RowDefinition x:Name="HeaderRow" Height="36"/>
@@ -249,7 +241,7 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="{StaticResource TimerSurface}" BorderBrush="{StaticResource TimerControlBorder}" BorderThickness="1" CornerRadius="4" Padding="1" Margin="0,0,10,0">
+                    <Border HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="{StaticResource FormControlBackground}" BorderBrush="{StaticResource FormControlBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="1" Margin="0,0,10,0">
                         <UniformGrid Columns="2" HorizontalAlignment="Stretch">
                             <RadioButton x:Name="RbTimer" IsChecked="True" Style="{StaticResource ModeButtonStyle}" Checked="Mode_Checked" Content="{local:Loc ResourceKey=TimerStopwatch_Timer}"/>
                             <RadioButton x:Name="RbStopwatch" Style="{StaticResource ModeButtonStyle}" Checked="Mode_Checked" Content="{local:Loc ResourceKey=TimerStopwatch_Stopwatch}"/>
@@ -257,8 +249,8 @@
                     </Border>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button x:Name="BtnCompact" Content="&#xE923;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource IconButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Compact}" Click="BtnCompact_Click"/>
-                        <Button Content="&#xF369;" Style="{StaticResource IconButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
+                        <Button x:Name="BtnCompact" Content="&#xE923;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource HeaderButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Compact}" Click="BtnCompact_Click"/>
+                        <Button Content="&#xF369;" Style="{StaticResource HeaderButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
                     </StackPanel>
                 </Grid>
 
@@ -323,12 +315,12 @@
             </Border>
         </Border>
 
-        <Border x:Name="CompactRootBorder" Margin="3" CornerRadius="6" Background="{StaticResource TimerBorder}" BorderBrush="#332A9CFF" BorderThickness="0.7" Visibility="Collapsed">
+        <Border x:Name="CompactRootBorder" Margin="3" CornerRadius="6" Background="{StaticResource BorderColor}" BorderBrush="#332A9CFF" BorderThickness="0.7" Visibility="Collapsed">
             <Border.Effect>
                 <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="2" Direction="270" Opacity="0.45"/>
             </Border.Effect>
 
-            <Border CornerRadius="5" Background="{StaticResource TimerPanel}">
+            <Border CornerRadius="5" Background="{StaticResource PanelBackground}">
                 <Grid Margin="8" Height="36" VerticalAlignment="Center">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="32"/>
@@ -338,7 +330,7 @@
                         <ColumnDefinition Width="32"/>
                     </Grid.ColumnDefinitions>
 
-                    <TextBlock x:Name="TxtCompactModeIcon" Text="&#xED88;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" Foreground="{StaticResource TimerAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtCompactModeIcon" Text="&#xED88;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" Foreground="{StaticResource AccentColor}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TxtCompactDisplay" Grid.Column="1" Text="00:00" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="23" FontWeight="Regular" Foreground="#FFFFFF" TextAlignment="Left" VerticalAlignment="Center" Margin="8,-2,0,0" LineHeight="28" LineStackingStrategy="BlockLineHeight" Typography.NumeralAlignment="Tabular" TextOptions.TextFormattingMode="Display"/>
                     <Button x:Name="BtnCompactStartPause" Grid.Column="2" Content="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="18" Style="{StaticResource CompactActionButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Start}" Click="BtnStartPause_Click"/>
                     <Button Grid.Column="4" Content="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource CompactSecondaryButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Expand}" Click="BtnCompact_Click"/>

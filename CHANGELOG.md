@@ -9,6 +9,18 @@
 
 ## [Unreleased]
 
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Утилита генератора QR-кодов**: Встроенная утилита для создания QR-кодов с настраиваемым размером модуля, уровнем коррекции ошибок и экспортом в PNG/SVG.
+- **QR code generator utility**: Built-in utility for generating QR codes with customizable module size, error correction level, and PNG/SVG export.
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Доработка Tooltip**: Улучшено визуальное оформление подсказок, мгновенное появление и правильное центрирование.
+- **Tooltip overhaul**: Improved tooltip visual design, instant appearance, and proper centering.
+- **Стиль таймера/секундомера**: Обновлён цветовой стиль для соответствия другим утилитам.
+- **Timer/stopwatch styling**: Updated color scheme to match other utilities.
+- **Прозрачность фона утилит**: Убрана прозрачность фона для снижения когнитивной нагрузки.
+- **Utility background transparency**: Removed background transparency to reduce cognitive load.
+
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
 - **Перетаскивание кнопок в многостолбчатом режиме**: Исправлено перетаскивание кнопок между колонками в вертикальном режиме панели. Теперь кнопка может свободно двигаться по обеим осям и корректно отображается в новом положении.
 - **Button drag-and-drop in multi-column mode**: Fixed button dragging between columns in vertical panel mode. Buttons can now move freely in both axes and are correctly animated to their new positions.

@@ -376,5 +376,28 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="IconConverter_SaveFilter" xml:space="preserve"><value>Піктограма Windows|*.ico</value></data>
   <data name="IconConverter_SavedFormat" xml:space="preserve"><value>Збережено: {0}</value></data>
   <data name="IconConverter_SaveFailed" xml:space="preserve"><value>Не удалось зберегти ICO: {0}</value></data>
+  <data name="Tool_QRCodeGenerator" xml:space="preserve"><value>Генератор QR-кодів</value></data>
+  <data name="Main_QRCodeGeneratorTooltip" xml:space="preserve"><value>Створити QR-код із тексту</value></data>
+  <data name="QRCodeGenerator_Title" xml:space="preserve"><value>Генератор QR-кодів</value></data>
+  <data name="QRCodeGenerator_InputLabel" xml:space="preserve"><value>Текст або URL</value></data>
+  <data name="QRCodeGenerator_InputPlaceholder" xml:space="preserve"><value>Введіть текст або URL...</value></data>
+  <data name="QRCodeGenerator_EmptyHint" xml:space="preserve"><value>Введіть текст, щоб створити QR-код</value></data>
+  <data name="QRCodeGenerator_EccLevel" xml:space="preserve"><value>Корекція помилок</value></data>
+  <data name="QRCodeGenerator_EccLevelL" xml:space="preserve"><value>L - 7%</value></data>
+  <data name="QRCodeGenerator_EccLevelM" xml:space="preserve"><value>M - 15%</value></data>
+  <data name="QRCodeGenerator_EccLevelQ" xml:space="preserve"><value>Q - 25%</value></data>
+  <data name="QRCodeGenerator_EccLevelH" xml:space="preserve"><value>H - 30%</value></data>
+  <data name="QRCodeGenerator_PixelSize" xml:space="preserve"><value>Розмір пікселя</value></data>
+  <data name="QRCodeGenerator_CopyPng" xml:space="preserve"><value>Копіювати PNG</value></data>
+  <data name="QRCodeGenerator_SavePng" xml:space="preserve"><value>Зберегти PNG</value></data>
+  <data name="QRCodeGenerator_SaveSvg" xml:space="preserve"><value>Зберегти SVG</value></data>
+  <data name="QRCodeGenerator_Status" xml:space="preserve"><value>QR версія {0}, {1}x{1} модулів</value></data>
+  <data name="QRCodeGenerator_ErrorEmptyText" xml:space="preserve"><value>Текст не може бути порожнім</value></data>
+  <data name="QRCodeGenerator_ErrorTextTooLong" xml:space="preserve"><value>Текст перевищує максимальну довжину ({0} символів)</value></data>
+  <data name="QRCodeGenerator_Copied" xml:space="preserve"><value>QR-код скопійовано в буфер обміну</value></data>
+  <data name="QRCodeGenerator_SavePngTitle" xml:space="preserve"><value>Зберегти QR-код як PNG</value></data>
+  <data name="QRCodeGenerator_SaveSvgTitle" xml:space="preserve"><value>Зберегти QR-код як SVG</value></data>
+  <data name="QRCodeGenerator_SaveSuccess" xml:space="preserve"><value>QR-код успішно збережено</value></data>
+  <data name="QRCodeGenerator_SaveFailed" xml:space="preserve"><value>Не вдалося зберегти: {0}</value></data>
   <data name="Utility_Unavailable" xml:space="preserve"><value>Утиліта {0} тимчасово недоступна.</value></data>
 </root>

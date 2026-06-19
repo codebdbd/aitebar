@@ -137,6 +137,7 @@ public class AppSettings
     public bool ShowPresetIconConverter { get; set; } = true;
     public bool ShowPresetColorPicker { get; set; } = false;
     public bool ShowPresetQuickNote { get; set; } = false;
+    public bool ShowPresetQRCodeGenerator { get; set; } = false;
     public bool ShowPresetTimerStopwatch { get; set; } = true;
     public string QuickNoteThemeId { get; set; } = "dark";
     public bool QuickNotePinned { get; set; } = false;
@@ -163,6 +164,7 @@ public class AppSettings
     public HotkeyBinding QuickNoteHotkey { get; set; } = new();
     public HotkeyBinding ColorPickerHotkey { get; set; } = new();
     public HotkeyBinding TimerStopwatchHotkey { get; set; } = new();
+    public HotkeyBinding QRCodeGeneratorHotkey { get; set; } = new();
     public FileSortUndoState? LastFileSortOperation { get; set; }
 
     public List<CustomElement> Elements { get; set; } = new();

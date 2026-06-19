@@ -15,7 +15,8 @@ public enum HotkeyCommand
     FileSorter,
     QuickNote,
     ColorPicker,
-    TimerStopwatch
+    TimerStopwatch,
+    QRCodeGenerator
 }
 
 public sealed record HotkeyDefinition(HotkeyCommand? Command, int Id, string DisplayName, HotkeyBinding Binding);
@@ -54,6 +55,7 @@ public sealed class HotkeyService
     internal const int QuickNoteId = 9005;
     internal const int ColorPickerId = 9006;
     internal const int TimerStopwatchId = 9007;
+    internal const int QRCodeGeneratorId = 9008;
 
     internal const uint ModAlt = 0x0001;
     internal const uint ModControl = 0x0002;
@@ -69,7 +71,8 @@ public sealed class HotkeyService
         new HotkeyDescriptor(HotkeyCommand.FileSorter, FileSorterId, "Tool_FileSorter"),
         new HotkeyDescriptor(HotkeyCommand.QuickNote, QuickNoteId, "Tool_QuickNote"),
         new HotkeyDescriptor(HotkeyCommand.ColorPicker, ColorPickerId, "Tool_ColorPicker"),
-        new HotkeyDescriptor(HotkeyCommand.TimerStopwatch, TimerStopwatchId, "Tool_TimerStopwatch")
+        new HotkeyDescriptor(HotkeyCommand.TimerStopwatch, TimerStopwatchId, "Tool_TimerStopwatch"),
+        new HotkeyDescriptor(HotkeyCommand.QRCodeGenerator, QRCodeGeneratorId, "Tool_QRCodeGenerator")
     ];
 
     private static readonly IReadOnlyDictionary<int, HotkeyCommand> CommandsById =
@@ -108,7 +111,8 @@ public sealed class HotkeyService
             [HotkeyCommand.FileSorter] = settings.FileSorterHotkey,
             [HotkeyCommand.QuickNote] = settings.QuickNoteHotkey,
             [HotkeyCommand.ColorPicker] = settings.ColorPickerHotkey,
-            [HotkeyCommand.TimerStopwatch] = settings.TimerStopwatchHotkey
+            [HotkeyCommand.TimerStopwatch] = settings.TimerStopwatchHotkey,
+            [HotkeyCommand.QRCodeGenerator] = settings.QRCodeGeneratorHotkey
         };
 
         return Descriptors

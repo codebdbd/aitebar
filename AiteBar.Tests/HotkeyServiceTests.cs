@@ -144,10 +144,12 @@ public sealed class HotkeyServiceTests
         Assert.True(service.TryGetCommand(HotkeyService.ShowPanelId, out var showPanel));
         Assert.True(service.TryGetCommand(HotkeyService.FileSorterId, out var fileSorter));
         Assert.True(service.TryGetCommand(HotkeyService.TimerStopwatchId, out var timerStopwatch));
+        Assert.True(service.TryGetCommand(HotkeyService.QRCodeGeneratorId, out var qrCodeGenerator));
         Assert.False(service.TryGetCommand(123, out _));
         Assert.Equal(HotkeyCommand.ShowPanel, showPanel);
         Assert.Equal(HotkeyCommand.FileSorter, fileSorter);
         Assert.Equal(HotkeyCommand.TimerStopwatch, timerStopwatch);
+        Assert.Equal(HotkeyCommand.QRCodeGenerator, qrCodeGenerator);
     }
 
     [Fact]
@@ -173,7 +175,8 @@ public sealed class HotkeyServiceTests
                 HotkeyCommand.FileSorter,
                 HotkeyCommand.QuickNote,
                 HotkeyCommand.ColorPicker,
-                HotkeyCommand.TimerStopwatch
+                HotkeyCommand.TimerStopwatch,
+                HotkeyCommand.QRCodeGenerator
             ],
             definitions.Select(definition => definition.Command));
         Assert.Equal("name:AppSettingsWindow_ShowPanel", definitions[0].DisplayName);

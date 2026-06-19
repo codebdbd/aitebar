@@ -20,7 +20,8 @@ internal sealed class UnifiedButtonService
         new("IconConverter", "\uF12F", "#2DD4BF", "ShowPresetIconConverter", "Main_IconConverterTooltip"),
         new("TimerStopwatch", "\uED88", "#38BDF8", "ShowPresetTimerStopwatch", "Main_TimerStopwatchTooltip"),
         new("ColorPicker", "\uE5FE", "#A855F7", "ShowPresetColorPicker", "Main_ColorPickerTooltip"),
-        new("QuickNote", "\uF56F", "#22D3EE", "ShowPresetQuickNote", "Main_QuickNoteTooltip")
+        new("QuickNote", "\uF56F", "#22D3EE", "ShowPresetQuickNote", "Main_QuickNoteTooltip"),
+        new("QRCodeGenerator", "\uF635", "#60A5FA", "ShowPresetQRCodeGenerator", "Main_QRCodeGeneratorTooltip")
     };
 
     public UnifiedButtonService(AppSettingsService settingsService)

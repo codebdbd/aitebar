@@ -88,6 +88,19 @@
         "resolved": "13.0.3",
         "contentHash": "HrC5BXdl00IP9zeV+0Z848QWPAoCr9P3bDEZguI+gkLcBKAOxix/tLEAAHC+UvDNPv4a2d18lOReHMOagPa+zQ=="
       },
+      "QRCoder": {
+        "type": "Transitive",
+        "resolved": "1.8.0",
+        "contentHash": "RuvX3PEXU6pbY/I5ItAk800jm62r+YnoPLgyS2WTgwxkOnGkOfU9ORiipHUF0LkLyqM8rlroUCA319JjRYfRFQ=="
+      },
+      "QRCoder.Xaml": {
+        "type": "Transitive",
+        "resolved": "1.8.0",
+        "contentHash": "f/FolHaypWuI/Vtcjf7u1W9X+tVSHu4BbhLZhWav+K88rmrYzU1+JvN/iVhMBQYgLAyDYIE5Dom9MSLAqJvCrg==",
+        "dependencies": {
+          "QRCoder": "1.8.0"
+        }
+      },
       "Sentry": {
         "type": "Transitive",
         "resolved": "6.6.0",
@@ -214,6 +227,8 @@
       "aitebar": {
         "type": "Project",
         "dependencies": {
+          "QRCoder": "[1.8.0, )",
+          "QRCoder.Xaml": "[1.8.0, )",
           "Sentry": "[6.6.0, )",
           "SkiaSharp": "[3.119.2, )",
           "SkiaSharp.NativeAssets.Win32": "[3.119.2, )",

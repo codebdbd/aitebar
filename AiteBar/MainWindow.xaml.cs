@@ -849,6 +849,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         if (AppSettings.ShowPresetTimerStopwatch) count++;
         if (AppSettings.ShowPresetColorPicker) count++;
         if (AppSettings.ShowPresetQuickNote) count++;
+        if (AppSettings.ShowPresetQRCodeGenerator) count++;
         return count;
     }
 
@@ -932,6 +933,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
             case HotkeyCommand.TimerStopwatch:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("TimerStopwatch", HideDock));
                 break;
+            case HotkeyCommand.QRCodeGenerator:
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("QRCodeGenerator", HideDock));
+                break;
         }
     }
 
@@ -970,6 +974,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
         if (foreground != null)
         {
             btn.Foreground = foreground;
+        }
+
+        if (!string.IsNullOrWhiteSpace(tooltip))
+        {
+            System.Windows.Automation.AutomationProperties.SetName(btn, tooltip);
+            System.Windows.Automation.AutomationProperties.SetHelpText(btn, tooltip);
         }
 
         btn.Click += onClick;
@@ -1534,6 +1544,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                         break;
                     case "QuickNote":
                         await _actionService.LaunchUtilityAsync("QuickNote", HideDock);
+                        break;
+                    case "QRCodeGenerator":
+                        await _actionService.LaunchUtilityAsync("QRCodeGenerator", HideDock);
                         break;
                 }
             });

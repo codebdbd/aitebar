@@ -79,6 +79,7 @@ public partial class AppSettingsWindow : DarkWindow
         yield return CmbQuickNoteKey;
         yield return CmbColorPickerKey;
         yield return CmbTimerStopwatchKey;
+        yield return CmbQRCodeGeneratorKey;
     }
 
     private static void SetKeyComboValue(ComboBox combo, string? key)
@@ -129,6 +130,7 @@ public partial class AppSettingsWindow : DarkWindow
         string quickNoteKey = GetComboTag(CmbQuickNoteKey) ?? "None";
         string colorPickerKey = GetComboTag(CmbColorPickerKey) ?? "None";
         string timerStopwatchKey = GetComboTag(CmbTimerStopwatchKey) ?? "None";
+        string qrCodeGeneratorKey = GetComboTag(CmbQRCodeGeneratorKey) ?? "None";
         object? edgeTag = (CmbEdge.SelectedItem as ComboBoxItem)?.Tag;
         object? monitorTag = (CmbMonitor.SelectedItem as ComboBoxItem)?.Tag;
 
@@ -147,6 +149,7 @@ public partial class AppSettingsWindow : DarkWindow
             SetKeyComboValue(CmbQuickNoteKey, quickNoteKey);
             SetKeyComboValue(CmbColorPickerKey, colorPickerKey);
             SetKeyComboValue(CmbTimerStopwatchKey, timerStopwatchKey);
+            SetKeyComboValue(CmbQRCodeGeneratorKey, qrCodeGeneratorKey);
 
             ReloadEdgeList(edgeTag);
             ReloadMonitorList(monitorTag);
@@ -312,7 +315,8 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding fileSorterBinding,
         HotkeyBinding quickNoteBinding,
         HotkeyBinding colorPickerBinding,
-        HotkeyBinding timerStopwatchBinding)
+        HotkeyBinding timerStopwatchBinding,
+        HotkeyBinding qrCodeGeneratorBinding)
     {
         var registrations = new (string Name, HotkeyBinding Binding)[]
         {
@@ -323,7 +327,8 @@ public partial class AppSettingsWindow : DarkWindow
             (LocalizationService.Get("Tool_FileSorter"), fileSorterBinding),
             (LocalizationService.Get("Tool_QuickNote"), quickNoteBinding),
             (LocalizationService.Get("Tool_ColorPicker"), colorPickerBinding),
-            (LocalizationService.Get("Tool_TimerStopwatch"), timerStopwatchBinding)
+            (LocalizationService.Get("Tool_TimerStopwatch"), timerStopwatchBinding),
+            (LocalizationService.Get("Tool_QRCodeGenerator"), qrCodeGeneratorBinding)
         };
 
         var missingModifiers = registrations
@@ -376,6 +381,7 @@ public partial class AppSettingsWindow : DarkWindow
         ChkShowPresetTimerStopwatch.IsChecked = _settings.ShowPresetTimerStopwatch;
         ChkShowPresetColorPicker.IsChecked = _settings.ShowPresetColorPicker;
         ChkShowPresetQuickNote.IsChecked = _settings.ShowPresetQuickNote;
+        ChkShowPresetQRCodeGenerator.IsChecked = _settings.ShowPresetQRCodeGenerator;
         ChkShowTaskbarPositionIndicator.IsChecked = _settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
         ChkCheckForUpdatesEnabled.IsChecked = _settings.CheckForUpdatesEnabled;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
@@ -403,6 +409,7 @@ public partial class AppSettingsWindow : DarkWindow
         LoadHotkeyBinding(_settings.QuickNoteHotkey, ChkQuickNoteCtrl, ChkQuickNoteAlt, ChkQuickNoteShift, ChkQuickNoteWin, CmbQuickNoteKey);
         LoadHotkeyBinding(_settings.ColorPickerHotkey, ChkColorPickerCtrl, ChkColorPickerAlt, ChkColorPickerShift, ChkColorPickerWin, CmbColorPickerKey);
         LoadHotkeyBinding(_settings.TimerStopwatchHotkey, ChkTimerStopwatchCtrl, ChkTimerStopwatchAlt, ChkTimerStopwatchShift, ChkTimerStopwatchWin, CmbTimerStopwatchKey);
+        LoadHotkeyBinding(_settings.QRCodeGeneratorHotkey, ChkQRCodeGeneratorCtrl, ChkQRCodeGeneratorAlt, ChkQRCodeGeneratorShift, ChkQRCodeGeneratorWin, CmbQRCodeGeneratorKey);
 
         ReloadEdgeList(_settings.Edge);
         ReloadMonitorList(_settings.MonitorIndex);
@@ -519,8 +526,9 @@ public partial class AppSettingsWindow : DarkWindow
         var quickNoteBinding = BuildHotkeyBinding(ChkQuickNoteCtrl, ChkQuickNoteAlt, ChkQuickNoteShift, ChkQuickNoteWin, CmbQuickNoteKey);
         var colorPickerBinding = BuildHotkeyBinding(ChkColorPickerCtrl, ChkColorPickerAlt, ChkColorPickerShift, ChkColorPickerWin, CmbColorPickerKey);
         var timerStopwatchBinding = BuildHotkeyBinding(ChkTimerStopwatchCtrl, ChkTimerStopwatchAlt, ChkTimerStopwatchShift, ChkTimerStopwatchWin, CmbTimerStopwatchKey);
+        var qrCodeGeneratorBinding = BuildHotkeyBinding(ChkQRCodeGeneratorCtrl, ChkQRCodeGeneratorAlt, ChkQRCodeGeneratorShift, ChkQRCodeGeneratorWin, CmbQRCodeGeneratorKey);
 
-        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, fileSorterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding))
+        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, fileSorterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding))
         {
             return;
         }
@@ -538,6 +546,7 @@ public partial class AppSettingsWindow : DarkWindow
         _settings.QuickNoteHotkey = quickNoteBinding;
         _settings.ColorPickerHotkey = colorPickerBinding;
         _settings.TimerStopwatchHotkey = timerStopwatchBinding;
+        _settings.QRCodeGeneratorHotkey = qrCodeGeneratorBinding;
 
         _settings.ShowPresetSearch = ChkShowPresetSearch.IsChecked ?? false;
         _settings.ShowPresetScreenshot = ChkShowPresetScreenshot.IsChecked ?? false;
@@ -550,6 +559,7 @@ public partial class AppSettingsWindow : DarkWindow
         _settings.ShowPresetTimerStopwatch = ChkShowPresetTimerStopwatch.IsChecked ?? false;
         _settings.ShowPresetColorPicker = ChkShowPresetColorPicker.IsChecked ?? false;
         _settings.ShowPresetQuickNote = ChkShowPresetQuickNote.IsChecked ?? false;
+        _settings.ShowPresetQRCodeGenerator = ChkShowPresetQRCodeGenerator.IsChecked ?? false;
         _settings.ShowTaskbarPositionIndicator = ChkShowTaskbarPositionIndicator.IsChecked ?? true;
         _settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;
         _settings.UiCulture = _selectedUiCulture;

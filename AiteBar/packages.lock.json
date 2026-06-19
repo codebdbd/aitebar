@@ -2,6 +2,21 @@
   "version": 1,
   "dependencies": {
     "net10.0-windows7.0": {
+      "QRCoder": {
+        "type": "Direct",
+        "requested": "[1.8.0, )",
+        "resolved": "1.8.0",
+        "contentHash": "RuvX3PEXU6pbY/I5ItAk800jm62r+YnoPLgyS2WTgwxkOnGkOfU9ORiipHUF0LkLyqM8rlroUCA319JjRYfRFQ=="
+      },
+      "QRCoder.Xaml": {
+        "type": "Direct",
+        "requested": "[1.8.0, )",
+        "resolved": "1.8.0",
+        "contentHash": "f/FolHaypWuI/Vtcjf7u1W9X+tVSHu4BbhLZhWav+K88rmrYzU1+JvN/iVhMBQYgLAyDYIE5Dom9MSLAqJvCrg==",
+        "dependencies": {
+          "QRCoder": "1.8.0"
+        }
+      },
       "Sentry": {
         "type": "Direct",
         "requested": "[6.6.0, )",
