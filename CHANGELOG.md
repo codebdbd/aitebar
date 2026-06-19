@@ -9,6 +9,10 @@
 
 ## [Unreleased]
 
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Перетаскивание кнопок в многостолбчатом режиме**: Исправлено перетаскивание кнопок между колонками в вертикальном режиме панели. Теперь кнопка может свободно двигаться по обеим осям и корректно отображается в новом положении.
+- **Button drag-and-drop in multi-column mode**: Fixed button dragging between columns in vertical panel mode. Buttons can now move freely in both axes and are correctly animated to their new positions.
+
 ## [1.10.0] - 2026-06-18
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

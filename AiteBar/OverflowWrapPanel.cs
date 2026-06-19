@@ -245,4 +245,64 @@ public sealed class OverflowWrapPanel : WpfPanel
 
         return Math.Max(1, (int)Math.Floor(availablePrimary / itemPrimary));
     }
+
+    public Rect GetArrangedRectForIndex(int index, int totalCount, WpfSize finalSize)
+    {
+        WpfSize itemSize = GetMaxDesiredChildSize();
+        if (itemSize.Width <= 0 || itemSize.Height <= 0)
+        {
+            return new Rect();
+        }
+
+        if (Orientation == WpfOrientation.Vertical)
+        {
+            double leadingReserve = Math.Max(0, LeadingPrimaryReserve);
+            double overflowReserve = Math.Max(0, OverflowPrimaryReserve);
+            int firstColumnCapacity = GetCapacity(finalSize.Height - leadingReserve, itemSize.Height, totalCount);
+            int firstColumnCount = Math.Min(totalCount, firstColumnCapacity);
+            int remainingAfterFirst = totalCount - firstColumnCount;
+            int secondColumnCapacity = GetCapacity(finalSize.Height - overflowReserve, itemSize.Height, remainingAfterFirst);
+            int secondColumnCount = Math.Min(remainingAfterFirst, secondColumnCapacity);
+
+            int column;
+            int row;
+            double verticalOffset;
+
+            if (index < firstColumnCount)
+            {
+                column = 0;
+                row = index;
+                verticalOffset = leadingReserve;
+            }
+            else if (index < firstColumnCount + secondColumnCount)
+            {
+                column = 1;
+                row = index - firstColumnCount;
+                verticalOffset = overflowReserve;
+            }
+            else
+            {
+                column = 2;
+                row = index - firstColumnCount - secondColumnCount;
+                verticalOffset = 0;
+            }
+
+            return new Rect(
+                column * itemSize.Width,
+                verticalOffset + (row * itemSize.Height),
+                itemSize.Width,
+                itemSize.Height);
+        }
+        else
+        {
+            int columnsPerRow = GetCapacity(finalSize.Width, itemSize.Width, totalCount);
+            int row = index / columnsPerRow;
+            int column = index % columnsPerRow;
+            return new Rect(
+                column * itemSize.Width,
+                row * itemSize.Height,
+                itemSize.Width,
+                itemSize.Height);
+        }
+    }
 }

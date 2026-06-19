@@ -53,9 +53,9 @@ public partial class MainWindow
 
             if (_isReordering)
             {
-                bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
                 var tt = (TranslateTransform)_draggedButton.RenderTransform;
-                if (isVertical) tt.Y = deltaY; else tt.X = deltaX;
+                tt.X = deltaX;
+                tt.Y = deltaY;
 
                 UpdateUnifiedReorderPositions(currentPos);
             }
@@ -199,58 +199,142 @@ public partial class MainWindow
     private int CalculateUnifiedTargetIndex(Point currentPos)
     {
         bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
+        
+        // Step 1: Collect all buttons except dragged, along with their original index
+        var otherButtons = new List<(Button btn, int originalIdx)>();
         for (int i = 0; i < _unifiedButtons.Count; i++)
         {
-            if (_unifiedButtons[i] == _draggedButton) continue;
-            var pos = _unifiedButtons[i].TransformToAncestor(this).Transform(new Point(0, 0));
-            var size = new System.Windows.Size(_unifiedButtons[i].ActualWidth, _unifiedButtons[i].ActualHeight);
-            if (isVertical)
+            if (_unifiedButtons[i] != _draggedButton)
             {
-                if (currentPos.Y < pos.Y + size.Height / 2) return i > _draggedOriginalIndex ? i - 1 : i;
-            }
-            else
-            {
-                if (currentPos.X < pos.X + size.Width / 2) return i > _draggedOriginalIndex ? i - 1 : i;
+                otherButtons.Add((_unifiedButtons[i], i));
             }
         }
-        return _unifiedButtons.Count - 1;
+        
+        if (otherButtons.Count == 0)
+            return _unifiedButtons.Count - 1;
+        
+        // Step 2: For each possible target index (0 to otherButtons.Count), create a virtual list and see where dragged button would be
+        int bestTargetIndex = 0;
+        double minDistance = double.MaxValue;
+        
+        // Get panel info
+        var panel = UnifiedButtonsPanel;
+        var finalSize = new System.Windows.Size(panel.ActualWidth, panel.ActualHeight);
+        Point currentPosInPanel = this.TranslatePoint(currentPos, panel);
+        
+        for (int testTargetIdx = 0; testTargetIdx <= otherButtons.Count; testTargetIdx++)
+        {
+            // Build virtual index map
+            var virtualIndexMap = new Dictionary<Button, int>();
+            int virtIdx = 0;
+            for (int i = 0; i < _unifiedButtons.Count; i++)
+            {
+                if (i == _draggedOriginalIndex) continue;
+                
+                if (i == testTargetIdx && _draggedOriginalIndex > testTargetIdx)
+                {
+                    virtualIndexMap[_draggedButton!] = virtIdx++;
+                }
+                virtualIndexMap[_unifiedButtons[i]] = virtIdx++;
+                if (i == testTargetIdx && _draggedOriginalIndex < testTargetIdx)
+                {
+                    virtualIndexMap[_draggedButton!] = virtIdx++;
+                }
+            }
+            if (!virtualIndexMap.ContainsKey(_draggedButton!))
+            {
+                virtualIndexMap[_draggedButton!] = virtIdx;
+            }
+            
+            // Get dragged button's virtual position
+            int draggedVirtIdx = virtualIndexMap[_draggedButton!];
+            var draggedVirtualSlot = panel.GetArrangedRectForIndex(draggedVirtIdx, _unifiedButtons.Count, finalSize);
+            var draggedCenter = new Point(
+                draggedVirtualSlot.X + draggedVirtualSlot.Width / 2,
+                draggedVirtualSlot.Y + draggedVirtualSlot.Height / 2
+            );
+            
+            // Compute distance to current pos (in panel coords)
+            double distance = isVertical
+                ? Math.Abs(currentPosInPanel.Y - draggedCenter.Y) * 2 + Math.Abs(currentPosInPanel.X - draggedCenter.X)
+                : Math.Abs(currentPosInPanel.X - draggedCenter.X) * 2 + Math.Abs(currentPosInPanel.Y - draggedCenter.Y);
+                
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                bestTargetIndex = testTargetIdx;
+            }
+        }
+        
+        return bestTargetIndex;
     }
 
     private void UpdateUnifiedReorderPositions(Point currentPos)
     {
         if (_unifiedButtons.Count < 2) return;
         int targetIndex = CalculateUnifiedTargetIndex(currentPos);
-        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
-
-        var buttonMargin = _unifiedButtons[0].Margin;
-        double offset = isVertical
-            ? _unifiedButtons[0].ActualHeight + buttonMargin.Top + buttonMargin.Bottom
-            : _unifiedButtons[0].ActualWidth + buttonMargin.Left + buttonMargin.Right;
-
+        
+        // First create the virtual order list (just indexes for lookup)
+        var virtualIndexMap = new Dictionary<Button, int>(); // button -> its index in virtual order
+        int virtualIdx = 0;
         for (int i = 0; i < _unifiedButtons.Count; i++)
         {
-            if (_unifiedButtons[i] == _draggedButton) continue;
-
-            double targetOffset = 0;
-            if (_draggedOriginalIndex < targetIndex)
+            if (i == _draggedOriginalIndex) continue;
+            
+            if (i == targetIndex && _draggedOriginalIndex > targetIndex)       
             {
-                if (i > _draggedOriginalIndex && i <= targetIndex) targetOffset = -offset;
+                virtualIndexMap[_draggedButton!] = virtualIdx++;
             }
-            else if (_draggedOriginalIndex > targetIndex)
+            
+            virtualIndexMap[_unifiedButtons[i]] = virtualIdx++;
+            
+            if (i == targetIndex && _draggedOriginalIndex < targetIndex)       
             {
-                if (i >= targetIndex && i < _draggedOriginalIndex) targetOffset = offset;
+                virtualIndexMap[_draggedButton!] = virtualIdx++;
             }
-
-            var tt = (TranslateTransform)_unifiedButtons[i].RenderTransform;
-            double currentOffset = isVertical ? tt.Y : tt.X;
-
-            if (Math.Abs(currentOffset - targetOffset) > 0.1)
+        }
+        if (!virtualIndexMap.ContainsKey(_draggedButton!))
+        {
+            virtualIndexMap[_draggedButton!] = virtualIdx;
+        }
+        
+        // Get the panel's final size
+        var panel = UnifiedButtonsPanel;
+        var finalSize = new System.Windows.Size(panel.ActualWidth, panel.ActualHeight);
+        
+        // Now animate each button (except dragged one)
+        for (int i = 0; i < _unifiedButtons.Count; i++)
+        {
+            var btn = _unifiedButtons[i];
+            if (btn == _draggedButton) continue;
+            
+            // Get original layout slot (position relative to panel, no transform)
+            var originalSlot = System.Windows.Controls.Primitives.LayoutInformation.GetLayoutSlot(btn);
+            
+            // Get virtual index and compute virtual slot
+            int virtIdx = virtualIndexMap[btn];
+            var virtualSlot = panel.GetArrangedRectForIndex(virtIdx, _unifiedButtons.Count, finalSize);
+            
+            // Compute delta
+            double deltaX = virtualSlot.X - originalSlot.X;
+            double deltaY = virtualSlot.Y - originalSlot.Y;
+            
+            // Get render transform
+            var tt = (TranslateTransform)btn.RenderTransform;
+            
+            // Animate
+            if (Math.Abs(tt.X - deltaX) > 0.1 || Math.Abs(tt.Y - deltaY) > 0.1)
             {
-                var anim = new DoubleAnimation(targetOffset, TimeSpan.FromMilliseconds(Constants.AnimationSlideMs))
+                var animX = new DoubleAnimation(deltaX, TimeSpan.FromMilliseconds(Constants.AnimationSlideMs))
                 {
                     EasingFunction = EasingHelper.DefaultEasing
                 };
-                tt.BeginAnimation(isVertical ? TranslateTransform.YProperty : TranslateTransform.XProperty, anim);
+                var animY = new DoubleAnimation(deltaY, TimeSpan.FromMilliseconds(Constants.AnimationSlideMs))
+                {
+                    EasingFunction = EasingHelper.DefaultEasing
+                };
+                tt.BeginAnimation(TranslateTransform.XProperty, animX);        
+                tt.BeginAnimation(TranslateTransform.YProperty, animY);        
             }
         }
     }
