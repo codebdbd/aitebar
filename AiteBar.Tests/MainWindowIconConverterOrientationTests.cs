@@ -25,12 +25,12 @@ public sealed class MainWindowIconConverterOrientationTests
             {
                 ConfigureSettingsForIconConverterOnly(window);
 
-                var expectations = new Dictionary<DockEdge, (Orientation Orientation, Dock AppSettingsDock, Dock DragHandleDock, PlacementMode ToolTipPlacement)>
+                var expectations = new Dictionary<DockEdge, (Orientation Orientation, Dock AppSettingsDock, Dock DragHandleDock, PlacementMode ToolTipPlacement, double HorizontalOffset, double VerticalOffset)>
                 {
-                    [DockEdge.Top] = (Orientation.Horizontal, Dock.Right, Dock.Left, PlacementMode.Bottom),
-                    [DockEdge.Bottom] = (Orientation.Horizontal, Dock.Right, Dock.Left, PlacementMode.Top),
-                    [DockEdge.Left] = (Orientation.Vertical, Dock.Bottom, Dock.Top, PlacementMode.Right),
-                    [DockEdge.Right] = (Orientation.Vertical, Dock.Bottom, Dock.Top, PlacementMode.Left)
+                    [DockEdge.Top] = (Orientation.Horizontal, Dock.Right, Dock.Left, PlacementMode.Bottom, 0d, 4d),
+                    [DockEdge.Bottom] = (Orientation.Horizontal, Dock.Right, Dock.Left, PlacementMode.Top, 0d, -4d),
+                    [DockEdge.Left] = (Orientation.Vertical, Dock.Bottom, Dock.Top, PlacementMode.Right, 4d, 4d),
+                    [DockEdge.Right] = (Orientation.Vertical, Dock.Bottom, Dock.Top, PlacementMode.Left, -4d, 4d)
                 };
 
                 foreach ((DockEdge edge, var expected) in expectations)
@@ -52,7 +52,17 @@ public sealed class MainWindowIconConverterOrientationTests
                     Assert.Equal(expected.Orientation, unifiedPanel.Orientation);
                     Assert.Equal(expected.AppSettingsDock, DockPanel.GetDock(appSettingsBlock));
                     Assert.Equal(expected.DragHandleDock, DockPanel.GetDock(dragHandle));
-                    Assert.Equal(expected.ToolTipPlacement, ToolTipService.GetPlacement(iconButton));
+                    AssertPanelToolTipPlacement(iconButton, expected.ToolTipPlacement, expected.HorizontalOffset, expected.VerticalOffset);
+                    AssertPanelToolTipPlacement(
+                        Assert.IsType<Button>(window.FindName("BtnAdd")),
+                        expected.ToolTipPlacement,
+                        expected.HorizontalOffset,
+                        expected.VerticalOffset);
+                    AssertPanelToolTipPlacement(
+                        Assert.IsType<Button>(window.FindName("BtnAppSettings")),
+                        expected.ToolTipPlacement,
+                        expected.HorizontalOffset,
+                        expected.VerticalOffset);
                     AssertWithinRoot(root, iconButton, $"IconConverter ({edge})");
                 }
             }
@@ -128,6 +138,14 @@ public sealed class MainWindowIconConverterOrientationTests
         Assert.True(bounds.Top >= -0.5, $"{elementName} top is outside the root: {bounds.Top}");
         Assert.True(bounds.Right <= root.ActualWidth + 0.5, $"{elementName} right is outside the root: {bounds.Right} > {root.ActualWidth}");
         Assert.True(bounds.Bottom <= root.ActualHeight + 0.5, $"{elementName} bottom is outside the root: {bounds.Bottom} > {root.ActualHeight}");
+    }
+
+    private static void AssertPanelToolTipPlacement(Button button, PlacementMode placement, double horizontalOffset, double verticalOffset)
+    {
+        Assert.Equal(0, ToolTipService.GetInitialShowDelay(button));
+        Assert.Equal(placement, ToolTipService.GetPlacement(button));
+        Assert.Equal(horizontalOffset, ToolTipService.GetHorizontalOffset(button));
+        Assert.Equal(verticalOffset, ToolTipService.GetVerticalOffset(button));
     }
 
     private static void EnsureApplicationResources()

@@ -1556,16 +1556,21 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private void ApplyPanelToolTipPlacement()
     {
         var placement = GetPanelToolTipPlacement(AppSettings.Edge);
-        var horizontalOffset = AppSettings.Edge switch
+        const double tooltipGap = 4d;
+        const double tooltipVerticalCenterOffset = 4d;
+
+        var horizontalOffset = placement switch
         {
-            DockEdge.Left => 8,
-            DockEdge.Right => -8,
+            PlacementMode.Right => tooltipGap,
+            PlacementMode.Left => -tooltipGap,
             _ => 0
         };
-        var verticalOffset = AppSettings.Edge switch
+
+        var verticalOffset = placement switch
         {
-            DockEdge.Top => 8,
-            DockEdge.Bottom => -8,
+            PlacementMode.Bottom => tooltipGap,
+            PlacementMode.Top => -tooltipGap,
+            PlacementMode.Left or PlacementMode.Right => tooltipVerticalCenterOffset,
             _ => 0
         };
 

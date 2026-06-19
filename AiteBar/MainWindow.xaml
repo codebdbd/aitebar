@@ -32,6 +32,7 @@
             <Setter Property="Margin" Value="2,2"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FocusVisualStyle" Value="{StaticResource ButtonFocusVisual}"/>
+            <Setter Property="ToolTipService.InitialShowDelay" Value="0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -52,6 +53,7 @@
             <Setter Property="Foreground" Value="{StaticResource PrimaryText}"/>
             <Setter Property="FontSize" Value="24"/>
             <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
+            <Setter Property="ToolTipService.InitialShowDelay" Value="0"/>
         </Style>
     </Window.Resources>
 

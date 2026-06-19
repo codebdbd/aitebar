@@ -292,14 +292,15 @@
 
         <!-- ToolTip Style - Windows 11 Dark Theme -->
         <Style TargetType="ToolTip">
-            <Setter Property="Background" Value="#202328"/>
-            <Setter Property="BorderBrush" Value="#3A4148"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Foreground" Value="#E7EAEE"/>
-            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Background" Value="#3A414D"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Foreground" Value="#F7F8FA"/>
+            <Setter Property="FontSize" Value="13"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="Padding" Value="9,6"/>
-            <Setter Property="Margin" Value="8"/>
+            <Setter Property="FontWeight" Value="Normal"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="Margin" Value="0"/>
             <Setter Property="HasDropShadow" Value="True"/>
             <Setter Property="Placement" Value="Mouse"/>
             <Setter Property="VerticalOffset" Value="10"/>
@@ -307,21 +308,25 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToolTip">
-                        <Border Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="3"
-                                Padding="{TemplateBinding Padding}"
-                                SnapsToDevicePixels="True">
-                            <Border.Effect>
-                                <DropShadowEffect Color="#000000"
-                                                  BlurRadius="8"
-                                                  ShadowDepth="1"
-                                                  Opacity="0.35"/>
-                            </Border.Effect>
-                            <ContentPresenter HorizontalAlignment="Left"
-                                              VerticalAlignment="Center"
-                                              TextOptions.TextFormattingMode="Display"/>
+                        <Border Background="Transparent" Padding="8">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="6"
+                                    Padding="{TemplateBinding Padding}"
+                                    SnapsToDevicePixels="True">
+                                <Border.Effect>
+                                    <DropShadowEffect Color="#000000"
+                                                      BlurRadius="18"
+                                                      ShadowDepth="0"
+                                                      Opacity="0.34"/>
+                                </Border.Effect>
+                                <ContentPresenter HorizontalAlignment="Left"
+                                                  VerticalAlignment="Center"
+                                                  RecognizesAccessKey="False"
+                                                  TextOptions.TextFormattingMode="Display"
+                                                  TextOptions.TextRenderingMode="ClearType"/>
+                            </Border>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>

@@ -86,7 +86,7 @@ public sealed class ContextStateHelperTests : IDisposable
     }
 
     [Fact]
-    public void NormalizeContexts_PreservesColor()
+    public void NormalizeContexts_UsesFixedPaletteColors()
     {
         List<PanelContext> contexts =
         [
@@ -96,9 +96,9 @@ public sealed class ContextStateHelperTests : IDisposable
 
         List<PanelContext> normalized = ContextStateHelper.NormalizeContexts(contexts);
 
-        Assert.Equal("#FF0000", normalized[0].Color);
-        Assert.Equal("#00FF00", normalized[1].Color);
-        Assert.Equal("#2A9CFF", normalized[2].Color); // Default color for new contexts
+        Assert.Equal("#2563EB", normalized[0].Color);
+        Assert.Equal("#059669", normalized[1].Color);
+        Assert.Equal("#D97706", normalized[2].Color);
     }
 
     [Fact]
