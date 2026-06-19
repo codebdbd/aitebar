@@ -1326,7 +1326,80 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
         var (availableWidth, availableHeight) = CalculateAvailableSize();
+
+        // Calculate metrics for all enabled contexts to find maximum size
+        var enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
+        double maxPanelSize = 0;
+        foreach (var context in enabledContexts)
+        {
+            var contextElements = _unifiedButtonService.BuildUnifiedList(context.Id);
+            var contextMetrics = PanelLayoutHelper.Calculate(
+                isVertical: isVertical,
+                availablePrimary: isVertical ? availableHeight : availableWidth,
+                panelPercent: AppSettings.PanelSizePercent,
+                totalButtonCount: contextElements.Count,
+                controlButtonCount: 2,
+                trailingControlButtonCount: 1
+            );
+            if (isVertical)
+            {
+                if (contextMetrics.PanelWidth > maxPanelSize) maxPanelSize = contextMetrics.PanelWidth;
+            }
+            else
+            {
+                if (contextMetrics.PanelHeight > maxPanelSize) maxPanelSize = contextMetrics.PanelHeight;
+            }
+        }
+
         _lastMetrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight);
+        // Apply maximum size to last metrics
+        if (isVertical)
+        {
+            if (maxPanelSize > _lastMetrics.PanelWidth)
+            {
+                _lastMetrics = new PanelLayoutHelper.PanelLayoutMetrics(
+                    IsVertical: _lastMetrics.IsVertical,
+                    PanelWidth: maxPanelSize,
+                    PanelHeight: _lastMetrics.PanelHeight,
+                    FixedWidth: _lastMetrics.FixedWidth,
+                    FixedHeight: _lastMetrics.FixedHeight,
+                    TrailingWidth: _lastMetrics.TrailingWidth,
+                    TrailingHeight: _lastMetrics.TrailingHeight,
+                    UserWidth: _lastMetrics.UserWidth,
+                    UserHeight: _lastMetrics.UserHeight,
+                    UserBands: _lastMetrics.UserBands,
+                    SystemWidth: _lastMetrics.SystemWidth,
+                    SystemHeight: _lastMetrics.SystemHeight,
+                    UserLeadingReserve: _lastMetrics.UserLeadingReserve,
+                    UserOverflowReserve: _lastMetrics.UserOverflowReserve,
+                    UseMultiColumnControls: _lastMetrics.UseMultiColumnControls
+                );
+            }
+        }
+        else
+        {
+            if (maxPanelSize > _lastMetrics.PanelHeight)
+            {
+                _lastMetrics = new PanelLayoutHelper.PanelLayoutMetrics(
+                    IsVertical: _lastMetrics.IsVertical,
+                    PanelWidth: _lastMetrics.PanelWidth,
+                    PanelHeight: maxPanelSize,
+                    FixedWidth: _lastMetrics.FixedWidth,
+                    FixedHeight: _lastMetrics.FixedHeight,
+                    TrailingWidth: _lastMetrics.TrailingWidth,
+                    TrailingHeight: _lastMetrics.TrailingHeight,
+                    UserWidth: _lastMetrics.UserWidth,
+                    UserHeight: _lastMetrics.UserHeight,
+                    UserBands: _lastMetrics.UserBands,
+                    SystemWidth: _lastMetrics.SystemWidth,
+                    SystemHeight: _lastMetrics.SystemHeight,
+                    UserLeadingReserve: _lastMetrics.UserLeadingReserve,
+                    UserOverflowReserve: _lastMetrics.UserOverflowReserve,
+                    UseMultiColumnControls: _lastMetrics.UseMultiColumnControls
+                );
+            }
+        }
+
         bool hasUnifiedButtons = UnifiedButtonsPanel.Children.Count > 0;
 
         // Разделители
