@@ -12,6 +12,12 @@
 ### 🇷🇺 Добавлено | 🇬🇧 Added
 - **Утилита генератора QR-кодов**: Встроенная утилита для создания QR-кодов с настраиваемым размером модуля, уровнем коррекции ошибок и экспортом в PNG/SVG.
 - **QR code generator utility**: Built-in utility for generating QR codes with customizable module size, error correction level, and PNG/SVG export.
+- **Утилита показа рабочего стола**: Быстрый доступ к показу рабочего стола.
+- **Show desktop utility**: Quick access to show desktop.
+- **Утилита папки приложений**: Быстрый доступ к папке Applications в Windows.
+- **Apps folder utility**: Quick access to Windows Applications folder.
+- **Утилита Copilot**: Быстрый запуск Windows Copilot.
+- **Copilot utility**: Quick launch of Windows Copilot.
 
 ### 🇷🇺 Изменено | 🇬🇧 Changed
 - **Доработка Tooltip**: Улучшено визуальное оформление подсказок, мгновенное появление и правильное центрирование.

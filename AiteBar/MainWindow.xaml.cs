@@ -850,6 +850,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
         if (AppSettings.ShowPresetColorPicker) count++;
         if (AppSettings.ShowPresetQuickNote) count++;
         if (AppSettings.ShowPresetQRCodeGenerator) count++;
+        if (AppSettings.ShowPresetShowDesktop) count++;
+        if (AppSettings.ShowPresetAppsFolder) count++;
+        if (AppSettings.ShowPresetCopilot) count++;
         return count;
     }
 
@@ -1547,6 +1550,15 @@ public partial class MainWindow : Window, ISettingsWindowContext
                         break;
                     case "QRCodeGenerator":
                         await _actionService.LaunchUtilityAsync("QRCodeGenerator", HideDock);
+                        break;
+                    case "ShowDesktop":
+                        await _actionService.StartShowDesktopAsync(HideDock);
+                        break;
+                    case "AppsFolder":
+                        await _actionService.StartAppsFolderAsync(HideDock);
+                        break;
+                    case "Copilot":
+                        await _actionService.StartCopilotAsync(HideDock);
                         break;
                 }
             });

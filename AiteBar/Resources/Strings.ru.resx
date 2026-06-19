@@ -930,4 +930,10 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_SaveSuccess" xml:space="preserve"><value>QR-код успешно сохранен</value></data>
   <data name="QRCodeGenerator_SaveFailed" xml:space="preserve"><value>Не удалось сохранить: {0}</value></data>
   <data name="Utility_Unavailable" xml:space="preserve"><value>Утилита {0} временно недоступна.</value></data>
+  <data name="Tool_ShowDesktop" xml:space="preserve"><value>Рабочий стол</value></data>
+  <data name="Main_ShowDesktopTooltip" xml:space="preserve"><value>Показать рабочий стол</value></data>
+  <data name="Tool_AppsFolder" xml:space="preserve"><value>Все приложения</value></data>
+  <data name="Main_AppsFolderTooltip" xml:space="preserve"><value>Открыть папку «Все приложения»</value></data>
+  <data name="Tool_Copilot" xml:space="preserve"><value>Copilot</value></data>
+  <data name="Main_CopilotTooltip" xml:space="preserve"><value>Открыть Copilot</value></data>
 </root>

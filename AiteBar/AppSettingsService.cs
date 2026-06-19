@@ -736,6 +736,9 @@ namespace AiteBar
                 "ShowPresetColorPicker" => settings.ShowPresetColorPicker,
                 "ShowPresetQuickNote" => settings.ShowPresetQuickNote,
                 "ShowPresetQRCodeGenerator" => settings.ShowPresetQRCodeGenerator,
+                "ShowPresetShowDesktop" => settings.ShowPresetShowDesktop,
+                "ShowPresetAppsFolder" => settings.ShowPresetAppsFolder,
+                "ShowPresetCopilot" => settings.ShowPresetCopilot,
                 _ => false
             };
         }
@@ -757,6 +760,9 @@ namespace AiteBar
                 case "ShowPresetColorPicker": settings.ShowPresetColorPicker = visible; break;
                 case "ShowPresetQuickNote": settings.ShowPresetQuickNote = visible; break;
                 case "ShowPresetQRCodeGenerator": settings.ShowPresetQRCodeGenerator = visible; break;
+                case "ShowPresetShowDesktop": settings.ShowPresetShowDesktop = visible; break;
+                case "ShowPresetAppsFolder": settings.ShowPresetAppsFolder = visible; break;
+                case "ShowPresetCopilot": settings.ShowPresetCopilot = visible; break;
             }
             Settings = settings;
         }

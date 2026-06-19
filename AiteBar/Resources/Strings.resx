@@ -464,4 +464,10 @@ Open the GitHub release page?</value></data>
   <data name="QRCodeGenerator_SaveSuccess" xml:space="preserve"><value>QR code saved successfully</value></data>
   <data name="QRCodeGenerator_SaveFailed" xml:space="preserve"><value>Failed to save: {0}</value></data>
   <data name="Utility_Unavailable" xml:space="preserve"><value>Utility {0} is temporarily unavailable.</value></data>
+  <data name="Tool_ShowDesktop" xml:space="preserve"><value>Show desktop</value></data>
+  <data name="Main_ShowDesktopTooltip" xml:space="preserve"><value>Show the desktop</value></data>
+  <data name="Tool_AppsFolder" xml:space="preserve"><value>All apps</value></data>
+  <data name="Main_AppsFolderTooltip" xml:space="preserve"><value>Open the Apps folder</value></data>
+  <data name="Tool_Copilot" xml:space="preserve"><value>Copilot</value></data>
+  <data name="Main_CopilotTooltip" xml:space="preserve"><value>Open Copilot</value></data>
 </root>

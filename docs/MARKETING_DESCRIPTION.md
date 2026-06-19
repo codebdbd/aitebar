@@ -42,7 +42,7 @@ AiteBar — desktop-утилита для Windows, которая создаёт
 | Ротация профилей | `ProfileRotationHelper.cs`, `RotationProfileSelectionWindow.xaml.cs` | Каждый запуск кнопки открывает следующий профиль из набора | Быстрое переключение между аккаунтами одной кнопкой |
 | App mode, Incognito, Fullscreen | `ActionService.cs`, `SettingsWindow.xaml.cs` | Запускает сайт как приложение, в приватном режиме или на весь экран | Веб-приложения выглядят как десктопные, приватные сессии не сохраняют cookies |
 | Drag-and-drop для создания кнопок | `MainWindow.xaml.cs` (`Border_Drop`) | Перетаскивает файл, папку, `.url` или ссылку на панель | Быстрое добавление без заполнения форм |
-| Встроенные быстрые инструменты | `ActionService.cs`, `UtilityRegistry.cs` | Использует поиск, скриншот, запись видео, калькулятор, проводник, загрузки, таймер, пипетку, Quick Note, File Sorter, Icon Converter | Частые системные действия доступны без поиска в меню Windows |
+| Встроенные быстрые инструменты | `ActionService.cs`, `UtilityRegistry.cs` | Использует поиск, скриншот, запись видео, калькулятор, проводник, загрузки, таймер, пипетку, Quick Note, File Sorter, Icon Converter, QR Code Generator, Показать рабочий стол, Папка приложений, Copilot | Частые системные действия доступны без поиска в меню Windows |
 | Quick Note с Markdown | `QuickNoteWindow.xaml.cs`, `QuickNoteService.cs`, `QuickNoteMarkdown.cs` | Вводит и редактирует текст с форматированием, автосохраняется в `.md` | Быстрая заметка без отдельного приложения, сохраняется между сессиями |
 | Таймер и секундомер | `TimerStopwatchWindow.xaml`, `TimerStopwatchWindow.xaml.cs` | Запускает обратный отсчёт или секундомер с пресетами и звуком | Контроль времени для Pomodoro и других техник без отдельного приложения |
 | Пипетка цвета | `ScreenColorPickerWindow.cs` | Выбирает цвет с экрана и копирует HEX | Мгновенное получение цвета для дизайна без сторонних утилит |
@@ -210,7 +210,7 @@ AiteBar не занимает место на рабочем столе и в п
 
 ### Встроенные быстрые инструменты
 
-**Что делает:** Скриншот, запись видео, калькулятор, проводник, загрузки, таймер и секундомер, пипетка цвета, Quick Note, File Sorter (сортировка файлов по категориям с отменой), Icon Converter (конвертация изображений в ICO) — доступны на панели рядом с пользовательскими кнопками.
+**Что делает:** Скриншот, запись видео, калькулятор, проводник, загрузки, таймер и секундомер, пипетка цвета, Quick Note, File Sorter (сортировка файлов по категориям с отменой), Icon Converter (конвертация изображений в ICO), QR Code Generator (создание QR-кодов с экспортом в PNG/SVG), Показать рабочий стол (минимизировать все окна), Папка приложений (открыть системную папку Applications), Copilot (запуск Windows Copilot) — доступны на панели рядом с пользовательскими кнопками.
 
 **Зачем это нужно:** Эти инструменты нужны часто, но их поиск в меню Windows или отдельных приложениях занимает время.
 
@@ -292,7 +292,7 @@ AiteBar — hidden edge panel for Windows. Organize your AI tools, work sites, b
 - Browser and profile support: Chrome, Edge, Brave, Yandex, Firefox
 - Launch modes: App Mode, Incognito/Private, Fullscreen, Profile Rotation
 - Action types: URL, Program, File, Folder, Script (.bat, .cmd, .ps1, .py), Command, Hotkey
-- Built-in tools: Screenshot, Screen Recording, Calculator, Explorer, Downloads, Timer & Stopwatch, Color Picker, Quick Note, File Sorter, Icon Converter
+- Built-in tools: Screenshot, Screen Recording, Calculator, Explorer, Downloads, Timer & Stopwatch, Color Picker, Quick Note, File Sorter, Icon Converter, QR Code Generator, Show Desktop, Apps Folder, Copilot
 - Drag-and-drop to create buttons from files, folders and links
 - Import/export panels via `.aitebarpanel` files
 - Global hotkeys for panel, context switching and built-in utilities
@@ -303,7 +303,7 @@ AiteBar — hidden edge panel for Windows. Organize your AI tools, work sites, b
 
 AiteBar — скрытая панель быстрого доступа для Windows. Запускайте сайты, программы, файлы, скрипты и команды одним наведением курсора на край экрана.
 
-До 8 панелей-контекстов для разделения действий по задачам. Выбор браузера (Chrome, Edge, Brave, Yandex, Firefox) с профилем, режимами App Mode и Incognito. Встроенные инструменты: скриншот, запись видео, калькулятор, таймер, пипетка цвета, быстрая заметка, сортировка файлов, конвертация иконок. Импорт и экспорт наборов кнопок. Глобальные горячие клавиши.
+До 8 панелей-контекстов для разделения действий по задачам. Выбор браузера (Chrome, Edge, Brave, Yandex, Firefox) с профилем, режимами App Mode и Incognito. Встроенные инструменты: скриншот, запись видео, калькулятор, таймер, пипетка цвета, быстрая заметка, сортировка файлов, конвертация иконок, генератор QR-кодов, показать рабочий стол, папка приложений, Copilot. Импорт и экспорт наборов кнопок. Глобальные горячие клавиши.
 
 ### Описание для страницы загрузки
 
@@ -313,7 +313,7 @@ AiteBar — desktop-утилита для Windows, которая превращ
 
 ### Текст для блока «О программе»
 
-AiteBar — это desktop-утилита для Windows, которая создаёт скрываемую панель быстрого доступа у края экрана. Панель появляется при наведении курсора и содержит пользовательские кнопки для запуска сайтов, программ, файлов, папок, скриптов и команд. Выбор браузера (Chrome, Edge, Brave, Yandex, Firefox) с профилем, режимами App Mode и Incognito, ротация профилей. До 8 панелей-контекстов, глобальные горячие клавиши, встроенные инструменты (скриншот, таймер, пипетка, Quick Note, File Sorter, Icon Converter), импорт/экспорт панелей. Все настройки хранятся локально.
+AiteBar — это desktop-утилита для Windows, которая создаёт скрываемую панель быстрого доступа у края экрана. Панель появляется при наведении курсора и содержит пользовательские кнопки для запуска сайтов, программ, файлов, папок, скриптов и команд. Выбор браузера (Chrome, Edge, Brave, Yandex, Firefox) с профилем, режимами App Mode и Incognito, ротация профилей. До 8 панелей-контекстов, глобальные горячие клавиши, встроенные инструменты (скриншот, таймер, пипетка, Quick Note, File Sorter, Icon Converter, QR Code Generator, Показать рабочий стол, Папка приложений, Copilot), импорт/экспорт панелей. Все настройки хранятся локально.
 
 ## 9. Преимущества перед стандартными средствами Windows
 

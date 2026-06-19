@@ -370,6 +370,24 @@ public class ActionService
         _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:Downloads"));
     }
 
+    public async Task StartShowDesktopAsync(Func<Task>? onBeforeExecute = null)
+    {
+        if (onBeforeExecute != null) await onBeforeExecute();
+        _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:::{3080F90D-D7AD-11D9-BD98-0000947B0257}"));
+    }
+
+    public async Task StartAppsFolderAsync(Func<Task>? onBeforeExecute = null)
+    {
+        if (onBeforeExecute != null) await onBeforeExecute();
+        _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:AppsFolder"));
+    }
+
+    public async Task StartCopilotAsync(Func<Task>? onBeforeExecute = null)
+    {
+        if (onBeforeExecute != null) await onBeforeExecute();
+        _runtime.StartProcess(BuildShellLaunchProcessStartInfo("microsoft-edge://?ux=copilot&cp=2"));
+    }
+
     public async Task LaunchUtilityAsync(string utilityId, Func<Task>? onBeforeExecute = null)
     {
         var utility = UtilityRegistry.GetById(utilityId);
