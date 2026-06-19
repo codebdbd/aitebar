@@ -27,7 +27,8 @@ public static class PanelLayoutHelper
         double SystemWidth,
         double SystemHeight,
         double UserLeadingReserve,
-        double UserOverflowReserve);
+        double UserOverflowReserve,
+        bool UseMultiColumnControls);
 
     public static PanelLayoutMetrics Calculate(
         bool isVertical,
@@ -41,18 +42,39 @@ public static class PanelLayoutHelper
         double maxPrimary = Math.Max(ButtonOuterSize, availablePrimary * normalizedPercent);
 
         int fixedSeparatorCount = totalButtonCount > 0 ? 1 : 0;
-        double fixedPrimary = (controlButtonCount * ButtonOuterSize) + (fixedSeparatorCount * SeparatorSize);
-        double fixedCross = (controlButtonCount > 0 || totalButtonCount > 0) ? ButtonOuterSize : 0;
+        double effectiveControlButtons = isVertical ? Math.Min(controlButtonCount, 1) : controlButtonCount;
+        double fixedPrimary = (effectiveControlButtons * ButtonOuterSize) + (fixedSeparatorCount * SeparatorSize);
         double trailingPrimary = (trailingControlButtonCount * ButtonOuterSize) + (totalButtonCount > 0 && trailingControlButtonCount > 0 ? SeparatorSize : 0);
         double trailingCross = trailingControlButtonCount > 0 ? ButtonOuterSize : 0;
 
+        // First calculate userLayout with temporary fixedCross (1×ButtonOuterSize for vertical mode)
+        double tempFixedCross = isVertical 
+            ? (controlButtonCount > 0 ? ButtonOuterSize : 0) 
+            : ((controlButtonCount > 0 || totalButtonCount > 0) ? ButtonOuterSize : 0);
+
+        // First calculate userLayout with temporary fixedPrimary (for 1 column)
         (UserLayout userLayout, double userLeadingReserve, double userOverflowReserve) = isVertical
             ? CalculateVerticalUserSection(totalButtonCount, maxPrimary, fixedPrimary, trailingPrimary)
             : CalculateHorizontalUserSection(totalButtonCount, maxPrimary, fixedPrimary, trailingPrimary);
 
+        // Now calculate real fixedCross based on actual user band count
+        bool useMultiColumnControls = isVertical && userLayout.Bands >= 2;
+        double fixedCross = isVertical 
+            ? (controlButtonCount > 0 ? (useMultiColumnControls ? controlButtonCount * ButtonOuterSize : ButtonOuterSize) : 0) 
+            : ((controlButtonCount > 0 || totalButtonCount > 0) ? ButtonOuterSize : 0);
+
+        // For vertical mode: if not using multi-column controls, we need to make panelPrimary bigger (for 2 stacked control buttons instead of 1)
+        double adjustedFixedPrimary = isVertical && !useMultiColumnControls ? controlButtonCount * ButtonOuterSize + (fixedSeparatorCount * SeparatorSize) : fixedPrimary;
+
+        // If we have vertical mode, not multi-column, and there are user buttons, recalculate user section with adjusted fixed primary!
+        if (isVertical && !useMultiColumnControls && totalButtonCount > 0)
+        {
+            (userLayout, userLeadingReserve, userOverflowReserve) = CalculateVerticalUserSection(totalButtonCount, maxPrimary, adjustedFixedPrimary, trailingPrimary);
+        }
+
         double panelPrimary = Math.Max(
             ButtonOuterSize + PanelChrome,
-            (isVertical ? userLayout.Primary + trailingPrimary : fixedPrimary + userLayout.Primary + trailingPrimary) + PanelChrome);
+            (isVertical ? Math.Max(adjustedFixedPrimary, userLayout.Primary + trailingPrimary) : fixedPrimary + userLayout.Primary + trailingPrimary) + PanelChrome);
         double panelCross = Math.Max(ButtonOuterSize + PanelChrome, Math.Max(Math.Max(fixedCross, trailingCross), userLayout.Cross) + PanelChrome);
 
         return isVertical
@@ -61,7 +83,7 @@ public static class PanelLayoutHelper
                 PanelWidth: panelCross,
                 PanelHeight: panelPrimary,
                 FixedWidth: fixedCross,
-                FixedHeight: fixedPrimary,
+                FixedHeight: adjustedFixedPrimary,
                 TrailingWidth: trailingCross,
                 TrailingHeight: trailingPrimary,
                 UserWidth: userLayout.Cross,
@@ -70,7 +92,8 @@ public static class PanelLayoutHelper
                 SystemWidth: 0,
                 SystemHeight: 0,
                 UserLeadingReserve: userLeadingReserve,
-                UserOverflowReserve: userOverflowReserve)
+                UserOverflowReserve: userOverflowReserve,
+                UseMultiColumnControls: useMultiColumnControls)
             : new PanelLayoutMetrics(
                 IsVertical: false,
                 PanelWidth: panelPrimary,
@@ -85,7 +108,8 @@ public static class PanelLayoutHelper
                 SystemWidth: 0,
                 SystemHeight: 0,
                 UserLeadingReserve: 0,
-                UserOverflowReserve: 0);
+                UserOverflowReserve: 0,
+                UseMultiColumnControls: false);
     }
 
     private static (UserLayout User, double LeadingReserve, double OverflowReserve) CalculateVerticalUserSection(

@@ -16,12 +16,28 @@ namespace AiteBar
             CultureInfo.GetCultureInfo("uk"),
             CultureInfo.GetCultureInfo("ru")
         ];
+        
+        // Фиксированные цвета для каждого контекста (хорошо видны белые цифры)
+        private static readonly string[] DefaultContextColors =
+        [
+            "#2563EB",   // Синий
+            "#059669",   // Зелёный
+            "#D97706",   // Оранжевый
+            "#7C3AED",   // Фиолетовый
+            "#0891B2",   // Голубой (циан)
+            "#BE123C",   // Красный
+            "#4D7C0F",   // Тёмно-зелёный
+            "#6D28D9"    // Тёмно-фиолетовый
+        ];
 
         public static string GetDefaultContextId(int index) => $"context-{index + 1}";
 
         public static string GetDefaultContextName(int index) => GetDefaultContextName(index, CultureInfo.CurrentUICulture);
 
         public static string GetDefaultContextName(int index, CultureInfo culture) => LocalizationService.Format("Panel_DefaultNameFormat", culture, index + 1);
+
+        // Получить фиксированный цвет для контекста по индексу
+        public static string GetContextColor(int index) => DefaultContextColors[index % DefaultContextColors.Length];
 
         public static List<PanelContext> NormalizeContexts(IReadOnlyList<PanelContext>? source)
         {
@@ -48,13 +64,15 @@ namespace AiteBar
                     usedIds.Add(id);
                 }
 
+                // Цвет всегда фиксированный для каждого индекса
                 normalized.Add(new PanelContext
                 {
                     Id = id,
                     Name = string.IsNullOrWhiteSpace(name) ? GetDefaultContextName(i, culture) : name,
                     IsNameCustomized = isNameCustomized,
                     IconGlyph = string.IsNullOrWhiteSpace(existing?.IconGlyph) ? "\uE8B7" : existing.IconGlyph,
-                    IsEnabled = i == 0 || (existing?.IsEnabled ?? false)
+                    IsEnabled = i == 0 || (existing?.IsEnabled ?? false),
+                    Color = GetContextColor(i)
                 });
             }
 

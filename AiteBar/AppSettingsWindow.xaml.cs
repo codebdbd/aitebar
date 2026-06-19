@@ -24,7 +24,7 @@ public partial class AppSettingsWindow : DarkWindow
 
     private readonly MainWindow _mainWindow;
     private readonly AppSettings _settings;
-    private readonly List<(CheckBox EnabledCheckBox, TextBox NameTextBox)> _contextRows = new();
+    private readonly List<(CheckBox EnabledCheckBox, TextBox NameTextBox, Border BadgeBorder)> _contextRows = new();
     private bool _isLoadingSettings;
     private string _selectedUiCulture = LocalizationService.AutoCulture;
 
@@ -191,6 +191,9 @@ public partial class AppSettingsWindow : DarkWindow
             }
 
             _contextRows[i].EnabledCheckBox.IsChecked = i == 0 || drafts[i].IsEnabled;
+
+            // Цвет всегда фиксированный, обновляем бейдж
+            SetBadgeColor(_contextRows[i].BadgeBorder, ContextStateHelper.GetContextColor(i));
         }
     }
 
@@ -202,6 +205,12 @@ public partial class AppSettingsWindow : DarkWindow
                 ? LocalizationService.Get("AppSettingsWindow_PrimaryPanelAlwaysEnabled")
                 : LocalizationService.Get("AppSettingsWindow_PanelEnabled");
         }
+    }
+
+    private static void SetBadgeColor(Border badgeBorder, string colorString)
+    {
+        var converter = new System.Windows.Media.BrushConverter();
+        badgeBorder.Background = (System.Windows.Media.Brush)(converter.ConvertFromString(colorString) ?? System.Windows.Media.Brushes.DimGray);
     }
 
     private void ReloadEdgeList(object? selectedEdge)
@@ -426,7 +435,7 @@ public partial class AppSettingsWindow : DarkWindow
                 Width = 22,
                 Height = 22,
                 CornerRadius = new CornerRadius(11),
-                Background = GetPanelBadgeBrush(i),
+                Background = GetPanelBadgeBrush(ContextStateHelper.GetContextColor(i)),
                 VerticalAlignment = VerticalAlignment.Center
             };
             badge.Child = new TextBlock
@@ -459,26 +468,14 @@ public partial class AppSettingsWindow : DarkWindow
             row.Children.Add(enabledCheckBox);
 
             PanelContextsList.Children.Add(row);
-            _contextRows.Add((enabledCheckBox, nameTextBox));
+            _contextRows.Add((enabledCheckBox, nameTextBox, badge));
         }
     }
 
-    private System.Windows.Media.Brush GetPanelBadgeBrush(int index)
+    private System.Windows.Media.Brush GetPanelBadgeBrush(string colorString)
     {
-        string[] colors =
-        [
-            "#2563EB",
-            "#059669",
-            "#D97706",
-            "#7C3AED",
-            "#0891B2",
-            "#BE123C",
-            "#4D7C0F",
-            "#6D28D9"
-        ];
-
         var converter = new System.Windows.Media.BrushConverter();
-        return (System.Windows.Media.Brush)(converter.ConvertFromString(colors[index % colors.Length]) ?? System.Windows.Media.Brushes.DimGray);
+        return (System.Windows.Media.Brush)(converter.ConvertFromString(colorString) ?? System.Windows.Media.Brushes.DimGray);
     }
 
     private void SldZoneSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -578,6 +575,7 @@ public partial class AppSettingsWindow : DarkWindow
                 : ContextStateHelper.GetDefaultContextName(i);
             _settings.Contexts[i].IsNameCustomized = isNameCustomized;
             _settings.Contexts[i].IsEnabled = i == 0 || (_contextRows[i].EnabledCheckBox.IsChecked ?? false);
+            // Цвет фиксированный, не сохраняем/не меняем
         }
 
         _mainWindow.GetSettingsService().Settings = _settings;

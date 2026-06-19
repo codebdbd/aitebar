@@ -87,6 +87,13 @@
 
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
+                        <Border x:Name="ContextIndicator" Width="40" Height="40" Margin="2,2">
+                            <Border Width="24" Height="24" Background="#2A9CFF" CornerRadius="12" 
+                                    HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="ContextIndicatorCircle">
+                                <TextBlock x:Name="ContextIndicatorText" Text="1" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
+                            </Border>
+                        </Border>
                         <Button x:Name="BtnAdd" Content="&#xF10A;" Click="BtnAdd_Click" Width="40" Height="40" Margin="2,2" FontSize="14" Padding="0"
                                 Foreground="#FFFFFF" Focusable="True">
                             <Button.Template>

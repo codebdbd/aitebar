@@ -86,6 +86,22 @@ public sealed class ContextStateHelperTests : IDisposable
     }
 
     [Fact]
+    public void NormalizeContexts_PreservesColor()
+    {
+        List<PanelContext> contexts =
+        [
+            new() { Id = "context-1", Name = "Контекст 1", Color = "#FF0000" },
+            new() { Id = "context-2", Name = "Контекст 2", Color = "#00FF00" }
+        ];
+
+        List<PanelContext> normalized = ContextStateHelper.NormalizeContexts(contexts);
+
+        Assert.Equal("#FF0000", normalized[0].Color);
+        Assert.Equal("#00FF00", normalized[1].Color);
+        Assert.Equal("#2A9CFF", normalized[2].Color); // Default color for new contexts
+    }
+
+    [Fact]
     public void NormalizeContexts_LocalizesLegacyDefaultNamesToCurrentCulture()
     {
         List<PanelContext> contexts =

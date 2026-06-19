@@ -18,6 +18,7 @@ public class PanelContext
     public bool IsNameCustomized { get; set; }
     public string IconGlyph { get; set; } = "\uE8B7"; // Fluent "Folder" по умолчанию
     public bool IsEnabled { get; set; } = true;
+    public string Color { get; set; } = "#2A9CFF";
 }
 
 public class HotkeyBinding

@@ -362,7 +362,8 @@ namespace AiteBar
                         left.Name != right.Name ||
                         left.IsNameCustomized != right.IsNameCustomized ||
                         left.IconGlyph != right.IconGlyph ||
-                        left.IsEnabled != right.IsEnabled).Any(hasDifference => hasDifference))
+                        left.IsEnabled != right.IsEnabled ||
+                        left.Color != right.Color).Any(hasDifference => hasDifference))
                 {
                     changed = true;
                 }
@@ -585,7 +586,8 @@ namespace AiteBar
             Name = ResolveContextDisplayName(context, index),
             IsNameCustomized = context.IsNameCustomized,
             IconGlyph = context.IconGlyph,
-            IsEnabled = context.IsEnabled
+            IsEnabled = context.IsEnabled,
+            Color = context.Color
         };
 
         private static string ResolveContextDisplayName(PanelContext context, int index)

@@ -69,6 +69,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         private int _lastElementsVersion = -1;
         private int _mouseWheelCaptureToken = 0;
     private readonly CancellationTokenSource _startupCts = new();
+    private PanelLayoutHelper.PanelLayoutMetrics _lastMetrics;
     private DateTime _lastContextWheelSwitchUtc = DateTime.MinValue;
     private readonly Dictionary<string, CachedButtonImage> _buttonImageCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Brush> _brushCache = new(StringComparer.OrdinalIgnoreCase);
@@ -757,7 +758,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             availablePrimary: isVertical ? availableHeight : availableWidth,
             panelPercent: AppSettings.PanelSizePercent,
             totalButtonCount: totalButtonCount,
-            controlButtonCount: 1,
+            controlButtonCount: 2,
             trailingControlButtonCount: 1);
     }
 
@@ -815,7 +816,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
         MainPanel.Width = contentWidth;
         MainPanel.Height = contentHeight;
         FixedPanel.Width = isVertical ? contentWidth : Math.Round(metrics.FixedWidth);
-        FixedPanel.Height = Math.Round(metrics.FixedHeight);
+        // For vertical mode: if not using multi-column controls, FixedPanel needs to fit 2 stacked control buttons
+        FixedPanel.Height = isVertical && !metrics.UseMultiColumnControls ? 2 * PanelLayoutHelper.ButtonOuterSize : Math.Round(metrics.FixedHeight);
         ControlBlock.Width = isVertical ? contentWidth : double.NaN;
         AppSettingsBlock.Width = Math.Round(metrics.TrailingWidth);
         AppSettingsBlock.Height = Math.Round(metrics.TrailingHeight);
@@ -1236,7 +1238,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         UnifiedButtonsPanel.Orientation = isVertical
             ? System.Windows.Controls.Orientation.Vertical
             : System.Windows.Controls.Orientation.Horizontal;
-        ControlBlock.Orientation = orientation;
+        ControlBlock.Orientation = isVertical && _lastMetrics.UseMultiColumnControls ? System.Windows.Controls.Orientation.Horizontal : orientation;
         System.Windows.Controls.DockPanel.SetDock(FixedPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
         System.Windows.Controls.DockPanel.SetDock(UnifiedButtonsPanel, isVertical ? System.Windows.Controls.Dock.Top : System.Windows.Controls.Dock.Left);
         System.Windows.Controls.DockPanel.SetDock(AppSettingsBlock, isVertical ? System.Windows.Controls.Dock.Bottom : System.Windows.Controls.Dock.Right);
@@ -1244,8 +1246,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
         UnifiedButtonsPanel.VerticalAlignment = isVertical ? VerticalAlignment.Top : VerticalAlignment.Center;
         AppSettingsBlock.VerticalAlignment = isVertical ? VerticalAlignment.Bottom : VerticalAlignment.Center;
         FixedPanel.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Left : System.Windows.HorizontalAlignment.Left;
-        ControlBlock.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Stretch : System.Windows.HorizontalAlignment.Left;
-        BtnAdd.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Stretch;
+        ControlBlock.HorizontalAlignment = isVertical && _lastMetrics.UseMultiColumnControls ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Left;
+        BtnAdd.HorizontalAlignment = isVertical && _lastMetrics.UseMultiColumnControls ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Stretch;
+        ContextIndicator.HorizontalAlignment = isVertical && _lastMetrics.UseMultiColumnControls ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Stretch;
         UnifiedButtonsPanel.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Left : System.Windows.HorizontalAlignment.Left;
         AppSettingsBlock.HorizontalAlignment = isVertical ? System.Windows.HorizontalAlignment.Center : System.Windows.HorizontalAlignment.Right;
 
@@ -1323,18 +1326,35 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
         var (availableWidth, availableHeight) = CalculateAvailableSize();
-        var metrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight);
+        _lastMetrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight);
         bool hasUnifiedButtons = UnifiedButtonsPanel.Children.Count > 0;
 
         // Разделители
         SepSystem.Visibility = hasUnifiedButtons ? Visibility.Visible : Visibility.Collapsed;
         SepAppSettings.Visibility = hasUnifiedButtons ? Visibility.Visible : Visibility.Collapsed;
 
-        ApplyPanelSizeConstraints(metrics);
+        UpdateContextIndicator();
+
+        ApplyPanelSizeConstraints(_lastMetrics);
+        UpdateOrientation(reposition: false, applySizeConstraints: false);
         AnimateContextTransitionIfNeeded();
         ApplyPanelToolTipPlacement();
 
         PositionWindowImmediately(_shown);
+    }
+
+    private void UpdateContextIndicator()
+    {
+        var enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts).ToList();
+        int activeIndex = enabledContexts.FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
+        if (activeIndex < 0) activeIndex = 0;
+
+        ContextIndicatorText.Text = (activeIndex + 1).ToString();
+        if (activeIndex < enabledContexts.Count)
+        {
+            string colorHex = enabledContexts[activeIndex].Color;
+            ContextIndicatorCircle.Background = GetCachedBrush(colorHex);
+        }
     }
 
     private void ApplyUnifiedButtonIcon(Button button, UnifiedButton item, int panelVersion)
