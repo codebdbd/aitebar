@@ -749,10 +749,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private PanelLayoutHelper.PanelLayoutMetrics ComputePanelMetrics(
         bool isVertical,
         double availableWidth,
-        double availableHeight)
+        double availableHeight,
+        int totalButtonCount)
     {
-        int totalButtonCount = _unifiedButtons.Count;
-
         return PanelLayoutHelper.Calculate(
             isVertical: isVertical,
             availablePrimary: isVertical ? availableHeight : availableWidth,
@@ -760,6 +759,39 @@ public partial class MainWindow : Window, ISettingsWindowContext
             totalButtonCount: totalButtonCount,
             controlButtonCount: 2,
             trailingControlButtonCount: 1);
+    }
+
+    private PanelLayoutHelper.PanelLayoutMetrics ComputeStablePrimaryPanelMetrics(
+        bool isVertical,
+        double availableWidth,
+        double availableHeight)
+    {
+        PanelLayoutHelper.PanelLayoutMetrics activeMetrics = ComputePanelMetrics(
+            isVertical,
+            availableWidth,
+            availableHeight,
+            _unifiedButtons.Count);
+        double maxPrimary = isVertical ? activeMetrics.PanelHeight : activeMetrics.PanelWidth;
+
+        foreach (PanelContext context in ContextStateHelper.GetEnabledContexts(AppSettings.Contexts))
+        {
+            int contextButtonCount = _unifiedButtonService.BuildUnifiedList(context.Id).Count;
+            PanelLayoutHelper.PanelLayoutMetrics contextMetrics = ComputePanelMetrics(
+                isVertical,
+                availableWidth,
+                availableHeight,
+                contextButtonCount);
+
+            double contextPrimary = isVertical ? contextMetrics.PanelHeight : contextMetrics.PanelWidth;
+            if (contextPrimary > maxPrimary)
+            {
+                maxPrimary = contextPrimary;
+            }
+        }
+
+        return isVertical
+            ? activeMetrics with { PanelHeight = maxPrimary }
+            : activeMetrics with { PanelWidth = maxPrimary };
     }
 
     private void ApplyPanelSizeConstraints(PanelLayoutHelper.PanelLayoutMetrics metrics)
@@ -1242,6 +1274,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
         var orientation = System.Windows.Controls.Orientation.Horizontal;
         if (isVertical) orientation = System.Windows.Controls.Orientation.Vertical;
 
+        if (applySizeConstraints)
+        {
+            var (availableWidth, availableHeight) = CalculateAvailableSize();
+            _lastMetrics = ComputeStablePrimaryPanelMetrics(isVertical, availableWidth, availableHeight);
+        }
+
         if (isVertical) { this.MinWidth = 0; this.MinHeight = 150; }
         else { this.MinWidth = 150; this.MinHeight = 0; }
 
@@ -1291,9 +1329,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         if (applySizeConstraints)
         {
-            var (availableWidth, availableHeight) = CalculateAvailableSize();
-            var metrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight);
-            ApplyPanelSizeConstraints(metrics);
+            ApplyPanelSizeConstraints(_lastMetrics);
         }
 
         ApplyPanelToolTipPlacement();
@@ -1340,42 +1376,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
         var (availableWidth, availableHeight) = CalculateAvailableSize();
 
-        // Calculate metrics for all enabled contexts to find maximum size and use full metrics for that context
-        var enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
-        PanelLayoutHelper.PanelLayoutMetrics maxMetrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight);
-        double maxPanelSize = isVertical ? maxMetrics.PanelHeight : maxMetrics.PanelWidth;
-        
-        foreach (var context in enabledContexts)
-        {
-            var contextElements = _unifiedButtonService.BuildUnifiedList(context.Id);
-            var contextMetrics = PanelLayoutHelper.Calculate(
-                isVertical: isVertical,
-                availablePrimary: isVertical ? availableHeight : availableWidth,
-                panelPercent: AppSettings.PanelSizePercent,
-                totalButtonCount: contextElements.Count,
-                controlButtonCount: 2,
-                trailingControlButtonCount: 1
-            );
-            
-            if (isVertical)
-            {
-                if (contextMetrics.PanelHeight > maxPanelSize)
-                {
-                    maxPanelSize = contextMetrics.PanelHeight;
-                    maxMetrics = contextMetrics;
-                }
-            }
-            else
-            {
-                if (contextMetrics.PanelWidth > maxPanelSize)
-                {
-                    maxPanelSize = contextMetrics.PanelWidth;
-                    maxMetrics = contextMetrics;
-                }
-            }
-        }
-
-        _lastMetrics = maxMetrics;
+        _lastMetrics = ComputeStablePrimaryPanelMetrics(isVertical, availableWidth, availableHeight);
 
         bool hasUnifiedButtons = UnifiedButtonsPanel.Children.Count > 0;
 

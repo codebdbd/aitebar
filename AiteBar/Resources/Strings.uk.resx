@@ -378,6 +378,12 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="IconConverter_SaveFailed" xml:space="preserve"><value>Не удалось зберегти ICO: {0}</value></data>
   <data name="Tool_QRCodeGenerator" xml:space="preserve"><value>Генератор QR-кодів</value></data>
   <data name="Main_QRCodeGeneratorTooltip" xml:space="preserve"><value>Створити QR-код із тексту</value></data>
+  <data name="Tool_ShowDesktop" xml:space="preserve"><value>Робочий стіл</value></data>
+  <data name="Main_ShowDesktopTooltip" xml:space="preserve"><value>Показати робочий стіл</value></data>
+  <data name="Tool_AppsFolder" xml:space="preserve"><value>Усі програми</value></data>
+  <data name="Main_AppsFolderTooltip" xml:space="preserve"><value>Відкрити папку програм</value></data>
+  <data name="Tool_Copilot" xml:space="preserve"><value>Copilot</value></data>
+  <data name="Main_CopilotTooltip" xml:space="preserve"><value>Відкрити Copilot</value></data>
   <data name="QRCodeGenerator_Title" xml:space="preserve"><value>Генератор QR-кодів</value></data>
   <data name="QRCodeGenerator_InputLabel" xml:space="preserve"><value>Текст або URL</value></data>
   <data name="QRCodeGenerator_InputPlaceholder" xml:space="preserve"><value>Введіть текст або URL...</value></data>

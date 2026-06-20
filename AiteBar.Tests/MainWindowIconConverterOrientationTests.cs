@@ -102,6 +102,82 @@ public sealed class MainWindowIconConverterOrientationTests
         });
     }
 
+    [Fact]
+    public async Task VerticalPanel_KeepsCurrentContextColumnWidth_WhenAnotherContextIsTaller()
+    {
+        await RunStaAsync(() =>
+        {
+            EnsureApplicationResources();
+
+            var window = new MainWindow();
+            try
+            {
+                ConfigureSettingsForIconConverterOnly(window);
+                AppSettings settings = window.GetAppSettings();
+                settings.Edge = DockEdge.Left;
+                settings.PanelSizePercent = 50;
+                settings.Contexts[1].IsEnabled = true;
+                settings.ActiveContextId = settings.Contexts[0].Id;
+                settings.Elements = CreateContextElements(settings.Contexts[1].Id, 20);
+                window.GetSettingsService().Settings = settings;
+
+                window.RefreshPanel();
+                LayoutWindow(window);
+
+                var root = Assert.IsAssignableFrom<FrameworkElement>(window.FindName("RootBorder"));
+                var unifiedPanel = Assert.IsAssignableFrom<OverflowWrapPanel>(window.FindName("UnifiedButtonsPanel"));
+
+                Assert.Single(unifiedPanel.Children);
+                Assert.Equal(44, unifiedPanel.Width);
+                Assert.Equal(52, root.MinWidth);
+                Assert.Equal(root.MinWidth, root.MaxWidth);
+                Assert.True(root.MinHeight > 52 + 18, $"Expected vertical primary size to be reserved from the taller context, got {root.MinHeight}.");
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
+    [Fact]
+    public async Task HorizontalPanel_KeepsCurrentContextRowHeight_WhenAnotherContextIsWider()
+    {
+        await RunStaAsync(() =>
+        {
+            EnsureApplicationResources();
+
+            var window = new MainWindow();
+            try
+            {
+                ConfigureSettingsForIconConverterOnly(window);
+                AppSettings settings = window.GetAppSettings();
+                settings.Edge = DockEdge.Top;
+                settings.PanelSizePercent = 100;
+                settings.Contexts[1].IsEnabled = true;
+                settings.ActiveContextId = settings.Contexts[0].Id;
+                settings.Elements = CreateContextElements(settings.Contexts[1].Id, 20);
+                window.GetSettingsService().Settings = settings;
+
+                window.RefreshPanel();
+                LayoutWindow(window);
+
+                var root = Assert.IsAssignableFrom<FrameworkElement>(window.FindName("RootBorder"));
+                var unifiedPanel = Assert.IsAssignableFrom<OverflowWrapPanel>(window.FindName("UnifiedButtonsPanel"));
+
+                Assert.Single(unifiedPanel.Children);
+                Assert.Equal(44, unifiedPanel.Height);
+                Assert.Equal(52, root.MinHeight);
+                Assert.Equal(root.MinHeight, root.MaxHeight);
+                Assert.True(root.MinWidth > 220, $"Expected horizontal primary size to be reserved from the wider context, got {root.MinWidth}.");
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
     private static void ConfigureSettingsForIconConverterOnly(MainWindow window)
     {
         AppSettings settings = window.GetAppSettings();
@@ -117,8 +193,30 @@ public sealed class MainWindowIconConverterOrientationTests
         settings.ShowPresetTimerStopwatch = false;
         settings.ShowPresetColorPicker = false;
         settings.ShowPresetQuickNote = false;
+        settings.ShowPresetQRCodeGenerator = false;
+        settings.ShowPresetShowDesktop = false;
+        settings.ShowPresetAppsFolder = false;
+        settings.ShowPresetCopilot = false;
         settings.ShowPresetIconConverter = true;
         window.GetSettingsService().Settings = settings;
+    }
+
+    private static List<CustomElement> CreateContextElements(string contextId, int count)
+    {
+        var elements = new List<CustomElement>();
+        for (int i = 0; i < count; i++)
+        {
+            elements.Add(new CustomElement
+            {
+                Id = $"test-element-{i}",
+                Name = $"Test {i}",
+                ContextId = contextId,
+                ActionType = nameof(ActionType.Web),
+                ActionValue = "https://example.com"
+            });
+        }
+
+        return elements;
     }
 
     private static void LayoutWindow(Window window)

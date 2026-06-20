@@ -383,6 +383,12 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="IconConverter_SaveFailed" xml:space="preserve"><value>ICO konnte nicht gespeichert werden: {0}</value></data>
   <data name="Tool_QRCodeGenerator" xml:space="preserve"><value>QR-Code-Generator</value></data>
   <data name="Main_QRCodeGeneratorTooltip" xml:space="preserve"><value>QR-Code aus Text erzeugen</value></data>
+  <data name="Tool_ShowDesktop" xml:space="preserve"><value>Desktop anzeigen</value></data>
+  <data name="Main_ShowDesktopTooltip" xml:space="preserve"><value>Desktop anzeigen</value></data>
+  <data name="Tool_AppsFolder" xml:space="preserve"><value>Alle Apps</value></data>
+  <data name="Main_AppsFolderTooltip" xml:space="preserve"><value>Apps-Ordner öffnen</value></data>
+  <data name="Tool_Copilot" xml:space="preserve"><value>Copilot</value></data>
+  <data name="Main_CopilotTooltip" xml:space="preserve"><value>Copilot öffnen</value></data>
   <data name="QRCodeGenerator_Title" xml:space="preserve"><value>QR-Code-Generator</value></data>
   <data name="QRCodeGenerator_InputLabel" xml:space="preserve"><value>Text oder URL</value></data>
   <data name="QRCodeGenerator_InputPlaceholder" xml:space="preserve"><value>Text oder URL eingeben...</value></data>
