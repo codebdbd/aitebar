@@ -24,14 +24,15 @@ namespace AiteBar
             return new HttpClient(handler);
         }
 
-        public static async Task<string?> DownloadFaviconAsync(string url)
+        public static async Task<string?> DownloadFaviconAsync(string url, double dpi = 1.0)
         {
             try
             {
                 if (!Uri.TryCreate(url, UriKind.Absolute, out var uri)) return null;
 
                 // Используем Google Favicon Service как самый надежный и быстрый способ
-                string faviconUrl = $"https://www.google.com/s2/favicons?domain={uri.Host}&sz=64";
+                int faviconSize = dpi > 1.5 ? 48 : 32;
+                string faviconUrl = $"https://www.google.com/s2/favicons?domain={uri.Host}&sz={faviconSize}";
                 var currentUrl = new Uri(faviconUrl);
 
                 // Ограничим количество редиректов, чтобы избежать циклов

@@ -1450,6 +1450,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
             bitmap.BeginInit();
             bitmap.StreamSource = stream;
             bitmap.CacheOption = System.Windows.Media.Imaging.BitmapCacheOption.OnLoad;
+            int pixelSize = (int)Math.Ceiling(24 * _cachedDpi);
+            bitmap.DecodePixelWidth = pixelSize;
+            bitmap.DecodePixelHeight = pixelSize;
             bitmap.EndInit();
             bitmap.Freeze();
 
@@ -1634,13 +1637,18 @@ public partial class MainWindow : Window, ISettingsWindowContext
         _ => PlacementMode.Bottom
     };
 
-    private static System.Windows.Controls.Image CreateButtonImage(System.Windows.Media.Imaging.BitmapSource source) => new()
+    private static System.Windows.Controls.Image CreateButtonImage(System.Windows.Media.Imaging.BitmapSource source)
     {
-        Source = source,
-        Width = 24,
-        Height = 24,
-        Stretch = Stretch.Uniform
-    };
+        var image = new System.Windows.Controls.Image
+        {
+            Source = source,
+            Width = 24,
+            Height = 24,
+            Stretch = Stretch.Uniform
+        };
+        RenderOptions.SetBitmapScalingMode(image, BitmapScalingMode.HighQuality);
+        return image;
+    }
 
     private sealed record CachedButtonImage(System.Windows.Media.Imaging.BitmapSource Source, DateTime LastWriteUtc);
 

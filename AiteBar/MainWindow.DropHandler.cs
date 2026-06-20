@@ -242,11 +242,12 @@ public partial class MainWindow
                 {
                     string elementId = newElement.Id;
                     string elementActionValue = newElement.ActionValue;
+                    double currentDpi = _cachedDpi;
                     _ = Task.Run(async () =>
                     {
                         try
                         {
-                            string? webIcon = await IconHelper.DownloadFaviconAsync(val);
+                            string? webIcon = await IconHelper.DownloadFaviconAsync(val, currentDpi);
                             if (!string.IsNullOrEmpty(webIcon))
                             {
                                 if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
