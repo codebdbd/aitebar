@@ -22,6 +22,7 @@ internal sealed class UnifiedButtonService
         new("ColorPicker", "\uE5FE", "#A855F7", "ShowPresetColorPicker", "Main_ColorPickerTooltip"),
         new("QuickNote", "\uF56F", "#22D3EE", "ShowPresetQuickNote", "Main_QuickNoteTooltip"),
         new("QRCodeGenerator", "\uF635", "#60A5FA", "ShowPresetQRCodeGenerator", "Main_QRCodeGeneratorTooltip"),
+        new("ClipboardManager", "\uE34E", "#F59E0B", "ShowPresetClipboardManager", "Main_ClipboardManagerTooltip"),
         new("ShowDesktop", "\uE4AB", "#6366F1", "ShowPresetShowDesktop", "Main_ShowDesktopTooltip"),
         new("AppsFolder", "\uF732", "#A855F7", "ShowPresetAppsFolder", "Main_AppsFolderTooltip"),
         new("Copilot", "\uF1F9", "#007ACC", "ShowPresetCopilot", "Main_CopilotTooltip")

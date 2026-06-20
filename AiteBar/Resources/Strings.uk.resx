@@ -384,6 +384,16 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="Main_AppsFolderTooltip" xml:space="preserve"><value>Відкрити папку програм</value></data>
   <data name="Tool_Copilot" xml:space="preserve"><value>Copilot</value></data>
   <data name="Main_CopilotTooltip" xml:space="preserve"><value>Відкрити Copilot</value></data>
+  <data name="Tool_ClipboardManager" xml:space="preserve"><value>Менеджер буфера обміну</value></data>
+  <data name="Main_ClipboardManagerTooltip" xml:space="preserve"><value>Переглянути історію буфера обміну</value></data>
+  <data name="ClipboardManager_Title" xml:space="preserve"><value>Менеджер буфера обміну</value></data>
+  <data name="ClipboardManager_SearchPlaceholder" xml:space="preserve"><value>Пошук в історії буфера обміну...</value></data>
+  <data name="ClipboardManager_Copy" xml:space="preserve"><value>Копіювати</value></data>
+  <data name="ClipboardManager_Copied" xml:space="preserve"><value>Скопійовано в буфер обміну</value></data>
+  <data name="ClipboardManager_ClearAll" xml:space="preserve"><value>Очистити все</value></data>
+  <data name="ClipboardManager_Cleared" xml:space="preserve"><value>Історію буфера обміну очищено</value></data>
+  <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>Історія буфера обміну порожня. Скопіюйте щось, щоб почати!</value></data>
+  <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} елементів в історії буфера обміну</value></data>
   <data name="QRCodeGenerator_Title" xml:space="preserve"><value>Генератор QR-кодів</value></data>
   <data name="QRCodeGenerator_InputLabel" xml:space="preserve"><value>Текст або URL</value></data>
   <data name="QRCodeGenerator_InputPlaceholder" xml:space="preserve"><value>Введіть текст або URL...</value></data>

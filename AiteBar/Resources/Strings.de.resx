@@ -389,6 +389,16 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="Main_AppsFolderTooltip" xml:space="preserve"><value>Apps-Ordner öffnen</value></data>
   <data name="Tool_Copilot" xml:space="preserve"><value>Copilot</value></data>
   <data name="Main_CopilotTooltip" xml:space="preserve"><value>Copilot öffnen</value></data>
+  <data name="Tool_ClipboardManager" xml:space="preserve"><value>Zwischenablage-Manager</value></data>
+  <data name="Main_ClipboardManagerTooltip" xml:space="preserve"><value>Zwischenablageverlauf anzeigen</value></data>
+  <data name="ClipboardManager_Title" xml:space="preserve"><value>Zwischenablage-Manager</value></data>
+  <data name="ClipboardManager_SearchPlaceholder" xml:space="preserve"><value>Zwischenablageverlauf durchsuchen...</value></data>
+  <data name="ClipboardManager_Copy" xml:space="preserve"><value>Kopieren</value></data>
+  <data name="ClipboardManager_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert</value></data>
+  <data name="ClipboardManager_ClearAll" xml:space="preserve"><value>Alle löschen</value></data>
+  <data name="ClipboardManager_Cleared" xml:space="preserve"><value>Zwischenablageverlauf gelöscht</value></data>
+  <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>Zwischenablageverlauf ist leer. Kopieren Sie etwas, um loszulegen!</value></data>
+  <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} Elemente im Zwischenablageverlauf</value></data>
   <data name="QRCodeGenerator_Title" xml:space="preserve"><value>QR-Code-Generator</value></data>
   <data name="QRCodeGenerator_InputLabel" xml:space="preserve"><value>Text oder URL</value></data>
   <data name="QRCodeGenerator_InputPlaceholder" xml:space="preserve"><value>Text oder URL eingeben...</value></data>

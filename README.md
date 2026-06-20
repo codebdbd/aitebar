@@ -21,7 +21,7 @@ AiteBar — Your Personal Command Center for Windows. Turn the edge of your scre
 - **Hidden edge panel**: Appears when hovering over the screen edge
 - **Panel position indicator**: Small indicator on the taskbar showing where the panel is located and allowing quick access
 - **Global hotkeys**: Quick access to the panel and actions
-- **Built-in tools**: Screenshot, screen recording, calculator, file explorer, downloads, timer and stopwatch, color picker, Quick Note, file sorter, icon converter, QR code generator, show desktop, apps folder, Copilot
+- **Built-in tools**: Screenshot, screen recording, calculator, file explorer, downloads, timer and stopwatch, color picker, Quick Note, file sorter, icon converter, QR code generator, clipboard manager, show desktop, apps folder, Copilot
 - **Drag-and-drop**: Add files, folders, .url shortcuts and links by dragging
 
 #### Action Types
@@ -82,7 +82,7 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 - **Скрытая edge-панель**: Появляется при наведении на край экрана
 - **Указатель положения панели**: Маленький индикатор на панели задач, показывающий, где находится панель и позволяющий быстро открыть её
 - **Глобальные горячие клавиши**: Быстрый доступ к панели и действиям
-- **Встроенные инструменты**: Скриншот, запись экрана, калькулятор, проводник, загрузки, таймер и секундомер, пипетка цвета, Quick Note, сортировщик файлов, конвертер иконок, генератор QR-кодов, показ рабочего стола, папка приложений, Copilot
+- **Встроенные инструменты**: Скриншот, запись экрана, калькулятор, проводник, загрузки, таймер и секундомер, пипетка цвета, Quick Note, сортировщик файлов, конвертер иконок, генератор QR-кодов, менеджер буфера обмена, показ рабочего стола, папка приложений, Copilot
 - **Drag-and-drop**: Добавляй файлы, папки, .url и ссылки перетаскиванием
 
 #### Типы действий

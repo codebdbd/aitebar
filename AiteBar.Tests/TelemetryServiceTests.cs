@@ -224,37 +224,25 @@ public sealed class TelemetryServiceTests : IDisposable
 
     private static async Task WithRawSettingsFile(string content, Func<Task> assertion)
     {
-        string settingsPath = PathHelper.SettingsFile;
-        string directory = Path.GetDirectoryName(settingsPath)!;
-        string backupPath = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"), "settings.backup.json");
-        bool hadOriginal = File.Exists(settingsPath);
-
-        Directory.CreateDirectory(directory);
-        Directory.CreateDirectory(Path.GetDirectoryName(backupPath)!);
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        PathHelper.SetAppDataFolderOverride(tempRoot);
 
         try
         {
-            if (hadOriginal)
-            {
-                File.Copy(settingsPath, backupPath, overwrite: true);
-            }
-
-            File.WriteAllText(settingsPath, content);
+            File.WriteAllText(PathHelper.SettingsFile, content);
             await assertion();
         }
         finally
         {
             TelemetryService.Shutdown();
-
-            if (hadOriginal)
+            PathHelper.ClearAppDataFolderOverride();
+            try
             {
-                File.Copy(backupPath, settingsPath, overwrite: true);
-                File.Delete(backupPath);
-                Directory.Delete(Path.GetDirectoryName(backupPath)!, recursive: true);
+                Directory.Delete(tempRoot, recursive: true);
             }
-            else if (File.Exists(settingsPath))
+            catch
             {
-                File.Delete(settingsPath);
             }
         }
     }

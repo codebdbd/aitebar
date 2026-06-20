@@ -233,5 +233,13 @@ namespace AiteBar
         internal const int WS_EX_NOACTIVATE = 0x08000000;
         internal const int SW_SHOWMAXIMIZED = 3;
         internal const int SW_SHOWMINIMIZED = 2;
+  
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern bool AddClipboardFormatListener(IntPtr hWnd);
+  
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern bool RemoveClipboardFormatListener(IntPtr hWnd);
+  
+        internal const int WM_CLIPBOARDUPDATE = 0x031D;
     }
 }

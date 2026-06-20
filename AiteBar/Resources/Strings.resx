@@ -470,4 +470,14 @@ Open the GitHub release page?</value></data>
   <data name="Main_AppsFolderTooltip" xml:space="preserve"><value>Open the Apps folder</value></data>
   <data name="Tool_Copilot" xml:space="preserve"><value>Copilot</value></data>
   <data name="Main_CopilotTooltip" xml:space="preserve"><value>Open Copilot</value></data>
+  <data name="Tool_ClipboardManager" xml:space="preserve"><value>Clipboard manager</value></data>
+  <data name="Main_ClipboardManagerTooltip" xml:space="preserve"><value>View clipboard history</value></data>
+  <data name="ClipboardManager_Title" xml:space="preserve"><value>Clipboard manager</value></data>
+  <data name="ClipboardManager_SearchPlaceholder" xml:space="preserve"><value>Search clipboard history...</value></data>
+  <data name="ClipboardManager_Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="ClipboardManager_Copied" xml:space="preserve"><value>Copied to clipboard</value></data>
+  <data name="ClipboardManager_ClearAll" xml:space="preserve"><value>Clear all</value></data>
+  <data name="ClipboardManager_Cleared" xml:space="preserve"><value>Clipboard history cleared</value></data>
+  <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>Clipboard history is empty. Copy something to start!</value></data>
+  <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} items in clipboard history</value></data>
 </root>

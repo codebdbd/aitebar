@@ -882,6 +882,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         if (AppSettings.ShowPresetColorPicker) count++;
         if (AppSettings.ShowPresetQuickNote) count++;
         if (AppSettings.ShowPresetQRCodeGenerator) count++;
+        if (AppSettings.ShowPresetClipboardManager) count++;
         if (AppSettings.ShowPresetShowDesktop) count++;
         if (AppSettings.ShowPresetAppsFolder) count++;
         if (AppSettings.ShowPresetCopilot) count++;
@@ -1553,6 +1554,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                         break;
                     case "QRCodeGenerator":
                         await _actionService.LaunchUtilityAsync("QRCodeGenerator", HideDock);
+                        break;
+                    case "ClipboardManager":
+                        await _actionService.LaunchUtilityAsync("ClipboardManager", HideDock);
                         break;
                     case "ShowDesktop":
                         await _actionService.StartShowDesktopAsync(HideDock);

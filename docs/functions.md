@@ -76,6 +76,7 @@ AiteBar - desktop-утилита для Windows: скрываемая edge-па�
   - Открыть File Sorter
   - Открыть Icon Converter
   - Открыть QR Code Generator
+  - Открыть Clipboard Manager
   - Показать рабочий стол
   - Открыть папку приложений
   - Открыть Copilot
@@ -2240,6 +2241,8 @@ Tray-меню.
 | `ShowPresetTimerStopwatch` | Показывать таймер и секундомер | true/false | `true` |
 | `ShowPresetColorPicker` | Показывать пипетку | true/false | `false` |
 | `ShowPresetQuickNote` | Показывать Quick Note | true/false | `false` |
+| `ShowPresetQRCodeGenerator` | Показывать QR Code Generator | true/false | `false` |
+| `ShowPresetClipboardManager` | Показывать Clipboard Manager | true/false | `false` |
 | `TimerSoundEnabled` | Звук окончания таймера | true/false | `true` |
 | `TimerIsStopwatchMode` | Последний выбранный режим таймера/секундомера | true/false | `false` |
 | `TimerDuration` | Последняя длительность таймера | TimeSpan | `00:05:00` |
@@ -2441,6 +2444,7 @@ Tray-меню.
 - Открыть File Sorter.
 - Открыть Icon Converter.
 - Открыть QR Code Generator.
+- Открыть Clipboard Manager.
 - Показать рабочий стол.
 - Открыть папку приложений.
 - Открыть Copilot.

@@ -8,7 +8,9 @@ namespace AiteBar
         public const string AppCompany = "Codebdbd";
         public const string AppName = "Aite Bar";
 
-        public static string AppDataFolder => Path.Combine(
+        // Для тестов: возможность переопределить корневую папку данных
+        private static string? _appDataFolderOverride;
+        public static string AppDataFolder => _appDataFolderOverride ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             AppCompany, AppName);
 
@@ -16,6 +18,17 @@ namespace AiteBar
         public static string SettingsFile => Path.Combine(AppDataFolder, "settings.json");
         public static string LogFile => Path.Combine(AppDataFolder, "error.log");
         public static string IconsFolder => Path.Combine(AppDataFolder, "Icons");
+
+        // Методы для тестов
+        public static void SetAppDataFolderOverride(string path)
+        {
+            _appDataFolderOverride = path;
+        }
+
+        public static void ClearAppDataFolderOverride()
+        {
+            _appDataFolderOverride = null;
+        }
 
         public static void EnsureDirectories()
         {

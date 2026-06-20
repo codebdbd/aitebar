@@ -736,6 +736,7 @@ namespace AiteBar
                 "ShowPresetColorPicker" => settings.ShowPresetColorPicker,
                 "ShowPresetQuickNote" => settings.ShowPresetQuickNote,
                 "ShowPresetQRCodeGenerator" => settings.ShowPresetQRCodeGenerator,
+                "ShowPresetClipboardManager" => settings.ShowPresetClipboardManager,
                 "ShowPresetShowDesktop" => settings.ShowPresetShowDesktop,
                 "ShowPresetAppsFolder" => settings.ShowPresetAppsFolder,
                 "ShowPresetCopilot" => settings.ShowPresetCopilot,
@@ -760,6 +761,7 @@ namespace AiteBar
                 case "ShowPresetColorPicker": settings.ShowPresetColorPicker = visible; break;
                 case "ShowPresetQuickNote": settings.ShowPresetQuickNote = visible; break;
                 case "ShowPresetQRCodeGenerator": settings.ShowPresetQRCodeGenerator = visible; break;
+                case "ShowPresetClipboardManager": settings.ShowPresetClipboardManager = visible; break;
                 case "ShowPresetShowDesktop": settings.ShowPresetShowDesktop = visible; break;
                 case "ShowPresetAppsFolder": settings.ShowPresetAppsFolder = visible; break;
                 case "ShowPresetCopilot": settings.ShowPresetCopilot = visible; break;

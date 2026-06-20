@@ -564,34 +564,29 @@ public sealed class ActionServiceTests
     [Fact]
     public void AdvanceRotationProfile_UsesBrowserProfilesAndLastUsedProfile()
     {
-        string basePath = BrowserHelper.GetUserDataPath(BrowserType.Yandex);
-        string firstProfilePath = Path.Combine(basePath, "Profile 900031");
-        string secondProfilePath = Path.Combine(basePath, "Profile 900032");
-
-        try
+        // Тестируем логику напрямую через ProfileRotationHelper, без реальных файлов
+        var profiles = new[]
         {
-            Directory.CreateDirectory(firstProfilePath);
-            Directory.CreateDirectory(secondProfilePath);
-            File.WriteAllText(Path.Combine(firstProfilePath, "Preferences"), "{}");
-            File.WriteAllText(Path.Combine(secondProfilePath, "Preferences"), "{}");
-
-            var element = new CustomElement
+            new BrowserProfileInfo
             {
-                Browser = BrowserType.Yandex,
-                RotationProfilePaths = [firstProfilePath, secondProfilePath],
-                LastUsedProfile = "Profile 900031"
-            };
-            MethodInfo method = typeof(ActionService).GetMethod("AdvanceRotationProfile", BindingFlags.NonPublic | BindingFlags.Static)!;
+                ProfilePath = @"C:\Fake\Browser\User Data\Profile 900031",
+                DisplayName = "Profile 1",
+                LaunchProfileName = "Profile 900031"
+            },
+            new BrowserProfileInfo
+            {
+                ProfilePath = @"C:\Fake\Browser\User Data\Profile 900032",
+                DisplayName = "Profile 2",
+                LaunchProfileName = "Profile 900032"
+            }
+        };
 
-            string next = (string)method.Invoke(null, [element])!;
+        var result = ProfileRotationHelper.AdvanceProfile(
+            profiles, 
+            [profiles[0].ProfilePath, profiles[1].ProfilePath], 
+            "Profile 900031");
 
-            Assert.Equal("Profile 900032", next);
-        }
-        finally
-        {
-            TryDeleteDirectory(firstProfilePath);
-            TryDeleteDirectory(secondProfilePath);
-        }
+        Assert.Equal("Profile 900032", result);
     }
 
     [Fact]

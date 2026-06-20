@@ -382,7 +382,8 @@ public partial class AppSettingsWindow : DarkWindow
         ChkShowPresetColorPicker.IsChecked = _settings.ShowPresetColorPicker;
         ChkShowPresetQuickNote.IsChecked = _settings.ShowPresetQuickNote;
         ChkShowPresetQRCodeGenerator.IsChecked = _settings.ShowPresetQRCodeGenerator;
-        ChkShowPresetShowDesktop.IsChecked = _settings.ShowPresetShowDesktop;
+            ChkShowPresetClipboardManager.IsChecked = _settings.ShowPresetClipboardManager;
+            ChkShowPresetShowDesktop.IsChecked = _settings.ShowPresetShowDesktop;
         ChkShowPresetAppsFolder.IsChecked = _settings.ShowPresetAppsFolder;
         ChkShowPresetCopilot.IsChecked = _settings.ShowPresetCopilot;
         ChkShowTaskbarPositionIndicator.IsChecked = _settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
@@ -563,6 +564,7 @@ public partial class AppSettingsWindow : DarkWindow
         _settings.ShowPresetColorPicker = ChkShowPresetColorPicker.IsChecked ?? false;
         _settings.ShowPresetQuickNote = ChkShowPresetQuickNote.IsChecked ?? false;
         _settings.ShowPresetQRCodeGenerator = ChkShowPresetQRCodeGenerator.IsChecked ?? false;
+        _settings.ShowPresetClipboardManager = ChkShowPresetClipboardManager.IsChecked ?? false;
         _settings.ShowPresetShowDesktop = ChkShowPresetShowDesktop.IsChecked ?? false;
         _settings.ShowPresetAppsFolder = ChkShowPresetAppsFolder.IsChecked ?? false;
         _settings.ShowPresetCopilot = ChkShowPresetCopilot.IsChecked ?? false;

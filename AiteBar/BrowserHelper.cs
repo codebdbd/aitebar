@@ -21,6 +21,9 @@ namespace AiteBar
     {
         private static readonly string LocalAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         private static readonly string AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        
+        // Для тестов: переопределение путей к данным браузеров
+        private static readonly Dictionary<BrowserType, string> _userDataPathOverrides = new();
 
         public static string GetExecutablePath(BrowserType type)
         {
@@ -90,6 +93,11 @@ namespace AiteBar
 
         public static string GetUserDataPath(BrowserType type)
         {
+            if (_userDataPathOverrides.TryGetValue(type, out string? path))
+            {
+                return path;
+            }
+
             return type switch
             {
                 BrowserType.Chrome => Path.Combine(LocalAppData, @"Google\Chrome\User Data"),
@@ -102,6 +110,22 @@ namespace AiteBar
                 BrowserType.Firefox => Path.Combine(AppData, @"Mozilla\Firefox"),
                 _ => Path.Combine(LocalAppData, @"Google\Chrome\User Data")
             };
+        }
+
+        // Методы для тестов
+        public static void SetUserDataPathOverride(BrowserType type, string path)
+        {
+            _userDataPathOverrides[type] = path;
+        }
+
+        public static void ClearUserDataPathOverride(BrowserType type)
+        {
+            _userDataPathOverrides.Remove(type);
+        }
+
+        public static void ClearAllUserDataPathOverrides()
+        {
+            _userDataPathOverrides.Clear();
         }
 
         public static BrowserType GetSystemDefaultBrowser()

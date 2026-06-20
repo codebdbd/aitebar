@@ -138,6 +138,7 @@ public class AppSettings
     public bool ShowPresetColorPicker { get; set; } = false;
     public bool ShowPresetQuickNote { get; set; } = false;
     public bool ShowPresetQRCodeGenerator { get; set; } = false;
+        public bool ShowPresetClipboardManager { get; set; } = false;
         public bool ShowPresetTimerStopwatch { get; set; } = true;
         public bool ShowPresetShowDesktop { get; set; } = true;
         public bool ShowPresetAppsFolder { get; set; } = true;

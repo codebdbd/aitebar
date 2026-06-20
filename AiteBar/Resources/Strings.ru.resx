@@ -936,4 +936,14 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="Main_AppsFolderTooltip" xml:space="preserve"><value>Открыть папку «Все приложения»</value></data>
   <data name="Tool_Copilot" xml:space="preserve"><value>Copilot</value></data>
   <data name="Main_CopilotTooltip" xml:space="preserve"><value>Открыть Copilot</value></data>
+  <data name="Tool_ClipboardManager" xml:space="preserve"><value>Менеджер буфера обмена</value></data>
+  <data name="Main_ClipboardManagerTooltip" xml:space="preserve"><value>Просмотреть историю буфера обмена</value></data>
+  <data name="ClipboardManager_Title" xml:space="preserve"><value>Менеджер буфера обмена</value></data>
+  <data name="ClipboardManager_SearchPlaceholder" xml:space="preserve"><value>Поиск в истории буфера обмена...</value></data>
+  <data name="ClipboardManager_Copy" xml:space="preserve"><value>Копировать</value></data>
+  <data name="ClipboardManager_Copied" xml:space="preserve"><value>Скопировано в буфер обмена</value></data>
+  <data name="ClipboardManager_ClearAll" xml:space="preserve"><value>Очистить всё</value></data>
+  <data name="ClipboardManager_Cleared" xml:space="preserve"><value>История буфера обмена очищена</value></data>
+  <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>История буфера обмена пуста. Скопируйте что-нибудь, чтобы начать!</value></data>
+  <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} элементов в истории буфера обмена</value></data>
 </root>

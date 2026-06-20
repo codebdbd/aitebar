@@ -357,6 +357,7 @@
                             <CheckBox x:Name="ChkShowPresetColorPicker" Content="{local:Loc ResourceKey=Tool_ColorPicker}"/>
                             <CheckBox x:Name="ChkShowPresetQuickNote" Content="{local:Loc ResourceKey=Tool_QuickNote}"/>
                             <CheckBox x:Name="ChkShowPresetQRCodeGenerator" Content="{local:Loc ResourceKey=Tool_QRCodeGenerator}"/>
+                            <CheckBox x:Name="ChkShowPresetClipboardManager" Content="{local:Loc ResourceKey=Tool_ClipboardManager}"/>
                             <CheckBox x:Name="ChkShowPresetShowDesktop" Content="{local:Loc ResourceKey=Tool_ShowDesktop}"/>
                             <CheckBox x:Name="ChkShowPresetAppsFolder" Content="{local:Loc ResourceKey=Tool_AppsFolder}"/>
                             <CheckBox x:Name="ChkShowPresetCopilot" Content="{local:Loc ResourceKey=Tool_Copilot}"/>

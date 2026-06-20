@@ -1,0 +1,190 @@
+<local:DarkWindow x:Class="AiteBar.ClipboardManagerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AiteBar"
+        Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
+        Width="380" Height="520" MinWidth="360" MinHeight="480"
+        WindowStartupLocation="Manual" WindowStyle="None" AllowsTransparency="True"
+        Background="Transparent" Foreground="White" ResizeMode="CanResizeWithGrip"
+        ShowInTaskbar="False" Topmost="True"
+        PreviewKeyDown="Window_PreviewKeyDown">
+
+    <Window.Resources>
+        <Style x:Key="HeaderButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Foreground" Value="#AEB6C1"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#25FFFFFF"/>
+                                <Setter Property="Foreground" Value="White"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="CommandButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="36"/>
+            <Setter Property="MinWidth" Value="112"/>
+            <Setter Property="Padding" Value="12,0"/>
+            <Setter Property="Foreground" Value="#E8EDF2"/>
+            <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="EntryItemStyle" TargetType="Border">
+            <Setter Property="Background" Value="#151922"/>
+            <Setter Property="BorderBrush" Value="#273344"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="10"/>
+            <Setter Property="Margin" Value="0,0,0,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#1E2532"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Grid>
+        <Border Margin="8" CornerRadius="8" Background="{StaticResource BorderColor}" BorderBrush="#332A9CFF" BorderThickness="0.7">
+            <Border.Effect>
+                <DropShadowEffect Color="#000000" BlurRadius="14" ShadowDepth="2" Direction="270" Opacity="0.45"/>
+            </Border.Effect>
+
+            <Border CornerRadius="7" Background="{StaticResource PanelBackground}">
+                <Grid Margin="18">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="32"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" MouseLeftButtonDown="Header_MouseLeftButtonDown">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{local:Loc ResourceKey=ClipboardManager_Title}"
+                                   FontSize="14"
+                                   FontWeight="SemiBold"
+                                   Foreground="White"
+                                   VerticalAlignment="Center"/>
+                        <Button Grid.Column="1"
+                                Content="&#xF369;"
+                                Style="{StaticResource HeaderButtonStyle}"
+                                ToolTip="{local:Loc ResourceKey=Common_Close}"
+                                Click="BtnClose_Click"/>
+                    </Grid>
+
+                    <Border Grid.Row="1"
+                            Margin="0,12,0,0"
+                            Background="#151922"
+                            BorderBrush="#273344"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="10">
+                        <Grid>
+                            <TextBox x:Name="TxtSearch"
+                                     Style="{StaticResource BaseTextBoxStyle}"
+                                     TextChanged="TxtSearch_TextChanged"
+                                     FontSize="12"/>
+                            <TextBlock x:Name="TxtSearchPlaceholder"
+                                       Text="{local:Loc ResourceKey=ClipboardManager_SearchPlaceholder}"
+                                       Foreground="{StaticResource MutedText}"
+                                       FontSize="12"
+                                       Margin="8,0"
+                                       IsHitTestVisible="False"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="2" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
+                        <StackPanel x:Name="EntriesPanel">
+                            <TextBlock x:Name="TxtEmptyHint"
+                                       Text="{local:Loc ResourceKey=ClipboardManager_EmptyHint}"
+                                       Foreground="{StaticResource MutedText}"
+                                       FontSize="12"
+                                       TextAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       Margin="0,20,0,0"/>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <Grid Grid.Row="3" Margin="0,10,0,0">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="40"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock x:Name="TxtStatus"
+                                   Foreground="{StaticResource MutedText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Top"
+                                   Margin="0,0,0,8"/>
+                        <Button Grid.Row="1"
+                                x:Name="BtnClearAll"
+                                Content="{local:Loc ResourceKey=ClipboardManager_ClearAll}"
+                                Style="{StaticResource CommandButtonStyle}"
+                                HorizontalAlignment="Right"
+                                Click="BtnClearAll_Click"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Border>
+    </Grid>
+</local:DarkWindow>

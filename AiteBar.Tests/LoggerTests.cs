@@ -79,42 +79,24 @@ public sealed class LoggerTests
 
     private sealed class LogArtifactScope : IDisposable
     {
-        private readonly string _directory = Path.GetDirectoryName(PathHelper.LogFile)!;
-        private readonly string _backupRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
-        private readonly List<string> _originalFiles = [];
+        private readonly string _tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
 
         public LogArtifactScope()
         {
-            Directory.CreateDirectory(_directory);
-            Directory.CreateDirectory(_backupRoot);
-
-            string fileName = Path.GetFileName(PathHelper.LogFile);
-            foreach (string path in Directory.GetFiles(_directory, $"{fileName}*"))
-            {
-                string destination = Path.Combine(_backupRoot, Path.GetFileName(path));
-                File.Copy(path, destination, overwrite: true);
-                _originalFiles.Add(destination);
-                File.Delete(path);
-            }
+            Directory.CreateDirectory(_tempRoot);
+            PathHelper.SetAppDataFolderOverride(_tempRoot);
+            Directory.CreateDirectory(Path.GetDirectoryName(PathHelper.LogFile)!);
         }
 
         public void Dispose()
         {
-            string fileName = Path.GetFileName(PathHelper.LogFile);
-            foreach (string path in Directory.GetFiles(_directory, $"{fileName}*"))
+            PathHelper.ClearAppDataFolderOverride();
+            try
             {
-                File.Delete(path);
+                Directory.Delete(_tempRoot, recursive: true);
             }
-
-            foreach (string backupPath in _originalFiles)
+            catch
             {
-                string restorePath = Path.Combine(_directory, Path.GetFileName(backupPath));
-                File.Copy(backupPath, restorePath, overwrite: true);
-            }
-
-            if (Directory.Exists(_backupRoot))
-            {
-                Directory.Delete(_backupRoot, recursive: true);
             }
         }
     }

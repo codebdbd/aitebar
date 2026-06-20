@@ -75,6 +75,7 @@ public sealed class IconHelperTests
     public void SaveCustomIcon_RegularFile_CopiesFileIntoIconsFolder()
     {
         string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(root, "test");
         Directory.CreateDirectory(root);
         string sourcePath = Path.Combine(root, "icon.png");
         File.WriteAllText(sourcePath, "test");
@@ -82,6 +83,7 @@ public sealed class IconHelperTests
 
         try
         {
+            PathHelper.SetAppDataFolderOverride(testRoot);
             savedPath = IconHelper.SaveCustomIcon(sourcePath);
 
             Assert.NotNull(savedPath);
@@ -91,6 +93,7 @@ public sealed class IconHelperTests
         }
         finally
         {
+            PathHelper.ClearAppDataFolderOverride();
             if (savedPath != null && File.Exists(savedPath))
             {
                 File.Delete(savedPath);
@@ -108,10 +111,14 @@ public sealed class IconHelperTests
             return;
         }
 
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(root, "test");
+        Directory.CreateDirectory(root);
         string? savedPath = null;
 
         try
         {
+            PathHelper.SetAppDataFolderOverride(testRoot);
             savedPath = IconHelper.ExtractAndSaveIcon(systemExe);
 
             Assert.NotNull(savedPath);
@@ -121,10 +128,12 @@ public sealed class IconHelperTests
         }
         finally
         {
+            PathHelper.ClearAppDataFolderOverride();
             if (savedPath != null && File.Exists(savedPath))
             {
                 File.Delete(savedPath);
             }
+            Directory.Delete(root, recursive: true);
         }
     }
 
@@ -138,6 +147,7 @@ public sealed class IconHelperTests
         }
 
         string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(root, "test");
         Directory.CreateDirectory(root);
         string sourcePath = Path.Combine(root, "icon.ico");
         string? savedPath = null;
@@ -152,6 +162,7 @@ public sealed class IconHelperTests
                 icon!.Save(stream);
             }
 
+            PathHelper.SetAppDataFolderOverride(testRoot);
             savedPath = IconHelper.SaveCustomIcon(sourcePath);
 
             Assert.NotNull(savedPath);
@@ -160,6 +171,7 @@ public sealed class IconHelperTests
         }
         finally
         {
+            PathHelper.ClearAppDataFolderOverride();
             if (savedPath != null && File.Exists(savedPath))
             {
                 File.Delete(savedPath);

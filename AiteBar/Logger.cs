@@ -9,7 +9,7 @@ namespace AiteBar
 {
     internal static class Logger
     {
-        private static readonly string LogPath = PathHelper.LogFile;
+        private static string LogPath => PathHelper.LogFile;
         private const long MaxLogSizeBytes = 1 * 1024 * 1024;
         private const int MaxBackupLogFiles = 3;
         private static readonly ConcurrentQueue<string> _logQueue = new();

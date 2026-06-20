@@ -133,10 +133,12 @@ public sealed class BrowserHelperTests
     [Fact]
     public void GetProfiles_ChromiumProfiles_ReadDisplayNamesFromPreferences()
     {
-        string basePath = BrowserHelper.GetUserDataPath(BrowserType.Yandex);
-        string emailProfilePath = Path.Combine(basePath, "Profile 900001");
-        string namedProfilePath = Path.Combine(basePath, "Profile 900002");
-        string fallbackProfilePath = Path.Combine(basePath, "Profile 900003");
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        BrowserHelper.SetUserDataPathOverride(BrowserType.Yandex, tempRoot);
+        
+        string emailProfilePath = Path.Combine(tempRoot, "Profile 900001");
+        string namedProfilePath = Path.Combine(tempRoot, "Profile 900002");
+        string fallbackProfilePath = Path.Combine(tempRoot, "Profile 900003");
 
         try
         {
@@ -168,17 +170,18 @@ public sealed class BrowserHelperTests
         }
         finally
         {
-            TryDeleteDirectory(emailProfilePath);
-            TryDeleteDirectory(namedProfilePath);
-            TryDeleteDirectory(fallbackProfilePath);
+            BrowserHelper.ClearUserDataPathOverride(BrowserType.Yandex);
+            TryDeleteDirectory(tempRoot);
         }
     }
 
     [Fact]
     public void GetProfiles_ChromiumPreferences_AllowsConcurrentWriter()
     {
-        string basePath = BrowserHelper.GetUserDataPath(BrowserType.Yandex);
-        string profilePath = Path.Combine(basePath, "Profile 900004");
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        BrowserHelper.SetUserDataPathOverride(BrowserType.Yandex, tempRoot);
+        
+        string profilePath = Path.Combine(tempRoot, "Profile 900004");
         string preferencesPath = Path.Combine(profilePath, "Preferences");
 
         try
@@ -196,7 +199,8 @@ public sealed class BrowserHelperTests
         }
         finally
         {
-            TryDeleteDirectory(profilePath);
+            BrowserHelper.ClearUserDataPathOverride(BrowserType.Yandex);
+            TryDeleteDirectory(tempRoot);
         }
     }
 
@@ -255,9 +259,11 @@ public sealed class BrowserHelperTests
     [Fact]
     public void AdvanceProfile_ReturnsNextMatchingLaunchName()
     {
-        string basePath = BrowserHelper.GetUserDataPath(BrowserType.Yandex);
-        string firstProfilePath = Path.Combine(basePath, "Profile 900011");
-        string secondProfilePath = Path.Combine(basePath, "Profile 900012");
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        BrowserHelper.SetUserDataPathOverride(BrowserType.Yandex, tempRoot);
+        
+        string firstProfilePath = Path.Combine(tempRoot, "Profile 900011");
+        string secondProfilePath = Path.Combine(tempRoot, "Profile 900012");
 
         try
         {
@@ -276,16 +282,18 @@ public sealed class BrowserHelperTests
         }
         finally
         {
-            TryDeleteDirectory(firstProfilePath);
-            TryDeleteDirectory(secondProfilePath);
+            BrowserHelper.ClearUserDataPathOverride(BrowserType.Yandex);
+            TryDeleteDirectory(tempRoot);
         }
     }
 
     [Fact]
     public void AdvanceProfile_WhenProfileIsUnknown_ReturnsFirstLaunchName()
     {
-        string basePath = BrowserHelper.GetUserDataPath(BrowserType.Yandex);
-        string firstProfilePath = Path.Combine(basePath, "Profile 900021");
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        BrowserHelper.SetUserDataPathOverride(BrowserType.Yandex, tempRoot);
+        
+        string firstProfilePath = Path.Combine(tempRoot, "Profile 900021");
 
         try
         {
@@ -300,7 +308,8 @@ public sealed class BrowserHelperTests
         }
         finally
         {
-            TryDeleteDirectory(firstProfilePath);
+            BrowserHelper.ClearUserDataPathOverride(BrowserType.Yandex);
+            TryDeleteDirectory(tempRoot);
         }
     }
 
