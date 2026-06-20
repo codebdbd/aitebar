@@ -68,7 +68,7 @@ This follows the existing utility pattern established by QRCodeGenerator, TimerS
   Rationale: New utilities should not clutter the panel by default; users opt in via settings or right-click context menu.
   Date/Author: 2026-06-19 / Codex.
 
-- Decision: Use Fluent icon glyph `\uE82F` (`ic_fluent_clipboard_24_regular`) with amber color `#F59E0B`.
+- Decision: Use Fluent icon glyph `\uE34E` with amber color `#F59E0B`.
   Rationale: The clipboard icon is semantically correct for the utility; amber distinguishes it from the existing blue/purple/teal utility icons on the panel.
   Date/Author: 2026-06-19 / Codex.
 
@@ -147,7 +147,7 @@ The implementation consists of six new files and modifications to eight existing
 
 6. `AiteBar/Models.cs` — Add `public bool ShowPresetClipboardManager { get; set; } = false;` to `AppSettings` class.
 
-7. `AiteBar/UnifiedButtonService.cs` — Add `new("ClipboardManager", "\uE82F", "#F59E0B", "ShowPresetClipboardManager", "Main_ClipboardManagerTooltip")` to `UtilityButtons` list.
+7. `AiteBar/UnifiedButtonService.cs` — Add `new("ClipboardManager", "\uE34E", "#F59E0B", "ShowPresetClipboardManager", "Main_ClipboardManagerTooltip")` to `UtilityButtons` list.
 
 8. `AiteBar/AppSettingsService.cs` — Add `"ShowPresetClipboardManager"` case to both `GetUtilityVisibility()` and `SetUtilityVisibility()` switch expressions.
 

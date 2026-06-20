@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
@@ -17,7 +18,11 @@ internal class TaskbarPositionIndicatorService : IDisposable
     private HwndSource? _hwndSource;
     private bool _disposed;
     private const double IndicatorSize = 28;
+    private static readonly TimeSpan VisibilityCheckInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan ZOrderRefreshInterval = TimeSpan.FromMilliseconds(250);
     private DispatcherTimer? _visibilityTimer;
+    private DispatcherTimer? _zOrderTimer;
+    private bool _isSuppressedByFullscreen;
 
     public void Initialize(AppSettingsService appSettingsService, MainWindow mainWindow)
     {
@@ -30,10 +35,17 @@ internal class TaskbarPositionIndicatorService : IDisposable
         // Initialize visibility check timer
         _visibilityTimer = new DispatcherTimer
         {
-            Interval = TimeSpan.FromSeconds(2)
+            Interval = VisibilityCheckInterval
         };
         _visibilityTimer.Tick += VisibilityTimer_Tick;
         _visibilityTimer.Start();
+
+        _zOrderTimer = new DispatcherTimer
+        {
+            Interval = ZOrderRefreshInterval
+        };
+        _zOrderTimer.Tick += ZOrderTimer_Tick;
+        _zOrderTimer.Start();
 
         var showIndicator = _appSettingsService.Settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
         Debug.WriteLine($"ShowTaskbarPositionIndicator: {showIndicator}");
@@ -132,6 +144,16 @@ internal class TaskbarPositionIndicatorService : IDisposable
         _window.Hide();
     }
 
+    private void BringIndicatorToTop()
+    {
+        if (_disposed || _window == null || !_window.IsVisible)
+        {
+            return;
+        }
+
+        UpdatePosition();
+    }
+
     public void UpdatePosition()
     {
         if (_disposed) return;
@@ -184,6 +206,70 @@ internal class TaskbarPositionIndicatorService : IDisposable
         }
     }
 
+    public void HandleGlobalMouseDown(int screenX, int screenY)
+    {
+        if (_disposed || _window == null)
+        {
+            return;
+        }
+
+        _window.Dispatcher.InvokeAsync(() =>
+        {
+            if (_disposed || _isSuppressedByFullscreen)
+            {
+                return;
+            }
+
+            if (_appSettingsService?.Settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true) != true)
+            {
+                return;
+            }
+
+            if (IsPointOnTargetTaskbar(screenX, screenY))
+            {
+                RestoreAfterTaskbarClick();
+            }
+        });
+    }
+
+    private bool IsPointOnTargetTaskbar(int screenX, int screenY)
+    {
+        if (_appSettingsService == null)
+        {
+            return false;
+        }
+
+        var taskbarInfo = TaskbarGeometryHelper.GetTaskbarInfo(_appSettingsService.Settings.MonitorIndex);
+        return taskbarInfo.Bounds.Contains(new Point(screenX, screenY));
+    }
+
+    private void RestoreAfterTaskbarClick()
+    {
+        BringIndicatorToTop();
+        _ = RestoreAfterTaskbarClickAsync();
+    }
+
+    private async Task RestoreAfterTaskbarClickAsync()
+    {
+        int[] delays = [50, 150, 350];
+        foreach (int delay in delays)
+        {
+            await Task.Delay(delay).ConfigureAwait(false);
+            if (_disposed || _window == null)
+            {
+                return;
+            }
+
+            await _window.Dispatcher.InvokeAsync(() =>
+            {
+                if (!_disposed && !_isSuppressedByFullscreen)
+                {
+                    BringIndicatorToTop();
+                }
+            });
+        }
+    }
+
     private string GetTooltipText(AppSettings settings)
     {
         var edgeText = settings.Edge switch
@@ -211,16 +297,32 @@ internal class TaskbarPositionIndicatorService : IDisposable
         {
             if (IsFullscreenAppRunning())
             {
+                _isSuppressedByFullscreen = true;
                 HideIndicator();
             }
             else
             {
+                _isSuppressedByFullscreen = false;
                 ShowIndicator();
             }
         }
         else
         {
+            _isSuppressedByFullscreen = false;
             HideIndicator();
+        }
+    }
+
+    private void ZOrderTimer_Tick(object? sender, EventArgs e)
+    {
+        if (_disposed || _isSuppressedByFullscreen)
+        {
+            return;
+        }
+
+        if (_appSettingsService?.Settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true) == true)
+        {
+            BringIndicatorToTop();
         }
     }
 
@@ -363,6 +465,13 @@ internal class TaskbarPositionIndicatorService : IDisposable
                 _visibilityTimer = null;
             }
 
+            if (_zOrderTimer != null)
+            {
+                _zOrderTimer.Stop();
+                _zOrderTimer.Tick -= ZOrderTimer_Tick;
+                _zOrderTimer = null;
+            }
+
             if (_appSettingsService != null)
             {
                 _appSettingsService.SettingsChanged -= AppSettingsService_SettingsChanged;
@@ -387,3 +496,4 @@ internal class TaskbarPositionIndicatorService : IDisposable
         Dispose(false);
     }
 }
+

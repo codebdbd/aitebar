@@ -1179,6 +1179,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
         _nativeService = new NativeIntegrationService(hwnd);
         _nativeService.MouseDownOutside += (x, y) =>
         {
+            _positionIndicatorService.HandleGlobalMouseDown(x, y);
+
             if (_shown && !_isAnimating && !IsPanelInteractionActive)
             {
                 if (x < _panelLeft || x > _panelRight || y < _panelTop || y > _panelBottom)
