@@ -82,6 +82,7 @@
                         <Grid Margin="0,0,0,15">
                             <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged"/>
                             <TextBlock x:Name="TxtNamePlaceholder" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_ButtonNamePlaceholder}"/>
+                            <TextBlock x:Name="TxtNameError" Margin="2,34,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
                         </Grid>
 
                         <UniformGrid Columns="2" Margin="0,0,0,15">
@@ -106,6 +107,7 @@
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="TxtActionValue" TextChanged="TxtActionValue_TextChanged"/>
                                 <TextBlock x:Name="TxtActionPlaceholder" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False"/>
+                                <TextBlock x:Name="TxtActionValueError" Grid.ColumnSpan="2" Margin="2,34,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
                                 <Button x:Name="BtnBrowse" Grid.Column="1" Width="80" Margin="5,0,0,0" Click="BtnBrowse_Click" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Browse}"/>
                             </Grid>
 

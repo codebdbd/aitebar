@@ -5,85 +5,12 @@
         Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
         Width="540" Height="520" MinWidth="500" MinHeight="480"
         WindowStartupLocation="Manual" WindowStyle="None" AllowsTransparency="True"
-        Background="Transparent" Foreground="White" ResizeMode="CanResizeWithGrip"
+        Background="Transparent" Foreground="White" ResizeMode="NoResize"
         ShowInTaskbar="False" Topmost="True"
         PreviewKeyDown="Window_PreviewKeyDown">
 
     <Window.Resources>
-        <Style x:Key="HeaderButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="32"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="Foreground" Value="#AEB6C1"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#25FFFFFF"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="CommandButtonStyle" TargetType="Button">
-            <Setter Property="Height" Value="36"/>
-            <Setter Property="MinWidth" Value="112"/>
-            <Setter Property="Padding" Value="12,0"/>
-            <Setter Property="Foreground" Value="#E8EDF2"/>
-            <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4">
-                            <ContentPresenter Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              RecognizesAccessKey="True"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.55"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="PrimaryCommandButtonStyle" TargetType="Button" BasedOn="{StaticResource CommandButtonStyle}">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="{StaticResource AccentColor}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource AccentColor}"/>
+        <Style x:Key="PrimaryCommandButtonStyle" TargetType="Button" BasedOn="{StaticResource UtilityPrimaryCommandButtonStyle}">
             <Style.Triggers>
                 <Trigger Property="IsEnabled" Value="False">
                     <Setter Property="Foreground" Value="{StaticResource FormControlMutedForegroundBrush}"/>

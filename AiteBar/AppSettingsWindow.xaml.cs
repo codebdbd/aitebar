@@ -26,6 +26,7 @@ public partial class AppSettingsWindow : DarkWindow
     private readonly AppSettings _settings;
     private readonly List<(CheckBox EnabledCheckBox, TextBox NameTextBox, Border BadgeBorder)> _contextRows = new();
     private bool _isLoadingSettings;
+    private readonly string _originalUiCulture;
     private string _selectedUiCulture = LocalizationService.AutoCulture;
 
     public AppSettingsWindow(MainWindow mainWindow)
@@ -35,6 +36,7 @@ public partial class AppSettingsWindow : DarkWindow
         LocalizationService.RefreshLocalizedBindings(this);
         _mainWindow = mainWindow;
         _settings = _mainWindow.GetAppSettings();
+        _originalUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
 
         _isLoadingSettings = true;
         LoadLanguageList();
@@ -504,7 +506,7 @@ public partial class AppSettingsWindow : DarkWindow
         if (TxtDelay != null) TxtDelay.Text = $"{(int)e.NewValue}";
     }
 
-    private async void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isLoadingSettings)
         {
@@ -514,9 +516,6 @@ public partial class AppSettingsWindow : DarkWindow
         string selectedCulture = (CmbLanguage.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? LocalizationService.AutoCulture;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(selectedCulture);
         LocalizationService.ApplyCulture(_selectedUiCulture);
-        _settings.UiCulture = _selectedUiCulture;
-        _mainWindow.GetSettingsService().NormalizeAppState();
-        await _mainWindow.GetSettingsService().SaveAsync();
         RefreshLocalizedUi();
     }
 
@@ -537,68 +536,84 @@ public partial class AppSettingsWindow : DarkWindow
             return;
         }
 
-        _settings.GlobalHotkeyCtrl = globalBinding.Ctrl;
-        _settings.GlobalHotkeyAlt = globalBinding.Alt;
-        _settings.GlobalHotkeyShift = globalBinding.Shift;
-        _settings.GlobalHotkeyWin = globalBinding.Win;
-        _settings.GlobalHotkeyKey = globalBinding.Key;
-
-        _settings.NextContextHotkey = nextBinding;
-        _settings.PreviousContextHotkey = previousBinding;
-        _settings.AddButtonHotkey = addButtonBinding;
-        _settings.FileSorterHotkey = fileSorterBinding;
-        _settings.QuickNoteHotkey = quickNoteBinding;
-        _settings.ColorPickerHotkey = colorPickerBinding;
-        _settings.TimerStopwatchHotkey = timerStopwatchBinding;
-        _settings.QRCodeGeneratorHotkey = qrCodeGeneratorBinding;
-
-        _settings.ShowPresetSearch = ChkShowPresetSearch.IsChecked ?? false;
-        _settings.ShowPresetScreenshot = ChkShowPresetScreenshot.IsChecked ?? false;
-        _settings.ShowPresetVideo = ChkShowPresetVideo.IsChecked ?? false;
-        _settings.ShowPresetCalc = ChkShowPresetCalc.IsChecked ?? false;
-        _settings.ShowPresetExplorer = ChkShowPresetExplorer.IsChecked ?? false;
-        _settings.ShowPresetDownloads = ChkShowPresetDownloads.IsChecked ?? false;
-        _settings.ShowPresetFileSorter = ChkShowPresetFileSorter.IsChecked ?? false;
-        _settings.ShowPresetIconConverter = ChkShowPresetIconConverter.IsChecked ?? false;
-        _settings.ShowPresetTimerStopwatch = ChkShowPresetTimerStopwatch.IsChecked ?? false;
-        _settings.ShowPresetColorPicker = ChkShowPresetColorPicker.IsChecked ?? false;
-        _settings.ShowPresetQuickNote = ChkShowPresetQuickNote.IsChecked ?? false;
-        _settings.ShowPresetQRCodeGenerator = ChkShowPresetQRCodeGenerator.IsChecked ?? false;
-        _settings.ShowPresetClipboardManager = ChkShowPresetClipboardManager.IsChecked ?? false;
-        _settings.ShowPresetShowDesktop = ChkShowPresetShowDesktop.IsChecked ?? false;
-        _settings.ShowPresetAppsFolder = ChkShowPresetAppsFolder.IsChecked ?? false;
-        _settings.ShowPresetCopilot = ChkShowPresetCopilot.IsChecked ?? false;
-        _settings.ShowTaskbarPositionIndicator = ChkShowTaskbarPositionIndicator.IsChecked ?? true;
-        _settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;
-        _settings.UiCulture = _selectedUiCulture;
-
-        if (CmbEdge.SelectedItem is ComboBoxItem edgeItem && edgeItem.Tag is DockEdge edge)
+        _mainWindow.GetSettingsService().UpdateSettings(settings =>
         {
-            _settings.Edge = edge;
+            settings.GlobalHotkeyCtrl = globalBinding.Ctrl;
+            settings.GlobalHotkeyAlt = globalBinding.Alt;
+            settings.GlobalHotkeyShift = globalBinding.Shift;
+            settings.GlobalHotkeyWin = globalBinding.Win;
+            settings.GlobalHotkeyKey = globalBinding.Key;
+
+            settings.NextContextHotkey = nextBinding;
+            settings.PreviousContextHotkey = previousBinding;
+            settings.AddButtonHotkey = addButtonBinding;
+            settings.FileSorterHotkey = fileSorterBinding;
+            settings.QuickNoteHotkey = quickNoteBinding;
+            settings.ColorPickerHotkey = colorPickerBinding;
+            settings.TimerStopwatchHotkey = timerStopwatchBinding;
+            settings.QRCodeGeneratorHotkey = qrCodeGeneratorBinding;
+
+            settings.ShowPresetSearch = ChkShowPresetSearch.IsChecked ?? false;
+            settings.ShowPresetScreenshot = ChkShowPresetScreenshot.IsChecked ?? false;
+            settings.ShowPresetVideo = ChkShowPresetVideo.IsChecked ?? false;
+            settings.ShowPresetCalc = ChkShowPresetCalc.IsChecked ?? false;
+            settings.ShowPresetExplorer = ChkShowPresetExplorer.IsChecked ?? false;
+            settings.ShowPresetDownloads = ChkShowPresetDownloads.IsChecked ?? false;
+            settings.ShowPresetFileSorter = ChkShowPresetFileSorter.IsChecked ?? false;
+            settings.ShowPresetIconConverter = ChkShowPresetIconConverter.IsChecked ?? false;
+            settings.ShowPresetTimerStopwatch = ChkShowPresetTimerStopwatch.IsChecked ?? false;
+            settings.ShowPresetColorPicker = ChkShowPresetColorPicker.IsChecked ?? false;
+            settings.ShowPresetQuickNote = ChkShowPresetQuickNote.IsChecked ?? false;
+            settings.ShowPresetQRCodeGenerator = ChkShowPresetQRCodeGenerator.IsChecked ?? false;
+            settings.ShowPresetClipboardManager = ChkShowPresetClipboardManager.IsChecked ?? false;
+            settings.ShowPresetShowDesktop = ChkShowPresetShowDesktop.IsChecked ?? false;
+            settings.ShowPresetAppsFolder = ChkShowPresetAppsFolder.IsChecked ?? false;
+            settings.ShowPresetCopilot = ChkShowPresetCopilot.IsChecked ?? false;
+            settings.ShowTaskbarPositionIndicator = ChkShowTaskbarPositionIndicator.IsChecked ?? true;
+            settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;
+            settings.UiCulture = _selectedUiCulture;
+
+            if (CmbEdge.SelectedItem is ComboBoxItem edgeItem && edgeItem.Tag is DockEdge edge)
+            {
+                settings.Edge = edge;
+            }
+
+            if (CmbMonitor.SelectedItem is ComboBoxItem monitorItem)
+            {
+                settings.MonitorIndex = (int)(monitorItem.Tag ?? 0);
+            }
+
+            settings.ActivationZoneSizePercent = SldZoneSize.Value;
+            settings.PanelSizePercent = SldPanelSize.Value;
+            settings.ActivationDelayMs = (int)SldDelay.Value;
+
+            for (int i = 0; i < settings.Contexts.Count && i < _contextRows.Count; i++)
+            {
+                string contextName = _contextRows[i].NameTextBox.Text;
+                bool isNameCustomized = ContextStateHelper.IsCustomizedContextNameInput(contextName, i);
+                settings.Contexts[i].Name = isNameCustomized
+                    ? contextName.Trim()
+                    : ContextStateHelper.GetDefaultContextName(i);
+                settings.Contexts[i].IsNameCustomized = isNameCustomized;
+                settings.Contexts[i].IsEnabled = i == 0 || (_contextRows[i].EnabledCheckBox.IsChecked ?? false);
+            }
+        });
+        IReadOnlyList<string> failedHotkeys;
+        try
+        {
+            failedHotkeys = await _mainWindow.SaveAppSettings();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            new DarkDialog(LocalizationService.Format("Settings_SaveFailed", ex.Message))
+            {
+                Owner = this
+            }.ShowDialog();
+            return;
         }
 
-        if (CmbMonitor.SelectedItem is ComboBoxItem monitorItem)
-            _settings.MonitorIndex = (int)(monitorItem.Tag ?? 0);
-
-        _settings.ActivationZoneSizePercent = SldZoneSize.Value;
-        _settings.PanelSizePercent = SldPanelSize.Value;
-        _settings.ActivationDelayMs = (int)SldDelay.Value;
-
-        for (int i = 0; i < _settings.Contexts.Count && i < _contextRows.Count; i++)
-        {
-            string contextName = _contextRows[i].NameTextBox.Text;
-            bool isNameCustomized = ContextStateHelper.IsCustomizedContextNameInput(contextName, i);
-            _settings.Contexts[i].Name = isNameCustomized
-                ? contextName.Trim()
-                : ContextStateHelper.GetDefaultContextName(i);
-            _settings.Contexts[i].IsNameCustomized = isNameCustomized;
-            _settings.Contexts[i].IsEnabled = i == 0 || (_contextRows[i].EnabledCheckBox.IsChecked ?? false);
-            // Цвет фиксированный, не сохраняем/не меняем
-        }
-
-        _mainWindow.GetSettingsService().Settings = _settings;
-        IReadOnlyList<string> failedHotkeys = await _mainWindow.SaveAppSettings();
-        LocalizationService.ApplyCulture(_settings.UiCulture);
+        LocalizationService.ApplyCulture(_selectedUiCulture);
         _mainWindow.RefreshPanel();
 
         if (failedHotkeys.Count > 0)
@@ -614,6 +629,7 @@ public partial class AppSettingsWindow : DarkWindow
 
     private void BtnCancel_Click(object sender, RoutedEventArgs e)
     {
+        LocalizationService.ApplyCulture(_originalUiCulture);
         this.Close();
     }
 

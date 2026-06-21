@@ -184,6 +184,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="SettingsWindow_PythonNotFound" xml:space="preserve"><value>Для запуску .py-файлів потрібен python.exe у PATH.</value></data>
   <data name="SettingsWindow_ErrorFormat" xml:space="preserve"><value>Помилка:
 {0}</value></data>
+  <data name="SettingsWindow_SaveFailed" xml:space="preserve"><value>Не вдалося зберегти кнопку. Перевірте введені значення й спробуйте ще раз.</value></data>
   <data name="AppSettingsWindow_GeneralHint" xml:space="preserve"><value>Налаштуйте розташування панелі та її поведінку.</value></data>
   <data name="AppSettingsWindow_PanelSize" xml:space="preserve"><value>Розмір панелі</value></data>
   <data name="AppSettingsWindow_ActivationZone" xml:space="preserve"><value>Зона активації, %</value></data>
@@ -261,6 +262,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
 Продовжити?</value></data>
   <data name="Action_SearchFailed" xml:space="preserve"><value>Не вдалося виконати пошук</value></data>
   <data name="Action_LaunchFailed" xml:space="preserve"><value>Не вдалося запустити.</value></data>
+  <data name="Action_BrowserNotFound" xml:space="preserve"><value>{0} не знайдено. Перевірте, що браузер встановлено.</value></data>
   <data name="Action_PythonNotFound" xml:space="preserve"><value>Python не знайдено.</value></data>
   <data name="Action_UnsupportedScript" xml:space="preserve"><value>Непідтримуваний скрипт.</value></data>
   <data name="About_VersionFormat" xml:space="preserve"><value>Версія {0}.{1}.{2}</value></data>
@@ -390,6 +392,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ClipboardManager_SearchPlaceholder" xml:space="preserve"><value>Пошук в історії буфера обміну...</value></data>
   <data name="ClipboardManager_Copy" xml:space="preserve"><value>Копіювати</value></data>
   <data name="ClipboardManager_Copied" xml:space="preserve"><value>Скопійовано в буфер обміну</value></data>
+  <data name="ClipboardManager_CopyFailed" xml:space="preserve"><value>Не вдалося скопіювати в буфер обміну. Спробуйте ще раз.</value></data>
   <data name="ClipboardManager_ClearAll" xml:space="preserve"><value>Очистити все</value></data>
   <data name="ClipboardManager_Cleared" xml:space="preserve"><value>Історію буфера обміну очищено</value></data>
   <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>Історія буфера обміну порожня. Скопіюйте щось, щоб почати!</value></data>
@@ -410,6 +413,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_Status" xml:space="preserve"><value>QR версія {0}, {1}x{1} модулів</value></data>
   <data name="QRCodeGenerator_ErrorEmptyText" xml:space="preserve"><value>Текст не може бути порожнім</value></data>
   <data name="QRCodeGenerator_ErrorTextTooLong" xml:space="preserve"><value>Текст перевищує максимальну довжину ({0} символів)</value></data>
+  <data name="QRCodeGenerator_ErrorGeneric" xml:space="preserve"><value>Не вдалося створити QR-код.</value></data>
   <data name="QRCodeGenerator_Copied" xml:space="preserve"><value>QR-код скопійовано в буфер обміну</value></data>
   <data name="QRCodeGenerator_SavePngTitle" xml:space="preserve"><value>Зберегти QR-код як PNG</value></data>
   <data name="QRCodeGenerator_SaveSvgTitle" xml:space="preserve"><value>Зберегти QR-код як SVG</value></data>

@@ -1,3 +1,4 @@
+using System.IO;
 using AiteBar;
 
 namespace AiteBar.Tests;
@@ -99,5 +100,35 @@ public sealed class TimerStopwatchLayoutHelperTests
     public void CompactToggleGlyph_UsesRestoreStyleGlyph()
     {
         Assert.Equal("\uE923", TimerStopwatchLayoutHelper.CompactToggleGlyph);
+    }
+    [Fact]
+    public void TimerCompletionFeedback_IsWiredForCompactMode()
+    {
+        string repoRoot = FindRepoRoot();
+        string xaml = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "TimerStopwatchWindow.xaml"));
+        string code = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "TimerStopwatchWindow.xaml.cs"));
+
+        Assert.Contains("TimerCompletionFlashStoryboard", xaml);
+        Assert.Contains("CompactCompletionFlash", xaml);
+        Assert.Contains("Storyboard.TargetName=\"TxtCompactDisplay\"", xaml);
+        Assert.Contains("StartCompletionFeedback();", code);
+        Assert.Contains("StopCompletionFeedback();", code);
+    }
+
+    private static string FindRepoRoot()
+    {
+        string? current = AppContext.BaseDirectory;
+
+        while (!string.IsNullOrEmpty(current))
+        {
+            if (File.Exists(Path.Combine(current, "AiteBar.sln")))
+            {
+                return current;
+            }
+
+            current = Directory.GetParent(current)?.FullName;
+        }
+
+        throw new DirectoryNotFoundException("Repository root with AiteBar.sln was not found.");
     }
 }

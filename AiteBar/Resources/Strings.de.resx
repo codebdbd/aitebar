@@ -234,6 +234,7 @@ Verwenden Sie für modulare Python-Projekte den Typ „Befehl“.</value></data>
   <data name="SettingsWindow_PythonNotFound" xml:space="preserve"><value>Zum Ausführen von .py-Dateien muss python.exe im PATH vorhanden sein.</value></data>
   <data name="SettingsWindow_ErrorFormat" xml:space="preserve"><value>Fehler:
 {0}</value></data>
+  <data name="SettingsWindow_SaveFailed" xml:space="preserve"><value>Schaltfläche konnte nicht gespeichert werden. Eingaben prüfen und erneut versuchen.</value></data>
   <data name="HotkeyConflictMessage" xml:space="preserve"><value>Es wurden widersprüchliche Tastenkürzel gefunden:
 {0}
 
@@ -266,6 +267,7 @@ Fortfahren?</value></data>
 Fortfahren?</value></data>
   <data name="Action_SearchFailed" xml:space="preserve"><value>Suche fehlgeschlagen</value></data>
   <data name="Action_LaunchFailed" xml:space="preserve"><value>Start fehlgeschlagen.</value></data>
+  <data name="Action_BrowserNotFound" xml:space="preserve"><value>{0} wurde nicht gefunden. Prüfen Sie, ob der Browser installiert ist.</value></data>
   <data name="Action_PythonNotFound" xml:space="preserve"><value>Python wurde nicht gefunden.</value></data>
   <data name="Action_UnsupportedScript" xml:space="preserve"><value>Nicht unterstütztes Skript.</value></data>
   <data name="About_VersionFormat" xml:space="preserve"><value>Version {0}.{1}.{2}</value></data>
@@ -395,6 +397,7 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="ClipboardManager_SearchPlaceholder" xml:space="preserve"><value>Zwischenablageverlauf durchsuchen...</value></data>
   <data name="ClipboardManager_Copy" xml:space="preserve"><value>Kopieren</value></data>
   <data name="ClipboardManager_Copied" xml:space="preserve"><value>In die Zwischenablage kopiert</value></data>
+  <data name="ClipboardManager_CopyFailed" xml:space="preserve"><value>Konnte nicht in die Zwischenablage kopieren. Bitte erneut versuchen.</value></data>
   <data name="ClipboardManager_ClearAll" xml:space="preserve"><value>Alle löschen</value></data>
   <data name="ClipboardManager_Cleared" xml:space="preserve"><value>Zwischenablageverlauf gelöscht</value></data>
   <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>Zwischenablageverlauf ist leer. Kopieren Sie etwas, um loszulegen!</value></data>
@@ -415,6 +418,7 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="QRCodeGenerator_Status" xml:space="preserve"><value>QR-Version {0}, {1}x{1} Module</value></data>
   <data name="QRCodeGenerator_ErrorEmptyText" xml:space="preserve"><value>Text darf nicht leer sein</value></data>
   <data name="QRCodeGenerator_ErrorTextTooLong" xml:space="preserve"><value>Text überschreitet die maximale Länge ({0} Zeichen)</value></data>
+  <data name="QRCodeGenerator_ErrorGeneric" xml:space="preserve"><value>QR-Code konnte nicht erzeugt werden.</value></data>
   <data name="QRCodeGenerator_Copied" xml:space="preserve"><value>QR-Code in die Zwischenablage kopiert</value></data>
   <data name="QRCodeGenerator_SavePngTitle" xml:space="preserve"><value>QR-Code als PNG speichern</value></data>
   <data name="QRCodeGenerator_SaveSvgTitle" xml:space="preserve"><value>QR-Code als SVG speichern</value></data>

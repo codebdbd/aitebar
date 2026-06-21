@@ -846,4 +846,51 @@ public sealed class AppSettingsServiceTests
         Assert.Equal(["Profile A"], source.RotationProfilePaths);
         Assert.Equal("context-2", source.ContextId);
     }
+    [Fact]
+    public void UpdateSettings_PreservesCurrentElementsWhenUpdatingStaleSettingsFields()
+    {
+        var service = new AppSettingsService();
+        var settings = service.Settings;
+        settings.Elements =
+        [
+            new CustomElement
+            {
+                Id = "button-1",
+                Name = "Button 1",
+                ContextId = "context-1"
+            }
+        ];
+        service.Settings = settings;
+
+        service.UpdateSettings(next =>
+        {
+            next.Elements.Clear();
+            next.PanelSizePercent = 75;
+        });
+
+        Assert.Single(service.Elements);
+        Assert.Equal("button-1", service.Elements[0].Id);
+        Assert.Equal(75, service.Settings.PanelSizePercent);
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenSettingsPathIsDirectory_ThrowsInsteadOfSwallowingFailure()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string settingsPath = Path.Combine(root, "settings.json");
+        Directory.CreateDirectory(settingsPath);
+        string configPath = Path.Combine(root, "custom_buttons.json");
+
+        try
+        {
+            var service = new AppSettingsService(configPath, settingsPath);
+
+            await Assert.ThrowsAnyAsync<IOException>(() => service.SaveAsync());
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
 }

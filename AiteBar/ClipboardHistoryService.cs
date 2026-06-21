@@ -92,12 +92,10 @@ namespace AiteBar
             HistoryChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void CopyEntryToClipboard(ClipboardHistoryEntry entry)
+        public bool CopyEntryToClipboard(ClipboardHistoryEntry entry)
         {
             try
             {
-                SuppressNextChange();
-                
                 if (entry.IsImage && entry.ImageBytes != null)
                 {
                     using var stream = new MemoryStream(entry.ImageBytes);
@@ -107,16 +105,25 @@ namespace AiteBar
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
                     bitmap.EndInit();
                     bitmap.Freeze();
+                    SuppressNextChange();
                     Clipboard.SetImage(bitmap);
+                    return true;
                 }
-                else if (!string.IsNullOrEmpty(entry.Text))
+
+                if (!string.IsNullOrEmpty(entry.Text))
                 {
+                    SuppressNextChange();
                     Clipboard.SetText(entry.Text);
+                    return true;
                 }
+
+                return false;
             }
             catch (Exception ex)
             {
+                _suppressNextChange = false;
                 Logger.Log(ex);
+                return false;
             }
         }
 

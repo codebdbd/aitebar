@@ -12,36 +12,6 @@
         PreviewKeyDown="Window_PreviewKeyDown">
 
     <Window.Resources>
-        <Style x:Key="HeaderButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="32"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="Foreground" Value="#AEB6C1"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#25FFFFFF"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
 
         <Style x:Key="CompactActionButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="32"/>
@@ -147,66 +117,16 @@
                 </Setter.Value>
             </Setter>
         </Style>
-
-        <Style x:Key="CommandButtonStyle" TargetType="Button">
+        <Style x:Key="CommandButtonStyle" TargetType="Button" BasedOn="{StaticResource UtilityCommandButtonStyle}">
             <Setter Property="Height" Value="44"/>
             <Setter Property="MinWidth" Value="150"/>
             <Setter Property="Padding" Value="18,0"/>
-            <Setter Property="Foreground" Value="#E8EDF2"/>
-            <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
-
-        <Style x:Key="PrimaryCommandButtonStyle" TargetType="Button">
-            <Setter Property="Height" Value="44"/>
-            <Setter Property="MinWidth" Value="150"/>
-            <Setter Property="Padding" Value="18,0"/>
+        <Style x:Key="PrimaryCommandButtonStyle" TargetType="Button" BasedOn="{StaticResource CommandButtonStyle}">
             <Setter Property="Foreground" Value="White"/>
             <Setter Property="Background" Value="{StaticResource AccentColor}"/>
             <Setter Property="BorderBrush" Value="{StaticResource AccentColor}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#148BDB"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
 
         <Style x:Key="TimeInputStyle" TargetType="TextBox" BasedOn="{StaticResource BaseTextBoxStyle}">
@@ -216,6 +136,44 @@
             <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="MaxLength" Value="8"/>
         </Style>
+
+        <Storyboard x:Key="TimerCompletionFlashStoryboard">
+            <ColorAnimationUsingKeyFrames Storyboard.TargetName="CompactCompletionFlashBrush" Storyboard.TargetProperty="Color">
+                <DiscreteColorKeyFrame KeyTime="0:0:0" Value="#2AA8FF"/>
+                <DiscreteColorKeyFrame KeyTime="0:0:0.18" Value="#E85A5A"/>
+                <DiscreteColorKeyFrame KeyTime="0:0:0.36" Value="#2AA8FF"/>
+                <DiscreteColorKeyFrame KeyTime="0:0:0.54" Value="#E85A5A"/>
+                <DiscreteColorKeyFrame KeyTime="0:0:0.72" Value="#2AA8FF"/>
+                <DiscreteColorKeyFrame KeyTime="0:0:0.90" Value="#2A2A2A"/>
+            </ColorAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="CompactCompletionFlash" Storyboard.TargetProperty="Opacity">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="0.88"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.18" Value="0.35"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.36" Value="0.88"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.54" Value="0.35"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.72" Value="0.88"/>
+                <LinearDoubleKeyFrame KeyTime="0:0:1.05" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="TxtCompactDisplay" Storyboard.TargetProperty="Opacity">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="1"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.18" Value="0.45"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.36" Value="1"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.54" Value="0.45"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.72" Value="1"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:1.05" Value="1"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+
+        <Storyboard x:Key="TimerDisplayCompletionFlashStoryboard">
+            <DoubleAnimationUsingKeyFrames Storyboard.TargetName="TxtTimerDisplay" Storyboard.TargetProperty="Opacity">
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0" Value="1"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.18" Value="0.45"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.36" Value="1"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.54" Value="0.45"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:0.72" Value="1"/>
+                <DiscreteDoubleKeyFrame KeyTime="0:0:1.05" Value="1"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
     </Window.Resources>
 
     <Grid>
@@ -321,7 +279,14 @@
             </Border.Effect>
 
             <Border CornerRadius="5" Background="{StaticResource PanelBackground}">
-                <Grid Margin="8" Height="36" VerticalAlignment="Center">
+                <Grid>
+                    <Border x:Name="CompactCompletionFlash" CornerRadius="5" Opacity="0" IsHitTestVisible="False">
+                        <Border.Background>
+                            <SolidColorBrush x:Name="CompactCompletionFlashBrush" Color="#2A2A2A"/>
+                        </Border.Background>
+                    </Border>
+
+                    <Grid Margin="8" Height="36" VerticalAlignment="Center">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="32"/>
                         <ColumnDefinition Width="*"/>
@@ -334,6 +299,7 @@
                     <TextBlock x:Name="TxtCompactDisplay" Grid.Column="1" Text="00:00" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="23" FontWeight="Regular" Foreground="#FFFFFF" TextAlignment="Left" VerticalAlignment="Center" Margin="8,-2,0,0" LineHeight="28" LineStackingStrategy="BlockLineHeight" Typography.NumeralAlignment="Tabular" TextOptions.TextFormattingMode="Display"/>
                     <Button x:Name="BtnCompactStartPause" Grid.Column="2" Content="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="18" Style="{StaticResource CompactActionButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Start}" Click="BtnStartPause_Click"/>
                     <Button Grid.Column="4" Content="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource CompactSecondaryButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Expand}" Click="BtnCompact_Click"/>
+                    </Grid>
                 </Grid>
             </Border>
         </Border>

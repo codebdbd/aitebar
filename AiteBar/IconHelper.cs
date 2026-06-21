@@ -21,10 +21,13 @@ namespace AiteBar
                 AllowAutoRedirect = false
             };
 
-            return new HttpClient(handler);
+            return new HttpClient(handler)
+            {
+                Timeout = TimeSpan.FromSeconds(5)
+            };
         }
 
-        public static async Task<string?> DownloadFaviconAsync(string url, double dpi = 1.0)
+        public static async Task<string?> DownloadFaviconAsync(string url, double dpi = 1.0, System.Threading.CancellationToken cancellationToken = default)
         {
             try
             {
@@ -45,7 +48,7 @@ namespace AiteBar
                         return null;
                     }
 
-                    var response = await _httpClient.GetAsync(currentUrl);
+                    var response = await _httpClient.GetAsync(currentUrl, cancellationToken);
 
                     // Если это успешный ответ (не редирект), обрабатываем его
                     if (response.IsSuccessStatusCode)

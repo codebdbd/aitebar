@@ -17,6 +17,8 @@ namespace AiteBar
         private readonly ISettingsWindowContext _context;
         private readonly CustomElement? _editingElement = null;
         private bool _showRequiredValidation;
+        private bool _nameValidationTouched;
+        private bool _actionValueValidationTouched;
         private List<BrowserProfileInfo> _availableProfiles = [];
         private List<string> _rotationProfilePaths = [];
         private int _profileLoadVersion;
@@ -344,7 +346,7 @@ namespace AiteBar
             UpdateNamePlaceholderVisibility();
             UpdateActionPlaceholderVisibility();
             UpdateSaveButtonState();
-            UpdateRequiredFieldsVisuals();
+            UpdateValidationVisuals();
             UpdateRotationProfilesUi();
 
             _ = LoadProfilesAsync(selectedProfile).ContinueWith(
@@ -474,25 +476,31 @@ namespace AiteBar
                         break;
                 }
             }
-            UpdateRequiredFieldsVisuals();
+            UpdateValidationVisuals();
             UpdateSaveButtonState();
             UpdateRotationProfilesUi();
         }
 
         private void CmbActionType_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateActionUI();
-        private void CmbKey_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateSaveButtonState();
+        private void CmbKey_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            UpdateValidationVisuals();
+            UpdateSaveButtonState();
+        }
 
         private void CmbActivationKey_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateSaveButtonState();
         private void TxtName_TextChanged(object sender, TextChangedEventArgs e)
         {
+            _nameValidationTouched = true;
             UpdateNamePlaceholderVisibility();
-            UpdateRequiredFieldsVisuals();
+            UpdateValidationVisuals();
             UpdateSaveButtonState();
         }
         private void TxtActionValue_TextChanged(object sender, TextChangedEventArgs e)
         {
+            _actionValueValidationTouched = true;
             UpdateActionPlaceholderVisibility();
-            UpdateRequiredFieldsVisuals();
+            UpdateValidationVisuals();
             UpdateSaveButtonState();
         }
         private void BtnBrowse_Click(object sender, RoutedEventArgs e)
@@ -589,38 +597,62 @@ namespace AiteBar
             return actionType;
         }
 
-        private void UpdateRequiredFieldsVisuals()
-        {
-            if (TxtName == null || TxtActionValue == null || CmbActionType?.SelectedItem == null)
-                return;
-
-            if (!_showRequiredValidation)
-            {
-                TxtName.BorderBrush = _defaultInputBorderBrush;
-                TxtActionValue.BorderBrush = _defaultInputBorderBrush;
-                return;
-            }
-
-            var actionType = GetSelectedActionType();
-            bool missingName = string.IsNullOrWhiteSpace(TxtName.Text);
-            bool missingActionValue = actionType != AiteBar.ActionType.Hotkey && string.IsNullOrWhiteSpace(TxtActionValue.Text);
-
-            TxtName.BorderBrush = missingName ? _requiredErrorBorderBrush : _defaultInputBorderBrush;
-            TxtActionValue.BorderBrush = missingActionValue ? _requiredErrorBorderBrush : _defaultInputBorderBrush;
-        }
-
-        private bool HasRequiredFieldsFilled()
+        private SettingsWindowValidationState GetValidationState()
         {
             if (TxtName == null || CmbActionType?.SelectedItem == null)
-                return false;
+            {
+                return new SettingsWindowValidationState(true, true, false, false);
+            }
+
+            string selectedKey = (CmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "None";
+            return SettingsWindowValidationHelper.Validate(
+                TxtName.Text,
+                GetSelectedActionType(),
+                TxtActionValue?.Text,
+                selectedKey);
+        }
+
+        private string GetActionValueFieldLabel(AiteBar.ActionType actionType) => actionType switch
+        {
+            AiteBar.ActionType.Web => "URL",
+            AiteBar.ActionType.Command => LocalizationService.Get("SettingsWindow_FieldCommand"),
+            AiteBar.ActionType.Folder => LocalizationService.Get("SettingsWindow_FieldFolderPath"),
+            _ => LocalizationService.Get("SettingsWindow_FieldFilePath")
+        };
+
+        private string FormatRequiredFieldError(string fieldName) =>
+            LocalizationService.Format("SettingsWindow_RequiredFields", fieldName);
+
+        private void ApplyTextBoxValidation(TextBox textBox, TextBlock errorText, bool isInvalid, string? message)
+        {
+            textBox.BorderBrush = isInvalid ? _requiredErrorBorderBrush : _defaultInputBorderBrush;
+            textBox.ToolTip = isInvalid ? message : null;
+            errorText.Text = isInvalid ? message : "";
+            errorText.Visibility = isInvalid ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private void UpdateValidationVisuals()
+        {
+            if (TxtName == null || TxtActionValue == null || TxtNameError == null || TxtActionValueError == null || CmbActionType?.SelectedItem == null)
+                return;
 
             var actionType = GetSelectedActionType();
-            bool hasName = !string.IsNullOrWhiteSpace(TxtName.Text);
-            bool hasActionValue = actionType == AiteBar.ActionType.Hotkey || !string.IsNullOrWhiteSpace(TxtActionValue.Text);
-            string selectedKey = (CmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "None";
-            bool hasHotkeyKey = actionType != AiteBar.ActionType.Hotkey ||
-                !string.Equals(selectedKey, "None", StringComparison.OrdinalIgnoreCase);
-            return hasName && hasActionValue && hasHotkeyKey;
+            var state = GetValidationState();
+            bool showNameError = _showRequiredValidation || _nameValidationTouched;
+            bool showActionValueError = _showRequiredValidation || _actionValueValidationTouched;
+
+            string nameError = FormatRequiredFieldError(LocalizationService.Get("SettingsWindow_FieldName"));
+            string actionRequiredError = FormatRequiredFieldError(GetActionValueFieldLabel(actionType));
+            string actionError = state.IsWebUrlInvalid
+                ? LocalizationService.Get("SettingsWindow_InvalidUrl")
+                : actionRequiredError;
+
+            ApplyTextBoxValidation(TxtName, TxtNameError, showNameError && state.IsNameMissing, nameError);
+            ApplyTextBoxValidation(
+                TxtActionValue,
+                TxtActionValueError,
+                showActionValueError && (state.IsActionValueMissing || state.IsWebUrlInvalid),
+                actionError);
         }
 
         private void UpdateSaveButtonState()
@@ -628,7 +660,7 @@ namespace AiteBar
             if (BtnSave == null)
                 return;
 
-            BtnSave.IsEnabled = HasRequiredFieldsFilled();
+            BtnSave.IsEnabled = GetValidationState().IsValid;
         }
 
         private void UpdateNamePlaceholderVisibility()
@@ -658,7 +690,7 @@ namespace AiteBar
                 if (missingName || missingActionValue)
                 {
                     _showRequiredValidation = true;
-                    UpdateRequiredFieldsVisuals();
+                    UpdateValidationVisuals();
                     var requiredFields = new List<string>();
                     if (missingName) requiredFields.Add(LocalizationService.Get("SettingsWindow_FieldName"));
                     if (missingActionValue)
@@ -680,7 +712,7 @@ namespace AiteBar
                     return;
                 }
                 _showRequiredValidation = false;
-                UpdateRequiredFieldsVisuals();
+                UpdateValidationVisuals();
 
                 if (actionType == AiteBar.ActionType.Program)
                 {
@@ -791,7 +823,7 @@ namespace AiteBar
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                new DarkDialog(LocalizationService.Format("SettingsWindow_ErrorFormat", ex.Message)) { Owner = this }.ShowDialog();
+                new DarkDialog(LocalizationService.Get("SettingsWindow_SaveFailed")) { Owner = this }.ShowDialog();
             }
             finally
             {

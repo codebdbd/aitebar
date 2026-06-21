@@ -434,7 +434,7 @@ namespace AiteBar
             var builder = new StringBuilder(text.Length);
             foreach (char ch in text)
             {
-                if (ch is '\\' or '*' or '`')
+                if (ch is '\\' or '*' or '`' or '<' or '>')
                 {
                     builder.Append('\\');
                 }
@@ -452,9 +452,13 @@ namespace AiteBar
             {
                 if (text[i] == '\\' && i + 1 < text.Length)
                 {
-                    builder.Append(text[i + 1]);
-                    i++;
-                    continue;
+                    char next = text[i + 1];
+                    if (next is '\\' or '*' or '`' or '<' or '>')
+                    {
+                        builder.Append(next);
+                        i++;
+                        continue;
+                    }
                 }
 
                 builder.Append(text[i]);

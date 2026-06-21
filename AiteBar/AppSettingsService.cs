@@ -47,6 +47,24 @@ namespace AiteBar
                 SettingsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
+
+        public void UpdateSettings(Action<AppSettings> update)
+        {
+            ArgumentNullException.ThrowIfNull(update);
+
+            lock (_stateLock)
+            {
+                var next = CloneAppSettings(_appSettings);
+                next.Elements = [.. _elements];
+                update(next);
+                next.Elements = [.. _elements];
+                _appSettings = CloneAppSettings(next);
+                _elements = _appSettings.Elements;
+            }
+
+            SettingsChanged?.Invoke(this, EventArgs.Empty);
+        }
+
         public IReadOnlyList<CustomElement> Elements
         {
             get
@@ -411,10 +429,6 @@ namespace AiteBar
                 string json = JsonSerializer.Serialize(snapshot, _jsonOptions);
 
                 await WriteSettingsWithBackupAsync(json);
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(ex);
             }
             finally
             {

@@ -754,6 +754,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="SettingsWindow_PythonNotFound" xml:space="preserve"><value>Для запуска .py-файлов требуется python.exe в PATH.</value></data>
   <data name="SettingsWindow_ErrorFormat" xml:space="preserve"><value>Ошибка:
 {0}</value></data>
+  <data name="SettingsWindow_SaveFailed" xml:space="preserve"><value>Не удалось сохранить кнопку. Проверьте введённые значения и попробуйте ещё раз.</value></data>
   <data name="HotkeyConflictMessage" xml:space="preserve"><value>Обнаружены конфликтующие горячие клавиши:
 {0}
 
@@ -791,6 +792,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
 Продолжить?</value></data>
   <data name="Action_SearchFailed" xml:space="preserve"><value>Не удалось выполнить поиск</value></data>
   <data name="Action_LaunchFailed" xml:space="preserve"><value>Не удалось запустить.</value></data>
+  <data name="Action_BrowserNotFound" xml:space="preserve"><value>{0} не найден. Проверьте, что браузер установлен.</value></data>
   <data name="Action_PythonNotFound" xml:space="preserve"><value>Python не найден.</value></data>
   <data name="Action_UnsupportedScript" xml:space="preserve"><value>Неподдерживаемый скрипт.</value></data>
   <data name="About_VersionFormat" xml:space="preserve"><value>Версия {0}.{1}.{2}</value></data>
@@ -924,6 +926,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_Status" xml:space="preserve"><value>QR версия {0}, {1}x{1} модулей</value></data>
   <data name="QRCodeGenerator_ErrorEmptyText" xml:space="preserve"><value>Текст не может быть пустым</value></data>
   <data name="QRCodeGenerator_ErrorTextTooLong" xml:space="preserve"><value>Текст превышает максимальную длину ({0} символов)</value></data>
+  <data name="QRCodeGenerator_ErrorGeneric" xml:space="preserve"><value>Не удалось создать QR-код.</value></data>
   <data name="QRCodeGenerator_Copied" xml:space="preserve"><value>QR-код скопирован в буфер обмена</value></data>
   <data name="QRCodeGenerator_SavePngTitle" xml:space="preserve"><value>Сохранить QR-код как PNG</value></data>
   <data name="QRCodeGenerator_SaveSvgTitle" xml:space="preserve"><value>Сохранить QR-код как SVG</value></data>
@@ -942,6 +945,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ClipboardManager_SearchPlaceholder" xml:space="preserve"><value>Поиск в истории буфера обмена...</value></data>
   <data name="ClipboardManager_Copy" xml:space="preserve"><value>Копировать</value></data>
   <data name="ClipboardManager_Copied" xml:space="preserve"><value>Скопировано в буфер обмена</value></data>
+  <data name="ClipboardManager_CopyFailed" xml:space="preserve"><value>Не удалось скопировать в буфер обмена. Попробуйте ещё раз.</value></data>
   <data name="ClipboardManager_ClearAll" xml:space="preserve"><value>Очистить всё</value></data>
   <data name="ClipboardManager_Cleared" xml:space="preserve"><value>История буфера обмена очищена</value></data>
   <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>История буфера обмена пуста. Скопируйте что-нибудь, чтобы начать!</value></data>

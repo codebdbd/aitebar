@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -93,7 +94,20 @@ public class ActionService
                 ["is_app_mode"] = el.IsAppMode.ToString(),
                 ["open_fullscreen"] = el.OpenFullscreen.ToString()
             });
-            return ActionExecutionResult.Failed(ex.Message);
+            if (Enum.TryParse<ActionType>(el.ActionType, out var failedActionType) &&
+                failedActionType == ActionType.Web &&
+                ex is Win32Exception { NativeErrorCode: 2 })
+            {
+                string browserName = LocalizationService.Get($"Browser_{el.Browser}");
+                if (browserName.StartsWith("Browser_", StringComparison.Ordinal))
+                {
+                    browserName = el.Browser.ToString();
+                }
+
+                return ActionExecutionResult.Failed(LocalizationService.Format("Action_BrowserNotFound", browserName));
+            }
+
+            return ActionExecutionResult.Failed(LocalizationService.Get("Action_LaunchFailed"));
         }
     }
 
@@ -146,7 +160,20 @@ public class ActionService
         {
             Logger.Log(ex);
             TelemetryService.CaptureException(ex, "hotkey_execution");
-            return ActionExecutionResult.Failed(ex.Message);
+            if (Enum.TryParse<ActionType>(el.ActionType, out var failedActionType) &&
+                failedActionType == ActionType.Web &&
+                ex is Win32Exception { NativeErrorCode: 2 })
+            {
+                string browserName = LocalizationService.Get($"Browser_{el.Browser}");
+                if (browserName.StartsWith("Browser_", StringComparison.Ordinal))
+                {
+                    browserName = el.Browser.ToString();
+                }
+
+                return ActionExecutionResult.Failed(LocalizationService.Format("Action_BrowserNotFound", browserName));
+            }
+
+            return ActionExecutionResult.Failed(LocalizationService.Get("Action_LaunchFailed"));
         }
         finally
         {

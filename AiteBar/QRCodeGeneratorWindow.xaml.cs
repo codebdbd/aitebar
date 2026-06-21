@@ -123,7 +123,9 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             SetActionsEnabled(false);
             TxtEmptyHint.Visibility = Visibility.Visible;
             PreviewSurface.Visibility = Visibility.Collapsed;
-            TxtStatus.Text = ex.Message;
+            TxtStatus.Text = ex is ArgumentException
+                ? ex.Message
+                : LocalizationService.Get("QRCodeGenerator_ErrorGeneric");
         }
     }
 

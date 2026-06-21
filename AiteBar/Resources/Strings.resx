@@ -100,6 +100,7 @@ For modular Python projects use the "Command" type.</value></data>
   <data name="SettingsWindow_PythonNotFound" xml:space="preserve"><value>Running .py files requires python.exe in PATH.</value></data>
   <data name="SettingsWindow_ErrorFormat" xml:space="preserve"><value>Error:
 {0}</value></data>
+  <data name="SettingsWindow_SaveFailed" xml:space="preserve"><value>Could not save the button. Check the entered values and try again.</value></data>
   <data name="AppSettingsWindow_Title" xml:space="preserve"><value>Program settings</value></data>
   <data name="AppSettingsWindow_General" xml:space="preserve"><value>General settings</value></data>
   <data name="AppSettingsWindow_GeneralHint" xml:space="preserve"><value>Configure panel position and appearance behavior.</value></data>
@@ -285,6 +286,7 @@ Continue?</value></data>
 Continue?</value></data>
   <data name="Action_SearchFailed" xml:space="preserve"><value>Search failed</value></data>
   <data name="Action_LaunchFailed" xml:space="preserve"><value>Launch failed.</value></data>
+  <data name="Action_BrowserNotFound" xml:space="preserve"><value>{0} was not found. Check that the browser is installed.</value></data>
   <data name="Action_PythonNotFound" xml:space="preserve"><value>Python was not found.</value></data>
   <data name="Action_UnsupportedScript" xml:space="preserve"><value>Unsupported script.</value></data>
   <data name="About_Title" xml:space="preserve"><value>About</value></data>
@@ -458,6 +460,7 @@ Open the GitHub release page?</value></data>
   <data name="QRCodeGenerator_Status" xml:space="preserve"><value>QR version {0}, {1}x{1} modules</value></data>
   <data name="QRCodeGenerator_ErrorEmptyText" xml:space="preserve"><value>Text cannot be empty</value></data>
   <data name="QRCodeGenerator_ErrorTextTooLong" xml:space="preserve"><value>Text exceeds maximum length ({0} characters)</value></data>
+  <data name="QRCodeGenerator_ErrorGeneric" xml:space="preserve"><value>Could not generate the QR code.</value></data>
   <data name="QRCodeGenerator_Copied" xml:space="preserve"><value>QR code copied to clipboard</value></data>
   <data name="QRCodeGenerator_SavePngTitle" xml:space="preserve"><value>Save QR code as PNG</value></data>
   <data name="QRCodeGenerator_SaveSvgTitle" xml:space="preserve"><value>Save QR code as SVG</value></data>
@@ -476,6 +479,7 @@ Open the GitHub release page?</value></data>
   <data name="ClipboardManager_SearchPlaceholder" xml:space="preserve"><value>Search clipboard history...</value></data>
   <data name="ClipboardManager_Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="ClipboardManager_Copied" xml:space="preserve"><value>Copied to clipboard</value></data>
+  <data name="ClipboardManager_CopyFailed" xml:space="preserve"><value>Could not copy to clipboard. Try again.</value></data>
   <data name="ClipboardManager_ClearAll" xml:space="preserve"><value>Clear all</value></data>
   <data name="ClipboardManager_Cleared" xml:space="preserve"><value>Clipboard history cleared</value></data>
   <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>Clipboard history is empty. Copy something to start!</value></data>

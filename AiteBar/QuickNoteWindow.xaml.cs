@@ -181,31 +181,33 @@ namespace AiteBar
                 return true;
             }
 
-            // Try to acquire the semaphore - if we can't, it means a save is already in progress
+            // If we can't acquire the semaphore immediately, mark that we need to save again after the current one finishes
             if (!await _saveSemaphore.WaitAsync(0))
             {
                 _saveAgainAfterCurrent = true;
-                // Wait for the semaphore to be released (i.e., current save to complete)
-                await _saveSemaphore.WaitAsync();
-                _saveSemaphore.Release();
-                return await SaveNowAsync(force);
+                return true;
             }
 
             SetStatus(QuickNoteStatusKind.Saving);
             try
             {
-                if (_noteService.HasExternalChanges())
-                {
-                    string conflictPath = await _noteService.SaveConflictCopyAsync(TxtNote.Document);
-                    _hasPendingChanges = false;
-                    _saveAgainAfterCurrent = false;
-                    SetStatus(QuickNoteStatusKind.ConflictCopySaved, System.IO.Path.GetFileName(conflictPath));
-                    UpdateConflictMenuState();
-                    return true;
-                }
-
                 do
                 {
+                    if (!_loaded || (!_hasPendingChanges && !force))
+                    {
+                        return true;
+                    }
+
+                    if (_noteService.HasExternalChanges())
+                    {
+                        string conflictPath = await _noteService.SaveConflictCopyAsync(TxtNote.Document);
+                        _hasPendingChanges = false;
+                        _saveAgainAfterCurrent = false;
+                        SetStatus(QuickNoteStatusKind.ConflictCopySaved, System.IO.Path.GetFileName(conflictPath));
+                        UpdateConflictMenuState();
+                        return true;
+                    }
+
                     _saveAgainAfterCurrent = false;
                     long savedVersion = _changeVersion;
                     await _noteService.SaveAsync(TxtNote.Document);
@@ -281,9 +283,10 @@ namespace AiteBar
 
         private async void BtnPin_Checked(object sender, RoutedEventArgs e)
         {
-            var s = _settingsService.Settings;
-            s.QuickNotePinned = sender is System.Windows.Controls.Primitives.ToggleButton { IsChecked: true };
-            _settingsService.Settings = s;
+            _settingsService.UpdateSettings(s =>
+            {
+                s.QuickNotePinned = sender is System.Windows.Controls.Primitives.ToggleButton { IsChecked: true };
+            });
             await _settingsService.SaveAsync();
             TxtNote.Focus();
         }
@@ -618,9 +621,10 @@ namespace AiteBar
                 button.Click += async (_, _) =>
                 {
                     _theme = theme;
-                    var s = _settingsService.Settings;
-                    s.QuickNoteThemeId = theme.Id;
-                    _settingsService.Settings = s;
+                    _settingsService.UpdateSettings(s =>
+                    {
+                        s.QuickNoteThemeId = theme.Id;
+                    });
                     ApplyTheme(theme);
                     BuildThemePalette();
                     ThemePopup.IsOpen = false;
@@ -853,12 +857,13 @@ namespace AiteBar
             double width = ActualWidth > 0 ? ActualWidth : Width;
             double height = ActualHeight > 0 ? ActualHeight : Height;
             var bounds = QuickNoteLayoutHelper.ClampBoundsToWorkArea(GetWorkArea(), Left, Top, width, height);
-            var s = _settingsService.Settings;
-            s.QuickNoteLeft = bounds.Left;
-            s.QuickNoteTop = bounds.Top;
-            s.QuickNoteWidth = bounds.Width;
-            s.QuickNoteHeight = bounds.Height;
-            _settingsService.Settings = s;
+            _settingsService.UpdateSettings(s =>
+            {
+                s.QuickNoteLeft = bounds.Left;
+                s.QuickNoteTop = bounds.Top;
+                s.QuickNoteWidth = bounds.Width;
+                s.QuickNoteHeight = bounds.Height;
+            });
             await _settingsService.SaveAsync();
         }
 

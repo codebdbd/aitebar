@@ -245,7 +245,11 @@
                                       StrokeThickness="2"
                                       StrokeStartLineCap="Round"
                                       StrokeEndLineCap="Round"
-                                      Visibility="Collapsed"/>
+                                      Visibility="Collapsed">
+                                    <Path.RenderTransform>
+                                        <TranslateTransform X="1" Y="0"/>
+                                    </Path.RenderTransform>
+                                </Path>
                             </Border>
                         </Border>
                         <ContentPresenter Margin="{TemplateBinding Padding}"

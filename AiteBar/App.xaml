@@ -7,6 +7,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="FormControlsResources.xaml"/>
+                <ResourceDictionary Source="UtilityWindowResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="{x:Type Control}">
                 <Setter Property="Template">

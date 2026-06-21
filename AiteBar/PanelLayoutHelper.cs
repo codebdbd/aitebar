@@ -75,6 +75,7 @@ public static class PanelLayoutHelper
         double panelPrimary = Math.Max(
             ButtonOuterSize + PanelChrome,
             (isVertical ? Math.Max(adjustedFixedPrimary, userLayout.Primary + trailingPrimary) : fixedPrimary + userLayout.Primary + trailingPrimary) + PanelChrome);
+        panelPrimary = Math.Min(panelPrimary, availablePrimary);
         double panelCross = Math.Max(ButtonOuterSize + PanelChrome, Math.Max(Math.Max(fixedCross, trailingCross), userLayout.Cross) + PanelChrome);
 
         return isVertical

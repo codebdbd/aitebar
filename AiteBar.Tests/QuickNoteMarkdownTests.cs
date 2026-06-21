@@ -87,6 +87,31 @@ public sealed class QuickNoteMarkdownTests
     }
 
     [Fact]
+    public void ToMarkdown_EscapesAngleBracketsToPreventHtmlUnderline()
+    {
+        string markdown = RunSta(() =>
+        {
+            var document = new FlowDocument(new Paragraph(new Run("plain <u>not underline</u> text")));
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal(@"plain \<u\>not underline\</u\> text", markdown);
+    }
+
+    [Fact]
+    public void LoadMarkdown_DoesNotTreatEscapedAngleBracketsAsHtmlUnderline()
+    {
+        string visibleText = RunSta(() =>
+        {
+            var document = new FlowDocument();
+            QuickNoteMarkdown.LoadMarkdown(document, @"plain \<u\>not underline\<\/u\> text");
+            return new TextRange(document.ContentStart, document.ContentEnd).Text.TrimEnd();
+        });
+
+        Assert.Equal("plain <u>not underline</u> text", visibleText);
+    }
+
+    [Fact]
     public void LoadMarkdown_RendersSupportedInlineFormatting()
     {
         string markdown = RunSta(() =>

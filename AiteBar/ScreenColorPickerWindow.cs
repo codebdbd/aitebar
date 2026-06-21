@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,6 +16,8 @@ namespace AiteBar
     public sealed class ScreenColorPickerWindow : Window
     {
         private readonly Drawing.Bitmap _screen;
+        private readonly byte[] _screenPixels;
+        private readonly int _screenStride;
         private readonly int _left;
         private readonly int _top;
         private readonly Canvas _root;
@@ -24,6 +27,7 @@ namespace AiteBar
         private readonly TextBlock _hexText;
         private readonly TextBlock _rgbText;
         private readonly TextBlock _instructionText;
+        private readonly byte[] _magnifierBuffer;
 
         private const int ZoomPixels = 11;
         private const int ZoomSize = 110;
@@ -34,15 +38,19 @@ namespace AiteBar
         {
             LocalizationService.CultureChanged += HandleCultureChanged;
 
+            _magnifierBuffer = new byte[ZoomPixels * ZoomPixels * 4];
+
             var bounds = Forms.SystemInformation.VirtualScreen;
             _left = bounds.Left;
             _top = bounds.Top;
-            _screen = new Drawing.Bitmap(bounds.Width, bounds.Height);
+            _screen = new Drawing.Bitmap(bounds.Width, bounds.Height, Drawing.Imaging.PixelFormat.Format32bppArgb);
 
             using (var graphics = Drawing.Graphics.FromImage(_screen))
             {
                 graphics.CopyFromScreen(bounds.Left, bounds.Top, 0, 0, bounds.Size);
             }
+
+            (_screenPixels, _screenStride) = CopyScreenPixels(_screen);
 
             WindowStyle = WindowStyle.None;
             AllowsTransparency = true;
@@ -183,8 +191,16 @@ namespace AiteBar
             var color = GetScreenPixel(position);
             string hex = ToHex(color);
 
-            WpfClipboard.SetText(hex);
-            Close();
+            try
+            {
+                WpfClipboard.SetText(hex);
+                Close();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                _instructionText.Text = LocalizationService.Get("ClipboardManager_CopyFailed");
+            }
         }
 
         protected override void OnKeyDown(System.Windows.Input.KeyEventArgs e)
@@ -229,14 +245,25 @@ namespace AiteBar
         {
             int x = Math.Clamp((int)Math.Round(screenPoint.X) - _left, 0, _screen.Width - 1);
             int y = Math.Clamp((int)Math.Round(screenPoint.Y) - _top, 0, _screen.Height - 1);
-            return _screen.GetPixel(x, y);
+            return GetScreenPixel(x, y);
+        }
+
+        private Drawing.Color GetScreenPixel(int x, int y)
+        {
+            int stride = Math.Abs(_screenStride);
+            int row = _screenStride < 0 ? _screen.Height - 1 - y : y;
+            int offset = (row * stride) + (x * 4);
+            byte b = _screenPixels[offset];
+            byte g = _screenPixels[offset + 1];
+            byte r = _screenPixels[offset + 2];
+            byte a = _screenPixels[offset + 3];
+            return Drawing.Color.FromArgb(a, r, g, b);
         }
 
         private BitmapSource BuildMagnifierBitmap(System.Windows.Point screenPoint)
         {
             int centerX = Math.Clamp((int)Math.Round(screenPoint.X) - _left, 0, _screen.Width - 1);
             int centerY = Math.Clamp((int)Math.Round(screenPoint.Y) - _top, 0, _screen.Height - 1);
-            var pixels = new byte[ZoomPixels * ZoomPixels * 4];
             int half = ZoomPixels / 2;
 
             for (int y = 0; y < ZoomPixels; y++)
@@ -245,12 +272,12 @@ namespace AiteBar
                 {
                     int sourceX = Math.Clamp(centerX + x - half, 0, _screen.Width - 1);
                     int sourceY = Math.Clamp(centerY + y - half, 0, _screen.Height - 1);
-                    var color = _screen.GetPixel(sourceX, sourceY);
+                    var color = GetScreenPixel(sourceX, sourceY);
                     int offset = ((y * ZoomPixels) + x) * 4;
-                    pixels[offset] = color.B;
-                    pixels[offset + 1] = color.G;
-                    pixels[offset + 2] = color.R;
-                    pixels[offset + 3] = 255;
+                    _magnifierBuffer[offset] = color.B;
+                    _magnifierBuffer[offset + 1] = color.G;
+                    _magnifierBuffer[offset + 2] = color.R;
+                    _magnifierBuffer[offset + 3] = 255;
                 }
             }
 
@@ -261,12 +288,29 @@ namespace AiteBar
                 96,
                 PixelFormats.Bgra32,
                 null,
-                pixels,
+                _magnifierBuffer,
                 ZoomPixels * 4);
             bitmap.Freeze();
             return bitmap;
         }
 
+
+        private static (byte[] Pixels, int Stride) CopyScreenPixels(Drawing.Bitmap bitmap)
+        {
+            var rect = new Drawing.Rectangle(0, 0, bitmap.Width, bitmap.Height);
+            var data = bitmap.LockBits(rect, Drawing.Imaging.ImageLockMode.ReadOnly, Drawing.Imaging.PixelFormat.Format32bppArgb);
+            try
+            {
+                int byteCount = Math.Abs(data.Stride) * bitmap.Height;
+                var pixels = new byte[byteCount];
+                Marshal.Copy(data.Scan0, pixels, 0, byteCount);
+                return (pixels, data.Stride);
+            }
+            finally
+            {
+                bitmap.UnlockBits(data);
+            }
+        }
         private static string ToHex(Drawing.Color color) => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
 
         protected override void OnClosed(EventArgs e)

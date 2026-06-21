@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace AiteBar
 {
@@ -12,13 +13,21 @@ namespace AiteBar
     public partial class ClipboardManagerWindow : DarkWindow
     {
         private readonly ClipboardHistoryService _historyService;
+        private readonly DispatcherTimer _refreshTimer;
+        private string _lastRenderedSignature = string.Empty;
 
         public ClipboardManagerWindow(ClipboardHistoryService historyService)
         {
             InitializeComponent();
             _historyService = historyService;
+            _refreshTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(100) };
+            _refreshTimer.Tick += (_, _) =>
+            {
+                _refreshTimer.Stop();
+                UpdateEntriesList();
+            };
             UpdateSearchPlaceholder();
-            UpdateEntriesList();
+            UpdateEntriesList(force: true);
         }
 
         public void ShowNearPanel(AppSettingsService settingsService)
@@ -58,16 +67,23 @@ namespace AiteBar
 
         private void OnHistoryChanged(object? sender, EventArgs e)
         {
-            UpdateEntriesList();
+            _refreshTimer.Stop();
+            _refreshTimer.Start();
         }
 
-        private void UpdateEntriesList()
+        private void UpdateEntriesList(bool force = false)
         {
             var searchText = TxtSearch?.Text.ToLowerInvariant() ?? string.Empty;
             var filteredEntries = _historyService.Entries.Where(entry => 
                 entry.Text.ToLowerInvariant().Contains(searchText) || 
                 (entry.IsImage && "image".ToLowerInvariant().Contains(searchText))).ToList();
+            string signature = BuildEntriesSignature(searchText, filteredEntries);
+            if (!force && string.Equals(signature, _lastRenderedSignature, StringComparison.Ordinal))
+            {
+                return;
+            }
 
+            _lastRenderedSignature = signature;
             EntriesPanel.Children.Clear();
 
             if (filteredEntries.Count == 0)
@@ -147,16 +163,22 @@ namespace AiteBar
                 : "";
         }
 
+
+        private static string BuildEntriesSignature(string searchText, System.Collections.Generic.IReadOnlyList<ClipboardHistoryEntry> entries)
+        {
+            return string.Join("|", entries.Select(entry => $"{searchText}:{entry.Timestamp.Ticks}:{entry.Text.Length}:{entry.ImageBytes?.Length ?? 0}"));
+        }
         private void CopyEntry(ClipboardHistoryEntry entry)
         {
-            _historyService.CopyEntryToClipboard(entry);
-            TxtStatus.Text = LocalizationService.Get("ClipboardManager_Copied");
+            TxtStatus.Text = _historyService.CopyEntryToClipboard(entry)
+                ? LocalizationService.Get("ClipboardManager_Copied")
+                : LocalizationService.Get("ClipboardManager_CopyFailed");
         }
 
         private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
         {
             UpdateSearchPlaceholder();
-            UpdateEntriesList();
+            UpdateEntriesList(force: true);
         }
 
         private void UpdateSearchPlaceholder()

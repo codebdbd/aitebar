@@ -1,8 +1,10 @@
 using System;
+using System.Diagnostics;
 using System.Media;
 using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 
@@ -16,7 +18,7 @@ public partial class TimerStopwatchWindow : DarkWindow
     private readonly DispatcherTimer _tickTimer = new() { Interval = TimeSpan.FromMilliseconds(TimerIntervalMs) };
     private TimeSpan _timerDuration = TimeSpan.FromMinutes(5);
     private TimeSpan _timerRemaining = TimeSpan.FromMinutes(5);
-    private DateTime _lastTickUtc;
+    private long _lastTickTimestamp;
     private TimeSpan _stopwatchElapsed;
     private bool _isRunning;
     private bool _isStopwatchMode;
@@ -24,6 +26,8 @@ public partial class TimerStopwatchWindow : DarkWindow
     private bool _isUpdatingInput;
     private bool _isUpdatingMode;
     private bool _soundEnabled = true;
+    private bool _completionFeedbackActive;
+    private bool _topmostBeforeCompact;
     private int _progressSegmentCount;
     private double _fullLeft;
     private double _fullTop;
@@ -239,6 +243,7 @@ public partial class TimerStopwatchWindow : DarkWindow
 
     private void ResetCurrentMode()
     {
+        StopCompletionFeedback();
         if (_isStopwatchMode)
         {
             StopRunning();
@@ -312,6 +317,7 @@ public partial class TimerStopwatchWindow : DarkWindow
         if (_isCompactMode)
         {
             _isCompactMode = false;
+            Topmost = _topmostBeforeCompact;
             if (_hasFullPosition)
             {
                 Left = _fullLeft;
@@ -322,6 +328,7 @@ public partial class TimerStopwatchWindow : DarkWindow
         {
             _fullLeft = Left;
             _fullTop = Top;
+            _topmostBeforeCompact = Topmost;
             _hasFullPosition = true;
             _isCompactMode = true;
         }
@@ -343,8 +350,9 @@ public partial class TimerStopwatchWindow : DarkWindow
 
     private void StartRunning(bool stopwatchMode)
     {
+        StopCompletionFeedback();
         _isStopwatchMode = stopwatchMode;
-        _lastTickUtc = DateTime.UtcNow;
+        _lastTickTimestamp = Stopwatch.GetTimestamp();
         _isRunning = true;
         _tickTimer.Start();
         UpdateMode();
@@ -353,9 +361,9 @@ public partial class TimerStopwatchWindow : DarkWindow
 
     private void TickTimer_Tick(object? sender, EventArgs e)
     {
-        var now = DateTime.UtcNow;
-        var delta = now - _lastTickUtc;
-        _lastTickUtc = now;
+        long now = Stopwatch.GetTimestamp();
+        var delta = Stopwatch.GetElapsedTime(_lastTickTimestamp, now);
+        _lastTickTimestamp = now;
 
         if (_isStopwatchMode)
         {
@@ -368,6 +376,7 @@ public partial class TimerStopwatchWindow : DarkWindow
             {
                 _timerRemaining = TimeSpan.Zero;
                 StopRunning();
+                StartCompletionFeedback();
                 if (_soundEnabled)
                 {
                     SystemSounds.Exclamation.Play();
@@ -422,6 +431,7 @@ public partial class TimerStopwatchWindow : DarkWindow
 
     private void ApplyTimerDuration(TimeSpan duration)
     {
+        StopCompletionFeedback();
         StopRunning();
         _timerDuration = duration;
         _timerRemaining = duration;
@@ -439,12 +449,16 @@ public partial class TimerStopwatchWindow : DarkWindow
 
     private void UpdateMode()
     {
+        if (_isStopwatchMode)
+        {
+            StopCompletionFeedback();
+        }
+
         var metrics = TimerStopwatchLayoutHelper.GetWindowMetrics(_isCompactMode, _isStopwatchMode);
         MinWidth = metrics.MinWidth;
         MinHeight = metrics.MinHeight;
         Width = metrics.Width;
         Height = metrics.Height;
-        Topmost = _isCompactMode || Topmost;
 
         _isUpdatingMode = true;
         try
@@ -472,6 +486,49 @@ public partial class TimerStopwatchWindow : DarkWindow
         finally
         {
             _isUpdatingMode = false;
+        }
+    }
+
+    private void StartCompletionFeedback()
+    {
+        if (_isStopwatchMode)
+        {
+            return;
+        }
+
+        _completionFeedbackActive = true;
+        BeginStoryboard("TimerDisplayCompletionFlashStoryboard");
+        BeginStoryboard("TimerCompletionFlashStoryboard");
+    }
+
+    private void StopCompletionFeedback()
+    {
+        if (!_completionFeedbackActive)
+        {
+            return;
+        }
+
+        _completionFeedbackActive = false;
+        StopStoryboard("TimerDisplayCompletionFlashStoryboard");
+        StopStoryboard("TimerCompletionFlashStoryboard");
+        TxtTimerDisplay.Opacity = 1;
+        TxtCompactDisplay.Opacity = 1;
+        CompactCompletionFlash.Opacity = 0;
+    }
+
+    private void BeginStoryboard(string resourceKey)
+    {
+        if (TryFindResource(resourceKey) is Storyboard storyboard)
+        {
+            storyboard.Begin(this, true);
+        }
+    }
+
+    private void StopStoryboard(string resourceKey)
+    {
+        if (TryFindResource(resourceKey) is Storyboard storyboard)
+        {
+            storyboard.Stop(this);
         }
     }
 
