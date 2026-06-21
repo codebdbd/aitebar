@@ -74,7 +74,6 @@ public partial class FileSorterWindow : DarkWindow
         _lastCompletedResult = null;
         _lastUndoStatus = null;
         Title = LocalizationService.Get("FileSorter_Title");
-        TxtTitle.Text = LocalizationService.Get("FileSorter_Title");
         IdleStatePanel.Visibility = Visibility.Visible;
         SortingStatePanel.Visibility = Visibility.Collapsed;
         CompletedStatePanel.Visibility = Visibility.Collapsed;
@@ -98,7 +97,6 @@ public partial class FileSorterWindow : DarkWindow
         _lastRootPath = result.RootPath;
         _lastUndoStatus = null;
         Title = LocalizationService.Get("FileSorter_Title");
-        TxtTitle.Text = LocalizationService.Get("FileSorter_Title");
         TxtResultSummary.Text = LocalizationService.Format("FileSorter_ResultFormat", result.SortedCount);
         IdleStatePanel.Visibility = Visibility.Collapsed;
         SortingStatePanel.Visibility = Visibility.Collapsed;
@@ -139,7 +137,6 @@ public partial class FileSorterWindow : DarkWindow
         if (SortingStatePanel.Visibility == Visibility.Visible)
         {
             Title = LocalizationService.Get("FileSorter_Title");
-            TxtTitle.Text = LocalizationService.Get("FileSorter_Title");
             return;
         }
 
@@ -273,25 +270,12 @@ public partial class FileSorterWindow : DarkWindow
         Process.Start(new ProcessStartInfo(_lastRootPath) { UseShellExecute = true });
     }
 
-    private void BtnClose_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
-
     private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
     {
         if (e.Key == Key.Escape)
         {
             Close();
             e.Handled = true;
-        }
-    }
-
-    private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ButtonState == MouseButtonState.Pressed)
-        {
-            DragMove();
         }
     }
 

@@ -1280,7 +1280,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         if (applySizeConstraints)
         {
             var (availableWidth, availableHeight) = CalculateAvailableSize();
-            _lastMetrics = ComputeStablePrimaryPanelMetrics(isVertical, availableWidth, availableHeight);
+            _lastMetrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight, _unifiedButtons.Count);
         }
 
         if (isVertical) { this.MinWidth = 0; this.MinHeight = 150; }
@@ -1391,7 +1391,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
         var (availableWidth, availableHeight) = CalculateAvailableSize();
 
-        _lastMetrics = ComputeStablePrimaryPanelMetrics(isVertical, availableWidth, availableHeight);
+        _lastMetrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight, _unifiedButtons.Count);
 
         bool hasUnifiedButtons = UnifiedButtonsPanel.Children.Count > 0;
 

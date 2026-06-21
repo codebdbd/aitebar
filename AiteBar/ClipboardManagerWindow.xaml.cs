@@ -194,25 +194,12 @@ namespace AiteBar
             TxtStatus.Text = LocalizationService.Get("ClipboardManager_Cleared");
         }
 
-        private void BtnClose_Click(object sender, RoutedEventArgs e)
-        {
-            Close();
-        }
-
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Escape)
             {
                 Close();
                 e.Handled = true;
-            }
-        }
-
-        private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ButtonState == MouseButtonState.Pressed)
-            {
-                DragMove();
             }
         }
     }

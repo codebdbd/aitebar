@@ -352,49 +352,49 @@ public partial class IconConverterWindow : DarkWindow
     }
 
     private void RefreshLocalizedUi()
-    {
-        UpdateBackgroundColorState();
-        TxtPadding.Text = $"{SldPadding.Value:0}%";
-
-        if (string.IsNullOrWhiteSpace(_sourcePath))
         {
-            SetStatus(LocalizationService.Get("IconConverter_Ready"));
-            return;
+            UpdateBackgroundColorState();
+            TxtPadding.Text = $"{SldPadding.Value:0}%";
+
+            if (string.IsNullOrWhiteSpace(_sourcePath))
+            {
+                SetStatus(LocalizationService.Get("IconConverter_Ready"));
+                return;
+            }
+
+            _ = QueuePreviewRefreshAsync(debounce: false);
         }
 
-        _ = QueuePreviewRefreshAsync(debounce: false);
-    }
-
-    private void BtnClose_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
-
-    private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
-    {
-        if (e.Key == Key.Escape)
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
         {
             Close();
-            e.Handled = true;
         }
-    }
 
-    private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ButtonState == MouseButtonState.Pressed)
+        private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            DragMove();
+            if (e.ButtonState == MouseButtonState.Pressed)
+            {
+                DragMove();
+            }
         }
-    }
 
-    protected override void OnClosed(EventArgs e)
-    {
-        _previewCts?.Cancel();
-        _previewCts?.Dispose();
-        _previewRequestCts?.Cancel();
-        _previewRequestCts?.Dispose();
-        base.OnClosed(e);
-    }
+        private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                Close();
+                e.Handled = true;
+            }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _previewCts?.Cancel();
+            _previewCts?.Dispose();
+            _previewRequestCts?.Cancel();
+            _previewRequestCts?.Dispose();
+            base.OnClosed(e);
+        }
 
     protected override void OnLocalizationChanged()
     {

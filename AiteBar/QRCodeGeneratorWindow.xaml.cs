@@ -285,33 +285,20 @@ public partial class QRCodeGeneratorWindow : DarkWindow
     }
 
     private void UpdateInputPlaceholder()
-    {
-        TxtInputPlaceholder.Visibility = string.IsNullOrEmpty(TxtInput.Text)
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-    }
-
-    private void BtnClose_Click(object sender, RoutedEventArgs e)
-    {
-        Close();
-    }
-
-    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Escape)
         {
-            Close();
-            e.Handled = true;
+            TxtInputPlaceholder.Visibility = string.IsNullOrEmpty(TxtInput.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
         }
-    }
 
-    private void Header_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ButtonState == MouseButtonState.Pressed)
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
-            DragMove();
+            if (e.Key == Key.Escape)
+            {
+                Close();
+                e.Handled = true;
+            }
         }
-    }
 
     protected override void OnClosed(EventArgs e)
     {

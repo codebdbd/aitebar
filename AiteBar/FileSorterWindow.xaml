@@ -3,210 +3,120 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
+        Title="{local:Loc ResourceKey=FileSorter_Title}"
         Width="320" SizeToContent="Height" MinWidth="320" MinHeight="200"
-        WindowStartupLocation="Manual" WindowStyle="None" AllowsTransparency="True"
-        Background="Transparent" Foreground="White" ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen" Background="#1A1A1C" Foreground="#DCDCDC"
+        WindowStyle="SingleBorderWindow" ResizeMode="NoResize"
         ShowInTaskbar="False" Topmost="True"
         PreviewKeyDown="Window_PreviewKeyDown">
 
     <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="SettingsWindowResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
-        <Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
-            <Setter Property="Height" Value="38"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Background" Value="{StaticResource AccentColor}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource AccentColor}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#148BDB"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#148BDB"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.55"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="SecondaryActionButtonStyle" TargetType="Button">
-            <Setter Property="Height" Value="38"/>
-            <Setter Property="Foreground" Value="#E8EDF2"/>
-            <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Bd" Property="Opacity" Value="0.55"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+            <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{StaticResource MutedText}"/>
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="Margin" Value="0,0,0,6"/>
+            </Style>
+        </ResourceDictionary>
     </Window.Resources>
 
-    <Grid>
-        <Border Margin="8" CornerRadius="8" Background="{StaticResource BorderColor}" BorderBrush="#332A9CFF" BorderThickness="0.7">
-            <Border.Effect>
-                <DropShadowEffect Color="#000000" BlurRadius="14" ShadowDepth="2" Direction="270" Opacity="0.45"/>
-            </Border.Effect>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-            <Border CornerRadius="7" Background="{StaticResource PanelBackground}">
-                <Grid Margin="16">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
+        <!-- Idle state -->
+        <StackPanel x:Name="IdleStatePanel">
+            <TextBlock Text="{local:Loc ResourceKey=FileSorter_LocationLabel}" Style="{StaticResource FieldLabelStyle}"/>
+            <ComboBox x:Name="CmbLocation"
+                      Height="32"
+                      SelectionChanged="CmbLocation_SelectionChanged"/>
+            <TextBlock x:Name="TxtCustomPath"
+                       Visibility="Collapsed"
+                       Foreground="{StaticResource MutedText}"
+                       FontSize="11"
+                       TextWrapping="Wrap"
+                       Margin="2,8,2,0"/>
+            <Button x:Name="BtnSort"
+                    Content="{local:Loc ResourceKey=FileSorter_SortButton}"
+                    Style="{StaticResource ActionButtonStyle}"
+                    Margin="0,16,0,0"
+                    Click="BtnSort_Click"/>
+        </StackPanel>
 
-                    <Grid Grid.Row="0" MouseLeftButtonDown="Header_MouseLeftButtonDown">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
+        <!-- Sorting state -->
+        <StackPanel x:Name="SortingStatePanel"
+                    Visibility="Collapsed"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center">
+            <Grid Width="34" Height="34" Margin="0,0,0,14">
+                <Ellipse Stroke="#1F3B56" StrokeThickness="3"/>
+                <Path Stroke="{StaticResource AccentColor}"
+                      StrokeThickness="3"
+                      StrokeStartLineCap="Round"
+                      StrokeEndLineCap="Round"
+                      Data="M 17,2 A 15,15 0 0 1 31,17">
+                    <Path.RenderTransform>
+                        <RotateTransform x:Name="SpinnerRotate" Angle="0" CenterX="17" CenterY="17"/>
+                    </Path.RenderTransform>
+                </Path>
+            </Grid>
+            <TextBlock Text="{local:Loc ResourceKey=FileSorter_LoadingTitle}"
+                       FontSize="14"
+                       FontWeight="SemiBold"
+                       Foreground="White"
+                       HorizontalAlignment="Center"/>
+            <TextBlock Text="{local:Loc ResourceKey=FileSorter_LoadingSubtitle}"
+                       Foreground="{StaticResource MutedText}"
+                       FontSize="12"
+                       Margin="0,8,0,0"
+                       HorizontalAlignment="Center"/>
+        </StackPanel>
 
-                        <TextBlock x:Name="TxtTitle"
-                                   Text="{local:Loc ResourceKey=FileSorter_Title}"
-                                   FontSize="14"
-                                   FontWeight="SemiBold"
-                                   Foreground="White"
-                                   VerticalAlignment="Center"/>
-
-                        <Button x:Name="BtnClose"
-                                Grid.Column="1"
-                                Content="&#xF369;"
-                                Style="{StaticResource HeaderButtonStyle}"
-                                VerticalAlignment="Center"
-                                ToolTip="{local:Loc ResourceKey=Common_Close}"
-                                Click="BtnClose_Click"/>
-                    </Grid>
-
-                    <Grid Grid.Row="1" Margin="0,14,0,0">
-                        <StackPanel x:Name="IdleStatePanel">
-                            <TextBlock Text="{local:Loc ResourceKey=FileSorter_LocationLabel}"
-                                       Foreground="{StaticResource MutedText}"
-                                       FontSize="12"
-                                       Margin="0,0,0,8"/>
-                            <ComboBox x:Name="CmbLocation"
-                                      Height="34"
-                                      SelectionChanged="CmbLocation_SelectionChanged"/>
-                            <TextBlock x:Name="TxtCustomPath"
-                                       Visibility="Collapsed"
-                                       Foreground="{StaticResource MutedText}"
-                                       FontSize="11"
-                                       TextWrapping="Wrap"
-                                       Margin="2,8,2,0"/>
-                            <Button x:Name="BtnSort"
-                                    Content="{local:Loc ResourceKey=FileSorter_SortButton}"
-                                    Style="{StaticResource PrimaryActionButtonStyle}"
-                                    Margin="0,16,0,0"
-                                    Click="BtnSort_Click"/>
-                        </StackPanel>
-
-                        <StackPanel x:Name="SortingStatePanel"
-                                    Visibility="Collapsed"
-                                    VerticalAlignment="Center"
-                                    HorizontalAlignment="Center">
-                            <Grid Width="34" Height="34" Margin="0,0,0,14">
-                                <Ellipse Stroke="#1F3B56" StrokeThickness="3"/>
-                                <Path Stroke="{StaticResource AccentColor}"
-                                      StrokeThickness="3"
-                                      StrokeStartLineCap="Round"
-                                      StrokeEndLineCap="Round"
-                                      Data="M 17,2 A 15,15 0 0 1 31,17">
-                                    <Path.RenderTransform>
-                                        <RotateTransform x:Name="SpinnerRotate" Angle="0" CenterX="17" CenterY="17"/>
-                                    </Path.RenderTransform>
-                                </Path>
-                            </Grid>
-                            <TextBlock Text="{local:Loc ResourceKey=FileSorter_LoadingTitle}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="White"
-                                       HorizontalAlignment="Center"/>
-                            <TextBlock Text="{local:Loc ResourceKey=FileSorter_LoadingSubtitle}"
-                                       Foreground="{StaticResource MutedText}"
-                                       FontSize="12"
-                                       Margin="0,8,0,0"
-                                       HorizontalAlignment="Center"/>
-                        </StackPanel>
-
-                        <StackPanel x:Name="CompletedStatePanel"
-                                    Visibility="Collapsed"
-                                    VerticalAlignment="Center">
-                            <Grid Width="48" Height="48" HorizontalAlignment="Center" Margin="0,0,0,14">
-                                <Ellipse Fill="#143C27" Stroke="#16A34A" StrokeThickness="1.4"/>
-                                <TextBlock Text="✓"
-                                           Foreground="#22C55E"
-                                           FontSize="28"
-                                           FontWeight="SemiBold"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"/>
-                            </Grid>
-                            <TextBlock Text="{local:Loc ResourceKey=FileSorter_CompletedTitle}"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       Foreground="White"
-                                       HorizontalAlignment="Center"/>
-                            <TextBlock x:Name="TxtResultSummary"
-                                       Foreground="{StaticResource MutedText}"
-                                       FontSize="12"
-                                       Margin="0,8,0,0"
-                                       HorizontalAlignment="Center"/>
-                            <Button x:Name="BtnOpenFolder"
-                                    Content="{local:Loc ResourceKey=FileSorter_OpenFolder}"
-                                    Style="{StaticResource SecondaryActionButtonStyle}"
-                                    Margin="0,18,0,0"
-                                    Click="BtnOpenFolder_Click"/>
-                            <Button x:Name="BtnUndo"
-                                    Content="{local:Loc ResourceKey=FileSorter_Undo}"
-                                    Style="{StaticResource SecondaryActionButtonStyle}"
-                                    Margin="0,10,0,0"
-                                    Click="BtnUndo_Click"/>
-                            <TextBlock x:Name="TxtUndoStatus"
-                                       Visibility="Collapsed"
-                                       Foreground="{StaticResource MutedText}"
-                                       FontSize="11"
-                                       TextWrapping="Wrap"
-                                       Margin="0,10,0,0"
-                                       TextAlignment="Center"/>
-                        </StackPanel>
-                    </Grid>
-                </Grid>
-            </Border>
-        </Border>
+        <!-- Completed state -->
+        <StackPanel x:Name="CompletedStatePanel"
+                    Visibility="Collapsed"
+                    VerticalAlignment="Center">
+            <Grid Width="48" Height="48" HorizontalAlignment="Center" Margin="0,0,0,14">
+                <Ellipse Fill="#143C27" Stroke="#16A34A" StrokeThickness="1.4"/>
+                <TextBlock Text="✓"
+                           Foreground="#22C55E"
+                           FontSize="28"
+                           FontWeight="SemiBold"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center"/>
+            </Grid>
+            <TextBlock Text="{local:Loc ResourceKey=FileSorter_CompletedTitle}"
+                       FontSize="14"
+                       FontWeight="SemiBold"
+                       Foreground="White"
+                       HorizontalAlignment="Center"/>
+            <TextBlock x:Name="TxtResultSummary"
+                       Foreground="{StaticResource MutedText}"
+                       FontSize="12"
+                       Margin="0,8,0,0"
+                       HorizontalAlignment="Center"/>
+            <Button x:Name="BtnOpenFolder"
+                    Content="{local:Loc ResourceKey=FileSorter_OpenFolder}"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Margin="0,18,0,0"
+                    Click="BtnOpenFolder_Click"/>
+            <Button x:Name="BtnUndo"
+                    Content="{local:Loc ResourceKey=FileSorter_Undo}"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Margin="0,10,0,0"
+                    Click="BtnUndo_Click"/>
+            <TextBlock x:Name="TxtUndoStatus"
+                       Visibility="Collapsed"
+                       Foreground="{StaticResource MutedText}"
+                       FontSize="11"
+                       TextWrapping="Wrap"
+                       Margin="0,10,0,0"
+                       TextAlignment="Center"/>
+        </StackPanel>
     </Grid>
 </local:DarkWindow>
