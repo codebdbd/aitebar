@@ -69,8 +69,10 @@ public class ActionService
                     case ActionType.Program:
                     case ActionType.File:
                     case ActionType.Folder:
-                        _runtime.StartProcess(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true });
+                    {
+                        using var _ = _runtime.StartProcess(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true });
                         break;
+                    }
                     case ActionType.ScriptFile:
                         await StartScriptFileAsync(el.ActionValue);
                         break;
@@ -271,7 +273,7 @@ public class ActionService
             };
             psi.ArgumentList.Add("/c");
             psi.ArgumentList.Add(command);
-            _runtime.StartProcess(psi);
+            using var _ = _runtime.StartProcess(psi);
         }
     }
 
@@ -343,49 +345,49 @@ public class ActionService
     public async Task StartScreenshotAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute();
-        _runtime.StartProcess(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true });
+        using var _ = _runtime.StartProcess(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true });
     }
 
     public async Task StartRecordVideoAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute();
-        _runtime.StartProcess(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true });
+        using var _ = _runtime.StartProcess(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true });
     }
 
     public async Task StartCalculatorAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute();
-        _runtime.StartProcess("calc.exe");
+        using var _ = _runtime.StartProcess("calc.exe");
     }
 
     public async Task StartExplorerAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute();
-        _runtime.StartProcess(BuildShellLaunchProcessStartInfo("explorer.exe"));
+        using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("explorer.exe"));
     }
 
     public async Task StartDownloadsAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute();
-        _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:Downloads"));
+        using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:Downloads"));
     }
 
     public async Task StartShowDesktopAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute();
-        _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:::{3080F90D-D7AD-11D9-BD98-0000947B0257}"));
+        using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:::{3080F90D-D7AD-11D9-BD98-0000947B0257}"));
     }
 
     public async Task StartAppsFolderAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute();
-        _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:AppsFolder"));
+        using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:AppsFolder"));
     }
 
     public async Task StartCopilotAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute();
-        _runtime.StartProcess(BuildShellLaunchProcessStartInfo("microsoft-edge://?ux=copilot&cp=2"));
+        using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("microsoft-edge://?ux=copilot&cp=2"));
     }
 
     public async Task LaunchUtilityAsync(string utilityId, Func<Task>? onBeforeExecute = null)

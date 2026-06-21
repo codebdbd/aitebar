@@ -23,7 +23,7 @@ namespace AiteBar
         private static readonly string AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
         
         // Для тестов: переопределение путей к данным браузеров
-        private static readonly Dictionary<BrowserType, string> _userDataPathOverrides = new();
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<BrowserType, string> _userDataPathOverrides = new();
 
         public static string GetExecutablePath(BrowserType type)
         {
@@ -120,7 +120,7 @@ namespace AiteBar
 
         public static void ClearUserDataPathOverride(BrowserType type)
         {
-            _userDataPathOverrides.Remove(type);
+            ((IDictionary<BrowserType, string>)_userDataPathOverrides).Remove(type);
         }
 
         public static void ClearAllUserDataPathOverrides()

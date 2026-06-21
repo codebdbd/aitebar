@@ -76,7 +76,10 @@ public partial class MainWindow
                 e.Handled = true;
                 _draggedButton.Opacity = 1.0;
                 int newIndex = CalculateUnifiedTargetIndex(e.GetPosition(this));
-                if (newIndex >= 0 && newIndex < _currentUnifiedButtons.Count && newIndex != _draggedOriginalIndex)
+                if (newIndex >= 0 && newIndex < _currentUnifiedButtons.Count && 
+                    newIndex != _draggedOriginalIndex && 
+                    _draggedOriginalIndex >= 0 && 
+                    _draggedOriginalIndex < _currentUnifiedButtons.Count)
                 {
                     // Reorder logic
                     var draggedItem = _currentUnifiedButtons[_draggedOriginalIndex];
@@ -88,16 +91,19 @@ public partial class MainWindow
                         // Calculate original index within context-specific user elements
                         var contextUserElements = _settingsService.Elements.Where(el => el.ContextId == contextId).ToList();
                         var originalUserIndex = contextUserElements.FindIndex(el => el.Id == draggedItem.Id);
-                        // Calculate new index within context-specific user elements
-                        var targetItemInNewIndex = _currentUnifiedButtons[newIndex];
-                        if (targetItemInNewIndex.Type == UnifiedButtonType.User)
+                        if (originalUserIndex >= 0)
                         {
-                            var targetUserElement = contextUserElements.FirstOrDefault(el => el.Id == targetItemInNewIndex.Id);
-                            if (targetUserElement != null)
+                            // Calculate new index within context-specific user elements
+                            var targetItemInNewIndex = _currentUnifiedButtons[newIndex];
+                            if (targetItemInNewIndex.Type == UnifiedButtonType.User)
                             {
-                                var newUserIndex = contextUserElements.IndexOf(targetUserElement);
-                                _settingsService.ReorderElements(originalUserIndex, newUserIndex, contextId);
-                                await SaveSettingsWithNotificationAsync();
+                                var targetUserElement = contextUserElements.FirstOrDefault(el => el.Id == targetItemInNewIndex.Id);
+                                if (targetUserElement != null)
+                                {
+                                    var newUserIndex = contextUserElements.IndexOf(targetUserElement);
+                                    _settingsService.ReorderElements(originalUserIndex, newUserIndex, contextId);
+                                    await SaveSettingsWithNotificationAsync();
+                                }
                             }
                         }
                     }
@@ -128,7 +134,7 @@ public partial class MainWindow
                         for (int compressedIndex = 0; compressedIndex < newIndex; compressedIndex++)
                         {
                             int actualIndex = compressedIndex >= _draggedOriginalIndex ? compressedIndex + 1 : compressedIndex;
-                            if (_currentUnifiedButtons[actualIndex].Type == UnifiedButtonType.Utility)
+                            if (actualIndex >= 0 && actualIndex < _currentUnifiedButtons.Count && _currentUnifiedButtons[actualIndex].Type == UnifiedButtonType.Utility)
                             {
                                 insertIndexInVisible++;
                             }
@@ -198,6 +204,11 @@ public partial class MainWindow
 
     private int CalculateUnifiedTargetIndex(Point currentPos)
     {
+        if (_draggedButton == null || _draggedOriginalIndex < 0 || _draggedOriginalIndex >= _unifiedButtons.Count)
+        {
+            return _unifiedButtons.Count - 1;
+        }
+
         bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
         
         // Step 1: Collect all buttons except dragged, along with their original index
@@ -251,8 +262,7 @@ public partial class MainWindow
             var draggedVirtualSlot = panel.GetArrangedRectForIndex(draggedVirtIdx, _unifiedButtons.Count, finalSize);
             var draggedCenter = new Point(
                 draggedVirtualSlot.X + draggedVirtualSlot.Width / 2,
-                draggedVirtualSlot.Y + draggedVirtualSlot.Height / 2
-            );
+                draggedVirtualSlot.Y + draggedVirtualSlot.Height / 2);
             
             // Compute distance to current pos (in panel coords)
             double distance = isVertical
@@ -271,7 +281,7 @@ public partial class MainWindow
 
     private void UpdateUnifiedReorderPositions(Point currentPos)
     {
-        if (_unifiedButtons.Count < 2) return;
+        if (_unifiedButtons.Count < 2 || _draggedButton == null || _draggedOriginalIndex < 0 || _draggedOriginalIndex >= _unifiedButtons.Count) return;
         int targetIndex = CalculateUnifiedTargetIndex(currentPos);
         
         // First create the virtual order list (just indexes for lookup)

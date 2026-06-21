@@ -69,6 +69,11 @@ namespace AiteBar
                             await WriteLogEntryAsync(logEntry);
                             hasMore = true;
                         }
+                        // Double-check inside loop without recursion
+                        if (!hasMore && !_logQueue.IsEmpty)
+                        {
+                            hasMore = true;
+                        }
                     } while (hasMore);
                 }
                 finally
@@ -81,9 +86,6 @@ namespace AiteBar
                             _flushCompleteTcs.SetResult(true);
                             _flushCompleteTcs = null;
                         }
-                        // Double-check if new items were added after we finished
-                        if (!_logQueue.IsEmpty)
-                            FlushQueue();
                     }
                 }
             });

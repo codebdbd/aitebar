@@ -94,18 +94,17 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             }
 
             QRCodeGenerationOptions options = BuildOptions(text);
-            using QRCodeData qrData = _service.GenerateQrData(options.Text, options.EccLevel);
-            token.ThrowIfCancellationRequested();
+            
+            // Offload QR generation to background thread
+            var (qrImage, moduleCount, version) = await Task.Run(() =>
+            {
+                using QRCodeData qrData = _service.GenerateQrData(options.Text, options.EccLevel);
+                token.ThrowIfCancellationRequested();
+                var image = _service.RenderXaml(qrData, options.PixelSize, options.DarkColor, options.LightColor, options.Margin);
+                return (image, qrData.ModuleMatrix.Count, QRCodeService.GetVersion(qrData));
+            }, token);
 
-            var renderer = new XamlQRCode(qrData);
-            ImgPreview.Source = renderer.GetGraphic(
-                options.PixelSize,
-                options.DarkColor,
-                options.LightColor,
-                drawQuietZones: options.Margin > 0);
-
-            int moduleCount = qrData.ModuleMatrix.Count;
-            int version = QRCodeService.GetVersion(qrData);
+            ImgPreview.Source = qrImage;
             _lastOptions = options;
             _lastPngBytes = null;
             _lastSvgContent = null;

@@ -10,9 +10,19 @@ namespace AiteBar
 
         // Для тестов: возможность переопределить корневую папку данных
         private static string? _appDataFolderOverride;
-        public static string AppDataFolder => _appDataFolderOverride ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            AppCompany, AppName);
+        private static readonly object _appDataLock = new();
+        public static string AppDataFolder
+        {
+            get
+            {
+                lock (_appDataLock)
+                {
+                    return _appDataFolderOverride ?? Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        AppCompany, AppName);
+                }
+            }
+        }
 
         public static string ConfigFile => Path.Combine(AppDataFolder, "custom_buttons.json");
         public static string SettingsFile => Path.Combine(AppDataFolder, "settings.json");
@@ -22,12 +32,18 @@ namespace AiteBar
         // Методы для тестов
         public static void SetAppDataFolderOverride(string path)
         {
-            _appDataFolderOverride = path;
+            lock (_appDataLock)
+            {
+                _appDataFolderOverride = path;
+            }
         }
 
         public static void ClearAppDataFolderOverride()
         {
-            _appDataFolderOverride = null;
+            lock (_appDataLock)
+            {
+                _appDataFolderOverride = null;
+            }
         }
 
         public static void EnsureDirectories()

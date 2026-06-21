@@ -18,6 +18,7 @@ namespace AiteBar
         private readonly List<ClipboardHistoryEntry> _entries = new List<ClipboardHistoryEntry>();
         private const int MaxEntries = 50;
         private const int MaxTextLength = 10 * 1024;
+        private const int MaxImageBytes = 5 * 1024 * 1024;
         private Window? _listeningWindow;
         private HwndSource? _hwndSource;
         private bool _suppressNextChange = false;
@@ -145,7 +146,7 @@ namespace AiteBar
                 if (Clipboard.ContainsText())
                 {
                     text = Clipboard.GetText();
-                    if (text.Length > MaxTextLength)
+                    if (string.IsNullOrEmpty(text) || text.Length > MaxTextLength)
                     {
                         text = null;
                     }
@@ -162,7 +163,11 @@ namespace AiteBar
                             var encoder = new PngBitmapEncoder();
                             encoder.Frames.Add(BitmapFrame.Create(image));
                             encoder.Save(stream);
-                            imageBytes = stream.ToArray();
+                            var bytes = stream.ToArray();
+                            if (bytes.Length <= MaxImageBytes)
+                            {
+                                imageBytes = bytes;
+                            }
                         }
                     }
                     catch
@@ -183,9 +188,9 @@ namespace AiteBar
                             break;
                         }
                         if (imageBytes != null && entry.ImageBytes != null && 
-                            entry.ImageBytes.Length == imageBytes.Length)
+                            entry.ImageBytes.SequenceEqual(imageBytes))
                         {
-                            // Simple check for duplicate images
+                            // Full check for duplicate images
                             isDuplicate = true;
                             break;
                         }
@@ -222,6 +227,7 @@ namespace AiteBar
             if (_disposed) return;
             
             StopListening();
+            ClearHistory();
             _disposed = true;
         }
     }
@@ -237,7 +243,16 @@ namespace AiteBar
             get 
             {
                 if (IsImage) return "📷 Image";
-                if (Text.Length > 50) return Text.Substring(0, 50) + "...";
+                if (Text.Length > 50)
+                {
+                    // Handle surrogate pairs correctly
+                    int safeLength = 50;
+                    if (safeLength < Text.Length && char.IsSurrogatePair(Text, safeLength - 1))
+                    {
+                        safeLength--;
+                    }
+                    return Text.Substring(0, safeLength) + "...";
+                }
                 return Text;
             } 
         }

@@ -60,9 +60,176 @@ namespace AiteBar
 
         private static AppSettings CloneAppSettings(AppSettings original)
         {
-            // Use JSON serialization for deep clone to avoid manual duplication
-            string json = JsonSerializer.Serialize(original, _jsonOptions);
-            return JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions) ?? new AppSettings();
+            var clone = new AppSettings
+            {
+                GlobalHotkeyCtrl = original.GlobalHotkeyCtrl,
+                GlobalHotkeyAlt = original.GlobalHotkeyAlt,
+                GlobalHotkeyShift = original.GlobalHotkeyShift,
+                GlobalHotkeyWin = original.GlobalHotkeyWin,
+                GlobalHotkeyKey = original.GlobalHotkeyKey,
+                ShowPresetSearch = original.ShowPresetSearch,
+                ShowPresetScreenshot = original.ShowPresetScreenshot,
+                ShowPresetVideo = original.ShowPresetVideo,
+                ShowPresetCalc = original.ShowPresetCalc,
+                ShowPresetExplorer = original.ShowPresetExplorer,
+                ShowPresetDownloads = original.ShowPresetDownloads,
+                ShowPresetFileSorter = original.ShowPresetFileSorter,
+                ShowPresetIconConverter = original.ShowPresetIconConverter,
+                ShowPresetColorPicker = original.ShowPresetColorPicker,
+                ShowPresetQuickNote = original.ShowPresetQuickNote,
+                ShowPresetQRCodeGenerator = original.ShowPresetQRCodeGenerator,
+                ShowPresetClipboardManager = original.ShowPresetClipboardManager,
+                ShowPresetTimerStopwatch = original.ShowPresetTimerStopwatch,
+                ShowPresetShowDesktop = original.ShowPresetShowDesktop,
+                ShowPresetAppsFolder = original.ShowPresetAppsFolder,
+                ShowPresetCopilot = original.ShowPresetCopilot,
+                QuickNoteThemeId = original.QuickNoteThemeId,
+                QuickNotePinned = original.QuickNotePinned,
+                QuickNoteLeft = original.QuickNoteLeft,
+                QuickNoteTop = original.QuickNoteTop,
+                QuickNoteWidth = original.QuickNoteWidth,
+                QuickNoteHeight = original.QuickNoteHeight,
+                TimerSoundEnabled = original.TimerSoundEnabled,
+                TimerIsStopwatchMode = original.TimerIsStopwatchMode,
+                TimerDuration = original.TimerDuration,
+                Edge = original.Edge,
+                MonitorIndex = original.MonitorIndex,
+                ActivationZoneSizePercent = original.ActivationZoneSizePercent,
+                PanelSizePercent = original.PanelSizePercent,
+                ActivationDelayMs = original.ActivationDelayMs,
+                UiCulture = original.UiCulture,
+                ActiveContextId = original.ActiveContextId,
+                CheckForUpdatesEnabled = original.CheckForUpdatesEnabled,
+                ShowTaskbarPositionIndicator = original.ShowTaskbarPositionIndicator,
+                NextContextHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.NextContextHotkey.Ctrl,
+                    Alt = original.NextContextHotkey.Alt,
+                    Shift = original.NextContextHotkey.Shift,
+                    Win = original.NextContextHotkey.Win,
+                    Key = original.NextContextHotkey.Key
+                },
+                PreviousContextHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.PreviousContextHotkey.Ctrl,
+                    Alt = original.PreviousContextHotkey.Alt,
+                    Shift = original.PreviousContextHotkey.Shift,
+                    Win = original.PreviousContextHotkey.Win,
+                    Key = original.PreviousContextHotkey.Key
+                },
+                AddButtonHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.AddButtonHotkey.Ctrl,
+                    Alt = original.AddButtonHotkey.Alt,
+                    Shift = original.AddButtonHotkey.Shift,
+                    Win = original.AddButtonHotkey.Win,
+                    Key = original.AddButtonHotkey.Key
+                },
+                FileSorterHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.FileSorterHotkey.Ctrl,
+                    Alt = original.FileSorterHotkey.Alt,
+                    Shift = original.FileSorterHotkey.Shift,
+                    Win = original.FileSorterHotkey.Win,
+                    Key = original.FileSorterHotkey.Key
+                },
+                QuickNoteHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.QuickNoteHotkey.Ctrl,
+                    Alt = original.QuickNoteHotkey.Alt,
+                    Shift = original.QuickNoteHotkey.Shift,
+                    Win = original.QuickNoteHotkey.Win,
+                    Key = original.QuickNoteHotkey.Key
+                },
+                ColorPickerHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.ColorPickerHotkey.Ctrl,
+                    Alt = original.ColorPickerHotkey.Alt,
+                    Shift = original.ColorPickerHotkey.Shift,
+                    Win = original.ColorPickerHotkey.Win,
+                    Key = original.ColorPickerHotkey.Key
+                },
+                TimerStopwatchHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.TimerStopwatchHotkey.Ctrl,
+                    Alt = original.TimerStopwatchHotkey.Alt,
+                    Shift = original.TimerStopwatchHotkey.Shift,
+                    Win = original.TimerStopwatchHotkey.Win,
+                    Key = original.TimerStopwatchHotkey.Key
+                },
+                QRCodeGeneratorHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.QRCodeGeneratorHotkey.Ctrl,
+                    Alt = original.QRCodeGeneratorHotkey.Alt,
+                    Shift = original.QRCodeGeneratorHotkey.Shift,
+                    Win = original.QRCodeGeneratorHotkey.Win,
+                    Key = original.QRCodeGeneratorHotkey.Key
+                },
+                Contexts = original.Contexts?.Select(ctx => new PanelContext
+                {
+                    Id = ctx.Id,
+                    Name = ctx.Name,
+                    IsNameCustomized = ctx.IsNameCustomized,
+                    IconGlyph = ctx.IconGlyph,
+                    IsEnabled = ctx.IsEnabled,
+                    Color = ctx.Color
+                }).ToList() ?? [],
+                Elements = original.Elements?.Select(el => new CustomElement
+                {
+                    Id = el.Id,
+                    Name = el.Name,
+                    Icon = el.Icon,
+                    IconFont = el.IconFont,
+                    Color = el.Color,
+                    ActionType = el.ActionType,
+                    ActionValue = el.ActionValue,
+                    Browser = el.Browser,
+                    ChromeProfile = el.ChromeProfile,
+                    RotationProfilePaths = [.. (el.RotationProfilePaths ?? [])],
+                    IsAppMode = el.IsAppMode,
+                    IsIncognito = el.IsIncognito,
+                    UseRotation = el.UseRotation,
+                    OpenFullscreen = el.OpenFullscreen,
+                    IsTopmost = el.IsTopmost,
+                    LastUsedProfile = el.LastUsedProfile,
+                    Alt = el.Alt,
+                    Ctrl = el.Ctrl,
+                    Shift = el.Shift,
+                    Win = el.Win,
+                    Key = el.Key,
+                    ImagePath = el.ImagePath,
+                    ContextId = el.ContextId
+                }).ToList() ?? [],
+                UtilityButtonOrder = [.. (original.UtilityButtonOrder ?? [])]
+            };
+
+            if (original.LastFileSortOperation != null)
+            {
+                clone.LastFileSortOperation = new FileSortUndoState
+                {
+                    RootPath = original.LastFileSortOperation.RootPath,
+                    CompletedAtUtc = original.LastFileSortOperation.CompletedAtUtc,
+                    Entries = original.LastFileSortOperation.Entries?.Select(e => new FileSortOperationEntry
+                    {
+                        SourcePath = e.SourcePath,
+                        DestinationPath = e.DestinationPath
+                    }).ToList() ?? []
+                };
+            }
+
+            if (original.Sentry != null)
+            {
+                clone.Sentry = new SentrySettings
+                {
+                    Dsn = original.Sentry.Dsn,
+                    IsEnabled = original.Sentry.IsEnabled,
+                    Environment = original.Sentry.Environment,
+                    TracesSampleRate = original.Sentry.TracesSampleRate,
+                    SendDefaultPii = original.Sentry.SendDefaultPii
+                };
+            }
+
+            return clone;
         }
 
         public async Task LoadAsync()
@@ -235,8 +402,10 @@ namespace AiteBar
                 AppSettings snapshot;
                 lock (_stateLock)
                 {
+                    // Update _appSettings with latest elements
                     _appSettings.Elements = [.. _elements];
-                    snapshot = _appSettings;
+                    // Create snapshot via deep clone INSIDE lock
+                    snapshot = CloneAppSettings(_appSettings);
                 }
 
                 string json = JsonSerializer.Serialize(snapshot, _jsonOptions);

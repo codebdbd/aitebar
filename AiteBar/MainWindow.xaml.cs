@@ -1344,6 +1344,18 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     public void RefreshPanel()
     {
+        // Cancel any ongoing drag-and-drop operation first
+        if (_isReordering)
+        {
+            if (_draggedButton != null && _draggedButton.IsMouseCaptured)
+            {
+                _draggedButton.ReleaseMouseCapture();
+            }
+            _draggedButton = null;
+            _isReordering = false;
+            _draggedOriginalIndex = -1;
+        }
+
         int panelVersion = unchecked(++_panelRefreshVersion);
         
         // Calculate a simple hash of current elements to detect changes

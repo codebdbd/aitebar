@@ -63,10 +63,10 @@ namespace AiteBar
 
         private void UpdateEntriesList()
         {
-            var searchText = TxtSearch?.Text.ToLower() ?? string.Empty;
+            var searchText = TxtSearch?.Text.ToLowerInvariant() ?? string.Empty;
             var filteredEntries = _historyService.Entries.Where(entry => 
-                entry.Text.ToLower().Contains(searchText) || 
-                (entry.IsImage && "image".Contains(searchText))).ToList();
+                entry.Text.ToLowerInvariant().Contains(searchText) || 
+                (entry.IsImage && "image".ToLowerInvariant().Contains(searchText))).ToList();
 
             EntriesPanel.Children.Clear();
 

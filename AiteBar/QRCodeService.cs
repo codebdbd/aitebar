@@ -75,6 +75,22 @@ public sealed class QRCodeService
             drawQuietZones: margin > 0);
     }
 
+    [System.Runtime.Versioning.SupportedOSPlatform("windows")]
+    public System.Windows.Media.DrawingImage RenderXaml(QRCodeData data, int pixelSize, string darkColor, string lightColor, int margin)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        ValidateRenderOptions(pixelSize, margin);
+
+        var renderer = new QRCoder.Xaml.XamlQRCode(data);
+        var image = renderer.GetGraphic(
+            pixelSize,
+            NormalizeColor(darkColor, "#000000"),
+            NormalizeColor(lightColor, "#FFFFFF"),
+            drawQuietZones: margin > 0);
+        image.Freeze();
+        return image;
+    }
+
     public static int GetVersion(QRCodeData data)
     {
         ArgumentNullException.ThrowIfNull(data);
