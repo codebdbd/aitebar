@@ -531,6 +531,15 @@ Open the GitHub release page?</value></data>
   <data name="ClipboardManager_Cleared" xml:space="preserve"><value>Clipboard history cleared</value></data>
   <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>Clipboard history is empty. Copy something to start!</value></data>
   <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} items in clipboard history</value></data>
+  <data name="QRCodeGenerator_ColorCode" xml:space="preserve"><value>QR code</value></data>
+  <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Logo (optional)</value></data>
+  <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Shape</value></data>
+  <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Quality &amp; size</value></data>
+  <data name="QRCodeGenerator_PresetScreenDetailed" xml:space="preserve"><value>Optimized for screen display</value></data>
+  <data name="QRCodeGenerator_CreateQr" xml:space="preserve"><value>Generate QR code</value></data>
+  <data name="QRCodeGenerator_Png800Subtext" xml:space="preserve"><value>Save as PNG image</value></data>
+  <data name="QRCodeGenerator_VectorSubtext" xml:space="preserve"><value>Save as SVG vector</value></data>
+  <data name="QRCodeGenerator_ClipboardSubtext" xml:space="preserve"><value>Copy to clipboard</value></data>
 </root>
 
 

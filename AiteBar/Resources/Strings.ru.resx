@@ -997,6 +997,15 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ClipboardManager_Cleared" xml:space="preserve"><value>История буфера обмена очищена</value></data>
   <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>История буфера обмена пуста. Скопируйте что-нибудь, чтобы начать!</value></data>
   <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} элементов в истории буфера обмена</value></data>
+  <data name="QRCodeGenerator_ColorCode" xml:space="preserve"><value>QR-код</value></data>
+  <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Логотип (необязательно)</value></data>
+  <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Форма</value></data>
+  <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Качество и размер</value></data>
+  <data name="QRCodeGenerator_PresetScreenDetailed" xml:space="preserve"><value>Оптимизировано для экрана</value></data>
+  <data name="QRCodeGenerator_CreateQr" xml:space="preserve"><value>Создать QR-код</value></data>
+  <data name="QRCodeGenerator_Png800Subtext" xml:space="preserve"><value>Сохранить как изображение PNG</value></data>
+  <data name="QRCodeGenerator_VectorSubtext" xml:space="preserve"><value>Сохранить как вектор SVG</value></data>
+  <data name="QRCodeGenerator_ClipboardSubtext" xml:space="preserve"><value>Копировать в буфер обмена</value></data>
 </root>
 
 

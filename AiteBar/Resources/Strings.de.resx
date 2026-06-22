@@ -472,7 +472,17 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="QRCodeGenerator_Output800" xml:space="preserve"><value>800 px</value></data>
   <data name="QRCodeGenerator_Output1000" xml:space="preserve"><value>1000 px</value></data>
   <data name="QRCodeGenerator_Output1200" xml:space="preserve"><value>1200 px</value></data>
-  <data name="QRCodeGenerator_Output1600" xml:space="preserve"><value>1600 px</value></data></root>
+  <data name="QRCodeGenerator_Output1600" xml:space="preserve"><value>1600 px</value></data>
+  <data name="QRCodeGenerator_ColorCode" xml:space="preserve"><value>QR-Code</value></data>
+  <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Logo (optional)</value></data>
+  <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Form</value></data>
+  <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Qualität &amp; Größe</value></data>
+  <data name="QRCodeGenerator_PresetScreenDetailed" xml:space="preserve"><value>Optimiert für Bildschirm</value></data>
+  <data name="QRCodeGenerator_CreateQr" xml:space="preserve"><value>QR-Code generieren</value></data>
+  <data name="QRCodeGenerator_Png800Subtext" xml:space="preserve"><value>Als PNG-Bild speichern</value></data>
+  <data name="QRCodeGenerator_VectorSubtext" xml:space="preserve"><value>Als SVG-Vektor speichern</value></data>
+  <data name="QRCodeGenerator_ClipboardSubtext" xml:space="preserve"><value>In Zwischenablage kopieren</value></data>
+</root>
 
 
 
