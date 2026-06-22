@@ -195,15 +195,15 @@
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <CheckBox x:Name="Chk16" Content="16" IsChecked="True" Margin="0,0,8,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk20" Content="20" IsChecked="True" Grid.Column="1" Margin="0,0,8,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk24" Content="24" IsChecked="True" Grid.Column="2" Margin="0,0,0,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk32" Content="32" IsChecked="True" Grid.Row="1" Margin="0,0,8,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk40" Content="40" IsChecked="True" Grid.Row="1" Grid.Column="1" Margin="0,0,8,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk48" Content="48" IsChecked="True" Grid.Row="1" Grid.Column="2" Margin="0,0,0,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk64" Content="64" IsChecked="True" Grid.Row="2" Margin="0,0,8,0" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk128" Content="128" IsChecked="True" Grid.Row="2" Grid.Column="1" Margin="0,0,8,0" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk256" Content="256" IsChecked="True" Grid.Row="2" Grid.Column="2" Margin="0,0,0,0" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk16" Content="16" IsChecked="True" Margin="0,0,8,8" VerticalAlignment="Center" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk20" Content="20" IsChecked="True" Grid.Column="1" Margin="0,0,8,8" VerticalAlignment="Center" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk24" Content="24" IsChecked="True" Grid.Column="2" Margin="0,0,0,8" VerticalAlignment="Center" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk32" Content="32" IsChecked="True" Grid.Row="1" Margin="0,0,8,8" VerticalAlignment="Center" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk40" Content="40" IsChecked="True" Grid.Row="1" Grid.Column="1" Margin="0,0,8,8" VerticalAlignment="Center" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk48" Content="48" IsChecked="True" Grid.Row="1" Grid.Column="2" Margin="0,0,0,8" VerticalAlignment="Center" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk64" Content="64" IsChecked="True" Grid.Row="2" Margin="0,0,8,0" VerticalAlignment="Center" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk128" Content="128" IsChecked="True" Grid.Row="2" Grid.Column="1" Margin="0,0,8,0" VerticalAlignment="Center" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk256" Content="256" IsChecked="True" Grid.Row="2" Grid.Column="2" Margin="0,0,0,0" VerticalAlignment="Center" Click="Options_Changed"/>
                     </Grid>
                 </Grid>
             </Border>
