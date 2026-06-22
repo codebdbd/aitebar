@@ -250,30 +250,7 @@ public partial class IconConverterWindow : DarkWindow
         TxtBackgroundColor.IsEnabled = RbSolid.IsChecked == true;
     }
 
-    private async void BtnPracticalPreset_Click(object sender, RoutedEventArgs e)
-    {
-        SetSizeChecks(new HashSet<int>(IconConversionOptions.DefaultSizes));
-        await QueuePreviewRefreshAsync(debounce: false);
-    }
 
-    private async void BtnWindowsPreset_Click(object sender, RoutedEventArgs e)
-    {
-        SetSizeChecks(new HashSet<int>(IconConversionOptions.WindowsDpiSizes));
-        await QueuePreviewRefreshAsync(debounce: false);
-    }
-
-    private void SetSizeChecks(IReadOnlySet<int> sizes)
-    {
-        Chk16.IsChecked = sizes.Contains(16);
-        Chk20.IsChecked = sizes.Contains(20);
-        Chk24.IsChecked = sizes.Contains(24);
-        Chk32.IsChecked = sizes.Contains(32);
-        Chk40.IsChecked = sizes.Contains(40);
-        Chk48.IsChecked = sizes.Contains(48);
-        Chk64.IsChecked = sizes.Contains(64);
-        Chk128.IsChecked = sizes.Contains(128);
-        Chk256.IsChecked = sizes.Contains(256);
-    }
 
     private async void BtnSave_Click(object sender, RoutedEventArgs e)
     {

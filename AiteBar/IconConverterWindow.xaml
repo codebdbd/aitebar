@@ -182,25 +182,20 @@
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <TextBlock Text="{local:Loc ResourceKey=IconConverter_Sizes}" Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,8"/>
-                    <WrapPanel Grid.Row="1">
+                    <UniformGrid Grid.Row="1" Columns="3" Rows="3">
                         <CheckBox x:Name="Chk16" Content="16" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk20" Content="20" Margin="0,0,10,8" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk20" Content="20" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
                         <CheckBox x:Name="Chk24" Content="24" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
                         <CheckBox x:Name="Chk32" Content="32" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk40" Content="40" Margin="0,0,10,8" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk40" Content="40" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
                         <CheckBox x:Name="Chk48" Content="48" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
                         <CheckBox x:Name="Chk64" Content="64" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
                         <CheckBox x:Name="Chk128" Content="128" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
                         <CheckBox x:Name="Chk256" Content="256" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                    </WrapPanel>
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
-                        <Button Content="{local:Loc ResourceKey=IconConverter_PracticalPreset}" MinWidth="92" Style="{StaticResource CommandButtonStyle}" Margin="0,0,8,0" Click="BtnPracticalPreset_Click"/>
-                        <Button Content="{local:Loc ResourceKey=IconConverter_WindowsPreset}" MinWidth="104" Style="{StaticResource CommandButtonStyle}" Click="BtnWindowsPreset_Click"/>
-                    </StackPanel>
+                    </UniformGrid>
                 </Grid>
             </Border>
 
