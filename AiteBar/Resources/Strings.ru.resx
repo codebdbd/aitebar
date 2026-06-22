@@ -916,6 +916,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_InputLabel" xml:space="preserve"><value>Текст или URL</value></data>
   <data name="QRCodeGenerator_InputPlaceholder" xml:space="preserve"><value>Введите текст или URL...</value></data>
   <data name="QRCodeGenerator_EmptyHint" xml:space="preserve"><value>Введите текст, чтобы создать QR-код</value></data>
+  <data name="QRCodeGenerator_Preview" xml:space="preserve"><value>Предпросмотр</value></data>
+  <data name="QRCodeGenerator_Options" xml:space="preserve"><value>Параметры</value></data>
   <data name="QRCodeGenerator_EccLevel" xml:space="preserve"><value>Коррекция ошибок</value></data>
   <data name="QRCodeGenerator_EccLevelL" xml:space="preserve"><value>L - 7%</value></data>
   <data name="QRCodeGenerator_EccLevelM" xml:space="preserve"><value>M - 15%</value></data>
@@ -934,8 +936,51 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_SaveSvgTitle" xml:space="preserve"><value>Сохранить QR-код как SVG</value></data>
   <data name="QRCodeGenerator_SaveSuccess" xml:space="preserve"><value>QR-код успешно сохранен</value></data>
   <data name="QRCodeGenerator_SaveFailed" xml:space="preserve"><value>Не удалось сохранить: {0}</value></data>
-  <data name="Utility_Unavailable" xml:space="preserve"><value>Утилита {0} временно недоступна.</value></data>
-  <data name="Tool_ShowDesktop" xml:space="preserve"><value>Рабочий стол</value></data>
+  <data name="QRCodeGenerator_Content" xml:space="preserve"><value>Содержимое</value></data>
+  <data name="QRCodeGenerator_Appearance" xml:space="preserve"><value>Внешний вид</value></data>
+  <data name="QRCodeGenerator_Type" xml:space="preserve"><value>Тип</value></data>
+  <data name="QRCodeGenerator_TypeText" xml:space="preserve"><value>Текст</value></data>
+  <data name="QRCodeGenerator_TypeUrl" xml:space="preserve"><value>URL</value></data>
+  <data name="QRCodeGenerator_TypeWifi" xml:space="preserve"><value>Wi-Fi</value></data>
+  <data name="QRCodeGenerator_WifiSsidPlaceholder" xml:space="preserve"><value>Имя сети</value></data>
+  <data name="QRCodeGenerator_WifiPasswordPlaceholder" xml:space="preserve"><value>Пароль</value></data>
+  <data name="QRCodeGenerator_WifiHidden" xml:space="preserve"><value>Скрытая сеть</value></data>
+  <data name="QRCodeGenerator_Quality" xml:space="preserve"><value>Качество</value></data>
+  <data name="QRCodeGenerator_PresetScreen" xml:space="preserve"><value>Экран</value></data>
+  <data name="QRCodeGenerator_PresetPrint" xml:space="preserve"><value>Печать</value></data>
+  <data name="QRCodeGenerator_PresetLogo" xml:space="preserve"><value>С логотипом</value></data>
+  <data name="QRCodeGenerator_OutputSize" xml:space="preserve"><value>Размер PNG</value></data>
+  <data name="QRCodeGenerator_Colors" xml:space="preserve"><value>Цвета</value></data>
+  <data name="QRCodeGenerator_ColorQr" xml:space="preserve"><value>QR</value></data>
+  <data name="QRCodeGenerator_ColorBackground" xml:space="preserve"><value>Фон</value></data>
+  <data name="QRCodeGenerator_Modules" xml:space="preserve"><value>Модули</value></data>
+  <data name="QRCodeGenerator_Eyes" xml:space="preserve"><value>Глазки</value></data>  <data name="QRCodeGenerator_Branding" xml:space="preserve"><value>Логотип</value></data>
+  <data name="QRCodeGenerator_ChooseLogo" xml:space="preserve"><value>Выбрать</value></data>
+  <data name="QRCodeGenerator_ClearLogo" xml:space="preserve"><value>Очистить логотип</value></data>
+  <data name="QRCodeGenerator_Style" xml:space="preserve"><value>Стиль</value></data>
+  <data name="QRCodeGenerator_ModuleSquare" xml:space="preserve"><value>Квадрат</value></data>
+  <data name="QRCodeGenerator_ModuleRounded" xml:space="preserve"><value>Скругл.</value></data>
+  <data name="QRCodeGenerator_ModuleCircle" xml:space="preserve"><value>Круг</value></data>
+  <data name="QRCodeGenerator_EyeSquare" xml:space="preserve"><value>Глаз: квадрат</value></data>
+  <data name="QRCodeGenerator_EyeRounded" xml:space="preserve"><value>Глаз: скругл.</value></data>
+  <data name="QRCodeGenerator_CopySvg" xml:space="preserve"><value>Копировать SVG</value></data>
+  <data name="QRCodeGenerator_CopiedSvg" xml:space="preserve"><value>SVG скопирован в буфер обмена</value></data>
+  <data name="QRCodeGenerator_StatusDetailed" xml:space="preserve"><value>QR v{0}, {1} модулей, PNG {2}x{2} px</value></data>
+  <data name="QRCodeGenerator_ContrastStatus" xml:space="preserve"><value>Контраст: {0}:1</value></data>
+  <data name="QRCodeGenerator_WarningLowContrast" xml:space="preserve"><value>Низкий контраст ({0}:1), сканирование может быть ненадежным.</value></data>
+  <data name="QRCodeGenerator_WarningLogoRequiresHighEcc" xml:space="preserve"><value>Логотип использует высокую коррекцию ошибок.</value></data>
+  <data name="QRCodeGenerator_ErrorLogoNotFound" xml:space="preserve"><value>Файл логотипа не найден.</value></data>
+  <data name="QRCodeGenerator_ErrorInvalidLogo" xml:space="preserve"><value>Не удалось прочитать изображение логотипа.</value></data>
+  <data name="QRCodeGenerator_ChooseLogoTitle" xml:space="preserve"><value>Выбрать логотип</value></data>
+  <data name="QRCodeGenerator_LogoFilter" xml:space="preserve"><value>Изображения|*.png;*.jpg;*.jpeg;*.webp;*.bmp|Все файлы|*.*</value></data>  <data name="Utility_Unavailable" xml:space="preserve"><value>Утилита {0} временно недоступна.</value></data>
+  <data name="QRCodeGenerator_WifiSecurityWpa" xml:space="preserve"><value>WPA</value></data>
+  <data name="QRCodeGenerator_WifiSecurityWep" xml:space="preserve"><value>WEP</value></data>
+  <data name="QRCodeGenerator_WifiSecurityNone" xml:space="preserve"><value>Без пароля</value></data>
+  <data name="QRCodeGenerator_Output512" xml:space="preserve"><value>512 px</value></data>
+  <data name="QRCodeGenerator_Output800" xml:space="preserve"><value>800 px</value></data>
+  <data name="QRCodeGenerator_Output1000" xml:space="preserve"><value>1000 px</value></data>
+  <data name="QRCodeGenerator_Output1200" xml:space="preserve"><value>1200 px</value></data>
+  <data name="QRCodeGenerator_Output1600" xml:space="preserve"><value>1600 px</value></data>  <data name="Tool_ShowDesktop" xml:space="preserve"><value>Рабочий стол</value></data>
   <data name="Main_ShowDesktopTooltip" xml:space="preserve"><value>Показать рабочий стол</value></data>
   <data name="Tool_AppsFolder" xml:space="preserve"><value>Все приложения</value></data>
   <data name="Main_AppsFolderTooltip" xml:space="preserve"><value>Открыть папку «Все приложения»</value></data>
@@ -953,3 +998,9 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>История буфера обмена пуста. Скопируйте что-нибудь, чтобы начать!</value></data>
   <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} элементов в истории буфера обмена</value></data>
 </root>
+
+
+
+
+
+

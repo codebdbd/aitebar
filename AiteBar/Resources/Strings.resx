@@ -450,6 +450,8 @@ Open the GitHub release page?</value></data>
   <data name="QRCodeGenerator_InputLabel" xml:space="preserve"><value>Text or URL</value></data>
   <data name="QRCodeGenerator_InputPlaceholder" xml:space="preserve"><value>Enter text or URL...</value></data>
   <data name="QRCodeGenerator_EmptyHint" xml:space="preserve"><value>Type something to generate a QR code</value></data>
+  <data name="QRCodeGenerator_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="QRCodeGenerator_Options" xml:space="preserve"><value>Options</value></data>
   <data name="QRCodeGenerator_EccLevel" xml:space="preserve"><value>Error correction</value></data>
   <data name="QRCodeGenerator_EccLevelL" xml:space="preserve"><value>L - 7%</value></data>
   <data name="QRCodeGenerator_EccLevelM" xml:space="preserve"><value>M - 15%</value></data>
@@ -468,8 +470,51 @@ Open the GitHub release page?</value></data>
   <data name="QRCodeGenerator_SaveSvgTitle" xml:space="preserve"><value>Save QR code as SVG</value></data>
   <data name="QRCodeGenerator_SaveSuccess" xml:space="preserve"><value>QR code saved successfully</value></data>
   <data name="QRCodeGenerator_SaveFailed" xml:space="preserve"><value>Failed to save: {0}</value></data>
-  <data name="Utility_Unavailable" xml:space="preserve"><value>Utility {0} is temporarily unavailable.</value></data>
-  <data name="Tool_ShowDesktop" xml:space="preserve"><value>Show desktop</value></data>
+  <data name="QRCodeGenerator_Content" xml:space="preserve"><value>Content</value></data>
+  <data name="QRCodeGenerator_Appearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="QRCodeGenerator_Type" xml:space="preserve"><value>Type</value></data>
+  <data name="QRCodeGenerator_TypeText" xml:space="preserve"><value>Text</value></data>
+  <data name="QRCodeGenerator_TypeUrl" xml:space="preserve"><value>URL</value></data>
+  <data name="QRCodeGenerator_TypeWifi" xml:space="preserve"><value>Wi-Fi</value></data>
+  <data name="QRCodeGenerator_WifiSsidPlaceholder" xml:space="preserve"><value>Network name</value></data>
+  <data name="QRCodeGenerator_WifiPasswordPlaceholder" xml:space="preserve"><value>Password</value></data>
+  <data name="QRCodeGenerator_WifiHidden" xml:space="preserve"><value>Hidden network</value></data>
+  <data name="QRCodeGenerator_Quality" xml:space="preserve"><value>Quality</value></data>
+  <data name="QRCodeGenerator_PresetScreen" xml:space="preserve"><value>Screen</value></data>
+  <data name="QRCodeGenerator_PresetPrint" xml:space="preserve"><value>Print</value></data>
+  <data name="QRCodeGenerator_PresetLogo" xml:space="preserve"><value>With logo</value></data>
+  <data name="QRCodeGenerator_OutputSize" xml:space="preserve"><value>PNG size</value></data>
+  <data name="QRCodeGenerator_Colors" xml:space="preserve"><value>Colors</value></data>
+  <data name="QRCodeGenerator_ColorQr" xml:space="preserve"><value>QR</value></data>
+  <data name="QRCodeGenerator_ColorBackground" xml:space="preserve"><value>Background</value></data>
+  <data name="QRCodeGenerator_Modules" xml:space="preserve"><value>Modules</value></data>
+  <data name="QRCodeGenerator_Eyes" xml:space="preserve"><value>Eyes</value></data>  <data name="QRCodeGenerator_Branding" xml:space="preserve"><value>Logo</value></data>
+  <data name="QRCodeGenerator_ChooseLogo" xml:space="preserve"><value>Choose</value></data>
+  <data name="QRCodeGenerator_ClearLogo" xml:space="preserve"><value>Clear logo</value></data>
+  <data name="QRCodeGenerator_Style" xml:space="preserve"><value>Style</value></data>
+  <data name="QRCodeGenerator_ModuleSquare" xml:space="preserve"><value>Square</value></data>
+  <data name="QRCodeGenerator_ModuleRounded" xml:space="preserve"><value>Rounded</value></data>
+  <data name="QRCodeGenerator_ModuleCircle" xml:space="preserve"><value>Circle</value></data>
+  <data name="QRCodeGenerator_EyeSquare" xml:space="preserve"><value>Eye: square</value></data>
+  <data name="QRCodeGenerator_EyeRounded" xml:space="preserve"><value>Eye: rounded</value></data>
+  <data name="QRCodeGenerator_CopySvg" xml:space="preserve"><value>Copy SVG</value></data>
+  <data name="QRCodeGenerator_CopiedSvg" xml:space="preserve"><value>SVG copied to clipboard</value></data>
+  <data name="QRCodeGenerator_StatusDetailed" xml:space="preserve"><value>QR v{0}, {1} modules, PNG {2}x{2} px</value></data>
+  <data name="QRCodeGenerator_ContrastStatus" xml:space="preserve"><value>Contrast: {0}:1</value></data>
+  <data name="QRCodeGenerator_WarningLowContrast" xml:space="preserve"><value>Low contrast ({0}:1), scanning may be unreliable.</value></data>
+  <data name="QRCodeGenerator_WarningLogoRequiresHighEcc" xml:space="preserve"><value>Logo uses high error correction.</value></data>
+  <data name="QRCodeGenerator_ErrorLogoNotFound" xml:space="preserve"><value>Logo file was not found.</value></data>
+  <data name="QRCodeGenerator_ErrorInvalidLogo" xml:space="preserve"><value>Logo image could not be read.</value></data>
+  <data name="QRCodeGenerator_ChooseLogoTitle" xml:space="preserve"><value>Choose logo</value></data>
+  <data name="QRCodeGenerator_LogoFilter" xml:space="preserve"><value>Images|*.png;*.jpg;*.jpeg;*.webp;*.bmp|All files|*.*</value></data>  <data name="Utility_Unavailable" xml:space="preserve"><value>Utility {0} is temporarily unavailable.</value></data>
+  <data name="QRCodeGenerator_WifiSecurityWpa" xml:space="preserve"><value>WPA</value></data>
+  <data name="QRCodeGenerator_WifiSecurityWep" xml:space="preserve"><value>WEP</value></data>
+  <data name="QRCodeGenerator_WifiSecurityNone" xml:space="preserve"><value>None</value></data>
+  <data name="QRCodeGenerator_Output512" xml:space="preserve"><value>512 px</value></data>
+  <data name="QRCodeGenerator_Output800" xml:space="preserve"><value>800 px</value></data>
+  <data name="QRCodeGenerator_Output1000" xml:space="preserve"><value>1000 px</value></data>
+  <data name="QRCodeGenerator_Output1200" xml:space="preserve"><value>1200 px</value></data>
+  <data name="QRCodeGenerator_Output1600" xml:space="preserve"><value>1600 px</value></data>  <data name="Tool_ShowDesktop" xml:space="preserve"><value>Show desktop</value></data>
   <data name="Main_ShowDesktopTooltip" xml:space="preserve"><value>Show the desktop</value></data>
   <data name="Tool_AppsFolder" xml:space="preserve"><value>All apps</value></data>
   <data name="Main_AppsFolderTooltip" xml:space="preserve"><value>Open the Apps folder</value></data>
@@ -487,3 +532,9 @@ Open the GitHub release page?</value></data>
   <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>Clipboard history is empty. Copy something to start!</value></data>
   <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} items in clipboard history</value></data>
 </root>
+
+
+
+
+
+

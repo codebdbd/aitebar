@@ -403,6 +403,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_InputLabel" xml:space="preserve"><value>Текст або URL</value></data>
   <data name="QRCodeGenerator_InputPlaceholder" xml:space="preserve"><value>Введіть текст або URL...</value></data>
   <data name="QRCodeGenerator_EmptyHint" xml:space="preserve"><value>Введіть текст, щоб створити QR-код</value></data>
+  <data name="QRCodeGenerator_Preview" xml:space="preserve"><value>Попередній перегляд</value></data>
+  <data name="QRCodeGenerator_Options" xml:space="preserve"><value>Параметри</value></data>
   <data name="QRCodeGenerator_EccLevel" xml:space="preserve"><value>Корекція помилок</value></data>
   <data name="QRCodeGenerator_EccLevelL" xml:space="preserve"><value>L - 7%</value></data>
   <data name="QRCodeGenerator_EccLevelM" xml:space="preserve"><value>M - 15%</value></data>
@@ -421,5 +423,54 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_SaveSvgTitle" xml:space="preserve"><value>Зберегти QR-код як SVG</value></data>
   <data name="QRCodeGenerator_SaveSuccess" xml:space="preserve"><value>QR-код успішно збережено</value></data>
   <data name="QRCodeGenerator_SaveFailed" xml:space="preserve"><value>Не вдалося зберегти: {0}</value></data>
-  <data name="Utility_Unavailable" xml:space="preserve"><value>Утиліта {0} тимчасово недоступна.</value></data>
-</root>
+  <data name="QRCodeGenerator_Content" xml:space="preserve"><value>Вміст</value></data>
+  <data name="QRCodeGenerator_Appearance" xml:space="preserve"><value>Зовнішній вигляд</value></data>
+  <data name="QRCodeGenerator_Type" xml:space="preserve"><value>Тип</value></data>
+  <data name="QRCodeGenerator_TypeText" xml:space="preserve"><value>Текст</value></data>
+  <data name="QRCodeGenerator_TypeUrl" xml:space="preserve"><value>URL</value></data>
+  <data name="QRCodeGenerator_TypeWifi" xml:space="preserve"><value>Wi-Fi</value></data>
+  <data name="QRCodeGenerator_WifiSsidPlaceholder" xml:space="preserve"><value>Назва мережі</value></data>
+  <data name="QRCodeGenerator_WifiPasswordPlaceholder" xml:space="preserve"><value>Пароль</value></data>
+  <data name="QRCodeGenerator_WifiHidden" xml:space="preserve"><value>Прихована мережа</value></data>
+  <data name="QRCodeGenerator_Quality" xml:space="preserve"><value>Якість</value></data>
+  <data name="QRCodeGenerator_PresetScreen" xml:space="preserve"><value>Екран</value></data>
+  <data name="QRCodeGenerator_PresetPrint" xml:space="preserve"><value>Друк</value></data>
+  <data name="QRCodeGenerator_PresetLogo" xml:space="preserve"><value>З логотипом</value></data>
+  <data name="QRCodeGenerator_OutputSize" xml:space="preserve"><value>Розмір PNG</value></data>
+  <data name="QRCodeGenerator_Colors" xml:space="preserve"><value>Кольори</value></data>
+  <data name="QRCodeGenerator_ColorQr" xml:space="preserve"><value>QR</value></data>
+  <data name="QRCodeGenerator_ColorBackground" xml:space="preserve"><value>Фон</value></data>
+  <data name="QRCodeGenerator_Modules" xml:space="preserve"><value>Модулі</value></data>
+  <data name="QRCodeGenerator_Eyes" xml:space="preserve"><value>Очі</value></data>  <data name="QRCodeGenerator_Branding" xml:space="preserve"><value>Логотип</value></data>
+  <data name="QRCodeGenerator_ChooseLogo" xml:space="preserve"><value>Обрати</value></data>
+  <data name="QRCodeGenerator_ClearLogo" xml:space="preserve"><value>Очистити логотип</value></data>
+  <data name="QRCodeGenerator_Style" xml:space="preserve"><value>Стиль</value></data>
+  <data name="QRCodeGenerator_ModuleSquare" xml:space="preserve"><value>Квадрат</value></data>
+  <data name="QRCodeGenerator_ModuleRounded" xml:space="preserve"><value>Скругл.</value></data>
+  <data name="QRCodeGenerator_ModuleCircle" xml:space="preserve"><value>Коло</value></data>
+  <data name="QRCodeGenerator_EyeSquare" xml:space="preserve"><value>Око: квадрат</value></data>
+  <data name="QRCodeGenerator_EyeRounded" xml:space="preserve"><value>Око: скругл.</value></data>
+  <data name="QRCodeGenerator_CopySvg" xml:space="preserve"><value>Копіювати SVG</value></data>
+  <data name="QRCodeGenerator_CopiedSvg" xml:space="preserve"><value>SVG скопійовано в буфер обміну</value></data>
+  <data name="QRCodeGenerator_StatusDetailed" xml:space="preserve"><value>QR v{0}, {1} модулів, PNG {2}x{2} px</value></data>
+  <data name="QRCodeGenerator_ContrastStatus" xml:space="preserve"><value>Контраст: {0}:1</value></data>
+  <data name="QRCodeGenerator_WarningLowContrast" xml:space="preserve"><value>Низький контраст ({0}:1), сканування може бути ненадійним.</value></data>
+  <data name="QRCodeGenerator_WarningLogoRequiresHighEcc" xml:space="preserve"><value>Логотип використовує високу корекцію помилок.</value></data>
+  <data name="QRCodeGenerator_ErrorLogoNotFound" xml:space="preserve"><value>Файл логотипа не знайдено.</value></data>
+  <data name="QRCodeGenerator_ErrorInvalidLogo" xml:space="preserve"><value>Не вдалося прочитати зображення логотипа.</value></data>
+  <data name="QRCodeGenerator_ChooseLogoTitle" xml:space="preserve"><value>Обрати логотип</value></data>
+  <data name="QRCodeGenerator_LogoFilter" xml:space="preserve"><value>Зображення|*.png;*.jpg;*.jpeg;*.webp;*.bmp|Усі файли|*.*</value></data>  <data name="Utility_Unavailable" xml:space="preserve"><value>Утиліта {0} тимчасово недоступна.</value></data>
+  <data name="QRCodeGenerator_WifiSecurityWpa" xml:space="preserve"><value>WPA</value></data>
+  <data name="QRCodeGenerator_WifiSecurityWep" xml:space="preserve"><value>WEP</value></data>
+  <data name="QRCodeGenerator_WifiSecurityNone" xml:space="preserve"><value>Без пароля</value></data>
+  <data name="QRCodeGenerator_Output512" xml:space="preserve"><value>512 px</value></data>
+  <data name="QRCodeGenerator_Output800" xml:space="preserve"><value>800 px</value></data>
+  <data name="QRCodeGenerator_Output1000" xml:space="preserve"><value>1000 px</value></data>
+  <data name="QRCodeGenerator_Output1200" xml:space="preserve"><value>1200 px</value></data>
+  <data name="QRCodeGenerator_Output1600" xml:space="preserve"><value>1600 px</value></data></root>
+
+
+
+
+
+

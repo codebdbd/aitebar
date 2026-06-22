@@ -408,6 +408,8 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="QRCodeGenerator_InputLabel" xml:space="preserve"><value>Text oder URL</value></data>
   <data name="QRCodeGenerator_InputPlaceholder" xml:space="preserve"><value>Text oder URL eingeben...</value></data>
   <data name="QRCodeGenerator_EmptyHint" xml:space="preserve"><value>Text eingeben, um einen QR-Code zu erzeugen</value></data>
+  <data name="QRCodeGenerator_Preview" xml:space="preserve"><value>Vorschau</value></data>
+  <data name="QRCodeGenerator_Options" xml:space="preserve"><value>Optionen</value></data>
   <data name="QRCodeGenerator_EccLevel" xml:space="preserve"><value>Fehlerkorrektur</value></data>
   <data name="QRCodeGenerator_EccLevelL" xml:space="preserve"><value>L - 7%</value></data>
   <data name="QRCodeGenerator_EccLevelM" xml:space="preserve"><value>M - 15%</value></data>
@@ -426,5 +428,54 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="QRCodeGenerator_SaveSvgTitle" xml:space="preserve"><value>QR-Code als SVG speichern</value></data>
   <data name="QRCodeGenerator_SaveSuccess" xml:space="preserve"><value>QR-Code erfolgreich gespeichert</value></data>
   <data name="QRCodeGenerator_SaveFailed" xml:space="preserve"><value>Speichern fehlgeschlagen: {0}</value></data>
-  <data name="Utility_Unavailable" xml:space="preserve"><value>Dienstprogramm {0} ist vorübergehend nicht verfügbar.</value></data>
-</root>
+  <data name="QRCodeGenerator_Content" xml:space="preserve"><value>Inhalt</value></data>
+  <data name="QRCodeGenerator_Appearance" xml:space="preserve"><value>Darstellung</value></data>
+  <data name="QRCodeGenerator_Type" xml:space="preserve"><value>Typ</value></data>
+  <data name="QRCodeGenerator_TypeText" xml:space="preserve"><value>Text</value></data>
+  <data name="QRCodeGenerator_TypeUrl" xml:space="preserve"><value>URL</value></data>
+  <data name="QRCodeGenerator_TypeWifi" xml:space="preserve"><value>Wi-Fi</value></data>
+  <data name="QRCodeGenerator_WifiSsidPlaceholder" xml:space="preserve"><value>Netzwerkname</value></data>
+  <data name="QRCodeGenerator_WifiPasswordPlaceholder" xml:space="preserve"><value>Passwort</value></data>
+  <data name="QRCodeGenerator_WifiHidden" xml:space="preserve"><value>Verstecktes Netzwerk</value></data>
+  <data name="QRCodeGenerator_Quality" xml:space="preserve"><value>Qualität</value></data>
+  <data name="QRCodeGenerator_PresetScreen" xml:space="preserve"><value>Bildschirm</value></data>
+  <data name="QRCodeGenerator_PresetPrint" xml:space="preserve"><value>Druck</value></data>
+  <data name="QRCodeGenerator_PresetLogo" xml:space="preserve"><value>Mit Logo</value></data>
+  <data name="QRCodeGenerator_OutputSize" xml:space="preserve"><value>PNG-Größe</value></data>
+  <data name="QRCodeGenerator_Colors" xml:space="preserve"><value>Farben</value></data>
+  <data name="QRCodeGenerator_ColorQr" xml:space="preserve"><value>QR</value></data>
+  <data name="QRCodeGenerator_ColorBackground" xml:space="preserve"><value>Hintergrund</value></data>
+  <data name="QRCodeGenerator_Modules" xml:space="preserve"><value>Module</value></data>
+  <data name="QRCodeGenerator_Eyes" xml:space="preserve"><value>Augen</value></data>  <data name="QRCodeGenerator_Branding" xml:space="preserve"><value>Logo</value></data>
+  <data name="QRCodeGenerator_ChooseLogo" xml:space="preserve"><value>Wählen</value></data>
+  <data name="QRCodeGenerator_ClearLogo" xml:space="preserve"><value>Logo entfernen</value></data>
+  <data name="QRCodeGenerator_Style" xml:space="preserve"><value>Stil</value></data>
+  <data name="QRCodeGenerator_ModuleSquare" xml:space="preserve"><value>Quadrat</value></data>
+  <data name="QRCodeGenerator_ModuleRounded" xml:space="preserve"><value>Rund</value></data>
+  <data name="QRCodeGenerator_ModuleCircle" xml:space="preserve"><value>Kreis</value></data>
+  <data name="QRCodeGenerator_EyeSquare" xml:space="preserve"><value>Auge: quadrat</value></data>
+  <data name="QRCodeGenerator_EyeRounded" xml:space="preserve"><value>Auge: rund</value></data>
+  <data name="QRCodeGenerator_CopySvg" xml:space="preserve"><value>SVG kopieren</value></data>
+  <data name="QRCodeGenerator_CopiedSvg" xml:space="preserve"><value>SVG in die Zwischenablage kopiert</value></data>
+  <data name="QRCodeGenerator_StatusDetailed" xml:space="preserve"><value>QR v{0}, {1} Module, PNG {2}x{2} px</value></data>
+  <data name="QRCodeGenerator_ContrastStatus" xml:space="preserve"><value>Kontrast: {0}:1</value></data>
+  <data name="QRCodeGenerator_WarningLowContrast" xml:space="preserve"><value>Niedriger Kontrast ({0}:1), Scannen kann unzuverlässig sein.</value></data>
+  <data name="QRCodeGenerator_WarningLogoRequiresHighEcc" xml:space="preserve"><value>Logo nutzt hohe Fehlerkorrektur.</value></data>
+  <data name="QRCodeGenerator_ErrorLogoNotFound" xml:space="preserve"><value>Logo-Datei wurde nicht gefunden.</value></data>
+  <data name="QRCodeGenerator_ErrorInvalidLogo" xml:space="preserve"><value>Logo-Bild konnte nicht gelesen werden.</value></data>
+  <data name="QRCodeGenerator_ChooseLogoTitle" xml:space="preserve"><value>Logo wählen</value></data>
+  <data name="QRCodeGenerator_LogoFilter" xml:space="preserve"><value>Bilder|*.png;*.jpg;*.jpeg;*.webp;*.bmp|Alle Dateien|*.*</value></data>  <data name="Utility_Unavailable" xml:space="preserve"><value>Dienstprogramm {0} ist vorübergehend nicht verfügbar.</value></data>
+  <data name="QRCodeGenerator_WifiSecurityWpa" xml:space="preserve"><value>WPA</value></data>
+  <data name="QRCodeGenerator_WifiSecurityWep" xml:space="preserve"><value>WEP</value></data>
+  <data name="QRCodeGenerator_WifiSecurityNone" xml:space="preserve"><value>Ohne Passwort</value></data>
+  <data name="QRCodeGenerator_Output512" xml:space="preserve"><value>512 px</value></data>
+  <data name="QRCodeGenerator_Output800" xml:space="preserve"><value>800 px</value></data>
+  <data name="QRCodeGenerator_Output1000" xml:space="preserve"><value>1000 px</value></data>
+  <data name="QRCodeGenerator_Output1200" xml:space="preserve"><value>1200 px</value></data>
+  <data name="QRCodeGenerator_Output1600" xml:space="preserve"><value>1600 px</value></data></root>
+
+
+
+
+
+

@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
         Title="{local:Loc ResourceKey=QRCodeGenerator_Title}"
-        Width="540" Height="540" MinWidth="500" MinHeight="480"
+        Width="1030" MinWidth="1010" SizeToContent="Height"
         WindowStartupLocation="CenterScreen" Background="#1A1A1C" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize"
         ShowInTaskbar="False" Topmost="True"
@@ -18,160 +18,383 @@
 
             <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
                 <Setter Property="Foreground" Value="{StaticResource MutedText}"/>
-                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="FontSize" Value="12"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
                 <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+            </Style>
+
+            <Style x:Key="SectionTitleStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#E6EDF7"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <Style x:Key="IconTextStyle" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                <Setter Property="Foreground" Value="#D7E2F0"/>
+                <Setter Property="FontSize" Value="15"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Margin" Value="0,0,10,0"/>
+            </Style>
+
+            <Style x:Key="PanelBorderStyle" TargetType="Border">
+                <Setter Property="Background" Value="#141922"/>
+                <Setter Property="BorderBrush" Value="#263241"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="6"/>
+                <Setter Property="Padding" Value="14"/>
+            </Style>
+
+            <Style x:Key="InspectorSectionStyle" TargetType="Border">
+                <Setter Property="Background" Value="#121720"/>
+                <Setter Property="BorderBrush" Value="#263241"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="6"/>
+                <Setter Property="Padding" Value="16"/>
+                <Setter Property="Margin" Value="0,0,0,6"/>
+            </Style>
+
+            <Style x:Key="CompactComboStyle" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="MinWidth" Value="120"/>
+            </Style>
+
+            <Style x:Key="CompactTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource BaseTextBoxStyle}">
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="Padding" Value="9,0"/>
+            </Style>
+
+            <Style x:Key="MiniButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="Padding" Value="14,0"/>
+                <Setter Property="MinWidth" Value="88"/>
+            </Style>
+
+            <Style x:Key="IconSquareButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                <Setter Property="Width" Value="38"/>
+                <Setter Property="Height" Value="38"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                <Setter Property="FontSize" Value="17"/>
+            </Style>
+
+            <Style x:Key="FooterButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                <Setter Property="Height" Value="52"/>
+                <Setter Property="Padding" Value="18,0"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+            </Style>
+
+            <Style x:Key="FooterPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
+                <Setter Property="Height" Value="34"/>
+                <Setter Property="Padding" Value="16,0"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
             </Style>
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid Margin="16">
+    <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="*"/>
+            <RowDefinition Height="10"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_InputLabel}"
-                       Style="{StaticResource FieldLabelStyle}"
-                       Margin="0,0,0,6"/>
-            <Grid>
-                <TextBox x:Name="TxtInput"
-                         TextWrapping="NoWrap"
-                         VerticalScrollBarVisibility="Disabled"
-                         MaxLength="4296"
-                         Style="{StaticResource BaseTextBoxStyle}"
-                         TextChanged="TxtInput_TextChanged"/>
-                <TextBlock x:Name="TxtInputPlaceholder"
-                           Text="{local:Loc ResourceKey=QRCodeGenerator_InputPlaceholder}"
-                           Foreground="{StaticResource MutedText}"
-                           FontSize="12"
-                           Margin="8,0"
-                           IsHitTestVisible="False"
-                           VerticalAlignment="Center"/>
-            </Grid>
-        </StackPanel>
-
-        <Grid Grid.Row="1" Margin="0,10,0,0">
+        <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="12"/>
+                <ColumnDefinition Width="570"/>
+                <ColumnDefinition Width="10"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <StackPanel Grid.Column="0">
-                <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_EccLevel}"
-                           Style="{StaticResource FieldLabelStyle}"
-                           Margin="0,0,0,5"/>
-                <ComboBox x:Name="CmbEccLevel"
-                          SelectionChanged="Options_Changed"
-                          SelectedIndex="2">
-                    <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EccLevelL}" Tag="L"/>
-                    <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EccLevelM}" Tag="M"/>
-                    <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EccLevelQ}" Tag="Q"/>
-                    <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EccLevelH}" Tag="H"/>
-                </ComboBox>
-            </StackPanel>
+            <Border Grid.Column="0" Style="{StaticResource PanelBorderStyle}" Padding="18">
+                <Grid Height="520">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-            <Grid Grid.Column="2">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="20"/>
-                    <RowDefinition Height="32"/>
-                </Grid.RowDefinitions>
-                <Grid Grid.Row="0" Margin="0,0,0,5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_PixelSize}"
-                               Style="{StaticResource FieldLabelStyle}"
-                               Margin="0,0,8,0"/>
-                    <TextBlock x:Name="TxtPixelSize"
-                               Grid.Column="1"
-                               Text="20"
-                               Foreground="#D8DEE6"
-                               FontSize="11"
-                               MinWidth="24"
-                               TextAlignment="Right"
-                               VerticalAlignment="Center"/>
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <ComboBox x:Name="CmbOutputSize" Width="112" Style="{StaticResource CompactComboStyle}" SelectedIndex="1" SelectionChanged="Options_Changed">
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_Output512}" Tag="512"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_Output800}" Tag="800"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_Output1000}" Tag="1000"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_Output1200}" Tag="1200"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_Output1600}" Tag="1600"/>
+                            </ComboBox>
+                            <ComboBox x:Name="CmbQualityPreset" Width="118" Margin="8,0,0,0" Style="{StaticResource CompactComboStyle}" SelectedIndex="0" SelectionChanged="QualityPreset_Changed">
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetScreen}" Tag="Screen"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetPrint}" Tag="Print"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetLogo}" Tag="Logo"/>
+                            </ComboBox>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                            <Button Content="&#xE706;" Style="{StaticResource IconSquareButtonStyle}"/>
+                            <Button Content="&#xE8A9;" Style="{StaticResource IconSquareButtonStyle}" Margin="6,0,0,0"/>
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <Border x:Name="PreviewSurface" Width="344" Height="344" Background="White" CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Image x:Name="ImgPreview" Width="320" Height="320" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <Border x:Name="EmptyPreviewSurface" Width="344" Height="344" Background="#101318" BorderBrush="#273344" BorderThickness="1" CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock x:Name="TxtEmptyHint" Text="{local:Loc ResourceKey=QRCodeGenerator_EmptyHint}" Foreground="{StaticResource MutedText}" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" Width="210" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+
+                    <StackPanel Grid.Row="2" HorizontalAlignment="Center">
+                        <TextBlock x:Name="TxtStatus" Foreground="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap" TextAlignment="Center"/>
+                        <TextBlock x:Name="TxtContrast" Margin="0,4,0,0" Foreground="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap" TextAlignment="Center"/>
+                    </StackPanel>
                 </Grid>
-                <Slider x:Name="SldPixelSize"
-                        Grid.Row="1"
-                        Minimum="4"
-                        Maximum="32"
-                        Value="20"
-                        TickFrequency="1"
-                        IsSnapToTickEnabled="True"
-                        ValueChanged="Options_Changed"/>
-            </Grid>
+            </Border>
+
+            <StackPanel Grid.Column="2">
+                <Border Style="{StaticResource InspectorSectionStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="12"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE71B;" Style="{StaticResource IconTextStyle}"/>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Content}" Style="{StaticResource SectionTitleStyle}"/>
+                        </StackPanel>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="132"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Type}" Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox x:Name="CmbContentType" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectedIndex="1" SelectionChanged="ContentType_Changed">
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_TypeText}" Tag="Text"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_TypeUrl}" Tag="Url"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_TypeWifi}" Tag="Wifi"/>
+                            </ComboBox>
+                        </Grid>
+                        <Grid x:Name="InputTextPanel" Grid.Row="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="132"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_TypeUrl}" Style="{StaticResource FieldLabelStyle}"/>
+                            <Grid Grid.Column="1">
+                                <TextBox x:Name="TxtInput" TextWrapping="NoWrap" VerticalScrollBarVisibility="Disabled" MaxLength="4296" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                                <TextBlock x:Name="TxtInputPlaceholder" Text="{local:Loc ResourceKey=QRCodeGenerator_InputPlaceholder}" Foreground="{StaticResource MutedText}" FontSize="12" Margin="9,0,0,0" IsHitTestVisible="False" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Grid>
+                        <Grid x:Name="WifiPanel" Grid.Row="4" Visibility="Collapsed">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="8"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="8"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="132"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_WifiSsidPlaceholder}" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="TxtWifiSsid" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBlock Grid.Row="2" Text="{local:Loc ResourceKey=QRCodeGenerator_WifiPasswordPlaceholder}" Style="{StaticResource FieldLabelStyle}"/>
+                            <Grid Grid.Row="2" Grid.Column="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="118"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TxtWifiPassword" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                                <ComboBox x:Name="CmbWifiSecurity" Grid.Column="2" Style="{StaticResource CompactComboStyle}" SelectedIndex="0" SelectionChanged="Options_Changed">
+                                    <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_WifiSecurityWpa}" Tag="Wpa"/>
+                                    <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_WifiSecurityWep}" Tag="Wep"/>
+                                    <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_WifiSecurityNone}" Tag="None"/>
+                                </ComboBox>
+                            </Grid>
+                            <CheckBox x:Name="ChkWifiHidden" Grid.Row="4" Grid.Column="1" Content="{local:Loc ResourceKey=QRCodeGenerator_WifiHidden}" Checked="Options_Changed" Unchecked="Options_Changed"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource InspectorSectionStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="12"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE790;" Style="{StaticResource IconTextStyle}"/>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Appearance}" Style="{StaticResource SectionTitleStyle}"/>
+                        </StackPanel>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="132"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_ColorCode}" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="TxtDarkColor" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                        </Grid>
+                        <Grid Grid.Row="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="132"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_ColorBackground}" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="TxtLightColor" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                        </Grid>
+                        <Grid Grid.Row="6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="132"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="92"/>
+                                <ColumnDefinition Width="8"/>
+                                <ColumnDefinition Width="92"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_LogoOptional}" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBox x:Name="TxtLogoPath" Grid.Column="1" IsReadOnly="True" Style="{StaticResource CompactTextBoxStyle}"/>
+                            <Button Grid.Column="3" Content="{local:Loc ResourceKey=QRCodeGenerator_ChooseLogo}" Style="{StaticResource MiniButtonStyle}" Click="BtnChooseLogo_Click"/>
+                            <Button x:Name="BtnClearLogo" Grid.Column="5" Content="{local:Loc ResourceKey=QRCodeGenerator_DeleteLogo}" Style="{StaticResource MiniButtonStyle}" Click="BtnClearLogo_Click"/>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource InspectorSectionStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="12"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE8A9;" Style="{StaticResource IconTextStyle}"/>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Style}" Style="{StaticResource SectionTitleStyle}"/>
+                        </StackPanel>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="132"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Shape}" Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox x:Name="CmbModuleShape" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectedIndex="0" SelectionChanged="Options_Changed">
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleSquare}" Tag="Square"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleRounded}" Tag="Rounded"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleCircle}" Tag="Circle"/>
+                            </ComboBox>
+                        </Grid>
+                        <Grid Grid.Row="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="132"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Eyes}" Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox x:Name="CmbEyeStyle" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectedIndex="0" SelectionChanged="Options_Changed">
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EyeSquare}" Tag="Square"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EyeRounded}" Tag="Rounded"/>
+                            </ComboBox>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource InspectorSectionStyle}" Margin="0">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="12"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="12"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#xE9D9;" Style="{StaticResource IconTextStyle}"/>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_QualityAndSize}" Style="{StaticResource SectionTitleStyle}"/>
+                        </StackPanel>
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="132"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Quality}" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBlock Grid.Column="1" Text="{local:Loc ResourceKey=QRCodeGenerator_PresetScreenDetailed}" Foreground="#D8DEE6" FontSize="12" VerticalAlignment="Center"/>
+                        </Grid>
+                        <Grid Grid.Row="4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="132"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_OutputSize}" Style="{StaticResource FieldLabelStyle}"/>
+                            <TextBlock Grid.Column="1" Text="{local:Loc ResourceKey=QRCodeGenerator_Output800}" Foreground="#D8DEE6" FontSize="12" VerticalAlignment="Center"/>
+                        </Grid>
+                        <Button x:Name="BtnCreateQr" Grid.Row="6" Content="{local:Loc ResourceKey=QRCodeGenerator_CreateQr}" Style="{StaticResource FooterPrimaryButtonStyle}"/>
+                    </Grid>
+                </Border>
+            </StackPanel>
         </Grid>
 
-        <Border Grid.Row="2"
-                Margin="0,10,0,0"
-                Background="#101318"
-                BorderBrush="#273344"
-                BorderThickness="1"
-                CornerRadius="6"
-                Padding="14">
-            <Grid>
-                <Border x:Name="PreviewSurface"
-                        Width="240"
-                        Height="240"
-                        Background="White"
-                        CornerRadius="4"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center">
-                    <Image x:Name="ImgPreview"
-                           Width="224"
-                           Height="224"
-                           Stretch="Uniform"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"/>
-                </Border>
-                <TextBlock x:Name="TxtEmptyHint"
-                           Text="{local:Loc ResourceKey=QRCodeGenerator_EmptyHint}"
-                           Foreground="{StaticResource MutedText}"
-                           FontSize="12"
-                           TextAlignment="Center"
-                           TextWrapping="Wrap"
-                           HorizontalAlignment="Center"
-                           VerticalAlignment="Center"/>
-            </Grid>
-        </Border>
-
-        <Grid Grid.Row="3" Margin="0,10,0,0">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <TextBlock x:Name="TxtStatus"
-                       Foreground="{StaticResource MutedText}"
-                       FontSize="11"
-                       TextWrapping="Wrap"
-                       TextTrimming="CharacterEllipsis"
-                       VerticalAlignment="Top"
-                       Margin="0,0,0,10"/>
-            <UniformGrid Grid.Row="1" Columns="3" HorizontalAlignment="Stretch">
-                <Button x:Name="BtnCopyPng"
-                        Content="{local:Loc ResourceKey=QRCodeGenerator_CopyPng}"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        IsEnabled="False"
-                        Margin="0,0,8,0"
-                        Click="BtnCopyPng_Click"/>
-                <Button x:Name="BtnSavePng"
-                        Content="{local:Loc ResourceKey=QRCodeGenerator_SavePng}"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        IsEnabled="False"
-                        Margin="0,0,8,0"
-                        Click="BtnSavePng_Click"/>
-                <Button x:Name="BtnSaveSvg"
-                        Content="{local:Loc ResourceKey=QRCodeGenerator_SaveSvg}"
-                        Style="{StaticResource ActionButtonStyle}"
-                        IsEnabled="False"
-                        Click="BtnSaveSvg_Click"/>
-            </UniformGrid>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="BtnSavePng" Style="{StaticResource FooterButtonStyle}" IsEnabled="False" Click="BtnSavePng_Click">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_SavePng}" Foreground="#F2F6FB" FontWeight="SemiBold"/>
+                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Png800Subtext}" Foreground="{StaticResource MutedText}" FontSize="11"/>
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+            <Button x:Name="BtnSaveSvg" Grid.Column="2" Style="{StaticResource FooterButtonStyle}" IsEnabled="False" Click="BtnSaveSvg_Click">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_SaveSvg}" Foreground="#F2F6FB" FontWeight="SemiBold"/>
+                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_VectorSubtext}" Foreground="{StaticResource MutedText}" FontSize="11"/>
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+            <Button x:Name="BtnCopyPng" Grid.Column="4" Style="{StaticResource FooterButtonStyle}" IsEnabled="False" Click="BtnCopyPng_Click">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_CopyPng}" Foreground="#F2F6FB" FontWeight="SemiBold"/>
+                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_ClipboardSubtext}" Foreground="{StaticResource MutedText}" FontSize="11"/>
+                    </StackPanel>
+                </StackPanel>
+            </Button>
+            <Button x:Name="BtnCopySvg" Grid.Column="6" Style="{StaticResource FooterButtonStyle}" IsEnabled="False" Click="BtnCopySvg_Click">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,14,0" VerticalAlignment="Center"/>
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_CopySvg}" Foreground="#F2F6FB" FontWeight="SemiBold"/>
+                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_ClipboardSubtext}" Foreground="{StaticResource MutedText}" FontSize="11"/>
+                    </StackPanel>
+                </StackPanel>
+            </Button>
         </Grid>
     </Grid>
 </local:DarkWindow>

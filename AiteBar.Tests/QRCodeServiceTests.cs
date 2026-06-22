@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using AiteBar;
+using SkiaSharp;
 using Xunit;
 
 namespace AiteBar.Tests;
@@ -45,6 +47,114 @@ public sealed class QRCodeServiceTests
         QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions { Text = "Hello World" });
 
         Assert.StartsWith("<svg", result.SvgContent);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_OutputSize_ControlsPngDimensions()
+    {
+        QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
+        {
+            Text = "https://example.com",
+            OutputSize = 512
+        });
+
+        using SKBitmap bitmap = SKBitmap.Decode(result.PngBytes);
+        Assert.Equal(512, bitmap.Width);
+        Assert.Equal(512, bitmap.Height);
+        Assert.Equal(512, result.PixelWidth);
+        Assert.Equal(512, result.PixelHeight);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_UrlType_AddsHttpsSchemeWhenMissing()
+    {
+        QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
+        {
+            ContentType = QRCodeContentType.Url,
+            Text = "example.com"
+        });
+
+        Assert.Equal("https://example.com", result.Payload);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_WifiType_BuildsEscapedWifiPayload()
+    {
+        QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
+        {
+            ContentType = QRCodeContentType.Wifi,
+            WifiSsid = "Cafe:Main;1",
+            WifiPassword = "pa,ss\\word",
+            WifiSecurity = QRCodeWifiSecurity.Wpa,
+            WifiHidden = true
+        });
+
+        Assert.Equal("WIFI:T:WPA;S:Cafe\\:Main\\;1;P:pa\\,ss\\\\word;H:true;;", result.Payload);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_LowContrast_ReturnsWarning()
+    {
+        QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
+        {
+            Text = "contrast",
+            DarkColor = "#777777",
+            LightColor = "#888888"
+        });
+
+        Assert.True(result.ContrastRatio < 4.5d);
+        Assert.NotEmpty(result.Warnings);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_LogoPath_ForcesHighErrorCorrectionAndEmbedsSvgImage()
+    {
+        string logoPath = Path.Combine(Path.GetTempPath(), $"aitebar-qr-logo-{Guid.NewGuid():N}.png");
+        CreateTestLogo(logoPath);
+
+        try
+        {
+            QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
+            {
+                Text = "https://example.com",
+                EccLevel = QRCodeEccLevel.L,
+                LogoPath = logoPath,
+                OutputSize = 384
+            });
+
+            Assert.NotEmpty(result.PngBytes);
+            Assert.Contains("data:image/png;base64,", result.SvgContent);
+            Assert.Equal(QRCodeEccLevel.H, QRCodeService.NormalizeOptions(new QRCodeGenerationOptions
+            {
+                Text = "https://example.com",
+                EccLevel = QRCodeEccLevel.L,
+                LogoPath = logoPath
+            }).EccLevel);
+        }
+        finally
+        {
+            if (File.Exists(logoPath))
+            {
+                File.Delete(logoPath);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(QRCodeModuleShape.Square)]
+    [InlineData(QRCodeModuleShape.Rounded)]
+    [InlineData(QRCodeModuleShape.Circle)]
+    public async Task GenerateAsync_ModuleShapes_ProduceValidSvg(QRCodeModuleShape shape)
+    {
+        QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
+        {
+            Text = "shape",
+            ModuleShape = shape,
+            EyeStyle = QRCodeEyeStyle.Rounded
+        });
+
+        Assert.StartsWith("<svg", result.SvgContent);
+        Assert.NotEmpty(result.PngBytes);
     }
 
     [Theory]
@@ -120,5 +230,16 @@ public sealed class QRCodeServiceTests
 
         Assert.NotEmpty(result.PngBytes);
         Assert.NotEmpty(result.SvgContent);
+    }
+
+    private static void CreateTestLogo(string path)
+    {
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(32, 32, SKColorType.Rgba8888, SKAlphaType.Premul))!;
+        surface.Canvas.Clear(SKColors.Transparent);
+        using var paint = new SKPaint { Color = SKColors.DeepSkyBlue, IsAntialias = true };
+        surface.Canvas.DrawCircle(16, 16, 14, paint);
+        using SKImage image = surface.Snapshot();
+        using SKData data = image.Encode(SKEncodedImageFormat.Png, 100)!;
+        File.WriteAllBytes(path, data.ToArray());
     }
 }
