@@ -876,6 +876,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="IconConverter_NoFile" xml:space="preserve"><value>PNG, JPG, WEBP, BMP, TIFF, SVG.</value></data>
   <data name="IconConverter_ChooseImage" xml:space="preserve"><value>Выбрать изображение</value></data>
   <data name="IconConverter_SaveIco" xml:space="preserve"><value>Сохранить ICO</value></data>
+  <data name="IconConverter_Preview" xml:space="preserve"><value>Предпросмотр</value></data>
+  <data name="IconConverter_ScaledPreview" xml:space="preserve"><value>масштаб</value></data>
   <data name="IconConverter_Sizes" xml:space="preserve"><value>Размеры</value></data>
   <data name="IconConverter_PracticalPreset" xml:space="preserve"><value>Практичный</value></data>
   <data name="IconConverter_WindowsPreset" xml:space="preserve"><value>Windows DPI</value></data>

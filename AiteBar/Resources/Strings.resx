@@ -410,6 +410,8 @@ Open the GitHub release page?</value></data>
   <data name="IconConverter_NoFile" xml:space="preserve"><value>PNG, JPG, WEBP, BMP, TIFF, SVG.</value></data>
   <data name="IconConverter_ChooseImage" xml:space="preserve"><value>Choose image</value></data>
   <data name="IconConverter_SaveIco" xml:space="preserve"><value>Save ICO</value></data>
+  <data name="IconConverter_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="IconConverter_ScaledPreview" xml:space="preserve"><value>scaled</value></data>
   <data name="IconConverter_Sizes" xml:space="preserve"><value>Sizes</value></data>
   <data name="IconConverter_PracticalPreset" xml:space="preserve"><value>Practical</value></data>
   <data name="IconConverter_WindowsPreset" xml:space="preserve"><value>Windows DPI</value></data>

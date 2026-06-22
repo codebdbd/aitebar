@@ -9,33 +9,18 @@
         Topmost="True">
     
     <Window.Resources>
-        <Style x:Key="DialogBtnStyle" TargetType="Button">
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Cursor" Value="Hand"/>
+        <Style x:Key="DialogPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
             <Setter Property="Height" Value="34"/>
             <Setter Property="MinWidth" Value="100"/>
             <Setter Property="Margin" Value="8,0,0,0"/>
             <Setter Property="Padding" Value="16,0"/>
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="#555555"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+        </Style>
+
+        <Style x:Key="DialogSecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Height" Value="34"/>
+            <Setter Property="MinWidth" Value="100"/>
+            <Setter Property="Margin" Value="8,0,0,0"/>
+            <Setter Property="Padding" Value="16,0"/>
         </Style>
     </Window.Resources>
 
@@ -48,9 +33,9 @@
         <TextBlock x:Name="TxtMessage" Text="" TextWrapping="Wrap" FontSize="14" Margin="0,0,0,28" LineHeight="18"/>
 
         <StackPanel x:Name="ButtonsPanel" Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button x:Name="BtnYes" Content="{local:Loc ResourceKey=Common_Yes}" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnYes_Click" Visibility="Collapsed" IsDefault="True"/>
-            <Button x:Name="BtnNo" Content="{local:Loc ResourceKey=Common_Cancel}" Background="#333333" Style="{StaticResource DialogBtnStyle}" Click="BtnNo_Click" Visibility="Collapsed" IsCancel="True"/>
-            <Button x:Name="BtnOk" Content="{local:Loc ResourceKey=Common_OK}" Background="#4285F4" Style="{StaticResource DialogBtnStyle}" Click="BtnOk_Click" Visibility="Collapsed" IsDefault="True" IsCancel="True"/>
+            <Button x:Name="BtnYes" Content="{local:Loc ResourceKey=Common_Yes}" Style="{StaticResource DialogPrimaryButtonStyle}" Click="BtnYes_Click" Visibility="Collapsed" IsDefault="True"/>
+            <Button x:Name="BtnNo" Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource DialogSecondaryButtonStyle}" Click="BtnNo_Click" Visibility="Collapsed" IsCancel="True"/>
+            <Button x:Name="BtnOk" Content="{local:Loc ResourceKey=Common_OK}" Style="{StaticResource DialogPrimaryButtonStyle}" Click="BtnOk_Click" Visibility="Collapsed" IsDefault="True" IsCancel="True"/>
         </StackPanel>
     </Grid>
 </local:DarkWindow>

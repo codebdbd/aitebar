@@ -40,7 +40,10 @@ public partial class IconConverterWindow : DarkWindow
             : Forms.Screen.PrimaryScreen;
         var work = screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
 
-        var (_, _, shownX, shownY) = QuickNoteLayoutHelper.GetSlideCoordinates(settings.Edge, work, Width, Height);
+        Measure(new System.Windows.Size(Width, double.PositiveInfinity));
+        double windowHeight = DesiredSize.Height > 0 ? DesiredSize.Height : 480;
+
+        var (_, _, shownX, shownY) = QuickNoteLayoutHelper.GetSlideCoordinates(settings.Edge, work, Width, windowHeight);
         Left = shownX;
         Top = shownY;
         Show();

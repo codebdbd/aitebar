@@ -351,6 +351,8 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="IconConverter_NoFile" xml:space="preserve"><value>PNG, JPG, WEBP, BMP, TIFF, SVG.</value></data>
   <data name="IconConverter_ChooseImage" xml:space="preserve"><value>Bild wählen</value></data>
   <data name="IconConverter_SaveIco" xml:space="preserve"><value>ICO speichern</value></data>
+  <data name="IconConverter_Preview" xml:space="preserve"><value>Vorschau</value></data>
+  <data name="IconConverter_ScaledPreview" xml:space="preserve"><value>skaliert</value></data>
   <data name="IconConverter_Sizes" xml:space="preserve"><value>Größen</value></data>
   <data name="IconConverter_PracticalPreset" xml:space="preserve"><value>Praktisch</value></data>
   <data name="IconConverter_WindowsPreset" xml:space="preserve"><value>Windows DPI</value></data>
