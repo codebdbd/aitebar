@@ -19,7 +19,6 @@
 
             <Style x:Key="CommandButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
                 <Setter Property="Height" Value="34"/>
-                <Setter Property="MinWidth" Value="72"/>
                 <Setter Property="Padding" Value="14,0"/>
             </Style>
 
@@ -185,17 +184,27 @@
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <TextBlock Text="{local:Loc ResourceKey=IconConverter_Sizes}" Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,8"/>
-                    <UniformGrid Grid.Row="1" Columns="3" Rows="3">
-                        <CheckBox x:Name="Chk16" Content="16" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk20" Content="20" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk24" Content="24" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk32" Content="32" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk40" Content="40" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk48" Content="48" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk64" Content="64" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk128" Content="128" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                        <CheckBox x:Name="Chk256" Content="256" IsChecked="True" Margin="0,0,10,8" Click="Options_Changed"/>
-                    </UniformGrid>
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <CheckBox x:Name="Chk16" Content="16" IsChecked="True" Margin="0,0,8,8" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk20" Content="20" IsChecked="True" Grid.Column="1" Margin="0,0,8,8" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk24" Content="24" IsChecked="True" Grid.Column="2" Margin="0,0,0,8" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk32" Content="32" IsChecked="True" Grid.Row="1" Margin="0,0,8,8" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk40" Content="40" IsChecked="True" Grid.Row="1" Grid.Column="1" Margin="0,0,8,8" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk48" Content="48" IsChecked="True" Grid.Row="1" Grid.Column="2" Margin="0,0,0,8" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk64" Content="64" IsChecked="True" Grid.Row="2" Margin="0,0,8,0" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk128" Content="128" IsChecked="True" Grid.Row="2" Grid.Column="1" Margin="0,0,8,0" Click="Options_Changed"/>
+                        <CheckBox x:Name="Chk256" Content="256" IsChecked="True" Grid.Row="2" Grid.Column="2" Margin="0,0,0,0" Click="Options_Changed"/>
+                    </Grid>
                 </Grid>
             </Border>
 
