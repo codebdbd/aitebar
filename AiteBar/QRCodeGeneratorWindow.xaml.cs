@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Forms = System.Windows.Forms;
 
@@ -45,7 +46,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         var work = screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
 
         Measure(new System.Windows.Size(Width, double.PositiveInfinity));
-        double windowHeight = DesiredSize.Height > 0 ? DesiredSize.Height : 540;
+        double windowHeight = DesiredSize.Height > 0 ? DesiredSize.Height : 520;
 
         var (_, _, shownX, shownY) = QuickNoteLayoutHelper.GetSlideCoordinates(settings.Edge, work, Width, windowHeight);
         Left = shownX;
@@ -58,6 +59,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
     private void TxtInput_TextChanged(object sender, TextChangedEventArgs e)
     {
         UpdateInputPlaceholder();
+        UpdateColorSwatches();
         QueuePreviewRefresh();
     }
 
@@ -90,6 +92,18 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             return;
         }
 
+        UpdateMarginValue();
+        QueuePreviewRefresh();
+    }
+
+    private void Options_Changed(object sender, EventArgs e)
+    {
+        if (!_isInitialized || _isApplyingPreset)
+        {
+            return;
+        }
+
+        UpdateMarginValue();
         QueuePreviewRefresh();
     }
 
@@ -168,7 +182,8 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             WifiHidden = ChkWifiHidden.IsChecked == true,
             QualityPreset = ReadComboTag(CmbQualityPreset, QRCodeQualityPreset.Screen),
             OutputSize = ReadOutputSize(),
-            Margin = 4,
+            Margin = (int)SliderMargin.Value,
+            EccLevel = ReadComboTag(CmbEccLevel, QRCodeEccLevel.Q),
             DarkColor = TxtDarkColor.Text,
             LightColor = TxtLightColor.Text,
             ModuleShape = ReadComboTag(CmbModuleShape, QRCodeModuleShape.Square),
@@ -231,7 +246,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         {
             Title = LocalizationService.Get("QRCodeGenerator_SavePngTitle"),
             Filter = "PNG (*.png)|*.png",
-            FileName = "qr-code.png",
+            FileName = GenerateFileName(".png"),
             AddExtension = true,
             DefaultExt = ".png",
             OverwritePrompt = true
@@ -249,7 +264,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         {
             Title = LocalizationService.Get("QRCodeGenerator_SaveSvgTitle"),
             Filter = "SVG (*.svg)|*.svg",
-            FileName = "qr-code.svg",
+            FileName = GenerateFileName(".svg"),
             AddExtension = true,
             DefaultExt = ".svg",
             OverwritePrompt = true
@@ -259,6 +274,45 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         {
             await SaveAsync(dialog.FileName, saveSvg: true);
         }
+    }
+
+    private string GenerateFileName(string extension)
+    {
+        var contentType = ReadComboTag(CmbContentType, QRCodeContentType.Url);
+        string baseName = "qr-code";
+
+        if (contentType == QRCodeContentType.Url && !string.IsNullOrWhiteSpace(TxtInput.Text))
+        {
+            string url = TxtInput.Text.Trim();
+            if (url.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+                url = url.Substring(7);
+            else if (url.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+                url = url.Substring(8);
+
+            int slashIndex = url.IndexOf('/');
+            if (slashIndex > 0)
+                url = url.Substring(0, slashIndex);
+
+            baseName = SanitizeFileName(url);
+        }
+        else if (contentType == QRCodeContentType.Wifi && !string.IsNullOrWhiteSpace(TxtWifiSsid.Text))
+        {
+            baseName = SanitizeFileName("wifi-" + TxtWifiSsid.Text);
+        }
+
+        return baseName + extension;
+    }
+
+    private string SanitizeFileName(string fileName)
+    {
+        char[] invalidChars = Path.GetInvalidFileNameChars();
+        foreach (char c in invalidChars)
+        {
+            fileName = fileName.Replace(c, '_');
+        }
+        if (fileName.Length > 50)
+            fileName = fileName.Substring(0, 50);
+        return fileName;
     }
 
     private void BtnChooseLogo_Click(object sender, RoutedEventArgs e)
@@ -274,6 +328,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         if (dialog.ShowDialog(this) == true)
         {
             TxtLogoPath.Text = dialog.FileName;
+            UpdateLogoPreview();
             SelectComboTag(CmbQualityPreset, QRCodeQualityPreset.Logo);
             QueuePreviewRefresh();
         }
@@ -282,7 +337,121 @@ public partial class QRCodeGeneratorWindow : DarkWindow
     private void BtnClearLogo_Click(object sender, RoutedEventArgs e)
     {
         TxtLogoPath.Text = string.Empty;
+        LogoPreviewBorder.Visibility = Visibility.Collapsed;
+        LogoPreviewImage.Source = null;
         QueuePreviewRefresh();
+    }
+
+    private void DarkColorSwatch_Click(object sender, MouseButtonEventArgs e)
+    {
+        ShowColorPicker(TxtDarkColor, DarkColorSwatch);
+    }
+
+    private void LightColorSwatch_Click(object sender, MouseButtonEventArgs e)
+    {
+        ShowColorPicker(TxtLightColor, LightColorSwatch);
+    }
+
+    private void ShowColorPicker(TextBox colorTextBox, Border colorSwatch)
+    {
+        var dialog = new Forms.ColorDialog();
+        // Попробуем парсить цвет без ColorTranslator
+        if (TryParseDrawingColor(colorTextBox.Text, out var drawingColor))
+        {
+            dialog.Color = drawingColor;
+        }
+
+        if (dialog.ShowDialog() == Forms.DialogResult.OK)
+        {
+            string hex = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+            colorTextBox.Text = hex;
+            UpdateColorSwatches();
+            QueuePreviewRefresh();
+        }
+    }
+
+    private bool TryParseDrawingColor(string hex, out System.Drawing.Color color)
+    {
+        color = System.Drawing.Color.Black;
+        try
+        {
+            if (hex.StartsWith("#") && hex.Length == 7)
+            {
+                byte r = Convert.ToByte(hex.Substring(1, 2), 16);
+                byte g = Convert.ToByte(hex.Substring(3, 2), 16);
+                byte b = Convert.ToByte(hex.Substring(5, 2), 16);
+                color = System.Drawing.Color.FromArgb(r, g, b);
+                return true;
+            }
+        }
+        catch
+        {
+        }
+        return false;
+    }
+
+    private void UpdateColorSwatches()
+    {
+        if (TryParseColor(TxtDarkColor.Text, out var darkColor))
+        {
+            DarkColorSwatch.Background = new SolidColorBrush(darkColor);
+        }
+
+        if (TryParseColor(TxtLightColor.Text, out var lightColor))
+        {
+            LightColorSwatch.Background = new SolidColorBrush(lightColor);
+        }
+    }
+
+    private bool TryParseColor(string hex, out System.Windows.Media.Color color)
+    {
+        color = System.Windows.Media.Colors.Black;
+        try
+        {
+            if (hex.StartsWith("#") && hex.Length == 7)
+            {
+                byte r = Convert.ToByte(hex.Substring(1, 2), 16);
+                byte g = Convert.ToByte(hex.Substring(3, 2), 16);
+                byte b = Convert.ToByte(hex.Substring(5, 2), 16);
+                color = System.Windows.Media.Color.FromRgb(r, g, b);
+                return true;
+            }
+        }
+        catch
+        {
+        }
+        return false;
+    }
+
+    private void UpdateLogoPreview()
+    {
+        if (File.Exists(TxtLogoPath.Text))
+        {
+            try
+            {
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.UriSource = new Uri(TxtLogoPath.Text);
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.EndInit();
+                bitmap.Freeze();
+                LogoPreviewImage.Source = bitmap;
+                LogoPreviewBorder.Visibility = Visibility.Visible;
+            }
+            catch
+            {
+                LogoPreviewBorder.Visibility = Visibility.Collapsed;
+            }
+        }
+        else
+        {
+            LogoPreviewBorder.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void UpdateMarginValue()
+    {
+        TxtMarginValue.Text = ((int)SliderMargin.Value).ToString();
     }
 
     private async Task SaveAsync(string path, bool saveSvg)
@@ -389,6 +558,16 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             };
 
             SelectComboTag(CmbOutputSize, outputSize.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+            if (preset == QRCodeQualityPreset.Logo)
+            {
+                SelectComboTag(CmbEccLevel, QRCodeEccLevel.H.ToString());
+                CmbEccLevel.IsEnabled = false;
+            }
+            else
+            {
+                CmbEccLevel.IsEnabled = true;
+            }
         }
         finally
         {
@@ -486,5 +665,3 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         UpdateInputPlaceholder();
     }
 }
-
-
