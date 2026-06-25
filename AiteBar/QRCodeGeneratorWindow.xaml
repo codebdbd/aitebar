@@ -416,40 +416,28 @@
                 <ColumnDefinition Width="8"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Button x:Name="BtnSavePng" Style="{StaticResource FooterButtonStyle}" IsEnabled="False" Click="BtnSavePng_Click">
+            <Button x:Name="BtnSavePng" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False" Click="BtnSavePng_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,14,0" VerticalAlignment="Center"/>
-                    <StackPanel>
-                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_SavePng}" Foreground="#F2F6FB" FontWeight="SemiBold"/>
-                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Png800Subtext}" Foreground="{StaticResource MutedText}" FontSize="11"/>
-                    </StackPanel>
+                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_SavePng}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
-            <Button x:Name="BtnSaveSvg" Grid.Column="2" Style="{StaticResource FooterButtonStyle}" IsEnabled="False" Click="BtnSaveSvg_Click">
+            <Button x:Name="BtnSaveSvg" Grid.Column="2" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False" Click="BtnSaveSvg_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,14,0" VerticalAlignment="Center"/>
-                    <StackPanel>
-                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_SaveSvg}" Foreground="#F2F6FB" FontWeight="SemiBold"/>
-                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_VectorSubtext}" Foreground="{StaticResource MutedText}" FontSize="11"/>
-                    </StackPanel>
+                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_SaveSvg}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
-            <Button x:Name="BtnCopyPng" Grid.Column="4" Style="{StaticResource FooterButtonStyle}" IsEnabled="False" Click="BtnCopyPng_Click">
+            <Button x:Name="BtnCopyPng" Grid.Column="4" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False" Click="BtnCopyPng_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,14,0" VerticalAlignment="Center"/>
-                    <StackPanel>
-                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_CopyPng}" Foreground="#F2F6FB" FontWeight="SemiBold"/>
-                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_ClipboardSubtext}" Foreground="{StaticResource MutedText}" FontSize="11"/>
-                    </StackPanel>
+                    <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_CopyPng}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
-            <Button x:Name="BtnCopySvg" Grid.Column="6" Style="{StaticResource FooterButtonStyle}" IsEnabled="False" Click="BtnCopySvg_Click">
+            <Button x:Name="BtnCopySvg" Grid.Column="6" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False" Click="BtnCopySvg_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,14,0" VerticalAlignment="Center"/>
-                    <StackPanel>
-                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_CopySvg}" Foreground="#F2F6FB" FontWeight="SemiBold"/>
-                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_ClipboardSubtext}" Foreground="{StaticResource MutedText}" FontSize="11"/>
-                    </StackPanel>
+                    <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_CopySvg}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
         </Grid>
