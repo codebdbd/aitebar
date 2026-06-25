@@ -438,9 +438,11 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="QRCodeGenerator_WifiPasswordPlaceholder" xml:space="preserve"><value>Passwort</value></data>
   <data name="QRCodeGenerator_WifiHidden" xml:space="preserve"><value>Verstecktes Netzwerk</value></data>
   <data name="QRCodeGenerator_Quality" xml:space="preserve"><value>Qualität</value></data>
-  <data name="QRCodeGenerator_PresetScreen" xml:space="preserve"><value>Bildschirm</value></data>
-  <data name="QRCodeGenerator_PresetPrint" xml:space="preserve"><value>Druck</value></data>
-  <data name="QRCodeGenerator_PresetLogo" xml:space="preserve"><value>Mit Logo</value></data>
+  <data name="QRCodeGenerator_PresetScreen" xml:space="preserve"><value>Bildschirm (96 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetScreenHD" xml:space="preserve"><value>Bildschirm HD (144 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetPrint" xml:space="preserve"><value>Druck (300 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetPrintHigh" xml:space="preserve"><value>Druck High (600 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetLogo" xml:space="preserve"><value>Mit Logo (1000px)</value></data>
   <data name="QRCodeGenerator_OutputSize" xml:space="preserve"><value>PNG-Größe</value></data>
   <data name="QRCodeGenerator_Colors" xml:space="preserve"><value>Farben</value></data>
   <data name="QRCodeGenerator_ColorQr" xml:space="preserve"><value>QR</value></data>
@@ -449,12 +451,17 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="QRCodeGenerator_Eyes" xml:space="preserve"><value>Augen</value></data>  <data name="QRCodeGenerator_Branding" xml:space="preserve"><value>Logo</value></data>
   <data name="QRCodeGenerator_ChooseLogo" xml:space="preserve"><value>Wählen</value></data>
   <data name="QRCodeGenerator_ClearLogo" xml:space="preserve"><value>Logo entfernen</value></data>
+  <data name="QRCodeGenerator_DeleteLogo" xml:space="preserve"><value>Entfernen</value></data>
   <data name="QRCodeGenerator_Style" xml:space="preserve"><value>Stil</value></data>
   <data name="QRCodeGenerator_ModuleSquare" xml:space="preserve"><value>Quadrat</value></data>
   <data name="QRCodeGenerator_ModuleRounded" xml:space="preserve"><value>Rund</value></data>
   <data name="QRCodeGenerator_ModuleCircle" xml:space="preserve"><value>Kreis</value></data>
+  <data name="QRCodeGenerator_ModuleDot" xml:space="preserve"><value>Punkt</value></data>
+  <data name="QRCodeGenerator_ModuleDiamond" xml:space="preserve"><value>Raute</value></data>
   <data name="QRCodeGenerator_EyeSquare" xml:space="preserve"><value>Auge: quadrat</value></data>
   <data name="QRCodeGenerator_EyeRounded" xml:space="preserve"><value>Auge: rund</value></data>
+  <data name="QRCodeGenerator_EyeCircle" xml:space="preserve"><value>Auge: kreis</value></data>
+  <data name="QRCodeGenerator_EyeDiamond" xml:space="preserve"><value>Auge: raute</value></data>
   <data name="QRCodeGenerator_CopySvg" xml:space="preserve"><value>SVG kopieren</value></data>
   <data name="QRCodeGenerator_CopiedSvg" xml:space="preserve"><value>SVG in die Zwischenablage kopiert</value></data>
   <data name="QRCodeGenerator_StatusDetailed" xml:space="preserve"><value>QR v{0}, {1} Module, PNG {2}x{2} px</value></data>
@@ -474,7 +481,7 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="QRCodeGenerator_Output1200" xml:space="preserve"><value>1200 px</value></data>
   <data name="QRCodeGenerator_Output1600" xml:space="preserve"><value>1600 px</value></data>
   <data name="QRCodeGenerator_ColorCode" xml:space="preserve"><value>QR-Code</value></data>
-  <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Logo (optional)</value></data>
+  <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Logo</value></data>
   <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Form</value></data>
   <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Qualität &amp; Größe</value></data>
   <data name="QRCodeGenerator_PresetScreenDetailed" xml:space="preserve"><value>Optimiert für Bildschirm</value></data>

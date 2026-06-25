@@ -946,9 +946,11 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_WifiPasswordPlaceholder" xml:space="preserve"><value>Пароль</value></data>
   <data name="QRCodeGenerator_WifiHidden" xml:space="preserve"><value>Скрытая сеть</value></data>
   <data name="QRCodeGenerator_Quality" xml:space="preserve"><value>Качество</value></data>
-  <data name="QRCodeGenerator_PresetScreen" xml:space="preserve"><value>Экран</value></data>
-  <data name="QRCodeGenerator_PresetPrint" xml:space="preserve"><value>Печать</value></data>
-  <data name="QRCodeGenerator_PresetLogo" xml:space="preserve"><value>С логотипом</value></data>
+  <data name="QRCodeGenerator_PresetScreen" xml:space="preserve"><value>Экран (96 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetScreenHD" xml:space="preserve"><value>Экран HD (144 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetPrint" xml:space="preserve"><value>Печать (300 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetPrintHigh" xml:space="preserve"><value>Печать High (600 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetLogo" xml:space="preserve"><value>С логотипом (1000px)</value></data>
   <data name="QRCodeGenerator_OutputSize" xml:space="preserve"><value>Размер PNG</value></data>
   <data name="QRCodeGenerator_Colors" xml:space="preserve"><value>Цвета</value></data>
   <data name="QRCodeGenerator_ColorQr" xml:space="preserve"><value>QR</value></data>
@@ -957,12 +959,17 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_Eyes" xml:space="preserve"><value>Глазки</value></data>  <data name="QRCodeGenerator_Branding" xml:space="preserve"><value>Логотип</value></data>
   <data name="QRCodeGenerator_ChooseLogo" xml:space="preserve"><value>Выбрать</value></data>
   <data name="QRCodeGenerator_ClearLogo" xml:space="preserve"><value>Очистить логотип</value></data>
+  <data name="QRCodeGenerator_DeleteLogo" xml:space="preserve"><value>Очистить</value></data>
   <data name="QRCodeGenerator_Style" xml:space="preserve"><value>Стиль</value></data>
   <data name="QRCodeGenerator_ModuleSquare" xml:space="preserve"><value>Квадрат</value></data>
   <data name="QRCodeGenerator_ModuleRounded" xml:space="preserve"><value>Скругл.</value></data>
   <data name="QRCodeGenerator_ModuleCircle" xml:space="preserve"><value>Круг</value></data>
+  <data name="QRCodeGenerator_ModuleDot" xml:space="preserve"><value>Точка</value></data>
+  <data name="QRCodeGenerator_ModuleDiamond" xml:space="preserve"><value>Ромб</value></data>
   <data name="QRCodeGenerator_EyeSquare" xml:space="preserve"><value>Глаз: квадрат</value></data>
   <data name="QRCodeGenerator_EyeRounded" xml:space="preserve"><value>Глаз: скругл.</value></data>
+  <data name="QRCodeGenerator_EyeCircle" xml:space="preserve"><value>Глаз: круг</value></data>
+  <data name="QRCodeGenerator_EyeDiamond" xml:space="preserve"><value>Глаз: ромб</value></data>
   <data name="QRCodeGenerator_CopySvg" xml:space="preserve"><value>Копировать SVG</value></data>
   <data name="QRCodeGenerator_CopiedSvg" xml:space="preserve"><value>SVG скопирован в буфер обмена</value></data>
   <data name="QRCodeGenerator_StatusDetailed" xml:space="preserve"><value>QR v{0}, {1} модулей, PNG {2}x{2} px</value></data>
@@ -998,7 +1005,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>История буфера обмена пуста. Скопируйте что-нибудь, чтобы начать!</value></data>
   <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} элементов в истории буфера обмена</value></data>
   <data name="QRCodeGenerator_ColorCode" xml:space="preserve"><value>QR-код</value></data>
-  <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Логотип (необязательно)</value></data>
+  <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Логотип</value></data>
   <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Форма</value></data>
   <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Качество и размер</value></data>
   <data name="QRCodeGenerator_PresetScreenDetailed" xml:space="preserve"><value>Оптимизировано для экрана</value></data>

@@ -129,7 +129,9 @@ public sealed class QRCodeService
         {
             outputSize = preset switch
             {
+                QRCodeQualityPreset.ScreenHD => 1200,
                 QRCodeQualityPreset.Print => 1200,
+                QRCodeQualityPreset.PrintHigh => 2000,
                 QRCodeQualityPreset.Logo => 1000,
                 _ => 800
             };
@@ -254,8 +256,21 @@ public sealed class QRCodeService
         var rect = new SKRect(x + inset, y + inset, x + size - inset, y + size - inset);
         switch (shape)
         {
+            case QRCodeModuleShape.Dot:
+                canvas.DrawCircle(x + size / 2f, y + size / 2f, size * 0.25f, paint);
+                break;
             case QRCodeModuleShape.Circle:
                 canvas.DrawCircle(rect.MidX, rect.MidY, Math.Min(rect.Width, rect.Height) / 2f, paint);
+                break;
+            case QRCodeModuleShape.Diamond:
+                var diamondPath = new SKPath();
+                diamondPath.MoveTo(rect.MidX, rect.Top);
+                diamondPath.LineTo(rect.Right, rect.MidY);
+                diamondPath.LineTo(rect.MidX, rect.Bottom);
+                diamondPath.LineTo(rect.Left, rect.MidY);
+                diamondPath.Close();
+                canvas.DrawPath(diamondPath, paint);
+                diamondPath.Dispose();
                 break;
             case QRCodeModuleShape.Rounded:
                 canvas.DrawRoundRect(rect, size * 0.28f, size * 0.28f, paint);
@@ -283,7 +298,22 @@ public sealed class QRCodeService
     private static void DrawEyeLayer(SKCanvas canvas, int moduleX, int moduleY, int modules, float moduleSize, SKPaint paint, QRCodeEyeStyle eyeStyle)
     {
         var rect = new SKRect(moduleX * moduleSize, moduleY * moduleSize, (moduleX + modules) * moduleSize, (moduleY + modules) * moduleSize);
-        if (eyeStyle == QRCodeEyeStyle.Rounded)
+        if (eyeStyle == QRCodeEyeStyle.Diamond)
+        {
+            var diamondPath = new SKPath();
+            diamondPath.MoveTo(rect.MidX, rect.Top);
+            diamondPath.LineTo(rect.Right, rect.MidY);
+            diamondPath.LineTo(rect.MidX, rect.Bottom);
+            diamondPath.LineTo(rect.Left, rect.MidY);
+            diamondPath.Close();
+            canvas.DrawPath(diamondPath, paint);
+            diamondPath.Dispose();
+        }
+        else if (eyeStyle == QRCodeEyeStyle.Circle)
+        {
+            canvas.DrawCircle(rect.MidX, rect.MidY, Math.Min(rect.Width, rect.Height) / 2f, paint);
+        }
+        else if (eyeStyle == QRCodeEyeStyle.Rounded)
         {
             canvas.DrawRoundRect(rect, moduleSize * 1.1f, moduleSize * 1.1f, paint);
         }
@@ -341,9 +371,25 @@ public sealed class QRCodeService
         float px = x + inset;
         float py = y + inset;
         float module = size - (inset * 2f);
-        if (shape == QRCodeModuleShape.Circle)
+        
+        if (shape == QRCodeModuleShape.Dot)
+        {
+            float cx = x + size / 2f;
+            float cy = y + size / 2f;
+            float r = size * 0.25f;
+            svg.Append(CultureInfo.InvariantCulture, $"  <circle cx=\"{cx:0.###}\" cy=\"{cy:0.###}\" r=\"{r:0.###}\" fill=\"{color}\"/>\n");
+        }
+        else if (shape == QRCodeModuleShape.Circle)
         {
             svg.Append(CultureInfo.InvariantCulture, $"  <circle cx=\"{px + (module / 2f):0.###}\" cy=\"{py + (module / 2f):0.###}\" r=\"{module / 2f:0.###}\" fill=\"{color}\"/>\n");
+        }
+        else if (shape == QRCodeModuleShape.Diamond)
+        {
+            float cx = px + module / 2f;
+            float cy = py + module / 2f;
+            float half = module / 2f;
+            string points = FormattableString.Invariant($"{cx:0.###},{py:0.###} {px + module:0.###},{cy:0.###} {cx:0.###},{py + module:0.###} {px:0.###},{cy:0.###}");
+            svg.Append(CultureInfo.InvariantCulture, $"  <polygon points=\"{points}\" fill=\"{color}\"/>\n");
         }
         else
         {
@@ -372,10 +418,28 @@ public sealed class QRCodeService
         float x = moduleX * moduleSize;
         float y = moduleY * moduleSize;
         float size = modules * moduleSize;
-        string radiusAttributes = eyeStyle == QRCodeEyeStyle.Rounded
-            ? FormattableString.Invariant($" rx=\"{moduleSize * 1.1f:0.###}\" ry=\"{moduleSize * 1.1f:0.###}\"")
-            : string.Empty;
-        svg.Append(CultureInfo.InvariantCulture, $"  <rect x=\"{x:0.###}\" y=\"{y:0.###}\" width=\"{size:0.###}\" height=\"{size:0.###}\"{radiusAttributes} fill=\"{color}\"/>\n");
+        
+        if (eyeStyle == QRCodeEyeStyle.Diamond)
+        {
+            float cx = x + size / 2f;
+            float cy = y + size / 2f;
+            string points = FormattableString.Invariant($"{cx:0.###},{y:0.###} {x + size:0.###},{cy:0.###} {cx:0.###},{y + size:0.###} {x:0.###},{cy:0.###}");
+            svg.Append(CultureInfo.InvariantCulture, $"  <polygon points=\"{points}\" fill=\"{color}\"/>\n");
+        }
+        else if (eyeStyle == QRCodeEyeStyle.Circle)
+        {
+            float cx = x + (size / 2f);
+            float cy = y + (size / 2f);
+            float r = size / 2f;
+            svg.Append(CultureInfo.InvariantCulture, $"  <circle cx=\"{cx:0.###}\" cy=\"{cy:0.###}\" r=\"{r:0.###}\" fill=\"{color}\"/>\n");
+        }
+        else
+        {
+            string radiusAttributes = eyeStyle == QRCodeEyeStyle.Rounded
+                ? FormattableString.Invariant($" rx=\"{moduleSize * 1.1f:0.###}\" ry=\"{moduleSize * 1.1f:0.###}\"")
+                : string.Empty;
+            svg.Append(CultureInfo.InvariantCulture, $"  <rect x=\"{x:0.###}\" y=\"{y:0.###}\" width=\"{size:0.###}\" height=\"{size:0.###}\"{radiusAttributes} fill=\"{color}\"/>\n");
+        }
     }
 
     private static void AppendLogo(StringBuilder svg, int outputSize, QRCodeGenerationOptions options, float moduleSize)

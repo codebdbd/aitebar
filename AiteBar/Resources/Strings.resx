@@ -480,9 +480,11 @@ Open the GitHub release page?</value></data>
   <data name="QRCodeGenerator_WifiPasswordPlaceholder" xml:space="preserve"><value>Password</value></data>
   <data name="QRCodeGenerator_WifiHidden" xml:space="preserve"><value>Hidden network</value></data>
   <data name="QRCodeGenerator_Quality" xml:space="preserve"><value>Quality</value></data>
-  <data name="QRCodeGenerator_PresetScreen" xml:space="preserve"><value>Screen</value></data>
-  <data name="QRCodeGenerator_PresetPrint" xml:space="preserve"><value>Print</value></data>
-  <data name="QRCodeGenerator_PresetLogo" xml:space="preserve"><value>With logo</value></data>
+  <data name="QRCodeGenerator_PresetScreen" xml:space="preserve"><value>Screen (96 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetScreenHD" xml:space="preserve"><value>Screen HD (144 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetPrint" xml:space="preserve"><value>Print (300 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetPrintHigh" xml:space="preserve"><value>Print High (600 DPI)</value></data>
+  <data name="QRCodeGenerator_PresetLogo" xml:space="preserve"><value>With logo (1000px)</value></data>
   <data name="QRCodeGenerator_OutputSize" xml:space="preserve"><value>PNG size</value></data>
   <data name="QRCodeGenerator_Colors" xml:space="preserve"><value>Colors</value></data>
   <data name="QRCodeGenerator_ColorQr" xml:space="preserve"><value>QR</value></data>
@@ -491,12 +493,17 @@ Open the GitHub release page?</value></data>
   <data name="QRCodeGenerator_Eyes" xml:space="preserve"><value>Eyes</value></data>  <data name="QRCodeGenerator_Branding" xml:space="preserve"><value>Logo</value></data>
   <data name="QRCodeGenerator_ChooseLogo" xml:space="preserve"><value>Choose</value></data>
   <data name="QRCodeGenerator_ClearLogo" xml:space="preserve"><value>Clear logo</value></data>
+  <data name="QRCodeGenerator_DeleteLogo" xml:space="preserve"><value>Clear</value></data>
   <data name="QRCodeGenerator_Style" xml:space="preserve"><value>Style</value></data>
   <data name="QRCodeGenerator_ModuleSquare" xml:space="preserve"><value>Square</value></data>
   <data name="QRCodeGenerator_ModuleRounded" xml:space="preserve"><value>Rounded</value></data>
   <data name="QRCodeGenerator_ModuleCircle" xml:space="preserve"><value>Circle</value></data>
+  <data name="QRCodeGenerator_ModuleDot" xml:space="preserve"><value>Dot</value></data>
+  <data name="QRCodeGenerator_ModuleDiamond" xml:space="preserve"><value>Diamond</value></data>
   <data name="QRCodeGenerator_EyeSquare" xml:space="preserve"><value>Eye: square</value></data>
   <data name="QRCodeGenerator_EyeRounded" xml:space="preserve"><value>Eye: rounded</value></data>
+  <data name="QRCodeGenerator_EyeCircle" xml:space="preserve"><value>Eye: circle</value></data>
+  <data name="QRCodeGenerator_EyeDiamond" xml:space="preserve"><value>Eye: diamond</value></data>
   <data name="QRCodeGenerator_CopySvg" xml:space="preserve"><value>Copy SVG</value></data>
   <data name="QRCodeGenerator_CopiedSvg" xml:space="preserve"><value>SVG copied to clipboard</value></data>
   <data name="QRCodeGenerator_StatusDetailed" xml:space="preserve"><value>QR v{0}, {1} modules, PNG {2}x{2} px</value></data>
@@ -532,7 +539,7 @@ Open the GitHub release page?</value></data>
   <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>Clipboard history is empty. Copy something to start!</value></data>
   <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} items in clipboard history</value></data>
   <data name="QRCodeGenerator_ColorCode" xml:space="preserve"><value>QR code</value></data>
-  <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Logo (optional)</value></data>
+  <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Logo</value></data>
   <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Shape</value></data>
   <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Quality &amp; size</value></data>
   <data name="QRCodeGenerator_PresetScreenDetailed" xml:space="preserve"><value>Optimized for screen display</value></data>

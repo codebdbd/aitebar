@@ -18,7 +18,9 @@ public enum QRCodeContentType
 public enum QRCodeQualityPreset
 {
     Screen,
+    ScreenHD,
     Print,
+    PrintHigh,
     Logo
 }
 
@@ -26,13 +28,17 @@ public enum QRCodeModuleShape
 {
     Square,
     Rounded,
-    Circle
+    Circle,
+    Dot,
+    Diamond
 }
 
 public enum QRCodeEyeStyle
 {
     Square,
-    Rounded
+    Rounded,
+    Circle,
+    Diamond
 }
 
 public enum QRCodeWifiSecurity

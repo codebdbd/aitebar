@@ -299,6 +299,8 @@
                                 <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleSquare}" Tag="Square"/>
                                 <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleRounded}" Tag="Rounded"/>
                                 <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleCircle}" Tag="Circle"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleDot}" Tag="Dot"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleDiamond}" Tag="Diamond"/>
                             </ComboBox>
                         </Grid>
                         <Grid Grid.Row="4">
@@ -310,6 +312,8 @@
                             <ComboBox x:Name="CmbEyeStyle" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectedIndex="0" SelectionChanged="Options_Changed">
                                 <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EyeSquare}" Tag="Square"/>
                                 <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EyeRounded}" Tag="Rounded"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EyeCircle}" Tag="Circle"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EyeDiamond}" Tag="Diamond"/>
                             </ComboBox>
                         </Grid>
                         <Grid Grid.Row="6">
@@ -365,7 +369,9 @@
                             <TextBlock Text="Качество" Style="{StaticResource FieldLabelStyle}"/>
                             <ComboBox x:Name="CmbQualityPreset" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectedIndex="0" SelectionChanged="QualityPreset_Changed">
                                 <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetScreen}" Tag="Screen"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetScreenHD}" Tag="ScreenHD"/>
                                 <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetPrint}" Tag="Print"/>
+                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetPrintHigh}" Tag="PrintHigh"/>
                                 <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetLogo}" Tag="Logo"/>
                             </ComboBox>
                         </Grid>

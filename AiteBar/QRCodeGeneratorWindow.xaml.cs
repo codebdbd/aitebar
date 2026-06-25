@@ -552,7 +552,9 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             QRCodeQualityPreset preset = ReadComboTag(CmbQualityPreset, QRCodeQualityPreset.Screen);
             int outputSize = preset switch
             {
+                QRCodeQualityPreset.ScreenHD => 1200,
                 QRCodeQualityPreset.Print => 1200,
+                QRCodeQualityPreset.PrintHigh => 2000,
                 QRCodeQualityPreset.Logo => 1000,
                 _ => 800
             };
