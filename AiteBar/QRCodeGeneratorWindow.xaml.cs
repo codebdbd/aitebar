@@ -189,7 +189,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             ModuleShape = ReadComboTag(CmbModuleShape, QRCodeModuleShape.Square),
             EyeStyle = ReadComboTag(CmbEyeStyle, QRCodeEyeStyle.Square),
             LogoPath = string.IsNullOrWhiteSpace(TxtLogoPath.Text) ? null : TxtLogoPath.Text,
-            LogoSizePercent = 18
+            LogoSizePercent = (int)SliderLogoSize.Value
         };
     }
 
@@ -450,9 +450,10 @@ public partial class QRCodeGeneratorWindow : DarkWindow
     }
 
     private void UpdateMarginValue()
-    {
-        TxtMarginValue.Text = ((int)SliderMargin.Value).ToString();
-    }
+        {
+            TxtMarginValue.Text = ((int)SliderMargin.Value).ToString();
+            TxtLogoSizeValue.Text = $"{(int)SliderLogoSize.Value}%";
+        }
 
     private async Task SaveAsync(string path, bool saveSvg)
     {

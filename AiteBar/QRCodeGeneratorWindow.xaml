@@ -225,6 +225,8 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="8"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="8"/>
+                            <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE790;" Style="{StaticResource IconTextStyle}"/>
@@ -253,24 +255,35 @@
                             <Border x:Name="LightColorSwatch" Grid.Column="3" Style="{StaticResource ColorSwatchStyle}" Background="#FFFFFF" MouseLeftButtonUp="LightColorSwatch_Click"/>
                         </Grid>
                         <Grid Grid.Row="6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="132"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="8"/>
-                                <ColumnDefinition Width="92"/>
-                                <ColumnDefinition Width="8"/>
-                                <ColumnDefinition Width="92"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_LogoOptional}" Style="{StaticResource FieldLabelStyle}"/>
-                            <Grid Grid.Column="1">
-                                <TextBox x:Name="TxtLogoPath" IsReadOnly="True" Style="{StaticResource CompactTextBoxStyle}" Visibility="Collapsed"/>
-                                <Border x:Name="LogoPreviewBorder" Width="32" Height="32" Background="White" CornerRadius="4" BorderBrush="#263241" BorderThickness="1" HorizontalAlignment="Left" Visibility="Collapsed">
-                                    <Image x:Name="LogoPreviewImage" Stretch="Uniform"/>
-                                </Border>
-                            </Grid>
-                            <Button Grid.Column="3" Content="{local:Loc ResourceKey=QRCodeGenerator_ChooseLogo}" Style="{StaticResource MiniButtonStyle}" Click="BtnChooseLogo_Click"/>
-                            <Button x:Name="BtnClearLogo" Grid.Column="5" Content="{local:Loc ResourceKey=QRCodeGenerator_DeleteLogo}" Style="{StaticResource MiniButtonStyle}" Click="BtnClearLogo_Click"/>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="132" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="92" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="92" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_LogoOptional}" Style="{StaticResource FieldLabelStyle}" />
+                        <Grid Grid.Column="1">
+                            <TextBox x:Name="TxtLogoPath" IsReadOnly="True" Style="{StaticResource CompactTextBoxStyle}" Visibility="Collapsed" />
+                            <Border x:Name="LogoPreviewBorder" Width="32" Height="32" Background="White" CornerRadius="4" BorderBrush="#263241" BorderThickness="1" HorizontalAlignment="Left" Visibility="Collapsed">
+                                <Image x:Name="LogoPreviewImage" Stretch="Uniform" />
+                            </Border>
                         </Grid>
+                        <Button Grid.Column="3" Content="{local:Loc ResourceKey=QRCodeGenerator_ChooseLogo}" Style="{StaticResource MiniButtonStyle}" Click="BtnChooseLogo_Click" />
+                        <Button x:Name="BtnClearLogo" Grid.Column="5" Content="{local:Loc ResourceKey=QRCodeGenerator_DeleteLogo}" Style="{StaticResource MiniButtonStyle}" Click="BtnClearLogo_Click" />
+                    </Grid>
+                    <Grid Grid.Row="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="132" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="40" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_LogoSize}" Style="{StaticResource FieldLabelStyle}" />
+                        <Slider x:Name="SliderLogoSize" Grid.Column="1" Minimum="8" Maximum="20" Value="18" TickFrequency="1" IsSnapToTickEnabled="True" Style="{StaticResource {x:Type Slider}}" ValueChanged="Options_Changed" />
+                        <TextBlock x:Name="TxtLogoSizeValue" Grid.Column="3" Text="18%" Style="{StaticResource FieldLabelStyle}" HorizontalAlignment="Right" />
+                    </Grid>
                     </Grid>
                 </Border>
 
@@ -317,16 +330,16 @@
                             </ComboBox>
                         </Grid>
                         <Grid Grid.Row="6">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="132"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="8"/>
-                                <ColumnDefinition Width="40"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="Отступ" Style="{StaticResource FieldLabelStyle}"/>
-                            <Slider x:Name="SliderMargin" Grid.Column="1" Minimum="0" Maximum="20" Value="4" TickFrequency="1" IsSnapToTickEnabled="True" Style="{StaticResource {x:Type Slider}}" ValueChanged="Options_Changed"/>
-                            <TextBlock x:Name="TxtMarginValue" Grid.Column="3" Text="4" Style="{StaticResource FieldLabelStyle}" HorizontalAlignment="Right"/>
-                        </Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="132" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="8" />
+                            <ColumnDefinition Width="40" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Margin}" Style="{StaticResource FieldLabelStyle}" />
+                        <Slider x:Name="SliderMargin" Grid.Column="1" Minimum="0" Maximum="20" Value="4" TickFrequency="1" IsSnapToTickEnabled="True" Style="{StaticResource {x:Type Slider}}" ValueChanged="Options_Changed" />
+                        <TextBlock x:Name="TxtMarginValue" Grid.Column="3" Text="4" Style="{StaticResource FieldLabelStyle}" HorizontalAlignment="Right" />
+                    </Grid>
                     </Grid>
                 </Border>
 

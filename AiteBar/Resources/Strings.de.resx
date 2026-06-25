@@ -468,10 +468,13 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="QRCodeGenerator_ContrastStatus" xml:space="preserve"><value>Kontrast: {0}:1</value></data>
   <data name="QRCodeGenerator_WarningLowContrast" xml:space="preserve"><value>Niedriger Kontrast ({0}:1), Scannen kann unzuverlässig sein.</value></data>
   <data name="QRCodeGenerator_WarningLogoRequiresHighEcc" xml:space="preserve"><value>Logo nutzt hohe Fehlerkorrektur.</value></data>
+  <data name="QRCodeGenerator_WarningInvalidDarkColor" xml:space="preserve"><value>Ungültige QR-Code-Farbe, Standard wird verwendet.</value></data>
+  <data name="QRCodeGenerator_WarningInvalidLightColor" xml:space="preserve"><value>Ungültige Hintergrundfarbe, Standard wird verwendet.</value></data>
   <data name="QRCodeGenerator_ErrorLogoNotFound" xml:space="preserve"><value>Logo-Datei wurde nicht gefunden.</value></data>
   <data name="QRCodeGenerator_ErrorInvalidLogo" xml:space="preserve"><value>Logo-Bild konnte nicht gelesen werden.</value></data>
   <data name="QRCodeGenerator_ChooseLogoTitle" xml:space="preserve"><value>Logo wählen</value></data>
-  <data name="QRCodeGenerator_LogoFilter" xml:space="preserve"><value>Bilder|*.png;*.jpg;*.jpeg;*.webp;*.bmp|Alle Dateien|*.*</value></data>  <data name="Utility_Unavailable" xml:space="preserve"><value>Dienstprogramm {0} ist vorübergehend nicht verfügbar.</value></data>
+  <data name="QRCodeGenerator_LogoFilter" xml:space="preserve"><value>Bilder|*.png;*.jpg;*.jpeg;*.webp;*.bmp|Alle Dateien|*.*</value></data>
+  <data name="Utility_Unavailable" xml:space="preserve"><value>Dienstprogramm {0} ist vorübergehend nicht verfügbar.</value></data>
   <data name="QRCodeGenerator_WifiSecurityWpa" xml:space="preserve"><value>WPA</value></data>
   <data name="QRCodeGenerator_WifiSecurityWep" xml:space="preserve"><value>WEP</value></data>
   <data name="QRCodeGenerator_WifiSecurityNone" xml:space="preserve"><value>Ohne Passwort</value></data>
@@ -484,6 +487,8 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Logo</value></data>
   <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Form</value></data>
   <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Qualität &amp; Größe</value></data>
+  <data name="QRCodeGenerator_Margin" xml:space="preserve"><value>Abstand</value></data>
+  <data name="QRCodeGenerator_LogoSize" xml:space="preserve"><value>Logo-Größe</value></data>
   <data name="QRCodeGenerator_PresetScreenDetailed" xml:space="preserve"><value>Optimiert für Bildschirm</value></data>
   <data name="QRCodeGenerator_CreateQr" xml:space="preserve"><value>QR-Code generieren</value></data>
   <data name="QRCodeGenerator_Png800Subtext" xml:space="preserve"><value>Als PNG-Bild speichern</value></data>

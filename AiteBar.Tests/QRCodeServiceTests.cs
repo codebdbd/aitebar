@@ -129,7 +129,7 @@ public sealed class QRCodeServiceTests
                 Text = "https://example.com",
                 EccLevel = QRCodeEccLevel.L,
                 LogoPath = logoPath
-            }).EccLevel);
+            }).options.EccLevel);
         }
         finally
         {

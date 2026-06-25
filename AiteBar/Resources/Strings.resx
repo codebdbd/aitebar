@@ -510,6 +510,8 @@ Open the GitHub release page?</value></data>
   <data name="QRCodeGenerator_ContrastStatus" xml:space="preserve"><value>Contrast: {0}:1</value></data>
   <data name="QRCodeGenerator_WarningLowContrast" xml:space="preserve"><value>Low contrast ({0}:1), scanning may be unreliable.</value></data>
   <data name="QRCodeGenerator_WarningLogoRequiresHighEcc" xml:space="preserve"><value>Logo uses high error correction.</value></data>
+  <data name="QRCodeGenerator_WarningInvalidDarkColor" xml:space="preserve"><value>Invalid dark color, using default.</value></data>
+  <data name="QRCodeGenerator_WarningInvalidLightColor" xml:space="preserve"><value>Invalid light color, using default.</value></data>
   <data name="QRCodeGenerator_ErrorLogoNotFound" xml:space="preserve"><value>Logo file was not found.</value></data>
   <data name="QRCodeGenerator_ErrorInvalidLogo" xml:space="preserve"><value>Logo image could not be read.</value></data>
   <data name="QRCodeGenerator_ChooseLogoTitle" xml:space="preserve"><value>Choose logo</value></data>
@@ -542,6 +544,8 @@ Open the GitHub release page?</value></data>
   <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Logo</value></data>
   <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Shape</value></data>
   <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Quality &amp; size</value></data>
+  <data name="QRCodeGenerator_Margin" xml:space="preserve"><value>Margin</value></data>
+  <data name="QRCodeGenerator_LogoSize" xml:space="preserve"><value>Logo size</value></data>
   <data name="QRCodeGenerator_PresetScreenDetailed" xml:space="preserve"><value>Optimized for screen display</value></data>
   <data name="QRCodeGenerator_CreateQr" xml:space="preserve"><value>Generate QR code</value></data>
   <data name="QRCodeGenerator_Png800Subtext" xml:space="preserve"><value>Save as PNG image</value></data>

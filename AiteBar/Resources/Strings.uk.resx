@@ -463,6 +463,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_ContrastStatus" xml:space="preserve"><value>Контраст: {0}:1</value></data>
   <data name="QRCodeGenerator_WarningLowContrast" xml:space="preserve"><value>Низький контраст ({0}:1), сканування може бути ненадійним.</value></data>
   <data name="QRCodeGenerator_WarningLogoRequiresHighEcc" xml:space="preserve"><value>Логотип використовує високу корекцію помилок.</value></data>
+  <data name="QRCodeGenerator_WarningInvalidDarkColor" xml:space="preserve"><value>Некоректний колір QR-коду, використовується значення за замовчуванням.</value></data>
+  <data name="QRCodeGenerator_WarningInvalidLightColor" xml:space="preserve"><value>Некоректний колір фону, використовується значення за замовчуванням.</value></data>
   <data name="QRCodeGenerator_ErrorLogoNotFound" xml:space="preserve"><value>Файл логотипа не знайдено.</value></data>
   <data name="QRCodeGenerator_ErrorInvalidLogo" xml:space="preserve"><value>Не вдалося прочитати зображення логотипа.</value></data>
   <data name="QRCodeGenerator_ChooseLogoTitle" xml:space="preserve"><value>Обрати логотип</value></data>
@@ -479,6 +481,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Логотип</value></data>
   <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Форма</value></data>
   <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Якість та розмір</value></data>
+  <data name="QRCodeGenerator_Margin" xml:space="preserve"><value>Відступ</value></data>
+  <data name="QRCodeGenerator_LogoSize" xml:space="preserve"><value>Розмір логотипу</value></data>
   <data name="QRCodeGenerator_PresetScreenDetailed" xml:space="preserve"><value>Оптимізовано для екрану</value></data>
   <data name="QRCodeGenerator_CreateQr" xml:space="preserve"><value>Створити QR-код</value></data>
   <data name="QRCodeGenerator_Png800Subtext" xml:space="preserve"><value>Зберегти як зображення PNG</value></data>

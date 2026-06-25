@@ -24,7 +24,7 @@ public sealed class QRCodeService
     {
         return Task.Run(() =>
         {
-            QRCodeGenerationOptions normalizedOptions = NormalizeOptions(options);
+            var (normalizedOptions, darkInvalid, lightInvalid) = NormalizeOptions(options);
             string payload = BuildPayload(normalizedOptions);
             using QRCodeData qrData = GenerateQrDataUnchecked(payload, normalizedOptions.EccLevel);
 
@@ -45,7 +45,7 @@ public sealed class QRCodeService
                 PixelHeight = normalizedOptions.OutputSize,
                 Payload = payload,
                 ContrastRatio = contrastRatio,
-                Warnings = BuildWarnings(normalizedOptions, contrastRatio)
+                Warnings = BuildWarnings(normalizedOptions, contrastRatio, darkInvalid, lightInvalid)
             };
         }, cancellationToken);
     }
@@ -72,7 +72,8 @@ public sealed class QRCodeService
             LightColor = lightColor
         };
 
-        return RenderPng(data, NormalizeOptions(options), exactOutputSize: false);
+        var (normalized, _, _) = NormalizeOptions(options);
+        return RenderPng(data, normalized, exactOutputSize: false);
     }
 
     public string RenderSvg(QRCodeData data, int pixelSize, string darkColor, string lightColor, int margin)
@@ -90,7 +91,8 @@ public sealed class QRCodeService
             LightColor = lightColor
         };
 
-        return RenderSvg(data, NormalizeOptions(options), exactOutputSize: false);
+        var (normalized, _, _) = NormalizeOptions(options);
+        return RenderSvg(data, normalized, exactOutputSize: false);
     }
 
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
@@ -100,10 +102,12 @@ public sealed class QRCodeService
         ValidateRenderOptions(pixelSize, margin);
 
         var renderer = new QRCoder.Xaml.XamlQRCode(data);
+        var (dark, _) = NormalizeColor(darkColor, "#000000");
+        var (light, _) = NormalizeColor(lightColor, "#FFFFFF");
         var image = renderer.GetGraphic(
             pixelSize,
-            NormalizeColor(darkColor, "#000000"),
-            NormalizeColor(lightColor, "#FFFFFF"),
+            dark,
+            light,
             drawQuietZones: margin > 0);
         image.Freeze();
         return image;
@@ -116,7 +120,7 @@ public sealed class QRCodeService
         return moduleCount <= 21 ? 1 : ((moduleCount - 21) / 4) + 1;
     }
 
-    internal static QRCodeGenerationOptions NormalizeOptions(QRCodeGenerationOptions options)
+    internal static (QRCodeGenerationOptions options, bool darkInvalid, bool lightInvalid) NormalizeOptions(QRCodeGenerationOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -139,6 +143,9 @@ public sealed class QRCodeService
 
         outputSize = Math.Clamp(outputSize, MinOutputSize, MaxOutputSize);
 
+        var (darkColor, darkInvalid) = NormalizeColor(options.DarkColor, "#000000");
+        var (lightColor, lightInvalid) = NormalizeColor(options.LightColor, "#FFFFFF");
+
         var normalized = new QRCodeGenerationOptions
         {
             Text = options.Text.Trim(),
@@ -152,8 +159,8 @@ public sealed class QRCodeService
             PixelSize = Math.Clamp(options.PixelSize, 1, 100),
             Margin = Math.Clamp(options.Margin, 0, 10),
             EccLevel = eccLevel,
-            DarkColor = NormalizeColor(options.DarkColor, "#000000"),
-            LightColor = NormalizeColor(options.LightColor, "#FFFFFF"),
+            DarkColor = darkColor,
+            LightColor = lightColor,
             ModuleShape = options.ModuleShape,
             EyeStyle = options.EyeStyle,
             LogoPath = string.IsNullOrWhiteSpace(options.LogoPath) ? null : options.LogoPath.Trim(),
@@ -166,12 +173,12 @@ public sealed class QRCodeService
             throw new FileNotFoundException(LocalizationService.Get("QRCodeGenerator_ErrorLogoNotFound"), normalized.LogoPath);
         }
 
-        return normalized;
+        return (normalized, darkInvalid, lightInvalid);
     }
 
     internal static string BuildPayload(QRCodeGenerationOptions options)
     {
-        QRCodeGenerationOptions normalized = NormalizeOptions(options);
+        var (normalized, _, _) = NormalizeOptions(options);
         return normalized.ContentType switch
         {
             QRCodeContentType.Url => NormalizeUrlPayload(normalized.Text),
@@ -348,19 +355,91 @@ public sealed class QRCodeService
 
     private static void AppendModules(StringBuilder svg, QRCodeData data, int margin, float moduleSize, string darkColor, QRCodeModuleShape shape)
     {
+        if (shape == QRCodeModuleShape.Square)
+        {
+            AppendOptimizedSquareModules(svg, data, margin, moduleSize, darkColor);
+        }
+        else
+        {
+            int count = data.ModuleMatrix.Count;
+            for (int y = 0; y < count; y++)
+            {
+                for (int x = 0; x < count; x++)
+                {
+                    if (!data.ModuleMatrix[y][x] || IsFinderPatternModule(x, y, count))
+                    {
+                        continue;
+                    }
+
+                    float px = (margin + x) * moduleSize;
+                    float py = (margin + y) * moduleSize;
+                    AppendModule(svg, px, py, moduleSize, darkColor, shape);
+                }
+            }
+        }
+    }
+
+    private static void AppendOptimizedSquareModules(StringBuilder svg, QRCodeData data, int margin, float moduleSize, string darkColor)
+    {
         int count = data.ModuleMatrix.Count;
+        bool[,] visited = new bool[count, count];
+
         for (int y = 0; y < count; y++)
         {
             for (int x = 0; x < count; x++)
             {
-                if (!data.ModuleMatrix[y][x] || IsFinderPatternModule(x, y, count))
+                if (visited[y, x] || !data.ModuleMatrix[y][x] || IsFinderPatternModule(x, y, count))
                 {
                     continue;
                 }
 
+                // Expand right as much as possible
+                int width = 1;
+                while (x + width < count && 
+                       !visited[y, x + width] && 
+                       data.ModuleMatrix[y][x + width] && 
+                       !IsFinderPatternModule(x + width, y, count))
+                {
+                    width++;
+                }
+
+                // Now expand down as much as possible for this width
+                int height = 1;
+                bool canExpandDown = true;
+                while (canExpandDown && y + height < count)
+                {
+                    for (int dx = 0; dx < width; dx++)
+                    {
+                        if (visited[y + height, x + dx] || 
+                            !data.ModuleMatrix[y + height][x + dx] || 
+                            IsFinderPatternModule(x + dx, y + height, count))
+                        {
+                            canExpandDown = false;
+                            break;
+                        }
+                    }
+
+                    if (canExpandDown)
+                    {
+                        height++;
+                    }
+                }
+
+                // Mark all modules in this rectangle as visited
+                for (int dy = 0; dy < height; dy++)
+                {
+                    for (int dx = 0; dx < width; dx++)
+                    {
+                        visited[y + dy, x + dx] = true;
+                    }
+                }
+
+                // Append the merged rectangle
                 float px = (margin + x) * moduleSize;
                 float py = (margin + y) * moduleSize;
-                AppendModule(svg, px, py, moduleSize, darkColor, shape);
+                float w = width * moduleSize;
+                float h = height * moduleSize;
+                svg.Append(CultureInfo.InvariantCulture, $"  <rect x=\"{px:0.###}\" y=\"{py:0.###}\" width=\"{w:0.###}\" height=\"{h:0.###}\" fill=\"{darkColor}\"/>\n");
             }
         }
     }
@@ -498,7 +577,7 @@ public sealed class QRCodeService
             bounds.Top + ((bounds.Height + height) / 2f));
     }
 
-    private static IReadOnlyList<string> BuildWarnings(QRCodeGenerationOptions options, double contrastRatio)
+    private static IReadOnlyList<string> BuildWarnings(QRCodeGenerationOptions options, double contrastRatio, bool darkInvalid, bool lightInvalid)
     {
         var warnings = new List<string>();
         if (contrastRatio < MinRecommendedContrastRatio)
@@ -509,6 +588,16 @@ public sealed class QRCodeService
         if (options.LogoPath != null && options.EccLevel != QRCodeEccLevel.H)
         {
             warnings.Add(LocalizationService.Get("QRCodeGenerator_WarningLogoRequiresHighEcc"));
+        }
+
+        if (darkInvalid)
+        {
+            warnings.Add(LocalizationService.Get("QRCodeGenerator_WarningInvalidDarkColor"));
+        }
+
+        if (lightInvalid)
+        {
+            warnings.Add(LocalizationService.Get("QRCodeGenerator_WarningInvalidLightColor"));
         }
 
         return warnings;
@@ -609,14 +698,14 @@ public sealed class QRCodeService
 
     private static SKColor ParseSkColor(string color, string fallback)
     {
-        string normalized = NormalizeColor(color, fallback);
+        var (normalized, _) = NormalizeColor(color, fallback);
         return new SKColor(
             Convert.ToByte(normalized.Substring(1, 2), 16),
             Convert.ToByte(normalized.Substring(3, 2), 16),
             Convert.ToByte(normalized.Substring(5, 2), 16));
     }
 
-    private static string NormalizeColor(string? color, string fallback)
+    private static (string normalizedColor, bool wasInvalid) NormalizeColor(string? color, string fallback)
     {
         string candidate = string.IsNullOrWhiteSpace(color) ? fallback : color.Trim();
         if (!candidate.StartsWith('#'))
@@ -624,22 +713,31 @@ public sealed class QRCodeService
             candidate = $"#{candidate}";
         }
 
+        bool invalid = false;
         if (candidate.Length != 7)
         {
-            return fallback;
+            invalid = true;
         }
-
-        for (int i = 1; i < candidate.Length; i++)
+        else
         {
-            char ch = candidate[i];
-            bool isHex = ch is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F';
-            if (!isHex)
+            for (int i = 1; i < candidate.Length; i++)
             {
-                return fallback;
+                char ch = candidate[i];
+                bool isHex = ch is >= '0' and <= '9' or >= 'a' and <= 'f' or >= 'A' and <= 'F';
+                if (!isHex)
+                {
+                    invalid = true;
+                    break;
+                }
             }
         }
 
-        return candidate.ToUpperInvariant();
+        if (invalid)
+        {
+            return (fallback, true);
+        }
+
+        return (candidate.ToUpperInvariant(), false);
     }
 
     private static double RelativeLuminance(SKColor color)
