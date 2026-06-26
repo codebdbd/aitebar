@@ -165,11 +165,7 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Type}" Style="{StaticResource FieldLabelStyle}"/>
-                            <ComboBox x:Name="CmbContentType" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectedIndex="1" SelectionChanged="ContentType_Changed">
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_TypeText}" Tag="Text"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_TypeUrl}" Tag="Url"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_TypeWifi}" Tag="Wifi"/>
-                            </ComboBox>
+                            <ComboBox x:Name="CmbContentType" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectionChanged="ContentType_Changed"/>
                         </Grid>
                         <Grid x:Name="InputTextPanel" Grid.Row="4">
                             <Grid.ColumnDefinitions>
@@ -204,11 +200,7 @@
                                     <ColumnDefinition Width="118"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="TxtWifiPassword" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
-                                <ComboBox x:Name="CmbWifiSecurity" Grid.Column="2" Style="{StaticResource CompactComboStyle}" SelectedIndex="0" SelectionChanged="Options_Changed">
-                                    <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_WifiSecurityWpa}" Tag="Wpa"/>
-                                    <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_WifiSecurityWep}" Tag="Wep"/>
-                                    <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_WifiSecurityNone}" Tag="None"/>
-                                </ComboBox>
+                                <ComboBox x:Name="CmbWifiSecurity" Grid.Column="2" Style="{StaticResource CompactComboStyle}" SelectionChanged="Options_Changed"/>
                             </Grid>
                             <CheckBox x:Name="ChkWifiHidden" Grid.Row="4" Grid.Column="1" Content="{local:Loc ResourceKey=QRCodeGenerator_WifiHidden}" Checked="Options_Changed" Unchecked="Options_Changed"/>
                         </Grid>
@@ -308,13 +300,7 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Shape}" Style="{StaticResource FieldLabelStyle}"/>
-                            <ComboBox x:Name="CmbModuleShape" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectedIndex="0" SelectionChanged="Options_Changed">
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleSquare}" Tag="Square"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleRounded}" Tag="Rounded"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleCircle}" Tag="Circle"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleDot}" Tag="Dot"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_ModuleDiamond}" Tag="Diamond"/>
-                            </ComboBox>
+                            <ComboBox x:Name="CmbModuleShape" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectionChanged="Options_Changed"/>
                         </Grid>
                         <Grid Grid.Row="4">
                             <Grid.ColumnDefinitions>
@@ -322,12 +308,7 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Eyes}" Style="{StaticResource FieldLabelStyle}"/>
-                            <ComboBox x:Name="CmbEyeStyle" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectedIndex="0" SelectionChanged="Options_Changed">
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EyeSquare}" Tag="Square"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EyeRounded}" Tag="Rounded"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EyeCircle}" Tag="Circle"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EyeDiamond}" Tag="Diamond"/>
-                            </ComboBox>
+                            <ComboBox x:Name="CmbEyeStyle" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectionChanged="Options_Changed"/>
                         </Grid>
                         <Grid Grid.Row="6">
                         <Grid.ColumnDefinitions>
@@ -365,28 +346,16 @@
                                 <ColumnDefinition Width="132"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Размер" Style="{StaticResource FieldLabelStyle}"/>
-                            <ComboBox x:Name="CmbOutputSize" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectedIndex="1" SelectionChanged="Options_Changed">
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_Output512}" Tag="512"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_Output800}" Tag="800"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_Output1000}" Tag="1000"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_Output1200}" Tag="1200"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_Output1600}" Tag="1600"/>
-                            </ComboBox>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_OutputSize}" Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox x:Name="CmbOutputSize" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectionChanged="Options_Changed"/>
                         </Grid>
                         <Grid Grid.Row="4">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="132"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="Качество" Style="{StaticResource FieldLabelStyle}"/>
-                            <ComboBox x:Name="CmbQualityPreset" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectedIndex="0" SelectionChanged="QualityPreset_Changed">
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetScreen}" Tag="Screen"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetScreenHD}" Tag="ScreenHD"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetPrint}" Tag="Print"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetPrintHigh}" Tag="PrintHigh"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_PresetLogo}" Tag="Logo"/>
-                            </ComboBox>
+                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Quality}" Style="{StaticResource FieldLabelStyle}"/>
+                            <ComboBox x:Name="CmbQualityPreset" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectionChanged="QualityPreset_Changed"/>
                         </Grid>
                         <Grid Grid.Row="6">
                             <Grid.ColumnDefinitions>
@@ -394,12 +363,7 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_EccLevel}" Style="{StaticResource FieldLabelStyle}"/>
-                            <ComboBox x:Name="CmbEccLevel" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectedIndex="2" SelectionChanged="Options_Changed">
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EccLevelL}" Tag="L"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EccLevelM}" Tag="M"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EccLevelQ}" Tag="Q"/>
-                                <ComboBoxItem Content="{local:Loc ResourceKey=QRCodeGenerator_EccLevelH}" Tag="H"/>
-                            </ComboBox>
+                            <ComboBox x:Name="CmbEccLevel" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectionChanged="Options_Changed"/>
                         </Grid>
                     </Grid>
                 </Border>

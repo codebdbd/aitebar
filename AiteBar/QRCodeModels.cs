@@ -1,5 +1,34 @@
 namespace AiteBar;
 
+public sealed class ComboItem<T>
+{
+    public string DisplayText { get; }
+    public T Value { get; }
+
+    public ComboItem(string displayText, T value)
+    {
+        DisplayText = displayText;
+        Value = value;
+    }
+
+    public override string ToString() => DisplayText;
+}
+
+public static class QRCodeQualityPresetExtensions
+{
+    public static int GetOutputSize(this QRCodeQualityPreset preset)
+    {
+        return preset switch
+        {
+            QRCodeQualityPreset.ScreenHD => 1200,
+            QRCodeQualityPreset.Print => 1200,
+            QRCodeQualityPreset.PrintHigh => 2000,
+            QRCodeQualityPreset.Logo => 1000,
+            _ => 800
+        };
+    }
+}
+
 public enum QRCodeEccLevel
 {
     L,

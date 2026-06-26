@@ -27,6 +27,57 @@ public partial class QRCodeGeneratorWindow : DarkWindow
     public QRCodeGeneratorWindow()
     {
         InitializeComponent();
+
+        // Initialize Content Type combo
+        CmbContentType.Items.Add(new ComboItem<QRCodeContentType>(LocalizationService.Get("QRCodeGenerator_TypeText"), QRCodeContentType.Text));
+        CmbContentType.Items.Add(new ComboItem<QRCodeContentType>(LocalizationService.Get("QRCodeGenerator_TypeUrl"), QRCodeContentType.Url));
+        CmbContentType.Items.Add(new ComboItem<QRCodeContentType>(LocalizationService.Get("QRCodeGenerator_TypeWifi"), QRCodeContentType.Wifi));
+        CmbContentType.SelectedIndex = 1;
+
+        // Initialize Wifi Security combo
+        CmbWifiSecurity.Items.Add(new ComboItem<QRCodeWifiSecurity>(LocalizationService.Get("QRCodeGenerator_WifiSecurityWpa"), QRCodeWifiSecurity.Wpa));
+        CmbWifiSecurity.Items.Add(new ComboItem<QRCodeWifiSecurity>(LocalizationService.Get("QRCodeGenerator_WifiSecurityWep"), QRCodeWifiSecurity.Wep));
+        CmbWifiSecurity.Items.Add(new ComboItem<QRCodeWifiSecurity>(LocalizationService.Get("QRCodeGenerator_WifiSecurityNone"), QRCodeWifiSecurity.None));
+        CmbWifiSecurity.SelectedIndex = 0;
+
+        // Initialize Quality Preset combo
+        CmbQualityPreset.Items.Add(new ComboItem<QRCodeQualityPreset>(LocalizationService.Get("QRCodeGenerator_PresetScreen"), QRCodeQualityPreset.Screen));
+        CmbQualityPreset.Items.Add(new ComboItem<QRCodeQualityPreset>(LocalizationService.Get("QRCodeGenerator_PresetScreenHD"), QRCodeQualityPreset.ScreenHD));
+        CmbQualityPreset.Items.Add(new ComboItem<QRCodeQualityPreset>(LocalizationService.Get("QRCodeGenerator_PresetPrint"), QRCodeQualityPreset.Print));
+        CmbQualityPreset.Items.Add(new ComboItem<QRCodeQualityPreset>(LocalizationService.Get("QRCodeGenerator_PresetPrintHigh"), QRCodeQualityPreset.PrintHigh));
+        CmbQualityPreset.Items.Add(new ComboItem<QRCodeQualityPreset>(LocalizationService.Get("QRCodeGenerator_PresetLogo"), QRCodeQualityPreset.Logo));
+        CmbQualityPreset.SelectedIndex = 0;
+
+        // Initialize Output Size combo
+        CmbOutputSize.Items.Add(new ComboItem<int>(LocalizationService.Get("QRCodeGenerator_Output512"), 512));
+        CmbOutputSize.Items.Add(new ComboItem<int>(LocalizationService.Get("QRCodeGenerator_Output800"), 800));
+        CmbOutputSize.Items.Add(new ComboItem<int>(LocalizationService.Get("QRCodeGenerator_Output1000"), 1000));
+        CmbOutputSize.Items.Add(new ComboItem<int>(LocalizationService.Get("QRCodeGenerator_Output1200"), 1200));
+        CmbOutputSize.Items.Add(new ComboItem<int>(LocalizationService.Get("QRCodeGenerator_Output1600"), 1600));
+        CmbOutputSize.SelectedIndex = 1;
+
+        // Initialize ECC Level combo
+        CmbEccLevel.Items.Add(new ComboItem<QRCodeEccLevel>(LocalizationService.Get("QRCodeGenerator_EccLevelL"), QRCodeEccLevel.L));
+        CmbEccLevel.Items.Add(new ComboItem<QRCodeEccLevel>(LocalizationService.Get("QRCodeGenerator_EccLevelM"), QRCodeEccLevel.M));
+        CmbEccLevel.Items.Add(new ComboItem<QRCodeEccLevel>(LocalizationService.Get("QRCodeGenerator_EccLevelQ"), QRCodeEccLevel.Q));
+        CmbEccLevel.Items.Add(new ComboItem<QRCodeEccLevel>(LocalizationService.Get("QRCodeGenerator_EccLevelH"), QRCodeEccLevel.H));
+        CmbEccLevel.SelectedIndex = 2;
+
+        // Initialize Module Shape combo
+        CmbModuleShape.Items.Add(new ComboItem<QRCodeModuleShape>(LocalizationService.Get("QRCodeGenerator_ModuleSquare"), QRCodeModuleShape.Square));
+        CmbModuleShape.Items.Add(new ComboItem<QRCodeModuleShape>(LocalizationService.Get("QRCodeGenerator_ModuleRounded"), QRCodeModuleShape.Rounded));
+        CmbModuleShape.Items.Add(new ComboItem<QRCodeModuleShape>(LocalizationService.Get("QRCodeGenerator_ModuleCircle"), QRCodeModuleShape.Circle));
+        CmbModuleShape.Items.Add(new ComboItem<QRCodeModuleShape>(LocalizationService.Get("QRCodeGenerator_ModuleDot"), QRCodeModuleShape.Dot));
+        CmbModuleShape.Items.Add(new ComboItem<QRCodeModuleShape>(LocalizationService.Get("QRCodeGenerator_ModuleDiamond"), QRCodeModuleShape.Diamond));
+        CmbModuleShape.SelectedIndex = 0;
+
+        // Initialize Eye Style combo
+        CmbEyeStyle.Items.Add(new ComboItem<QRCodeEyeStyle>(LocalizationService.Get("QRCodeGenerator_EyeSquare"), QRCodeEyeStyle.Square));
+        CmbEyeStyle.Items.Add(new ComboItem<QRCodeEyeStyle>(LocalizationService.Get("QRCodeGenerator_EyeRounded"), QRCodeEyeStyle.Rounded));
+        CmbEyeStyle.Items.Add(new ComboItem<QRCodeEyeStyle>(LocalizationService.Get("QRCodeGenerator_EyeCircle"), QRCodeEyeStyle.Circle));
+        CmbEyeStyle.Items.Add(new ComboItem<QRCodeEyeStyle>(LocalizationService.Get("QRCodeGenerator_EyeDiamond"), QRCodeEyeStyle.Diamond));
+        CmbEyeStyle.SelectedIndex = 0;
+
         TxtDarkColor.Text = "#000000";
         TxtLightColor.Text = "#FFFFFF";
         _isInitialized = true;
@@ -175,46 +226,55 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         return new QRCodeGenerationOptions
         {
             Text = TxtInput.Text,
-            ContentType = ReadComboTag(CmbContentType, QRCodeContentType.Url),
+            ContentType = GetSelectedValue(CmbContentType, QRCodeContentType.Url),
             WifiSsid = TxtWifiSsid.Text,
             WifiPassword = TxtWifiPassword.Text,
-            WifiSecurity = ReadComboTag(CmbWifiSecurity, QRCodeWifiSecurity.Wpa),
+            WifiSecurity = GetSelectedValue(CmbWifiSecurity, QRCodeWifiSecurity.Wpa),
             WifiHidden = ChkWifiHidden.IsChecked == true,
-            QualityPreset = ReadComboTag(CmbQualityPreset, QRCodeQualityPreset.Screen),
-            OutputSize = ReadOutputSize(),
+            QualityPreset = GetSelectedValue(CmbQualityPreset, QRCodeQualityPreset.Screen),
+            OutputSize = GetSelectedValue(CmbOutputSize, 800),
             Margin = (int)SliderMargin.Value,
-            EccLevel = ReadComboTag(CmbEccLevel, QRCodeEccLevel.Q),
+            EccLevel = GetSelectedValue(CmbEccLevel, QRCodeEccLevel.Q),
             DarkColor = TxtDarkColor.Text,
             LightColor = TxtLightColor.Text,
-            ModuleShape = ReadComboTag(CmbModuleShape, QRCodeModuleShape.Square),
-            EyeStyle = ReadComboTag(CmbEyeStyle, QRCodeEyeStyle.Square),
+            ModuleShape = GetSelectedValue(CmbModuleShape, QRCodeModuleShape.Square),
+            EyeStyle = GetSelectedValue(CmbEyeStyle, QRCodeEyeStyle.Square),
             LogoPath = string.IsNullOrWhiteSpace(TxtLogoPath.Text) ? null : TxtLogoPath.Text,
             LogoSizePercent = (int)SliderLogoSize.Value
         };
     }
 
-    private async Task EnsureRenderedArtifactsAsync()
+    private async Task EnsurePngAsync()
     {
         if (_lastOptions == null)
         {
             throw new InvalidOperationException(LocalizationService.Get("QRCodeGenerator_ErrorEmptyText"));
         }
 
-        if (_lastPngBytes != null && _lastSvgContent != null)
+        if (_lastPngBytes == null)
         {
-            return;
+            _lastPngBytes = await _service.GeneratePngAsync(_lastOptions);
+        }
+    }
+
+    private async Task EnsureSvgAsync()
+    {
+        if (_lastOptions == null)
+        {
+            throw new InvalidOperationException(LocalizationService.Get("QRCodeGenerator_ErrorEmptyText"));
         }
 
-        QRCodeGenerationResult result = await _service.GenerateAsync(_lastOptions);
-        _lastPngBytes = result.PngBytes;
-        _lastSvgContent = result.SvgContent;
+        if (_lastSvgContent == null)
+        {
+            _lastSvgContent = await _service.GenerateSvgAsync(_lastOptions);
+        }
     }
 
     private async void BtnCopyPng_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            await EnsureRenderedArtifactsAsync();
+            await EnsurePngAsync();
             Clipboard.SetImage(CreateBitmapImage(_lastPngBytes!));
             TxtStatus.Text = LocalizationService.Get("QRCodeGenerator_Copied");
         }
@@ -229,7 +289,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
     {
         try
         {
-            await EnsureRenderedArtifactsAsync();
+            await EnsureSvgAsync();
             Clipboard.SetText(_lastSvgContent!);
             TxtStatus.Text = LocalizationService.Get("QRCodeGenerator_CopiedSvg");
         }
@@ -278,7 +338,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
 
     private string GenerateFileName(string extension)
     {
-        var contentType = ReadComboTag(CmbContentType, QRCodeContentType.Url);
+        var contentType = GetSelectedValue(CmbContentType, QRCodeContentType.Url);
         string baseName = "qr-code";
 
         if (contentType == QRCodeContentType.Url && !string.IsNullOrWhiteSpace(TxtInput.Text))
@@ -329,7 +389,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         {
             TxtLogoPath.Text = dialog.FileName;
             UpdateLogoPreview();
-            SelectComboTag(CmbQualityPreset, QRCodeQualityPreset.Logo);
+            SetSelectedValue(CmbQualityPreset, QRCodeQualityPreset.Logo);
             QueuePreviewRefresh();
         }
     }
@@ -460,13 +520,14 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         try
         {
             SetActionsEnabled(false);
-            await EnsureRenderedArtifactsAsync();
             if (saveSvg)
             {
+                await EnsureSvgAsync();
                 await File.WriteAllTextAsync(path, _lastSvgContent!, Encoding.UTF8);
             }
             else
             {
+                await EnsurePngAsync();
                 await File.WriteAllBytesAsync(path, _lastPngBytes!);
             }
 
@@ -531,7 +592,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
 
     private void UpdateInputMode()
     {
-        bool isWifi = ReadComboTag(CmbContentType, QRCodeContentType.Url) == QRCodeContentType.Wifi;
+        bool isWifi = GetSelectedValue(CmbContentType, QRCodeContentType.Url) == QRCodeContentType.Wifi;
         InputTextPanel.Visibility = isWifi ? Visibility.Collapsed : Visibility.Visible;
         WifiPanel.Visibility = isWifi ? Visibility.Visible : Visibility.Collapsed;
         UpdateInputPlaceholder();
@@ -550,21 +611,13 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         _isApplyingPreset = true;
         try
         {
-            QRCodeQualityPreset preset = ReadComboTag(CmbQualityPreset, QRCodeQualityPreset.Screen);
-            int outputSize = preset switch
-            {
-                QRCodeQualityPreset.ScreenHD => 1200,
-                QRCodeQualityPreset.Print => 1200,
-                QRCodeQualityPreset.PrintHigh => 2000,
-                QRCodeQualityPreset.Logo => 1000,
-                _ => 800
-            };
-
-            SelectComboTag(CmbOutputSize, outputSize.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            QRCodeQualityPreset preset = GetSelectedValue(CmbQualityPreset, QRCodeQualityPreset.Screen);
+            int outputSize = preset.GetOutputSize();
+            SetSelectedValue(CmbOutputSize, outputSize);
 
             if (preset == QRCodeQualityPreset.Logo)
             {
-                SelectComboTag(CmbEccLevel, QRCodeEccLevel.H.ToString());
+                SetSelectedValue(CmbEccLevel, QRCodeEccLevel.H);
                 CmbEccLevel.IsEnabled = false;
             }
             else
@@ -580,7 +633,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
 
     private bool HasRequiredInput()
     {
-        return ReadComboTag(CmbContentType, QRCodeContentType.Url) == QRCodeContentType.Wifi
+        return GetSelectedValue(CmbContentType, QRCodeContentType.Url) == QRCodeContentType.Wifi
             ? !string.IsNullOrWhiteSpace(TxtWifiSsid.Text)
             : !string.IsNullOrWhiteSpace(TxtInput.Text);
     }
@@ -592,7 +645,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             return;
         }
 
-        if (ReadComboTag(CmbContentType, QRCodeContentType.Url) == QRCodeContentType.Wifi)
+        if (GetSelectedValue(CmbContentType, QRCodeContentType.Url) == QRCodeContentType.Wifi)
         {
             TxtWifiSsid.Focus();
         }
@@ -602,35 +655,20 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         }
     }
 
-    private int ReadOutputSize()
+    private static T GetSelectedValue<T>(ComboBox comboBox, T fallback)
     {
-        if (CmbOutputSize.SelectedItem is ComboBoxItem item &&
-            int.TryParse(item.Tag?.ToString(), out int outputSize))
+        if (comboBox.SelectedItem is ComboItem<T> item)
         {
-            return outputSize;
+            return item.Value;
         }
-
-        return 800;
-    }
-
-    private static TEnum ReadComboTag<TEnum>(ComboBox comboBox, TEnum fallback)
-        where TEnum : struct
-    {
-        if (comboBox.SelectedItem is ComboBoxItem item &&
-            Enum.TryParse(item.Tag?.ToString(), out TEnum parsed))
-        {
-            return parsed;
-        }
-
         return fallback;
     }
 
-    private static void SelectComboTag(ComboBox comboBox, object tag)
+    private static void SetSelectedValue<T>(ComboBox comboBox, T value)
     {
-        string tagText = tag.ToString() ?? string.Empty;
         foreach (object option in comboBox.Items)
         {
-            if (option is ComboBoxItem item && string.Equals(item.Tag?.ToString(), tagText, StringComparison.OrdinalIgnoreCase))
+            if (option is ComboItem<T> item && Equals(item.Value, value))
             {
                 comboBox.SelectedItem = item;
                 return;

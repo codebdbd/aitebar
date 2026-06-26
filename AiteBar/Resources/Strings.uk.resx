@@ -465,6 +465,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_WarningLogoRequiresHighEcc" xml:space="preserve"><value>Логотип використовує високу корекцію помилок.</value></data>
   <data name="QRCodeGenerator_WarningInvalidDarkColor" xml:space="preserve"><value>Некоректний колір QR-коду, використовується значення за замовчуванням.</value></data>
   <data name="QRCodeGenerator_WarningInvalidLightColor" xml:space="preserve"><value>Некоректний колір фону, використовується значення за замовчуванням.</value></data>
+  <data name="QRCodeGenerator_WarningLargeLogo" xml:space="preserve"><value>Великий розмір логотипа ({0}%), сканування може бути ненадійним.</value></data>
   <data name="QRCodeGenerator_ErrorLogoNotFound" xml:space="preserve"><value>Файл логотипа не знайдено.</value></data>
   <data name="QRCodeGenerator_ErrorInvalidLogo" xml:space="preserve"><value>Не вдалося прочитати зображення логотипа.</value></data>
   <data name="QRCodeGenerator_ChooseLogoTitle" xml:space="preserve"><value>Обрати логотип</value></data>

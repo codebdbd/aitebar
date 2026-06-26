@@ -512,6 +512,7 @@ Open the GitHub release page?</value></data>
   <data name="QRCodeGenerator_WarningLogoRequiresHighEcc" xml:space="preserve"><value>Logo uses high error correction.</value></data>
   <data name="QRCodeGenerator_WarningInvalidDarkColor" xml:space="preserve"><value>Invalid dark color, using default.</value></data>
   <data name="QRCodeGenerator_WarningInvalidLightColor" xml:space="preserve"><value>Invalid light color, using default.</value></data>
+  <data name="QRCodeGenerator_WarningLargeLogo" xml:space="preserve"><value>Large logo size ({0}%), scanning may be unreliable.</value></data>
   <data name="QRCodeGenerator_ErrorLogoNotFound" xml:space="preserve"><value>Logo file was not found.</value></data>
   <data name="QRCodeGenerator_ErrorInvalidLogo" xml:space="preserve"><value>Logo image could not be read.</value></data>
   <data name="QRCodeGenerator_ChooseLogoTitle" xml:space="preserve"><value>Choose logo</value></data>
