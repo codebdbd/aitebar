@@ -146,6 +146,8 @@ public sealed class QRCodeService
         }
     }
 
+    private readonly record struct QrRenderLayout(int OutputSize, float ModuleSize, float Offset);
+
     private GenerationContext PrepareGenerationContext(QRCodeGenerationOptions options)
     {
         var (normalizedOptions, darkInvalid, lightInvalid) = NormalizeOptions(options);
@@ -350,12 +352,12 @@ public sealed class QRCodeService
 
     private static void DrawModule(SKCanvas canvas, float x, float y, float size, SKPaint paint, QRCodeModuleShape shape)
     {
-        float inset = shape == QRCodeModuleShape.Square ? 0 : size * 0.08f;
+        float inset = GetModuleInset(shape, size);
         var rect = new SKRect(x + inset, y + inset, x + size - inset, y + size - inset);
         switch (shape)
         {
             case QRCodeModuleShape.Dot:
-                canvas.DrawCircle(x + size / 2f, y + size / 2f, size * 0.25f, paint);
+                canvas.DrawCircle(x + size / 2f, y + size / 2f, size * 0.42f, paint);
                 break;
             case QRCodeModuleShape.Circle:
                 canvas.DrawCircle(rect.MidX, rect.MidY, Math.Min(rect.Width, rect.Height) / 2f, paint);
@@ -455,22 +457,29 @@ public sealed class QRCodeService
     private static byte[] RenderPng(QRCodeData data, int size, bool exactSize, SKColor skDarkColor, SKColor skLightColor, int margin, QRCodeModuleShape moduleShape, QRCodeEyeStyle eyeStyle, LogoData? logoData, int logoSizePercent = 20, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        int outputSize = exactSize 
-            ? size 
-            : Math.Max(1, (data.ModuleMatrix.Count + (margin * 2)) * size);
-        using SKSurface surface = SKSurface.Create(new SKImageInfo(outputSize, outputSize, SKColorType.Rgba8888, SKAlphaType.Premul))
+        QrRenderLayout layout = CreateLayout(size, exactSize, data.ModuleMatrix.Count, margin);
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(layout.OutputSize, layout.OutputSize, SKColorType.Rgba8888, SKAlphaType.Premul))
             ?? throw new InvalidDataException(LocalizationService.Get("QRCodeGenerator_ErrorGeneric"));
         SKCanvas canvas = surface.Canvas;
         canvas.Clear(skLightColor);
 
-        using var paint = new SKPaint { IsAntialias = moduleShape != QRCodeModuleShape.Square, Color = skDarkColor, Style = SKPaintStyle.Fill };
-        using var lightPaint = new SKPaint { IsAntialias = true, Color = skLightColor, Style = SKPaintStyle.Fill };
-        float moduleSize = outputSize / (float)(data.ModuleMatrix.Count + (margin * 2));
-        DrawFinderPatterns(canvas, data.ModuleMatrix.Count, margin, moduleSize, paint, lightPaint, eyeStyle);
+        using var paint = new SKPaint { IsAntialias = false, Color = skDarkColor, Style = SKPaintStyle.Fill };
+        using var lightPaint = new SKPaint { IsAntialias = false, Color = skLightColor, Style = SKPaintStyle.Fill };
+        if (layout.Offset != 0)
+        {
+            canvas.Translate(layout.Offset, layout.Offset);
+        }
+
+        DrawFinderPatterns(canvas, data.ModuleMatrix.Count, margin, layout.ModuleSize, paint, lightPaint, eyeStyle);
         cancellationToken.ThrowIfCancellationRequested();
-        DrawModules(canvas, data, margin, moduleSize, paint, moduleShape);
+        DrawModules(canvas, data, margin, layout.ModuleSize, paint, moduleShape);
         cancellationToken.ThrowIfCancellationRequested();
-        DrawLogo(canvas, outputSize, logoSizePercent, skLightColor, logoData);
+        if (layout.Offset != 0)
+        {
+            canvas.Translate(-layout.Offset, -layout.Offset);
+        }
+
+        DrawLogo(canvas, layout.OutputSize, logoSizePercent, skLightColor, logoData);
         cancellationToken.ThrowIfCancellationRequested();
         canvas.Flush();
 
@@ -501,27 +510,24 @@ public sealed class QRCodeService
     private static string RenderSvg(QRCodeData data, int size, bool exactSize, string darkColor, string lightColor, int margin, QRCodeModuleShape moduleShape, QRCodeEyeStyle eyeStyle, LogoData? logoData, int logoSizePercent = 20, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        int outputSize = exactSize 
-            ? size 
-            : Math.Max(1, (data.ModuleMatrix.Count + (margin * 2)) * size);
-        float moduleSize = outputSize / (float)(data.ModuleMatrix.Count + (margin * 2));
+        QrRenderLayout layout = CreateLayout(size, exactSize, data.ModuleMatrix.Count, margin);
         var svg = new StringBuilder();
-        svg.Append(CultureInfo.InvariantCulture, $"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{outputSize}\" height=\"{outputSize}\" viewBox=\"0 0 {outputSize} {outputSize}\" shape-rendering=\"geometricPrecision\">\n");
+        svg.Append(CultureInfo.InvariantCulture, $"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{layout.OutputSize}\" height=\"{layout.OutputSize}\" viewBox=\"0 0 {layout.OutputSize} {layout.OutputSize}\" shape-rendering=\"crispEdges\">\n");
         svg.Append(CultureInfo.InvariantCulture, $"  <rect width=\"100%\" height=\"100%\" fill=\"{lightColor}\"/>\n");
-        AppendFinderPatterns(svg, data.ModuleMatrix.Count, margin, moduleSize, darkColor, lightColor, eyeStyle);
+        AppendFinderPatterns(svg, data.ModuleMatrix.Count, margin, layout.ModuleSize, darkColor, lightColor, eyeStyle, layout.Offset);
         cancellationToken.ThrowIfCancellationRequested();
-        AppendModules(svg, data, margin, moduleSize, darkColor, moduleShape);
+        AppendModules(svg, data, margin, layout.ModuleSize, darkColor, moduleShape, layout.Offset);
         cancellationToken.ThrowIfCancellationRequested();
-        AppendLogo(svg, outputSize, logoSizePercent, lightColor, moduleSize, logoData);
+        AppendLogo(svg, layout.OutputSize, logoSizePercent, lightColor, layout.ModuleSize, logoData);
         svg.Append("</svg>");
         return svg.ToString();
     }
 
-    private static void AppendModules(StringBuilder svg, QRCodeData data, int margin, float moduleSize, string darkColor, QRCodeModuleShape shape)
+    private static void AppendModules(StringBuilder svg, QRCodeData data, int margin, float moduleSize, string darkColor, QRCodeModuleShape shape, float offset)
     {
         if (shape == QRCodeModuleShape.Square)
         {
-            AppendOptimizedSquareModules(svg, data, margin, moduleSize, darkColor);
+            AppendOptimizedSquareModules(svg, data, margin, moduleSize, darkColor, offset);
         }
         else
         {
@@ -535,15 +541,15 @@ public sealed class QRCodeService
                         continue;
                     }
 
-                    float px = (margin + x) * moduleSize;
-                    float py = (margin + y) * moduleSize;
+                    float px = offset + ((margin + x) * moduleSize);
+                    float py = offset + ((margin + y) * moduleSize);
                     AppendModule(svg, px, py, moduleSize, darkColor, shape);
                 }
             }
         }
     }
 
-    private static void AppendOptimizedSquareModules(StringBuilder svg, QRCodeData data, int margin, float moduleSize, string darkColor)
+    private static void AppendOptimizedSquareModules(StringBuilder svg, QRCodeData data, int margin, float moduleSize, string darkColor, float offset)
     {
         int count = data.ModuleMatrix.Count;
         bool[,] visited = new bool[count, count];
@@ -599,8 +605,8 @@ public sealed class QRCodeService
                 }
 
                 // Append the merged rectangle
-                float px = (margin + x) * moduleSize;
-                float py = (margin + y) * moduleSize;
+                float px = offset + ((margin + x) * moduleSize);
+                float py = offset + ((margin + y) * moduleSize);
                 float w = width * moduleSize;
                 float h = height * moduleSize;
                 svg.Append(CultureInfo.InvariantCulture, $"  <rect x=\"{px:0.###}\" y=\"{py:0.###}\" width=\"{w:0.###}\" height=\"{h:0.###}\" fill=\"{darkColor}\"/>\n");
@@ -610,7 +616,7 @@ public sealed class QRCodeService
 
     private static void AppendModule(StringBuilder svg, float x, float y, float size, string color, QRCodeModuleShape shape)
     {
-        float inset = shape == QRCodeModuleShape.Square ? 0 : size * 0.08f;
+        float inset = GetModuleInset(shape, size);
         float px = x + inset;
         float py = y + inset;
         float module = size - (inset * 2f);
@@ -619,7 +625,7 @@ public sealed class QRCodeService
         {
             float cx = x + size / 2f;
             float cy = y + size / 2f;
-            float r = size * 0.25f;
+            float r = size * 0.42f;
             svg.Append(CultureInfo.InvariantCulture, $"  <circle cx=\"{cx:0.###}\" cy=\"{cy:0.###}\" r=\"{r:0.###}\" fill=\"{color}\"/>\n");
         }
         else if (shape == QRCodeModuleShape.Circle)
@@ -642,24 +648,24 @@ public sealed class QRCodeService
         }
     }
 
-    private static void AppendFinderPatterns(StringBuilder svg, int count, int margin, float moduleSize, string darkColor, string lightColor, QRCodeEyeStyle eyeStyle)
+    private static void AppendFinderPatterns(StringBuilder svg, int count, int margin, float moduleSize, string darkColor, string lightColor, QRCodeEyeStyle eyeStyle, float offset)
     {
-        AppendFinderPattern(svg, margin, margin, moduleSize, darkColor, lightColor, eyeStyle);
-        AppendFinderPattern(svg, margin + count - 7, margin, moduleSize, darkColor, lightColor, eyeStyle);
-        AppendFinderPattern(svg, margin, margin + count - 7, moduleSize, darkColor, lightColor, eyeStyle);
+        AppendFinderPattern(svg, margin, margin, moduleSize, darkColor, lightColor, eyeStyle, offset);
+        AppendFinderPattern(svg, margin + count - 7, margin, moduleSize, darkColor, lightColor, eyeStyle, offset);
+        AppendFinderPattern(svg, margin, margin + count - 7, moduleSize, darkColor, lightColor, eyeStyle, offset);
     }
 
-    private static void AppendFinderPattern(StringBuilder svg, int moduleX, int moduleY, float moduleSize, string darkColor, string lightColor, QRCodeEyeStyle eyeStyle)
+    private static void AppendFinderPattern(StringBuilder svg, int moduleX, int moduleY, float moduleSize, string darkColor, string lightColor, QRCodeEyeStyle eyeStyle, float offset)
     {
-        AppendEyeLayer(svg, moduleX, moduleY, 7, moduleSize, darkColor, eyeStyle);
-        AppendEyeLayer(svg, moduleX + 1, moduleY + 1, 5, moduleSize, lightColor, eyeStyle);
-        AppendEyeLayer(svg, moduleX + 2, moduleY + 2, 3, moduleSize, darkColor, eyeStyle);
+        AppendEyeLayer(svg, moduleX, moduleY, 7, moduleSize, darkColor, eyeStyle, offset);
+        AppendEyeLayer(svg, moduleX + 1, moduleY + 1, 5, moduleSize, lightColor, eyeStyle, offset);
+        AppendEyeLayer(svg, moduleX + 2, moduleY + 2, 3, moduleSize, darkColor, eyeStyle, offset);
     }
 
-    private static void AppendEyeLayer(StringBuilder svg, int moduleX, int moduleY, int modules, float moduleSize, string color, QRCodeEyeStyle eyeStyle)
+    private static void AppendEyeLayer(StringBuilder svg, int moduleX, int moduleY, int modules, float moduleSize, string color, QRCodeEyeStyle eyeStyle, float offset)
     {
-        float x = moduleX * moduleSize;
-        float y = moduleY * moduleSize;
+        float x = offset + (moduleX * moduleSize);
+        float y = offset + (moduleY * moduleSize);
         float size = modules * moduleSize;
         
         if (eyeStyle == QRCodeEyeStyle.Diamond)
@@ -707,6 +713,32 @@ public sealed class QRCodeService
         x < 7 && y < 7 ||
         x >= count - 7 && y < 7 ||
         x < 7 && y >= count - 7;
+
+    private static QrRenderLayout CreateLayout(int size, bool exactSize, int moduleCount, int margin)
+    {
+        int totalModules = moduleCount + (margin * 2);
+        if (!exactSize)
+        {
+            int outputSize = Math.Max(1, totalModules * size);
+            return new QrRenderLayout(outputSize, size, 0);
+        }
+
+        int output = Math.Max(1, size);
+        float moduleSize = Math.Max(1, (float)Math.Floor(output / (double)totalModules));
+        float used = moduleSize * totalModules;
+        float offset = (output - used) / 2f;
+        return new QrRenderLayout(output, moduleSize, offset);
+    }
+
+    private static float GetModuleInset(QRCodeModuleShape shape, float size) =>
+        shape switch
+        {
+            QRCodeModuleShape.Dot => size * 0.06f,
+            QRCodeModuleShape.Circle => size * 0.02f,
+            QRCodeModuleShape.Diamond => size * 0.02f,
+            QRCodeModuleShape.Rounded => size * 0.01f,
+            _ => 0
+        };
 
     private static SKRect CenterRect(int outputSize, float size)
     {

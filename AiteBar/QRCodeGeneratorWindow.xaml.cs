@@ -21,6 +21,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
     private QRCodeGenerationOptions? _lastOptions;
     private byte[]? _lastPngBytes;
     private string? _lastSvgContent;
+    private string? _selectedLogoPath;
     private bool _isInitialized;
     private bool _isApplyingPreset;
 
@@ -256,7 +257,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             LightColor = TxtLightColor.Text,
             ModuleShape = GetSelectedValue(CmbModuleShape, QRCodeModuleShape.Square),
             EyeStyle = GetSelectedValue(CmbEyeStyle, QRCodeEyeStyle.Square),
-            LogoPath = string.IsNullOrWhiteSpace(TxtLogoPath.Text) ? null : TxtLogoPath.Text,
+            LogoPath = _selectedLogoPath,
             LogoSizePercent = (int)SliderLogoSize.Value
         };
     }
@@ -404,8 +405,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
 
         if (dialog.ShowDialog(this) == true)
         {
-            TxtLogoPath.Text = dialog.FileName;
-            UpdateLogoPreview();
+            _selectedLogoPath = dialog.FileName;
             SetSelectedValue(CmbQualityPreset, QRCodeQualityPreset.Logo);
             QueuePreviewRefresh();
         }
@@ -413,9 +413,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
 
     private void BtnClearLogo_Click(object sender, RoutedEventArgs e)
     {
-        TxtLogoPath.Text = string.Empty;
-        LogoPreviewBorder.Visibility = Visibility.Collapsed;
-        LogoPreviewImage.Source = null;
+        _selectedLogoPath = null;
         QueuePreviewRefresh();
     }
 
@@ -484,32 +482,6 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         {
         }
         return false;
-    }
-
-    private void UpdateLogoPreview()
-    {
-        if (File.Exists(TxtLogoPath.Text))
-        {
-            try
-            {
-                var bitmap = new BitmapImage();
-                bitmap.BeginInit();
-                bitmap.UriSource = new Uri(TxtLogoPath.Text);
-                bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                bitmap.EndInit();
-                bitmap.Freeze();
-                LogoPreviewImage.Source = bitmap;
-                LogoPreviewBorder.Visibility = Visibility.Visible;
-            }
-            catch
-            {
-                LogoPreviewBorder.Visibility = Visibility.Collapsed;
-            }
-        }
-        else
-        {
-            LogoPreviewBorder.Visibility = Visibility.Collapsed;
-        }
     }
 
     private void UpdateMarginValue()

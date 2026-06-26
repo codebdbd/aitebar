@@ -352,24 +352,16 @@
                             <TextBox x:Name="TxtLightColor" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
                             <Border x:Name="LightColorSwatch" Grid.Column="3" Style="{StaticResource ColorSwatchStyle}" Background="#FFFFFF" MouseLeftButtonUp="LightColorSwatch_Click"/>
                         </Grid>
-                        <Grid Grid.Row="6">
+                    <Grid Grid.Row="6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="132" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="8" />
-                            <ColumnDefinition Width="92" />
-                            <ColumnDefinition Width="8" />
-                            <ColumnDefinition Width="92" />
+                            <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_LogoOptional}" Style="{StaticResource FieldLabelStyle}" />
-                        <Grid Grid.Column="1">
-                            <TextBox x:Name="TxtLogoPath" IsReadOnly="True" Style="{StaticResource CompactTextBoxStyle}" Visibility="Collapsed" />
-                            <Border x:Name="LogoPreviewBorder" Width="32" Height="32" Background="White" CornerRadius="4" BorderBrush="#263241" BorderThickness="1" HorizontalAlignment="Left" Visibility="Collapsed">
-                                <Image x:Name="LogoPreviewImage" Stretch="Uniform" />
-                            </Border>
-                        </Grid>
-                        <Button Grid.Column="3" Content="{local:Loc ResourceKey=QRCodeGenerator_ChooseLogo}" Style="{StaticResource MiniButtonStyle}" Click="BtnChooseLogo_Click" />
-                        <Button x:Name="BtnClearLogo" Grid.Column="5" Content="{local:Loc ResourceKey=QRCodeGenerator_DeleteLogo}" Style="{StaticResource MiniButtonStyle}" Click="BtnClearLogo_Click" />
+                        <Button Grid.Column="1" Content="{local:Loc ResourceKey=QRCodeGenerator_ChooseLogo}" Style="{StaticResource MiniButtonStyle}" Click="BtnChooseLogo_Click" />
+                        <Button Grid.Column="3" Content="{local:Loc ResourceKey=QRCodeGenerator_DeleteLogo}" Style="{StaticResource MiniButtonStyle}" Click="BtnClearLogo_Click" />
                     </Grid>
                     <Grid Grid.Row="8">
                         <Grid.ColumnDefinitions>
