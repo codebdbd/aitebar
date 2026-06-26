@@ -56,6 +56,7 @@ public partial class MainWindow
         menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Donate), LocalizationService.Get("Menu_Donate"), (s, e) => OpenUrl(DonatePageUrl)));
         menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Exit), LocalizationService.Get("Menu_Exit"), (s, e) =>
         {
+            _notifyIcon.Visible = false;
             _notifyIcon.Dispose();
             Application.Current.Shutdown();
         }));

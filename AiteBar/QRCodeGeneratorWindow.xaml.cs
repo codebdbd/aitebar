@@ -32,6 +32,10 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         CmbContentType.Items.Add(new ComboItem<QRCodeContentType>(LocalizationService.Get("QRCodeGenerator_TypeText"), QRCodeContentType.Text));
         CmbContentType.Items.Add(new ComboItem<QRCodeContentType>(LocalizationService.Get("QRCodeGenerator_TypeUrl"), QRCodeContentType.Url));
         CmbContentType.Items.Add(new ComboItem<QRCodeContentType>(LocalizationService.Get("QRCodeGenerator_TypeWifi"), QRCodeContentType.Wifi));
+        CmbContentType.Items.Add(new ComboItem<QRCodeContentType>(LocalizationService.Get("QRCodeGenerator_TypeEmail"), QRCodeContentType.Email));
+        CmbContentType.Items.Add(new ComboItem<QRCodeContentType>(LocalizationService.Get("QRCodeGenerator_TypePhone"), QRCodeContentType.Phone));
+        CmbContentType.Items.Add(new ComboItem<QRCodeContentType>(LocalizationService.Get("QRCodeGenerator_TypeSms"), QRCodeContentType.Sms));
+        CmbContentType.Items.Add(new ComboItem<QRCodeContentType>(LocalizationService.Get("QRCodeGenerator_TypeVCard"), QRCodeContentType.VCard));
         CmbContentType.SelectedIndex = 1;
 
         // Initialize Wifi Security combo
@@ -96,10 +100,11 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             : Forms.Screen.PrimaryScreen;
         var work = screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
 
-        Measure(new System.Windows.Size(Width, double.PositiveInfinity));
+        Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+        double windowWidth = DesiredSize.Width > 0 ? DesiredSize.Width : MinWidth;
         double windowHeight = DesiredSize.Height > 0 ? DesiredSize.Height : 520;
 
-        var (_, _, shownX, shownY) = QuickNoteLayoutHelper.GetSlideCoordinates(settings.Edge, work, Width, windowHeight);
+        var (_, _, shownX, shownY) = QuickNoteLayoutHelper.GetSlideCoordinates(settings.Edge, work, windowWidth, windowHeight);
         Left = shownX;
         Top = shownY;
         Show();
@@ -231,6 +236,18 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             WifiPassword = TxtWifiPassword.Text,
             WifiSecurity = GetSelectedValue(CmbWifiSecurity, QRCodeWifiSecurity.Wpa),
             WifiHidden = ChkWifiHidden.IsChecked == true,
+            EmailAddress = TxtEmailAddress.Text,
+            EmailSubject = TxtEmailSubject.Text,
+            EmailBody = TxtEmailBody.Text,
+            PhoneNumber = GetSelectedValue(CmbContentType, QRCodeContentType.Url) == QRCodeContentType.Sms ? TxtSmsPhone.Text : TxtPhoneNumber.Text,
+            SmsMessage = TxtSmsMessage.Text,
+            VCardFirstName = TxtVCardFirstName.Text,
+            VCardLastName = TxtVCardLastName.Text,
+            VCardPhone = TxtVCardPhone.Text,
+            VCardEmail = TxtVCardEmail.Text,
+            VCardCompany = TxtVCardCompany.Text,
+            VCardJobTitle = TxtVCardJobTitle.Text,
+            VCardWebsite = TxtVCardWebsite.Text,
             QualityPreset = GetSelectedValue(CmbQualityPreset, QRCodeQualityPreset.Screen),
             OutputSize = GetSelectedValue(CmbOutputSize, 800),
             Margin = (int)SliderMargin.Value,
@@ -578,9 +595,24 @@ public partial class QRCodeGeneratorWindow : DarkWindow
 
     private void UpdateInputMode()
     {
-        bool isWifi = GetSelectedValue(CmbContentType, QRCodeContentType.Url) == QRCodeContentType.Wifi;
-        InputTextPanel.Visibility = isWifi ? Visibility.Collapsed : Visibility.Visible;
-        WifiPanel.Visibility = isWifi ? Visibility.Visible : Visibility.Collapsed;
+        var type = GetSelectedValue(CmbContentType, QRCodeContentType.Url);
+        
+        InputTextPanel.Visibility = (type == QRCodeContentType.Text || type == QRCodeContentType.Url) ? Visibility.Visible : Visibility.Collapsed;
+        WifiPanel.Visibility = type == QRCodeContentType.Wifi ? Visibility.Visible : Visibility.Collapsed;
+        EmailPanel.Visibility = type == QRCodeContentType.Email ? Visibility.Visible : Visibility.Collapsed;
+        PhonePanel.Visibility = type == QRCodeContentType.Phone ? Visibility.Visible : Visibility.Collapsed;
+        SmsPanel.Visibility = type == QRCodeContentType.Sms ? Visibility.Visible : Visibility.Collapsed;
+        VCardPanel.Visibility = type == QRCodeContentType.VCard ? Visibility.Visible : Visibility.Collapsed;
+
+        if (type == QRCodeContentType.Text)
+        {
+            LblInputTextType.Text = LocalizationService.Get("QRCodeGenerator_TypeText");
+        }
+        else if (type == QRCodeContentType.Url)
+        {
+            LblInputTextType.Text = LocalizationService.Get("QRCodeGenerator_TypeUrl");
+        }
+
         UpdateInputPlaceholder();
         FocusCurrentInput();
     }
@@ -619,25 +651,110 @@ public partial class QRCodeGeneratorWindow : DarkWindow
 
     private bool HasRequiredInput()
     {
-        return GetSelectedValue(CmbContentType, QRCodeContentType.Url) == QRCodeContentType.Wifi
-            ? !string.IsNullOrWhiteSpace(TxtWifiSsid.Text)
-            : !string.IsNullOrWhiteSpace(TxtInput.Text);
+        return GetSelectedValue(CmbContentType, QRCodeContentType.Url) switch
+        {
+            QRCodeContentType.Wifi => !string.IsNullOrWhiteSpace(TxtWifiSsid.Text),
+            QRCodeContentType.Email => !string.IsNullOrWhiteSpace(TxtEmailAddress.Text),
+            QRCodeContentType.Phone => !string.IsNullOrWhiteSpace(TxtPhoneNumber.Text),
+            QRCodeContentType.Sms => !string.IsNullOrWhiteSpace(TxtSmsPhone.Text),
+            QRCodeContentType.VCard => !string.IsNullOrWhiteSpace(TxtVCardFirstName.Text) || !string.IsNullOrWhiteSpace(TxtVCardLastName.Text) || !string.IsNullOrWhiteSpace(TxtVCardCompany.Text),
+            _ => !string.IsNullOrWhiteSpace(TxtInput.Text)
+        };
     }
 
     private void FocusCurrentInput()
     {
-        if (!_isInitialized)
-        {
-            return;
-        }
+        if (!_isInitialized) return;
 
-        if (GetSelectedValue(CmbContentType, QRCodeContentType.Url) == QRCodeContentType.Wifi)
+        var type = GetSelectedValue(CmbContentType, QRCodeContentType.Url);
+        switch (type)
         {
-            TxtWifiSsid.Focus();
+            case QRCodeContentType.Wifi: TxtWifiSsid.Focus(); break;
+            case QRCodeContentType.Email: TxtEmailAddress.Focus(); break;
+            case QRCodeContentType.Phone: TxtPhoneNumber.Focus(); break;
+            case QRCodeContentType.Sms: TxtSmsPhone.Focus(); break;
+            case QRCodeContentType.VCard: TxtVCardFirstName.Focus(); break;
+            default: TxtInput.Focus(); break;
+        }
+    }
+
+    private void PasteFromClipboard_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (Clipboard.ContainsText())
+            {
+                string text = Clipboard.GetText();
+                if (!string.IsNullOrWhiteSpace(text))
+                {
+                    AutoFillFromText(text);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+    }
+
+    private void AutoFillFromClipboard()
+    {
+        try
+        {
+            if (Clipboard.ContainsText())
+            {
+                string text = Clipboard.GetText();
+                if (!string.IsNullOrWhiteSpace(text) && string.IsNullOrWhiteSpace(TxtInput.Text) && string.IsNullOrWhiteSpace(TxtWifiSsid.Text))
+                {
+                    AutoFillFromText(text);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+    }
+
+    private void AutoFillFromText(string text)
+    {
+        text = text.Trim();
+        if (text.StartsWith("WIFI:", StringComparison.OrdinalIgnoreCase))
+        {
+            SetSelectedValue(CmbContentType, QRCodeContentType.Wifi);
+            // Minimal heuristic for wifi copy
+            int idx = text.IndexOf("S:", StringComparison.OrdinalIgnoreCase);
+            if (idx > 0)
+            {
+                int endIdx = text.IndexOf(';', idx);
+                if (endIdx > idx)
+                {
+                    TxtWifiSsid.Text = text.Substring(idx + 2, endIdx - idx - 2);
+                }
+            }
+        }
+        else if (text.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
+        {
+            SetSelectedValue(CmbContentType, QRCodeContentType.Email);
+            int emailStart = 7;
+            int emailEnd = text.IndexOf('?');
+            if (emailEnd < 0) emailEnd = text.Length;
+            TxtEmailAddress.Text = text.Substring(emailStart, emailEnd - emailStart);
+        }
+        else if (text.StartsWith("tel:", StringComparison.OrdinalIgnoreCase))
+        {
+            SetSelectedValue(CmbContentType, QRCodeContentType.Phone);
+            TxtPhoneNumber.Text = text.Substring(4);
+        }
+        else if (text.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || text.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || text.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
+        {
+            SetSelectedValue(CmbContentType, QRCodeContentType.Url);
+            TxtInput.Text = text;
         }
         else
         {
-            TxtInput.Focus();
+            SetSelectedValue(CmbContentType, QRCodeContentType.Text);
+            TxtInput.Text = text;
         }
     }
 

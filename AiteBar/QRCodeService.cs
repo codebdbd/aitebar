@@ -265,6 +265,18 @@ public sealed class QRCodeService
             WifiPassword = options.WifiPassword,
             WifiSecurity = options.WifiSecurity,
             WifiHidden = options.WifiHidden,
+            EmailAddress = options.EmailAddress.Trim(),
+            EmailSubject = options.EmailSubject.Trim(),
+            EmailBody = options.EmailBody,
+            PhoneNumber = options.PhoneNumber.Trim(),
+            SmsMessage = options.SmsMessage,
+            VCardFirstName = options.VCardFirstName.Trim(),
+            VCardLastName = options.VCardLastName.Trim(),
+            VCardPhone = options.VCardPhone.Trim(),
+            VCardEmail = options.VCardEmail.Trim(),
+            VCardCompany = options.VCardCompany.Trim(),
+            VCardJobTitle = options.VCardJobTitle.Trim(),
+            VCardWebsite = options.VCardWebsite.Trim(),
             QualityPreset = preset,
             OutputSize = outputSize,
             PixelSize = Math.Clamp(options.PixelSize, 1, 100),
@@ -293,6 +305,10 @@ public sealed class QRCodeService
         {
             QRCodeContentType.Url => NormalizeUrlPayload(normalizedOptions.Text),
             QRCodeContentType.Wifi => BuildWifiPayload(normalizedOptions),
+            QRCodeContentType.Email => BuildEmailPayload(normalizedOptions),
+            QRCodeContentType.Phone => string.IsNullOrWhiteSpace(normalizedOptions.PhoneNumber) ? string.Empty : $"tel:{normalizedOptions.PhoneNumber}",
+            QRCodeContentType.Sms => BuildSmsPayload(normalizedOptions),
+            QRCodeContentType.VCard => BuildVCardPayload(normalizedOptions),
             _ => normalizedOptions.Text
         };
     }
@@ -749,9 +765,15 @@ public sealed class QRCodeService
         
         if (string.IsNullOrWhiteSpace(payload))
         {
-            string parameterName = options.ContentType == QRCodeContentType.Wifi 
-                ? nameof(options.WifiSsid) 
-                : nameof(options.Text);
+            string parameterName = options.ContentType switch
+            {
+                QRCodeContentType.Wifi => nameof(options.WifiSsid),
+                QRCodeContentType.Email => nameof(options.EmailAddress),
+                QRCodeContentType.Phone => nameof(options.PhoneNumber),
+                QRCodeContentType.Sms => nameof(options.PhoneNumber),
+                QRCodeContentType.VCard => nameof(options.VCardFirstName),
+                _ => nameof(options.Text)
+            };
             throw new ArgumentException(LocalizationService.Get("QRCodeGenerator_ErrorEmptyText"), parameterName);
         }
 
@@ -761,9 +783,15 @@ public sealed class QRCodeService
         // но для универсальности используем наиболее строгий лимит среди общих сценариев.
         if (payload.Length > 4296)
         {
-            string parameterName = options.ContentType == QRCodeContentType.Wifi 
-                ? nameof(options.WifiSsid) 
-                : nameof(options.Text);
+            string parameterName = options.ContentType switch
+            {
+                QRCodeContentType.Wifi => nameof(options.WifiSsid),
+                QRCodeContentType.Email => nameof(options.EmailAddress),
+                QRCodeContentType.Phone => nameof(options.PhoneNumber),
+                QRCodeContentType.Sms => nameof(options.PhoneNumber),
+                QRCodeContentType.VCard => nameof(options.VCardFirstName),
+                _ => nameof(options.Text)
+            };
             throw new ArgumentException(LocalizationService.Format("QRCodeGenerator_ErrorTextTooLong", 4296), parameterName);
         }
     }
@@ -793,6 +821,73 @@ public sealed class QRCodeService
             : $"P:{EscapeWifiValue(options.WifiPassword)};";
         string hiddenPart = options.WifiHidden ? "H:true;" : string.Empty;
         return $"WIFI:T:{security};S:{EscapeWifiValue(options.WifiSsid)};{passwordPart}{hiddenPart};";
+    }
+
+    private static string BuildEmailPayload(QRCodeGenerationOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.EmailAddress))
+            return string.Empty;
+        var uri = new StringBuilder($"mailto:{options.EmailAddress}");
+        bool hasSubject = !string.IsNullOrWhiteSpace(options.EmailSubject);
+        bool hasBody = !string.IsNullOrWhiteSpace(options.EmailBody);
+        
+        if (hasSubject || hasBody)
+        {
+            uri.Append('?');
+            if (hasSubject)
+            {
+                uri.Append($"subject={Uri.EscapeDataString(options.EmailSubject)}");
+            }
+            if (hasBody)
+            {
+                if (hasSubject) uri.Append('&');
+                uri.Append($"body={Uri.EscapeDataString(options.EmailBody)}");
+            }
+        }
+        return uri.ToString();
+    }
+
+    private static string BuildSmsPayload(QRCodeGenerationOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.PhoneNumber))
+            return string.Empty;
+        return $"SMSTO:{options.PhoneNumber}:{options.SmsMessage}";
+    }
+
+    private static string BuildVCardPayload(QRCodeGenerationOptions options)
+    {
+        bool hasFirst = !string.IsNullOrWhiteSpace(options.VCardFirstName);
+        bool hasLast = !string.IsNullOrWhiteSpace(options.VCardLastName);
+        if (!hasFirst && !hasLast && string.IsNullOrWhiteSpace(options.VCardCompany))
+            return string.Empty;
+
+        var sb = new StringBuilder();
+        sb.Append("BEGIN:VCARD\nVERSION:3.0\n");
+        sb.Append($"N:{options.VCardLastName};{options.VCardFirstName};;;\n");
+        
+        string fn = string.Join(" ", new[] { options.VCardFirstName, options.VCardLastName }
+            .Where(s => !string.IsNullOrWhiteSpace(s)));
+            
+        if (!string.IsNullOrWhiteSpace(fn))
+            sb.Append($"FN:{fn}\n");
+            
+        if (!string.IsNullOrWhiteSpace(options.VCardCompany))
+            sb.Append($"ORG:{options.VCardCompany}\n");
+            
+        if (!string.IsNullOrWhiteSpace(options.VCardJobTitle))
+            sb.Append($"TITLE:{options.VCardJobTitle}\n");
+            
+        if (!string.IsNullOrWhiteSpace(options.VCardPhone))
+            sb.Append($"TEL;TYPE=CELL:{options.VCardPhone}\n");
+            
+        if (!string.IsNullOrWhiteSpace(options.VCardEmail))
+            sb.Append($"EMAIL;TYPE=PREF,INTERNET:{options.VCardEmail}\n");
+            
+        if (!string.IsNullOrWhiteSpace(options.VCardWebsite))
+            sb.Append($"URL:{options.VCardWebsite}\n");
+
+        sb.Append("END:VCARD\n");
+        return sb.ToString();
     }
 
     private static string EscapeWifiValue(string value)

@@ -449,17 +449,43 @@ namespace AiteBar
 
             try
             {
-                RotateExistingBackupsOnly();
-
+                // Safety check: don't overwrite with empty elements if we previously had elements
                 if (File.Exists(_settingsFile))
                 {
-                    string newestBackup = GetBackupFilePath(0);
-                    if (File.Exists(newestBackup))
+                    try
                     {
-                        File.Delete(newestBackup);
+                        string oldJson = await File.ReadAllTextAsync(_settingsFile);
+                        var oldSettings = JsonSerializer.Deserialize<AppSettings>(oldJson, _jsonOptions);
+                        var newSettings = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions);
+                        
+                        // If old settings had elements and new don't, keep old and log error
+                        if ((oldSettings?.Elements?.Count ?? 0) > 0 && (newSettings?.Elements?.Count ?? 0) == 0)
+                        {
+                            Logger.Log(new Exception("Attempted to save empty elements list, keeping old settings"));
+                            return;
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                    }
+                }
 
-                    File.Replace(tempFile, _settingsFile, newestBackup);
+                // First create backup of current file before rotating
+                if (File.Exists(_settingsFile))
+                {
+                    // Rotate existing backups first (0→1, 1→2, ...)
+                    RotateExistingBackupsOnly();
+                    
+                    // Now backup current file to backup.0
+                    string newestBackup = GetBackupFilePath(0);
+                    File.Copy(_settingsFile, newestBackup, overwrite: true);
+                }
+
+                // Now replace the main file
+                if (File.Exists(_settingsFile))
+                {
+                    File.Replace(tempFile, _settingsFile, null);
                 }
                 else
                 {

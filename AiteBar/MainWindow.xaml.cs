@@ -1943,7 +1943,11 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
             try
             {
-                _notifyIcon?.Dispose();
+                if (_notifyIcon != null)
+                {
+                    _notifyIcon.Visible = false;
+                    _notifyIcon.Dispose();
+                }
             }
             catch (Exception ex)
             {

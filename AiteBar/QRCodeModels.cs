@@ -41,7 +41,11 @@ public enum QRCodeContentType
 {
     Text,
     Url,
-    Wifi
+    Wifi,
+    Email,
+    Phone,
+    Sms,
+    VCard
 }
 
 public enum QRCodeQualityPreset
@@ -81,10 +85,34 @@ public sealed class QRCodeGenerationOptions
 {
     public string Text { get; init; } = string.Empty;
     public QRCodeContentType ContentType { get; init; } = QRCodeContentType.Text;
+    
+    // Wifi
     public string WifiSsid { get; init; } = string.Empty;
     public string WifiPassword { get; init; } = string.Empty;
     public QRCodeWifiSecurity WifiSecurity { get; init; } = QRCodeWifiSecurity.Wpa;
     public bool WifiHidden { get; init; }
+    
+    // Email
+    public string EmailAddress { get; init; } = string.Empty;
+    public string EmailSubject { get; init; } = string.Empty;
+    public string EmailBody { get; init; } = string.Empty;
+    
+    // Phone
+    public string PhoneNumber { get; init; } = string.Empty;
+    
+    // Sms
+    public string SmsMessage { get; init; } = string.Empty;
+    
+    // VCard
+    public string VCardFirstName { get; init; } = string.Empty;
+    public string VCardLastName { get; init; } = string.Empty;
+    public string VCardPhone { get; init; } = string.Empty;
+    public string VCardEmail { get; init; } = string.Empty;
+    public string VCardCompany { get; init; } = string.Empty;
+    public string VCardJobTitle { get; init; } = string.Empty;
+    public string VCardWebsite { get; init; } = string.Empty;
+
+    // Appearance & Quality
     public QRCodeQualityPreset QualityPreset { get; init; } = QRCodeQualityPreset.Screen;
     public int OutputSize { get; init; } = 800;
     public int PixelSize { get; init; } = 20;
