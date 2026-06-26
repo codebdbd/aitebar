@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
         Title="{local:Loc ResourceKey=QRCodeGenerator_Title}"
-        Width="840" MinWidth="820" SizeToContent="Height"
+        Width="838" MinWidth="838" SizeToContent="Height"
         WindowStartupLocation="CenterScreen" Background="#1A1A1C" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize"
         ShowInTaskbar="False" Topmost="True"
@@ -110,38 +110,41 @@
 
         <Grid Grid.Row="0">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="380"/>
+                <ColumnDefinition Width="400"/>
                 <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="400"/>
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Style="{StaticResource PanelBorderStyle}" Padding="18">
-                <Grid Height="520">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
 
+                <Border Grid.Row="0" Style="{StaticResource PanelBorderStyle}" Padding="18">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="1">
-                        <Border x:Name="PreviewSurface" Width="344" Height="344" Background="White" CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <Image x:Name="ImgPreview" Width="320" Height="320" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <Border x:Name="EmptyPreviewSurface" Width="344" Height="344" Background="#101318" BorderBrush="#273344" BorderThickness="1" CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBlock x:Name="TxtEmptyHint" Text="{local:Loc ResourceKey=QRCodeGenerator_EmptyHint}" Foreground="{StaticResource MutedText}" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" Width="210" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
+                        <Grid Grid.Row="0">
+                            <Border x:Name="PreviewSurface" Width="344" Height="344" Background="White" CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <Image x:Name="ImgPreview" Width="320" Height="320" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <Border x:Name="EmptyPreviewSurface" Width="344" Height="344" Background="#101318" BorderBrush="#273344" BorderThickness="1" CornerRadius="10" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock x:Name="TxtEmptyHint" Text="{local:Loc ResourceKey=QRCodeGenerator_EmptyHint}" Foreground="{StaticResource MutedText}" FontSize="12" TextAlignment="Center" TextWrapping="Wrap" Width="210" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </Grid>
+
+                        <StackPanel Grid.Row="1" HorizontalAlignment="Center">
+                            <TextBlock x:Name="TxtStatus" Foreground="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap" TextAlignment="Center"/>
+                            <TextBlock x:Name="TxtContrast" Margin="0,4,0,0" Foreground="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap" TextAlignment="Center"/>
+                        </StackPanel>
                     </Grid>
+                </Border>
 
-                    <StackPanel Grid.Row="2" HorizontalAlignment="Center">
-                        <TextBlock x:Name="TxtStatus" Foreground="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap" TextAlignment="Center"/>
-                        <TextBlock x:Name="TxtContrast" Margin="0,4,0,0" Foreground="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap" TextAlignment="Center"/>
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <StackPanel Grid.Column="2">
-                <Border Style="{StaticResource InspectorSectionStyle}">
+                <Border Grid.Row="1" Style="{StaticResource InspectorSectionStyle}" Margin="0,6,0,0">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
@@ -201,6 +204,9 @@
                         </Grid>
                     </Grid>
                 </Border>
+            </Grid>
+
+            <StackPanel Grid.Column="2">
 
                 <Border Style="{StaticResource InspectorSectionStyle}">
                     <Grid>
