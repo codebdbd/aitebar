@@ -345,40 +345,87 @@ public sealed class QRCodeService
                     continue;
                 }
 
-                DrawModule(canvas, (margin + x) * moduleSize, (margin + y) * moduleSize, moduleSize, paint, shape);
+                DrawModule(
+                    canvas,
+                    (margin + x) * moduleSize,
+                    (margin + y) * moduleSize,
+                    moduleSize,
+                    paint,
+                    shape,
+                    GetModuleNeighbors(data, x, y, count));
             }
         }
     }
 
-    private static void DrawModule(SKCanvas canvas, float x, float y, float size, SKPaint paint, QRCodeModuleShape shape)
+    private static void DrawModule(SKCanvas canvas, float x, float y, float size, SKPaint paint, QRCodeModuleShape shape, ModuleNeighbors neighbors)
     {
-        float inset = GetModuleInset(shape, size);
-        var rect = new SKRect(x + inset, y + inset, x + size - inset, y + size - inset);
         switch (shape)
         {
             case QRCodeModuleShape.Dot:
-                canvas.DrawCircle(x + size / 2f, y + size / 2f, size * 0.42f, paint);
+                DrawCircularModule(canvas, x, y, size, paint, GetModuleInset(shape, size), neighbors);
                 break;
             case QRCodeModuleShape.Circle:
-                canvas.DrawCircle(rect.MidX, rect.MidY, Math.Min(rect.Width, rect.Height) / 2f, paint);
+                DrawCircularModule(canvas, x, y, size, paint, GetModuleInset(shape, size), neighbors);
                 break;
             case QRCodeModuleShape.Diamond:
-                var diamondPath = new SKPath();
-                diamondPath.MoveTo(rect.MidX, rect.Top);
-                diamondPath.LineTo(rect.Right, rect.MidY);
-                diamondPath.LineTo(rect.MidX, rect.Bottom);
-                diamondPath.LineTo(rect.Left, rect.MidY);
-                diamondPath.Close();
-                canvas.DrawPath(diamondPath, paint);
-                diamondPath.Dispose();
+                DrawDiamondModule(canvas, x, y, size, paint, GetModuleInset(shape, size), neighbors);
                 break;
             case QRCodeModuleShape.Rounded:
-                canvas.DrawRoundRect(rect, size * 0.28f, size * 0.28f, paint);
+                canvas.DrawRoundRect(CreateAdaptiveRect(x, y, size, GetModuleInset(shape, size), neighbors), size * 0.28f, size * 0.28f, paint);
                 break;
             default:
-                canvas.DrawRect(rect, paint);
+                canvas.DrawRect(CreateAdaptiveRect(x, y, size, 0, neighbors), paint);
                 break;
         }
+    }
+
+    private static void DrawCircularModule(SKCanvas canvas, float x, float y, float size, SKPaint paint, float inset, ModuleNeighbors neighbors)
+    {
+        SKRect rect = CreateAdaptiveRect(x, y, size, inset, neighbors);
+        float radius = Math.Min(rect.Width, rect.Height) / 2f;
+        canvas.DrawRoundRect(rect, radius, radius, paint);
+    }
+
+    private static void DrawDiamondModule(SKCanvas canvas, float x, float y, float size, SKPaint paint, float inset, ModuleNeighbors neighbors)
+    {
+        using SKPath diamondPath = CreateDiamondPath(x, y, size, inset, neighbors);
+        canvas.DrawPath(diamondPath, paint);
+    }
+
+    private readonly record struct ModuleNeighbors(bool Left, bool Right, bool Up, bool Down);
+
+    private static ModuleNeighbors GetModuleNeighbors(QRCodeData data, int x, int y, int count)
+    {
+        bool left = x > 0 && data.ModuleMatrix[y][x - 1] && !IsFinderPatternModule(x - 1, y, count);
+        bool right = x + 1 < count && data.ModuleMatrix[y][x + 1] && !IsFinderPatternModule(x + 1, y, count);
+        bool up = y > 0 && data.ModuleMatrix[y - 1][x] && !IsFinderPatternModule(x, y - 1, count);
+        bool down = y + 1 < count && data.ModuleMatrix[y + 1][x] && !IsFinderPatternModule(x, y + 1, count);
+        return new ModuleNeighbors(left, right, up, down);
+    }
+
+    private static SKRect CreateAdaptiveRect(float x, float y, float size, float inset, ModuleNeighbors neighbors)
+    {
+        float left = neighbors.Left ? x : x + inset;
+        float right = neighbors.Right ? x + size : x + size - inset;
+        float top = neighbors.Up ? y : y + inset;
+        float bottom = neighbors.Down ? y + size : y + size - inset;
+        return new SKRect(left, top, right, bottom);
+    }
+
+    private static SKPath CreateDiamondPath(float x, float y, float size, float inset, ModuleNeighbors neighbors)
+    {
+        float left = neighbors.Left ? x : x + inset;
+        float right = neighbors.Right ? x + size : x + size - inset;
+        float top = neighbors.Up ? y : y + inset;
+        float bottom = neighbors.Down ? y + size : y + size - inset;
+
+        var diamondPath = new SKPath();
+        diamondPath.MoveTo(x + size / 2f, top);
+        diamondPath.LineTo(right, y + size / 2f);
+        diamondPath.LineTo(x + size / 2f, bottom);
+        diamondPath.LineTo(left, y + size / 2f);
+        diamondPath.Close();
+        return diamondPath;
     }
 
     private static void DrawFinderPatterns(SKCanvas canvas, int count, int margin, float moduleSize, SKPaint darkPaint, SKPaint lightPaint, QRCodeEyeStyle eyeStyle)
@@ -543,7 +590,7 @@ public sealed class QRCodeService
 
                     float px = offset + ((margin + x) * moduleSize);
                     float py = offset + ((margin + y) * moduleSize);
-                    AppendModule(svg, px, py, moduleSize, darkColor, shape);
+                    AppendModule(svg, px, py, moduleSize, darkColor, shape, GetModuleNeighbors(data, x, y, count));
                 }
             }
         }
@@ -614,38 +661,44 @@ public sealed class QRCodeService
         }
     }
 
-    private static void AppendModule(StringBuilder svg, float x, float y, float size, string color, QRCodeModuleShape shape)
+    private static void AppendModule(StringBuilder svg, float x, float y, float size, string color, QRCodeModuleShape shape, ModuleNeighbors neighbors)
     {
-        float inset = GetModuleInset(shape, size);
-        float px = x + inset;
-        float py = y + inset;
-        float module = size - (inset * 2f);
-        
         if (shape == QRCodeModuleShape.Dot)
         {
-            float cx = x + size / 2f;
-            float cy = y + size / 2f;
-            float r = size * 0.42f;
-            svg.Append(CultureInfo.InvariantCulture, $"  <circle cx=\"{cx:0.###}\" cy=\"{cy:0.###}\" r=\"{r:0.###}\" fill=\"{color}\"/>\n");
+            AppendCircularModule(svg, x, y, size, color, GetModuleInset(shape, size), neighbors);
         }
         else if (shape == QRCodeModuleShape.Circle)
         {
-            svg.Append(CultureInfo.InvariantCulture, $"  <circle cx=\"{px + (module / 2f):0.###}\" cy=\"{py + (module / 2f):0.###}\" r=\"{module / 2f:0.###}\" fill=\"{color}\"/>\n");
+            AppendCircularModule(svg, x, y, size, color, GetModuleInset(shape, size), neighbors);
         }
         else if (shape == QRCodeModuleShape.Diamond)
         {
-            float cx = px + module / 2f;
-            float cy = py + module / 2f;
-            float half = module / 2f;
-            string points = FormattableString.Invariant($"{cx:0.###},{py:0.###} {px + module:0.###},{cy:0.###} {cx:0.###},{py + module:0.###} {px:0.###},{cy:0.###}");
+            string points = CreateDiamondPoints(x, y, size, GetModuleInset(shape, size), neighbors);
             svg.Append(CultureInfo.InvariantCulture, $"  <polygon points=\"{points}\" fill=\"{color}\"/>\n");
         }
         else
         {
+            SKRect rect = CreateAdaptiveRect(x, y, size, shape == QRCodeModuleShape.Rounded ? GetModuleInset(shape, size) : 0, neighbors);
             float radius = shape == QRCodeModuleShape.Rounded ? size * 0.28f : 0;
             string radiusAttributes = radius > 0 ? FormattableString.Invariant($" rx=\"{radius:0.###}\" ry=\"{radius:0.###}\"") : string.Empty;
-            svg.Append(CultureInfo.InvariantCulture, $"  <rect x=\"{px:0.###}\" y=\"{py:0.###}\" width=\"{module:0.###}\" height=\"{module:0.###}\"{radiusAttributes} fill=\"{color}\"/>\n");
+            svg.Append(CultureInfo.InvariantCulture, $"  <rect x=\"{rect.Left:0.###}\" y=\"{rect.Top:0.###}\" width=\"{rect.Width:0.###}\" height=\"{rect.Height:0.###}\"{radiusAttributes} fill=\"{color}\"/>\n");
         }
+    }
+
+    private static void AppendCircularModule(StringBuilder svg, float x, float y, float size, string color, float inset, ModuleNeighbors neighbors)
+    {
+        SKRect rect = CreateAdaptiveRect(x, y, size, inset, neighbors);
+        float radius = Math.Min(rect.Width, rect.Height) / 2f;
+        svg.Append(CultureInfo.InvariantCulture, $"  <rect x=\"{rect.Left:0.###}\" y=\"{rect.Top:0.###}\" width=\"{rect.Width:0.###}\" height=\"{rect.Height:0.###}\" rx=\"{radius:0.###}\" ry=\"{radius:0.###}\" fill=\"{color}\"/>\n");
+    }
+
+    private static string CreateDiamondPoints(float x, float y, float size, float inset, ModuleNeighbors neighbors)
+    {
+        float left = neighbors.Left ? x : x + inset;
+        float right = neighbors.Right ? x + size : x + size - inset;
+        float top = neighbors.Up ? y : y + inset;
+        float bottom = neighbors.Down ? y + size : y + size - inset;
+        return FormattableString.Invariant($"{x + size / 2f:0.###},{top:0.###} {right:0.###},{y + size / 2f:0.###} {x + size / 2f:0.###},{bottom:0.###} {left:0.###},{y + size / 2f:0.###}");
     }
 
     private static void AppendFinderPatterns(StringBuilder svg, int count, int margin, float moduleSize, string darkColor, string lightColor, QRCodeEyeStyle eyeStyle, float offset)
@@ -733,9 +786,9 @@ public sealed class QRCodeService
     private static float GetModuleInset(QRCodeModuleShape shape, float size) =>
         shape switch
         {
-            QRCodeModuleShape.Dot => size * 0.06f,
-            QRCodeModuleShape.Circle => size * 0.02f,
-            QRCodeModuleShape.Diamond => size * 0.02f,
+            QRCodeModuleShape.Dot => size * 0.20f,
+            QRCodeModuleShape.Circle => size * 0.10f,
+            QRCodeModuleShape.Diamond => size * 0.12f,
             QRCodeModuleShape.Rounded => size * 0.01f,
             _ => 0
         };

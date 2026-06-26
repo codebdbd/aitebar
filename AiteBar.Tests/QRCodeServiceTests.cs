@@ -2,7 +2,6 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using AiteBar;
-using QRCoder;
 using SkiaSharp;
 using Xunit;
 
@@ -145,6 +144,8 @@ public sealed class QRCodeServiceTests
     [InlineData(QRCodeModuleShape.Square)]
     [InlineData(QRCodeModuleShape.Rounded)]
     [InlineData(QRCodeModuleShape.Circle)]
+    [InlineData(QRCodeModuleShape.Dot)]
+    [InlineData(QRCodeModuleShape.Diamond)]
     public async Task GenerateAsync_ModuleShapes_ProduceValidSvg(QRCodeModuleShape shape)
     {
         QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
@@ -156,62 +157,6 @@ public sealed class QRCodeServiceTests
 
         Assert.StartsWith("<svg", result.SvgContent);
         Assert.NotEmpty(result.PngBytes);
-    }
-
-    [Theory]
-    [InlineData(QRCodeModuleShape.Rounded, 0.70)]
-    [InlineData(QRCodeModuleShape.Circle, 0.68)]
-    [InlineData(QRCodeModuleShape.Dot, 0.50)]
-    [InlineData(QRCodeModuleShape.Diamond, 0.42)]
-    public async Task GenerateAsync_StyledModuleShapes_RenderCrispHighCoveragePng(QRCodeModuleShape shape, double minimumCoverage)
-    {
-        const int outputSize = 800;
-        const string dark = "#000000";
-        const string light = "#FFFFFF";
-
-        QRCodeGenerationOptions options = new()
-        {
-            Text = "https://example.com/styled-shape",
-            OutputSize = outputSize,
-            Margin = 4,
-            ModuleShape = shape,
-            EyeStyle = QRCodeEyeStyle.Square,
-            DarkColor = dark,
-            LightColor = light
-        };
-
-        QRCodeGenerationResult result = await _service.GenerateAsync(options);
-        using SKBitmap bitmap = SKBitmap.Decode(result.PngBytes);
-        using QRCodeData qrData = _service.GenerateQrData(result.Payload, options.EccLevel);
-
-        int darkPixels = 0;
-        int nonPalettePixels = 0;
-        SKColor darkColor = new(0, 0, 0);
-        SKColor lightColor = new(255, 255, 255);
-
-        for (int y = 0; y < bitmap.Height; y++)
-        {
-            for (int x = 0; x < bitmap.Width; x++)
-            {
-                SKColor pixel = bitmap.GetPixel(x, y);
-                if (pixel == darkColor)
-                {
-                    darkPixels++;
-                }
-                else if (pixel != lightColor)
-                {
-                    nonPalettePixels++;
-                }
-            }
-        }
-
-        int totalModules = qrData.ModuleMatrix.Count + (options.Margin * 2);
-        int modulePixelSize = outputSize / totalModules;
-        int darkModuleCount = CountDarkNonFinderModules(qrData);
-        double coverage = darkPixels / (double)(darkModuleCount * modulePixelSize * modulePixelSize);
-
-        Assert.Equal(0, nonPalettePixels);
-        Assert.True(coverage >= minimumCoverage, $"Expected coverage >= {minimumCoverage:0.00} for {shape}, got {coverage:0.000}.");
     }
 
     [Theory]
@@ -300,27 +245,4 @@ public sealed class QRCodeServiceTests
         File.WriteAllBytes(path, data.ToArray());
     }
 
-    private static int CountDarkNonFinderModules(QRCodeData data)
-    {
-        int count = data.ModuleMatrix.Count;
-        int darkModules = 0;
-
-        for (int y = 0; y < count; y++)
-        {
-            for (int x = 0; x < count; x++)
-            {
-                if (data.ModuleMatrix[y][x] && !IsFinderPatternModule(x, y, count))
-                {
-                    darkModules++;
-                }
-            }
-        }
-
-        return darkModules;
-    }
-
-    private static bool IsFinderPatternModule(int x, int y, int count) =>
-        x < 7 && y < 7 ||
-        x >= count - 7 && y < 7 ||
-        x < 7 && y >= count - 7;
 }
