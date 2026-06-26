@@ -170,6 +170,18 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="Main_QuickNoteTooltip" xml:space="preserve"><value>Quick note</value></data>
   <data name="ColorPicker_Instruction" xml:space="preserve"><value>Click anywhere to copy the color. Esc cancels.</value></data>
   <data name="ColorPicker_Copied" xml:space="preserve"><value>Copied color: {0}</value></data>
+  <data name="ColorPicker_ChooseColor" xml:space="preserve"><value>Choose color</value></data>
+  <data name="ColorPicker_Red" xml:space="preserve"><value>Red</value></data>
+  <data name="ColorPicker_Green" xml:space="preserve"><value>Green</value></data>
+  <data name="ColorPicker_Blue" xml:space="preserve"><value>Blue</value></data>
+  <data name="ColorPicker_Hex" xml:space="preserve"><value>Hex</value></data>
+  <data name="ColorPicker_Preview" xml:space="preserve"><value>Preview</value></data>
+  <data name="ColorPicker_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="ColorPicker_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="ColorPicker_Hue" xml:space="preserve"><value>Hue</value></data>
+  <data name="ColorPicker_Saturation" xml:space="preserve"><value>Saturation</value></data>
+  <data name="ColorPicker_Brightness" xml:space="preserve"><value>Brightness</value></data>
+  <data name="ColorPicker_Palette" xml:space="preserve"><value>Palette</value></data>
   <data name="QuickNote_Title" xml:space="preserve"><value>Quick Note</value></data>
   <data name="QuickNote_Placeholder" xml:space="preserve"><value>Paste text, links, commands...</value></data>
   <data name="QuickNote_SavedInitial" xml:space="preserve"><value>Saved</value></data>

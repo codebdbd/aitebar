@@ -209,6 +209,18 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="Main_ColorPickerTooltip" xml:space="preserve"><value>Вибрати колір з екрана</value></data>
   <data name="ColorPicker_Instruction" xml:space="preserve"><value>Клацніть будь-де, щоб скопіювати колір. Esc скасовує дію.</value></data>
   <data name="ColorPicker_Copied" xml:space="preserve"><value>Колір скопійовано: {0}</value></data>
+  <data name="ColorPicker_ChooseColor" xml:space="preserve"><value>Вибір кольору</value></data>
+  <data name="ColorPicker_Red" xml:space="preserve"><value>Червоний</value></data>
+  <data name="ColorPicker_Green" xml:space="preserve"><value>Зелений</value></data>
+  <data name="ColorPicker_Blue" xml:space="preserve"><value>Синій</value></data>
+  <data name="ColorPicker_Hex" xml:space="preserve"><value>Hex</value></data>
+  <data name="ColorPicker_Preview" xml:space="preserve"><value>Попередній перегляд</value></data>
+  <data name="ColorPicker_OK" xml:space="preserve"><value>Гаразд</value></data>
+  <data name="ColorPicker_Cancel" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="ColorPicker_Hue" xml:space="preserve"><value>Відтінок</value></data>
+  <data name="ColorPicker_Saturation" xml:space="preserve"><value>Насиченість</value></data>
+  <data name="ColorPicker_Brightness" xml:space="preserve"><value>Яскравість</value></data>
+  <data name="ColorPicker_Palette" xml:space="preserve"><value>Палітра</value></data>
   <data name="Menu_ImportPanel" xml:space="preserve"><value>Імпортувати панель...</value></data>
   <data name="Menu_Help" xml:space="preserve"><value>Довідка</value></data>
   <data name="Menu_Donate" xml:space="preserve"><value>Підтримати автора</value></data>

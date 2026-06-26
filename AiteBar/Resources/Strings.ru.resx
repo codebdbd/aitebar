@@ -354,6 +354,42 @@
   <data name="ColorPicker_Copied" xml:space="preserve">
     <value>Цвет скопирован: {0}</value>
   </data>
+  <data name="ColorPicker_ChooseColor" xml:space="preserve">
+    <value>Выбор цвета</value>
+  </data>
+  <data name="ColorPicker_Red" xml:space="preserve">
+    <value>Красный</value>
+  </data>
+  <data name="ColorPicker_Green" xml:space="preserve">
+    <value>Зелёный</value>
+  </data>
+  <data name="ColorPicker_Blue" xml:space="preserve">
+    <value>Синий</value>
+  </data>
+  <data name="ColorPicker_Hex" xml:space="preserve">
+    <value>Hex</value>
+  </data>
+  <data name="ColorPicker_Preview" xml:space="preserve">
+    <value>Предпросмотр</value>
+  </data>
+  <data name="ColorPicker_OK" xml:space="preserve">
+    <value>ОК</value>
+  </data>
+  <data name="ColorPicker_Cancel" xml:space="preserve">
+    <value>Отмена</value>
+  </data>
+  <data name="ColorPicker_Hue" xml:space="preserve">
+    <value>Тон</value>
+  </data>
+  <data name="ColorPicker_Saturation" xml:space="preserve">
+    <value>Насыщенность</value>
+  </data>
+  <data name="ColorPicker_Brightness" xml:space="preserve">
+    <value>Яркость</value>
+  </data>
+  <data name="ColorPicker_Palette" xml:space="preserve">
+    <value>Палитра</value>
+  </data>
   <data name="QuickNote_Title" xml:space="preserve">
     <value>Быстрая заметка</value>
   </data>

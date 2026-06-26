@@ -414,40 +414,26 @@ public partial class QRCodeGeneratorWindow : DarkWindow
 
     private void ShowColorPicker(TextBox colorTextBox, Border colorSwatch)
     {
-        var dialog = new Forms.ColorDialog();
-        // Попробуем парсить цвет без ColorTranslator
-        if (TryParseDrawingColor(colorTextBox.Text, out var drawingColor))
+        if (TryParseColor(colorTextBox.Text, out var initialColor))
         {
-            dialog.Color = drawingColor;
         }
-
-        if (dialog.ShowDialog() == Forms.DialogResult.OK)
+        else
         {
-            string hex = $"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}";
+            initialColor = Colors.Black;
+        }
+        
+        var dialog = new ColorPickerDialog(initialColor)
+        {
+            Owner = this
+        };
+
+        if (dialog.ShowDialog() == true)
+        {
+            string hex = $"#{dialog.SelectedColor.R:X2}{dialog.SelectedColor.G:X2}{dialog.SelectedColor.B:X2}";
             colorTextBox.Text = hex;
             UpdateColorSwatches();
             QueuePreviewRefresh();
         }
-    }
-
-    private bool TryParseDrawingColor(string hex, out System.Drawing.Color color)
-    {
-        color = System.Drawing.Color.Black;
-        try
-        {
-            if (hex.StartsWith("#") && hex.Length == 7)
-            {
-                byte r = Convert.ToByte(hex.Substring(1, 2), 16);
-                byte g = Convert.ToByte(hex.Substring(3, 2), 16);
-                byte b = Convert.ToByte(hex.Substring(5, 2), 16);
-                color = System.Drawing.Color.FromArgb(r, g, b);
-                return true;
-            }
-        }
-        catch
-        {
-        }
-        return false;
     }
 
     private void UpdateColorSwatches()
