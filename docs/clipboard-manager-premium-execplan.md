@@ -21,6 +21,8 @@ The user-visible behavior to enable is: copy text or an image, open `Clipboard m
 - [x] (2026-06-27 16:49+03:00) Verified `dotnet build .\AiteBar.sln -c Release --disable-build-servers` succeeds.
 - [x] (2026-06-27 18:28+03:00) Refined Clipboard Manager row interaction: card-click copy no longer should reorder entries on copy-back, duplicate text blocks were removed from text entries, and action clicks are isolated from the row click handler.
 - [x] (2026-06-27 18:37+03:00) Removed the `1-line` action from the main UI and simplified the list visual treatment to reduce clutter; added right-side breathing room and a narrower scrollbar to stop the scrollbar from visually cutting card borders.
+- [x] (2026-06-27 19:08+03:00) Fixed two review findings: card borders are no longer locally overwritten from code-behind, and clipboard copy-back suppression now uses a short payload-matching window instead of a broad 2-second ignore period.
+- [x] (2026-06-27 19:26+03:00) Reworked Clipboard Manager list rendering around a templated `ListBox`, added keyboard navigation (`Ctrl+F`, arrows, `Enter`, `Delete`), removed dead wipe handler code from the window, and added focused tests for copy-back suppression behavior.
 - [ ] Full `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --disable-build-servers` is still red because of unrelated existing failures in `AppSettingsWindowIntegrationTests`, `IconConverterIntegrationTests`, `LocalizationServiceTests`, and `IconConverterWindowLayoutTests`.
 - [x] (2026-06-27 16:49+03:00) Verified focused clipboard coverage with `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --disable-build-servers --filter "Clipboard|ClipboardManager"`: 8 passed, 0 failed.
 
@@ -40,6 +42,12 @@ The user-visible behavior to enable is: copy text or an image, open `Clipboard m
 
 - Observation: the main visual “torn border” problem was amplified by entries rendering too close to the vertical scrollbar, so the thumb visually overlapped the card edge while scrolling.
   Evidence: user screenshots on 2026-06-27 show the right card border apparently breaking exactly where the thick scrollbar/thumb sits.
+
+- Observation: the previous copy-back suppression was too coarse because it could discard a legitimate repeated copy of the same payload shortly after the user clicked a clipboard card.
+  Evidence: `ClipboardHistoryService.ShouldIgnoreClipboardPayload` used a 2-second suppression window for any matching payload.
+
+- Observation: the old manual card construction path in `ClipboardManagerWindow.xaml.cs` was becoming the main reason UI fixes were expensive, because every visual tweak required rebuilding control trees in code.
+  Evidence: card layout, previews, action buttons, and state styling were all created imperatively in `CreateEntryCard`.
 
 - Observation: the repository's full test suite currently contains unrelated failures outside the clipboard area, including stale source assertions and IconConverter-specific issues.
   Evidence: `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --disable-build-servers` failed in `AppSettingsWindowIntegrationTests.LanguageSelection_PersistsUiCultureImmediately`, `LocalizationServiceTests.XamlTextProperties_DoNotContainTranslatableLiteralText`, `IconConverterWindowLayoutTests.Window_MinimumSize_DoesNotClipCriticalControlsInRussian`, and `IconConverterIntegrationTests.IconConverter_IsWiredIntoPanelSettingsAndUtilityRegistry`.
@@ -64,6 +72,14 @@ The user-visible behavior to enable is: copy text or an image, open `Clipboard m
 
 - Decision: remove the `1-line` action from the visible card UI rather than demoting it to a prominent secondary control.
   Rationale: the feature is too niche for the main clipboard list and adds visual noise disproportionate to its value.
+  Date/Author: 2026-06-27 / Codex
+
+- Decision: keep payload-based suppression, but narrow it to a short notification-budgeted window instead of a long generic ignore interval.
+  Rationale: this still prevents the utility from re-capturing its own copy-back while materially reducing the chance of swallowing a real user copy.
+  Date/Author: 2026-06-27 / Codex
+
+- Decision: keep the search field at the bottom per the latest requested layout, but offset the discoverability loss by adding direct keyboard focus (`Ctrl+F`) and list-first keyboard navigation.
+  Rationale: this preserves the requested composition while still making frequent clipboard-search workflows efficient.
   Date/Author: 2026-06-27 / Codex
 
 ## Outcomes & Retrospective

@@ -1,7 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.Json;
+using System.Threading;
 
 namespace AiteBar.Tests;
 
@@ -121,5 +123,53 @@ public sealed class ClipboardHistoryServiceTests : IDisposable
         string result = ClipboardTextTransforms.ToSingleLine("  alpha \r\n beta\t\tgamma \n\n delta ");
 
         Assert.Equal("alpha beta gamma delta", result);
+    }
+
+    [Fact]
+    public void CopyBackSuppression_IgnoresMatchingPayloadImmediately()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+
+        InvokePrivate(service, "RegisterSuppressedClipboardPayload", "alpha", null);
+
+        bool ignored = (bool)InvokePrivate(service, "ShouldIgnoreClipboardPayload", "alpha", null)!;
+
+        Assert.True(ignored);
+    }
+
+    [Fact]
+    public void CopyBackSuppression_ExpiresQuicklyForMatchingPayload()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+
+        InvokePrivate(service, "RegisterSuppressedClipboardPayload", "alpha", null);
+        Thread.Sleep(650);
+
+        bool ignored = (bool)InvokePrivate(service, "ShouldIgnoreClipboardPayload", "alpha", null)!;
+
+        Assert.False(ignored);
+    }
+
+    [Fact]
+    public void CopyBackSuppression_DoesNotIgnoreDifferentPayload()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+
+        InvokePrivate(service, "RegisterSuppressedClipboardPayload", "alpha", null);
+
+        bool ignored = (bool)InvokePrivate(service, "ShouldIgnoreClipboardPayload", "beta", null)!;
+
+        Assert.False(ignored);
+    }
+
+    private static object? InvokePrivate(object target, string methodName, params object?[]? args)
+    {
+        MethodInfo method = target.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException($"Private method '{methodName}' was not found.");
+
+        return method.Invoke(target, args);
     }
 }

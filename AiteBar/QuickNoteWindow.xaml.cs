@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
@@ -17,7 +18,7 @@ using Forms = System.Windows.Forms;
 namespace AiteBar
 {
     [SupportedOSPlatform("windows6.1")]
-    public partial class QuickNoteWindow : DarkWindow
+    public partial class QuickNoteWindow : DarkWindow, IDisposable
     {
         private const int WM_SYSCOMMAND = 0x0112;
         private const int SC_SIZE = 0xF000;
@@ -46,6 +47,9 @@ namespace AiteBar
         private int _monitorIndex;
         private QuickNoteStatusKind _statusKind;
         private string? _statusArgument;
+        private System.Windows.Controls.MenuItem? _cachedConflictCopyMenuItem;
+        private List<TextBlock>? _cachedTextBlocks;
+        private List<System.Windows.Controls.Button>? _cachedButtons;
 
         public QuickNoteWindow(QuickNoteService noteService, AppSettingsService settingsService)
         {
@@ -91,8 +95,7 @@ namespace AiteBar
             TxtNote.Focus();
             TxtNote.CaretPosition = TxtNote.Document.ContentEnd;
             ResetCaretFormatting();
-            TxtNote.IsUndoEnabled = false;
-            TxtNote.IsUndoEnabled = true;
+            ClearUndoStack();
         }
 
         private async void Window_Deactivated(object? sender, EventArgs e)
@@ -116,6 +119,14 @@ namespace AiteBar
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
+            Dispose();
+        }
+
+        public void Dispose()
+        {
+            _saveSemaphore?.Dispose();
+            _saveTimer?.Stop();
+            _geometrySaveTimer?.Stop();
         }
 
         private void TxtNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -254,7 +265,7 @@ namespace AiteBar
         {
             string text = GetEditorText();
             TxtPlaceholder.Visibility = string.IsNullOrWhiteSpace(text) ? Visibility.Visible : Visibility.Collapsed;
-            int lines = string.IsNullOrEmpty(text) ? 0 : text.Split('\n').Length;
+            int lines = string.IsNullOrEmpty(text) ? 0 : text.Count(c => c == '\n') + 1;
             TxtStats.Text = LocalizationService.Format("QuickNote_Stats", text.Length, lines);
         }
 
@@ -679,14 +690,16 @@ namespace AiteBar
             FormatSeparator1.Opacity = theme.IsDark ? 0.35 : 0.45;
             FormatSeparator2.Opacity = theme.IsDark ? 0.35 : 0.45;
 
-            foreach (var textBlock in FindVisualChildren<TextBlock>(this))
+            _cachedTextBlocks ??= FindVisualChildren<TextBlock>(this).ToList();
+            foreach (var textBlock in _cachedTextBlocks)
             {
                 textBlock.Foreground = textBlock == TxtPlaceholder || textBlock == TxtSaveStatus || textBlock == TxtStats
                     ? muted
                     : text;
             }
 
-            foreach (var button in FindVisualChildren<System.Windows.Controls.Button>(this))
+            _cachedButtons ??= FindVisualChildren<System.Windows.Controls.Button>(this).ToList();
+            foreach (var button in _cachedButtons)
             {
                 button.Foreground = text;
             }
@@ -735,8 +748,12 @@ namespace AiteBar
             }
         }
 
-        private static SolidColorBrush Brush(string color) =>
-            new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
+        private static SolidColorBrush Brush(string color)
+        {
+            var brush = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
+            brush.Freeze();
+            return brush;
+        }
 
         private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject
         {
@@ -822,7 +839,16 @@ namespace AiteBar
             var screen = (_monitorIndex >= 0 && _monitorIndex < screens.Length)
                 ? screens[_monitorIndex]
                 : Forms.Screen.PrimaryScreen;
-            return screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
+            return screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? GetVirtualScreenFallback();
+        }
+
+        private static System.Drawing.Rectangle GetVirtualScreenFallback()
+        {
+            int left = (int)SystemParameters.VirtualScreenLeft;
+            int top = (int)SystemParameters.VirtualScreenTop;
+            int width = (int)SystemParameters.VirtualScreenWidth;
+            int height = (int)SystemParameters.VirtualScreenHeight;
+            return new System.Drawing.Rectangle(left, top, width, height);
         }
 
         private void Window_LocationChanged(object? sender, EventArgs e)
@@ -878,6 +904,11 @@ namespace AiteBar
             try
             {
                 string normalized = QuickNoteMarkdown.NormalizeLinkForOpen(link.Value.Link, link.Value.Type);
+                if (!IsValidLink(normalized, link.Value.Type))
+                {
+                    SetStatus(QuickNoteStatusKind.OpenFailed);
+                    return false;
+                }
                 Process.Start(new ProcessStartInfo(normalized) { UseShellExecute = true });
             }
             catch (Exception ex)
@@ -888,6 +919,22 @@ namespace AiteBar
             }
 
             return true;
+        }
+
+        private static bool IsValidLink(string link, QuickNoteMarkdown.LinkType type)
+        {
+            if (string.IsNullOrWhiteSpace(link))
+            {
+                return false;
+            }
+
+            return type switch
+            {
+                QuickNoteMarkdown.LinkType.Url => Uri.TryCreate(link, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps),
+                QuickNoteMarkdown.LinkType.Email => link.Contains('@') && link.Length > 3,
+                QuickNoteMarkdown.LinkType.Phone => link.Length > 3,
+                _ => false
+            };
         }
 
         private (string Link, QuickNoteMarkdown.LinkType Type)? FindLinkAtMouse(System.Windows.Point position)
@@ -922,7 +969,7 @@ namespace AiteBar
         {
             string text = new TextRange(TxtNote.Document.ContentStart, TxtNote.Document.ContentEnd).Text;
             text = QuickNoteDocumentHelper.NormalizeLineEndings(text);
-            return text.EndsWith('\n') ? text[..^1] : text;
+            return text.TrimEnd('\n');
         }
 
         private void UndoEditor()
@@ -945,13 +992,33 @@ namespace AiteBar
             TxtNote.Redo();
         }
 
+        private void ClearUndoStack()
+        {
+            if (TxtNote.CanUndo)
+            {
+                while (TxtNote.CanUndo)
+                {
+                    TxtNote.Undo();
+                }
+            }
+        }
+
         private void UpdateConflictMenuState()
         {
             bool hasConflict = !string.IsNullOrWhiteSpace(_noteService.LastConflictCopyPath);
-            if (FindConflictCopyMenuItem() is { } menuItem)
+            if (_cachedConflictCopyMenuItem is { } menuItem)
             {
                 menuItem.IsEnabled = hasConflict;
                 menuItem.ToolTip = hasConflict ? _noteService.LastConflictCopyPath : null;
+            }
+            else
+            {
+                _cachedConflictCopyMenuItem = FindConflictCopyMenuItem();
+                if (_cachedConflictCopyMenuItem is { } cachedItem)
+                {
+                    cachedItem.IsEnabled = hasConflict;
+                    cachedItem.ToolTip = hasConflict ? _noteService.LastConflictCopyPath : null;
+                }
             }
         }
 

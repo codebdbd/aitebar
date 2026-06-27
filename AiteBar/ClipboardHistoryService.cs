@@ -36,6 +36,7 @@ namespace AiteBar
         private string? _suppressedText;
         private byte[]? _suppressedImageBytes;
         private DateTime _suppressedClipboardExpiresAtUtc;
+        private int _suppressedClipboardNotificationBudget;
         private bool _disposed;
         private bool _persistHistory;
 
@@ -479,12 +480,6 @@ namespace AiteBar
 
         private void OnClipboardChanged()
         {
-            if (_suppressNextChange)
-            {
-                _suppressNextChange = false;
-                return;
-            }
-
             try
             {
                 string? text = null;
@@ -529,14 +524,16 @@ namespace AiteBar
 
         private void RegisterSuppressedClipboardPayload(string? text, byte[]? imageBytes)
         {
+            _suppressNextChange = true;
             _suppressedText = text;
             _suppressedImageBytes = imageBytes;
-            _suppressedClipboardExpiresAtUtc = DateTime.UtcNow.AddSeconds(2);
+            _suppressedClipboardExpiresAtUtc = DateTime.UtcNow.AddMilliseconds(500);
+            _suppressedClipboardNotificationBudget = 2;
         }
 
         private bool ShouldIgnoreClipboardPayload(string? text, byte[]? imageBytes)
         {
-            if (_suppressedClipboardExpiresAtUtc == default)
+            if (!_suppressNextChange || _suppressedClipboardExpiresAtUtc == default)
             {
                 return false;
             }
@@ -556,7 +553,12 @@ namespace AiteBar
                 return false;
             }
 
-            ClearSuppressedClipboardPayload();
+            _suppressedClipboardNotificationBudget--;
+            if (_suppressedClipboardNotificationBudget <= 0)
+            {
+                ClearSuppressedClipboardPayload();
+            }
+
             return true;
         }
 
@@ -566,6 +568,7 @@ namespace AiteBar
             _suppressedText = null;
             _suppressedImageBytes = null;
             _suppressedClipboardExpiresAtUtc = default;
+            _suppressedClipboardNotificationBudget = 0;
         }
 
         public void Dispose()

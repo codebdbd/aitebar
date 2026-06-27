@@ -141,7 +141,6 @@ namespace AiteBar
 
         public static QuickNoteTextOperation[] GetListMarkerOperations(string text, int selectionStart, int selectionEnd, bool numbered)
         {
-            text = NormalizeLineEndings(text);
             var lines = GetSelectedLines(text, selectionStart, selectionEnd);
             bool removeList = LinesHaveListMarker(lines.Select(line => line.Text), numbered);
             var operations = new List<QuickNoteTextOperation>();
@@ -180,7 +179,6 @@ namespace AiteBar
 
         public static QuickNoteTextOperation[] GetClearMarkerOperations(string text, int selectionStart, int selectionEnd)
         {
-            text = NormalizeLineEndings(text);
             return GetSelectedLines(text, selectionStart, selectionEnd)
                 .Select(line => (Line: line, Marker: GetListMarker(line.Text)))
                 .Where(item => item.Marker.MarkerLength > 0)

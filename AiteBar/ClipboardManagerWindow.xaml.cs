@@ -24,14 +24,11 @@ namespace AiteBar
     [SupportedOSPlatform("windows6.1")]
     public partial class ClipboardManagerWindow : DarkWindow
     {
-        private const string GlyphCopy = "\uE8C8";
-        private const string GlyphPin = "\uE718";
-        private const string GlyphDelete = "\uE74D";
-
         private readonly ClipboardHistoryService _historyService;
         private readonly DispatcherTimer _refreshTimer;
         private string _lastRenderedSignature = string.Empty;
         private ClipboardManagerFilter _activeFilter = ClipboardManagerFilter.All;
+        private string? _selectedEntryId;
 
         public ClipboardManagerWindow(ClipboardHistoryService historyService)
         {
@@ -44,7 +41,6 @@ namespace AiteBar
                 UpdateEntriesList();
             };
             UpdateSearchPlaceholder();
-            UpdateFilterButtons();
             UpdateEntriesList(force: true);
         }
 
@@ -80,7 +76,6 @@ namespace AiteBar
         protected override void OnLocalizationChanged()
         {
             _lastRenderedSignature = string.Empty;
-            UpdateFilterButtons();
             UpdateEntriesList(force: true);
         }
 
@@ -92,6 +87,7 @@ namespace AiteBar
 
         private void UpdateEntriesList(bool force = false)
         {
+            ListBox entriesList = GetEntriesList();
             string searchText = TxtSearch?.Text ?? string.Empty;
             List<ClipboardHistoryEntry> filteredEntries = GetFilteredEntries(searchText);
             string signature = BuildEntriesSignature(searchText, filteredEntries);
@@ -101,20 +97,21 @@ namespace AiteBar
             }
 
             _lastRenderedSignature = signature;
-            EntriesPanel.Children.Clear();
+            List<ClipboardHistoryEntryViewModel> items = filteredEntries.Select(CreateViewModel).ToList();
+            entriesList.ItemsSource = items;
 
-            if (filteredEntries.Count == 0)
+            if (items.Count == 0)
             {
                 TxtEmptyHint.Visibility = Visibility.Visible;
-                EntriesPanel.Children.Add(TxtEmptyHint);
+                entriesList.SelectedItem = null;
+                _selectedEntryId = null;
             }
             else
             {
                 TxtEmptyHint.Visibility = Visibility.Collapsed;
-                foreach (ClipboardHistoryEntry entry in filteredEntries)
-                {
-                    EntriesPanel.Children.Add(CreateEntryCard(entry));
-                }
+                ClipboardHistoryEntryViewModel? selectedItem = items.FirstOrDefault(item => item.Id == _selectedEntryId) ?? items[0];
+                entriesList.SelectedItem = selectedItem;
+                _selectedEntryId = selectedItem.Id;
             }
 
             TxtStatus.Text = LocalizationService.Format(
@@ -160,152 +157,26 @@ namespace AiteBar
                 || (entry.IsPinned && LocalizationService.Get("ClipboardManager_PinnedBadge").Contains(query, StringComparison.OrdinalIgnoreCase));
         }
 
-        private Border CreateEntryCard(ClipboardHistoryEntry entry)
+        private ClipboardHistoryEntryViewModel CreateViewModel(ClipboardHistoryEntry entry)
         {
-            var entryBorder = new Border
+            return new ClipboardHistoryEntryViewModel
             {
-                Style = (Style)FindResource("EntryItemStyle"),
-                BorderBrush = entry.IsPinned
-                    ? new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#D4A72C"))
-                    : (Brush)FindResource("FormControlBorderBrush"),
-                Tag = entry
-            };
-
-            var layout = new Grid();
-            layout.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            layout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-
-            if (entry.IsImage)
-            {
-                Border preview = CreateImagePreview(entry);
-                Grid.SetColumn(preview, 0);
-                layout.Children.Add(preview);
-            }
-
-            var content = new Grid();
-            content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            Grid.SetColumn(content, 1);
-            layout.Children.Add(content);
-
-            var header = new Grid();
-            header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            header.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            header.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            Border typeBadge = entry.IsImage
-                ? CreateTypeBadge("IMG", "#1F2731", "#344150")
-                : CreateTypeBadge("TXT", "#1C2734", "#314559");
-            Grid.SetColumn(typeBadge, 0);
-            header.Children.Add(typeBadge);
-
-            var textStack = new StackPanel();
-            var title = new TextBlock
-            {
-                Text = entry.IsImage ? LocalizationService.Get("ClipboardManager_ImageLabel") : entry.DisplayText,
-                FontSize = 13,
-                FontWeight = FontWeights.SemiBold,
-                Foreground = Brushes.White,
-                TextWrapping = TextWrapping.Wrap,
-                MaxHeight = 36
-            };
-            var summary = new TextBlock
-            {
-                Text = BuildEntrySummary(entry),
-                FontSize = 10,
-                Foreground = (Brush)FindResource("MutedText"),
-                Margin = new Thickness(0, 4, 0, 0)
-            };
-            textStack.Children.Add(title);
-            textStack.Children.Add(summary);
-            Grid.SetColumn(textStack, 1);
-            header.Children.Add(textStack);
-
-            if (entry.IsPinned)
-            {
-                var pinned = new Border
-                {
-                    Style = (Style)FindResource("ClipboardPinnedBadgeStyle"),
-                    Margin = new Thickness(8, 1, 0, 0),
-                    VerticalAlignment = VerticalAlignment.Top,
-                    ToolTip = LocalizationService.Get("ClipboardManager_PinnedBadge"),
-                    Child = new TextBlock
-                    {
-                        Text = LocalizationService.Get("ClipboardManager_PinnedBadge"),
-                        FontSize = 10,
-                        FontWeight = FontWeights.SemiBold,
-                        Foreground = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#F2D57B"))
-                    }
-                };
-                Grid.SetColumn(pinned, 2);
-                header.Children.Add(pinned);
-            }
-
-            Grid.SetRow(header, 0);
-            content.Children.Add(header);
-
-            var actions = new StackPanel
-            {
-                Margin = new Thickness(entry.IsImage ? 0 : 50, 10, 0, 0),
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = System.Windows.HorizontalAlignment.Right
-            };
-            actions.Children.Add(CreateActionButton(GlyphCopy, LocalizationService.Get("ClipboardManager_Copy"), () => CopyEntry(entry)));
-            actions.Children.Add(CreateActionButton(
-                GlyphPin,
-                entry.IsPinned
+                Id = entry.Id,
+                Entry = entry,
+                IsImage = entry.IsImage,
+                IsPinned = entry.IsPinned,
+                Title = entry.IsImage ? LocalizationService.Get("ClipboardManager_ImageLabel") : entry.DisplayText,
+                Summary = BuildEntrySummary(entry),
+                PreviewImage = TryCreateBitmap(entry.ImageBytes),
+                ImageLabel = LocalizationService.Get("ClipboardManager_ImageLabel"),
+                PinnedLabel = LocalizationService.Get("ClipboardManager_PinnedBadge"),
+                CopyLabel = LocalizationService.Get("ClipboardManager_Copy"),
+                PinLabel = entry.IsPinned
                     ? LocalizationService.Get("ClipboardManager_Unpin")
                     : LocalizationService.Get("ClipboardManager_Pin"),
-                () => TogglePin(entry)));
-            actions.Children.Add(CreateActionButton(GlyphDelete, LocalizationService.Get("ClipboardManager_Delete"), () => DeleteEntry(entry)));
-
-            Grid.SetRow(actions, 1);
-            content.Children.Add(actions);
-
-            entryBorder.Child = layout;
-            entryBorder.MouseLeftButtonDown += (_, args) =>
-            {
-                if (IsInteractiveChildClick(args.OriginalSource as DependencyObject))
-                {
-                    return;
-                }
-
-                CopyEntry(entry);
+                DeleteLabel = LocalizationService.Get("ClipboardManager_Delete"),
+                ActionsMargin = entry.IsImage ? new Thickness(0, 10, 0, 0) : new Thickness(50, 10, 0, 0)
             };
-            return entryBorder;
-        }
-
-        private Border CreateImagePreview(ClipboardHistoryEntry entry)
-        {
-            var frame = new Border
-            {
-                Style = (Style)FindResource("PreviewFrameStyle")
-            };
-
-            if (TryCreateBitmap(entry.ImageBytes) is BitmapSource bitmap)
-            {
-                frame.Child = new Image
-                {
-                    Source = bitmap,
-                    Stretch = Stretch.UniformToFill,
-                    SnapsToDevicePixels = true
-                };
-                frame.ClipToBounds = true;
-            }
-            else
-            {
-                frame.Child = new TextBlock
-                {
-                    Text = LocalizationService.Get("ClipboardManager_ImageLabel"),
-                    Foreground = (Brush)FindResource("MutedText"),
-                    FontSize = 11,
-                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    TextAlignment = TextAlignment.Center
-                };
-            }
-
-            return frame;
         }
 
         private static BitmapSource? TryCreateBitmap(byte[]? imageBytes)
@@ -331,38 +202,6 @@ namespace AiteBar
             {
                 return null;
             }
-        }
-
-        private Button CreateActionButton(string glyph, string toolTip, Action onClick)
-        {
-            var button = new Button
-            {
-                Content = glyph,
-                ToolTip = toolTip,
-                Style = (Style)FindResource("ClipboardActionButtonStyle")
-            };
-            button.Click += (_, _) => onClick();
-            return button;
-        }
-
-        private Border CreateTypeBadge(string label, string backgroundHex, string borderHex)
-        {
-            return new Border
-            {
-                Style = (Style)FindResource("ClipboardTypeBadgeStyle"),
-                Background = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(backgroundHex)),
-                BorderBrush = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(borderHex)),
-                Child = new TextBlock
-                {
-                    Text = label,
-                    FontSize = 10,
-                    FontWeight = FontWeights.Bold,
-                    Foreground = Brushes.White,
-                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center,
-                    TextAlignment = TextAlignment.Center
-                }
-            };
         }
 
         private static bool IsInteractiveChildClick(DependencyObject? source)
@@ -449,31 +288,36 @@ namespace AiteBar
         private void SetFilter(ClipboardManagerFilter filter)
         {
             _activeFilter = filter;
-            UpdateFilterButtons();
             UpdateEntriesList(force: true);
         }
 
-        private void UpdateFilterButtons()
+        private ListBox GetEntriesList()
         {
-            ApplyFilterState(BtnFilterAll, _activeFilter == ClipboardManagerFilter.All);
-            ApplyFilterState(BtnFilterPinned, _activeFilter == ClipboardManagerFilter.Pinned);
-            ApplyFilterState(BtnFilterText, _activeFilter == ClipboardManagerFilter.Text);
-            ApplyFilterState(BtnFilterImages, _activeFilter == ClipboardManagerFilter.Images);
+            return (ListBox)(FindName("EntriesList") ?? throw new InvalidOperationException("EntriesList was not found."));
         }
 
-        private static void ApplyFilterState(Button button, bool active)
+        private ClipboardHistoryEntry? GetSelectedEntry()
         {
-            button.Opacity = 1.0;
-            button.FontWeight = FontWeights.SemiBold;
-            button.Background = active
-                ? new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#21496F"))
-                : new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#141C27"));
-            button.BorderBrush = active
-                ? new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#3B78B6"))
-                : new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#26384A"));
-            button.Foreground = active
-                ? Brushes.White
-                : new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#AEB9C8"));
+            return GetEntriesList().SelectedItem is ClipboardHistoryEntryViewModel item ? item.Entry : null;
+        }
+
+        private ClipboardHistoryEntry? FindEntryById(string? entryId)
+        {
+            if (string.IsNullOrWhiteSpace(entryId))
+            {
+                return null;
+            }
+
+            return _historyService.Entries.FirstOrDefault(entry => string.Equals(entry.Id, entryId, StringComparison.Ordinal));
+        }
+
+        private static string? GetEntryIdFromSender(object sender)
+        {
+            return sender switch
+            {
+                FrameworkElement { Tag: string entryId } => entryId,
+                _ => null
+            };
         }
 
         private bool Confirm(string messageKey)
@@ -484,10 +328,72 @@ namespace AiteBar
             }.ShowDialog() == true;
         }
 
-        private void BtnFilterAll_Click(object sender, RoutedEventArgs e) => SetFilter(ClipboardManagerFilter.All);
-        private void BtnFilterPinned_Click(object sender, RoutedEventArgs e) => SetFilter(ClipboardManagerFilter.Pinned);
-        private void BtnFilterText_Click(object sender, RoutedEventArgs e) => SetFilter(ClipboardManagerFilter.Text);
-        private void BtnFilterImages_Click(object sender, RoutedEventArgs e) => SetFilter(ClipboardManagerFilter.Images);
+        private void FilterTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (!IsLoaded || sender is not System.Windows.Controls.TabControl tabControl || tabControl.SelectedItem is not TabItem selectedTab)
+            {
+                return;
+            }
+
+            if (selectedTab.Tag is not string tag)
+            {
+                return;
+            }
+
+            ClipboardManagerFilter filter = tag switch
+            {
+                "Pinned" => ClipboardManagerFilter.Pinned,
+                "Text" => ClipboardManagerFilter.Text,
+                "Images" => ClipboardManagerFilter.Images,
+                _ => ClipboardManagerFilter.All
+            };
+
+            if (_activeFilter != filter)
+            {
+                SetFilter(filter);
+            }
+        }
+
+        private void EntryCard_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (IsInteractiveChildClick(e.OriginalSource as DependencyObject) || sender is not FrameworkElement { DataContext: ClipboardHistoryEntryViewModel item })
+            {
+                return;
+            }
+
+            GetEntriesList().SelectedItem = item;
+            _selectedEntryId = item.Id;
+            CopyEntry(item.Entry);
+        }
+
+        private void EntryCopyButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (FindEntryById(GetEntryIdFromSender(sender)) is ClipboardHistoryEntry entry)
+            {
+                ListBox entriesList = GetEntriesList();
+                entriesList.SelectedItem = entriesList.Items.OfType<ClipboardHistoryEntryViewModel>().FirstOrDefault(item => item.Id == entry.Id);
+                _selectedEntryId = entry.Id;
+                CopyEntry(entry);
+            }
+        }
+
+        private void EntryPinButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (FindEntryById(GetEntryIdFromSender(sender)) is ClipboardHistoryEntry entry)
+            {
+                _selectedEntryId = entry.Id;
+                TogglePin(entry);
+            }
+        }
+
+        private void EntryDeleteButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (FindEntryById(GetEntryIdFromSender(sender)) is ClipboardHistoryEntry entry)
+            {
+                _selectedEntryId = null;
+                DeleteEntry(entry);
+            }
+        }
 
         private void BtnClearHistory_Click(object sender, RoutedEventArgs e)
         {
@@ -497,27 +403,101 @@ namespace AiteBar
             }
 
             _historyService.ClearUnpinnedHistory();
+            _selectedEntryId = _historyService.Entries.FirstOrDefault(entry => entry.IsPinned)?.Id;
             TxtStatus.Text = LocalizationService.Get("ClipboardManager_Cleared");
-        }
-
-        private void BtnWipeAll_Click(object sender, RoutedEventArgs e)
-        {
-            if (!Confirm("ClipboardManager_WipeAllConfirm"))
-            {
-                return;
-            }
-
-            _historyService.ClearAllHistory();
-            TxtStatus.Text = LocalizationService.Get("ClipboardManager_WipedAll");
         }
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
+            if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.F)
+            {
+                TxtSearch.Focus();
+                TxtSearch.SelectAll();
+                e.Handled = true;
+                return;
+            }
+
             if (e.Key == Key.Escape)
             {
                 Close();
                 e.Handled = true;
+                return;
+            }
+
+            if (TxtSearch.IsKeyboardFocusWithin)
+            {
+                ListBox entriesList = GetEntriesList();
+                if (e.Key == Key.Down && entriesList.Items.Count > 0)
+                {
+                    entriesList.Focus();
+                    entriesList.SelectedIndex = Math.Max(0, entriesList.SelectedIndex);
+                    e.Handled = true;
+                }
+
+                return;
+            }
+
+            ListBox listBox = GetEntriesList();
+            if (listBox.Items.Count == 0)
+            {
+                return;
+            }
+
+            if (e.Key == Key.Down)
+            {
+                listBox.SelectedIndex = Math.Min(listBox.Items.Count - 1, listBox.SelectedIndex < 0 ? 0 : listBox.SelectedIndex + 1);
+                listBox.ScrollIntoView(listBox.SelectedItem);
+                if (GetSelectedEntry() is ClipboardHistoryEntry selectedEntry)
+                {
+                    _selectedEntryId = selectedEntry.Id;
+                }
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Up)
+            {
+                listBox.SelectedIndex = listBox.SelectedIndex <= 0 ? 0 : listBox.SelectedIndex - 1;
+                listBox.ScrollIntoView(listBox.SelectedItem);
+                if (GetSelectedEntry() is ClipboardHistoryEntry selectedEntry)
+                {
+                    _selectedEntryId = selectedEntry.Id;
+                }
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Enter)
+            {
+                if (GetSelectedEntry() is ClipboardHistoryEntry selectedEntry)
+                {
+                    CopyEntry(selectedEntry);
+                    _selectedEntryId = selectedEntry.Id;
+                    e.Handled = true;
+                }
+            }
+            else if (e.Key == Key.Delete)
+            {
+                if (GetSelectedEntry() is ClipboardHistoryEntry selectedEntry)
+                {
+                    _selectedEntryId = null;
+                    DeleteEntry(selectedEntry);
+                    e.Handled = true;
+                }
             }
         }
+    }
+
+    public sealed class ClipboardHistoryEntryViewModel
+    {
+        public required string Id { get; init; }
+        public required ClipboardHistoryEntry Entry { get; init; }
+        public required bool IsImage { get; init; }
+        public required bool IsPinned { get; init; }
+        public required string Title { get; init; }
+        public required string Summary { get; init; }
+        public required string ImageLabel { get; init; }
+        public required string PinnedLabel { get; init; }
+        public required string CopyLabel { get; init; }
+        public required string PinLabel { get; init; }
+        public required string DeleteLabel { get; init; }
+        public required Thickness ActionsMargin { get; init; }
+        public BitmapSource? PreviewImage { get; init; }
     }
 }

@@ -336,14 +336,14 @@
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
                             <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource FormControlForegroundBrush}"/>
                         </Trigger>
-                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                        <Trigger Property="IsKeyboardFocused" Value="True">
                             <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
                             <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource FormControlForegroundBrush}"/>
                         </Trigger>
                         <Trigger Property="IsDropDownOpen" Value="True">
                             <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
                             <Setter TargetName="Chrome" Property="BorderThickness" Value="1,1,1,0"/>
                             <Setter TargetName="Chrome" Property="CornerRadius" Value="4,4,0,0"/>
                             <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource FormControlForegroundBrush}"/>
