@@ -384,10 +384,11 @@ public partial class AppSettingsWindow : DarkWindow
         ChkShowPresetColorPicker.IsChecked = _settings.ShowPresetColorPicker;
         ChkShowPresetQuickNote.IsChecked = _settings.ShowPresetQuickNote;
         ChkShowPresetQRCodeGenerator.IsChecked = _settings.ShowPresetQRCodeGenerator;
-            ChkShowPresetClipboardManager.IsChecked = _settings.ShowPresetClipboardManager;
-            ChkShowPresetShowDesktop.IsChecked = _settings.ShowPresetShowDesktop;
+        ChkShowPresetClipboardManager.IsChecked = _settings.ShowPresetClipboardManager;
+        ChkShowPresetShowDesktop.IsChecked = _settings.ShowPresetShowDesktop;
         ChkShowPresetAppsFolder.IsChecked = _settings.ShowPresetAppsFolder;
         ChkShowPresetCopilot.IsChecked = _settings.ShowPresetCopilot;
+        ChkClipboardManagerPersistHistory.IsChecked = _settings.ClipboardManagerPersistHistory;
         ChkShowTaskbarPositionIndicator.IsChecked = _settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
         ChkCheckForUpdatesEnabled.IsChecked = _settings.CheckForUpdatesEnabled;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
@@ -569,6 +570,7 @@ public partial class AppSettingsWindow : DarkWindow
             settings.ShowPresetShowDesktop = ChkShowPresetShowDesktop.IsChecked ?? false;
             settings.ShowPresetAppsFolder = ChkShowPresetAppsFolder.IsChecked ?? false;
             settings.ShowPresetCopilot = ChkShowPresetCopilot.IsChecked ?? false;
+            settings.ClipboardManagerPersistHistory = ChkClipboardManagerPersistHistory.IsChecked ?? true;
             settings.ShowTaskbarPositionIndicator = ChkShowTaskbarPositionIndicator.IsChecked ?? true;
             settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;
             settings.UiCulture = _selectedUiCulture;

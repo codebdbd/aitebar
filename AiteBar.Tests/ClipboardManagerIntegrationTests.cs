@@ -32,12 +32,15 @@ public sealed class ClipboardManagerIntegrationTests : IDisposable
         Assert.Contains("RegisterAllFromAssembly", appXaml);
         Assert.Contains("[Utility]", clipboardUtilityCode);
         Assert.Contains("public bool ShowPresetClipboardManager { get; set; } = false;", modelsCode);
+        Assert.Contains("public bool ClipboardManagerPersistHistory { get; set; } = true;", modelsCode);
         Assert.Contains("ShowPresetClipboardManager", unifiedButtonServiceCode);
         Assert.Contains("if (AppSettings.ShowPresetClipboardManager) count++;", mainWindowCode);
         Assert.Contains("case \"ClipboardManager\":", mainWindowCode);
         Assert.Contains("LaunchUtilityAsync(\"ClipboardManager\", HideDock)", mainWindowCode);
         Assert.Contains("ChkShowPresetClipboardManager.IsChecked = _settings.ShowPresetClipboardManager", settingsCode);
         Assert.Contains("settings.ShowPresetClipboardManager = ChkShowPresetClipboardManager.IsChecked ?? false", settingsCode);
+        Assert.Contains("ChkClipboardManagerPersistHistory.IsChecked = _settings.ClipboardManagerPersistHistory", settingsCode);
+        Assert.Contains("settings.ClipboardManagerPersistHistory = ChkClipboardManagerPersistHistory.IsChecked ?? true", settingsCode);
 
         UtilityRegistry.RegisterAllFromAssembly(typeof(ClipboardManagerUtility).Assembly);
         Assert.Contains(UtilityRegistry.GetAll(), utility => utility.Id == "ClipboardManager");
@@ -51,6 +54,9 @@ public sealed class ClipboardManagerIntegrationTests : IDisposable
 
         XElement settingsCheckbox = FindNamedElement(settingsWindow, "ChkShowPresetClipboardManager");
         Assert.Equal("{local:Loc ResourceKey=Tool_ClipboardManager}", settingsCheckbox.Attribute("Content")?.Value);
+
+        XElement persistenceCheckbox = FindNamedElement(settingsWindow, "ChkClipboardManagerPersistHistory");
+        Assert.Equal("{local:Loc ResourceKey=ClipboardManager_PersistHistorySetting}", persistenceCheckbox.Attribute("Content")?.Value);
     }
 
     private static XElement FindNamedElement(XDocument document, string name)

@@ -1043,6 +1043,32 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ClipboardManager_Cleared" xml:space="preserve"><value>История буфера обмена очищена</value></data>
   <data name="ClipboardManager_EmptyHint" xml:space="preserve"><value>История буфера обмена пуста. Скопируйте что-нибудь, чтобы начать!</value></data>
   <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} элементов в истории буфера обмена</value></data>
+  <data name="ClipboardManager_FilterAll" xml:space="preserve"><value>Все</value></data>
+  <data name="ClipboardManager_FilterPinned" xml:space="preserve"><value>Закреплённые</value></data>
+  <data name="ClipboardManager_FilterText" xml:space="preserve"><value>Текст</value></data>
+  <data name="ClipboardManager_FilterImages" xml:space="preserve"><value>Изображения</value></data>
+  <data name="ClipboardManager_CopySingleLine" xml:space="preserve"><value>1 строка</value></data>
+  <data name="ClipboardManager_CopiedSingleLine" xml:space="preserve"><value>Однострочная версия скопирована</value></data>
+  <data name="ClipboardManager_Pin" xml:space="preserve"><value>Закрепить</value></data>
+  <data name="ClipboardManager_Unpin" xml:space="preserve"><value>Открепить</value></data>
+  <data name="ClipboardManager_Pinned" xml:space="preserve"><value>Запись закреплена</value></data>
+  <data name="ClipboardManager_Unpinned" xml:space="preserve"><value>Запись откреплена</value></data>
+  <data name="ClipboardManager_PinnedBadge" xml:space="preserve"><value>Закреплено</value></data>
+  <data name="ClipboardManager_Delete" xml:space="preserve"><value>Удалить</value></data>
+  <data name="ClipboardManager_Deleted" xml:space="preserve"><value>Запись удалена</value></data>
+  <data name="ClipboardManager_ImageLabel" xml:space="preserve"><value>Изображение</value></data>
+  <data name="ClipboardManager_TextSummary" xml:space="preserve"><value>{0} символов, {1} строк, {2}</value></data>
+  <data name="ClipboardManager_ImageSummary" xml:space="preserve"><value>{0} КБ, {1}</value></data>
+  <data name="ClipboardManager_StatusDetailed" xml:space="preserve"><value>Показано: {0}, всего: {1}, закреплено: {2}, {3}</value></data>
+  <data name="ClipboardManager_StatusPersistent" xml:space="preserve"><value>сохраняется между сессиями</value></data>
+  <data name="ClipboardManager_StatusSessionOnly" xml:space="preserve"><value>только текущая сессия</value></data>
+  <data name="ClipboardManager_ClearHistory" xml:space="preserve"><value>Очистить историю</value></data>
+  <data name="ClipboardManager_ClearHistoryConfirm" xml:space="preserve"><value>Очистить все незакреплённые записи буфера обмена?</value></data>
+  <data name="ClipboardManager_WipeAll" xml:space="preserve"><value>Удалить всё</value></data>
+  <data name="ClipboardManager_WipeAllConfirm" xml:space="preserve"><value>Удалить все записи буфера обмена, включая закреплённые?</value></data>
+  <data name="ClipboardManager_WipedAll" xml:space="preserve"><value>Все записи буфера обмена удалены</value></data>
+  <data name="ClipboardManager_PersistHistorySetting" xml:space="preserve"><value>Сохранять историю буфера между сессиями</value></data>
+  <data name="ClipboardManager_PersistHistoryHint" xml:space="preserve"><value>История будет храниться в данных AiteBar. Отключите, если нужен режим только на время текущей сессии.</value></data>
   <data name="QRCodeGenerator_ColorCode" xml:space="preserve"><value>QR-код</value></data>
   <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Логотип</value></data>
   <data name="QRCodeGenerator_UseDefaultLogo" xml:space="preserve"><value>Использовать стандартный логотип</value></data>

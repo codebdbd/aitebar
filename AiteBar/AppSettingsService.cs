@@ -101,6 +101,7 @@ namespace AiteBar
                 ShowPresetShowDesktop = original.ShowPresetShowDesktop,
                 ShowPresetAppsFolder = original.ShowPresetAppsFolder,
                 ShowPresetCopilot = original.ShowPresetCopilot,
+                ClipboardManagerPersistHistory = original.ClipboardManagerPersistHistory,
                 QuickNoteThemeId = original.QuickNoteThemeId,
                 QuickNotePinned = original.QuickNotePinned,
                 QuickNoteLeft = original.QuickNoteLeft,

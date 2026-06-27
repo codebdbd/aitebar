@@ -77,6 +77,11 @@ AiteBar - desktop-утилита для Windows: скрываемая edge-па�
   - Открыть Icon Converter
   - Открыть QR Code Generator
   - Открыть Clipboard Manager
+  - Смотреть историю текста и изображений между сессиями AiteBar
+  - Закреплять важные клипы
+  - Копировать текст как одну строку для промптов, команд и URL
+  - Фильтровать историю по закреплённым, тексту и изображениям
+  - Очищать только незакреплённую историю или полностью стирать все клипы
   - Показать рабочий стол
   - Открыть папку приложений
   - Открыть Copilot
@@ -2243,6 +2248,7 @@ Tray-меню.
 | `ShowPresetQuickNote` | Показывать Quick Note | true/false | `false` |
 | `ShowPresetQRCodeGenerator` | Показывать QR Code Generator | true/false | `false` |
 | `ShowPresetClipboardManager` | Показывать Clipboard Manager | true/false | `false` |
+| `ClipboardManagerPersistHistory` | Сохранять историю Clipboard Manager между сессиями | true/false | `true` |
 | `TimerSoundEnabled` | Звук окончания таймера | true/false | `true` |
 | `TimerIsStopwatchMode` | Последний выбранный режим таймера/секундомера | true/false | `false` |
 | `TimerDuration` | Последняя длительность таймера | TimeSpan | `00:05:00` |

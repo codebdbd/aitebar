@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
         Title="{local:Loc ResourceKey=ClipboardManager_Title}"
-        Width="380" Height="520" MinWidth="360" MinHeight="480"
+        Width="420" Height="620" MinWidth="390" MinHeight="540"
         WindowStartupLocation="CenterScreen" Background="#1A1A1C" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="CanResizeWithGrip"
         ShowInTaskbar="False" Topmost="True"
@@ -32,11 +32,27 @@
                     </Trigger>
                 </Style.Triggers>
             </Style>
+
+            <Style x:Key="ClipboardActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                <Setter Property="Height" Value="28"/>
+                <Setter Property="MinWidth" Value="64"/>
+                <Setter Property="Margin" Value="0,0,6,6"/>
+                <Setter Property="Padding" Value="10,0"/>
+                <Setter Property="FontSize" Value="11"/>
+            </Style>
+
+            <Style x:Key="ClipboardFilterButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                <Setter Property="Height" Value="30"/>
+                <Setter Property="Margin" Value="0,0,8,0"/>
+                <Setter Property="Padding" Value="12,0"/>
+                <Setter Property="FontSize" Value="11"/>
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
 
     <Grid Margin="16">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -56,7 +72,26 @@
                        VerticalAlignment="Center"/>
         </Grid>
 
-        <ScrollViewer Grid.Row="1" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto">
+        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+            <Button x:Name="BtnFilterAll"
+                    Style="{StaticResource ClipboardFilterButtonStyle}"
+                    Content="{local:Loc ResourceKey=ClipboardManager_FilterAll}"
+                    Click="BtnFilterAll_Click"/>
+            <Button x:Name="BtnFilterPinned"
+                    Style="{StaticResource ClipboardFilterButtonStyle}"
+                    Content="{local:Loc ResourceKey=ClipboardManager_FilterPinned}"
+                    Click="BtnFilterPinned_Click"/>
+            <Button x:Name="BtnFilterText"
+                    Style="{StaticResource ClipboardFilterButtonStyle}"
+                    Content="{local:Loc ResourceKey=ClipboardManager_FilterText}"
+                    Click="BtnFilterText_Click"/>
+            <Button x:Name="BtnFilterImages"
+                    Style="{StaticResource ClipboardFilterButtonStyle}"
+                    Content="{local:Loc ResourceKey=ClipboardManager_FilterImages}"
+                    Click="BtnFilterImages_Click"/>
+        </StackPanel>
+
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
             <StackPanel x:Name="EntriesPanel">
                 <TextBlock x:Name="TxtEmptyHint"
                            Text="{local:Loc ResourceKey=ClipboardManager_EmptyHint}"
@@ -69,7 +104,7 @@
             </StackPanel>
         </ScrollViewer>
 
-        <Grid Grid.Row="2" Margin="0,10,0,0">
+        <Grid Grid.Row="3" Margin="0,10,0,0">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="40"/>
@@ -81,12 +116,17 @@
                        TextTrimming="CharacterEllipsis"
                        VerticalAlignment="Top"
                        Margin="0,0,0,8"/>
-            <Button Grid.Row="1"
-                    x:Name="BtnClearAll"
-                    Content="{local:Loc ResourceKey=ClipboardManager_ClearAll}"
-                    Style="{StaticResource SecondaryButtonStyle}"
-                    HorizontalAlignment="Right"
-                    Click="BtnClearAll_Click"/>
+            <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button x:Name="BtnClearHistory"
+                        Content="{local:Loc ResourceKey=ClipboardManager_ClearHistory}"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Margin="0,0,8,0"
+                        Click="BtnClearHistory_Click"/>
+                <Button x:Name="BtnWipeAll"
+                        Content="{local:Loc ResourceKey=ClipboardManager_WipeAll}"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Click="BtnWipeAll_Click"/>
+            </StackPanel>
         </Grid>
     </Grid>
 </local:DarkWindow>

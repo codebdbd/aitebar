@@ -143,6 +143,7 @@ public class AppSettings
         public bool ShowPresetShowDesktop { get; set; } = true;
         public bool ShowPresetAppsFolder { get; set; } = true;
         public bool ShowPresetCopilot { get; set; } = true;
+    public bool ClipboardManagerPersistHistory { get; set; } = true;
     public string QuickNoteThemeId { get; set; } = "dark";
     public bool QuickNotePinned { get; set; } = false;
     public double? QuickNoteLeft { get; set; }

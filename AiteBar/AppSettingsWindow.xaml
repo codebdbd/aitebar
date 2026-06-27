@@ -362,6 +362,19 @@
                             <CheckBox x:Name="ChkShowPresetAppsFolder" Content="{local:Loc ResourceKey=Tool_AppsFolder}"/>
                             <CheckBox x:Name="ChkShowPresetCopilot" Content="{local:Loc ResourceKey=Tool_Copilot}"/>
                         </UniformGrid>
+
+                        <Border Margin="0,14,0,0" Padding="10" Background="#151A22" BorderBrush="#263140" BorderThickness="1" CornerRadius="6">
+                            <StackPanel>
+                                <CheckBox x:Name="ChkClipboardManagerPersistHistory"
+                                          Style="{StaticResource CompactCheckBoxStyle}"
+                                          Content="{local:Loc ResourceKey=ClipboardManager_PersistHistorySetting}"/>
+                                <TextBlock Margin="0,6,0,0"
+                                           Text="{local:Loc ResourceKey=ClipboardManager_PersistHistoryHint}"
+                                           Foreground="{StaticResource MutedText}"
+                                           FontSize="11"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
                 </Border>
             </TabItem>
