@@ -414,7 +414,44 @@ public class ActionService
     public async Task StartCopilotAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute();
-        using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("microsoft-edge://?ux=copilot&cp=2"));
+        
+        const int KeyDelayMs = 30;
+        var pressedModifiers = new List<byte>();
+        
+        try
+        {
+            // Press Win key
+            var winDownInput = new NativeMethods.INPUT
+            {
+                type = NativeMethods.INPUT_KEYBOARD,
+                U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = NativeMethods.VK_LWIN } }
+            };
+            SendKeyboardInputOrThrow(winDownInput, "Win key down");
+            pressedModifiers.Add(NativeMethods.VK_LWIN);
+            await _runtime.DelayAsync(KeyDelayMs);
+            
+            // Press C key
+            var cDownInput = new NativeMethods.INPUT
+            {
+                type = NativeMethods.INPUT_KEYBOARD,
+                U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = 0x43 } }
+            };
+            SendKeyboardInputOrThrow(cDownInput, "C key down");
+            await _runtime.DelayAsync(KeyDelayMs);
+            
+            // Release C key
+            var cUpInput = new NativeMethods.INPUT
+            {
+                type = NativeMethods.INPUT_KEYBOARD,
+                U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = 0x43, dwFlags = NativeMethods.KEYEVENTF_KEYUP } }
+            };
+            SendKeyboardInputOrThrow(cUpInput, "C key up");
+            await _runtime.DelayAsync(KeyDelayMs);
+        }
+        finally
+        {
+            await ReleaseInjectedModifiersAsync(pressedModifiers, KeyDelayMs, throwOnFailure: false);
+        }
     }
 
     public async Task LaunchUtilityAsync(string utilityId, Func<Task>? onBeforeExecute = null)

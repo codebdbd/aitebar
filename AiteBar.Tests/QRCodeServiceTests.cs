@@ -78,6 +78,16 @@ public sealed class QRCodeServiceTests
     }
 
     [Fact]
+    public async Task GenerateAsync_UrlType_WithWhitespace_ThrowsArgumentException()
+    {
+        await Assert.ThrowsAsync<ArgumentException>(() => _service.GenerateAsync(new QRCodeGenerationOptions
+        {
+            ContentType = QRCodeContentType.Url,
+            Text = "example .com"
+        }));
+    }
+
+    [Fact]
     public async Task GenerateAsync_WifiType_BuildsEscapedWifiPayload()
     {
         QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
@@ -90,6 +100,27 @@ public sealed class QRCodeServiceTests
         });
 
         Assert.Equal("WIFI:T:WPA;S:Cafe\\:Main\\;1;P:pa\\,ss\\\\word;H:true;;", result.Payload);
+    }
+
+    [Fact]
+    public async Task GenerateAsync_VCard_EscapesReservedCharacters()
+    {
+        QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
+        {
+            ContentType = QRCodeContentType.VCard,
+            VCardFirstName = "Ann, Jr.",
+            VCardLastName = "Smith;Doe",
+            VCardCompany = "A\\B",
+            VCardJobTitle = "Lead\nDev",
+            VCardEmail = "ann@example.com",
+            VCardWebsite = "https://example.com/profile,1"
+        });
+
+        Assert.Contains("N:Smith\\;Doe;Ann\\, Jr.;;;", result.Payload);
+        Assert.Contains("FN:Ann\\, Jr. Smith\\;Doe", result.Payload);
+        Assert.Contains("ORG:A\\\\B", result.Payload);
+        Assert.Contains("TITLE:Lead\\nDev", result.Payload);
+        Assert.Contains("URL:https://example.com/profile\\,1", result.Payload);
     }
 
     [Fact]
@@ -107,55 +138,34 @@ public sealed class QRCodeServiceTests
     }
 
     [Fact]
-    public async Task GenerateAsync_LogoPath_ForcesHighErrorCorrectionAndEmbedsSvgImage()
+    public async Task GenerateAsync_LogoSvgContent_ForcesHighErrorCorrectionAndEmbedsInlineSvg()
     {
-        string logoPath = Path.Combine(Path.GetTempPath(), $"aitebar-qr-logo-{Guid.NewGuid():N}.png");
-        CreateTestLogo(logoPath);
+        const string logoSvg = """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+              <circle cx="16" cy="16" r="14" fill="#00BFFF" />
+            </svg>
+            """;
 
-        try
-        {
-            QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
-            {
-                Text = "https://example.com",
-                EccLevel = QRCodeEccLevel.L,
-                LogoPath = logoPath,
-                OutputSize = 384
-            });
-
-            Assert.NotEmpty(result.PngBytes);
-            Assert.Contains("data:image/png;base64,", result.SvgContent);
-            Assert.Equal(QRCodeEccLevel.H, QRCodeService.NormalizeOptions(new QRCodeGenerationOptions
-            {
-                Text = "https://example.com",
-                EccLevel = QRCodeEccLevel.L,
-                LogoPath = logoPath
-            }).options.EccLevel);
-        }
-        finally
-        {
-            if (File.Exists(logoPath))
-            {
-                File.Delete(logoPath);
-            }
-        }
-    }
-
-    [Theory]
-    [InlineData(QRCodeModuleShape.Square)]
-    [InlineData(QRCodeModuleShape.Rounded)]
-    [InlineData(QRCodeModuleShape.Circle)]
-    [InlineData(QRCodeModuleShape.Dot)]
-    [InlineData(QRCodeModuleShape.Diamond)]
-    public async Task GenerateAsync_ModuleShapes_ProduceValidSvg(QRCodeModuleShape shape)
-    {
         QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
         {
-            Text = "shape",
-            ModuleShape = shape
+            Text = "https://example.com",
+            EccLevel = QRCodeEccLevel.L,
+            LogoSvgContent = logoSvg,
+            OutputSize = 384
         });
 
-        Assert.StartsWith("<svg", result.SvgContent);
         Assert.NotEmpty(result.PngBytes);
+        Assert.Contains("<g transform=", result.SvgContent);
+        Assert.Contains("<circle", result.SvgContent);
+        Assert.Equal(QRCodeEccLevel.H, QRCodeService.NormalizeOptions(new QRCodeGenerationOptions
+        {
+            Text = "https://example.com",
+            EccLevel = QRCodeEccLevel.L,
+            LogoSvgContent = logoSvg
+        }).options.EccLevel);
+        Assert.Contains(
+            LocalizationService.Get("QRCodeGenerator_WarningLogoRequiresHighEcc"),
+            result.Warnings);
     }
 
     [Theory]
@@ -232,16 +242,4 @@ public sealed class QRCodeServiceTests
         Assert.NotEmpty(result.PngBytes);
         Assert.NotEmpty(result.SvgContent);
     }
-
-    private static void CreateTestLogo(string path)
-    {
-        using SKSurface surface = SKSurface.Create(new SKImageInfo(32, 32, SKColorType.Rgba8888, SKAlphaType.Premul))!;
-        surface.Canvas.Clear(SKColors.Transparent);
-        using var paint = new SKPaint { Color = SKColors.DeepSkyBlue, IsAntialias = true };
-        surface.Canvas.DrawCircle(16, 16, 14, paint);
-        using SKImage image = surface.Snapshot();
-        using SKData data = image.Encode(SKEncodedImageFormat.Png, 100)!;
-        File.WriteAllBytes(path, data.ToArray());
-    }
-
 }

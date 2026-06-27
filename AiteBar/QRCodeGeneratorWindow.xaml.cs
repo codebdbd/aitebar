@@ -16,18 +16,22 @@ namespace AiteBar;
 [SupportedOSPlatform("windows6.1")]
 public partial class QRCodeGeneratorWindow : DarkWindow
 {
+    private const int DefaultMargin = 4;
+    private const int DefaultLogoSizePercent = 15;
+    private static readonly Uri DefaultLogoUri = new("pack://application:,,,/Resources/Design/qr-logo.svg", UriKind.Absolute);
     private readonly QRCodeService _service = new();
+    private readonly string? _defaultLogoSvgContent;
     private CancellationTokenSource? _previewRequestCts;
     private QRCodeGenerationOptions? _lastOptions;
     private byte[]? _lastPngBytes;
     private string? _lastSvgContent;
-    private string? _selectedLogoPath;
     private bool _isInitialized;
     private bool _isApplyingPreset;
 
     public QRCodeGeneratorWindow()
     {
         InitializeComponent();
+        _defaultLogoSvgContent = TryLoadDefaultLogoSvgContent();
 
         // Initialize Content Type combo
         CmbContentType.Items.Add(new ComboItem<QRCodeContentType>(LocalizationService.Get("QRCodeGenerator_TypeText"), QRCodeContentType.Text));
@@ -68,19 +72,13 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         CmbEccLevel.Items.Add(new ComboItem<QRCodeEccLevel>(LocalizationService.Get("QRCodeGenerator_EccLevelH"), QRCodeEccLevel.H));
         CmbEccLevel.SelectedIndex = 2;
 
-        // Initialize Module Shape combo
-        CmbModuleShape.Items.Add(new ComboItem<QRCodeModuleShape>(LocalizationService.Get("QRCodeGenerator_ModuleSquare"), QRCodeModuleShape.Square));
-        CmbModuleShape.Items.Add(new ComboItem<QRCodeModuleShape>(LocalizationService.Get("QRCodeGenerator_ModuleRounded"), QRCodeModuleShape.Rounded));
-        CmbModuleShape.Items.Add(new ComboItem<QRCodeModuleShape>(LocalizationService.Get("QRCodeGenerator_ModuleCircle"), QRCodeModuleShape.Circle));
-        CmbModuleShape.Items.Add(new ComboItem<QRCodeModuleShape>(LocalizationService.Get("QRCodeGenerator_ModuleDot"), QRCodeModuleShape.Dot));
-        CmbModuleShape.Items.Add(new ComboItem<QRCodeModuleShape>(LocalizationService.Get("QRCodeGenerator_ModuleDiamond"), QRCodeModuleShape.Diamond));
-        CmbModuleShape.SelectedIndex = 0;
-
         TxtDarkColor.Text = "#000000";
         TxtLightColor.Text = "#FFFFFF";
+        ChkUseDefaultLogo.IsChecked = !string.IsNullOrWhiteSpace(_defaultLogoSvgContent);
         _isInitialized = true;
         UpdateInputMode();
         ApplyQualityPreset();
+        UpdateLogoActions();
         SetEmptyState();
         TxtInput.Focus();
     }
@@ -142,7 +140,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             return;
         }
 
-        UpdateMarginValue();
+        UpdateLogoActions();
         QueuePreviewRefresh();
     }
 
@@ -153,7 +151,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             return;
         }
 
-        UpdateMarginValue();
+        UpdateLogoActions();
         QueuePreviewRefresh();
     }
 
@@ -164,10 +162,11 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             return;
         }
 
-        _previewRequestCts?.Cancel();
-        _previewRequestCts?.Dispose();
-        _previewRequestCts = new CancellationTokenSource();
-        CancellationToken token = _previewRequestCts.Token;
+        var nextCts = new CancellationTokenSource();
+        CancellationTokenSource? previousCts = Interlocked.Exchange(ref _previewRequestCts, nextCts);
+        previousCts?.Cancel();
+        previousCts?.Dispose();
+        CancellationToken token = nextCts.Token;
 
         _ = RefreshPreviewAsync(token);
     }
@@ -244,13 +243,12 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             VCardWebsite = TxtVCardWebsite.Text,
             QualityPreset = GetSelectedValue(CmbQualityPreset, QRCodeQualityPreset.Screen),
             OutputSize = GetSelectedValue(CmbOutputSize, 800),
-            Margin = (int)SliderMargin.Value,
+            Margin = DefaultMargin,
             EccLevel = GetSelectedValue(CmbEccLevel, QRCodeEccLevel.Q),
             DarkColor = TxtDarkColor.Text,
             LightColor = TxtLightColor.Text,
-            ModuleShape = GetSelectedValue(CmbModuleShape, QRCodeModuleShape.Square),
-            LogoPath = _selectedLogoPath,
-            LogoSizePercent = (int)SliderLogoSize.Value
+            LogoSvgContent = ChkUseDefaultLogo.IsChecked == true ? _defaultLogoSvgContent : null,
+            LogoSizePercent = DefaultLogoSizePercent
         };
     }
 
@@ -385,49 +383,21 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         return fileName;
     }
 
-    private void BtnChooseLogo_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new Microsoft.Win32.OpenFileDialog
-        {
-            Title = LocalizationService.Get("QRCodeGenerator_ChooseLogoTitle"),
-            Filter = LocalizationService.Get("QRCodeGenerator_LogoFilter"),
-            CheckFileExists = true,
-            Multiselect = false
-        };
-
-        if (dialog.ShowDialog(this) == true)
-        {
-            _selectedLogoPath = dialog.FileName;
-            SetSelectedValue(CmbQualityPreset, QRCodeQualityPreset.Logo);
-            QueuePreviewRefresh();
-        }
-    }
-
-    private void BtnClearLogo_Click(object sender, RoutedEventArgs e)
-    {
-        _selectedLogoPath = null;
-        QueuePreviewRefresh();
-    }
-
     private void DarkColorSwatch_Click(object sender, MouseButtonEventArgs e)
     {
-        ShowColorPicker(TxtDarkColor, DarkColorSwatch);
+        ShowColorPicker(TxtDarkColor);
     }
 
     private void LightColorSwatch_Click(object sender, MouseButtonEventArgs e)
     {
-        ShowColorPicker(TxtLightColor, LightColorSwatch);
+        ShowColorPicker(TxtLightColor);
     }
 
-    private void ShowColorPicker(TextBox colorTextBox, Border colorSwatch)
+    private void ShowColorPicker(TextBox colorTextBox)
     {
-        if (TryParseColor(colorTextBox.Text, out var initialColor))
-        {
-        }
-        else
-        {
-            initialColor = Colors.Black;
-        }
+        var initialColor = TryParseColor(colorTextBox.Text, out var parsedColor)
+            ? parsedColor
+            : Colors.Black;
         
         var dialog = new ColorPickerDialog(initialColor)
         {
@@ -475,12 +445,6 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         }
         return false;
     }
-
-    private void UpdateMarginValue()
-        {
-            TxtMarginValue.Text = ((int)SliderMargin.Value).ToString();
-            TxtLogoSizeValue.Text = $"{(int)SliderLogoSize.Value}%";
-        }
 
     private async Task SaveAsync(string path, bool saveSvg)
     {
@@ -606,10 +570,21 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             {
                 CmbEccLevel.IsEnabled = true;
             }
+
+            UpdateLogoActions();
         }
         finally
         {
             _isApplyingPreset = false;
+        }
+    }
+
+    private void UpdateLogoActions()
+    {
+        bool hasDefaultLogo = !string.IsNullOrWhiteSpace(_defaultLogoSvgContent);
+        if (ChkUseDefaultLogo != null)
+        {
+            ChkUseDefaultLogo.IsEnabled = hasDefaultLogo;
         }
     }
 
@@ -650,25 +625,6 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             {
                 string text = Clipboard.GetText();
                 if (!string.IsNullOrWhiteSpace(text))
-                {
-                    AutoFillFromText(text);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.Log(ex);
-        }
-    }
-
-    private void AutoFillFromClipboard()
-    {
-        try
-        {
-            if (Clipboard.ContainsText())
-            {
-                string text = Clipboard.GetText();
-                if (!string.IsNullOrWhiteSpace(text) && string.IsNullOrWhiteSpace(TxtInput.Text) && string.IsNullOrWhiteSpace(TxtWifiSsid.Text))
                 {
                     AutoFillFromText(text);
                 }
@@ -771,5 +727,26 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         }
 
         UpdateInputPlaceholder();
+    }
+
+    private static string? TryLoadDefaultLogoSvgContent()
+    {
+        try
+        {
+            var resource = Application.GetResourceStream(DefaultLogoUri);
+            if (resource?.Stream == null)
+            {
+                return null;
+            }
+
+            using Stream stream = resource.Stream;
+            using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
+            return reader.ReadToEnd();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            return null;
+        }
     }
 }

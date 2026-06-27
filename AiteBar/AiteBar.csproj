@@ -31,6 +31,7 @@
 
   <ItemGroup>
     <Resource Include="Resources\app.ico" />
+    <Resource Include="Resources\Design\qr-logo.svg" />
     <Resource Include="Resources\Font Awesome 7 Brands-Regular-400.otf" />
     <Resource Include="Resources\MaterialIcons-Regular.ttf" />
     <Resource Include="Resources\MaterialIcons.codepoints" />

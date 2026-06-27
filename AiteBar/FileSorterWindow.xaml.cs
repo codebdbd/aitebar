@@ -206,7 +206,7 @@ public partial class FileSorterWindow : DarkWindow
 
         try
         {
-            FileSortResult result = await Task.Run(() => _fileSorterService.SortFiles(rootPath));
+            FileSortResult result = await _fileSorterService.SortFilesAsync(rootPath);
             _settingsService.Settings.LastFileSortOperation = result.UndoState;
             await _settingsService.SaveAsync();
             SetCompletedState(result);
@@ -245,7 +245,7 @@ public partial class FileSorterWindow : DarkWindow
 
         try
         {
-            FileSortUndoResult result = await Task.Run(() => _fileSorterService.UndoLastSort(undoState));
+            FileSortUndoResult result = await _fileSorterService.UndoLastSortAsync(undoState);
             _settingsService.Settings.LastFileSortOperation = result.RemainingUndoState;
             await _settingsService.SaveAsync();
 

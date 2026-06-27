@@ -1,3 +1,4 @@
+using System;
 using System.Runtime.Versioning;
 using System.Windows;
 
@@ -5,7 +6,7 @@ namespace AiteBar
 {
     [SupportedOSPlatform("windows6.1")]
     [Utility]
-    public sealed class ClipboardManagerUtility : UtilityBase<ClipboardManagerWindow>
+    public sealed class ClipboardManagerUtility : UtilityBase<ClipboardManagerWindow>, IDisposable
     {
         private readonly ClipboardHistoryService _historyService = new ClipboardHistoryService();
 
@@ -24,6 +25,17 @@ namespace AiteBar
         protected override void ShowWindow(ClipboardManagerWindow window, AppSettingsService settingsService)
         {
             window.ShowNearPanel(settingsService);
+        }
+
+        protected override void OnWindowClosed(ClipboardManagerWindow window)
+        {
+            _historyService.Dispose();
+            base.OnWindowClosed(window);
+        }
+
+        public void Dispose()
+        {
+            _historyService.Dispose();
         }
     }
 }

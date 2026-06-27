@@ -62,15 +62,15 @@ public enum FileSortLocationKind
 
 public sealed class FileSortOperationEntry
 {
-    public string SourcePath { get; set; } = string.Empty;
-    public string DestinationPath { get; set; } = string.Empty;
+    public string SourcePath { get; init; } = string.Empty;
+    public string DestinationPath { get; init; } = string.Empty;
 }
 
 public sealed class FileSortUndoState
 {
-    public string RootPath { get; set; } = string.Empty;
-    public DateTime CompletedAtUtc { get; set; } = DateTime.UtcNow;
-    public List<FileSortOperationEntry> Entries { get; set; } = [];
+    public string RootPath { get; init; } = string.Empty;
+    public DateTime CompletedAtUtc { get; init; } = DateTime.UtcNow;
+    public List<FileSortOperationEntry> Entries { get; init; } = [];
 }
 
 public sealed class FileSortResult

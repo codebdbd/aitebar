@@ -391,16 +391,12 @@
                                     Background="{StaticResource FormControlBackground}"
                                     CornerRadius="3">
                                 <Path x:Name="CheckMark"
-                                      Data="M 3 8 L 7 12 L 13 4"
+                                      Data="M 3 7 L 6 10 L 13 3"
                                       Stroke="White"
                                       StrokeThickness="2"
                                       StrokeStartLineCap="Round"
                                       StrokeEndLineCap="Round"
-                                      Visibility="Collapsed">
-                                    <Path.RenderTransform>
-                                        <TranslateTransform X="1" Y="0"/>
-                                    </Path.RenderTransform>
-                                </Path>
+                                      Visibility="Collapsed"/>
                             </Border>
                         </Border>
                         <ContentPresenter Margin="{TemplateBinding Padding}"

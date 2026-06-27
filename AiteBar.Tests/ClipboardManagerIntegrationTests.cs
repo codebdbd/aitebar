@@ -37,7 +37,7 @@ public sealed class ClipboardManagerIntegrationTests : IDisposable
         Assert.Contains("case \"ClipboardManager\":", mainWindowCode);
         Assert.Contains("LaunchUtilityAsync(\"ClipboardManager\", HideDock)", mainWindowCode);
         Assert.Contains("ChkShowPresetClipboardManager.IsChecked = _settings.ShowPresetClipboardManager", settingsCode);
-        Assert.Contains("_settings.ShowPresetClipboardManager = ChkShowPresetClipboardManager.IsChecked ?? false", settingsCode);
+        Assert.Contains("settings.ShowPresetClipboardManager = ChkShowPresetClipboardManager.IsChecked ?? false", settingsCode);
 
         UtilityRegistry.RegisterAllFromAssembly(typeof(ClipboardManagerUtility).Assembly);
         Assert.Contains(UtilityRegistry.GetAll(), utility => utility.Id == "ClipboardManager");

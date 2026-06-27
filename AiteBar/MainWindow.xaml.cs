@@ -1391,7 +1391,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
         var (availableWidth, availableHeight) = CalculateAvailableSize();
 
-        _lastMetrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight, _unifiedButtons.Count);
+        _lastMetrics = ComputeStablePrimaryPanelMetrics(isVertical, availableWidth, availableHeight);
 
         bool hasUnifiedButtons = UnifiedButtonsPanel.Children.Count > 0;
 

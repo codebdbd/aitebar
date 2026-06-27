@@ -74,7 +74,7 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
-    public void SortFiles_SortsOnlyTopLevelFiles()
+    public async Task SortFiles_SortsOnlyTopLevelFiles()
     {
         string root = CreateTempRoot();
         try
@@ -89,7 +89,7 @@ public sealed class FileSorterServiceTests
             MakeOld(nestedFile);
 
             var service = new FileSorterService();
-            FileSortResult result = service.SortFiles(root);
+            FileSortResult result = await service.SortFilesAsync(root);
 
             Assert.Equal(1, result.SortedCount);
             Assert.True(File.Exists(Path.Combine(root, LocalizationService.Get("FileSorter_CategoryImages"), "top.jpg")));
@@ -102,7 +102,7 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
-    public void SortFiles_SkipsShortcutsAndTempFiles()
+    public async Task SortFiles_SkipsShortcutsAndTempFiles()
     {
         string root = CreateTempRoot();
         try
@@ -115,7 +115,7 @@ public sealed class FileSorterServiceTests
             MakeOld(temp);
 
             var service = new FileSorterService();
-            FileSortResult result = service.SortFiles(root);
+            FileSortResult result = await service.SortFilesAsync(root);
 
             Assert.Equal(0, result.SortedCount);
             Assert.Equal(2, result.SkippedCount);
@@ -129,7 +129,7 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
-    public void SortFiles_SortsFreshCompletedFiles()
+    public async Task SortFiles_SortsFreshCompletedFiles()
     {
         string root = CreateTempRoot();
         try
@@ -138,7 +138,7 @@ public sealed class FileSorterServiceTests
             File.WriteAllText(fresh, "c");
 
             var service = new FileSorterService();
-            FileSortResult result = service.SortFiles(root);
+            FileSortResult result = await service.SortFilesAsync(root);
 
             Assert.Equal(1, result.SortedCount);
             Assert.Equal(0, result.SkippedCount);
@@ -151,7 +151,7 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
-    public void SortFiles_SkipsLockedFileAndContinues()
+    public async Task SortFiles_SkipsLockedFileAndContinues()
     {
         string root = CreateTempRoot();
         try
@@ -166,7 +166,7 @@ public sealed class FileSorterServiceTests
             using var stream = new FileStream(locked, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
 
             var service = new FileSorterService();
-            FileSortResult result = service.SortFiles(root);
+            FileSortResult result = await service.SortFilesAsync(root);
 
             Assert.Equal(1, result.SortedCount);
             Assert.Equal(1, result.SkippedCount);
@@ -180,7 +180,7 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
-    public void SortFiles_CreatesTargetFoldersAndAvoidsOverwrite()
+    public async Task SortFiles_CreatesTargetFoldersAndAvoidsOverwrite()
     {
         string root = CreateTempRoot();
         try
@@ -194,7 +194,7 @@ public sealed class FileSorterServiceTests
             MakeOld(source);
 
             var service = new FileSorterService();
-            FileSortResult result = service.SortFiles(root);
+            FileSortResult result = await service.SortFilesAsync(root);
 
             Assert.Equal(1, result.SortedCount);
             Assert.True(File.Exists(Path.Combine(existingTargetDir, "photo.jpg")));
@@ -207,7 +207,7 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
-    public void SortFiles_SkipsFilesAboveConfiguredSizeLimit()
+    public async Task SortFiles_SkipsFilesAboveConfiguredSizeLimit()
     {
         string root = CreateTempRoot();
         try
@@ -217,7 +217,7 @@ public sealed class FileSorterServiceTests
             MakeOld(oversized);
 
             var service = new FileSorterService(maxMovableFileBytes: 8);
-            FileSortResult result = service.SortFiles(root);
+            FileSortResult result = await service.SortFilesAsync(root);
 
             Assert.Equal(0, result.SortedCount);
             Assert.Equal(1, result.SkippedCount);
@@ -247,7 +247,7 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
-    public void UndoLastSort_RestoresFilesInReverseOrder()
+    public async Task UndoLastSort_RestoresFilesInReverseOrder()
     {
         string root = CreateTempRoot();
         try
@@ -260,8 +260,8 @@ public sealed class FileSorterServiceTests
             MakeOld(second);
 
             var service = new FileSorterService();
-            FileSortResult sortResult = service.SortFiles(root);
-            FileSortUndoResult undoResult = service.UndoLastSort(sortResult.UndoState!);
+            FileSortResult sortResult = await service.SortFilesAsync(root);
+            FileSortUndoResult undoResult = await service.UndoLastSortAsync(sortResult.UndoState!);
 
             Assert.Equal(2, undoResult.RestoredCount);
             Assert.Equal(0, undoResult.SkippedCount);
@@ -275,7 +275,7 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
-    public void UndoLastSort_SkipsEntriesOutsideRoot()
+    public async Task UndoLastSort_SkipsEntriesOutsideRoot()
     {
         string root = CreateTempRoot();
         string outside = CreateTempRoot();
@@ -299,7 +299,7 @@ public sealed class FileSorterServiceTests
             };
 
             var service = new FileSorterService();
-            FileSortUndoResult result = service.UndoLastSort(undoState);
+            FileSortUndoResult result = await service.UndoLastSortAsync(undoState);
 
             Assert.Equal(0, result.RestoredCount);
             Assert.Equal(1, result.SkippedCount);
@@ -314,7 +314,7 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
-    public void UndoLastSort_UsesSafeNameWhenOriginalNameIsTaken()
+    public async Task UndoLastSort_UsesSafeNameWhenOriginalNameIsTaken()
     {
         string root = CreateTempRoot();
         try
@@ -324,11 +324,11 @@ public sealed class FileSorterServiceTests
             MakeOld(source);
 
             var service = new FileSorterService();
-            FileSortResult sortResult = service.SortFiles(root);
+            FileSortResult sortResult = await service.SortFilesAsync(root);
 
             File.WriteAllText(source, "occupied");
 
-            FileSortUndoResult undoResult = service.UndoLastSort(sortResult.UndoState!);
+            FileSortUndoResult undoResult = await service.UndoLastSortAsync(sortResult.UndoState!);
 
             Assert.Equal(1, undoResult.RestoredCount);
             Assert.True(File.Exists(source));
@@ -341,7 +341,7 @@ public sealed class FileSorterServiceTests
     }
 
     [Fact]
-    public void UndoLastSort_ReturnsRemainingEntriesWhenDestinationIsMissing()
+    public async Task UndoLastSort_ReturnsRemainingEntriesWhenDestinationIsMissing()
     {
         string root = CreateTempRoot();
         try
@@ -351,10 +351,10 @@ public sealed class FileSorterServiceTests
             MakeOld(source);
 
             var service = new FileSorterService();
-            FileSortResult sortResult = service.SortFiles(root);
+            FileSortResult sortResult = await service.SortFilesAsync(root);
             File.Delete(sortResult.UndoState!.Entries.Single().DestinationPath);
 
-            FileSortUndoResult undoResult = service.UndoLastSort(sortResult.UndoState);
+            FileSortUndoResult undoResult = await service.UndoLastSortAsync(sortResult.UndoState);
 
             Assert.Equal(0, undoResult.RestoredCount);
             Assert.Equal(1, undoResult.SkippedCount);

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AiteBar;
 
@@ -145,7 +147,7 @@ public sealed class FileSorterService
             ["astro"] = "FileSorter_CategoryWeb"
         };
 
-    public FileSortResult SortFiles(string rootPath)
+    public async Task<FileSortResult> SortFilesAsync(string rootPath)
     {
         if (string.IsNullOrWhiteSpace(rootPath))
         {
@@ -164,9 +166,21 @@ public sealed class FileSorterService
 
         foreach (string filePath in Directory.EnumerateFiles(rootFullPath).ToList())
         {
-            if (ShouldSkipFile(filePath, out _) ||
+            FileInfo? fileInfo = null;
+            try
+            {
+                fileInfo = new FileInfo(filePath);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(new IOException($"File sorter could not access '{filePath}'.", ex));
+                skippedCount++;
+                continue;
+            }
+
+            if (ShouldSkipFile(fileInfo, out _) ||
                 !IsPathWithinRoot(filePath, rootFullPath) ||
-                IsFileTooLarge(filePath, _maxMovableFileBytes))
+                IsFileTooLarge(fileInfo, _maxMovableFileBytes))
             {
                 skippedCount++;
                 continue;
@@ -185,7 +199,7 @@ public sealed class FileSorterService
                     Path.GetExtension(filePath));
                 EnsurePathWithinRoot(destinationPath, rootFullPath);
 
-                MoveFileWithRetry(filePath, destinationPath);
+                await MoveFileWithRetryAsync(filePath, destinationPath);
                 entries.Add(new FileSortOperationEntry
                 {
                     SourcePath = filePath,
@@ -215,7 +229,13 @@ public sealed class FileSorterService
         };
     }
 
-    public FileSortUndoResult UndoLastSort(FileSortUndoState undoState)
+    // Keep synchronous version for backward compatibility
+    public FileSortResult SortFiles(string rootPath)
+    {
+        return Task.Run(() => SortFilesAsync(rootPath)).GetAwaiter().GetResult();
+    }
+
+    public async Task<FileSortUndoResult> UndoLastSortAsync(FileSortUndoState undoState)
     {
         ArgumentNullException.ThrowIfNull(undoState);
 
@@ -245,13 +265,18 @@ public sealed class FileSorterService
                 Directory.CreateDirectory(originalDirectory);
                 EnsureDirectoryWritable(originalDirectory);
 
-                string restorePath = GetUniquePath(
-                    originalDirectory,
-                    Path.GetFileNameWithoutExtension(entry.SourcePath),
-                    Path.GetExtension(entry.SourcePath));
+                // Try original path first; only use unique path if original is taken
+                string restorePath = entry.SourcePath;
+                if (File.Exists(restorePath) || Directory.Exists(restorePath))
+                {
+                    restorePath = GetUniquePath(
+                        originalDirectory,
+                        Path.GetFileNameWithoutExtension(entry.SourcePath),
+                        Path.GetExtension(entry.SourcePath));
+                }
                 EnsurePathWithinRoot(restorePath, rootFullPath);
 
-                File.Move(entry.DestinationPath, restorePath);
+                await MoveFileWithRetryAsync(entry.DestinationPath, restorePath);
                 restoredCount++;
             }
             catch
@@ -275,6 +300,12 @@ public sealed class FileSorterService
                     Entries = remainingEntries
                 }
         };
+    }
+
+    // Keep synchronous version for backward compatibility
+    public FileSortUndoResult UndoLastSort(FileSortUndoState undoState)        
+    {
+        return Task.Run(() => UndoLastSortAsync(undoState)).GetAwaiter().GetResult();
     }
 
     internal static string GetCategoryFolder(string filePath)
@@ -318,12 +349,16 @@ public sealed class FileSorterService
 
     internal static bool ShouldSkipFile(string filePath)
     {
-        return ShouldSkipFile(filePath, out _);
+        return ShouldSkipFile(new FileInfo(filePath), out _);
     }
 
     internal static bool ShouldSkipFile(string filePath, out string reason)
     {
-        var fileInfo = new FileInfo(filePath);
+        return ShouldSkipFile(new FileInfo(filePath), out reason);
+    }
+
+    internal static bool ShouldSkipFile(FileInfo fileInfo, out string reason)
+    {
         FileAttributes attributes = fileInfo.Attributes;
 
         if (attributes.HasFlag(FileAttributes.Hidden) || attributes.HasFlag(FileAttributes.System))
@@ -397,16 +432,30 @@ public sealed class FileSorterService
         }
     }
 
-    private static bool IsFileTooLarge(string filePath, long maxMovableFileBytes)
+    private static bool IsFileTooLarge(FileInfo fileInfo, long maxMovableFileBytes)
     {
         try
         {
-            return new FileInfo(filePath).Length > maxMovableFileBytes;
+            return fileInfo.Length > maxMovableFileBytes;
         }
         catch (IOException)
         {
             // Could not access file due to lock or other IO issue - don't skip for size, let move retry handle it
             return false;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(new IOException($"File sorter could not inspect '{fileInfo.FullName}'.", ex));
+            return true;
+        }
+    }
+
+    // Keep for backward compatibility
+    private static bool IsFileTooLarge(string filePath, long maxMovableFileBytes)
+    {
+        try
+        {
+            return IsFileTooLarge(new FileInfo(filePath), maxMovableFileBytes);
         }
         catch (Exception ex)
         {
@@ -427,6 +476,23 @@ public sealed class FileSorterService
             FileOptions.DeleteOnClose);
     }
 
+    private static async Task MoveFileWithRetryAsync(string sourcePath, string destinationPath)
+    {
+        for (int attempt = 1; ; attempt++)
+        {
+            try
+            {
+                File.Move(sourcePath, destinationPath);
+                return;
+            }
+            catch (Exception) when (attempt < MoveRetryCount)
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(MoveRetryDelay.TotalMilliseconds * attempt));
+            }
+        }
+    }
+
+    // Keep synchronous version for backward compatibility
     private static void MoveFileWithRetry(string sourcePath, string destinationPath)
     {
         for (int attempt = 1; ; attempt++)

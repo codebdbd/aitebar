@@ -48,7 +48,11 @@ public abstract class UtilityBase<TWindow> : IUtility where TWindow : Window
             }
 
             _window = CreateWindow(settingsService, owner);
-            _window.Closed += (_, _) => _window = null;
+            _window.Closed += (s, e) =>
+            {
+                OnWindowClosed(_window);
+                _window = null;
+            };
             ShowWindow(_window, settingsService);
         }
         catch (Exception ex)
@@ -69,6 +73,7 @@ public abstract class UtilityBase<TWindow> : IUtility where TWindow : Window
 
     protected abstract TWindow CreateWindow(AppSettingsService settingsService, Window? owner);
     protected abstract void ShowWindow(TWindow window, AppSettingsService settingsService);
+    protected virtual void OnWindowClosed(TWindow window) { }
 }
 
 public static class UtilityRegistry

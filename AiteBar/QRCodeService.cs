@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using QRCoder;
 using SkiaSharp;
+using Svg.Skia;
+using System.Xml.Linq;
 
 namespace AiteBar;
 
@@ -15,6 +18,8 @@ public sealed class QRCodeService
 {
     private const int MinOutputSize = 128;
     private const int MaxOutputSize = 4096;
+    // Conservative cross-content payload limit to fail fast before QRCoder throws on oversized inputs.
+    private const int MaxPayloadLength = 4296;
     private const double MinRecommendedContrastRatio = 4.5d;
     private static readonly SKSamplingOptions LogoSampling = new(SKCubicResampler.Mitchell);
 
@@ -24,7 +29,7 @@ public sealed class QRCodeService
     {
         return Task.Run(() =>
         {
-            var context = PrepareGenerationContext(options);
+            using var context = PrepareGenerationContext(options);
 
             cancellationToken.ThrowIfCancellationRequested();
             byte[] pngBytes = RenderPng(
@@ -34,7 +39,6 @@ public sealed class QRCodeService
                 context.SkDarkColor,
                 context.SkLightColor,
                 context.NormalizedOptions.Margin,
-                context.NormalizedOptions.ModuleShape,
                 context.LogoData,
                 context.NormalizedOptions.LogoSizePercent,
                 cancellationToken);
@@ -47,7 +51,6 @@ public sealed class QRCodeService
                 context.NormalizedOptions.DarkColor,
                 context.NormalizedOptions.LightColor,
                 context.NormalizedOptions.Margin,
-                context.NormalizedOptions.ModuleShape,
                 context.LogoData,
                 context.NormalizedOptions.LogoSizePercent,
                 cancellationToken);
@@ -73,7 +76,7 @@ public sealed class QRCodeService
     {
         return Task.Run(() =>
         {
-            var context = PrepareGenerationContext(options);
+            using var context = PrepareGenerationContext(options);
 
             cancellationToken.ThrowIfCancellationRequested();
             return RenderPng(
@@ -83,7 +86,6 @@ public sealed class QRCodeService
                 context.SkDarkColor,
                 context.SkLightColor,
                 context.NormalizedOptions.Margin,
-                context.NormalizedOptions.ModuleShape,
                 context.LogoData,
                 context.NormalizedOptions.LogoSizePercent,
                 cancellationToken);
@@ -96,7 +98,7 @@ public sealed class QRCodeService
     {
         return Task.Run(() =>
         {
-            var context = PrepareGenerationContext(options);
+            using var context = PrepareGenerationContext(options);
 
             cancellationToken.ThrowIfCancellationRequested();
             return RenderSvg(
@@ -106,14 +108,13 @@ public sealed class QRCodeService
                 context.NormalizedOptions.DarkColor,
                 context.NormalizedOptions.LightColor,
                 context.NormalizedOptions.Margin,
-                context.NormalizedOptions.ModuleShape,
                 context.LogoData,
                 context.NormalizedOptions.LogoSizePercent,
                 cancellationToken);
         }, cancellationToken);
     }
 
-    private sealed class GenerationContext
+    private sealed class GenerationContext : IDisposable
     {
         public QRCodeGenerationOptions NormalizedOptions { get; init; } = null!;
         public QRCodeData QrData { get; init; } = null!;
@@ -126,6 +127,11 @@ public sealed class QRCodeService
         public LogoData? LogoData { get; init; }
         public SKColor SkDarkColor { get; init; }
         public SKColor SkLightColor { get; init; }
+
+        public void Dispose()
+        {
+            QrData.Dispose();
+        }
     }
 
     private sealed class LogoData
@@ -133,12 +139,14 @@ public sealed class QRCodeService
         public byte[] PngBytes { get; }
         public int Width { get; }
         public int Height { get; }
+        public string? InlineSvgContent { get; }
 
-        public LogoData(byte[] pngBytes, int width, int height)
+        public LogoData(byte[] pngBytes, int width, int height, string? inlineSvgContent = null)
         {
             PngBytes = pngBytes;
             Width = width;
             Height = height;
+            InlineSvgContent = inlineSvgContent;
         }
     }
 
@@ -146,15 +154,18 @@ public sealed class QRCodeService
 
     private GenerationContext PrepareGenerationContext(QRCodeGenerationOptions options)
     {
+        bool logoForcesHighEcc = HasLogo(options) && options.EccLevel != QRCodeEccLevel.H;
         var (normalizedOptions, darkInvalid, lightInvalid) = NormalizeOptions(options);
         string payload = BuildPayload(normalizedOptions);
-        QRCodeData qrData = GenerateQrDataUnchecked(payload, normalizedOptions.EccLevel);
+        QRCodeData qrData = GenerateQrDataCore(payload, normalizedOptions.EccLevel);
         
         SKColor skDarkColor = ParseNormalizedSkColor(normalizedOptions.DarkColor);
         SKColor skLightColor = ParseNormalizedSkColor(normalizedOptions.LightColor);
         double contrastRatio = CalculateContrastRatio(skDarkColor, skLightColor);
         
-        LogoData? logoData = normalizedOptions.LogoPath != null ? LoadLogoData(normalizedOptions.LogoPath) : null;
+        LogoData? logoData = !string.IsNullOrWhiteSpace(normalizedOptions.LogoSvgContent)
+            ? LoadSvgLogoData(normalizedOptions.LogoSvgContent)
+            : null;
 
         return new GenerationContext
         {
@@ -165,34 +176,47 @@ public sealed class QRCodeService
             PixelSize = normalizedOptions.OutputSize,
             Payload = payload,
             ContrastRatio = contrastRatio,
-            Warnings = BuildWarnings(normalizedOptions, contrastRatio, darkInvalid, lightInvalid),
+            Warnings = BuildWarnings(normalizedOptions, contrastRatio, darkInvalid, lightInvalid, logoForcesHighEcc),
             LogoData = logoData,
             SkDarkColor = skDarkColor,
             SkLightColor = skLightColor
         };
     }
 
-    private static LogoData LoadLogoData(string logoPath)
+    private static LogoData LoadSvgLogoData(string svgContent)
     {
-        using SKBitmap? logo = SKBitmap.Decode(logoPath);
-        if (logo == null || logo.Width <= 0 || logo.Height <= 0)
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(svgContent));
+        using var svg = new SKSvg();
+        using SKPicture picture = svg.Load(stream) ?? throw new InvalidDataException(LocalizationService.Get("QRCodeGenerator_ErrorInvalidLogo"));
+
+        SKRect bounds = picture.CullRect;
+        if (bounds.Width <= 0 || bounds.Height <= 0)
         {
             throw new InvalidDataException(LocalizationService.Get("QRCodeGenerator_ErrorInvalidLogo"));
         }
 
-        int width = logo.Width;
-        int height = logo.Height;
-        using SKImage image = SKImage.FromBitmap(logo);
+        int width = Math.Max(1, (int)Math.Ceiling(bounds.Width));
+        int height = Math.Max(1, (int)Math.Ceiling(bounds.Height));
+        using SKSurface surface = SKSurface.Create(new SKImageInfo(width, height, SKColorType.Rgba8888, SKAlphaType.Premul))
+            ?? throw new InvalidDataException(LocalizationService.Get("QRCodeGenerator_ErrorInvalidLogo"));
+        SKCanvas canvas = surface.Canvas;
+        canvas.Clear(SKColors.Transparent);
+        canvas.Translate(-bounds.Left, -bounds.Top);
+        canvas.DrawPicture(picture);
+        canvas.Flush();
+
+        using SKImage image = surface.Snapshot();
         using SKData data = image.Encode(SKEncodedImageFormat.Png, 100)
             ?? throw new InvalidDataException(LocalizationService.Get("QRCodeGenerator_ErrorInvalidLogo"));
-        return new LogoData(data.ToArray(), width, height);
+
+        return new LogoData(data.ToArray(), width, height, CreateInlineSvgMarkup(svgContent));
     }
 
     public QRCodeData GenerateQrData(string text, QRCodeEccLevel eccLevel = QRCodeEccLevel.Q)
     {
         ValidateText(text, nameof(text));
 
-        return GenerateQrDataUnchecked(text, eccLevel);
+        return GenerateQrDataCore(text, eccLevel);
     }
 
     public byte[] RenderPng(QRCodeData data, int pixelSize, string darkColor, string lightColor, int margin, CancellationToken cancellationToken = default)
@@ -200,7 +224,7 @@ public sealed class QRCodeService
         ArgumentNullException.ThrowIfNull(data);
         ValidateRenderOptions(pixelSize, margin);
 
-        return RenderPng(data, pixelSize, exactSize: false, darkColor, lightColor, margin, QRCodeModuleShape.Square, logoData: null, cancellationToken: cancellationToken);
+        return RenderPng(data, pixelSize, exactSize: false, darkColor, lightColor, margin, logoData: null, cancellationToken: cancellationToken);
     }
 
     public string RenderSvg(QRCodeData data, int pixelSize, string darkColor, string lightColor, int margin, CancellationToken cancellationToken = default)
@@ -208,7 +232,7 @@ public sealed class QRCodeService
         ArgumentNullException.ThrowIfNull(data);
         ValidateRenderOptions(pixelSize, margin);
 
-        return RenderSvg(data, pixelSize, exactSize: false, darkColor, lightColor, margin, QRCodeModuleShape.Square, logoData: null, cancellationToken: cancellationToken);
+        return RenderSvg(data, pixelSize, exactSize: false, darkColor, lightColor, margin, logoData: null, cancellationToken: cancellationToken);
     }
 
     [System.Runtime.Versioning.SupportedOSPlatform("windows")]
@@ -240,7 +264,7 @@ public sealed class QRCodeService
     {
         ArgumentNullException.ThrowIfNull(options);
 
-        QRCodeQualityPreset preset = options.LogoPath is { Length: > 0 }
+        QRCodeQualityPreset preset = HasLogo(options)
             ? QRCodeQualityPreset.Logo
             : options.QualityPreset;
         QRCodeEccLevel eccLevel = preset == QRCodeQualityPreset.Logo ? QRCodeEccLevel.H : options.EccLevel;
@@ -282,17 +306,11 @@ public sealed class QRCodeService
             EccLevel = eccLevel,
             DarkColor = darkColor,
             LightColor = lightColor,
-            ModuleShape = options.ModuleShape,
-            LogoPath = string.IsNullOrWhiteSpace(options.LogoPath) ? null : options.LogoPath.Trim(),
+            LogoSvgContent = string.IsNullOrWhiteSpace(options.LogoSvgContent) ? null : options.LogoSvgContent.Trim(),
             LogoSizePercent = Math.Clamp(options.LogoSizePercent, 8, 20)
         };
 
         ValidatePayloadSource(normalized);
-        if (normalized.LogoPath != null && !File.Exists(normalized.LogoPath))
-        {
-            throw new FileNotFoundException(LocalizationService.Get("QRCodeGenerator_ErrorLogoNotFound"), normalized.LogoPath);
-        }
-
         return (normalized, darkInvalid, lightInvalid);
     }
 
@@ -328,7 +346,7 @@ public sealed class QRCodeService
 
 
 
-    private static void DrawModules(SKCanvas canvas, QRCodeData data, int margin, float moduleSize, SKPaint paint, QRCodeModuleShape shape)
+    private static void DrawModules(SKCanvas canvas, QRCodeData data, int margin, float moduleSize, SKPaint paint)
     {
         int count = data.ModuleMatrix.Count;
         for (int y = 0; y < count; y++)
@@ -340,87 +358,14 @@ public sealed class QRCodeService
                     continue;
                 }
 
-                DrawModule(
-                    canvas,
+                canvas.DrawRect(
                     (margin + x) * moduleSize,
                     (margin + y) * moduleSize,
                     moduleSize,
-                    paint,
-                    shape,
-                    GetModuleNeighbors(data, x, y, count));
+                    moduleSize,
+                    paint);
             }
         }
-    }
-
-    private static void DrawModule(SKCanvas canvas, float x, float y, float size, SKPaint paint, QRCodeModuleShape shape, ModuleNeighbors neighbors)
-    {
-        switch (shape)
-        {
-            case QRCodeModuleShape.Dot:
-                DrawCircularModule(canvas, x, y, size, paint, GetModuleInset(shape, size), neighbors);
-                break;
-            case QRCodeModuleShape.Circle:
-                DrawCircularModule(canvas, x, y, size, paint, GetModuleInset(shape, size), neighbors);
-                break;
-            case QRCodeModuleShape.Diamond:
-                DrawDiamondModule(canvas, x, y, size, paint, GetModuleInset(shape, size), neighbors);
-                break;
-            case QRCodeModuleShape.Rounded:
-                canvas.DrawRoundRect(CreateAdaptiveRect(x, y, size, GetModuleInset(shape, size), neighbors), size * 0.28f, size * 0.28f, paint);
-                break;
-            default:
-                canvas.DrawRect(CreateAdaptiveRect(x, y, size, 0, neighbors), paint);
-                break;
-        }
-    }
-
-    private static void DrawCircularModule(SKCanvas canvas, float x, float y, float size, SKPaint paint, float inset, ModuleNeighbors neighbors)
-    {
-        SKRect rect = CreateAdaptiveRect(x, y, size, inset, neighbors);
-        float radius = Math.Min(rect.Width, rect.Height) / 2f;
-        canvas.DrawRoundRect(rect, radius, radius, paint);
-    }
-
-    private static void DrawDiamondModule(SKCanvas canvas, float x, float y, float size, SKPaint paint, float inset, ModuleNeighbors neighbors)
-    {
-        using SKPath diamondPath = CreateDiamondPath(x, y, size, inset, neighbors);
-        canvas.DrawPath(diamondPath, paint);
-    }
-
-    private readonly record struct ModuleNeighbors(bool Left, bool Right, bool Up, bool Down);
-
-    private static ModuleNeighbors GetModuleNeighbors(QRCodeData data, int x, int y, int count)
-    {
-        bool left = x > 0 && data.ModuleMatrix[y][x - 1];
-        bool right = x + 1 < count && data.ModuleMatrix[y][x + 1];
-        bool up = y > 0 && data.ModuleMatrix[y - 1][x];
-        bool down = y + 1 < count && data.ModuleMatrix[y + 1][x];
-        return new ModuleNeighbors(left, right, up, down);
-    }
-
-    private static SKRect CreateAdaptiveRect(float x, float y, float size, float inset, ModuleNeighbors neighbors)
-    {
-        float left = neighbors.Left ? x : x + inset;
-        float right = neighbors.Right ? x + size : x + size - inset;
-        float top = neighbors.Up ? y : y + inset;
-        float bottom = neighbors.Down ? y + size : y + size - inset;
-        return new SKRect(left, top, right, bottom);
-    }
-
-    private static SKPath CreateDiamondPath(float x, float y, float size, float inset, ModuleNeighbors neighbors)
-    {
-        float left = neighbors.Left ? x : x + inset;
-        float right = neighbors.Right ? x + size : x + size - inset;
-        float top = neighbors.Up ? y : y + inset;
-        float bottom = neighbors.Down ? y + size : y + size - inset;
-
-        var diamondPath = new SKPath();
-        diamondPath.MoveTo(x + size / 2f, top);
-        diamondPath.LineTo(right, y + size / 2f);
-        diamondPath.LineTo(x + size / 2f, bottom);
-        diamondPath.LineTo(left, y + size / 2f);
-        diamondPath.Close();
-        return diamondPath;
     }
 
     private static void DrawLogo(SKCanvas canvas, int outputSize, int logoSizePercent, SKColor backgroundColor, LogoData? logoData)
@@ -441,20 +386,20 @@ public sealed class QRCodeService
         var backing = CenterRect(outputSize, backingSize);
         var target = FitRect(logo.Width, logo.Height, CenterRect(outputSize, boxSize));
         using var backingPaint = new SKPaint { IsAntialias = true, Color = backgroundColor, Style = SKPaintStyle.Fill };
-        canvas.DrawRoundRect(backing, backingSize * 0.16f, backingSize * 0.16f, backingPaint);
+        canvas.DrawRect(backing, backingPaint);
         using SKImage image = SKImage.FromBitmap(logo);
         canvas.DrawImage(image, target, LogoSampling);
     }
 
-    private static byte[] RenderPng(QRCodeData data, int size, bool exactSize, string darkColor, string lightColor, int margin, QRCodeModuleShape moduleShape, LogoData? logoData, int logoSizePercent = 20, CancellationToken cancellationToken = default)
+    private static byte[] RenderPng(QRCodeData data, int size, bool exactSize, string darkColor, string lightColor, int margin, LogoData? logoData, int logoSizePercent = 20, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         SKColor skDark = ParseSkColor(darkColor, "#000000");
         SKColor skLight = ParseSkColor(lightColor, "#FFFFFF");
-        return RenderPng(data, size, exactSize, skDark, skLight, margin, moduleShape, logoData, logoSizePercent, cancellationToken);
+        return RenderPng(data, size, exactSize, skDark, skLight, margin, logoData, logoSizePercent, cancellationToken);
     }
 
-    private static byte[] RenderPng(QRCodeData data, int size, bool exactSize, SKColor skDarkColor, SKColor skLightColor, int margin, QRCodeModuleShape moduleShape, LogoData? logoData, int logoSizePercent = 20, CancellationToken cancellationToken = default)
+    private static byte[] RenderPng(QRCodeData data, int size, bool exactSize, SKColor skDarkColor, SKColor skLightColor, int margin, LogoData? logoData, int logoSizePercent = 20, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         QrRenderLayout layout = CreateLayout(size, exactSize, data.ModuleMatrix.Count, margin);
@@ -470,7 +415,7 @@ public sealed class QRCodeService
             canvas.Translate(layout.Offset, layout.Offset);
         }
 
-        DrawModules(canvas, data, margin, layout.ModuleSize, paint, moduleShape);
+        DrawModules(canvas, data, margin, layout.ModuleSize, paint);
         cancellationToken.ThrowIfCancellationRequested();
         if (layout.Offset != 0)
         {
@@ -500,49 +445,39 @@ public sealed class QRCodeService
         float backingSize = boxSize * 1.22f;
         SKRect backing = CenterRect(outputSize, backingSize);
         SKRect target = FitRect(logoData.Width, logoData.Height, CenterRect(outputSize, boxSize));
-        float radius = backingSize * 0.16f;
-        svg.Append(CultureInfo.InvariantCulture, $"  <rect x=\"{backing.Left:0.###}\" y=\"{backing.Top:0.###}\" width=\"{backing.Width:0.###}\" height=\"{backing.Height:0.###}\" rx=\"{radius:0.###}\" ry=\"{radius:0.###}\" fill=\"{lightColor}\"/>\n");
-        svg.Append(CultureInfo.InvariantCulture, $"  <image x=\"{target.Left:0.###}\" y=\"{target.Top:0.###}\" width=\"{target.Width:0.###}\" height=\"{target.Height:0.###}\" href=\"data:image/png;base64,{Convert.ToBase64String(logoData.PngBytes)}\" preserveAspectRatio=\"xMidYMid meet\"/>\n");
+        svg.Append(CultureInfo.InvariantCulture, $"  <rect x=\"{backing.Left:0.###}\" y=\"{backing.Top:0.###}\" width=\"{backing.Width:0.###}\" height=\"{backing.Height:0.###}\" fill=\"{lightColor}\"/>\n");
+        if (!string.IsNullOrWhiteSpace(logoData.InlineSvgContent))
+        {
+            svg.Append(CultureInfo.InvariantCulture, $"  <g transform=\"translate({target.Left:0.###},{target.Top:0.###}) scale({target.Width / logoData.Width:0.######},{target.Height / logoData.Height:0.######})\">\n");
+            svg.Append(logoData.InlineSvgContent);
+            if (!logoData.InlineSvgContent.EndsWith('\n'))
+            {
+                svg.Append('\n');
+            }
+
+            svg.Append("  </g>\n");
+            return;
+        }
+
     }
 
-    private static string RenderSvg(QRCodeData data, int size, bool exactSize, string darkColor, string lightColor, int margin, QRCodeModuleShape moduleShape, LogoData? logoData, int logoSizePercent = 20, CancellationToken cancellationToken = default)
+    private static string RenderSvg(QRCodeData data, int size, bool exactSize, string darkColor, string lightColor, int margin, LogoData? logoData, int logoSizePercent = 20, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         QrRenderLayout layout = CreateLayout(size, exactSize, data.ModuleMatrix.Count, margin);
         var svg = new StringBuilder();
         svg.Append(CultureInfo.InvariantCulture, $"<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"{layout.OutputSize}\" height=\"{layout.OutputSize}\" viewBox=\"0 0 {layout.OutputSize} {layout.OutputSize}\" shape-rendering=\"crispEdges\">\n");
         svg.Append(CultureInfo.InvariantCulture, $"  <rect width=\"100%\" height=\"100%\" fill=\"{lightColor}\"/>\n");
-        AppendModules(svg, data, margin, layout.ModuleSize, darkColor, moduleShape, layout.Offset);
+        AppendModules(svg, data, margin, layout.ModuleSize, darkColor, layout.Offset);
         cancellationToken.ThrowIfCancellationRequested();
         AppendLogo(svg, layout.OutputSize, logoSizePercent, lightColor, layout.ModuleSize, logoData);
         svg.Append("</svg>");
         return svg.ToString();
     }
 
-    private static void AppendModules(StringBuilder svg, QRCodeData data, int margin, float moduleSize, string darkColor, QRCodeModuleShape shape, float offset)
+    private static void AppendModules(StringBuilder svg, QRCodeData data, int margin, float moduleSize, string darkColor, float offset)
     {
-        if (shape == QRCodeModuleShape.Square)
-        {
-            AppendOptimizedSquareModules(svg, data, margin, moduleSize, darkColor, offset);
-        }
-        else
-        {
-            int count = data.ModuleMatrix.Count;
-            for (int y = 0; y < count; y++)
-            {
-                for (int x = 0; x < count; x++)
-                {
-                    if (!data.ModuleMatrix[y][x])
-                    {
-                        continue;
-                    }
-
-                    float px = offset + ((margin + x) * moduleSize);
-                    float py = offset + ((margin + y) * moduleSize);
-                    AppendModule(svg, px, py, moduleSize, darkColor, shape, GetModuleNeighbors(data, x, y, count));
-                }
-            }
-        }
+        AppendOptimizedSquareModules(svg, data, margin, moduleSize, darkColor, offset);
     }
 
     private static void AppendOptimizedSquareModules(StringBuilder svg, QRCodeData data, int margin, float moduleSize, string darkColor, float offset)
@@ -608,61 +543,7 @@ public sealed class QRCodeService
         }
     }
 
-    private static void AppendModule(StringBuilder svg, float x, float y, float size, string color, QRCodeModuleShape shape, ModuleNeighbors neighbors)
-    {
-        if (shape == QRCodeModuleShape.Dot)
-        {
-            AppendCircularModule(svg, x, y, size, color, GetModuleInset(shape, size), neighbors);
-        }
-        else if (shape == QRCodeModuleShape.Circle)
-        {
-            AppendCircularModule(svg, x, y, size, color, GetModuleInset(shape, size), neighbors);
-        }
-        else if (shape == QRCodeModuleShape.Diamond)
-        {
-            string points = CreateDiamondPoints(x, y, size, GetModuleInset(shape, size), neighbors);
-            svg.Append(CultureInfo.InvariantCulture, $"  <polygon points=\"{points}\" fill=\"{color}\"/>\n");
-        }
-        else
-        {
-            SKRect rect = CreateAdaptiveRect(x, y, size, shape == QRCodeModuleShape.Rounded ? GetModuleInset(shape, size) : 0, neighbors);
-            float radius = shape == QRCodeModuleShape.Rounded ? size * 0.28f : 0;
-            string radiusAttributes = radius > 0 ? FormattableString.Invariant($" rx=\"{radius:0.###}\" ry=\"{radius:0.###}\"") : string.Empty;
-            svg.Append(CultureInfo.InvariantCulture, $"  <rect x=\"{rect.Left:0.###}\" y=\"{rect.Top:0.###}\" width=\"{rect.Width:0.###}\" height=\"{rect.Height:0.###}\"{radiusAttributes} fill=\"{color}\"/>\n");
-        }
-    }
 
-    private static void AppendCircularModule(StringBuilder svg, float x, float y, float size, string color, float inset, ModuleNeighbors neighbors)
-    {
-        SKRect rect = CreateAdaptiveRect(x, y, size, inset, neighbors);
-        float radius = Math.Min(rect.Width, rect.Height) / 2f;
-        svg.Append(CultureInfo.InvariantCulture, $"  <rect x=\"{rect.Left:0.###}\" y=\"{rect.Top:0.###}\" width=\"{rect.Width:0.###}\" height=\"{rect.Height:0.###}\" rx=\"{radius:0.###}\" ry=\"{radius:0.###}\" fill=\"{color}\"/>\n");
-    }
-
-    private static string CreateDiamondPoints(float x, float y, float size, float inset, ModuleNeighbors neighbors)
-    {
-        float left = neighbors.Left ? x : x + inset;
-        float right = neighbors.Right ? x + size : x + size - inset;
-        float top = neighbors.Up ? y : y + inset;
-        float bottom = neighbors.Down ? y + size : y + size - inset;
-        return FormattableString.Invariant($"{x + size / 2f:0.###},{top:0.###} {right:0.###},{y + size / 2f:0.###} {x + size / 2f:0.###},{bottom:0.###} {left:0.###},{y + size / 2f:0.###}");
-    }
-
-    private static byte[] LoadLogoPngBytes(string logoPath, out int width, out int height)
-    {
-        using SKBitmap? logo = SKBitmap.Decode(logoPath);
-        if (logo == null || logo.Width <= 0 || logo.Height <= 0)
-        {
-            throw new InvalidDataException(LocalizationService.Get("QRCodeGenerator_ErrorInvalidLogo"));
-        }
-
-        width = logo.Width;
-        height = logo.Height;
-        using SKImage image = SKImage.FromBitmap(logo);
-        using SKData data = image.Encode(SKEncodedImageFormat.Png, 100)
-            ?? throw new InvalidDataException(LocalizationService.Get("QRCodeGenerator_ErrorInvalidLogo"));
-        return data.ToArray();
-    }
 
     private static QrRenderLayout CreateLayout(int size, bool exactSize, int moduleCount, int margin)
     {
@@ -679,16 +560,6 @@ public sealed class QRCodeService
         float offset = (output - used) / 2f;
         return new QrRenderLayout(output, moduleSize, offset);
     }
-
-    private static float GetModuleInset(QRCodeModuleShape shape, float size) =>
-        shape switch
-        {
-            QRCodeModuleShape.Dot => size * 0.20f,
-            QRCodeModuleShape.Circle => size * 0.10f,
-            QRCodeModuleShape.Diamond => size * 0.12f,
-            QRCodeModuleShape.Rounded => size * 0.01f,
-            _ => 0
-        };
 
     private static SKRect CenterRect(int outputSize, float size)
     {
@@ -708,7 +579,7 @@ public sealed class QRCodeService
             bounds.Top + ((bounds.Height + height) / 2f));
     }
 
-    private static IReadOnlyList<string> BuildWarnings(QRCodeGenerationOptions options, double contrastRatio, bool darkInvalid, bool lightInvalid)
+    private static IReadOnlyList<string> BuildWarnings(QRCodeGenerationOptions options, double contrastRatio, bool darkInvalid, bool lightInvalid, bool logoForcesHighEcc)
     {
         var warnings = new List<string>();
         if (contrastRatio < MinRecommendedContrastRatio)
@@ -716,9 +587,9 @@ public sealed class QRCodeService
             warnings.Add(LocalizationService.Format("QRCodeGenerator_WarningLowContrast", contrastRatio.ToString("0.0", CultureInfo.CurrentCulture)));
         }
 
-        if (options.LogoPath != null)
+        if (!string.IsNullOrWhiteSpace(options.LogoSvgContent))
         {
-            if (options.EccLevel != QRCodeEccLevel.H)
+            if (logoForcesHighEcc)
             {
                 warnings.Add(LocalizationService.Get("QRCodeGenerator_WarningLogoRequiresHighEcc"));
             }
@@ -741,46 +612,44 @@ public sealed class QRCodeService
         return warnings;
     }
 
+    private static bool HasLogo(QRCodeGenerationOptions options)
+    {
+        return !string.IsNullOrWhiteSpace(options.LogoSvgContent);
+    }
+
+    private static string CreateInlineSvgMarkup(string svgContent)
+    {
+        try
+        {
+            var document = XDocument.Parse(svgContent, LoadOptions.PreserveWhitespace);
+            XElement root = document.Root ?? throw new InvalidDataException(LocalizationService.Get("QRCodeGenerator_ErrorInvalidLogo"));
+            root.Name = XName.Get("g", root.Name.NamespaceName);
+            root.Attributes()
+                .Where(a => a.IsNamespaceDeclaration || a.Name.LocalName is "width" or "height" or "viewBox" or "x" or "y")
+                .Remove();
+            return root.ToString(SaveOptions.DisableFormatting);
+        }
+        catch (Exception ex) when (ex is not InvalidDataException)
+        {
+            throw new InvalidDataException(LocalizationService.Get("QRCodeGenerator_ErrorInvalidLogo"), ex);
+        }
+    }
+
     private static void ValidatePayloadSource(QRCodeGenerationOptions options)
     {
         string payload = BuildPayload(options);
-        
-        if (string.IsNullOrWhiteSpace(payload))
-        {
-            string parameterName = options.ContentType switch
-            {
-                QRCodeContentType.Wifi => nameof(options.WifiSsid),
-                QRCodeContentType.Email => nameof(options.EmailAddress),
-                QRCodeContentType.Phone => nameof(options.PhoneNumber),
-                QRCodeContentType.Sms => nameof(options.PhoneNumber),
-                QRCodeContentType.VCard => nameof(options.VCardFirstName),
-                _ => nameof(options.Text)
-            };
-            throw new ArgumentException(LocalizationService.Get("QRCodeGenerator_ErrorEmptyText"), parameterName);
-        }
 
-        // Максимальное значение для QR-кода версии 40 (самой большой) с уровнем коррекции ошибок L (Low),
-        // в режиме кодирования alphanumeric (наиболее распространенный общий случай).
-        // В других режимах лимит может быть больше (numeric: 7089, byte: 2953, kanji: 1817),
-        // но для универсальности используем наиболее строгий лимит среди общих сценариев.
-        if (payload.Length > 4296)
-        {
-            string parameterName = options.ContentType switch
-            {
-                QRCodeContentType.Wifi => nameof(options.WifiSsid),
-                QRCodeContentType.Email => nameof(options.EmailAddress),
-                QRCodeContentType.Phone => nameof(options.PhoneNumber),
-                QRCodeContentType.Sms => nameof(options.PhoneNumber),
-                QRCodeContentType.VCard => nameof(options.VCardFirstName),
-                _ => nameof(options.Text)
-            };
-            throw new ArgumentException(LocalizationService.Format("QRCodeGenerator_ErrorTextTooLong", 4296), parameterName);
-        }
+        ValidatePayloadText(payload, GetPayloadParameterName(options.ContentType));
     }
 
     private static string NormalizeUrlPayload(string text)
     {
         string candidate = text.Trim();
+        if (candidate.IndexOfAny([' ', '\t', '\r', '\n']) >= 0)
+        {
+            throw new ArgumentException(LocalizationService.Get("QRCodeGenerator_ErrorInvalidUrl"), nameof(text));
+        }
+
         if (candidate.Contains("://", StringComparison.Ordinal))
         {
             return candidate;
@@ -845,28 +714,28 @@ public sealed class QRCodeService
 
         var sb = new StringBuilder();
         sb.Append("BEGIN:VCARD\nVERSION:3.0\n");
-        sb.Append($"N:{options.VCardLastName};{options.VCardFirstName};;;\n");
+        sb.Append($"N:{EscapeVCardValue(options.VCardLastName)};{EscapeVCardValue(options.VCardFirstName)};;;\n");
         
         string fn = string.Join(" ", new[] { options.VCardFirstName, options.VCardLastName }
             .Where(s => !string.IsNullOrWhiteSpace(s)));
             
         if (!string.IsNullOrWhiteSpace(fn))
-            sb.Append($"FN:{fn}\n");
+            sb.Append($"FN:{EscapeVCardValue(fn)}\n");
             
         if (!string.IsNullOrWhiteSpace(options.VCardCompany))
-            sb.Append($"ORG:{options.VCardCompany}\n");
+            sb.Append($"ORG:{EscapeVCardValue(options.VCardCompany)}\n");
             
         if (!string.IsNullOrWhiteSpace(options.VCardJobTitle))
-            sb.Append($"TITLE:{options.VCardJobTitle}\n");
+            sb.Append($"TITLE:{EscapeVCardValue(options.VCardJobTitle)}\n");
             
         if (!string.IsNullOrWhiteSpace(options.VCardPhone))
-            sb.Append($"TEL;TYPE=CELL:{options.VCardPhone}\n");
+            sb.Append($"TEL;TYPE=CELL:{EscapeVCardValue(options.VCardPhone)}\n");
             
         if (!string.IsNullOrWhiteSpace(options.VCardEmail))
-            sb.Append($"EMAIL;TYPE=PREF,INTERNET:{options.VCardEmail}\n");
+            sb.Append($"EMAIL;TYPE=PREF,INTERNET:{EscapeVCardValue(options.VCardEmail)}\n");
             
         if (!string.IsNullOrWhiteSpace(options.VCardWebsite))
-            sb.Append($"URL:{options.VCardWebsite}\n");
+            sb.Append($"URL:{EscapeVCardValue(options.VCardWebsite)}\n");
 
         sb.Append("END:VCARD\n");
         return sb.ToString();
@@ -888,6 +757,37 @@ public sealed class QRCodeService
         return escaped.ToString();
     }
 
+    private static string EscapeVCardValue(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+        {
+            return string.Empty;
+        }
+
+        var escaped = new StringBuilder(value.Length);
+        foreach (char ch in value)
+        {
+            switch (ch)
+            {
+                case '\\':
+                case ';':
+                case ',':
+                    escaped.Append('\\').Append(ch);
+                    break;
+                case '\r':
+                    break;
+                case '\n':
+                    escaped.Append("\\n");
+                    break;
+                default:
+                    escaped.Append(ch);
+                    break;
+            }
+        }
+
+        return escaped.ToString();
+    }
+
     private static void ValidateRenderOptions(int pixelSize, int margin)
     {
         if (pixelSize < 1 || pixelSize > 100)
@@ -903,22 +803,34 @@ public sealed class QRCodeService
 
     private static void ValidateText(string text, string parameterName)
     {
+        ValidatePayloadText(text, parameterName);
+    }
+
+    private static void ValidatePayloadText(string text, string parameterName)
+    {
         if (string.IsNullOrWhiteSpace(text))
         {
             throw new ArgumentException(LocalizationService.Get("QRCodeGenerator_ErrorEmptyText"), parameterName);
         }
 
-        // Максимальное значение для QR-кода версии 40 (самой большой) с уровнем коррекции ошибок L (Low),
-        // в режиме кодирования alphanumeric (наиболее распространенный общий случай).
-        // В других режимах лимит может быть больше (numeric: 7089, byte: 2953, kanji: 1817),
-        // но для универсальности используем наиболее строгий лимит среди общих сценариев.
-        if (text.Length > 4296)
+        if (text.Length > MaxPayloadLength)
         {
-            throw new ArgumentException(LocalizationService.Format("QRCodeGenerator_ErrorTextTooLong", 4296), parameterName);
+            throw new ArgumentException(LocalizationService.Format("QRCodeGenerator_ErrorTextTooLong", MaxPayloadLength), parameterName);
         }
     }
 
-    private static QRCodeData GenerateQrDataUnchecked(string text, QRCodeEccLevel eccLevel) =>
+    private static string GetPayloadParameterName(QRCodeContentType contentType) =>
+        contentType switch
+        {
+            QRCodeContentType.Wifi => nameof(QRCodeGenerationOptions.WifiSsid),
+            QRCodeContentType.Email => nameof(QRCodeGenerationOptions.EmailAddress),
+            QRCodeContentType.Phone => nameof(QRCodeGenerationOptions.PhoneNumber),
+            QRCodeContentType.Sms => nameof(QRCodeGenerationOptions.PhoneNumber),
+            QRCodeContentType.VCard => nameof(QRCodeGenerationOptions.VCardFirstName),
+            _ => nameof(QRCodeGenerationOptions.Text)
+        };
+
+    private static QRCodeData GenerateQrDataCore(string text, QRCodeEccLevel eccLevel) =>
         QRCodeGenerator.GenerateQrCode(text, MapEccLevel(eccLevel));
 
     private static QRCodeGenerator.ECCLevel MapEccLevel(QRCodeEccLevel eccLevel) =>

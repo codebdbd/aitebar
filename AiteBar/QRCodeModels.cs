@@ -57,15 +57,6 @@ public enum QRCodeQualityPreset
     Logo
 }
 
-public enum QRCodeModuleShape
-{
-    Square,
-    Rounded,
-    Circle,
-    Dot,
-    Diamond
-}
-
 public enum QRCodeWifiSecurity
 {
     Wpa,
@@ -112,9 +103,8 @@ public sealed class QRCodeGenerationOptions
     public QRCodeEccLevel EccLevel { get; init; } = QRCodeEccLevel.Q;
     public string DarkColor { get; init; } = "#000000";
     public string LightColor { get; init; } = "#FFFFFF";
-    public QRCodeModuleShape ModuleShape { get; init; } = QRCodeModuleShape.Square;
-    public string? LogoPath { get; init; }
-    public int LogoSizePercent { get; init; } = 18;
+    public string? LogoSvgContent { get; init; }
+    public int LogoSizePercent { get; init; } = 15;
 }
 
 public sealed class QRCodeGenerationResult

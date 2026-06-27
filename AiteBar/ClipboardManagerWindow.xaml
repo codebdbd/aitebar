@@ -14,6 +14,8 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="SettingsWindowResources.xaml"/>
+                <ResourceDictionary Source="FormControlsResources.xaml"/>
+                <ResourceDictionary Source="UtilityWindowResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
             <Style x:Key="EntryItemStyle" TargetType="Border">
