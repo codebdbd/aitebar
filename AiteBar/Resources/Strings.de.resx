@@ -498,6 +498,7 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="QRCodeGenerator_Output1600" xml:space="preserve"><value>1600 px</value></data>
   <data name="QRCodeGenerator_ColorCode" xml:space="preserve"><value>QR-Code</value></data>
   <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Logo</value></data>
+  <data name="QRCodeGenerator_UseDefaultLogo" xml:space="preserve"><value>Standardlogo verwenden</value></data>
   <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Form</value></data>
   <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Qualität &amp; Größe</value></data>
   <data name="QRCodeGenerator_Margin" xml:space="preserve"><value>Abstand</value></data>

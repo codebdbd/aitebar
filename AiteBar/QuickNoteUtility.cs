@@ -7,6 +7,8 @@ namespace AiteBar;
 [Utility]
 public class QuickNoteUtility : UtilityBase<QuickNoteWindow>
 {
+    private static readonly QuickNoteService _noteService = new QuickNoteService();
+
     public override string Id => "QuickNote";
     public override string DisplayNameKey => "Tool_QuickNote";
     public override string IconGlyph => "\uF56F";
@@ -14,7 +16,7 @@ public class QuickNoteUtility : UtilityBase<QuickNoteWindow>
 
     protected override QuickNoteWindow CreateWindow(AppSettingsService settingsService, Window? owner)
     {
-        return new QuickNoteWindow(new QuickNoteService(), settingsService) { Owner = owner };
+        return new QuickNoteWindow(_noteService, settingsService) { Owner = owner };
     }
 
     protected override void ShowWindow(QuickNoteWindow window, AppSettingsService settingsService)

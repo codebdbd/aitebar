@@ -229,7 +229,7 @@ public sealed class FileSorterService
         };
     }
 
-    // Keep synchronous version for backward compatibility
+    [Obsolete("Use SortFilesAsync instead. This synchronous method may cause deadlocks in UI contexts.")]
     public FileSortResult SortFiles(string rootPath)
     {
         return Task.Run(() => SortFilesAsync(rootPath)).GetAwaiter().GetResult();
@@ -302,8 +302,8 @@ public sealed class FileSorterService
         };
     }
 
-    // Keep synchronous version for backward compatibility
-    public FileSortUndoResult UndoLastSort(FileSortUndoState undoState)        
+    [Obsolete("Use UndoLastSortAsync instead. This synchronous method may cause deadlocks in UI contexts.")]
+    public FileSortUndoResult UndoLastSort(FileSortUndoState undoState)
     {
         return Task.Run(() => UndoLastSortAsync(undoState)).GetAwaiter().GetResult();
     }

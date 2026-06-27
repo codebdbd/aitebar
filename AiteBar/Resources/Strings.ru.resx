@@ -1045,6 +1045,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} элементов в истории буфера обмена</value></data>
   <data name="QRCodeGenerator_ColorCode" xml:space="preserve"><value>QR-код</value></data>
   <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Логотип</value></data>
+  <data name="QRCodeGenerator_UseDefaultLogo" xml:space="preserve"><value>Использовать стандартный логотип</value></data>
   <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Форма</value></data>
   <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Качество и размер</value></data>
   <data name="QRCodeGenerator_Margin" xml:space="preserve"><value>Отступ</value></data>

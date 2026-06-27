@@ -555,6 +555,7 @@ Open the GitHub release page?</value></data>
   <data name="ClipboardManager_Status" xml:space="preserve"><value>{0} items in clipboard history</value></data>
   <data name="QRCodeGenerator_ColorCode" xml:space="preserve"><value>QR code</value></data>
   <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Logo</value></data>
+  <data name="QRCodeGenerator_UseDefaultLogo" xml:space="preserve"><value>Use default logo</value></data>
   <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Shape</value></data>
   <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Quality &amp; size</value></data>
   <data name="QRCodeGenerator_Margin" xml:space="preserve"><value>Margin</value></data>

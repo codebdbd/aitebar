@@ -492,6 +492,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_Output1600" xml:space="preserve"><value>1600 px</value></data>
   <data name="QRCodeGenerator_ColorCode" xml:space="preserve"><value>QR-код</value></data>
   <data name="QRCodeGenerator_LogoOptional" xml:space="preserve"><value>Логотип</value></data>
+  <data name="QRCodeGenerator_UseDefaultLogo" xml:space="preserve"><value>Використовувати стандартний логотип</value></data>
   <data name="QRCodeGenerator_Shape" xml:space="preserve"><value>Форма</value></data>
   <data name="QRCodeGenerator_QualityAndSize" xml:space="preserve"><value>Якість та розмір</value></data>
   <data name="QRCodeGenerator_Margin" xml:space="preserve"><value>Відступ</value></data>

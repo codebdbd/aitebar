@@ -8,26 +8,18 @@ namespace AiteBar.Tests;
 public sealed class FileSorterWindowLayoutTests
 {
     [Fact]
-    public void FileSorterHeader_CloseButtonIsNotClippedAndHasNoFocusOutlineTrigger()
+    public void FileSorterWindow_UsesStandardWindowTitleBar()
     {
         string repoRoot = FindRepoRoot();
-        XDocument document = XDocument.Load(Path.Combine(repoRoot, "AiteBar", "FileSorterWindow.xaml"));
-
-        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
-        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
-
-        XElement closeButton = Assert.Single(
-            document.Descendants(presentation + "Button"),
-            element => string.Equals(element.Attribute(x + "Name")?.Value, "BtnClose", StringComparison.Ordinal));
-
-        Assert.Equal("Center", closeButton.Attribute("VerticalAlignment")?.Value);
-
-        XElement firstRowDefinition = document
-            .Descendants(presentation + "RowDefinition")
-            .First();
-        Assert.Equal("Auto", firstRowDefinition.Attribute("Height")?.Value);
-
         string xaml = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "FileSorterWindow.xaml"));
+
+        // Window uses standard title bar with WindowStyle="SingleBorderWindow"
+        Assert.Contains("WindowStyle=\"SingleBorderWindow\"", xaml, StringComparison.Ordinal);
+
+        // No custom close button needed
+        Assert.DoesNotContain("BtnClose", xaml, StringComparison.Ordinal);
+
+        // No focus outline triggers needed for standard title bar
         Assert.DoesNotContain("<Trigger Property=\"IsKeyboardFocused\" Value=\"True\">", xaml, StringComparison.Ordinal);
     }
 

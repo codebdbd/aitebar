@@ -77,7 +77,7 @@ public partial class TimerStopwatchWindow : DarkWindow
 
         double width = Width;
         double height = Height;
-        var (_, _, shownX, shownY) = QuickNoteLayoutHelper.GetSlideCoordinates(settings.Edge, work, width, height);
+        var (shownX, shownY) = UtilityWindowLayoutHelper.GetCenteredCoordinates(settings.Edge, work, width, height);
         Left = shownX;
         Top = shownY;
 
