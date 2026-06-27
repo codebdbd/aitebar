@@ -66,14 +66,6 @@ public enum QRCodeModuleShape
     Diamond
 }
 
-public enum QRCodeEyeStyle
-{
-    Square,
-    Rounded,
-    Circle,
-    Diamond
-}
-
 public enum QRCodeWifiSecurity
 {
     Wpa,
@@ -121,7 +113,6 @@ public sealed class QRCodeGenerationOptions
     public string DarkColor { get; init; } = "#000000";
     public string LightColor { get; init; } = "#FFFFFF";
     public QRCodeModuleShape ModuleShape { get; init; } = QRCodeModuleShape.Square;
-    public QRCodeEyeStyle EyeStyle { get; init; } = QRCodeEyeStyle.Square;
     public string? LogoPath { get; init; }
     public int LogoSizePercent { get; init; } = 18;
 }

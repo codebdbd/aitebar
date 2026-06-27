@@ -151,8 +151,7 @@ public sealed class QRCodeServiceTests
         QRCodeGenerationResult result = await _service.GenerateAsync(new QRCodeGenerationOptions
         {
             Text = "shape",
-            ModuleShape = shape,
-            EyeStyle = QRCodeEyeStyle.Rounded
+            ModuleShape = shape
         });
 
         Assert.StartsWith("<svg", result.SvgContent);

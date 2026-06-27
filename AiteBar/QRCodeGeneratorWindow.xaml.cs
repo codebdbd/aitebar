@@ -76,13 +76,6 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         CmbModuleShape.Items.Add(new ComboItem<QRCodeModuleShape>(LocalizationService.Get("QRCodeGenerator_ModuleDiamond"), QRCodeModuleShape.Diamond));
         CmbModuleShape.SelectedIndex = 0;
 
-        // Initialize Eye Style combo
-        CmbEyeStyle.Items.Add(new ComboItem<QRCodeEyeStyle>(LocalizationService.Get("QRCodeGenerator_EyeSquare"), QRCodeEyeStyle.Square));
-        CmbEyeStyle.Items.Add(new ComboItem<QRCodeEyeStyle>(LocalizationService.Get("QRCodeGenerator_EyeRounded"), QRCodeEyeStyle.Rounded));
-        CmbEyeStyle.Items.Add(new ComboItem<QRCodeEyeStyle>(LocalizationService.Get("QRCodeGenerator_EyeCircle"), QRCodeEyeStyle.Circle));
-        CmbEyeStyle.Items.Add(new ComboItem<QRCodeEyeStyle>(LocalizationService.Get("QRCodeGenerator_EyeDiamond"), QRCodeEyeStyle.Diamond));
-        CmbEyeStyle.SelectedIndex = 0;
-
         TxtDarkColor.Text = "#000000";
         TxtLightColor.Text = "#FFFFFF";
         _isInitialized = true;
@@ -256,7 +249,6 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             DarkColor = TxtDarkColor.Text,
             LightColor = TxtLightColor.Text,
             ModuleShape = GetSelectedValue(CmbModuleShape, QRCodeModuleShape.Square),
-            EyeStyle = GetSelectedValue(CmbEyeStyle, QRCodeEyeStyle.Square),
             LogoPath = _selectedLogoPath,
             LogoSizePercent = (int)SliderLogoSize.Value
         };

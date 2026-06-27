@@ -401,14 +401,6 @@
                             <ComboBox x:Name="CmbModuleShape" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectionChanged="Options_Changed"/>
                         </Grid>
                         <Grid Grid.Row="4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="132"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Eyes}" Style="{StaticResource FieldLabelStyle}"/>
-                            <ComboBox x:Name="CmbEyeStyle" Grid.Column="1" Style="{StaticResource CompactComboStyle}" SelectionChanged="Options_Changed"/>
-                        </Grid>
-                        <Grid Grid.Row="6">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="132" />
                             <ColumnDefinition Width="*" />
