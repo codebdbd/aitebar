@@ -33,6 +33,9 @@ namespace AiteBar
         private HwndSource? _hwndSource;
         private IntPtr? _hwnd;
         private bool _suppressNextChange;
+        private string? _suppressedText;
+        private byte[]? _suppressedImageBytes;
+        private DateTime _suppressedClipboardExpiresAtUtc;
         private bool _disposed;
         private bool _persistHistory;
 
@@ -163,6 +166,7 @@ namespace AiteBar
                     bitmap.CacheOption = BitmapCacheOption.OnLoad;
                     bitmap.EndInit();
                     bitmap.Freeze();
+                    RegisterSuppressedClipboardPayload(null, entry.ImageBytes);
                     SuppressNextChange();
                     Clipboard.SetImage(bitmap);
                     return true;
@@ -179,6 +183,7 @@ namespace AiteBar
                         return false;
                     }
 
+                    RegisterSuppressedClipboardPayload(text, null);
                     SuppressNextChange();
                     Clipboard.SetText(text);
                     return true;
@@ -188,7 +193,7 @@ namespace AiteBar
             }
             catch (Exception ex)
             {
-                _suppressNextChange = false;
+                ClearSuppressedClipboardPayload();
                 Logger.Log(ex);
                 return false;
             }
@@ -509,12 +514,58 @@ namespace AiteBar
                     }
                 }
 
+                if (ShouldIgnoreClipboardPayload(text, imageBytes))
+                {
+                    return;
+                }
+
                 RecordClipboardData(text, imageBytes);
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
             }
+        }
+
+        private void RegisterSuppressedClipboardPayload(string? text, byte[]? imageBytes)
+        {
+            _suppressedText = text;
+            _suppressedImageBytes = imageBytes;
+            _suppressedClipboardExpiresAtUtc = DateTime.UtcNow.AddSeconds(2);
+        }
+
+        private bool ShouldIgnoreClipboardPayload(string? text, byte[]? imageBytes)
+        {
+            if (_suppressedClipboardExpiresAtUtc == default)
+            {
+                return false;
+            }
+
+            if (DateTime.UtcNow > _suppressedClipboardExpiresAtUtc)
+            {
+                ClearSuppressedClipboardPayload();
+                return false;
+            }
+
+            bool sameText = string.Equals(_suppressedText, text, StringComparison.Ordinal);
+            bool sameImage = (_suppressedImageBytes == null && imageBytes == null)
+                || (_suppressedImageBytes != null && imageBytes != null && _suppressedImageBytes.SequenceEqual(imageBytes));
+
+            if (!sameText || !sameImage)
+            {
+                return false;
+            }
+
+            ClearSuppressedClipboardPayload();
+            return true;
+        }
+
+        private void ClearSuppressedClipboardPayload()
+        {
+            _suppressNextChange = false;
+            _suppressedText = null;
+            _suppressedImageBytes = null;
+            _suppressedClipboardExpiresAtUtc = default;
         }
 
         public void Dispose()

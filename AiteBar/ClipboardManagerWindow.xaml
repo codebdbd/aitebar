@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
         Title="{local:Loc ResourceKey=ClipboardManager_Title}"
-        Width="420" Height="620" MinWidth="390" MinHeight="540"
+        Width="480" Height="660" MinWidth="440" MinHeight="580"
         WindowStartupLocation="CenterScreen" Background="#1A1A1C" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="CanResizeWithGrip"
         ShowInTaskbar="False" Topmost="True"
@@ -19,33 +19,103 @@
             </ResourceDictionary.MergedDictionaries>
 
             <Style x:Key="EntryItemStyle" TargetType="Border">
-                <Setter Property="Background" Value="#151922"/>
-                <Setter Property="BorderBrush" Value="#273344"/>
+                <Setter Property="Background" Value="#161A22"/>
+                <Setter Property="BorderBrush" Value="#2A3440"/>
                 <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="CornerRadius" Value="6"/>
-                <Setter Property="Padding" Value="10"/>
-                <Setter Property="Margin" Value="0,0,0,8"/>
+                <Setter Property="CornerRadius" Value="12"/>
+                <Setter Property="Padding" Value="14"/>
+                <Setter Property="Margin" Value="0,0,0,12"/>
                 <Setter Property="Cursor" Value="Hand"/>
                 <Style.Triggers>
                     <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="#1E2532"/>
+                        <Setter Property="Background" Value="#1A202A"/>
+                        <Setter Property="BorderBrush" Value="#3A4A5C"/>
                     </Trigger>
                 </Style.Triggers>
             </Style>
 
             <Style x:Key="ClipboardActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                <Setter Property="Width" Value="28"/>
                 <Setter Property="Height" Value="28"/>
-                <Setter Property="MinWidth" Value="64"/>
-                <Setter Property="Margin" Value="0,0,6,6"/>
-                <Setter Property="Padding" Value="10,0"/>
-                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="Margin" Value="0,0,6,0"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="FontWeight" Value="Normal"/>
+                <Setter Property="Background" Value="#1A2230"/>
+                <Setter Property="BorderBrush" Value="#344459"/>
+                <Setter Property="Foreground" Value="#DCE6F2"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Bd"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="7"
+                                    SnapsToDevicePixels="True">
+                                <ContentPresenter HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#233043"/>
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#4B617B"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#16202E"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <Style x:Key="ClipboardFilterButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
                 <Setter Property="Height" Value="30"/>
-                <Setter Property="Margin" Value="0,0,8,0"/>
-                <Setter Property="Padding" Value="12,0"/>
+                <Setter Property="Margin" Value="0,0,8,8"/>
+                <Setter Property="Padding" Value="11,0"/>
                 <Setter Property="FontSize" Value="11"/>
+                <Setter Property="Background" Value="#141C27"/>
+                <Setter Property="BorderBrush" Value="#26384A"/>
+                <Setter Property="Foreground" Value="#AEB9C8"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Style>
+
+            <Style x:Key="PreviewFrameStyle" TargetType="Border">
+                <Setter Property="Width" Value="78"/>
+                <Setter Property="Height" Value="78"/>
+                <Setter Property="CornerRadius" Value="10"/>
+                <Setter Property="Background" Value="#11161E"/>
+                <Setter Property="BorderBrush" Value="#2B3642"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Margin" Value="0,0,12,0"/>
+            </Style>
+
+            <Style x:Key="ClipboardTypeBadgeStyle" TargetType="Border">
+                <Setter Property="Width" Value="38"/>
+                <Setter Property="Height" Value="38"/>
+                <Setter Property="CornerRadius" Value="11"/>
+                <Setter Property="Background" Value="#1C2734"/>
+                <Setter Property="BorderBrush" Value="#314559"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Margin" Value="0,0,12,0"/>
+            </Style>
+
+            <Style x:Key="ClipboardPinnedBadgeStyle" TargetType="Border">
+                <Setter Property="Background" Value="#2C2411"/>
+                <Setter Property="BorderBrush" Value="#6C5720"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="Padding" Value="7,2"/>
+            </Style>
+
+            <Style x:Key="ClipboardScrollBarStyle" TargetType="ScrollBar" BasedOn="{StaticResource DarkScrollBarStyle}">
+                <Setter Property="Width" Value="6"/>
             </Style>
         </ResourceDictionary>
     </Window.Resources>
@@ -72,7 +142,7 @@
                        VerticalAlignment="Center"/>
         </Grid>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+        <WrapPanel Grid.Row="1" Margin="0,0,0,10">
             <Button x:Name="BtnFilterAll"
                     Style="{StaticResource ClipboardFilterButtonStyle}"
                     Content="{local:Loc ResourceKey=ClipboardManager_FilterAll}"
@@ -89,10 +159,13 @@
                     Style="{StaticResource ClipboardFilterButtonStyle}"
                     Content="{local:Loc ResourceKey=ClipboardManager_FilterImages}"
                     Click="BtnFilterImages_Click"/>
-        </StackPanel>
+        </WrapPanel>
 
-        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
-            <StackPanel x:Name="EntriesPanel">
+        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <ScrollViewer.Resources>
+                <Style TargetType="ScrollBar" BasedOn="{StaticResource ClipboardScrollBarStyle}"/>
+            </ScrollViewer.Resources>
+            <StackPanel x:Name="EntriesPanel" Margin="0,0,10,0">
                 <TextBlock x:Name="TxtEmptyHint"
                            Text="{local:Loc ResourceKey=ClipboardManager_EmptyHint}"
                            Foreground="{StaticResource MutedText}"

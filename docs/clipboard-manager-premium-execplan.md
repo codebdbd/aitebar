@@ -19,6 +19,8 @@ The user-visible behavior to enable is: copy text or an image, open `Clipboard m
 - [x] (2026-06-27 16:49+03:00) Upgraded `ClipboardManagerWindow` with filters, pinning, delete, copy original, copy one-line, richer metadata, and separate clear-history vs wipe-all actions.
 - [x] (2026-06-27 16:49+03:00) Added clipboard-manager persistence settings and updated user-facing documentation.
 - [x] (2026-06-27 16:49+03:00) Verified `dotnet build .\AiteBar.sln -c Release --disable-build-servers` succeeds.
+- [x] (2026-06-27 18:28+03:00) Refined Clipboard Manager row interaction: card-click copy no longer should reorder entries on copy-back, duplicate text blocks were removed from text entries, and action clicks are isolated from the row click handler.
+- [x] (2026-06-27 18:37+03:00) Removed the `1-line` action from the main UI and simplified the list visual treatment to reduce clutter; added right-side breathing room and a narrower scrollbar to stop the scrollbar from visually cutting card borders.
 - [ ] Full `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --disable-build-servers` is still red because of unrelated existing failures in `AppSettingsWindowIntegrationTests`, `IconConverterIntegrationTests`, `LocalizationServiceTests`, and `IconConverterWindowLayoutTests`.
 - [x] (2026-06-27 16:49+03:00) Verified focused clipboard coverage with `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --disable-build-servers --filter "Clipboard|ClipboardManager"`: 8 passed, 0 failed.
 
@@ -32,6 +34,12 @@ The user-visible behavior to enable is: copy text or an image, open `Clipboard m
 
 - Observation: repository guidance explicitly warns against turning clipboard history into persistent storage without privacy handling, user-facing clearing behavior, and documentation.
   Evidence: `AGENTS.md` says clipboard history must not become persistent storage without a separate privacy/settings/documentation decision.
+
+- Observation: the first visual polish pass regressed usability because icon placeholders looked improvised and the text card repeated the same content twice, making the list feel noisy instead of compact.
+  Evidence: manual user feedback on 2026-06-27 identified pseudo-glyph buttons, broken card feel, and duplicate text rendering in `ClipboardManagerWindow`.
+
+- Observation: the main visual “torn border” problem was amplified by entries rendering too close to the vertical scrollbar, so the thumb visually overlapped the card edge while scrolling.
+  Evidence: user screenshots on 2026-06-27 show the right card border apparently breaking exactly where the thick scrollbar/thumb sits.
 
 - Observation: the repository's full test suite currently contains unrelated failures outside the clipboard area, including stale source assertions and IconConverter-specific issues.
   Evidence: `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --disable-build-servers` failed in `AppSettingsWindowIntegrationTests.LanguageSelection_PersistsUiCultureImmediately`, `LocalizationServiceTests.XamlTextProperties_DoNotContainTranslatableLiteralText`, `IconConverterWindowLayoutTests.Window_MinimumSize_DoesNotClipCriticalControlsInRussian`, and `IconConverterIntegrationTests.IconConverter_IsWiredIntoPanelSettingsAndUtilityRegistry`.
@@ -48,6 +56,14 @@ The user-visible behavior to enable is: copy text or an image, open `Clipboard m
 
 - Decision: add a settings-level persistence toggle and documentation instead of making persistence an undocumented always-on behavior.
   Rationale: the repository explicitly calls out privacy concerns, so the premium upgrade must give the user visibility and control.
+  Date/Author: 2026-06-27 / Codex
+
+- Decision: keep row-click-to-copy, but treat row actions as isolated controls and suppress copy-back re-capture by payload rather than relying only on a single WM_CLIPBOARDUPDATE skip.
+  Rationale: the row interaction is useful, but it must not reorder history or trigger accidental second actions when the user clicks an inner button.
+  Date/Author: 2026-06-27 / Codex
+
+- Decision: remove the `1-line` action from the visible card UI rather than demoting it to a prominent secondary control.
+  Rationale: the feature is too niche for the main clipboard list and adds visual noise disproportionate to its value.
   Date/Author: 2026-06-27 / Codex
 
 ## Outcomes & Retrospective
