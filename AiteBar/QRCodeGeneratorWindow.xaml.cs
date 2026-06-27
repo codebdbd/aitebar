@@ -96,7 +96,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         double windowWidth = DesiredSize.Width > 0 ? DesiredSize.Width : MinWidth;
         double windowHeight = DesiredSize.Height > 0 ? DesiredSize.Height : 520;
 
-        var (_, _, shownX, shownY) = QuickNoteLayoutHelper.GetSlideCoordinates(settings.Edge, work, windowWidth, windowHeight);
+        var (shownX, shownY) = UtilityWindowLayoutHelper.GetCenteredCoordinates(settings.Edge, work, windowWidth, windowHeight);
         Left = shownX;
         Top = shownY;
         Show();
