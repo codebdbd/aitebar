@@ -117,10 +117,15 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         // Subscribe to settings changes for auto-re-registration
         _settingsService.SettingsChanged += OnSettingsChanged;
+        if (_settingsPreloaded)
+        {
+            ClipboardHistoryService.Instance.ConfigurePersistence(AppSettings.ClipboardManagerPersistHistory);
+        }
     }
 
     private void OnSettingsChanged(object? sender, EventArgs e)
     {
+        ClipboardHistoryService.Instance.ConfigurePersistence(AppSettings.ClipboardManagerPersistHistory);
         UnregisterGlobalHotkey();
         RegisterGlobalHotkey();
     }
@@ -992,6 +997,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     {
         IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
         System.Windows.Interop.HwndSource.FromHwnd(hwnd).AddHook(WndProc);
+        ClipboardHistoryService.Instance.Initialize(hwnd);
     }
 
     private Button CreatePanelButton(string content, string tooltip, RoutedEventHandler onClick, Brush? foreground = null)
@@ -1251,6 +1257,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             await Task.Run(async () => await _settingsService.LoadAsync(), token);
             token.ThrowIfCancellationRequested();
             LocalizationService.ApplyCulture(AppSettings.UiCulture);
+            ClipboardHistoryService.Instance.ConfigurePersistence(AppSettings.ClipboardManagerPersistHistory);
             _deferredStartupCompleted = true;
             ApplyLocalizedText();
             RegisterGlobalHotkey();
@@ -1957,6 +1964,15 @@ public partial class MainWindow : Window, ISettingsWindowContext
             try
             {
                 _positionIndicatorService?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+
+            try
+            {
+                ClipboardHistoryService.Instance?.Dispose();
             }
             catch (Exception ex)
             {

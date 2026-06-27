@@ -6,10 +6,8 @@ namespace AiteBar
 {
     [SupportedOSPlatform("windows6.1")]
     [Utility]
-    public sealed class ClipboardManagerUtility : UtilityBase<ClipboardManagerWindow>, IDisposable
+    public sealed class ClipboardManagerUtility : UtilityBase<ClipboardManagerWindow>
     {
-        private readonly ClipboardHistoryService _historyService = new ClipboardHistoryService();
-
         public override string Id => "ClipboardManager";
         public override string DisplayNameKey => "Tool_ClipboardManager";
         public override string IconGlyph => "\uE34E";
@@ -17,25 +15,12 @@ namespace AiteBar
 
         protected override ClipboardManagerWindow CreateWindow(AppSettingsService settingsService, Window? owner)
         {
-            var window = new ClipboardManagerWindow(_historyService) { Owner = owner };
-            _historyService.StartListening(window);
-            return window;
+            return new ClipboardManagerWindow(ClipboardHistoryService.Instance) { Owner = owner };
         }
 
         protected override void ShowWindow(ClipboardManagerWindow window, AppSettingsService settingsService)
         {
             window.ShowNearPanel(settingsService);
-        }
-
-        protected override void OnWindowClosed(ClipboardManagerWindow window)
-        {
-            _historyService.Dispose();
-            base.OnWindowClosed(window);
-        }
-
-        public void Dispose()
-        {
-            _historyService.Dispose();
         }
     }
 }
