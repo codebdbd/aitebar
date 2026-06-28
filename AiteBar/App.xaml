@@ -9,13 +9,6 @@
                 <ResourceDictionary Source="FormControlsResources.xaml"/>
                 <ResourceDictionary Source="UtilityWindowResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="{x:Type Control}">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate/>
-                    </Setter.Value>
-                </Setter>
-            </Style>
             <!-- Colors -->
         <SolidColorBrush x:Key="WindowBackground" Color="#191919"/>
         <SolidColorBrush x:Key="PanelBackground" Color="#1F1F1F"/>
@@ -23,6 +16,14 @@
         <SolidColorBrush x:Key="AccentColor" Color="#007ACC"/>
         <SolidColorBrush x:Key="MutedText" Color="#9BA1A6"/>
         <SolidColorBrush x:Key="PrimaryText" Color="#E3E3E3"/>
+
+        <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="{x:Type Control}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate/>
+                </Setter.Value>
+            </Setter>
+        </Style>
 
         <FontFamily x:Key="FontAwesomeBrands">
             pack://application:,,,/Resources/#Font Awesome 7 Brands Regular

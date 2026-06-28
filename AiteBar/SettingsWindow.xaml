@@ -26,7 +26,6 @@
         </Style>
 
         <Style TargetType="TabItem">
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="TabItem">

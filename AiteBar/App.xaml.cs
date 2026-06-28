@@ -15,6 +15,7 @@ public partial class App : System.Windows.Application
     {
         base.OnStartup(e);
         ShutdownMode = ShutdownMode.OnExplicitShutdown;
+        KeyboardFocusVisualService.Initialize();
 
         await TelemetryService.InitializeAsync();
         RegisterExceptionHandlers();

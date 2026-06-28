@@ -160,7 +160,6 @@
 
             <Style x:Key="ClipboardFilterTabItemStyle" TargetType="TabItem">
 
-                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
 
                 <Setter Property="Template">
 
@@ -404,7 +403,6 @@
 
             <Style x:Key="ClipboardListBoxItemStyle" TargetType="ListBoxItem">
 
-                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
 
                 <Setter Property="Padding" Value="0"/>
 
@@ -506,7 +504,7 @@
 
             <ListBox x:Name="EntriesList"
 
-                     Margin="0,0,10,0"
+                     Padding="5,0,0,0"
 
                      Style="{StaticResource ClipboardListBoxStyle}"
 
@@ -519,6 +517,8 @@
                      HorizontalContentAlignment="Stretch"
 
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+
+                     ScrollViewer.VerticalScrollBarVisibility="Visible"
 
                      ScrollViewer.CanContentScroll="True"
 

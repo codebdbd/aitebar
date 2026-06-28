@@ -1007,10 +1007,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             Content = content,
             ToolTip = tooltip,
             Style = (Style)FindResource("PanelButtonStyle"),
-            Focusable = true,
-            FocusVisualStyle = _panelInputMode == PanelInputMode.Keyboard
-                ? (Style)FindResource("ButtonFocusVisual")
-                : null
+            Focusable = true
         };
 
         if (foreground != null)
@@ -1153,7 +1150,6 @@ public partial class MainWindow : Window, ISettingsWindowContext
             ApplyLocalizedText();
             EnsureStartupInfrastructure();
             RefreshPanel();
-            UpdateAllButtonsFocusVisualStyle();
             PositionWindowImmediately(_shown);
             await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
             if (_settingsPreloaded)

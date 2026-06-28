@@ -68,7 +68,6 @@
 
                 <Setter Property="FontWeight" Value="SemiBold"/>
 
-                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
 
                 <Setter Property="Template">
 
@@ -210,7 +209,6 @@
 
             <Style TargetType="TabItem">
 
-                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
 
                 <Setter Property="Template">
 

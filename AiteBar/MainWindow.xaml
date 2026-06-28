@@ -11,16 +11,6 @@
         Loaded="Window_Loaded" SourceInitialized="Window_SourceInitialized" PreviewKeyDown="Window_PreviewKeyDown" Left="0" Top="-2000">
     
     <Window.Resources>
-        <Style x:Key="ButtonFocusVisual">
-            <Setter Property="Control.Template">
-                <Setter.Value>
-                    <ControlTemplate>
-                        <Border BorderBrush="#2A9CFF" BorderThickness="1" CornerRadius="4" Margin="1"/>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
         <Style TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
@@ -31,7 +21,6 @@
             <Setter Property="Height" Value="40"/>
             <Setter Property="Margin" Value="2,2"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FocusVisualStyle" Value="{StaticResource ButtonFocusVisual}"/>
             <Setter Property="ToolTipService.InitialShowDelay" Value="0"/>
             <Setter Property="Template">
                 <Setter.Value>

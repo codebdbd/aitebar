@@ -14,13 +14,7 @@ public partial class MainWindow
 
     private void SetPanelInputMode(PanelInputMode mode, bool clearFocus)
     {
-        bool modeChanged = _panelInputMode != mode;
-
-        if (modeChanged)
-        {
-            _panelInputMode = mode;
-            UpdateAllButtonsFocusVisualStyle();
-        }
+        _panelInputMode = mode;
 
         if (mode != PanelInputMode.Pointer)
         {
@@ -32,18 +26,6 @@ public partial class MainWindow
         if (clearFocus)
         {
             Keyboard.ClearFocus();
-        }
-    }
-
-    private void UpdateAllButtonsFocusVisualStyle()
-    {
-        Style? focusVisualStyle = _panelInputMode == PanelInputMode.Keyboard
-            ? (Style)FindResource("ButtonFocusVisual")
-            : null;
-
-        foreach (var button in EnumeratePanelButtons())
-        {
-            button.FocusVisualStyle = focusVisualStyle;
         }
     }
 

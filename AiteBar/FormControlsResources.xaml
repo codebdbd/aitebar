@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:AiteBar">
     <SolidColorBrush x:Key="FormControlBackground" Color="#383838"/>
     <SolidColorBrush x:Key="FormControlBackgroundHover" Color="#404040"/>
     <SolidColorBrush x:Key="FormControlBorderBrush" Color="#3A3A3E"/>
@@ -25,7 +26,6 @@
         <Setter Property="Padding" Value="15,0"/>
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="UseLayoutRounding" Value="True"/>
         <Setter Property="Template">
@@ -41,6 +41,13 @@
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                     </Border>
                     <ControlTemplate.Triggers>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True"/>
+                                <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                        </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -88,7 +95,6 @@
         <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Cursor" Value="Hand"/>
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="UseLayoutRounding" Value="True"/>
         <Setter Property="Template">
@@ -108,6 +114,13 @@
                             <Setter TargetName="Bd" Property="Background" Value="#25FFFFFF"/>
                             <Setter Property="Foreground" Value="White"/>
                         </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True"/>
+                                <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                        </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -128,7 +141,6 @@
         <Setter Property="IsTabStop" Value="False"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="UseLayoutRounding" Value="True"/>
         <Setter Property="Template">
@@ -163,7 +175,6 @@
         <Setter Property="Height" Value="32"/>
         <Setter Property="Padding" Value="8,0"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="UseLayoutRounding" Value="True"/>
         <Setter Property="Template">
@@ -184,6 +195,13 @@
                             <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
                         </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True"/>
+                                <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                        </MultiTrigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{StaticResource FormControlDisabledForegroundBrush}"/>
                             <Setter TargetName="Chrome" Property="Opacity" Value="0.55"/>
@@ -201,7 +219,6 @@
         <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
         <Setter Property="Padding" Value="10,7"/>
         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -241,7 +258,6 @@
         <Setter Property="Height" Value="32"/>
         <Setter Property="Padding" Value="10,0"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="UseLayoutRounding" Value="True"/>
         <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
@@ -326,6 +342,14 @@
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
                             <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource FormControlForegroundBrush}"/>
                         </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True"/>
+                                <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                            <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource FormControlForegroundBrush}"/>
+                        </MultiTrigger>
                         <Trigger Property="IsDropDownOpen" Value="True">
                             <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
@@ -353,7 +377,6 @@
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Padding" Value="8,0,0,0"/>
         <Setter Property="Margin" Value="0,4"/>
-        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="UseLayoutRounding" Value="True"/>
         <Setter Property="Template">
@@ -393,6 +416,13 @@
                             <Setter TargetName="Box" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                             <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
                         </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True"/>
+                                <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="FocusFrame" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                        </MultiTrigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Box" Property="Background" Value="{DynamicResource AccentColor}"/>
                             <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
