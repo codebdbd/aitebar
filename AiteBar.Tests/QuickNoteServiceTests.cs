@@ -216,6 +216,15 @@ public sealed class QuickNoteServiceTests : IDisposable
         }
     }
 
+    [Fact]
+    public void QuickNoteWindow_Loaded_DisablesUndoInsteadOfReplayingUndoHistory()
+    {
+        string code = ReadRepoFile("AiteBar", "QuickNoteWindow.xaml.cs");
+
+        Assert.Contains("TxtNote.IsUndoEnabled = false;", code);
+        Assert.DoesNotContain("while (TxtNote.CanUndo)", code);
+    }
+
     private static async Task WaitForDistinctFileTimestampAsync()
     {
         await Task.Delay(1100);
@@ -257,6 +266,23 @@ public sealed class QuickNoteServiceTests : IDisposable
             await action();
             return true;
         });
+
+    private static string ReadRepoFile(params string[] parts)
+    {
+        string? current = AppContext.BaseDirectory;
+
+        while (!string.IsNullOrEmpty(current))
+        {
+            if (File.Exists(Path.Combine(current, "AiteBar.sln")))
+            {
+                return File.ReadAllText(Path.Combine([current, .. parts]));
+            }
+
+            current = Directory.GetParent(current)?.FullName;
+        }
+
+        throw new DirectoryNotFoundException("Repository root with AiteBar.sln was not found.");
+    }
 
     private sealed class FakeQuickNoteProcessStartDispatcher : IQuickNoteProcessStartDispatcher
     {

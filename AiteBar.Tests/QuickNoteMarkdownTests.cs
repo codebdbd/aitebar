@@ -75,6 +75,28 @@ public sealed class QuickNoteMarkdownTests
     }
 
     [Fact]
+    public void GetToggleListMarkerRangeEdit_ReplacesSelectedLinesAsSingleSegment()
+    {
+        QuickNoteRangeEdit edit = QuickNoteMarkdown.GetToggleListMarkerRangeEdit("head\none\ntwo\ntail", 5, 12, numbered: false);
+
+        Assert.Equal(5, edit.StartOffset);
+        Assert.Equal("one\ntwo".Length, edit.RemoveLength);
+        Assert.Equal("- one\n- two", edit.InsertText);
+        Assert.True(edit.CaretOffset > edit.StartOffset);
+    }
+
+    [Fact]
+    public void GetClearLineMarkerRangeEdit_ReplacesSelectedLinesAsSingleSegment()
+    {
+        QuickNoteRangeEdit edit = QuickNoteMarkdown.GetClearLineMarkerRangeEdit("head\n- one\n- two\ntail", 5, 16);
+
+        Assert.Equal(5, edit.StartOffset);
+        Assert.Equal("- one\n- two".Length, edit.RemoveLength);
+        Assert.Equal("one\ntwo", edit.InsertText);
+        Assert.True(edit.CaretOffset >= edit.StartOffset);
+    }
+
+    [Fact]
     public void ToMarkdown_EscapesLiteralMarkdownCharacters()
     {
         string markdown = RunSta(() =>
