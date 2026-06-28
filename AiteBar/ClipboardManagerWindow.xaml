@@ -1,461 +1,908 @@
 <local:DarkWindow x:Class="AiteBar.ClipboardManagerWindow"
+
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+
         xmlns:local="clr-namespace:AiteBar"
+
         Icon="pack://application:,,,/Resources/app.ico"
+
         Title="{local:Loc ResourceKey=ClipboardManager_Title}"
+
         Width="480" Height="660" MinWidth="440" MinHeight="580"
-        WindowStartupLocation="CenterScreen" Background="#1A1A1C" Foreground="#DCDCDC"
+
+        WindowStartupLocation="CenterScreen" Background="#191919" Foreground="#DCDCDC"
+
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize"
+
         ShowInTaskbar="False" Topmost="True"
+
         PreviewKeyDown="Window_PreviewKeyDown">
 
+
+
     <Window.Resources>
+
         <ResourceDictionary>
+
             <ResourceDictionary.MergedDictionaries>
+
                 <ResourceDictionary Source="SettingsWindowResources.xaml"/>
+
                 <ResourceDictionary Source="FormControlsResources.xaml"/>
+
                 <ResourceDictionary Source="UtilityWindowResources.xaml"/>
+
             </ResourceDictionary.MergedDictionaries>
 
+
+
             <Style x:Key="EntryItemStyle" TargetType="Border">
+
                 <Setter Property="Background" Value="#161A22"/>
+
                 <Setter Property="BorderBrush" Value="#313840"/>
+
                 <Setter Property="BorderThickness" Value="1"/>
+
                 <Setter Property="CornerRadius" Value="12"/>
+
                 <Setter Property="Padding" Value="14"/>
+
                 <Setter Property="Margin" Value="0,0,0,12"/>
+
                 <Setter Property="Cursor" Value="Hand"/>
+
                 <Style.Triggers>
+
                     <Trigger Property="IsMouseOver" Value="True">
+
                         <Setter Property="Background" Value="#1A202A"/>
+
                         <Setter Property="BorderBrush" Value="#404B57"/>
+
                     </Trigger>
+
                 </Style.Triggers>
+
             </Style>
+
+
 
             <Style x:Key="ClipboardActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+
                 <Setter Property="Width" Value="28"/>
+
                 <Setter Property="Height" Value="28"/>
+
                 <Setter Property="Margin" Value="0,0,6,0"/>
+
                 <Setter Property="Padding" Value="0"/>
+
                 <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+
                 <Setter Property="FontSize" Value="13"/>
+
                 <Setter Property="FontWeight" Value="Normal"/>
+
                 <Setter Property="Background" Value="#1A2230"/>
+
                 <Setter Property="BorderBrush" Value="#344459"/>
+
                 <Setter Property="Foreground" Value="#DCE6F2"/>
+
                 <Setter Property="BorderThickness" Value="1"/>
+
                 <Setter Property="Template">
+
                     <Setter.Value>
+
                         <ControlTemplate TargetType="Button">
+
                             <Border x:Name="Bd"
+
                                     Background="{TemplateBinding Background}"
+
                                     BorderBrush="{TemplateBinding BorderBrush}"
+
                                     BorderThickness="{TemplateBinding BorderThickness}"
+
                                     CornerRadius="7"
+
                                     SnapsToDevicePixels="True">
+
                                 <ContentPresenter HorizontalAlignment="Center"
+
                                                   VerticalAlignment="Center"/>
+
                             </Border>
+
                             <ControlTemplate.Triggers>
+
                                 <Trigger Property="IsMouseOver" Value="True">
+
                                     <Setter TargetName="Bd" Property="Background" Value="#233043"/>
+
                                     <Setter TargetName="Bd" Property="BorderBrush" Value="#4B617B"/>
+
                                 </Trigger>
+
                                 <Trigger Property="IsPressed" Value="True">
+
                                     <Setter TargetName="Bd" Property="Background" Value="#16202E"/>
+
                                 </Trigger>
-                                <Trigger Property="IsKeyboardFocused" Value="True">
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
-                                </Trigger>
+
                             </ControlTemplate.Triggers>
+
                         </ControlTemplate>
+
                     </Setter.Value>
+
                 </Setter>
+
             </Style>
+
+
 
             <Style x:Key="ClipboardFilterTabControlStyle" TargetType="TabControl">
+
                 <Setter Property="Background" Value="Transparent"/>
+
                 <Setter Property="BorderThickness" Value="0"/>
+
                 <Setter Property="Padding" Value="0"/>
+
             </Style>
+
+
 
             <Style x:Key="ClipboardFilterTabItemStyle" TargetType="TabItem">
+
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
                 <Setter Property="Template">
+
                     <Setter.Value>
+
                         <ControlTemplate TargetType="TabItem">
+
                             <Border x:Name="Bd"
+
                                     Background="Transparent"
+
                                     BorderThickness="0,0,0,2"
+
                                     BorderBrush="Transparent"
+
                                     Margin="0,0,18,0"
+
                                     Padding="2,6,2,8">
+
                                 <ContentPresenter ContentSource="Header"
+
                                                   TextElement.Foreground="{TemplateBinding Foreground}"
+
                                                   TextElement.FontSize="13"
+
                                                   TextElement.FontWeight="SemiBold"/>
+
                             </Border>
+
                             <ControlTemplate.Triggers>
+
                                 <Trigger Property="IsSelected" Value="True">
+
                                     <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+
                                     <Setter Property="Foreground" Value="White"/>
+
                                 </Trigger>
+
                                 <Trigger Property="IsSelected" Value="False">
+
                                     <Setter Property="Foreground" Value="{DynamicResource MutedText}"/>
+
                                 </Trigger>
+
                                 <Trigger Property="IsMouseOver" Value="True">
+
                                     <Setter Property="Cursor" Value="Hand"/>
+
                                     <Setter Property="Foreground" Value="White"/>
+
                                 </Trigger>
-                                <Trigger Property="IsKeyboardFocused" Value="True">
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                </Trigger>
+
                             </ControlTemplate.Triggers>
+
                         </ControlTemplate>
+
                     </Setter.Value>
+
                 </Setter>
+
             </Style>
+
+
 
             <Style x:Key="PreviewFrameStyle" TargetType="Border">
+
                 <Setter Property="Width" Value="78"/>
+
                 <Setter Property="Height" Value="78"/>
+
                 <Setter Property="CornerRadius" Value="10"/>
+
                 <Setter Property="Background" Value="#11161E"/>
+
                 <Setter Property="BorderBrush" Value="#2B3642"/>
+
                 <Setter Property="BorderThickness" Value="1"/>
+
                 <Setter Property="Margin" Value="0,0,12,0"/>
+
             </Style>
+
+
 
             <Style x:Key="ClipboardTypeBadgeStyle" TargetType="Border">
+
                 <Setter Property="Width" Value="78"/>
+
                 <Setter Property="Height" Value="78"/>
+
                 <Setter Property="CornerRadius" Value="10"/>
+
                 <Setter Property="Background" Value="#18212D"/>
+
                 <Setter Property="BorderBrush" Value="#313E4C"/>
+
                 <Setter Property="BorderThickness" Value="1"/>
+
                 <Setter Property="Margin" Value="0,0,12,0"/>
+
             </Style>
+
+
 
             <Style x:Key="ClipboardPinnedBadgeStyle" TargetType="Border">
+
                 <Setter Property="Background" Value="#2C2411"/>
+
                 <Setter Property="BorderBrush" Value="#6C5720"/>
+
                 <Setter Property="BorderThickness" Value="1"/>
+
                 <Setter Property="CornerRadius" Value="8"/>
+
                 <Setter Property="Padding" Value="7,2"/>
+
             </Style>
+
+
 
             <Style x:Key="ClipboardScrollBarStyle" TargetType="ScrollBar">
+
                 <Setter Property="Width" Value="5"/>
+
                 <Setter Property="Background" Value="Transparent"/>
+
                 <Setter Property="Template">
+
                     <Setter.Value>
+
                         <ControlTemplate TargetType="ScrollBar">
+
                             <Grid Background="Transparent" Width="{TemplateBinding Width}">
+
                                 <Track x:Name="PART_Track" IsDirectionReversed="True">
+
                                     <Track.DecreaseRepeatButton>
+
                                         <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False"/>
+
                                     </Track.DecreaseRepeatButton>
+
                                     <Track.Thumb>
+
                                         <Thumb>
+
                                             <Thumb.Template>
+
                                                 <ControlTemplate TargetType="Thumb">
+
                                                     <Border x:Name="ThumbBorder"
+
                                                             Width="5"
+
                                                             CornerRadius="2.5"
+
                                                             Background="#8C8D92"
+
                                                             Opacity="0.88"/>
+
                                                     <ControlTemplate.Triggers>
+
                                                         <Trigger Property="IsMouseOver" Value="True">
+
                                                             <Setter TargetName="ThumbBorder" Property="Background" Value="#A6A7AC"/>
+
                                                             <Setter TargetName="ThumbBorder" Property="Opacity" Value="1"/>
+
                                                         </Trigger>
+
                                                     </ControlTemplate.Triggers>
+
                                                 </ControlTemplate>
+
                                             </Thumb.Template>
+
                                         </Thumb>
+
                                     </Track.Thumb>
+
                                     <Track.IncreaseRepeatButton>
+
                                         <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False"/>
+
                                     </Track.IncreaseRepeatButton>
+
                                 </Track>
+
                             </Grid>
+
                             <ControlTemplate.Triggers>
+
                                 <Trigger Property="Orientation" Value="Horizontal">
+
                                     <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
+
                                 </Trigger>
+
                             </ControlTemplate.Triggers>
+
                         </ControlTemplate>
+
                     </Setter.Value>
+
                 </Setter>
+
             </Style>
+
+
 
             <Style x:Key="ClipboardFooterIconButtonStyle" TargetType="Button" BasedOn="{StaticResource ClipboardActionButtonStyle}">
+
                 <Setter Property="Width" Value="32"/>
+
                 <Setter Property="Height" Value="32"/>
+
                 <Setter Property="Margin" Value="10,0,0,0"/>
+
                 <Setter Property="FontSize" Value="14"/>
+
             </Style>
+
+
 
             <Style x:Key="ClipboardListBoxStyle" TargetType="ListBox">
+
                 <Setter Property="Background" Value="Transparent"/>
+
                 <Setter Property="BorderThickness" Value="0"/>
+
                 <Setter Property="Padding" Value="0"/>
+
                 <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+
                 <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+
             </Style>
+
+
 
             <Style x:Key="ClipboardListBoxItemStyle" TargetType="ListBoxItem">
+
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
                 <Setter Property="Padding" Value="0"/>
+
                 <Setter Property="Margin" Value="0"/>
+
                 <Setter Property="Background" Value="Transparent"/>
+
                 <Setter Property="BorderThickness" Value="0"/>
+
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+
                 <Setter Property="Template">
+
                     <Setter.Value>
+
                         <ControlTemplate TargetType="ListBoxItem">
+
                             <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+
                                               VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+
                         </ControlTemplate>
+
                     </Setter.Value>
+
                 </Setter>
+
             </Style>
+
         </ResourceDictionary>
+
     </Window.Resources>
 
+
+
     <Grid Margin="16">
+
         <Grid.RowDefinitions>
+
             <RowDefinition Height="Auto"/>
+
             <RowDefinition Height="*"/>
+
             <RowDefinition Height="Auto"/>
+
         </Grid.RowDefinitions>
 
+
+
         <TabControl x:Name="FilterTabs"
+
                     Grid.Row="0"
+
                     Margin="0,0,0,10"
+
                     Style="{StaticResource ClipboardFilterTabControlStyle}"
+
                     SelectionChanged="FilterTabs_SelectionChanged">
+
             <TabItem x:Name="TabFilterAll"
+
                      Header="{local:Loc ResourceKey=ClipboardManager_FilterAll}"
+
                      Style="{StaticResource ClipboardFilterTabItemStyle}"
+
                      Tag="All"
+
                      IsSelected="True"/>
+
             <TabItem x:Name="TabFilterPinned"
+
                      Header="{local:Loc ResourceKey=ClipboardManager_FilterPinned}"
+
                      Style="{StaticResource ClipboardFilterTabItemStyle}"
+
                      Tag="Pinned"/>
+
             <TabItem x:Name="TabFilterText"
+
                      Header="{local:Loc ResourceKey=ClipboardManager_FilterText}"
+
                      Style="{StaticResource ClipboardFilterTabItemStyle}"
+
                      Tag="Text"/>
+
             <TabItem x:Name="TabFilterImages"
+
                      Header="{local:Loc ResourceKey=ClipboardManager_FilterImages}"
+
                      Style="{StaticResource ClipboardFilterTabItemStyle}"
+
                      Tag="Images"/>
+
         </TabControl>
 
+
+
         <Grid Grid.Row="1">
+
             <ListBox x:Name="EntriesList"
+
                      Margin="0,0,10,0"
+
                      Style="{StaticResource ClipboardListBoxStyle}"
+
                      ItemContainerStyle="{StaticResource ClipboardListBoxItemStyle}"
+
                      BorderThickness="0"
+
                      Background="Transparent"
+
                      HorizontalContentAlignment="Stretch"
+
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+
                      ScrollViewer.CanContentScroll="True"
+
                      KeyboardNavigation.TabNavigation="Continue">
+
                 <ListBox.Resources>
+
                     <Style TargetType="ScrollBar" BasedOn="{StaticResource ClipboardScrollBarStyle}"/>
+
                 </ListBox.Resources>
+
                 <ListBox.ItemTemplate>
+
                     <DataTemplate>
+
                         <Border x:Name="CardBorder"
+
                                 Style="{StaticResource EntryItemStyle}"
+
                                 MouseLeftButtonDown="EntryCard_MouseLeftButtonDown">
+
                             <Grid>
+
                                 <Grid.ColumnDefinitions>
+
                                     <ColumnDefinition Width="Auto"/>
+
                                     <ColumnDefinition Width="*"/>
+
                                 </Grid.ColumnDefinitions>
 
+
+
                                 <Border x:Name="TextBadge"
+
                                         Grid.Column="0"
+
                                         Style="{StaticResource ClipboardTypeBadgeStyle}">
-                                    <TextBlock Text="TXT"
+
+                                    <TextBlock Text="{local:Loc ResourceKey=IconConverter_StatusText}"
+
                                                FontSize="14"
+
                                                FontWeight="Bold"
+
                                                Foreground="White"
+
                                                HorizontalAlignment="Center"
+
                                                VerticalAlignment="Center"/>
+
                                 </Border>
+
+
 
                                 <Border x:Name="ImagePreview"
+
                                         Grid.Column="0"
+
                                         Style="{StaticResource PreviewFrameStyle}"
+
                                         Visibility="Collapsed">
+
                                     <Grid>
+
                                         <Image Source="{Binding PreviewImage}"
+
                                                Stretch="UniformToFill"
+
                                                SnapsToDevicePixels="True"/>
+
                                         <TextBlock x:Name="ImageFallback"
+
                                                    Text="{Binding ImageLabel}"
+
                                                    Foreground="{StaticResource MutedText}"
+
                                                    FontSize="11"
+
                                                    HorizontalAlignment="Center"
+
                                                    VerticalAlignment="Center"
+
                                                    TextAlignment="Center"
+
                                                    Visibility="Collapsed"/>
+
                                     </Grid>
+
                                 </Border>
 
+
+
                                 <Grid Grid.Column="1">
+
                                     <Grid.RowDefinitions>
+
                                         <RowDefinition Height="Auto"/>
+
                                         <RowDefinition Height="Auto"/>
+
                                     </Grid.RowDefinitions>
 
+
+
                                     <Grid>
+
                                         <Grid.ColumnDefinitions>
+
                                             <ColumnDefinition Width="*"/>
+
                                             <ColumnDefinition Width="Auto"/>
+
                                         </Grid.ColumnDefinitions>
 
+
+
                                         <StackPanel>
+
                                             <TextBlock Text="{Binding Title}"
+
                                                        FontSize="13"
+
                                                        FontWeight="SemiBold"
+
                                                        Foreground="White"
+
                                                        TextWrapping="Wrap"
+
                                                        MaxHeight="36"/>
+
                                             <TextBlock Text="{Binding Summary}"
+
                                                        FontSize="10"
+
                                                        Foreground="{StaticResource MutedText}"
+
                                                        Margin="0,4,0,0"/>
+
                                         </StackPanel>
 
+
+
                                         <Border x:Name="PinnedBadge"
+
                                                 Grid.Column="1"
+
                                                 Style="{StaticResource ClipboardPinnedBadgeStyle}"
+
                                                 Margin="8,1,0,0"
+
                                                 VerticalAlignment="Top"
+
                                                 ToolTip="{Binding PinnedLabel}"
+
                                                 Visibility="Collapsed">
+
                                             <TextBlock Text="{Binding PinnedLabel}"
+
                                                        FontSize="10"
+
                                                        FontWeight="SemiBold"
+
                                                        Foreground="#F2D57B"/>
+
                                         </Border>
+
                                     </Grid>
 
+
+
                                     <StackPanel Grid.Row="1"
+
                                                 Margin="{Binding ActionsMargin}"
+
                                                 Orientation="Horizontal"
+
                                                 HorizontalAlignment="Right">
+
                                         <Button Content="&#xE8C8;"
+
                                                 FontFamily="Segoe MDL2 Assets"
+
                                                 Style="{StaticResource ClipboardActionButtonStyle}"
+
                                                 ToolTip="{Binding CopyLabel}"
+
                                                 Tag="{Binding Id}"
+
                                                 Click="EntryCopyButton_Click"/>
+
                                         <Button Content="&#xE718;"
+
                                                 FontFamily="Segoe MDL2 Assets"
+
                                                 Style="{StaticResource ClipboardActionButtonStyle}"
+
                                                 ToolTip="{Binding PinLabel}"
+
                                                 Tag="{Binding Id}"
+
                                                 Click="EntryPinButton_Click"/>
+
                                         <Button Content="&#xE74D;"
+
                                                 FontFamily="Segoe MDL2 Assets"
+
                                                 Style="{StaticResource ClipboardActionButtonStyle}"
+
                                                 ToolTip="{Binding DeleteLabel}"
+
                                                 Tag="{Binding Id}"
+
                                                 Click="EntryDeleteButton_Click"/>
+
                                     </StackPanel>
+
                                 </Grid>
+
                             </Grid>
+
                         </Border>
+
                         <DataTemplate.Triggers>
+
                             <DataTrigger Binding="{Binding IsImage}" Value="True">
+
                                 <Setter TargetName="TextBadge" Property="Visibility" Value="Collapsed"/>
+
                                 <Setter TargetName="ImagePreview" Property="Visibility" Value="Visible"/>
+
                             </DataTrigger>
+
                             <DataTrigger Binding="{Binding PreviewImage}" Value="{x:Null}">
+
                                 <Setter TargetName="ImageFallback" Property="Visibility" Value="Visible"/>
+
                             </DataTrigger>
+
                             <DataTrigger Binding="{Binding IsPinned}" Value="True">
+
                                 <Setter TargetName="PinnedBadge" Property="Visibility" Value="Visible"/>
+
                                 <Setter TargetName="CardBorder" Property="BorderBrush" Value="#7B6631"/>
+
                                 <Setter TargetName="CardBorder" Property="Background" Value="#1A1E24"/>
+
                             </DataTrigger>
+
                             <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+
                                 <Setter TargetName="CardBorder" Property="Background" Value="#1B222C"/>
+
                                 <Setter TargetName="CardBorder" Property="BorderBrush" Value="#475363"/>
+
                             </DataTrigger>
+
                             <MultiDataTrigger>
+
                                 <MultiDataTrigger.Conditions>
+
                                     <Condition Binding="{Binding IsPinned}" Value="True"/>
+
                                     <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True"/>
+
                                 </MultiDataTrigger.Conditions>
+
                                 <Setter TargetName="CardBorder" Property="BorderBrush" Value="#A1863D"/>
+
                             </MultiDataTrigger>
+
                         </DataTemplate.Triggers>
+
                     </DataTemplate>
+
                 </ListBox.ItemTemplate>
+
             </ListBox>
 
+
+
             <TextBlock x:Name="TxtEmptyHint"
+
                        Text="{local:Loc ResourceKey=ClipboardManager_EmptyHint}"
+
                        Foreground="{StaticResource MutedText}"
+
                        FontSize="12"
+
                        TextWrapping="Wrap"
+
                        HorizontalAlignment="Center"
+
                        VerticalAlignment="Top"
+
                        Margin="0,20,0,0"
+
                        Visibility="Collapsed"
+
                        IsHitTestVisible="False"/>
+
         </Grid>
 
+
+
         <Grid Grid.Row="2" Margin="0,10,0,0">
+
             <Grid.RowDefinitions>
+
                 <RowDefinition Height="Auto"/>
+
                 <RowDefinition Height="Auto"/>
+
             </Grid.RowDefinitions>
+
             <TextBlock x:Name="TxtStatus"
+
                        Foreground="{StaticResource MutedText}"
+
                        FontSize="11"
+
                        TextWrapping="Wrap"
+
                        TextTrimming="CharacterEllipsis"
+
                        VerticalAlignment="Top"
+
                        Margin="0,0,0,8"/>
+
             <Grid Grid.Row="1">
+
                 <Grid.ColumnDefinitions>
+
                     <ColumnDefinition Width="*"/>
+
                     <ColumnDefinition Width="Auto"/>
+
                 </Grid.ColumnDefinitions>
+
                 <Grid Grid.Column="0">
+
                     <TextBox x:Name="TxtSearch"
+
                              Style="{StaticResource BaseTextBoxStyle}"
+
                              TextChanged="TxtSearch_TextChanged"
+
                              FontSize="12"/>
+
                     <TextBlock x:Name="TxtSearchPlaceholder"
+
                                Text="{local:Loc ResourceKey=ClipboardManager_SearchPlaceholder}"
+
                                Foreground="{StaticResource MutedText}"
+
                                FontSize="12"
+
                                Margin="8,0"
+
                                IsHitTestVisible="False"
+
                                VerticalAlignment="Center"/>
+
                 </Grid>
+
                 <Button x:Name="BtnClearHistory"
+
                         Grid.Column="1"
+
                         Content="&#xE74D;"
+
                         FontFamily="Segoe MDL2 Assets"
+
                         Style="{StaticResource ClipboardFooterIconButtonStyle}"
+
                         ToolTip="{local:Loc ResourceKey=ClipboardManager_ClearHistory}"
+
                         Click="BtnClearHistory_Click"/>
+
             </Grid>
+
         </Grid>
+
     </Grid>
+
 </local:DarkWindow>
+

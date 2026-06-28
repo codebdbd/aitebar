@@ -5,7 +5,7 @@
         Icon="pack://application:,,,/Resources/app.ico"
         Title="{local:Loc ResourceKey=IconConverter_Title}"
         Width="600" MinWidth="580" SizeToContent="Height"
-        WindowStartupLocation="CenterScreen" Background="#1A1A1C" Foreground="#DCDCDC"
+        WindowStartupLocation="CenterScreen" Background="#191919" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize"
         ShowInTaskbar="False" Topmost="True"
         AllowDrop="True" DragOver="Window_DragOver" Drop="Window_Drop"
@@ -86,7 +86,7 @@
                                             Height="16"
                                             BorderBrush="#3A3A3E"
                                             BorderThickness="1"
-                                            Background="#2D2D30"
+                                            Background="#383838"
                                             CornerRadius="8"
                                             VerticalAlignment="Center"
                                             Margin="0,0,6,0">
@@ -108,9 +108,6 @@
                                     <Setter TargetName="RadioBorder" Property="Background" Value="{StaticResource AccentColor}"/>
                                     <Setter TargetName="RadioBorder" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
                                     <Setter TargetName="RadioCheck" Property="Visibility" Value="Visible"/>
-                                </Trigger>
-                                <Trigger Property="IsKeyboardFocused" Value="True">
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

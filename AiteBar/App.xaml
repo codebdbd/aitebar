@@ -17,7 +17,7 @@
                 </Setter>
             </Style>
             <!-- Colors -->
-        <SolidColorBrush x:Key="WindowBackground" Color="#1A1A1C"/>
+        <SolidColorBrush x:Key="WindowBackground" Color="#191919"/>
         <SolidColorBrush x:Key="PanelBackground" Color="#1F1F1F"/>
         <SolidColorBrush x:Key="BorderColor" Color="#2A2A2A"/>
         <SolidColorBrush x:Key="AccentColor" Color="#007ACC"/>
@@ -30,8 +30,8 @@
 
         <!-- ContextMenu Style -->
         <Style x:Key="DarkContextMenu" TargetType="ContextMenu">
-            <Setter Property="Background" Value="#202020"/>
-            <Setter Property="BorderBrush" Value="#242424"/>
+            <Setter Property="Background" Value="#2C2C2C"/>
+            <Setter Property="BorderBrush" Value="#2C2C2C"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Foreground" Value="#EAEAEA"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
@@ -152,8 +152,8 @@
                                    PopupAnimation="Fade"
                                    HorizontalOffset="6"
                                    VerticalOffset="-8">
-                                <Border Background="#202020"
-                                        BorderBrush="#242424"
+                                <Border Background="#2C2C2C"
+                                        BorderBrush="#2C2C2C"
                                         BorderThickness="1"
                                         CornerRadius="16"
                                         Padding="8"

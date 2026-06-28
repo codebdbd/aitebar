@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
         Title="{local:Loc ResourceKey=RotationProfiles_Title}" Width="560" Height="440"
-        WindowStartupLocation="CenterOwner" Background="#1A1A1C" Foreground="#DCDCDC"
+        WindowStartupLocation="CenterOwner" Background="#191919" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
     <Window.Resources>
@@ -32,7 +32,7 @@
                 <TextBlock Text="{local:Loc ResourceKey=RotationProfiles_Profiles}" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
                 <TextBlock Text="{local:Loc ResourceKey=RotationProfiles_DefaultHint}" Foreground="{StaticResource MutedText}" FontSize="11" Margin="0,3,0,0"/>
             </StackPanel>
-            <Border Grid.Column="1" Background="#2D2D30" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="4" Padding="10,4" VerticalAlignment="Top">
+            <Border Grid.Column="1" Background="#383838" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="4" Padding="10,4" VerticalAlignment="Top">
                 <TextBlock x:Name="TxtSelectionCount" Foreground="{StaticResource MutedText}" FontSize="11"/>
             </Border>
         </Grid>
@@ -42,7 +42,7 @@
             <TextBlock x:Name="TxtSearchPlaceholder" Text="{local:Loc ResourceKey=RotationProfiles_SearchPlaceholder}" Margin="10,0" VerticalAlignment="Center" Foreground="#666666" IsHitTestVisible="False"/>
         </Grid>
 
-        <Border Grid.Row="2" Background="#202022" BorderBrush="#3A3A3E" BorderThickness="1" CornerRadius="6" Padding="4">
+        <Border Grid.Row="2" Background="#383838" BorderBrush="#3A3A3E" BorderThickness="1" CornerRadius="6" Padding="4">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel x:Name="PanelProfiles"/>
             </ScrollViewer>

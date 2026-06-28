@@ -279,8 +279,9 @@ public sealed class FileSorterService
                 await MoveFileWithRetryAsync(entry.DestinationPath, restorePath);
                 restoredCount++;
             }
-            catch
+            catch (Exception ex)
             {
+                Logger.Log(new IOException($"File sorter could not restore '{entry.DestinationPath}'.", ex));
                 remainingEntries.Add(entry);
             }
         }

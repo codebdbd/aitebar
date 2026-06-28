@@ -5,7 +5,7 @@
         Icon="pack://application:,,,/Resources/app.ico"
         Title="{local:Loc ResourceKey=FileSorter_Title}"
         Width="320" SizeToContent="Height" MinWidth="320" MinHeight="200"
-        WindowStartupLocation="CenterScreen" Background="#1A1A1C" Foreground="#DCDCDC"
+        WindowStartupLocation="CenterScreen" Background="#191919" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize"
         ShowInTaskbar="False" Topmost="True"
         PreviewKeyDown="Window_PreviewKeyDown">

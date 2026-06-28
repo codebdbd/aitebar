@@ -1,7 +1,7 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <SolidColorBrush x:Key="FormControlBackground" Color="#2D2D30"/>
-    <SolidColorBrush x:Key="FormControlBackgroundHover" Color="#343438"/>
+    <SolidColorBrush x:Key="FormControlBackground" Color="#383838"/>
+    <SolidColorBrush x:Key="FormControlBackgroundHover" Color="#404040"/>
     <SolidColorBrush x:Key="FormControlBorderBrush" Color="#3A3A3E"/>
     <SolidColorBrush x:Key="FormControlBorderHoverBrush" Color="#4A4A4E"/>
     <SolidColorBrush x:Key="FormControlFocusBorderBrush" Color="#3ABEFF"/>
@@ -41,9 +41,6 @@
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
-                        </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
@@ -107,9 +104,6 @@
                         <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="#3ABEFF"/>
-                        </Trigger>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Bd" Property="Background" Value="#25FFFFFF"/>
                             <Setter Property="Foreground" Value="White"/>
@@ -189,10 +183,6 @@
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
-                        </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{StaticResource FormControlDisabledForegroundBrush}"/>
@@ -336,11 +326,6 @@
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
                             <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource FormControlForegroundBrush}"/>
                         </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
-                            <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource FormControlForegroundBrush}"/>
-                        </Trigger>
                         <Trigger Property="IsDropDownOpen" Value="True">
                             <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                             <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
@@ -412,9 +397,6 @@
                             <Setter TargetName="Box" Property="Background" Value="{DynamicResource AccentColor}"/>
                             <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
                             <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
-                        </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="FocusFrame" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{StaticResource FormControlDisabledForegroundBrush}"/>

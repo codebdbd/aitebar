@@ -6,7 +6,7 @@
         Icon="pack://application:,,,/Resources/app.ico"
         Width="580" Height="430" MinWidth="460" MinHeight="320"
         WindowStartupLocation="CenterOwner" WindowStyle="None" AllowsTransparency="True"
-        Background="Transparent" Foreground="White" ResizeMode="CanResize"
+        Background="#191919" Foreground="White" ResizeMode="CanResize"
         ShowInTaskbar="False" Topmost="True"
         Loaded="Window_Loaded" Closing="Window_Closing" Deactivated="Window_Deactivated"
         LocationChanged="Window_LocationChanged" SizeChanged="Window_SizeChanged">
@@ -132,10 +132,10 @@
                                     <Thumb>
                                         <Thumb.Template>
                                             <ControlTemplate TargetType="Thumb">
-                                                <Border x:Name="ThumbBorder" Width="6" CornerRadius="3" Background="#55565D" Opacity="0.72"/>
+                                                <Border x:Name="ThumbBorder" Width="6" CornerRadius="3" Background="#383838" Opacity="0.72"/>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="ThumbBorder" Property="Background" Value="#74757D"/>
+                                                        <Setter TargetName="ThumbBorder" Property="Background" Value="#4A4A4A"/>
                                                         <Setter TargetName="ThumbBorder" Property="Opacity" Value="1"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
@@ -155,7 +155,7 @@
     </Window.Resources>
 
     <Grid>
-        <Border Margin="8" CornerRadius="14" Background="#202124" BorderBrush="#3A3B40" BorderThickness="1">
+        <Border Margin="8" CornerRadius="14" Background="#383838" BorderBrush="#3A3B40" BorderThickness="1">
             <Border.Effect>
                 <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="3" Direction="270" Opacity="0.14"/>
             </Border.Effect>

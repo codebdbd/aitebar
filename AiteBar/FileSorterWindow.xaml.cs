@@ -267,7 +267,15 @@ public partial class FileSorterWindow : DarkWindow
             return;
         }
 
-        Process.Start(new ProcessStartInfo(_lastRootPath) { UseShellExecute = true });
+        try
+        {
+            Process.Start(new ProcessStartInfo(_lastRootPath) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            new DarkDialog(LocalizationService.Format("FileSorter_ErrorFormat", ex.Message)) { Owner = this }.ShowDialog();
+        }
     }
 
     private void Window_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)

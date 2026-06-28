@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
         Title="{local:Loc ResourceKey=Common_Warning}" Width="420" SizeToContent="Height"
-        WindowStartupLocation="CenterOwner" Background="#1E1E1E" Foreground="White"
+        WindowStartupLocation="CenterOwner" Background="#191919" Foreground="White"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
     

@@ -7,7 +7,7 @@
         Width="540"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
-        Background="#1E1E1E"
+        Background="#191919"
         Foreground="White"
         WindowStyle="SingleBorderWindow"
         ResizeMode="NoResize"
