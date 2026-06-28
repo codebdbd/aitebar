@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace AiteBar;
@@ -193,13 +192,17 @@ public sealed class FileSorterService
                 Directory.CreateDirectory(destinationDirectory);
                 EnsureDirectoryWritable(destinationDirectory);
 
-                string destinationPath = GetUniquePath(
-                    destinationDirectory,
-                    Path.GetFileNameWithoutExtension(filePath),
-                    Path.GetExtension(filePath));
-                EnsurePathWithinRoot(destinationPath, rootFullPath);
-
-                await MoveFileWithRetryAsync(filePath, destinationPath);
+                string destinationPath = await MoveFileWithRetryAsync(
+                    filePath,
+                    () =>
+                    {
+                        string path = GetUniquePath(
+                            destinationDirectory,
+                            Path.GetFileNameWithoutExtension(filePath),
+                            Path.GetExtension(filePath));
+                        EnsurePathWithinRoot(path, rootFullPath);
+                        return path;
+                    });
                 entries.Add(new FileSortOperationEntry
                 {
                     SourcePath = filePath,
@@ -266,17 +269,23 @@ public sealed class FileSorterService
                 EnsureDirectoryWritable(originalDirectory);
 
                 // Try original path first; only use unique path if original is taken
-                string restorePath = entry.SourcePath;
-                if (File.Exists(restorePath) || Directory.Exists(restorePath))
-                {
-                    restorePath = GetUniquePath(
-                        originalDirectory,
-                        Path.GetFileNameWithoutExtension(entry.SourcePath),
-                        Path.GetExtension(entry.SourcePath));
-                }
-                EnsurePathWithinRoot(restorePath, rootFullPath);
+                string restorePath = await MoveFileWithRetryAsync(
+                    entry.DestinationPath,
+                    () =>
+                    {
+                        if (!File.Exists(entry.SourcePath) && !Directory.Exists(entry.SourcePath))
+                        {
+                            EnsurePathWithinRoot(entry.SourcePath, rootFullPath);
+                            return entry.SourcePath;
+                        }
 
-                await MoveFileWithRetryAsync(entry.DestinationPath, restorePath);
+                        string path = GetUniquePath(
+                            originalDirectory,
+                            Path.GetFileNameWithoutExtension(entry.SourcePath),
+                            Path.GetExtension(entry.SourcePath));
+                        EnsurePathWithinRoot(path, rootFullPath);
+                        return path;
+                    });
                 restoredCount++;
             }
             catch (Exception ex)
@@ -451,20 +460,6 @@ public sealed class FileSorterService
         }
     }
 
-    // Keep for backward compatibility
-    private static bool IsFileTooLarge(string filePath, long maxMovableFileBytes)
-    {
-        try
-        {
-            return IsFileTooLarge(new FileInfo(filePath), maxMovableFileBytes);
-        }
-        catch (Exception ex)
-        {
-            Logger.Log(new IOException($"File sorter could not inspect '{filePath}'.", ex));
-            return true;
-        }
-    }
-
     private static void EnsureDirectoryWritable(string directoryPath)
     {
         string probePath = Path.Combine(directoryPath, $".aitebar-write-check-{Guid.NewGuid():N}.tmp");
@@ -477,14 +472,23 @@ public sealed class FileSorterService
             FileOptions.DeleteOnClose);
     }
 
-    private static async Task MoveFileWithRetryAsync(string sourcePath, string destinationPath)
+    internal static async Task<string> MoveFileWithRetryAsync(
+        string sourcePath,
+        Func<string> destinationPathFactory,
+        Func<string, string, Task>? moveFileAsync = null)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(sourcePath);
+        ArgumentNullException.ThrowIfNull(destinationPathFactory);
+
+        moveFileAsync ??= MoveFileAsync;
+
         for (int attempt = 1; ; attempt++)
         {
+            string destinationPath = destinationPathFactory();
             try
             {
-                File.Move(sourcePath, destinationPath);
-                return;
+                await moveFileAsync(sourcePath, destinationPath);
+                return destinationPath;
             }
             catch (Exception) when (attempt < MoveRetryCount)
             {
@@ -493,20 +497,9 @@ public sealed class FileSorterService
         }
     }
 
-    // Keep synchronous version for backward compatibility
-    private static void MoveFileWithRetry(string sourcePath, string destinationPath)
+    private static Task MoveFileAsync(string sourcePath, string destinationPath)
     {
-        for (int attempt = 1; ; attempt++)
-        {
-            try
-            {
-                File.Move(sourcePath, destinationPath);
-                return;
-            }
-            catch (Exception) when (attempt < MoveRetryCount)
-            {
-                Thread.Sleep(TimeSpan.FromMilliseconds(MoveRetryDelay.TotalMilliseconds * attempt));
-            }
-        }
+        File.Move(sourcePath, destinationPath);
+        return Task.CompletedTask;
     }
 }

@@ -20,7 +20,21 @@
         <Style x:Key="{x:Static SystemParameters.FocusVisualStyleKey}" TargetType="{x:Type Control}">
             <Setter Property="Template">
                 <Setter.Value>
-                    <ControlTemplate/>
+                    <ControlTemplate>
+                        <Rectangle x:Name="FocusCue"
+                                   Margin="-1"
+                                   Visibility="Collapsed"
+                                   Stroke="#3ABEFF"
+                                   StrokeThickness="1"
+                                   RadiusX="4"
+                                   RadiusY="4"
+                                   SnapsToDevicePixels="True"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True">
+                                <Setter TargetName="FocusCue" Property="Visibility" Value="Visible"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
                 </Setter.Value>
             </Setter>
         </Style>
@@ -77,6 +91,7 @@
         </Style>
 
         <Style x:Key="DarkMenuItem" TargetType="MenuItem">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Foreground" Value="#EAEAEA"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>

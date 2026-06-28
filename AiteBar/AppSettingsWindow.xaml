@@ -48,6 +48,8 @@
 
             <Style x:Key="HotkeyModifierButtonStyle" TargetType="ToggleButton">
 
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+
                 <Setter Property="Width" Value="62"/>
 
                 <Setter Property="Height" Value="32"/>
@@ -131,7 +133,7 @@
 
                                     <Setter TargetName="Chrome" Property="Background" Value="#1D2633"/>
 
-                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
 
                                 </Trigger>
 
@@ -167,7 +169,9 @@
 
                                     <MultiTrigger.Conditions>
 
-                                        <Condition Property="IsChecked" Value="True"/>
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
 
                                     </MultiTrigger.Conditions>
 
@@ -209,6 +213,7 @@
 
             <Style TargetType="TabItem">
 
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
 
                 <Setter Property="Template">
 
@@ -245,6 +250,22 @@
                                     <Setter Property="Foreground" Value="White"/>
 
                                 </Trigger>
+
+                                <MultiTrigger>
+
+                                    <MultiTrigger.Conditions>
+
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+
+                                    </MultiTrigger.Conditions>
+
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+
+                                    <Setter Property="Foreground" Value="White"/>
+
+                                </MultiTrigger>
 
                             </ControlTemplate.Triggers>
 

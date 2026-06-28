@@ -281,24 +281,24 @@ public sealed class QRCodeService
 
         var normalized = new QRCodeGenerationOptions
         {
-            Text = options.Text.Trim(),
+            Text = NormalizeText(options.Text),
             ContentType = options.ContentType,
-            WifiSsid = options.WifiSsid.Trim(),
-            WifiPassword = options.WifiPassword,
+            WifiSsid = NormalizeText(options.WifiSsid),
+            WifiPassword = options.WifiPassword ?? string.Empty,
             WifiSecurity = options.WifiSecurity,
             WifiHidden = options.WifiHidden,
-            EmailAddress = options.EmailAddress.Trim(),
-            EmailSubject = options.EmailSubject.Trim(),
-            EmailBody = options.EmailBody,
-            PhoneNumber = options.PhoneNumber.Trim(),
-            SmsMessage = options.SmsMessage,
-            VCardFirstName = options.VCardFirstName.Trim(),
-            VCardLastName = options.VCardLastName.Trim(),
-            VCardPhone = options.VCardPhone.Trim(),
-            VCardEmail = options.VCardEmail.Trim(),
-            VCardCompany = options.VCardCompany.Trim(),
-            VCardJobTitle = options.VCardJobTitle.Trim(),
-            VCardWebsite = options.VCardWebsite.Trim(),
+            EmailAddress = NormalizeText(options.EmailAddress),
+            EmailSubject = NormalizeText(options.EmailSubject),
+            EmailBody = options.EmailBody ?? string.Empty,
+            PhoneNumber = NormalizeText(options.PhoneNumber),
+            SmsMessage = options.SmsMessage ?? string.Empty,
+            VCardFirstName = NormalizeText(options.VCardFirstName),
+            VCardLastName = NormalizeText(options.VCardLastName),
+            VCardPhone = NormalizeText(options.VCardPhone),
+            VCardEmail = NormalizeText(options.VCardEmail),
+            VCardCompany = NormalizeText(options.VCardCompany),
+            VCardJobTitle = NormalizeText(options.VCardJobTitle),
+            VCardWebsite = NormalizeText(options.VCardWebsite),
             QualityPreset = preset,
             OutputSize = outputSize,
             PixelSize = Math.Clamp(options.PixelSize, 1, 100),
@@ -343,6 +343,8 @@ public sealed class QRCodeService
         double darker = Math.Min(l1, l2);
         return (lighter + 0.05d) / (darker + 0.05d);
     }
+
+    private static string NormalizeText(string? value) => value?.Trim() ?? string.Empty;
 
 
 

@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace AiteBar.Tests;
@@ -66,6 +67,47 @@ public sealed class FileSorterServiceTests
             string uniquePath = FileSorterService.GetUniquePath(root, "photo", ".jpg");
 
             Assert.Equal(Path.Combine(root, "photo (2).jpg"), uniquePath);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public async Task MoveFileWithRetryAsync_RecomputesDestinationAfterCollision()
+    {
+        string root = CreateTempRoot();
+        try
+        {
+            string source = Path.Combine(root, "photo.jpg");
+            string destinationDirectory = Path.Combine(root, "Images");
+            string firstDestination = Path.Combine(destinationDirectory, "photo.jpg");
+            string secondDestination = Path.Combine(destinationDirectory, "photo (1).jpg");
+            int attempt = 0;
+
+            Directory.CreateDirectory(destinationDirectory);
+            File.WriteAllText(source, "new");
+
+            string movedPath = await FileSorterService.MoveFileWithRetryAsync(
+                source,
+                () => attempt == 0 ? firstDestination : secondDestination,
+                (from, to) =>
+                {
+                    if (attempt++ == 0)
+                    {
+                        File.WriteAllText(to, "occupied");
+                        throw new IOException("Simulated name collision.");
+                    }
+
+                    File.Move(from, to);
+                    return Task.CompletedTask;
+                });
+
+            Assert.Equal(secondDestination, movedPath);
+            Assert.True(File.Exists(firstDestination));
+            Assert.True(File.Exists(secondDestination));
+            Assert.False(File.Exists(source));
         }
         finally
         {

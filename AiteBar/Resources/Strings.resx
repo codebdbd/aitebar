@@ -488,6 +488,25 @@ Open the GitHub release page?</value></data>
   <data name="QRCodeGenerator_TypeText" xml:space="preserve"><value>Text</value></data>
   <data name="QRCodeGenerator_TypeUrl" xml:space="preserve"><value>URL</value></data>
   <data name="QRCodeGenerator_TypeWifi" xml:space="preserve"><value>Wi-Fi</value></data>
+  <data name="QRCodeGenerator_TypeEmail" xml:space="preserve"><value>Email</value></data>
+  <data name="QRCodeGenerator_TypePhone" xml:space="preserve"><value>Phone</value></data>
+  <data name="QRCodeGenerator_TypeSms" xml:space="preserve"><value>SMS</value></data>
+  <data name="QRCodeGenerator_TypeVCard" xml:space="preserve"><value>Contact (vCard)</value></data>
+  <data name="QRCodeGenerator_EmailAddress" xml:space="preserve"><value>Email address</value></data>
+  <data name="QRCodeGenerator_EmailSubject" xml:space="preserve"><value>Subject</value></data>
+  <data name="QRCodeGenerator_EmailBody" xml:space="preserve"><value>Message</value></data>
+  <data name="QRCodeGenerator_PhoneNumber" xml:space="preserve"><value>Phone number</value></data>
+  <data name="QRCodeGenerator_SmsMessage" xml:space="preserve"><value>Message</value></data>
+  <data name="QRCodeGenerator_VCardFirstName" xml:space="preserve"><value>First name</value></data>
+  <data name="QRCodeGenerator_VCardLastName" xml:space="preserve"><value>Last name</value></data>
+  <data name="QRCodeGenerator_VCardCompany" xml:space="preserve"><value>Company</value></data>
+  <data name="QRCodeGenerator_VCardJobTitle" xml:space="preserve"><value>Job title</value></data>
+  <data name="QRCodeGenerator_VCardPhone" xml:space="preserve"><value>Phone</value></data>
+  <data name="QRCodeGenerator_VCardEmail" xml:space="preserve"><value>Email</value></data>
+  <data name="QRCodeGenerator_VCardWebsite" xml:space="preserve"><value>Website</value></data>
+  <data name="QRCodeGenerator_PasteFromClipboard" xml:space="preserve"><value>Paste from clipboard</value></data>
+  <data name="QRCodeGenerator_UrlLabel" xml:space="preserve"><value>URL</value></data>
+  <data name="QRCodeGenerator_TextLabel" xml:space="preserve"><value>Text</value></data>
   <data name="QRCodeGenerator_WifiSsidPlaceholder" xml:space="preserve"><value>Network name</value></data>
   <data name="QRCodeGenerator_WifiPasswordPlaceholder" xml:space="preserve"><value>Password</value></data>
   <data name="QRCodeGenerator_WifiHidden" xml:space="preserve"><value>Hidden network</value></data>

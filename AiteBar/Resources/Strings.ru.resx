@@ -978,6 +978,25 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_TypeText" xml:space="preserve"><value>Текст</value></data>
   <data name="QRCodeGenerator_TypeUrl" xml:space="preserve"><value>URL</value></data>
   <data name="QRCodeGenerator_TypeWifi" xml:space="preserve"><value>Wi-Fi</value></data>
+  <data name="QRCodeGenerator_TypeEmail" xml:space="preserve"><value>Эл. почта</value></data>
+  <data name="QRCodeGenerator_TypePhone" xml:space="preserve"><value>Телефон</value></data>
+  <data name="QRCodeGenerator_TypeSms" xml:space="preserve"><value>СМС</value></data>
+  <data name="QRCodeGenerator_TypeVCard" xml:space="preserve"><value>Контакт (vCard)</value></data>
+  <data name="QRCodeGenerator_EmailAddress" xml:space="preserve"><value>Адрес эл. почты</value></data>
+  <data name="QRCodeGenerator_EmailSubject" xml:space="preserve"><value>Тема</value></data>
+  <data name="QRCodeGenerator_EmailBody" xml:space="preserve"><value>Сообщение</value></data>
+  <data name="QRCodeGenerator_PhoneNumber" xml:space="preserve"><value>Номер телефона</value></data>
+  <data name="QRCodeGenerator_SmsMessage" xml:space="preserve"><value>Сообщение</value></data>
+  <data name="QRCodeGenerator_VCardFirstName" xml:space="preserve"><value>Имя</value></data>
+  <data name="QRCodeGenerator_VCardLastName" xml:space="preserve"><value>Фамилия</value></data>
+  <data name="QRCodeGenerator_VCardCompany" xml:space="preserve"><value>Компания</value></data>
+  <data name="QRCodeGenerator_VCardJobTitle" xml:space="preserve"><value>Должность</value></data>
+  <data name="QRCodeGenerator_VCardPhone" xml:space="preserve"><value>Телефон</value></data>
+  <data name="QRCodeGenerator_VCardEmail" xml:space="preserve"><value>Эл. почта</value></data>
+  <data name="QRCodeGenerator_VCardWebsite" xml:space="preserve"><value>Веб-сайт</value></data>
+  <data name="QRCodeGenerator_PasteFromClipboard" xml:space="preserve"><value>Вставить из буфера обмена</value></data>
+  <data name="QRCodeGenerator_UrlLabel" xml:space="preserve"><value>Ссылка</value></data>
+  <data name="QRCodeGenerator_TextLabel" xml:space="preserve"><value>Текст</value></data>
   <data name="QRCodeGenerator_WifiSsidPlaceholder" xml:space="preserve"><value>Имя сети</value></data>
   <data name="QRCodeGenerator_WifiPasswordPlaceholder" xml:space="preserve"><value>Пароль</value></data>
   <data name="QRCodeGenerator_WifiHidden" xml:space="preserve"><value>Скрытая сеть</value></data>

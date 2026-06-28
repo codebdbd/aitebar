@@ -18,9 +18,11 @@ public partial class MainWindow
 
         if (mode != PanelInputMode.Pointer)
         {
+            KeyboardFocusVisualService.SetShowKeyboardFocusCue(this, true);
             return;
         }
 
+        KeyboardFocusVisualService.SetShowKeyboardFocusCue(this, false);
         unchecked { _panelFocusRequestVersion++; }
 
         if (clearFocus)

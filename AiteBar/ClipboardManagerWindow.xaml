@@ -160,6 +160,7 @@
 
             <Style x:Key="ClipboardFilterTabItemStyle" TargetType="TabItem">
 
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
 
                 <Setter Property="Template">
 
@@ -212,6 +213,22 @@
                                     <Setter Property="Foreground" Value="White"/>
 
                                 </Trigger>
+
+                                <MultiTrigger>
+
+                                    <MultiTrigger.Conditions>
+
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+
+                                    </MultiTrigger.Conditions>
+
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+
+                                    <Setter Property="Foreground" Value="White"/>
+
+                                </MultiTrigger>
 
                             </ControlTemplate.Triggers>
 
@@ -403,6 +420,7 @@
 
             <Style x:Key="ClipboardListBoxItemStyle" TargetType="ListBoxItem">
 
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
 
                 <Setter Property="Padding" Value="0"/>
 
@@ -420,9 +438,33 @@
 
                         <ControlTemplate TargetType="ListBoxItem">
 
-                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            <Border x:Name="FocusChrome"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="1"
+                                    CornerRadius="12"
+                                    SnapsToDevicePixels="True">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
 
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                            </Border>
+
+                            <ControlTemplate.Triggers>
+
+                                <MultiTrigger>
+
+                                    <MultiTrigger.Conditions>
+
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+
+                                    </MultiTrigger.Conditions>
+
+                                    <Setter TargetName="FocusChrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+
+                                </MultiTrigger>
+
+                            </ControlTemplate.Triggers>
 
                         </ControlTemplate>
 
@@ -522,6 +564,8 @@
 
                      ScrollViewer.CanContentScroll="True"
 
+                     VirtualizingStackPanel.IsVirtualizing="False"
+
                      KeyboardNavigation.TabNavigation="Continue">
 
                 <ListBox.Resources>
@@ -558,7 +602,7 @@
 
                                         Style="{StaticResource ClipboardTypeBadgeStyle}">
 
-                                    <TextBlock Text="{local:Loc ResourceKey=IconConverter_StatusText}"
+                                    <TextBlock Text="TXT"
 
                                                FontSize="14"
 

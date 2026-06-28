@@ -64,6 +64,7 @@
             </Style>
 
             <Style x:Key="OptionRadioButtonStyle" TargetType="RadioButton">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Height" Value="28"/>
                 <Setter Property="Foreground" Value="#D8DEE6"/>
                 <Setter Property="Background" Value="Transparent"/>
@@ -108,6 +109,13 @@
                                     <Setter TargetName="RadioBorder" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
                                     <Setter TargetName="RadioCheck" Property="Visibility" Value="Visible"/>
                                 </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                </MultiTrigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>

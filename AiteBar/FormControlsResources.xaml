@@ -17,6 +17,7 @@
 
     <!-- Primary Command Button - Accent color, main action -->
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Background" Value="{DynamicResource AccentColor}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
@@ -86,6 +87,7 @@
 
     <!-- Icon Button - Small square button with icon only -->
     <Style x:Key="IconButtonStyle" TargetType="Button">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Width" Value="32"/>
         <Setter Property="Height" Value="32"/>
         <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
@@ -168,6 +170,7 @@
     <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}"/>
 
     <Style x:Key="BaseTextBoxStyle" TargetType="TextBox">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
         <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
@@ -251,6 +254,7 @@
     <Style TargetType="ComboBoxItem" BasedOn="{StaticResource BaseComboBoxItemStyle}"/>
 
     <Style x:Key="BaseComboBoxStyle" TargetType="ComboBox">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
         <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
@@ -373,6 +377,7 @@
     <Style TargetType="ComboBox" BasedOn="{StaticResource BaseComboBoxStyle}"/>
 
     <Style x:Key="BaseCheckBoxStyle" TargetType="CheckBox">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
         <Setter Property="VerticalContentAlignment" Value="Center"/>
         <Setter Property="Padding" Value="8,0,0,0"/>

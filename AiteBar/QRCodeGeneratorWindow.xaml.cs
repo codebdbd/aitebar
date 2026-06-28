@@ -18,6 +18,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
 {
     private const int DefaultMargin = 4;
     private const int DefaultLogoSizePercent = 15;
+    private const int PreviewDebounceMs = 180;
     private static readonly Uri DefaultLogoUri = new("pack://application:,,,/Resources/Design/qr-logo.svg", UriKind.Absolute);
     private readonly QRCodeService _service = new();
     private readonly string? _defaultLogoSvgContent;
@@ -108,6 +109,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
     {
         UpdateInputPlaceholder();
         UpdateColorSwatches();
+        InvalidateGeneratedOutput();
         QueuePreviewRefresh();
     }
 
@@ -119,6 +121,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         }
 
         UpdateInputMode();
+        InvalidateGeneratedOutput();
         QueuePreviewRefresh();
     }
 
@@ -130,6 +133,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         }
 
         ApplyQualityPreset();
+        InvalidateGeneratedOutput();
         QueuePreviewRefresh();
     }
 
@@ -141,6 +145,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         }
 
         UpdateLogoActions();
+        InvalidateGeneratedOutput();
         QueuePreviewRefresh();
     }
 
@@ -152,6 +157,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         }
 
         UpdateLogoActions();
+        InvalidateGeneratedOutput();
         QueuePreviewRefresh();
     }
 
@@ -175,7 +181,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
     {
         try
         {
-            await Task.Delay(180, token);
+            await Task.Delay(PreviewDebounceMs, token);
             if (!HasRequiredInput())
             {
                 SetEmptyState();
@@ -511,6 +517,14 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         TxtStatus.Text = status;
         TxtContrast.Text = contrast;
         SetActionsEnabled(true);
+    }
+
+    private void InvalidateGeneratedOutput()
+    {
+        _lastOptions = null;
+        _lastPngBytes = null;
+        _lastSvgContent = null;
+        SetActionsEnabled(false);
     }
 
     private void SetActionsEnabled(bool enabled)

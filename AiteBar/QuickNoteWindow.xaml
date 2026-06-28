@@ -231,6 +231,7 @@
             <Border Grid.Row="1" Margin="24,2,24,0" CornerRadius="0" Background="Transparent" BorderThickness="0">
                 <Grid>
                     <RichTextBox x:Name="TxtNote"
+                                 FocusVisualStyle="{x:Null}"
                                  Margin="0"
                                  Background="Transparent"
                                  Foreground="#F6F0E6"
