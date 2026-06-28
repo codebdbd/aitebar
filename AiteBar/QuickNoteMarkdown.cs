@@ -11,6 +11,7 @@ namespace AiteBar
 {
     internal readonly record struct QuickNoteTextEdit(string Text, int CaretOffset, int SelectionLength);
     internal readonly record struct QuickNoteTextOperation(int Offset, int RemoveLength, string InsertText);
+    internal readonly record struct QuickNoteRangeEdit(int StartOffset, int RemoveLength, string InsertText, int CaretOffset, int SelectionLength);
 
     internal static class QuickNoteMarkdown
     {
@@ -130,6 +131,17 @@ namespace AiteBar
             return new QuickNoteTextEdit(updatedText, caret, 0);
         }
 
+        public static QuickNoteRangeEdit GetToggleListMarkerRangeEdit(string text, int selectionStart, int selectionEnd, bool numbered)
+        {
+            text = NormalizeLineEndings(text);
+            var (lineStart, lineEnd) = GetSelectedLineBounds(text, selectionStart, selectionEnd);
+            string selectedText = text[lineStart..lineEnd];
+            QuickNoteTextOperation[] operations = GetListMarkerOperations(selectedText, selectionStart - lineStart, selectionEnd - lineStart, numbered);
+            string updatedText = ApplyOperations(selectedText, operations);
+            int caret = lineStart + MapOffsetThroughOperations(Math.Max(selectionStart, selectionEnd) - lineStart, operations);
+            return new QuickNoteRangeEdit(lineStart, lineEnd - lineStart, updatedText, caret, 0);
+        }
+
         public static QuickNoteTextEdit ClearLineMarkers(string text, int selectionStart, int selectionEnd)
         {
             text = NormalizeLineEndings(text);
@@ -137,6 +149,17 @@ namespace AiteBar
             string updatedText = ApplyOperations(text, operations);
             int caret = MapOffsetThroughOperations(Math.Max(selectionStart, selectionEnd), operations);
             return new QuickNoteTextEdit(updatedText, caret, 0);
+        }
+
+        public static QuickNoteRangeEdit GetClearLineMarkerRangeEdit(string text, int selectionStart, int selectionEnd)
+        {
+            text = NormalizeLineEndings(text);
+            var (lineStart, lineEnd) = GetSelectedLineBounds(text, selectionStart, selectionEnd);
+            string selectedText = text[lineStart..lineEnd];
+            QuickNoteTextOperation[] operations = GetClearMarkerOperations(selectedText, selectionStart - lineStart, selectionEnd - lineStart);
+            string updatedText = ApplyOperations(selectedText, operations);
+            int caret = lineStart + MapOffsetThroughOperations(Math.Max(selectionStart, selectionEnd) - lineStart, operations);
+            return new QuickNoteRangeEdit(lineStart, lineEnd - lineStart, updatedText, caret, 0);
         }
 
         public static QuickNoteTextOperation[] GetListMarkerOperations(string text, int selectionStart, int selectionEnd, bool numbered)

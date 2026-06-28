@@ -149,6 +149,29 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="QuickNoteEditorStyle" TargetType="RichTextBox">
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RichTextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Background="Transparent"
+                                          Focusable="False"
+                                          HorizontalScrollBarVisibility="{TemplateBinding HorizontalScrollBarVisibility}"
+                                          VerticalScrollBarVisibility="{TemplateBinding VerticalScrollBarVisibility}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
     </Window.Resources>
 
     <Grid>
@@ -231,10 +254,12 @@
             <Border Grid.Row="1" Margin="24,2,24,0" CornerRadius="0" Background="Transparent" BorderThickness="0">
                 <Grid>
                     <RichTextBox x:Name="TxtNote"
+                                 Style="{StaticResource QuickNoteEditorStyle}"
                                  FocusVisualStyle="{x:Null}"
                                  Margin="0"
                                  Background="Transparent"
                                  Foreground="#F6F0E6"
+                                 BorderBrush="Transparent"
                                  BorderThickness="0"
                                  AcceptsTab="True"
                                  VerticalScrollBarVisibility="Auto"

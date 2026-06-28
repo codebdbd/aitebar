@@ -67,6 +67,8 @@ namespace AiteBar
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            bool restoreUndoEnabled = TxtNote.IsUndoEnabled;
+            TxtNote.IsUndoEnabled = false;
             try
             {
                 await _noteService.LoadAsync(TxtNote.Document);
@@ -77,6 +79,10 @@ namespace AiteBar
                 TxtNote.Document.Blocks.Clear();
                 TxtNote.Document.Blocks.Add(new Paragraph(new Run(string.Empty)));
                 SetStatus(QuickNoteStatusKind.LoadFailed);
+            }
+            finally
+            {
+                TxtNote.IsUndoEnabled = restoreUndoEnabled;
             }
 
             _loaded = true;
@@ -95,7 +101,6 @@ namespace AiteBar
             TxtNote.Focus();
             TxtNote.CaretPosition = TxtNote.Document.ContentEnd;
             ResetCaretFormatting();
-            ClearUndoStack();
         }
 
         private async void Window_Deactivated(object? sender, EventArgs e)
@@ -428,9 +433,8 @@ namespace AiteBar
         {
             var (selectionStart, selectionEnd) = GetSelectionOffsets();
             string text = GetEditorText();
-            QuickNoteTextOperation[] operations = QuickNoteMarkdown.GetListMarkerOperations(text, selectionStart, selectionEnd, numbered);
-            QuickNoteTextEdit edit = QuickNoteMarkdown.ToggleListMarkers(text, selectionStart, selectionEnd, numbered);
-            ApplyTextOperations(operations);
+            QuickNoteRangeEdit edit = QuickNoteMarkdown.GetToggleListMarkerRangeEdit(text, selectionStart, selectionEnd, numbered);
+            ApplyRangeEdit(edit);
             SetCaretOffset(edit.CaretOffset);
             ResetCaretFormatting();
             MarkChangedAndScheduleSave();
@@ -469,18 +473,23 @@ namespace AiteBar
             TxtNote.Document.Blocks.Add(paragraph);
         }
 
-        private void ApplyTextOperations(IReadOnlyCollection<QuickNoteTextOperation> operations)
+        private void ApplyRangeEdit(QuickNoteRangeEdit edit)
         {
-            foreach (var operation in operations.OrderByDescending(operation => operation.Offset))
+            TextPointer? start = GetTextPointerAtOffset(edit.StartOffset);
+            TextPointer? end = GetTextPointerAtOffset(edit.StartOffset + edit.RemoveLength);
+            if (start == null || end == null)
             {
-                TextPointer? start = GetTextPointerAtOffset(operation.Offset);
-                TextPointer? end = GetTextPointerAtOffset(operation.Offset + operation.RemoveLength);
-                if (start == null || end == null)
-                {
-                    continue;
-                }
+                return;
+            }
 
-                new TextRange(start, end).Text = operation.InsertText;
+            TxtNote.BeginChange();
+            try
+            {
+                new TextRange(start, end).Text = edit.InsertText;
+            }
+            finally
+            {
+                TxtNote.EndChange();
             }
         }
 
@@ -488,11 +497,11 @@ namespace AiteBar
         {
             string text = GetEditorText();
             var (selectionStart, selectionEnd) = GetSelectionOffsets();
-            QuickNoteTextOperation[] operations = QuickNoteMarkdown.GetClearMarkerOperations(text, selectionStart, selectionEnd);
-            QuickNoteTextEdit edit = QuickNoteMarkdown.ClearLineMarkers(text, selectionStart, selectionEnd);
-            if (!string.Equals(edit.Text, text, StringComparison.Ordinal))
+            QuickNoteRangeEdit edit = QuickNoteMarkdown.GetClearLineMarkerRangeEdit(text, selectionStart, selectionEnd);
+            if (!(edit.RemoveLength == edit.InsertText.Length &&
+                  string.Equals(text.Substring(edit.StartOffset, edit.RemoveLength), edit.InsertText, StringComparison.Ordinal)))
             {
-                ApplyTextOperations(operations);
+                ApplyRangeEdit(edit);
                 SetCaretOffset(edit.CaretOffset);
             }
 
@@ -990,17 +999,6 @@ namespace AiteBar
             }
 
             TxtNote.Redo();
-        }
-
-        private void ClearUndoStack()
-        {
-            if (TxtNote.CanUndo)
-            {
-                while (TxtNote.CanUndo)
-                {
-                    TxtNote.Undo();
-                }
-            }
         }
 
         private void UpdateConflictMenuState()
