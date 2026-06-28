@@ -23,6 +23,7 @@ public partial class MainWindow
         }
 
         KeyboardFocusVisualService.SetShowKeyboardFocusCue(this, false);
+        _focusPanelButtonsOnShow = true;
         unchecked { _panelFocusRequestVersion++; }
 
         if (clearFocus)
@@ -220,15 +221,19 @@ public partial class MainWindow
         }
     }
 
-    private void EnablePanelKeyboardMode()
+    private void EnablePanelKeyboardMode(bool focusButtons = true)
     {
         if (!_shown)
         {
             return;
         }
 
+        _focusPanelButtonsOnShow = focusButtons;
         SetPanelInputMode(PanelInputMode.Keyboard, clearFocus: false);
         _hoverStartTime = null;
-        FocusPanelForKeyboard();
+        if (focusButtons)
+        {
+            FocusPanelForKeyboard();
+        }
     }
 }
