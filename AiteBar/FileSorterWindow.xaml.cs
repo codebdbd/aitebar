@@ -207,7 +207,7 @@ public partial class FileSorterWindow : DarkWindow
         try
         {
             FileSortResult result = await _fileSorterService.SortFilesAsync(rootPath);
-            _settingsService.Settings.LastFileSortOperation = result.UndoState;
+            SetLastFileSortOperation(_settingsService, result.UndoState);
             await _settingsService.SaveAsync();
             SetCompletedState(result);
         }
@@ -237,7 +237,7 @@ public partial class FileSorterWindow : DarkWindow
 
     private async void BtnUndo_Click(object sender, RoutedEventArgs e)
     {
-        FileSortUndoState? undoState = _settingsService.Settings.LastFileSortOperation;
+        FileSortUndoState? undoState = GetLastFileSortOperation(_settingsService);
         if (undoState == null)
         {
             return;
@@ -246,7 +246,7 @@ public partial class FileSorterWindow : DarkWindow
         try
         {
             FileSortUndoResult result = await _fileSorterService.UndoLastSortAsync(undoState);
-            _settingsService.Settings.LastFileSortOperation = result.RemainingUndoState;
+            SetLastFileSortOperation(_settingsService, result.RemainingUndoState);
             await _settingsService.SaveAsync();
 
             _lastUndoStatus = new FileSorterUndoStatus(result.RestoredCount, result.SkippedCount);
@@ -319,6 +319,18 @@ public partial class FileSorterWindow : DarkWindow
     }
 
     private static readonly Guid KnownFolderDownloads = new("374DE290-123F-4565-9164-39C4925E467B");
+
+    internal static FileSortUndoState? GetLastFileSortOperation(AppSettingsService settingsService)
+    {
+        ArgumentNullException.ThrowIfNull(settingsService);
+        return settingsService.Settings.LastFileSortOperation;
+    }
+
+    internal static void SetLastFileSortOperation(AppSettingsService settingsService, FileSortUndoState? undoState)
+    {
+        ArgumentNullException.ThrowIfNull(settingsService);
+        settingsService.UpdateSettings(settings => settings.LastFileSortOperation = undoState);
+    }
 
     protected override void OnLocalizationChanged()
     {

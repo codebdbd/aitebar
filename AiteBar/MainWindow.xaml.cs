@@ -74,6 +74,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private readonly Dictionary<string, CachedButtonImage> _buttonImageCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Brush> _brushCache = new(StringComparer.OrdinalIgnoreCase);
     private bool _isLocalizationSubscribed;
+    private bool _focusPanelButtonsOnShow = true;
 
     private const double PanelScreenPadding = Constants.PanelScreenPadding;
     private const double ButtonPitch = Constants.ButtonOuterSize;
@@ -1755,7 +1756,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         ShowDock(fromKeyboard);
         if (fromKeyboard)
         {
-            EnablePanelKeyboardMode();
+            EnablePanelKeyboardMode(focusButtons: false);
         }
     }
 
@@ -1805,7 +1806,14 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
                     if (IsPanelKeyboardMode)
                     {
-                        FocusPanelForKeyboard();
+                        if (_focusPanelButtonsOnShow)
+                        {
+                            FocusPanelForKeyboard();
+                        }
+                        else
+                        {
+                            Focus();
+                        }
                     }
                 }
             }

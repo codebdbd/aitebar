@@ -893,4 +893,34 @@ public sealed class AppSettingsServiceTests
             Directory.Delete(root, recursive: true);
         }
     }
+
+    [Fact]
+    public void FileSorterWindow_LastFileSortOperationHelpers_PersistUndoStateInSettingsService()
+    {
+        var service = new AppSettingsService();
+        var undoState = new FileSortUndoState
+        {
+            RootPath = @"C:\Temp\SortRoot",
+            Entries =
+            [
+                new FileSortOperationEntry
+                {
+                    SourcePath = @"C:\Temp\SortRoot\photo.jpg",
+                    DestinationPath = @"C:\Temp\SortRoot\Images\photo.jpg"
+                }
+            ]
+        };
+
+        FileSorterWindow.SetLastFileSortOperation(service, undoState);
+
+        FileSortUndoState? persisted = FileSorterWindow.GetLastFileSortOperation(service);
+        Assert.NotNull(persisted);
+        Assert.Equal(undoState.RootPath, persisted.RootPath);
+        Assert.Single(persisted.Entries);
+        Assert.Equal(undoState.Entries[0].DestinationPath, persisted.Entries[0].DestinationPath);
+
+        FileSorterWindow.SetLastFileSortOperation(service, null);
+
+        Assert.Null(FileSorterWindow.GetLastFileSortOperation(service));
+    }
 }
