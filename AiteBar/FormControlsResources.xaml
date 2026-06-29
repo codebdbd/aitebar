@@ -32,22 +32,27 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="4"
-                            Padding="{TemplateBinding Padding}"
-                            SnapsToDevicePixels="True">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
-                    </Border>
+                    <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                        <Border x:Name="Outline"
+                                Background="{TemplateBinding BorderBrush}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True"/>
+                        <Border x:Name="Fill"
+                                Margin="1"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="3"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" RecognizesAccessKey="True"/>
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <Condition Property="IsKeyboardFocused" Value="True"/>
                                 <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                            <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
                         </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -102,18 +107,23 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Border x:Name="Bd"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="4"
-                            Padding="{TemplateBinding Padding}"
-                            SnapsToDevicePixels="True">
-                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                    </Border>
+                    <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                        <Border x:Name="Outline"
+                                Background="{TemplateBinding BorderBrush}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True"/>
+                        <Border x:Name="Fill"
+                                Margin="1"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="3"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Bd" Property="Background" Value="#25FFFFFF"/>
+                            <Setter TargetName="Fill" Property="Background" Value="#25FFFFFF"/>
                             <Setter Property="Foreground" Value="White"/>
                         </Trigger>
                         <MultiTrigger>
@@ -121,7 +131,7 @@
                                 <Condition Property="IsKeyboardFocused" Value="True"/>
                                 <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                            <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
                         </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -183,27 +193,33 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="TextBox">
-                    <Border x:Name="Chrome"
-                            Background="{TemplateBinding Background}"
-                            BorderBrush="{TemplateBinding BorderBrush}"
-                            BorderThickness="{TemplateBinding BorderThickness}"
-                            CornerRadius="4"
-                            SnapsToDevicePixels="True">
-                        <ScrollViewer x:Name="PART_ContentHost"
-                                      Margin="0"
-                                      VerticalAlignment="Center"/>
-                    </Border>
+                    <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                        <Border x:Name="Outline"
+                                Background="{TemplateBinding BorderBrush}"
+                                CornerRadius="4"
+                                SnapsToDevicePixels="True"/>
+                        <Border x:Name="Chrome"
+                                Margin="1"
+                                Background="{TemplateBinding Background}"
+                                CornerRadius="3"
+                                Padding="{TemplateBinding Padding}"
+                                SnapsToDevicePixels="True">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                          Margin="0"
+                                          VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
+                            <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
                         </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
                                 <Condition Property="IsKeyboardFocused" Value="True"/>
                                 <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                            <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
                         </MultiTrigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{StaticResource FormControlDisabledForegroundBrush}"/>
@@ -270,11 +286,13 @@
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
                     <Grid SnapsToDevicePixels="True">
+                        <Border x:Name="Outline"
+                                Background="{TemplateBinding BorderBrush}"
+                                CornerRadius="4"/>
                         <Border x:Name="Chrome"
+                                Margin="1"
                                 Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="4">
+                                CornerRadius="3">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
@@ -328,7 +346,7 @@
                                     MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                                     MaxHeight="300"
                                     Background="{StaticResource FormControlBackground}"
-                                    BorderBrush="{Binding BorderBrush, ElementName=Chrome}"
+                                    BorderBrush="{Binding Background, ElementName=Outline}"
                                     BorderThickness="1,0,1,1"
                                     CornerRadius="0,0,4,4"
                                     SnapsToDevicePixels="True">
@@ -343,7 +361,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
+                            <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
                             <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource FormControlForegroundBrush}"/>
                         </Trigger>
                         <MultiTrigger>
@@ -351,14 +369,15 @@
                                 <Condition Property="IsKeyboardFocused" Value="True"/>
                                 <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
                             </MultiTrigger.Conditions>
-                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                            <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
                             <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource FormControlForegroundBrush}"/>
                         </MultiTrigger>
                         <Trigger Property="IsDropDownOpen" Value="True">
                             <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                            <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
-                            <Setter TargetName="Chrome" Property="BorderThickness" Value="1,1,1,0"/>
-                            <Setter TargetName="Chrome" Property="CornerRadius" Value="4,4,0,0"/>
+                            <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
+                            <Setter TargetName="Outline" Property="CornerRadius" Value="4,4,0,0"/>
+                            <Setter TargetName="Chrome" Property="Margin" Value="1,1,1,0"/>
+                            <Setter TargetName="Chrome" Property="CornerRadius" Value="3,3,0,0"/>
                             <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource FormControlForegroundBrush}"/>
                         </Trigger>
                         <Trigger Property="HasItems" Value="False">
@@ -396,21 +415,23 @@
                                 CornerRadius="4"
                                 Padding="1"
                                 VerticalAlignment="Center">
-                            <Border x:Name="Box"
-                                    Width="16"
-                                    Height="16"
-                                    BorderBrush="{StaticResource FormControlBorderBrush}"
-                                    BorderThickness="1"
-                                    Background="{StaticResource FormControlBackground}"
-                                    CornerRadius="3">
-                                <Path x:Name="CheckMark"
-                                      Data="M 3 7 L 6 10 L 13 3"
-                                      Stroke="White"
-                                      StrokeThickness="2"
-                                      StrokeStartLineCap="Round"
-                                      StrokeEndLineCap="Round"
-                                      Visibility="Collapsed"/>
-                            </Border>
+                            <Grid Width="16" Height="16" SnapsToDevicePixels="True">
+                                <Border x:Name="BoxOutline"
+                                        Background="{StaticResource FormControlBorderBrush}"
+                                        CornerRadius="3"/>
+                                <Border x:Name="Box"
+                                        Margin="1"
+                                        Background="{StaticResource FormControlBackground}"
+                                        CornerRadius="2">
+                                    <Path x:Name="CheckMark"
+                                          Data="M 3 7 L 6 10 L 13 3"
+                                          Stroke="White"
+                                          StrokeThickness="2"
+                                          StrokeStartLineCap="Round"
+                                          StrokeEndLineCap="Round"
+                                          Visibility="Collapsed"/>
+                                </Border>
+                            </Grid>
                         </Border>
                         <ContentPresenter Margin="{TemplateBinding Padding}"
                                           VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
@@ -419,7 +440,7 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                             <Setter TargetName="Box" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                            <Setter TargetName="Box" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
+                            <Setter TargetName="BoxOutline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
                         </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
@@ -430,7 +451,7 @@
                         </MultiTrigger>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Box" Property="Background" Value="{DynamicResource AccentColor}"/>
-                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+                            <Setter TargetName="BoxOutline" Property="Background" Value="{DynamicResource AccentColor}"/>
                             <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">

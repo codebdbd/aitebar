@@ -50,22 +50,26 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="FocusChrome"
-                                BorderBrush="Transparent"
-                                BorderThickness="1"
-                                CornerRadius="4"
-                                Padding="2">
-                            <TextBlock TextDecorations="Underline"
-                                       Text="{TemplateBinding Content}"
-                                       Foreground="{TemplateBinding Foreground}"/>
-                        </Border>
+                        <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                            <Border x:Name="FocusChrome"
+                                    Background="Transparent"
+                                    CornerRadius="4"/>
+                            <Border Margin="1"
+                                    Background="Transparent"
+                                    CornerRadius="3"
+                                    Padding="2">
+                                <TextBlock TextDecorations="Underline"
+                                           Text="{TemplateBinding Content}"
+                                           Foreground="{TemplateBinding Foreground}"/>
+                            </Border>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <MultiTrigger>
                                 <MultiTrigger.Conditions>
                                     <Condition Property="IsKeyboardFocused" Value="True"/>
                                     <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="FocusChrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                <Setter TargetName="FocusChrome" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
                             </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

@@ -76,18 +76,25 @@
                     <Setter.Value>
 
                         <ControlTemplate TargetType="ToggleButton">
+                            <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
 
-                            <Border x:Name="Chrome"
+                                <Border x:Name="Outline"
 
-                                    Background="{TemplateBinding Background}"
+                                        Background="{TemplateBinding BorderBrush}"
 
-                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                        CornerRadius="6"
 
-                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                        SnapsToDevicePixels="True"/>
 
-                                    CornerRadius="6"
+                                <Border x:Name="Chrome"
 
-                                    SnapsToDevicePixels="True">
+                                        Margin="1"
+
+                                        Background="{TemplateBinding Background}"
+
+                                        CornerRadius="5"
+
+                                        SnapsToDevicePixels="True">
 
                                 <Grid Margin="8,0">
 
@@ -125,7 +132,9 @@
 
                                 </Grid>
 
-                            </Border>
+                                </Border>
+
+                            </Grid>
 
                             <ControlTemplate.Triggers>
 
@@ -133,7 +142,7 @@
 
                                     <Setter TargetName="Chrome" Property="Background" Value="#1D2633"/>
 
-                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlBorderHoverBrush}"/>
+                                    <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
 
                                 </Trigger>
 
@@ -141,7 +150,7 @@
 
                                     <Setter TargetName="Chrome" Property="Background" Value="#2D7BEA"/>
 
-                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="Transparent"/>
+                                    <Setter TargetName="Outline" Property="Background" Value="Transparent"/>
 
                                     <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
 
@@ -161,7 +170,7 @@
 
                                     <Setter TargetName="Chrome" Property="Background" Value="#3487F3"/>
 
-                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="#3487F3"/>
+                                    <Setter TargetName="Outline" Property="Background" Value="#3487F3"/>
 
                                 </MultiTrigger>
 
@@ -175,7 +184,7 @@
 
                                     </MultiTrigger.Conditions>
 
-                                    <Setter TargetName="Chrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                    <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
 
                                 </MultiTrigger>
 

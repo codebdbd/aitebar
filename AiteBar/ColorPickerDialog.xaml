@@ -31,23 +31,26 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="Button">
-                            <Border x:Name="Border" 
-                                    Background="{TemplateBinding Background}" 
-                                    CornerRadius="4"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}">
-                            </Border>
+                            <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                                <Border x:Name="Outline"
+                                        Background="{TemplateBinding BorderBrush}"
+                                        CornerRadius="4"/>
+                                <Border x:Name="Border" 
+                                        Margin="1"
+                                        Background="{TemplateBinding Background}" 
+                                        CornerRadius="3">
+                                </Border>
+                            </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Border" Property="BorderBrush" Value="#3A4658"/>
+                                    <Setter TargetName="Outline" Property="Background" Value="#3A4658"/>
                                 </Trigger>
                                 <MultiTrigger>
                                     <MultiTrigger.Conditions>
                                         <Condition Property="IsKeyboardFocused" Value="True"/>
                                         <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
                                     </MultiTrigger.Conditions>
-                                    <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
-                                    <Setter TargetName="Border" Property="BorderThickness" Value="2"/>
+                                    <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
                                 </MultiTrigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

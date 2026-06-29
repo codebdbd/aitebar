@@ -25,9 +25,12 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
+                        <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                            <Border x:Name="Outline" Background="{TemplateBinding BorderBrush}" CornerRadius="4"/>
+                            <Border x:Name="Bd" Background="{TemplateBinding Background}" Margin="1" CornerRadius="3">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
@@ -41,7 +44,7 @@
                                     <Condition Property="IsKeyboardFocused" Value="True"/>
                                     <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
                             </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -65,9 +68,12 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
+                        <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                            <Border x:Name="Outline" Background="{TemplateBinding BorderBrush}" CornerRadius="4"/>
+                            <Border x:Name="Bd" Background="{TemplateBinding Background}" Margin="1" CornerRadius="3">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentColor}"/>
@@ -88,7 +94,7 @@
                                     <Condition Property="IsKeyboardFocused" Value="True"/>
                                     <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
                             </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

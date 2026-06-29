@@ -97,24 +97,33 @@
                     <Setter.Value>
 
                         <ControlTemplate TargetType="Button">
+                            <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
 
-                            <Border x:Name="Bd"
+                                <Border x:Name="Outline"
 
-                                    Background="{TemplateBinding Background}"
+                                        Background="{TemplateBinding BorderBrush}"
 
-                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                        CornerRadius="4"
 
-                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                        SnapsToDevicePixels="True"/>
 
-                                    CornerRadius="4"
+                                <Border x:Name="Bd"
 
-                                    SnapsToDevicePixels="True">
+                                        Margin="1"
 
-                                <ContentPresenter HorizontalAlignment="Center"
+                                        Background="{TemplateBinding Background}"
 
-                                                  VerticalAlignment="Center"/>
+                                        CornerRadius="3"
 
-                            </Border>
+                                        SnapsToDevicePixels="True">
+
+                                    <ContentPresenter HorizontalAlignment="Center"
+
+                                                      VerticalAlignment="Center"/>
+
+                                </Border>
+
+                            </Grid>
 
                             <ControlTemplate.Triggers>
 
@@ -122,7 +131,7 @@
 
                                     <Setter TargetName="Bd" Property="Background" Value="#233043"/>
 
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#4B617B"/>
+                                    <Setter TargetName="Outline" Property="Background" Value="#4B617B"/>
 
                                 </Trigger>
 
@@ -355,16 +364,23 @@
                     <Setter.Value>
 
                         <ControlTemplate TargetType="ListBoxItem">
+                            <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
 
-                            <Border x:Name="FocusChrome"
-                                    BorderBrush="Transparent"
-                                    BorderThickness="0"
-                                    CornerRadius="4"
-                                    SnapsToDevicePixels="True">
-                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                <Border x:Name="FocusChrome"
+                                        Background="Transparent"
+                                        CornerRadius="4"
+                                        SnapsToDevicePixels="True"/>
 
-                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                            </Border>
+                                <Border Margin="1"
+                                        Background="Transparent"
+                                        CornerRadius="3"
+                                        SnapsToDevicePixels="True">
+                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+
+                                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                </Border>
+
+                            </Grid>
 
                             <ControlTemplate.Triggers>
 
@@ -378,9 +394,7 @@
 
                                     </MultiTrigger.Conditions>
 
-                                    <Setter TargetName="FocusChrome" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
-
-                                    <Setter TargetName="FocusChrome" Property="BorderThickness" Value="1"/>
+                                    <Setter TargetName="FocusChrome" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
 
                                 </MultiTrigger>
 

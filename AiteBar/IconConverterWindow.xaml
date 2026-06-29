@@ -75,38 +75,46 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="RadioButton">
-                            <Border x:Name="Bd" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="8,4">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Border x:Name="RadioBorder"
-                                            Width="16"
-                                            Height="16"
-                                            BorderBrush="#3A3A3E"
-                                            BorderThickness="1"
-                                            Background="#383838"
-                                            CornerRadius="8"
-                                            VerticalAlignment="Center"
-                                            Margin="0,0,6,0">
-                                        <Ellipse x:Name="RadioCheck"
-                                                 Width="8"
-                                                 Height="8"
-                                                 Fill="White"
-                                                 Visibility="Collapsed"/>
-                                    </Border>
-                                    <ContentPresenter Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                                </Grid>
-                            </Border>
+                            <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                                <Border x:Name="Outline"
+                                        Background="{TemplateBinding BorderBrush}"
+                                        CornerRadius="4"/>
+                                <Border x:Name="Bd" Background="{TemplateBinding Background}" Margin="1" CornerRadius="3" Padding="8,4">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Grid Width="16"
+                                              Height="16"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,6,0">
+                                            <Border x:Name="RadioOutline"
+                                                    Background="#3A3A3E"
+                                                    CornerRadius="8"/>
+                                            <Border x:Name="RadioBorder"
+                                                    Margin="1"
+                                                    Background="#383838"
+                                                    CornerRadius="7">
+                                                <Ellipse x:Name="RadioCheck"
+                                                         Width="8"
+                                                         Height="8"
+                                                         Fill="White"
+                                                         Visibility="Collapsed"/>
+                                            </Border>
+                                        </Grid>
+                                        <ContentPresenter Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </Border>
+                            </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="RadioBorder" Property="Background" Value="#343438"/>
-                                    <Setter TargetName="RadioBorder" Property="BorderBrush" Value="#4A4A4E"/>
+                                    <Setter TargetName="RadioOutline" Property="Background" Value="#4A4A4E"/>
                                 </Trigger>
                                 <Trigger Property="IsChecked" Value="True">
                                     <Setter TargetName="RadioBorder" Property="Background" Value="{StaticResource AccentColor}"/>
-                                    <Setter TargetName="RadioBorder" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
+                                    <Setter TargetName="RadioOutline" Property="Background" Value="{StaticResource AccentColor}"/>
                                     <Setter TargetName="RadioCheck" Property="Visibility" Value="Visible"/>
                                 </Trigger>
                                 <MultiTrigger>
@@ -114,7 +122,7 @@
                                         <Condition Property="IsKeyboardFocused" Value="True"/>
                                         <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
                                     </MultiTrigger.Conditions>
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                    <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
                                 </MultiTrigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>

@@ -26,12 +26,15 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="FocusChrome" Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
+                        <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                            <Border x:Name="FocusChrome" Background="Transparent" CornerRadius="4"/>
+                            <Border x:Name="FillChrome" Background="{TemplateBinding Background}" Margin="1" CornerRadius="3">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </Grid>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#25FFFFFF"/>
+                                <Setter TargetName="FillChrome" Property="Background" Value="#25FFFFFF"/>
                             </Trigger>
                             <MultiTrigger>
                                 <MultiTrigger.Conditions>
@@ -97,12 +100,13 @@
                                 Foreground="#FFFFFF" Focusable="True">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
-                                    <Border x:Name="FocusChrome" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4">
+                                    <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                                        <Border x:Name="FocusChrome" Background="Transparent" CornerRadius="4"/>
                                         <Border Width="24" Height="24" Background="#2A9CFF" CornerRadius="12" 
                                                 HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="CircleBorder">
                                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
                                         </Border>
-                                    </Border>
+                                    </Grid>
                                     <ControlTemplate.Triggers>
                                         <Trigger Property="IsMouseOver" Value="True">
                                             <Setter Property="Background" Value="#1E6FD9" TargetName="CircleBorder"/>
