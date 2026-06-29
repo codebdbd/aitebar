@@ -26,9 +26,11 @@ namespace AiteBar
     {
         private readonly ClipboardHistoryService _historyService;
         private readonly DispatcherTimer _refreshTimer;
+        private readonly DispatcherTimer _copiedBadgeTimer;
         private string _lastRenderedSignature = string.Empty;
         private ClipboardManagerFilter _activeFilter = ClipboardManagerFilter.All;
         private string? _selectedEntryId;
+        private string? _copiedEntryId;
 
         public ClipboardManagerWindow(ClipboardHistoryService historyService)
         {
@@ -39,6 +41,13 @@ namespace AiteBar
             {
                 _refreshTimer.Stop();
                 UpdateEntriesList();
+            };
+            _copiedBadgeTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(900) };
+            _copiedBadgeTimer.Tick += (_, _) =>
+            {
+                _copiedBadgeTimer.Stop();
+                _copiedEntryId = null;
+                UpdateEntriesList(force: true);
             };
             UpdateSearchPlaceholder();
             UpdateEntriesList(force: true);
@@ -171,11 +180,13 @@ namespace AiteBar
                 ImageLabel = LocalizationService.Get("ClipboardManager_ImageLabel"),
                 PinnedLabel = LocalizationService.Get("ClipboardManager_PinnedBadge"),
                 CopyLabel = LocalizationService.Get("ClipboardManager_Copy"),
+                CopiedLabel = LocalizationService.Get("ClipboardManager_Copied"),
                 PinLabel = entry.IsPinned
                     ? LocalizationService.Get("ClipboardManager_Unpin")
                     : LocalizationService.Get("ClipboardManager_Pin"),
                 DeleteLabel = LocalizationService.Get("ClipboardManager_Delete"),
-                ActionsMargin = entry.IsImage ? new Thickness(0, 10, 0, 0) : new Thickness(50, 10, 0, 0)
+                ActionsMargin = entry.IsImage ? new Thickness(0, 10, 0, 0) : new Thickness(50, 10, 0, 0),
+                IsRecentlyCopied = string.Equals(_copiedEntryId, entry.Id, StringComparison.Ordinal)
             };
         }
 
@@ -247,6 +258,14 @@ namespace AiteBar
         private void CopyEntry(ClipboardHistoryEntry entry, ClipboardCopyMode mode = ClipboardCopyMode.Original)
         {
             bool success = _historyService.CopyEntryToClipboard(entry, mode);
+            if (success)
+            {
+                _copiedEntryId = entry.Id;
+                _copiedBadgeTimer.Stop();
+                _copiedBadgeTimer.Start();
+                UpdateEntriesList(force: true);
+            }
+
             TxtStatus.Text = success
                 ? mode == ClipboardCopyMode.SingleLine
                     ? LocalizationService.Get("ClipboardManager_CopiedSingleLine")
@@ -294,6 +313,20 @@ namespace AiteBar
         private ListBox GetEntriesList()
         {
             return (ListBox)(FindName("EntriesList") ?? throw new InvalidOperationException("EntriesList was not found."));
+        }
+
+        private static void FocusSelectedListBoxItem(ListBox listBox)
+        {
+            if (listBox.SelectedItem == null)
+            {
+                return;
+            }
+
+            listBox.UpdateLayout();
+            if (listBox.ItemContainerGenerator.ContainerFromItem(listBox.SelectedItem) is ListBoxItem item)
+            {
+                item.Focus();
+            }
         }
 
         private ClipboardHistoryEntry? GetSelectedEntry()
@@ -429,8 +462,8 @@ namespace AiteBar
                 ListBox entriesList = GetEntriesList();
                 if (e.Key == Key.Down && entriesList.Items.Count > 0)
                 {
-                    entriesList.Focus();
                     entriesList.SelectedIndex = Math.Max(0, entriesList.SelectedIndex);
+                    FocusSelectedListBoxItem(entriesList);
                     e.Handled = true;
                 }
 
@@ -447,6 +480,7 @@ namespace AiteBar
             {
                 listBox.SelectedIndex = Math.Min(listBox.Items.Count - 1, listBox.SelectedIndex < 0 ? 0 : listBox.SelectedIndex + 1);
                 listBox.ScrollIntoView(listBox.SelectedItem);
+                FocusSelectedListBoxItem(listBox);
                 if (GetSelectedEntry() is ClipboardHistoryEntry selectedEntry)
                 {
                     _selectedEntryId = selectedEntry.Id;
@@ -457,6 +491,7 @@ namespace AiteBar
             {
                 listBox.SelectedIndex = listBox.SelectedIndex <= 0 ? 0 : listBox.SelectedIndex - 1;
                 listBox.ScrollIntoView(listBox.SelectedItem);
+                FocusSelectedListBoxItem(listBox);
                 if (GetSelectedEntry() is ClipboardHistoryEntry selectedEntry)
                 {
                     _selectedEntryId = selectedEntry.Id;
@@ -495,9 +530,11 @@ namespace AiteBar
         public required string ImageLabel { get; init; }
         public required string PinnedLabel { get; init; }
         public required string CopyLabel { get; init; }
+        public required string CopiedLabel { get; init; }
         public required string PinLabel { get; init; }
         public required string DeleteLabel { get; init; }
         public required Thickness ActionsMargin { get; init; }
+        public required bool IsRecentlyCopied { get; init; }
         public BitmapSource? PreviewImage { get; init; }
     }
 }

@@ -199,84 +199,6 @@
 
 
 
-            <Style TargetType="TabControl">
-
-                <Setter Property="Background" Value="Transparent"/>
-
-                <Setter Property="BorderThickness" Value="0"/>
-
-                <Setter Property="Padding" Value="0"/>
-
-            </Style>
-
-
-
-            <Style TargetType="TabItem">
-
-                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-
-                <Setter Property="Template">
-
-                    <Setter.Value>
-
-                        <ControlTemplate TargetType="TabItem">
-
-                            <Border x:Name="Bd" Background="Transparent" BorderThickness="0,0,0,2" BorderBrush="Transparent" Margin="0,0,18,0" Padding="8,8">
-
-                                <ContentPresenter ContentSource="Header" TextElement.Foreground="{TemplateBinding Foreground}" TextElement.FontSize="13" TextElement.FontWeight="SemiBold"/>
-
-                            </Border>
-
-                            <ControlTemplate.Triggers>
-
-                                <Trigger Property="IsSelected" Value="True">
-
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
-
-                                    <Setter Property="Foreground" Value="White"/>
-
-                                </Trigger>
-
-                                <Trigger Property="IsSelected" Value="False">
-
-                                    <Setter Property="Foreground" Value="{DynamicResource MutedText}"/>
-
-                                </Trigger>
-
-                                <Trigger Property="IsMouseOver" Value="True">
-
-                                    <Setter Property="Cursor" Value="Hand"/>
-
-                                    <Setter Property="Foreground" Value="White"/>
-
-                                </Trigger>
-
-                                <MultiTrigger>
-
-                                    <MultiTrigger.Conditions>
-
-                                        <Condition Property="IsKeyboardFocused" Value="True"/>
-
-                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
-
-                                    </MultiTrigger.Conditions>
-
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
-
-                                    <Setter Property="Foreground" Value="White"/>
-
-                                </MultiTrigger>
-
-                            </ControlTemplate.Triggers>
-
-                        </ControlTemplate>
-
-                    </Setter.Value>
-
-                </Setter>
-
-            </Style>
-
         </ResourceDictionary>
 
     </Window.Resources>
@@ -295,9 +217,11 @@
 
 
 
-        <TabControl Grid.Row="0">
+        <TabControl Grid.Row="0"
+                    Style="{StaticResource UnderlineTabControlStyle}">
 
-            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_General}">
+            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_General}"
+                     Style="{StaticResource UnderlineTabItemStyle}">
 
                 <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
 
@@ -433,7 +357,8 @@
 
 
 
-            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_ContextNames}">
+            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_ContextNames}"
+                     Style="{StaticResource UnderlineTabItemStyle}">
 
                 <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
 
@@ -461,7 +386,8 @@
 
 
 
-            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_Hotkeys}">
+            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_Hotkeys}"
+                     Style="{StaticResource UnderlineTabItemStyle}">
 
                 <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
 
@@ -671,7 +597,8 @@
 
 
 
-            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_QuickTools}">
+            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_QuickTools}"
+                     Style="{StaticResource UnderlineTabItemStyle}">
 
                 <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
 

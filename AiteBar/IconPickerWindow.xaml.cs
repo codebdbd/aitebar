@@ -92,6 +92,10 @@ namespace AiteBar
             BtnTabBrands.Foreground = fontName == FontHelper.BrandsKey
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
 
+            BtnTabMaterial.BorderBrush = fontName == FontHelper.MaterialKey ? (Brush)FindResource("AccentColor") : Brushes.Transparent;
+            BtnTabFluent.BorderBrush = fontName == FontHelper.FluentKey ? (Brush)FindResource("AccentColor") : Brushes.Transparent;
+            BtnTabBrands.BorderBrush = fontName == FontHelper.BrandsKey ? (Brush)FindResource("AccentColor") : Brushes.Transparent;
+
             UpdateSearchHint();
 
             LoadIcons(fontName);
