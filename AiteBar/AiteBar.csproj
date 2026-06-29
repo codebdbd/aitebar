@@ -24,8 +24,8 @@
     <PackageReference Include="QRCoder" Version="1.8.0" />
     <PackageReference Include="QRCoder.Xaml" Version="1.8.0" />
     <PackageReference Include="Sentry" Version="6.6.0" />
-    <PackageReference Include="SkiaSharp" Version="3.119.2" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="3.119.2" />
+    <PackageReference Include="SkiaSharp" Version="4.148.0" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="4.148.0" />
     <PackageReference Include="Svg.Skia" Version="5.1.0" />
   </ItemGroup>
 
