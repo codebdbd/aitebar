@@ -6,7 +6,7 @@
         Icon="pack://application:,,,/Resources/app.ico"
         Width="580" Height="430" MinWidth="460" MinHeight="320"
         WindowStartupLocation="CenterOwner" WindowStyle="None" AllowsTransparency="True"
-        Background="#191919" Foreground="White" ResizeMode="CanResize"
+        Background="Transparent" Foreground="White" ResizeMode="CanResize"
         ShowInTaskbar="False" Topmost="True"
         Loaded="Window_Loaded" Closing="Window_Closing" Deactivated="Window_Deactivated"
         LocationChanged="Window_LocationChanged" SizeChanged="Window_SizeChanged">
@@ -114,41 +114,9 @@
             </Setter>
         </Style>
 
-        <Style x:Key="QuickNoteScrollBarStyle" TargetType="ScrollBar">
-            <Setter Property="Width" Value="8"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ScrollBar">
-                        <Grid Background="Transparent">
-                            <Track x:Name="PART_Track" IsDirectionReversed="True">
-                                <Track.DecreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False"/>
-                                </Track.DecreaseRepeatButton>
-                                <Track.Thumb>
-                                    <Thumb>
-                                        <Thumb.Template>
-                                            <ControlTemplate TargetType="Thumb">
-                                                <Border x:Name="ThumbBorder" Width="6" CornerRadius="3" Background="#383838" Opacity="0.72"/>
-                                                <ControlTemplate.Triggers>
-                                                    <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter TargetName="ThumbBorder" Property="Background" Value="#4A4A4A"/>
-                                                        <Setter TargetName="ThumbBorder" Property="Opacity" Value="1"/>
-                                                    </Trigger>
-                                                </ControlTemplate.Triggers>
-                                            </ControlTemplate>
-                                        </Thumb.Template>
-                                    </Thumb>
-                                </Track.Thumb>
-                                <Track.IncreaseRepeatButton>
-                                    <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False"/>
-                                </Track.IncreaseRepeatButton>
-                            </Track>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <Style x:Key="QuickNoteScrollBarStyle"
+               TargetType="ScrollBar"
+               BasedOn="{StaticResource DarkScrollBarStyle}"/>
 
         <Style x:Key="QuickNoteEditorStyle" TargetType="RichTextBox">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>

@@ -178,7 +178,6 @@ namespace AiteBar
                 Summary = BuildEntrySummary(entry),
                 PreviewImage = TryCreateBitmap(entry.ImageBytes),
                 ImageLabel = LocalizationService.Get("ClipboardManager_ImageLabel"),
-                PinnedLabel = LocalizationService.Get("ClipboardManager_PinnedBadge"),
                 CopyLabel = LocalizationService.Get("ClipboardManager_Copy"),
                 CopiedLabel = LocalizationService.Get("ClipboardManager_Copied"),
                 PinLabel = entry.IsPinned
@@ -528,7 +527,6 @@ namespace AiteBar
         public required string Title { get; init; }
         public required string Summary { get; init; }
         public required string ImageLabel { get; init; }
-        public required string PinnedLabel { get; init; }
         public required string CopyLabel { get; init; }
         public required string CopiedLabel { get; init; }
         public required string PinLabel { get; init; }

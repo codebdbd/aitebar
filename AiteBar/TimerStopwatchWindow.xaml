@@ -58,43 +58,41 @@
 
         <Style x:Key="ModeButtonStyle" TargetType="RadioButton">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Height" Value="32"/>
+            <Setter Property="Height" Value="36"/>
             <Setter Property="Foreground" Value="{StaticResource MutedText}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderThickness" Value="0,0,0,2"/>
             <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding" Value="2,6,2,8"/>
+            <Setter Property="Margin" Value="0,0,18,0"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
-                        <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
-                            <Border x:Name="Outline" Background="{TemplateBinding BorderBrush}" CornerRadius="4"/>
-                            <Border x:Name="Bd" Background="{TemplateBinding Background}" Margin="1" CornerRadius="3">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                        </Grid>
+                        <Border x:Name="Bd"
+                                Background="Transparent"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource AccentColor}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
                                 <Setter Property="Foreground" Value="White"/>
                             </Trigger>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </Trigger>
-                            <MultiTrigger>
-                                <MultiTrigger.Conditions>
-                                    <Condition Property="IsChecked" Value="True"/>
-                                    <Condition Property="IsMouseOver" Value="True"/>
-                                </MultiTrigger.Conditions>
-                                <Setter TargetName="Bd" Property="Background" Value="#148BDB"/>
-                            </MultiTrigger>
                             <MultiTrigger>
                                 <MultiTrigger.Conditions>
                                     <Condition Property="IsKeyboardFocused" Value="True"/>
                                     <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
                                 </MultiTrigger.Conditions>
-                                <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
+                                <Setter Property="Foreground" Value="White"/>
                             </MultiTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -191,12 +189,10 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <Border HorizontalAlignment="Stretch" VerticalAlignment="Center" Background="{StaticResource FormControlBackground}" BorderBrush="{StaticResource FormControlBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="1" Margin="0,0,10,0">
-                        <UniformGrid Columns="2" HorizontalAlignment="Stretch">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,10,0">
                             <RadioButton x:Name="RbTimer" IsChecked="True" Style="{StaticResource ModeButtonStyle}" Checked="Mode_Checked" Content="{local:Loc ResourceKey=TimerStopwatch_Timer}"/>
                             <RadioButton x:Name="RbStopwatch" Style="{StaticResource ModeButtonStyle}" Checked="Mode_Checked" Content="{local:Loc ResourceKey=TimerStopwatch_Stopwatch}"/>
-                        </UniformGrid>
-                    </Border>
+                    </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <Button x:Name="BtnCompact" Content="&#xE923;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource HeaderButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Compact}" Click="BtnCompact_Click"/>

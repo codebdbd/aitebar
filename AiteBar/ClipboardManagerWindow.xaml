@@ -193,125 +193,9 @@
 
 
 
-            <Style x:Key="ClipboardPinnedBadgeStyle" TargetType="Border">
-
-                <Setter Property="Background" Value="#2C2411"/>
-
-                <Setter Property="BorderBrush" Value="#6C5720"/>
-
-                <Setter Property="BorderThickness" Value="1"/>
-
-                <Setter Property="CornerRadius" Value="8"/>
-
-                <Setter Property="Padding" Value="7,2"/>
-
-            </Style>
-
-
-
-            <Style x:Key="ClipboardCopiedBadgeStyle" TargetType="Border">
-
-                <Setter Property="Background" Value="#173A5E"/>
-
-                <Setter Property="BorderBrush" Value="#2AA8FF"/>
-
-                <Setter Property="BorderThickness" Value="1"/>
-
-                <Setter Property="CornerRadius" Value="8"/>
-
-                <Setter Property="Padding" Value="7,2"/>
-
-            </Style>
-
-
-
-            <Style x:Key="ClipboardScrollBarStyle" TargetType="ScrollBar">
-
-                <Setter Property="Width" Value="5"/>
-
-                <Setter Property="Background" Value="Transparent"/>
-
-                <Setter Property="Template">
-
-                    <Setter.Value>
-
-                        <ControlTemplate TargetType="ScrollBar">
-
-                            <Grid Background="Transparent" Width="{TemplateBinding Width}">
-
-                                <Track x:Name="PART_Track" IsDirectionReversed="True">
-
-                                    <Track.DecreaseRepeatButton>
-
-                                        <RepeatButton Command="ScrollBar.PageUpCommand" Opacity="0" Focusable="False"/>
-
-                                    </Track.DecreaseRepeatButton>
-
-                                    <Track.Thumb>
-
-                                        <Thumb>
-
-                                            <Thumb.Template>
-
-                                                <ControlTemplate TargetType="Thumb">
-
-                                                    <Border x:Name="ThumbBorder"
-
-                                                            Width="5"
-
-                                                            CornerRadius="2.5"
-
-                                                            Background="#8C8D92"
-
-                                                            Opacity="0.88"/>
-
-                                                    <ControlTemplate.Triggers>
-
-                                                        <Trigger Property="IsMouseOver" Value="True">
-
-                                                            <Setter TargetName="ThumbBorder" Property="Background" Value="#A6A7AC"/>
-
-                                                            <Setter TargetName="ThumbBorder" Property="Opacity" Value="1"/>
-
-                                                        </Trigger>
-
-                                                    </ControlTemplate.Triggers>
-
-                                                </ControlTemplate>
-
-                                            </Thumb.Template>
-
-                                        </Thumb>
-
-                                    </Track.Thumb>
-
-                                    <Track.IncreaseRepeatButton>
-
-                                        <RepeatButton Command="ScrollBar.PageDownCommand" Opacity="0" Focusable="False"/>
-
-                                    </Track.IncreaseRepeatButton>
-
-                                </Track>
-
-                            </Grid>
-
-                            <ControlTemplate.Triggers>
-
-                                <Trigger Property="Orientation" Value="Horizontal">
-
-                                    <Setter TargetName="PART_Track" Property="IsDirectionReversed" Value="False"/>
-
-                                </Trigger>
-
-                            </ControlTemplate.Triggers>
-
-                        </ControlTemplate>
-
-                    </Setter.Value>
-
-                </Setter>
-
-            </Style>
+            <Style x:Key="ClipboardScrollBarStyle"
+                   TargetType="ScrollBar"
+                   BasedOn="{StaticResource DarkScrollBarStyle}"/>
 
 
 
@@ -681,17 +565,6 @@
 
 
                                     <Grid>
-
-                                        <Grid.ColumnDefinitions>
-
-                                            <ColumnDefinition Width="*"/>
-
-                                            <ColumnDefinition Width="Auto"/>
-
-                                        </Grid.ColumnDefinitions>
-
-
-
                                         <StackPanel>
 
                                             <TextBlock Text="{Binding Title}"
@@ -716,56 +589,6 @@
 
                                         </StackPanel>
 
-
-
-                                        <StackPanel Grid.Column="1"
-
-                                                    Margin="8,1,0,0"
-
-                                                    VerticalAlignment="Top"
-
-                                                    HorizontalAlignment="Right">
-
-                                            <Border x:Name="CopiedBadge"
-
-                                                    Style="{StaticResource ClipboardCopiedBadgeStyle}"
-
-                                                    ToolTip="{Binding CopiedLabel}"
-
-                                                    Margin="0,0,0,6"
-
-                                                    Visibility="Collapsed">
-
-                                                <TextBlock Text="{Binding CopiedLabel}"
-
-                                                           FontSize="10"
-
-                                                           FontWeight="SemiBold"
-
-                                                           Foreground="#D9F1FF"/>
-
-                                            </Border>
-
-                                            <Border x:Name="PinnedBadge"
-
-                                                    Style="{StaticResource ClipboardPinnedBadgeStyle}"
-
-                                                    ToolTip="{Binding PinnedLabel}"
-
-                                                    Visibility="Collapsed">
-
-                                                <TextBlock Text="{Binding PinnedLabel}"
-
-                                                           FontSize="10"
-
-                                                           FontWeight="SemiBold"
-
-                                                           Foreground="#F2D57B"/>
-
-                                            </Border>
-
-                                        </StackPanel>
-
                                     </Grid>
 
 
@@ -778,7 +601,8 @@
 
                                                 HorizontalAlignment="Right">
 
-                                        <Button Content="&#xE8C8;"
+                                        <Button x:Name="CopyButton"
+                                                Content="&#xE8C8;"
 
                                                 FontFamily="Segoe MDL2 Assets"
 
@@ -794,9 +618,10 @@
 
                                                 Click="EntryCopyButton_Click"/>
 
-                                        <Button Content="&#xE718;"
+                                        <Button x:Name="PinButton"
+                                                Content="&#xF602;"
 
-                                                FontFamily="Segoe MDL2 Assets"
+                                                FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
 
                                                 Style="{StaticResource ClipboardActionButtonStyle}"
 
@@ -852,17 +677,31 @@
 
                             <DataTrigger Binding="{Binding IsPinned}" Value="True">
 
-                                <Setter TargetName="PinnedBadge" Property="Visibility" Value="Visible"/>
-
                                 <Setter TargetName="CardBorder" Property="Background" Value="#2D2D2D"/>
+
+                                <Setter TargetName="PinButton" Property="Content" Value="&#xF604;"/>
+
+                                <Setter TargetName="PinButton" Property="Background" Value="{StaticResource AccentColor}"/>
+
+                                <Setter TargetName="PinButton" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
+
+                                <Setter TargetName="PinButton" Property="Foreground" Value="White"/>
 
                             </DataTrigger>
 
                             <DataTrigger Binding="{Binding IsRecentlyCopied}" Value="True">
 
-                                <Setter TargetName="CopiedBadge" Property="Visibility" Value="Visible"/>
-
                                 <Setter TargetName="CardBorder" Property="Background" Value="#22324A"/>
+
+                                <Setter TargetName="CopyButton" Property="Content" Value="&#xE73E;"/>
+
+                                <Setter TargetName="CopyButton" Property="Background" Value="{StaticResource AccentColor}"/>
+
+                                <Setter TargetName="CopyButton" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
+
+                                <Setter TargetName="CopyButton" Property="Foreground" Value="White"/>
+
+                                <Setter TargetName="CopyButton" Property="ToolTip" Value="{Binding CopiedLabel}"/>
 
                             </DataTrigger>
 
