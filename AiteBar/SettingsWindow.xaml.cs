@@ -189,7 +189,7 @@ namespace AiteBar
                 border.MouseDown += (s, e) =>
                 {
                     _selectedColor = hex;
-                    TxtHexColor.Text = hex;
+                    if (TxtHexColor != null) TxtHexColor.Text = hex;
                     UpdatePreview();
                 };
                 GridColors.Children.Add(border);
@@ -405,7 +405,7 @@ namespace AiteBar
 
         private void UpdateActionUI()
         {
-            if (PanelHotkeyAction == null || PanelStandardAction == null || CmbActionType.SelectedItem == null || ActionHelpBox == null || TxtActionHelp == null || TxtActionPlaceholder == null || TxtActionValue == null) return;
+            if (PanelHotkeyAction == null || PanelStandardAction == null || PanelWebSettings == null || CmbActionType.SelectedItem == null || ActionHelpBox == null || TxtActionHelp == null || TxtActionPlaceholder == null || TxtActionValue == null || LblActionValue == null || BtnBrowse == null) return;
             string typeStr = ((ComboBoxItem)CmbActionType.SelectedItem).Tag?.ToString() ?? "Web";
             if (Enum.TryParse<AiteBar.ActionType>(typeStr, out var actionType))
             {
