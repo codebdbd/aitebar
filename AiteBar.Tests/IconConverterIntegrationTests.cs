@@ -21,7 +21,7 @@ public sealed class IconConverterIntegrationTests
         Assert.Contains("public bool ShowPresetIconConverter { get; set; } = true;", modelsCode);
         Assert.Contains("ShowPresetIconConverter", unifiedButtonServiceCode);
         Assert.Contains("ChkShowPresetIconConverter.IsChecked = _settings.ShowPresetIconConverter", settingsCode);
-        Assert.Contains("_settings.ShowPresetIconConverter = ChkShowPresetIconConverter.IsChecked ?? false", settingsCode);
+        Assert.Contains("settings.ShowPresetIconConverter = ChkShowPresetIconConverter.IsChecked ?? false", settingsCode);
     }
 
     [Fact]

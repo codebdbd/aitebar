@@ -507,7 +507,7 @@ public partial class AppSettingsWindow : DarkWindow
         if (TxtDelay != null) TxtDelay.Text = $"{(int)e.NewValue}";
     }
 
-    private void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isLoadingSettings)
         {
@@ -516,7 +516,12 @@ public partial class AppSettingsWindow : DarkWindow
 
         string selectedCulture = (CmbLanguage.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? LocalizationService.AutoCulture;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(selectedCulture);
+        _settings.UiCulture = _selectedUiCulture;
         LocalizationService.ApplyCulture(_selectedUiCulture);
+        _mainWindow.GetSettingsService().NormalizeAppState();
+        await _mainWindow.GetSettingsService().SaveAsync();
+        LocalizationService.EnsureAppliedCulture();
+        LocalizationService.RefreshLocalizedBindings(this);
         RefreshLocalizedUi();
     }
 

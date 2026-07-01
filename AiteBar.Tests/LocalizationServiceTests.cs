@@ -203,7 +203,8 @@ public sealed class LocalizationServiceTests
             "AiteBar", "© 2026 Codebdbd", ".NET 10", "WPF",
             "Ctrl", "Shift", "Alt", "Win",
             "Chrome", "Edge", "Brave", "Yandex", "Firefox",
-            "B", "I", "U", "Tx"
+            "B", "I", "U", "Tx",
+            "TXT", "16 px", "32 px", "48 px", "256 px"
         ];
         HashSet<string> textProperties = ["Text", "Content", "Header", "Title", "ToolTip", "Description"];
 

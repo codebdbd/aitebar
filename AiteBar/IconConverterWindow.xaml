@@ -2,7 +2,6 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
-        Icon="pack://application:,,,/Resources/app.ico"
         Title="{local:Loc ResourceKey=IconConverter_Title}"
         Width="600" MinWidth="580" SizeToContent="Height"
         WindowStartupLocation="CenterScreen" Background="#191919" Foreground="#DCDCDC"
