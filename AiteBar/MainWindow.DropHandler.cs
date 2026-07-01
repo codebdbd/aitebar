@@ -235,43 +235,7 @@ public partial class MainWindow
                     ContextId = AppSettings.ActiveContextId
                 };
 
-                await _settingsService.SaveElementAsync(newElement);
-                RefreshPanel();
-
-                if (isWeb && string.IsNullOrEmpty(iconPath))
-                {
-                    string elementId = newElement.Id;
-                    string elementActionValue = newElement.ActionValue;
-                    double currentDpi = _cachedDpi;
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            string? webIcon = await IconHelper.DownloadFaviconAsync(val, currentDpi);
-                            if (!string.IsNullOrEmpty(webIcon))
-                            {
-                                if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
-                                {
-                                    return;
-                                }
-
-                                await Dispatcher.InvokeAsync(() =>
-                                {
-                                    var el = Elements.FirstOrDefault(x =>
-                                        string.Equals(x.Id, elementId, StringComparison.Ordinal) &&
-                                        string.Equals(x.ActionValue, elementActionValue, StringComparison.Ordinal));
-                                    if (el == null)
-                                    {
-                                        return;
-                                    }
-
-                                    _ = UpdateDownloadedFaviconAsync(el.Id, webIcon);
-                                });
-                            }
-                        }
-                        catch (Exception ex) { Logger.Log(ex); }
-                    });
-                }
+                await SaveElement(newElement);
             }
         }
         catch (Exception ex) { Logger.Log(ex); }
