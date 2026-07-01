@@ -22,6 +22,7 @@ namespace AiteBar
         private List<BrowserProfileInfo> _availableProfiles = [];
         private List<string> _rotationProfilePaths = [];
         private int _profileLoadVersion;
+        private CancellationTokenSource? _faviconCts;
 
         public SettingsWindow(ISettingsWindowContext context, CustomElement? el = null)
         {
@@ -153,6 +154,12 @@ namespace AiteBar
             UpdateActionUI();
             UpdateRotationProfilesUi();
             UpdateNamePlaceholderVisibility();
+            
+            // Если это веб-элемент без иконки — пытаемся скачать favicon
+            if (_editingElement.ActionType == nameof(ActionType.Web) && !string.IsNullOrWhiteSpace(_editingElement.ActionValue))
+            {
+                TryDownloadFaviconAsync(_editingElement.ActionValue);
+            }
         }
 
         private static void SetComboValue(ComboBox combo, string value)
@@ -502,6 +509,55 @@ namespace AiteBar
             UpdateActionPlaceholderVisibility();
             UpdateValidationVisuals();
             UpdateSaveButtonState();
+            
+            // Если это веб-ссылка и иконка не выбрана — пытаемся скачать favicon
+            var actionType = GetSelectedActionType();
+            if (actionType == ActionType.Web && !string.IsNullOrWhiteSpace(TxtActionValue.Text))
+            {
+                TryDownloadFaviconAsync(TxtActionValue.Text);
+            }
+        }
+
+        private async void TryDownloadFaviconAsync(string url)
+        {
+            // Если иконка уже выбрана — не скачиваем
+            if (!string.IsNullOrEmpty(_selectedImagePath) || 
+                (_selectedIcon != "\uF45B" && !string.IsNullOrEmpty(_selectedIcon)))
+            {
+                return;
+            }
+
+            // Отменяем предыдущий запрос
+            _faviconCts?.Cancel();
+            _faviconCts?.Dispose();
+            _faviconCts = new CancellationTokenSource();
+            
+            // Debounce — ждём 300 мс перед скачиванием
+            await Task.Delay(300, _faviconCts.Token);
+
+            if (_faviconCts.Token.IsCancellationRequested) return;
+
+            try
+            {
+                string? webIcon = await IconHelper.DownloadFaviconAsync(url, cancellationToken: _faviconCts.Token);
+                if (!string.IsNullOrEmpty(webIcon) && !_faviconCts.Token.IsCancellationRequested)
+                {
+                    await Dispatcher.InvokeAsync(() =>
+                    {
+                        _selectedImagePath = webIcon;
+                        _selectedIcon = "";
+                        UpdatePreview();
+                    });
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Игнорируем отмену
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
         }
         private void BtnBrowse_Click(object sender, RoutedEventArgs e)
         {
@@ -840,6 +896,14 @@ namespace AiteBar
         protected override void OnLocalizationChanged()
         {
             RefreshLocalizedUi();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            _faviconCts?.Cancel();
+            _faviconCts?.Dispose();
+            _faviconCts = null;
+            base.OnClosed(e);
         }
 
     }

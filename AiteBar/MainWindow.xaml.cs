@@ -1720,6 +1720,35 @@ public partial class MainWindow : Window, ISettingsWindowContext
     {
         await _settingsService.SaveElementAsync(updated, removeId);
         RefreshPanel();
+        
+        // Если это веб-элемент и иконка не задана — пытаемся скачать favicon
+        if (updated.ActionType == nameof(ActionType.Web) && string.IsNullOrEmpty(updated.ImagePath))
+        {
+            string elementId = updated.Id;
+            string elementActionValue = updated.ActionValue;
+            double currentDpi = _cachedDpi;
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    string? webIcon = await IconHelper.DownloadFaviconAsync(elementActionValue, currentDpi);
+                    if (!string.IsNullOrEmpty(webIcon))
+                    {
+                        if (Dispatcher.HasShutdownStarted || Dispatcher.HasShutdownFinished)
+                        {
+                            return;
+                        }
+
+                        await Dispatcher.InvokeAsync(() =>
+                        {
+                            _ = UpdateDownloadedFaviconAsync(elementId, webIcon);
+                        });
+                    }
+                }
+                catch (Exception ex) { Logger.Log(ex); }
+            });
+        }
+        
         return RegisterGlobalHotkey();
     }
 
