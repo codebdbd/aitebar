@@ -241,12 +241,29 @@ public partial class MainWindow
         catch (Exception ex) { Logger.Log(ex); }
     }
 
-    private async Task UpdateDownloadedFaviconAsync(string elementId, string webIcon)
+    private async Task UpdateDownloadedFaviconAsync(string elementId, string actionValue, string webIcon)
     {
         try
         {
-            await _settingsService.UpdateElementAsync(elementId, element => element.ImagePath = webIcon);
-            RefreshPanel();
+            bool updated = false;
+            await _settingsService.UpdateElementAsync(elementId, element =>
+            {
+                if (!string.Equals(element.ActionType, nameof(ActionType.Web), StringComparison.Ordinal) ||
+                    !string.Equals(element.ActionValue, actionValue, StringComparison.Ordinal) ||
+                    !string.IsNullOrEmpty(element.ImagePath) ||
+                    (!string.IsNullOrEmpty(element.Icon) && element.Icon != "\uF45B"))
+                {
+                    return;
+                }
+
+                element.ImagePath = webIcon;
+                updated = true;
+            });
+
+            if (updated)
+            {
+                RefreshPanel();
+            }
         }
         catch (Exception ex)
         {

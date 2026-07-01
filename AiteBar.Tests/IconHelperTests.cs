@@ -72,24 +72,52 @@ public sealed class IconHelperTests
     }
 
     [Fact]
-    public void SaveCustomIcon_RegularFile_CopiesFileIntoIconsFolder()
+    public void SaveCustomIcon_InvalidImageFile_ReturnsNull()
     {
         string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
         string testRoot = Path.Combine(root, "test");
         Directory.CreateDirectory(root);
         string sourcePath = Path.Combine(root, "icon.png");
         File.WriteAllText(sourcePath, "test");
+
+        try
+        {
+            PathHelper.SetAppDataFolderOverride(testRoot);
+            var savedPath = IconHelper.SaveCustomIcon(sourcePath);
+
+            Assert.Null(savedPath);
+        }
+        finally
+        {
+            PathHelper.ClearAppDataFolderOverride();
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void SaveCustomIcon_RegularFile_CopiesFileIntoIconsFolder()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(root, "test");
+        Directory.CreateDirectory(root);
+        string sourcePath = Path.Combine(root, "icon.png");
         string? savedPath = null;
 
         try
         {
+            using (var bitmap = new Bitmap(8, 8))
+            {
+                bitmap.SetPixel(0, 0, Color.Red);
+                bitmap.Save(sourcePath, System.Drawing.Imaging.ImageFormat.Png);
+            }
+
             PathHelper.SetAppDataFolderOverride(testRoot);
             savedPath = IconHelper.SaveCustomIcon(sourcePath);
 
             Assert.NotNull(savedPath);
             Assert.StartsWith(PathHelper.IconsFolder, savedPath!, StringComparison.OrdinalIgnoreCase);
             Assert.True(File.Exists(savedPath));
-            Assert.Equal("test", File.ReadAllText(savedPath));
+            Assert.True(IconHelper.IsSupportedImageFile(savedPath!));
         }
         finally
         {

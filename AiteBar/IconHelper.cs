@@ -48,18 +48,22 @@ namespace AiteBar
                         return null;
                     }
 
-                    var response = await _httpClient.GetAsync(currentUrl, cancellationToken);
+                    using var response = await _httpClient.GetAsync(currentUrl, cancellationToken);
 
                     // Если это успешный ответ (не редирект), обрабатываем его
                     if (response.IsSuccessStatusCode)
                     {
-                        byte[] data = await response.Content.ReadAsByteArrayAsync();
+                        byte[] data = await response.Content.ReadAsByteArrayAsync(cancellationToken);
+                        if (!IsSupportedImage(data))
+                        {
+                            return null;
+                        }
 
                         PathHelper.EnsureDirectories();
                         string fileName = $"web_{Guid.NewGuid()}.png";
                         string destPath = Path.Combine(PathHelper.IconsFolder, fileName);
 
-                        await File.WriteAllBytesAsync(destPath, data);
+                        await File.WriteAllBytesAsync(destPath, data, cancellationToken);
                         return destPath;
                     }
 
@@ -86,6 +90,10 @@ namespace AiteBar
                 }
 
                 // Превышено максимальное количество редиректов
+                return null;
+            }
+            catch (OperationCanceledException)
+            {
                 return null;
             }
             catch (Exception ex)
@@ -141,6 +149,11 @@ namespace AiteBar
                 }
                 else
                 {
+                    if (!IsSupportedImageFile(sourcePath))
+                    {
+                        return null;
+                    }
+
                     string destPath = Path.Combine(PathHelper.IconsFolder, fileName);
                     File.Copy(sourcePath, destPath, true);
                     return destPath;
@@ -150,6 +163,38 @@ namespace AiteBar
             {
                 Logger.Log(ex);
                 return null;
+            }
+        }
+
+        public static bool IsSupportedImageFile(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return false;
+
+            try
+            {
+                using var stream = File.OpenRead(path);
+                using var image = System.Drawing.Image.FromStream(stream, useEmbeddedColorManagement: false, validateImageData: true);
+                return image.Width > 0 && image.Height > 0;
+            }
+            catch (Exception ex) when (ex is ArgumentException or OutOfMemoryException or IOException or UnauthorizedAccessException)
+            {
+                return false;
+            }
+        }
+
+        private static bool IsSupportedImage(byte[] data)
+        {
+            if (data.Length == 0) return false;
+
+            try
+            {
+                using var stream = new MemoryStream(data);
+                using var image = System.Drawing.Image.FromStream(stream, useEmbeddedColorManagement: false, validateImageData: true);
+                return image.Width > 0 && image.Height > 0;
+            }
+            catch (Exception ex) when (ex is ArgumentException or OutOfMemoryException or IOException)
+            {
+                return false;
             }
         }
     }

@@ -1722,7 +1722,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
         RefreshPanel();
         
         // Если это веб-элемент и иконка не задана — пытаемся скачать favicon
-        if (updated.ActionType == nameof(ActionType.Web) && string.IsNullOrEmpty(updated.ImagePath))
+        if (updated.ActionType == nameof(ActionType.Web) &&
+            string.IsNullOrEmpty(updated.ImagePath) &&
+            (string.IsNullOrEmpty(updated.Icon) || updated.Icon == "\uF45B"))
         {
             string elementId = updated.Id;
             string elementActionValue = updated.ActionValue;
@@ -1741,7 +1743,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
                         await Dispatcher.InvokeAsync(() =>
                         {
-                            _ = UpdateDownloadedFaviconAsync(elementId, webIcon);
+                            _ = UpdateDownloadedFaviconAsync(elementId, elementActionValue, webIcon);
                         });
                     }
                 }

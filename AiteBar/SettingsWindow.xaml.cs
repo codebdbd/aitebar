@@ -23,6 +23,7 @@ namespace AiteBar
         private List<string> _rotationProfilePaths = [];
         private int _profileLoadVersion;
         private CancellationTokenSource? _faviconCts;
+        private bool _isLoadingElementData;
 
         public SettingsWindow(ISettingsWindowContext context, CustomElement? el = null)
         {
@@ -127,28 +128,36 @@ namespace AiteBar
 
         private void LoadElementData()
         {
-            TxtName.Text = _editingElement!.Name;
-            TxtActionValue.Text = _editingElement.ActionValue;
-            _selectedIcon = _editingElement.Icon;
-            _selectedFont = _editingElement.IconFont;
-            _selectedColor = _editingElement.Color;
-            _selectedImagePath = _editingElement.ImagePath;
-            TxtHexColor.Text = _selectedColor;
-            ChkAppMode.IsChecked = _editingElement.IsAppMode;
-            ChkIncognito.IsChecked = _editingElement.IsIncognito;
-            ChkFullscreen.IsChecked = _editingElement.OpenFullscreen;
-            ChkRotation.IsChecked = _editingElement.UseRotation;
-            _rotationProfilePaths = [.. _editingElement.RotationProfilePaths];
-            ChkCtrl.IsChecked = _editingElement.Ctrl;
-            ChkShift.IsChecked = _editingElement.Shift;
-            ChkAlt.IsChecked = _editingElement.Alt;
-            ChkWin.IsChecked = _editingElement.Win;
+            _isLoadingElementData = true;
+            try
+            {
+                TxtName.Text = _editingElement!.Name;
+                _selectedIcon = _editingElement.Icon;
+                _selectedFont = _editingElement.IconFont;
+                _selectedColor = _editingElement.Color;
+                _selectedImagePath = _editingElement.ImagePath;
+                SetComboValue(CmbActionType, ActionTargetHelper.NormalizeActionType(_editingElement.ActionType, _editingElement.ActionValue));
+                TxtActionValue.Text = _editingElement.ActionValue;
+                TxtHexColor.Text = _selectedColor;
+                ChkAppMode.IsChecked = _editingElement.IsAppMode;
+                ChkIncognito.IsChecked = _editingElement.IsIncognito;
+                ChkFullscreen.IsChecked = _editingElement.OpenFullscreen;
+                ChkRotation.IsChecked = _editingElement.UseRotation;
+                _rotationProfilePaths = [.. _editingElement.RotationProfilePaths];
+                ChkCtrl.IsChecked = _editingElement.Ctrl;
+                ChkShift.IsChecked = _editingElement.Shift;
+                ChkAlt.IsChecked = _editingElement.Alt;
+                ChkWin.IsChecked = _editingElement.Win;
 
-            SetComboValue(CmbBrowser, _editingElement.Browser.ToString());
-            SetComboValue(CmbActionType, ActionTargetHelper.NormalizeActionType(_editingElement.ActionType, _editingElement.ActionValue));
-            SetComboValue(CmbContext, _editingElement.ContextId);
-            SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
-            SetComboValue(CmbKey, _editingElement.Key);
+                SetComboValue(CmbBrowser, _editingElement.Browser.ToString());
+                SetComboValue(CmbContext, _editingElement.ContextId);
+                SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
+                SetComboValue(CmbKey, _editingElement.Key);
+            }
+            finally
+            {
+                _isLoadingElementData = false;
+            }
 
             UpdatePreview();
             UpdateActionUI();
@@ -156,9 +165,9 @@ namespace AiteBar
             UpdateNamePlaceholderVisibility();
             
             // Если это веб-элемент без иконки — пытаемся скачать favicon
-            if (_editingElement.ActionType == nameof(ActionType.Web) && !string.IsNullOrWhiteSpace(_editingElement.ActionValue))
+            if (_editingElement!.ActionType == nameof(ActionType.Web) && !string.IsNullOrWhiteSpace(_editingElement.ActionValue))
             {
-                TryDownloadFaviconAsync(_editingElement.ActionValue);
+                QueueFaviconDownload(_editingElement.ActionValue);
             }
         }
 
@@ -228,6 +237,7 @@ namespace AiteBar
             var picker = new IconPickerWindow { Owner = this };
             if (picker.ShowDialog() == true)
             {
+                CancelPendingFaviconDownload();
                 _selectedIcon = picker.SelectedIcon;
                 _selectedFont = picker.SelectedFont;
                 _selectedImagePath = picker.SelectedImagePath;
@@ -248,6 +258,7 @@ namespace AiteBar
                 string? savedPath = IconHelper.SaveCustomIcon(dlg.FileName);
                 if (!string.IsNullOrEmpty(savedPath))
                 {
+                    CancelPendingFaviconDownload();
                     _selectedImagePath = savedPath;
                     _selectedIcon = ""; // Сбрасываем шрифтовую иконку
                     UpdatePreview();
@@ -263,18 +274,43 @@ namespace AiteBar
                 PreviewImage.Visibility = Visibility.Visible;
                 try
                 {
-                    PreviewImage.Source = new BitmapImage(new Uri(_selectedImagePath));
+                    PreviewImage.Source = LoadPreviewImage(_selectedImagePath);
                 }
-                catch (Exception ex) { Logger.Log(ex); }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                    PreviewImage.Source = null;
+                    PreviewImage.Visibility = Visibility.Collapsed;
+                    PreviewIcon.Visibility = Visibility.Visible;
+                    PreviewIcon.Text = string.IsNullOrEmpty(_selectedIcon) ? "\uF45B" : _selectedIcon;
+                    PreviewIcon.FontFamily = FontHelper.Resolve(string.IsNullOrEmpty(_selectedFont) ? FontHelper.FluentKey : _selectedFont);
+                    PreviewIcon.Foreground = _brushConverter.ConvertFromString(_selectedColor) as Brush ?? Brushes.White;
+                }
             }
             else
             {
                 PreviewIcon.Visibility = Visibility.Visible;
                 PreviewImage.Visibility = Visibility.Collapsed;
-                PreviewIcon.Text = _selectedIcon;
-                PreviewIcon.FontFamily = FontHelper.Resolve(_selectedFont);
+                PreviewImage.Source = null;
+                PreviewIcon.Text = string.IsNullOrEmpty(_selectedIcon) ? "\uF45B" : _selectedIcon;
+                PreviewIcon.FontFamily = FontHelper.Resolve(string.IsNullOrEmpty(_selectedFont) ? FontHelper.FluentKey : _selectedFont);
                 PreviewIcon.Foreground = _brushConverter.ConvertFromString(_selectedColor) as Brush ?? Brushes.White;
             }
+        }
+
+        private static BitmapImage LoadPreviewImage(string imagePath)
+        {
+            byte[] imageBytes = File.ReadAllBytes(imagePath);
+            using var stream = new MemoryStream(imageBytes);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad;
+            bitmap.StreamSource = stream;
+            bitmap.DecodePixelWidth = 64;
+            bitmap.DecodePixelHeight = 64;
+            bitmap.EndInit();
+            bitmap.Freeze();
+            return bitmap;
         }
 
         private async void CmbBrowser_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -428,6 +464,11 @@ namespace AiteBar
                         PanelStandardAction.Visibility = Visibility.Visible;
                         PanelHotkeyAction.Visibility = Visibility.Collapsed;
                         PanelWebSettings.Visibility = actionType == AiteBar.ActionType.Web ? Visibility.Visible : Visibility.Collapsed;
+                        if (actionType != AiteBar.ActionType.Web)
+                        {
+                            CancelPendingFaviconDownload();
+                        }
+
                         BtnBrowse.Visibility = (actionType == AiteBar.ActionType.Program ||
                                                 actionType == AiteBar.ActionType.File ||
                                                 actionType == AiteBar.ActionType.Folder ||
@@ -498,6 +539,12 @@ namespace AiteBar
         private void CmbActivationKey_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateSaveButtonState();
         private void TxtName_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (_isLoadingElementData)
+            {
+                UpdateNamePlaceholderVisibility();
+                return;
+            }
+
             _nameValidationTouched = true;
             UpdateNamePlaceholderVisibility();
             UpdateValidationVisuals();
@@ -505,6 +552,12 @@ namespace AiteBar
         }
         private void TxtActionValue_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (_isLoadingElementData)
+            {
+                UpdateActionPlaceholderVisibility();
+                return;
+            }
+
             _actionValueValidationTouched = true;
             UpdateActionPlaceholderVisibility();
             UpdateValidationVisuals();
@@ -512,38 +565,48 @@ namespace AiteBar
             
             // Если это веб-ссылка и иконка не выбрана — пытаемся скачать favicon
             var actionType = GetSelectedActionType();
-            if (actionType == ActionType.Web && !string.IsNullOrWhiteSpace(TxtActionValue.Text))
+            if (!_isLoadingElementData && actionType == ActionType.Web && !string.IsNullOrWhiteSpace(TxtActionValue.Text))
             {
-                TryDownloadFaviconAsync(TxtActionValue.Text);
+                QueueFaviconDownload(TxtActionValue.Text);
             }
         }
 
-        private async void TryDownloadFaviconAsync(string url)
+        private void QueueFaviconDownload(string url)
+        {
+            _ = TryDownloadFaviconAsync(url);
+        }
+
+        private async Task TryDownloadFaviconAsync(string url)
         {
             // Если иконка уже выбрана — не скачиваем
-            if (!string.IsNullOrEmpty(_selectedImagePath) || 
-                (_selectedIcon != "\uF45B" && !string.IsNullOrEmpty(_selectedIcon)))
+            if (!ShouldAutoDownloadFavicon(url))
             {
                 return;
             }
 
             // Отменяем предыдущий запрос
             _faviconCts?.Cancel();
-            _faviconCts?.Dispose();
-            _faviconCts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource();
+            _faviconCts = cts;
+            var token = cts.Token;
             
-            // Debounce — ждём 300 мс перед скачиванием
-            await Task.Delay(300, _faviconCts.Token);
-
-            if (_faviconCts.Token.IsCancellationRequested) return;
-
             try
             {
-                string? webIcon = await IconHelper.DownloadFaviconAsync(url, cancellationToken: _faviconCts.Token);
-                if (!string.IsNullOrEmpty(webIcon) && !_faviconCts.Token.IsCancellationRequested)
+                // Debounce — ждём 300 мс перед скачиванием
+                await Task.Delay(300, token);
+
+                if (token.IsCancellationRequested) return;
+
+                string? webIcon = await IconHelper.DownloadFaviconAsync(url, cancellationToken: token);
+                if (!string.IsNullOrEmpty(webIcon) && !token.IsCancellationRequested)
                 {
                     await Dispatcher.InvokeAsync(() =>
                     {
+                        if (!ShouldAutoDownloadFavicon(url) || token.IsCancellationRequested)
+                        {
+                            return;
+                        }
+
                         _selectedImagePath = webIcon;
                         _selectedIcon = "";
                         UpdatePreview();
@@ -558,6 +621,38 @@ namespace AiteBar
             {
                 Logger.Log(ex);
             }
+            finally
+            {
+                if (ReferenceEquals(_faviconCts, cts))
+                {
+                    _faviconCts = null;
+                }
+
+                cts.Dispose();
+            }
+        }
+
+        private bool ShouldAutoDownloadFavicon(string? url = null)
+        {
+            if (!string.IsNullOrEmpty(_selectedImagePath) ||
+                (_selectedIcon != "\uF45B" && !string.IsNullOrEmpty(_selectedIcon)))
+            {
+                return false;
+            }
+
+            if (CmbActionType?.SelectedItem != null && GetSelectedActionType() != ActionType.Web)
+            {
+                return false;
+            }
+
+            return string.IsNullOrWhiteSpace(url) ||
+                string.Equals(TxtActionValue?.Text?.Trim(), url.Trim(), StringComparison.Ordinal);
+        }
+
+        private void CancelPendingFaviconDownload()
+        {
+            _faviconCts?.Cancel();
+            _faviconCts = null;
         }
         private void BtnBrowse_Click(object sender, RoutedEventArgs e)
         {
@@ -647,7 +742,7 @@ namespace AiteBar
 
         private AiteBar.ActionType GetSelectedActionType()
         {
-            string typeStr = ((ComboBoxItem)CmbActionType.SelectedItem).Tag?.ToString() ?? "Web";
+            string typeStr = (CmbActionType?.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "Web";
             if (!Enum.TryParse<AiteBar.ActionType>(typeStr, out var actionType))
                 actionType = AiteBar.ActionType.Web;
             return actionType;
@@ -900,9 +995,7 @@ namespace AiteBar
 
         protected override void OnClosed(EventArgs e)
         {
-            _faviconCts?.Cancel();
-            _faviconCts?.Dispose();
-            _faviconCts = null;
+            CancelPendingFaviconDownload();
             base.OnClosed(e);
         }
 
