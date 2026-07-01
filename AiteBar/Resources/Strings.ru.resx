@@ -987,6 +987,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_EmailBody" xml:space="preserve"><value>Сообщение</value></data>
   <data name="QRCodeGenerator_PhoneNumber" xml:space="preserve"><value>Номер телефона</value></data>
   <data name="QRCodeGenerator_SmsMessage" xml:space="preserve"><value>Сообщение</value></data>
+  <data name="QRCodeGenerator_VCardName" xml:space="preserve"><value>Имя и Фамилия</value></data>
   <data name="QRCodeGenerator_VCardFirstName" xml:space="preserve"><value>Имя</value></data>
   <data name="QRCodeGenerator_VCardLastName" xml:space="preserve"><value>Фамилия</value></data>
   <data name="QRCodeGenerator_VCardCompany" xml:space="preserve"><value>Компания</value></data>
@@ -1100,24 +1101,6 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_Png800Subtext" xml:space="preserve"><value>Сохранить как изображение PNG</value></data>
   <data name="QRCodeGenerator_VectorSubtext" xml:space="preserve"><value>Сохранить как вектор SVG</value></data>
   <data name="QRCodeGenerator_ClipboardSubtext" xml:space="preserve"><value>Копировать в буфер обмена</value></data>
-  <data name="QRCodeGenerator_TypeEmail" xml:space="preserve"><value>Email</value></data>
-  <data name="QRCodeGenerator_TypePhone" xml:space="preserve"><value>Телефон</value></data>
-  <data name="QRCodeGenerator_TypeSms" xml:space="preserve"><value>СМС</value></data>
-  <data name="QRCodeGenerator_TypeVCard" xml:space="preserve"><value>Контакт (vCard)</value></data>
-  <data name="QRCodeGenerator_PasteFromClipboard" xml:space="preserve"><value>Вставить из буфера обмена</value></data>
-  <data name="QRCodeGenerator_EmailAddress" xml:space="preserve"><value>Эл. почта</value></data>
-  <data name="QRCodeGenerator_EmailSubject" xml:space="preserve"><value>Тема</value></data>
-  <data name="QRCodeGenerator_EmailBody" xml:space="preserve"><value>Сообщение</value></data>
-  <data name="QRCodeGenerator_PhoneNumber" xml:space="preserve"><value>Номер телефона</value></data>
-  <data name="QRCodeGenerator_SmsMessage" xml:space="preserve"><value>Сообщение</value></data>
-  <data name="QRCodeGenerator_VCardName" xml:space="preserve"><value>Имя и Фамилия</value></data>
-  <data name="QRCodeGenerator_VCardFirstName" xml:space="preserve"><value>Имя</value></data>
-  <data name="QRCodeGenerator_VCardLastName" xml:space="preserve"><value>Фамилия</value></data>
-  <data name="QRCodeGenerator_VCardPhone" xml:space="preserve"><value>Телефон</value></data>
-  <data name="QRCodeGenerator_VCardEmail" xml:space="preserve"><value>Эл. почта</value></data>
-  <data name="QRCodeGenerator_VCardCompany" xml:space="preserve"><value>Организация</value></data>
-  <data name="QRCodeGenerator_VCardJobTitle" xml:space="preserve"><value>Должность</value></data>
-  <data name="QRCodeGenerator_VCardWebsite" xml:space="preserve"><value>Веб-сайт</value></data>
 </root>
 
 
