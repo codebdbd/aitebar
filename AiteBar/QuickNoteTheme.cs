@@ -20,7 +20,7 @@ namespace AiteBar
 
         public static IReadOnlyList<QuickNoteTheme> Themes { get; } =
         [
-            new("dark", "#202124", "#3A3B40", "#F6F0E6", "#74757A", "#70B7FF", "#2A2C30", "#E0E0E0", "#70B7FF", true),
+            new("dark", "#272727", "#3A3B40", "#F6F0E6", "#74757A", "#70B7FF", "#2A2C30", "#E0E0E0", "#70B7FF", true),
             new("graphite", "#2A2B2E", "#44464A", "#F2EEE7", "#8B8D92", "#70B7FF", "#34363A", "#E0E0E0", "#70B7FF", true),
             new("rose", "#E9C7C3", "#CFAEA9", "#222222", "#65514F", "#0067B8", "#D4B4AF", "#1A1A1A", "#0067B8", false),
             new("clay", "#E5C6AE", "#C9AA91", "#222222", "#63503F", "#0067B8", "#D0B399", "#1A1A1A", "#0067B8", false),

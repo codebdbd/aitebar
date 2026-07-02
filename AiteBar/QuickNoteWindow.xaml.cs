@@ -39,17 +39,13 @@ namespace AiteBar
         private bool _hasPendingChanges;
         private readonly System.Threading.SemaphoreSlim _saveSemaphore = new(1, 1);
         private bool _saveAgainAfterCurrent;
-        private bool _allowClose;
-        private bool _isSlidingClosed;
-        private bool _suppressGeometrySave;
         private long _changeVersion;
-        private DockEdge _edge = DockEdge.Top;
-        private int _monitorIndex;
         private QuickNoteStatusKind _statusKind;
         private string? _statusArgument;
         private System.Windows.Controls.MenuItem? _cachedConflictCopyMenuItem;
         private List<TextBlock>? _cachedTextBlocks;
         private List<System.Windows.Controls.Button>? _cachedButtons;
+        private List<ToggleButton>? _cachedToggleButtons;
 
         public QuickNoteWindow(QuickNoteService noteService, AppSettingsService settingsService)
         {
@@ -63,6 +59,13 @@ namespace AiteBar
             _geometrySaveTimer.Tick += async (_, _) => await SaveGeometryNowAsync();
             BuildThemePalette();
             ApplyTheme(_theme);
+        }
+
+        private void ClearCaches()
+        {
+            _cachedTextBlocks = null;
+            _cachedButtons = null;
+            _cachedToggleButtons = null;
         }
 
         private async void Window_Loaded(object sender, RoutedEventArgs e)
@@ -91,6 +94,7 @@ namespace AiteBar
                 pinButton.IsChecked = _settingsService.Settings.QuickNotePinned;
             }
             UpdateConflictMenuState();
+            ClearCaches();
             ApplyTheme(_theme);
             UpdatePlaceholderAndStats();
             if (_statusKind != QuickNoteStatusKind.LoadFailed)
@@ -106,19 +110,17 @@ namespace AiteBar
         private async void Window_Deactivated(object? sender, EventArgs e)
         {
             await Dispatcher.Yield(DispatcherPriority.Background);
-            if (!_settingsService.Settings.QuickNotePinned && !_allowClose && !_isSlidingClosed && !IsActive && !IsTransientUiOpen())
+            if (!_settingsService.Settings.QuickNotePinned && !IsTransientUiOpen())
             {
-                _ = CloseSlidingAsync();
+                Close();
             }
         }
 
-        private void Window_Closing(object? sender, CancelEventArgs e)
+        private async void Window_Closing(object? sender, CancelEventArgs e)
         {
-            if (!_allowClose)
-            {
-                e.Cancel = true;
-                _ = CloseSlidingAsync();
-            }
+            // Сохраняем перед закрытием
+            await SaveNowAsync(force: true);
+            await SaveGeometryNowAsync();
         }
 
         protected override void OnClosed(EventArgs e)
@@ -535,12 +537,8 @@ namespace AiteBar
             ScheduleSave();
         }
 
-        public void ShowSliding(AppSettings settings)
+        public void ShowSimple(AppSettings settings)
         {
-            _edge = settings.Edge;
-            _monitorIndex = settings.MonitorIndex;
-            WindowStartupLocation = WindowStartupLocation.Manual;
-            _suppressGeometrySave = true;
             var work = GetWorkArea();
             var bounds = QuickNoteLayoutHelper.ClampBoundsToWorkArea(
                 work,
@@ -548,20 +546,22 @@ namespace AiteBar
                 settings.QuickNoteTop,
                 settings.QuickNoteWidth,
                 settings.QuickNoteHeight);
-            Width = bounds.Width;
-            Height = bounds.Height;
-
-            var (hiddenX, hiddenY, shownX, shownY) = HasSavedBounds(settings)
-                ? GetSlideCoordinatesForShownBounds(work, bounds.Left, bounds.Top, bounds.Width, bounds.Height)
-                : GetSlideCoordinates(hidden: true);
-            Left = hiddenX;
-            Top = hiddenY;
-            Show();
-            AnimateTo(shownX, shownY, () =>
+            
+            if (HasSavedBounds(settings))
             {
-                _suppressGeometrySave = false;
-                _ = SaveGeometryNowAsync();
-            });
+                WindowStartupLocation = WindowStartupLocation.Manual;
+                Left = bounds.Left;
+                Top = bounds.Top;
+                Width = bounds.Width;
+                Height = bounds.Height;
+            }
+            else
+            {
+                WindowStartupLocation = WindowStartupLocation.CenterOwner;
+            }
+            
+            Show();
+            Activate();
         }
 
         private static bool HasSavedBounds(AppSettings settings) =>
@@ -569,22 +569,6 @@ namespace AiteBar
             settings.QuickNoteTop.HasValue ||
             settings.QuickNoteWidth.HasValue ||
             settings.QuickNoteHeight.HasValue;
-
-        private (double hiddenX, double hiddenY, double shownX, double shownY) GetSlideCoordinatesForShownBounds(
-            System.Drawing.Rectangle work,
-            double shownX,
-            double shownY,
-            double width,
-            double height)
-        {
-            return _edge switch
-            {
-                DockEdge.Bottom => (shownX, work.Bottom + QuickNoteLayoutHelper.EdgeClearance, shownX, shownY),
-                DockEdge.Left => (work.Left - width - QuickNoteLayoutHelper.EdgeClearance, shownY, shownX, shownY),
-                DockEdge.Right => (work.Right + QuickNoteLayoutHelper.EdgeClearance, shownY, shownX, shownY),
-                _ => (shownX, work.Top - height - QuickNoteLayoutHelper.EdgeClearance, shownX, shownY)
-            };
-        }
 
         private bool IsTransientUiOpen()
         {
@@ -645,6 +629,7 @@ namespace AiteBar
                     {
                         s.QuickNoteThemeId = theme.Id;
                     });
+                    ClearCaches();
                     ApplyTheme(theme);
                     BuildThemePalette();
                     ThemePopup.IsOpen = false;
@@ -674,6 +659,7 @@ namespace AiteBar
             var codeBackground = Brush(theme.CodeBackground);
             var codeText = Brush(theme.CodeText);
             var link = Brush(theme.Link);
+            var iconColor = theme.IsDark ? Brush("#AFAFB7") : Brush("#000000");
 
             if (Content is Grid root && root.Children.OfType<Border>().FirstOrDefault() is { } shell)
             {
@@ -710,7 +696,13 @@ namespace AiteBar
             _cachedButtons ??= FindVisualChildren<System.Windows.Controls.Button>(this).ToList();
             foreach (var button in _cachedButtons)
             {
-                button.Foreground = text;
+                button.Foreground = iconColor;
+            }
+
+            _cachedToggleButtons ??= FindVisualChildren<ToggleButton>(this).ToList();
+            foreach (var toggleButton in _cachedToggleButtons)
+            {
+                toggleButton.Foreground = iconColor;
             }
 
             ApplyDocumentStyles(TxtNote.Document, codeBackground, codeText, link);
@@ -781,74 +773,14 @@ namespace AiteBar
             }
         }
 
-        private async Task CloseSlidingAsync()
-        {
-            if (_isSlidingClosed)
-            {
-                return;
-            }
 
-            _isSlidingClosed = true;
-            if (!await SaveNowAsync())
-            {
-                _isSlidingClosed = false;
-                return;
-            }
-
-            await SaveGeometryNowAsync();
-            _suppressGeometrySave = true;
-            var (hiddenX, hiddenY, _, _) = GetSlideCoordinates(hidden: false);
-            AnimateTo(hiddenX, hiddenY, () =>
-            {
-                _allowClose = true;
-                Close();
-            });
-        }
-
-        private void AnimateTo(double targetX, double targetY, Action? completed)
-        {
-            var easing = new CubicEase { EasingMode = EasingMode.EaseOut };
-            var x = new DoubleAnimation(targetX, TimeSpan.FromMilliseconds(200)) { EasingFunction = easing };
-            var y = new DoubleAnimation(targetY, TimeSpan.FromMilliseconds(200)) { EasingFunction = easing };
-            int done = 0;
-            void OnDone(object? sender, EventArgs e)
-            {
-                done++;
-                if (done < 2)
-                {
-                    return;
-                }
-
-                BeginAnimation(LeftProperty, null);
-                BeginAnimation(TopProperty, null);
-                Left = targetX;
-                Top = targetY;
-                completed?.Invoke();
-            }
-
-            x.Completed += OnDone;
-            y.Completed += OnDone;
-            BeginAnimation(LeftProperty, x);
-            BeginAnimation(TopProperty, y);
-        }
-
-        [SupportedOSPlatform("windows6.1")]
-        private (double hiddenX, double hiddenY, double shownX, double shownY) GetSlideCoordinates(bool hidden)
-        {
-            var work = GetWorkArea();
-
-            double width = ActualWidth > 0 ? ActualWidth : Width;
-            double height = ActualHeight > 0 ? ActualHeight : Height;
-            return QuickNoteLayoutHelper.GetSlideCoordinates(_edge, work, width, height);
-        }
 
         private System.Drawing.Rectangle GetWorkArea()
         {
             var screens = Forms.Screen.AllScreens;
-            var screen = (_monitorIndex >= 0 && _monitorIndex < screens.Length)
-                ? screens[_monitorIndex]
-                : Forms.Screen.PrimaryScreen;
-            return screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? GetVirtualScreenFallback();
+            // Находим экран, где сейчас находится окно или используем основной
+            var currentScreen = Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(this).Handle);
+            return currentScreen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? GetVirtualScreenFallback();
         }
 
         private static System.Drawing.Rectangle GetVirtualScreenFallback()
@@ -872,7 +804,7 @@ namespace AiteBar
 
         private void ScheduleGeometrySave()
         {
-            if (!_loaded || _suppressGeometrySave || _isSlidingClosed || !IsVisible)
+            if (!_loaded || !IsVisible)
             {
                 return;
             }
@@ -884,7 +816,7 @@ namespace AiteBar
         private async Task SaveGeometryNowAsync()
         {
             _geometrySaveTimer.Stop();
-            if (!_loaded || _suppressGeometrySave || double.IsNaN(Left) || double.IsNaN(Top))
+            if (!_loaded || double.IsNaN(Left) || double.IsNaN(Top))
             {
                 return;
             }

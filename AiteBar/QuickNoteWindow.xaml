@@ -56,6 +56,7 @@
             <Setter Property="Width" Value="32"/>
             <Setter Property="Height" Value="32"/>
             <Setter Property="Margin" Value="2,0,0,0"/>
+            <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="Foreground" Value="#AFAFB7"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -89,14 +90,13 @@
             <Setter Property="Height" Value="30"/>
             <Setter Property="Margin" Value="0,0,5,0"/>
             <Setter Property="Padding" Value="8,0"/>
-            <Setter Property="Foreground" Value="#AFAFB7"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Focusable" Value="False"/>
             <Setter Property="IsTabStop" Value="False"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
+            <Setter Property="FontSize" Value="24"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
@@ -163,31 +163,29 @@
                     </Grid.ColumnDefinitions>
 
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button Content="↶" FontSize="17" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Undo}" Click="BtnUndo_Click"/>
-                        <Button Content="↷" FontSize="17" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Redo}" Click="BtnRedo_Click"/>
+                        <Button Content="&#xF16F;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Undo}" Click="BtnUndo_Click"/>
+                        <Button Content="&#xF19A;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Redo}" Click="BtnRedo_Click"/>
                         <Rectangle Width="1" Height="18" Fill="#30FFFFFF" Margin="2,0,7,0"/>
-                        <Button Content="B" FontWeight="Bold" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Bold}" Click="BtnBold_Click"/>
-                        <Button Content="I" FontStyle="Italic" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Italic}" Click="BtnItalic_Click"/>
-                        <Button Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Underline}" Click="BtnUnderline_Click">
+                        <Button Content="B" FontWeight="Bold" FontFamily="Segoe UI" FontSize="13" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Bold}" Click="BtnBold_Click"/>
+                        <Button Content="I" FontStyle="Italic" FontFamily="Segoe UI" FontSize="13" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Italic}" Click="BtnItalic_Click"/>
+                        <Button FontFamily="Segoe UI" FontSize="13" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Underline}" Click="BtnUnderline_Click">
                             <TextBlock Text="U" TextDecorations="Underline"/>
                         </Button>
-                        <Button Content="&lt;/&gt;" FontFamily="Consolas" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Code}" Click="BtnCode_Click"/>
+                        <Button Content="&lt;/&gt;" FontFamily="Consolas" FontSize="13" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Code}" Click="BtnCode_Click"/>
                         <Rectangle x:Name="FormatSeparator1" Width="0" Height="18" Fill="#30FFFFFF" Margin="0" Visibility="Collapsed"/>
-                        <Button Content="&#xECDA;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_BulletList}" Click="BtnBullet_Click"/>
-                        <Button Content="&#xF7FA;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_NumberedList}" Click="BtnNumbered_Click"/>
+                        <Button Content="&#xECDA;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_BulletList}" Click="BtnBullet_Click"/>
+                        <Button Content="&#xF7FA;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_NumberedList}" Click="BtnNumbered_Click"/>
                         <Rectangle x:Name="FormatSeparator2" Width="0" Height="18" Fill="#30FFFFFF" Margin="0" Visibility="Collapsed"/>
-                        <Button Content="&#xF2C8;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_ClearFormatting}" Click="BtnClearFormatting_Click"/>
+                        <Button Content="&#xF7BD;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_ClearFormatting}" Click="BtnClearFormatting_Click"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <ToggleButton x:Name="BtnPin"
-                                      Content="📌"
-                                      FontFamily="Segoe UI Emoji"
-                                      FontSize="15"
-                                      Style="{StaticResource IconToggleButtonStyle}"
-                                      ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
-                                      Checked="BtnPin_Checked"
-                                      Unchecked="BtnPin_Checked"/>
+                          Content="&#xF602;"
+                          Style="{StaticResource IconToggleButtonStyle}"
+                          ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
+                          Checked="BtnPin_Checked"
+                          Unchecked="BtnPin_Checked"/>
                         <Button Content="⋯" FontFamily="Segoe UI" FontSize="22" Style="{StaticResource IconButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Menu}" Click="BtnMenu_Click">
                             <Button.ContextMenu>
                                 <ContextMenu Style="{StaticResource DarkContextMenu}">

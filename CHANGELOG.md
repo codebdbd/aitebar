@@ -16,6 +16,8 @@ No unreleased changes yet.
 ## [1.10.0] - 2026-06-18
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Индикатор положения панели**: Добавлен индикатор положения панели на панели задач, показывающий направление панели с помощью стрелки и контекстное меню.
+- **Panel position indicator**: Added panel position indicator on taskbar showing panel direction with arrow and context menu.
 - **Утилита генератора QR-кодов**: Встроенная утилита для создания QR-кодов с настраиваемым размером модуля, уровнем коррекции ошибок и экспортом в PNG/SVG.
 - **QR code generator utility**: Built-in utility for generating QR codes with customizable module size, error correction level, and PNG/SVG export.
 - **Утилита показа рабочего стола**: Быстрый доступ к показу рабочего стола.
@@ -24,22 +26,6 @@ No unreleased changes yet.
 - **Apps folder utility**: Quick access to Windows Applications folder.
 - **Утилита Copilot**: Быстрый запуск Windows Copilot.
 - **Copilot utility**: Quick launch of Windows Copilot.
-
-### 🇷🇺 Изменено | 🇬🇧 Changed
-- **Доработка Tooltip**: Улучшено визуальное оформление подсказок, мгновенное появление и правильное центрирование.
-- **Tooltip overhaul**: Improved tooltip visual design, instant appearance, and proper centering.
-- **Стиль таймера/секундомера**: Обновлён цветовой стиль для соответствия другим утилитам.
-- **Timer/stopwatch styling**: Updated color scheme to match other utilities.
-- **Прозрачность фона утилит**: Убрана прозрачность фона для снижения когнитивной нагрузки.
-- **Utility background transparency**: Removed background transparency to reduce cognitive load.
-
-### 🇷🇺 Исправлено | 🇬🇧 Fixed
-- **Перетаскивание кнопок в многостолбчатом режиме**: Исправлено перетаскивание кнопок между колонками в вертикальном режиме панели. Теперь кнопка может свободно двигаться по обеим осям и корректно отображается в новом положении.
-- **Button drag-and-drop in multi-column mode**: Fixed button dragging between columns in vertical panel mode. Buttons can now move freely in both axes and are correctly animated to their new positions.
-
-### 🇷🇺 Добавлено | 🇬🇧 Added
-- **Индикатор положения панели**: Добавлен индикатор положения панели на панели задач, показывающий направление панели с помощью стрелки и контекстное меню.
-- **Panel position indicator**: Added panel position indicator on taskbar showing panel direction with arrow and context menu.
 - **Атрибут [Utility]**: Добавлен атрибут для маркировки утилит для автоматической регистрации.
 - **Utility attribute**: Added attribute to mark utilities for automatic registration.
 - **Метод RegisterAllFromAssembly()**: Автоматическая регистрация всех утилит с атрибутом [Utility] из указанной сборки.
@@ -54,6 +40,12 @@ No unreleased changes yet.
 - **Clear() method for testing**: Added to `UtilityRegistry` to reset state between tests.
 
 ### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Доработка Tooltip**: Улучшено визуальное оформление подсказок, мгновенное появление и правильное центрирование.
+- **Tooltip overhaul**: Improved tooltip visual design, instant appearance, and proper centering.
+- **Стиль таймера/секундомера**: Обновлён цветовой стиль для соответствия другим утилитам.
+- **Timer/stopwatch styling**: Updated color scheme to match other utilities.
+- **Прозрачность фона утилит**: Убрана прозрачность фона для снижения когнитивной нагрузки.
+- **Utility background transparency**: Removed background transparency to reduce cognitive load.
 - **Иконка утилиты конвертации иконок**: Изменена иконка IconConverterUtility на новый глиф.
 - **Icon converter utility icon**: Changed IconConverterUtility icon to new glyph.
 - **Регистрация утилит**: Заменена ручная регистрация в `App.xaml.cs` на автоматическую через `RegisterAllFromAssembly()`.
@@ -68,6 +60,8 @@ No unreleased changes yet.
 - **Panel position indicator**: Indicator now automatically hides when an app is running in fullscreen mode.
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Перетаскивание кнопок в многостолбчатом режиме**: Исправлено перетаскивание кнопок между колонками в вертикальном режиме панели. Теперь кнопка может свободно двигаться по обеим осям и корректно отображается в новом положении.
+- **Button drag-and-drop in multi-column mode**: Fixed button dragging between columns in vertical panel mode. Buttons can now move freely in both axes and are correctly animated to their new positions.
 - **Завершение приложения**: Исправлено зависание процесса при закрытии приложения из-за индикатора положения панели.
 - **App shutdown**: Fixed process hanging on app exit due to panel position indicator.
 - **Отображение индикатора**: Исправлено не отображение индикатора при включении в настройках и его исчезновение.

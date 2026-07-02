@@ -20,7 +20,7 @@ public class QuickNoteUtility : UtilityBase<QuickNoteWindow>
     }
 
     protected override void ShowWindow(QuickNoteWindow window, AppSettingsService settingsService)
-    {
-        window.ShowSliding(settingsService.Settings);
-    }
+        {
+            window.ShowSimple(settingsService.Settings);
+        }
 }

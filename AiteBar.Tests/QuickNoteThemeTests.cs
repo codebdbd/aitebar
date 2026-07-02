@@ -11,7 +11,7 @@ public sealed class QuickNoteThemeTests
 
         Assert.Equal("dark", theme.Id);
         Assert.True(theme.IsDark);
-        Assert.Equal("#202124", theme.Background);
+        Assert.Equal("#272727", theme.Background);
     }
 
     [Fact]
