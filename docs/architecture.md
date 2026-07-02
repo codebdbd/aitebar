@@ -17,7 +17,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - Быстрый запуск сайтов в выбранном браузере и профиле
 - Открытие программ, файлов и папок
 - Выполнение скриптов (.bat, .cmd, .ps1, .py)
-- Использование встроенных утилит (поиск, скриншот, запись видео, калькулятор, проводник, цветовой пикер, быстрая заметка)
+- Использование встроенных утилит (поиск, скриншот, запись видео, калькулятор, проводник, таймер, цветовой пикер, Quick Note, File Sorter, Icon Converter, QR Code Generator, Clipboard Manager, Show Desktop, Apps Folder, Copilot)
 - Переключение между контекстами кнопок
 - Импорт/экспорт панелей с кнопками
 
@@ -98,6 +98,8 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `ScreenColorPickerWindow` — цветовой пикер
 - `FileSorterWindow` — окно утилиты сортировки файлов
 - `IconConverterWindow` — окно утилиты конвертации иконок
+- `QRCodeGeneratorWindow` — окно генератора QR-кодов
+- `ClipboardManagerWindow` — окно менеджера буфера обмена
 - `IconPickerWindow` — выбор иконки
 - `AboutWindow` — окно "О программе"
 - `DarkDialog` — диалоговое окно с подтверждением
@@ -118,6 +120,8 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `UnifiedButtonService` — построение списка унифицированных кнопок (пользовательские + системные)
 - `FileSorterService` — сервис для работы FileSorter утилиты
 - `IconConverterService` — сервис для работы IconConverter утилиты
+- `QRCodeService` — генерация QR-кодов и экспорт PNG/SVG
+- `ClipboardHistoryService` — runtime-история текста и изображений из буфера обмена
 - `HotkeyService` — регистрация и управление глобальными горячими клавишами
 - `TelemetryService` — телеметрия (Sentry)
 - `Logger` — логирование ошибок и событий
@@ -975,7 +979,7 @@ API отсутствует, так как это desktop-приложение б
 - Win (bool) — нажат ли Win
 - Key (string) — основная клавиша
 
-**Использование в системе:** Используется в AppSettings для глобальных горячих клавиш и в `CustomElement.ActivationHotkey` для отдельного global shortcut пользовательской кнопки.
+**Использование в системе:** Используется в AppSettings для глобальных горячих клавиш приложения и встроенных утилит.
 
 ---
 
@@ -1001,7 +1005,6 @@ API отсутствует, так как это desktop-приложение б
 - LastUsedProfile (string) — последний использованный профиль
 - Alt/Ctrl/Shift/Win (bool) — модификаторы payload для действия Hotkey
 - Key (string) — основная клавиша payload для действия Hotkey
-- ActivationHotkey (HotkeyBinding) — отдельная глобальная горячая клавиша запуска кнопки
 - ImagePath (string) — путь к кастомному изображению
 - ContextId (string) — идентификатор контекста, к которому принадлежит кнопка
 
@@ -1015,7 +1018,9 @@ API отсутствует, так как это desktop-приложение б
 **Поля:**
 - GlobalHotkeyCtrl/Alt/Shift/Win (bool) — глобальная горячая клавиша для показа панели
 - GlobalHotkeyKey (string) — основная клавиша глобальной горячей клавиши
-- ShowPresetSearch/Screenshot/Video/Calc/Explorer/Downloads/ColorPicker/QuickNote (bool) — показывать ли соответствующие системные кнопки
+- ShowPresetSearch/Screenshot/Video/Calc/Explorer/Downloads/ColorPicker/QuickNote/FileSorter/IconConverter/QRCodeGenerator/ClipboardManager/TimerStopwatch/ShowDesktop/AppsFolder/Copilot (bool) — показывать ли соответствующие системные кнопки и встроенные утилиты
+- ClipboardManagerPersistHistory (bool) — сохранять ли историю Clipboard Manager между сессиями
+- FileSorterHotkey/QuickNoteHotkey/ColorPickerHotkey/TimerStopwatchHotkey/QRCodeGeneratorHotkey (HotkeyBinding) — горячие клавиши встроенных утилит
 - QuickNoteThemeId (string) — тема быстрых заметок
 - Edge (DockEdge) — сторона экрана для панели
 - MonitorIndex (int) — индекс монитора
@@ -1171,7 +1176,7 @@ API отсутствует, так как это desktop-приложение б
 - Глобальная горячая клавиша: Alt + D4
 - Сторона панели: Top
 - Язык интерфейса: auto (по ОС)
-- Включенные системные кнопки: Search, Screenshot, Video, Calculator, Explorer, Downloads
+- Включенные системные кнопки: Search, Screenshot, Video, Calculator, Explorer, Downloads, File Sorter, Icon Converter, Timer/Stopwatch, Show Desktop, Apps Folder, Copilot
 
 ---
 

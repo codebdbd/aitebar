@@ -42,6 +42,7 @@ AiteBar запускается как один экземпляр. Если по
 | `settings.json` | Основные настройки приложения, панелей и пользовательских кнопок |
 | `custom_buttons.json` | Старый формат кнопок; используется для миграции, если `settings.json` отсутствует |
 | `QuickNote.md` | Файл быстрой заметки |
+| `clipboard_history.json` | История Clipboard Manager, если включено сохранение истории |
 | `Icons` | Пользовательские и импортированные иконки |
 | `error.log` | Текущий журнал ошибок |
 | `error.log.bak` | Резервная копия журнала после ротации |
@@ -79,6 +80,13 @@ AiteBar запускается как один экземпляр. Если по
 | `ShowPresetQuickNote` | `false` | Показывать Quick Note |
 | `ShowPresetFileSorter` | `true` | Показывать File Sorter |
 | `ShowPresetIconConverter` | `true` | Показывать Icon Converter |
+| `ShowPresetQRCodeGenerator` | `false` | Показывать QR Code Generator |
+| `ShowPresetClipboardManager` | `false` | Показывать Clipboard Manager |
+| `ShowPresetShowDesktop` | `true` | Показывать Show Desktop |
+| `ShowPresetAppsFolder` | `true` | Показывать Apps Folder |
+| `ShowPresetCopilot` | `true` | Показывать Copilot |
+| `ClipboardManagerPersistHistory` | `true` | Сохранять историю Clipboard Manager между сессиями |
+| `QRCodeGeneratorHotkey` | не назначено | Запустить QR Code Generator |
 | `TimerSoundEnabled` | `true` | Звук окончания таймера |
 | `TimerIsStopwatchMode` | `false` | Последний выбранный режим: таймер или секундомер |
 | `TimerDuration` | `00:05:00` | Последняя длительность таймера |
@@ -105,7 +113,7 @@ AiteBar запускается как один экземпляр. Если по
 - запустить Quick Note;
 - запустить Color Picker;
 - запустить Timer/Stopwatch;
-- запустить любую пользовательскую кнопку, если для неё назначен отдельный global shortcut.
+- запустить QR Code Generator.
 
 Внутри окна настроек нельзя сохранить две одинаковые назначенные комбинации. Если Windows не даёт зарегистрировать hotkey, настройки сохраняются, но приложение показывает предупреждение, а комбинация не работает до изменения.
 
@@ -126,8 +134,6 @@ AiteBar запускается как один экземпляр. Если по
 - `0-9`;
 - `NumPad0-NumPad9` и операторы numpad;
 - `F1-F12`.
-
-У каждой пользовательской кнопки может быть отдельный global shortcut. Для кнопок типа Hotkey этот shortcut не связан с сочетанием, которое действие отправляет в активное окно через системный ввод.
 
 ## Константы анимаций
 
@@ -193,6 +199,11 @@ AiteBar запускается как один экземпляр. Если по
 | Quick Note | Открывает локальную заметку с автосохранением |
 | File Sorter | Утилита для сортировки файлов по расширению и другим правилам |
 | Icon Converter | Утилита для конвертации изображений в формат ICO |
+| QR Code Generator | Утилита для создания QR-кодов с экспортом в PNG/SVG |
+| Clipboard Manager | Показывает runtime-историю текста и изображений из буфера обмена |
+| Show Desktop | Минимизирует окна и показывает рабочий стол |
+| Apps Folder | Открывает системную папку Applications |
+| Copilot | Запускает Windows Copilot |
 
 ## Таймер и секундомер
 
