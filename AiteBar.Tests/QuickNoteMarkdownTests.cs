@@ -86,6 +86,30 @@ public sealed class QuickNoteMarkdownTests
     }
 
     [Fact]
+    public void GetToggleListMarkerRangeEdit_PreservesOriginalSelectionInsteadOfSelectingWholeLine()
+    {
+        QuickNoteRangeEdit edit = QuickNoteMarkdown.GetToggleListMarkerRangeEdit("head\none two\ntail", 6, 8, numbered: false);
+
+        Assert.Equal(5, edit.StartOffset);
+        Assert.Equal("one two".Length, edit.RemoveLength);
+        Assert.Equal("- one two", edit.InsertText);
+        Assert.Equal(8, edit.CaretOffset);
+        Assert.Equal(2, edit.SelectionLength);
+    }
+
+    [Fact]
+    public void GetToggleListMarkerRangeEdit_DoesNotIncludeNextLineWhenSelectionEndsAfterLineBreak()
+    {
+        QuickNoteRangeEdit edit = QuickNoteMarkdown.GetToggleListMarkerRangeEdit("one\ntwo\nthree", 0, "one\ntwo\n".Length, numbered: false);
+
+        Assert.Equal(0, edit.StartOffset);
+        Assert.Equal("one\ntwo".Length, edit.RemoveLength);
+        Assert.Equal("- one\n- two", edit.InsertText);
+        Assert.Equal(2, edit.CaretOffset);
+        Assert.Equal("one\n- two".Length, edit.SelectionLength);
+    }
+
+    [Fact]
     public void GetClearLineMarkerRangeEdit_ReplacesSelectedLinesAsSingleSegment()
     {
         QuickNoteRangeEdit edit = QuickNoteMarkdown.GetClearLineMarkerRangeEdit("head\n- one\n- two\ntail", 5, 16);
@@ -144,6 +168,119 @@ public sealed class QuickNoteMarkdownTests
         });
 
         Assert.Equal("plain **bold** *italic* `code`", markdown);
+    }
+
+    [Fact]
+    public void LoadMarkdown_RendersAndSavesHeadings()
+    {
+        string markdown = RunSta(() =>
+        {
+            var document = new FlowDocument();
+            QuickNoteMarkdown.LoadMarkdown(document, "# Title\n###### Subsection");
+            var paragraph = Assert.IsType<Paragraph>(document.Blocks.FirstBlock);
+            var firstHeading = Assert.IsType<Span>(paragraph.Inlines.FirstInline);
+
+            Assert.Equal("heading:1", firstHeading.Tag);
+            Assert.True(firstHeading.FontSize > 20);
+
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("# Title\n###### Subsection", markdown.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public void HeadingFontSizes_DecreaseByHeadingLevel()
+    {
+        Assert.Equal(32, QuickNoteMarkdown.GetHeadingFontSizeForLevel(1));
+        Assert.Equal(26, QuickNoteMarkdown.GetHeadingFontSizeForLevel(2));
+        Assert.Equal(22, QuickNoteMarkdown.GetHeadingFontSizeForLevel(3));
+        Assert.Equal(18, QuickNoteMarkdown.GetHeadingFontSizeForLevel(4));
+        Assert.Equal(16, QuickNoteMarkdown.GetHeadingFontSizeForLevel(5));
+        Assert.Equal(15, QuickNoteMarkdown.GetHeadingFontSizeForLevel(6));
+        Assert.Equal(14, QuickNoteMarkdown.GetHeadingFontSizeForLevel(0));
+        Assert.True(QuickNoteMarkdown.GetHeadingFontSizeForLevel(1) > QuickNoteMarkdown.GetHeadingFontSizeForLevel(2));
+        Assert.True(QuickNoteMarkdown.GetHeadingFontSizeForLevel(2) > QuickNoteMarkdown.GetHeadingFontSizeForLevel(3));
+        Assert.True(QuickNoteMarkdown.GetHeadingFontSizeForLevel(3) > QuickNoteMarkdown.GetHeadingFontSizeForLevel(4));
+        Assert.True(QuickNoteMarkdown.GetHeadingFontSizeForLevel(4) > QuickNoteMarkdown.GetHeadingFontSizeForLevel(5));
+        Assert.True(QuickNoteMarkdown.GetHeadingFontSizeForLevel(5) > QuickNoteMarkdown.GetHeadingFontSizeForLevel(6));
+        Assert.True(QuickNoteMarkdown.GetHeadingFontSizeForLevel(6) > QuickNoteMarkdown.GetHeadingFontSizeForLevel(0));
+    }
+
+    [Fact]
+    public void ToMarkdown_SavesVisuallyFormattedHeadingWithoutVisibleMarkdownMarker()
+    {
+        string markdown = RunSta(() =>
+        {
+            var headingRun = new Run("Visible title")
+            {
+                FontSize = QuickNoteMarkdown.GetHeadingFontSizeForLevel(1),
+                FontWeight = FontWeights.SemiBold
+            };
+            var paragraph = new Paragraph();
+            paragraph.Inlines.Add(headingRun);
+            paragraph.Inlines.Add(new LineBreak());
+            paragraph.Inlines.Add(new Run("Body"));
+            var document = new FlowDocument(paragraph);
+
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("# Visible title\nBody", markdown.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public void LoadMarkdown_RendersAndSavesMarkdownLinks()
+    {
+        string markdown = RunSta(() =>
+        {
+            var document = new FlowDocument();
+            QuickNoteMarkdown.LoadMarkdown(document, "Open [AiteBar](https://example.com/path)");
+            var paragraph = Assert.IsType<Paragraph>(document.Blocks.FirstBlock);
+            var hyperlink = paragraph.Inlines.OfType<Hyperlink>().Single();
+
+            Assert.Equal(new Uri("https://example.com/path"), hyperlink.NavigateUri);
+            Assert.Equal("AiteBar", new TextRange(hyperlink.ContentStart, hyperlink.ContentEnd).Text);
+
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("Open [AiteBar](https://example.com/path)", markdown);
+    }
+
+    [Fact]
+    public void LoadMarkdown_RendersAndSavesStrikethrough()
+    {
+        string markdown = RunSta(() =>
+        {
+            var document = new FlowDocument();
+            QuickNoteMarkdown.LoadMarkdown(document, "plain ~~done~~");
+            var paragraph = Assert.IsType<Paragraph>(document.Blocks.FirstBlock);
+            var strike = paragraph.Inlines.OfType<Span>().Single();
+
+            Assert.Contains(strike.TextDecorations, decoration => decoration.Location == TextDecorationLocation.Strikethrough);
+
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("plain ~~done~~", markdown);
+    }
+
+    [Fact]
+    public void GetHeadingRangeEdit_AddsReplacesAndRemovesHeadingMarkers()
+    {
+        QuickNoteRangeEdit added = QuickNoteMarkdown.GetHeadingRangeEdit("one\ntwo", 0, 7, 2);
+
+        string withHeadings = "one\ntwo".Remove(added.StartOffset, added.RemoveLength).Insert(added.StartOffset, added.InsertText);
+        Assert.Equal("## one\n## two", withHeadings);
+
+        QuickNoteRangeEdit replaced = QuickNoteMarkdown.GetHeadingRangeEdit(withHeadings, 0, withHeadings.Length, 4);
+        string replacedText = withHeadings.Remove(replaced.StartOffset, replaced.RemoveLength).Insert(replaced.StartOffset, replaced.InsertText);
+        Assert.Equal("#### one\n#### two", replacedText);
+
+        QuickNoteRangeEdit removed = QuickNoteMarkdown.GetHeadingRangeEdit(replacedText, 0, replacedText.Length, 0);
+        string bodyText = replacedText.Remove(removed.StartOffset, removed.RemoveLength).Insert(removed.StartOffset, removed.InsertText);
+        Assert.Equal("one\ntwo", bodyText);
     }
 
     [Fact]

@@ -23,6 +23,8 @@ namespace AiteBar
         private static readonly Regex BulletMarkerRegex = new(@"^\s*[-*]\s+", RegexOptions.Compiled);
         private static readonly Regex NumberMarkerRegex = new(@"^\s*\d+\.\s+", RegexOptions.Compiled);
         private static readonly Regex AnyListMarkerRegex = new(@"^(?<indent>\s*)(?:[-*]\s+|\d+\.\s+)", RegexOptions.Compiled);
+        private static readonly Regex HeadingMarkerRegex = new(@"^(?<indent>\s*)(?<marker>#{1,6})\s+", RegexOptions.Compiled);
+        private const string HeadingTagPrefix = "heading:";
 
         public enum LinkType
         {
@@ -84,7 +86,16 @@ namespace AiteBar
                     paragraph.Inlines.Add(new LineBreak());
                 }
 
-                AddMarkdownInlines(paragraph, lines[i]);
+                if (TryReadHeadingLine(lines[i], out int headingLevel, out string headingText))
+                {
+                    var heading = CreateHeadingSpan(headingLevel);
+                    AddMarkdownInlines(heading.Inlines, headingText);
+                    paragraph.Inlines.Add(heading);
+                }
+                else
+                {
+                    AddMarkdownInlines(paragraph.Inlines, lines[i]);
+                }
             }
 
             if (!paragraph.Inlines.Any())
@@ -111,10 +122,7 @@ namespace AiteBar
                     builder.AppendLine();
                 }
 
-                foreach (Inline inline in paragraph.Inlines)
-                {
-                    AppendInlineMarkdown(builder, inline, false, false, false, false);
-                }
+                AppendParagraphMarkdown(builder, paragraph);
 
                 firstParagraph = false;
             }
@@ -136,10 +144,13 @@ namespace AiteBar
             text = NormalizeLineEndings(text);
             var (lineStart, lineEnd) = GetSelectedLineBounds(text, selectionStart, selectionEnd);
             string selectedText = text[lineStart..lineEnd];
-            QuickNoteTextOperation[] operations = GetListMarkerOperations(selectedText, selectionStart - lineStart, selectionEnd - lineStart, numbered);
+            int relativeSelectionStart = Math.Clamp(selectionStart - lineStart, 0, selectedText.Length);
+            int relativeSelectionEnd = Math.Clamp(selectionEnd - lineStart, 0, selectedText.Length);
+            QuickNoteTextOperation[] operations = GetListMarkerOperations(selectedText, relativeSelectionStart, relativeSelectionEnd, numbered);
             string updatedText = ApplyOperations(selectedText, operations);
-            int caret = lineStart + MapOffsetThroughOperations(Math.Max(selectionStart, selectionEnd) - lineStart, operations);
-            return new QuickNoteRangeEdit(lineStart, lineEnd - lineStart, updatedText, caret, 0);
+            int mappedStart = lineStart + MapOffsetThroughOperations(relativeSelectionStart, operations);
+            int mappedEnd = lineStart + MapOffsetThroughOperations(relativeSelectionEnd, operations);
+            return new QuickNoteRangeEdit(lineStart, lineEnd - lineStart, updatedText, mappedStart, Math.Max(0, mappedEnd - mappedStart));
         }
 
         public static QuickNoteTextEdit ClearLineMarkers(string text, int selectionStart, int selectionEnd)
@@ -157,6 +168,22 @@ namespace AiteBar
             var (lineStart, lineEnd) = GetSelectedLineBounds(text, selectionStart, selectionEnd);
             string selectedText = text[lineStart..lineEnd];
             QuickNoteTextOperation[] operations = GetClearMarkerOperations(selectedText, selectionStart - lineStart, selectionEnd - lineStart);
+            string updatedText = ApplyOperations(selectedText, operations);
+            int caret = lineStart + MapOffsetThroughOperations(Math.Max(selectionStart, selectionEnd) - lineStart, operations);
+            return new QuickNoteRangeEdit(lineStart, lineEnd - lineStart, updatedText, caret, 0);
+        }
+
+        public static QuickNoteRangeEdit GetHeadingRangeEdit(string text, int selectionStart, int selectionEnd, int headingLevel)
+        {
+            if (headingLevel is < 0 or > 6)
+            {
+                throw new ArgumentOutOfRangeException(nameof(headingLevel), "Heading level must be 0 for body text or 1 through 6.");
+            }
+
+            text = NormalizeLineEndings(text);
+            var (lineStart, lineEnd) = GetSelectedLineBounds(text, selectionStart, selectionEnd);
+            string selectedText = text[lineStart..lineEnd];
+            QuickNoteTextOperation[] operations = GetHeadingOperations(selectedText, selectionStart - lineStart, selectionEnd - lineStart, headingLevel);
             string updatedText = ApplyOperations(selectedText, operations);
             int caret = lineStart + MapOffsetThroughOperations(Math.Max(selectionStart, selectionEnd) - lineStart, operations);
             return new QuickNoteRangeEdit(lineStart, lineEnd - lineStart, updatedText, caret, 0);
@@ -209,7 +236,39 @@ namespace AiteBar
                 .ToArray();
         }
 
-        private static void AddMarkdownInlines(Paragraph paragraph, string line)
+        public static QuickNoteTextOperation[] GetHeadingOperations(string text, int selectionStart, int selectionEnd, int headingLevel)
+        {
+            if (headingLevel is < 0 or > 6)
+            {
+                throw new ArgumentOutOfRangeException(nameof(headingLevel), "Heading level must be 0 for body text or 1 through 6.");
+            }
+
+            var operations = new List<QuickNoteTextOperation>();
+            string prefix = headingLevel == 0 ? string.Empty : new string('#', headingLevel) + " ";
+
+            foreach (var line in GetSelectedLines(text, selectionStart, selectionEnd))
+            {
+                if (string.IsNullOrWhiteSpace(line.Text))
+                {
+                    continue;
+                }
+
+                var marker = GetHeadingMarker(line.Text);
+                int markerOffset = line.Offset + marker.IndentLength;
+                if (marker.MarkerLength > 0)
+                {
+                    operations.Add(new QuickNoteTextOperation(markerOffset, marker.MarkerLength, prefix));
+                }
+                else if (headingLevel > 0)
+                {
+                    operations.Add(new QuickNoteTextOperation(markerOffset, 0, prefix));
+                }
+            }
+
+            return operations.ToArray();
+        }
+
+        private static void AddMarkdownInlines(InlineCollection inlines, string line)
         {
             var plain = new StringBuilder();
             int index = 0;
@@ -224,16 +283,16 @@ namespace AiteBar
 
                 if (TryReadDelimited(line, index, "**", out string boldText, out int boldEnd))
                 {
-                    FlushPlain(paragraph, plain);
-                    paragraph.Inlines.Add(new Bold(CreateRun(UnescapeMarkdownText(boldText))));
+                    FlushPlain(inlines, plain);
+                    inlines.Add(new Bold(CreateRun(UnescapeMarkdownText(boldText))));
                     index = boldEnd;
                     continue;
                 }
 
                 if (TryReadHtmlUnderline(line, index, out string underlineText, out int underlineEnd))
                 {
-                    FlushPlain(paragraph, plain);
-                    paragraph.Inlines.Add(new Span(CreateRun(UnescapeMarkdownText(underlineText)))
+                    FlushPlain(inlines, plain);
+                    inlines.Add(new Span(CreateRun(UnescapeMarkdownText(underlineText)))
                     {
                         TextDecorations = TextDecorations.Underline
                     });
@@ -241,14 +300,33 @@ namespace AiteBar
                     continue;
                 }
 
+                if (TryReadDelimited(line, index, "~~", out string strikeText, out int strikeEnd))
+                {
+                    FlushPlain(inlines, plain);
+                    inlines.Add(new Span(CreateRun(UnescapeMarkdownText(strikeText)))
+                    {
+                        TextDecorations = TextDecorations.Strikethrough
+                    });
+                    index = strikeEnd;
+                    continue;
+                }
+
+                if (TryReadMarkdownLink(line, index, out string linkText, out string url, out int linkEnd))
+                {
+                    FlushPlain(inlines, plain);
+                    inlines.Add(CreateHyperlink(UnescapeMarkdownText(linkText), UnescapeMarkdownText(url)));
+                    index = linkEnd;
+                    continue;
+                }
+
                 if (TryReadDelimited(line, index, "`", out string codeText, out int codeEnd))
                 {
-                    FlushPlain(paragraph, plain);
+                    FlushPlain(inlines, plain);
                     var codeSpan = new Span(CreateRun(UnescapeMarkdownText(codeText), CodeFont))
                     {
                         Tag = "code"
                     };
-                    paragraph.Inlines.Add(codeSpan);
+                    inlines.Add(codeSpan);
                     index = codeEnd;
                     continue;
                 }
@@ -256,8 +334,8 @@ namespace AiteBar
                 if (line[index] == '*' && (index + 1 >= line.Length || line[index + 1] != '*') &&
                     TryReadDelimited(line, index, "*", out string italicText, out int italicEnd))
                 {
-                    FlushPlain(paragraph, plain);
-                    paragraph.Inlines.Add(new Italic(CreateRun(UnescapeMarkdownText(italicText))));
+                    FlushPlain(inlines, plain);
+                    inlines.Add(new Italic(CreateRun(UnescapeMarkdownText(italicText))));
                     index = italicEnd;
                     continue;
                 }
@@ -266,7 +344,7 @@ namespace AiteBar
                 index++;
             }
 
-            FlushPlain(paragraph, plain);
+            FlushPlain(inlines, plain);
         }
 
         private static bool TryReadDelimited(string text, int start, string marker, out string value, out int end)
@@ -287,6 +365,35 @@ namespace AiteBar
 
             value = text[contentStart..close];
             end = close + marker.Length;
+            return true;
+        }
+
+        private static bool TryReadMarkdownLink(string text, int start, out string linkText, out string url, out int end)
+        {
+            linkText = string.Empty;
+            url = string.Empty;
+            end = start;
+            if (text[start] != '[')
+            {
+                return false;
+            }
+
+            int textEnd = FindClosingMarker(text, "]", start + 1);
+            if (textEnd <= start + 1 || textEnd + 1 >= text.Length || text[textEnd + 1] != '(')
+            {
+                return false;
+            }
+
+            int urlStart = textEnd + 2;
+            int urlEnd = FindClosingMarker(text, ")", urlStart);
+            if (urlEnd <= urlStart)
+            {
+                return false;
+            }
+
+            linkText = text[(start + 1)..textEnd];
+            url = text[urlStart..urlEnd];
+            end = urlEnd + 1;
             return true;
         }
 
@@ -332,14 +439,29 @@ namespace AiteBar
             return true;
         }
 
-        private static void FlushPlain(Paragraph paragraph, StringBuilder plain)
+        private static bool TryReadHeadingLine(string line, out int headingLevel, out string headingText)
+        {
+            headingLevel = 0;
+            headingText = line;
+            Match match = HeadingMarkerRegex.Match(line);
+            if (!match.Success)
+            {
+                return false;
+            }
+
+            headingLevel = match.Groups["marker"].Value.Length;
+            headingText = line[match.Length..];
+            return !string.IsNullOrWhiteSpace(headingText);
+        }
+
+        private static void FlushPlain(InlineCollection inlines, StringBuilder plain)
         {
             if (plain.Length == 0)
             {
                 return;
             }
 
-            paragraph.Inlines.Add(CreateRun(plain.ToString()));
+            inlines.Add(CreateRun(plain.ToString()));
             plain.Clear();
         }
 
@@ -371,16 +493,186 @@ namespace AiteBar
                 TextDecorations = null
             };
 
-        private static void AppendInlineMarkdown(StringBuilder builder, Inline inline, bool bold, bool italic, bool code, bool underline)
+        public static Hyperlink CreateHyperlink(string text, string url)
+        {
+            var hyperlink = new Hyperlink(CreateRun(text))
+            {
+                NavigateUri = Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri : null,
+                Tag = "link:" + url,
+                Foreground = Brushes.DodgerBlue,
+                TextDecorations = TextDecorations.Underline
+            };
+            return hyperlink;
+        }
+
+        private static Span CreateHeadingSpan(int headingLevel)
+        {
+            return new Span
+            {
+                Tag = HeadingTagPrefix + headingLevel.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                FontSize = GetHeadingFontSize(headingLevel),
+                FontWeight = FontWeights.SemiBold
+            };
+        }
+
+        public static double GetHeadingFontSizeForLevel(int headingLevel) => headingLevel switch
+        {
+            1 => 32,
+            2 => 26,
+            3 => 22,
+            4 => 18,
+            5 => 16,
+            6 => 15,
+            _ => 14
+        };
+
+        private static double GetHeadingFontSize(int headingLevel) => GetHeadingFontSizeForLevel(headingLevel);
+
+        private static void AppendParagraphMarkdown(StringBuilder builder, Paragraph paragraph)
+        {
+            var line = new List<Inline>();
+            foreach (Inline inline in paragraph.Inlines)
+            {
+                if (inline is LineBreak)
+                {
+                    AppendLineMarkdown(builder, line);
+                    builder.AppendLine();
+                    line.Clear();
+                    continue;
+                }
+
+                line.Add(inline);
+            }
+
+            AppendLineMarkdown(builder, line);
+        }
+
+        private static void AppendLineMarkdown(StringBuilder builder, IReadOnlyList<Inline> line)
+        {
+            if (TryGetHeadingLevelForLine(line, out int headingLevel))
+            {
+                builder.Append(new string('#', headingLevel));
+                builder.Append(' ');
+            }
+
+            foreach (Inline inline in line)
+            {
+                AppendInlineMarkdown(builder, inline, false, false, false, false, false);
+            }
+        }
+
+        private static bool TryGetHeadingLevelForLine(IReadOnlyList<Inline> line, out int headingLevel)
+        {
+            headingLevel = 0;
+            foreach (Inline inline in line)
+            {
+                if (inline is Run { Text.Length: > 0 } run && !string.IsNullOrWhiteSpace(run.Text))
+                {
+                    return TryGetHeadingLevelFromLocalFontSize(run, out headingLevel);
+                }
+
+                if (inline is Span span)
+                {
+                    if (TryGetHeadingLevel(span, out headingLevel))
+                    {
+                        return true;
+                    }
+
+                    Inline? firstText = span.Inlines.FirstInline;
+                    while (firstText != null)
+                    {
+                        if (firstText is Run { Text.Length: > 0 } childRun && !string.IsNullOrWhiteSpace(childRun.Text))
+                        {
+                            return TryGetHeadingLevelFromLocalFontSize(childRun, out headingLevel) ||
+                                   TryGetHeadingLevelFromLocalFontSize(span, out headingLevel);
+                        }
+
+                        firstText = firstText.NextInline;
+                    }
+                }
+
+                if (inline is Hyperlink hyperlink)
+                {
+                    Inline? firstText = hyperlink.Inlines.FirstInline;
+                    while (firstText != null)
+                    {
+                        if (firstText is Run { Text.Length: > 0 } linkRun && !string.IsNullOrWhiteSpace(linkRun.Text))
+                        {
+                            return TryGetHeadingLevelFromLocalFontSize(linkRun, out headingLevel) ||
+                                   TryGetHeadingLevelFromLocalFontSize(hyperlink, out headingLevel);
+                        }
+
+                        firstText = firstText.NextInline;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        private static bool TryGetHeadingLevelFromLocalFontSize(TextElement element, out int headingLevel)
+        {
+            object value = element.ReadLocalValue(TextElement.FontSizeProperty);
+            if (value is double fontSize)
+            {
+                return TryGetHeadingLevelFromFontSize(fontSize, out headingLevel);
+            }
+
+            headingLevel = 0;
+            return false;
+        }
+
+        private static bool TryGetHeadingLevelFromFontSize(double fontSize, out int headingLevel)
+        {
+            for (int level = 1; level <= 6; level++)
+            {
+                if (Math.Abs(fontSize - GetHeadingFontSizeForLevel(level)) < 0.1)
+                {
+                    headingLevel = level;
+                    return true;
+                }
+            }
+
+            headingLevel = 0;
+            return false;
+        }
+
+        private static void AppendInlineMarkdown(StringBuilder builder, Inline inline, bool bold, bool italic, bool code, bool underline, bool strikethrough)
         {
             bool isBold = bold || inline is Bold || IsLocalValue(inline, TextElement.FontWeightProperty, FontWeights.Bold);
             bool isItalic = italic || inline is Italic || IsLocalValue(inline, TextElement.FontStyleProperty, FontStyles.Italic);
             bool isCode = code || IsCodeInline(inline);
-            bool isUnderline = underline || IsUnderlineInline(inline);
+            bool isUnderline = underline || HasTextDecoration(inline, TextDecorationLocation.Underline);
+            bool isStrikethrough = strikethrough || HasTextDecoration(inline, TextDecorationLocation.Strikethrough);
+
+            if (inline is Hyperlink hyperlink)
+            {
+                var linkBuilder = new StringBuilder();
+                foreach (Inline child in hyperlink.Inlines)
+                {
+                    AppendInlineMarkdown(linkBuilder, child, isBold, isItalic, isCode, false, isStrikethrough);
+                }
+
+                string linkUrl = GetHyperlinkUrl(hyperlink);
+                if (string.IsNullOrWhiteSpace(linkUrl))
+                {
+                    builder.Append(linkBuilder);
+                }
+                else
+                {
+                    builder.Append('[');
+                    builder.Append(linkBuilder);
+                    builder.Append("](");
+                    builder.Append(EscapeMarkdownText(linkUrl));
+                    builder.Append(')');
+                }
+
+                return;
+            }
 
             if (inline is Run run)
             {
-                AppendStyledText(builder, run.Text, isBold, isItalic, isCode, isUnderline);
+                AppendStyledText(builder, run.Text, isBold, isItalic, isCode, isUnderline, isStrikethrough);
                 return;
             }
 
@@ -394,12 +686,34 @@ namespace AiteBar
             {
                 foreach (Inline child in span.Inlines)
                 {
-                    AppendInlineMarkdown(builder, child, isBold, isItalic, isCode, isUnderline);
+                    AppendInlineMarkdown(builder, child, isBold, isItalic, isCode, isUnderline, isStrikethrough);
                 }
             }
         }
 
-        private static void AppendStyledText(StringBuilder builder, string text, bool bold, bool italic, bool code, bool underline)
+        private static string GetHyperlinkUrl(Hyperlink hyperlink)
+        {
+            if (hyperlink.Tag is string tag && tag.StartsWith("link:", StringComparison.Ordinal))
+            {
+                return tag["link:".Length..];
+            }
+
+            return hyperlink.NavigateUri?.ToString() ?? string.Empty;
+        }
+
+        private static bool TryGetHeadingLevel(Span span, out int headingLevel)
+        {
+            headingLevel = 0;
+            if (span.Tag is not string tag || !tag.StartsWith(HeadingTagPrefix, StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            return int.TryParse(tag[HeadingTagPrefix.Length..], out headingLevel) &&
+                   headingLevel is >= 1 and <= 6;
+        }
+
+        private static void AppendStyledText(StringBuilder builder, string text, bool bold, bool italic, bool code, bool underline, bool strikethrough)
         {
             if (string.IsNullOrEmpty(text))
             {
@@ -427,7 +741,17 @@ namespace AiteBar
                 builder.Append('`');
             }
 
+            if (strikethrough)
+            {
+                builder.Append("~~");
+            }
+
             builder.Append(escaped);
+
+            if (strikethrough)
+            {
+                builder.Append("~~");
+            }
 
             if (code)
             {
@@ -455,7 +779,7 @@ namespace AiteBar
             var builder = new StringBuilder(text.Length);
             foreach (char ch in text)
             {
-                if (ch is '\\' or '*' or '`' or '<' or '>')
+                if (ch is '\\' or '*' or '`' or '<' or '>' or '~' or '[' or ']' or '(' or ')')
                 {
                     builder.Append('\\');
                 }
@@ -474,7 +798,7 @@ namespace AiteBar
                 if (text[i] == '\\' && i + 1 < text.Length)
                 {
                     char next = text[i + 1];
-                    if (next is '\\' or '*' or '`' or '<' or '>')
+                    if (next is '\\' or '*' or '`' or '<' or '>' or '~' or '[' or ']' or '(' or ')' or '/')
                     {
                         builder.Append(next);
                         i++;
@@ -492,9 +816,16 @@ namespace AiteBar
             inline.FontFamily?.Source.Equals("Consolas", StringComparison.OrdinalIgnoreCase) == true ||
             (inline is Span span && span.Tag?.ToString() == "code");
 
-        private static bool IsUnderlineInline(Inline inline) =>
-            inline.TextDecorations?.Count > 0 ||
-            inline.ReadLocalValue(Inline.TextDecorationsProperty) is TextDecorationCollection { Count: > 0 };
+        private static bool HasTextDecoration(Inline inline, TextDecorationLocation location)
+        {
+            if (inline.TextDecorations?.Any(decoration => decoration.Location == location) == true)
+            {
+                return true;
+            }
+
+            return inline.ReadLocalValue(Inline.TextDecorationsProperty) is TextDecorationCollection localDecorations &&
+                   localDecorations.Any(decoration => decoration.Location == location);
+        }
 
         private static bool IsLocalValue(DependencyObject element, DependencyProperty property, object expectedValue)
         {
@@ -504,9 +835,17 @@ namespace AiteBar
 
         private static (int Start, int End) GetSelectedLineBounds(string text, int selectionStart, int selectionEnd)
         {
-            int lineStart = text.LastIndexOf('\n', Math.Max(0, selectionStart - 1));
+            int start = Math.Clamp(Math.Min(selectionStart, selectionEnd), 0, text.Length);
+            int end = Math.Clamp(Math.Max(selectionStart, selectionEnd), 0, text.Length);
+            int effectiveEnd = end;
+            if (end > start && end > 0 && text[end - 1] == '\n')
+            {
+                effectiveEnd = end - 1;
+            }
+
+            int lineStart = text.LastIndexOf('\n', Math.Max(0, start - 1));
             lineStart = lineStart < 0 ? 0 : lineStart + 1;
-            int lineEnd = text.IndexOf('\n', selectionEnd);
+            int lineEnd = text.IndexOf('\n', effectiveEnd);
             lineEnd = lineEnd < 0 ? text.Length : lineEnd;
             return (lineStart, lineEnd);
         }
@@ -535,6 +874,18 @@ namespace AiteBar
         private static (int IndentLength, int MarkerLength) GetListMarker(string line)
         {
             Match match = AnyListMarkerRegex.Match(line);
+            if (!match.Success)
+            {
+                return (line.Length - line.TrimStart().Length, 0);
+            }
+
+            int indentLength = match.Groups["indent"].Value.Length;
+            return (indentLength, match.Length - indentLength);
+        }
+
+        private static (int IndentLength, int MarkerLength) GetHeadingMarker(string line)
+        {
+            Match match = HeadingMarkerRegex.Match(line);
             if (!match.Success)
             {
                 return (line.Length - line.TrimStart().Length, 0);

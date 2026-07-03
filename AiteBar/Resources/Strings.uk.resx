@@ -65,6 +65,20 @@
   <data name="QuickNote_BulletList" xml:space="preserve"><value>Маркований список</value></data>
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Нумерований список</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Очистити форматування</value></data>
+  <data name="QuickNote_Heading" xml:space="preserve"><value>Заголовок</value></data>
+  <data name="QuickNote_BodyText" xml:space="preserve"><value>Звичайний текст</value></data>
+  <data name="QuickNote_TitleHeading" xml:space="preserve"><value>Заголовок 1</value></data>
+  <data name="QuickNote_SubtitleHeading" xml:space="preserve"><value>Заголовок 2</value></data>
+  <data name="QuickNote_Heading3" xml:space="preserve"><value>Заголовок 3</value></data>
+  <data name="QuickNote_Heading4" xml:space="preserve"><value>Заголовок 4</value></data>
+  <data name="QuickNote_Heading5" xml:space="preserve"><value>Заголовок 5</value></data>
+  <data name="QuickNote_Heading6" xml:space="preserve"><value>Заголовок 6</value></data>
+  <data name="QuickNote_List" xml:space="preserve"><value>Список</value></data>
+  <data name="QuickNote_ListPlaceholder" xml:space="preserve"><value>Список</value></data>
+  <data name="QuickNote_Strikethrough" xml:space="preserve"><value>Закреслити</value></data>
+  <data name="QuickNote_InsertLink" xml:space="preserve"><value>Вставити посилання</value></data>
+  <data name="QuickNote_LinkText" xml:space="preserve"><value>Текст</value></data>
+  <data name="QuickNote_LinkUrl" xml:space="preserve"><value>URL</value></data>
   <data name="SettingsWindow_RotationProfilesButton" xml:space="preserve"><value>Профілі...</value></data>
   <data name="SettingsWindow_RotationProfilesAll" xml:space="preserve"><value>Профілі ротації: усі профілі</value></data>
   <data name="SettingsWindow_RotationProfilesNoneAvailable" xml:space="preserve"><value>Профілі ротації: вибрані профілі недоступні</value></data>

@@ -217,6 +217,20 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_BulletList" xml:space="preserve"><value>Bullet list</value></data>
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Numbered list</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Clear formatting</value></data>
+  <data name="QuickNote_Heading" xml:space="preserve"><value>Heading</value></data>
+  <data name="QuickNote_BodyText" xml:space="preserve"><value>Body Text</value></data>
+  <data name="QuickNote_TitleHeading" xml:space="preserve"><value>Title</value></data>
+  <data name="QuickNote_SubtitleHeading" xml:space="preserve"><value>Subtitle</value></data>
+  <data name="QuickNote_Heading3" xml:space="preserve"><value>Heading</value></data>
+  <data name="QuickNote_Heading4" xml:space="preserve"><value>Subheading</value></data>
+  <data name="QuickNote_Heading5" xml:space="preserve"><value>Section</value></data>
+  <data name="QuickNote_Heading6" xml:space="preserve"><value>Subsection</value></data>
+  <data name="QuickNote_List" xml:space="preserve"><value>List</value></data>
+  <data name="QuickNote_ListPlaceholder" xml:space="preserve"><value>List</value></data>
+  <data name="QuickNote_Strikethrough" xml:space="preserve"><value>Strikethrough</value></data>
+  <data name="QuickNote_InsertLink" xml:space="preserve"><value>Insert link</value></data>
+  <data name="QuickNote_LinkText" xml:space="preserve"><value>Text</value></data>
+  <data name="QuickNote_LinkUrl" xml:space="preserve"><value>URL</value></data>
   <data name="TimerStopwatch_Timer" xml:space="preserve"><value>Timer</value></data>
   <data name="TimerStopwatch_Stopwatch" xml:space="preserve"><value>Stopwatch</value></data>
   <data name="TimerStopwatch_Start" xml:space="preserve"><value>Start</value></data>

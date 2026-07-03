@@ -128,6 +128,20 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="QuickNote_BulletList" xml:space="preserve"><value>Aufzählung</value></data>
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Nummerierte Liste</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Formatierung löschen</value></data>
+  <data name="QuickNote_Heading" xml:space="preserve"><value>Überschrift</value></data>
+  <data name="QuickNote_BodyText" xml:space="preserve"><value>Fließtext</value></data>
+  <data name="QuickNote_TitleHeading" xml:space="preserve"><value>Titel</value></data>
+  <data name="QuickNote_SubtitleHeading" xml:space="preserve"><value>Untertitel</value></data>
+  <data name="QuickNote_Heading3" xml:space="preserve"><value>Überschrift</value></data>
+  <data name="QuickNote_Heading4" xml:space="preserve"><value>Zwischenüberschrift</value></data>
+  <data name="QuickNote_Heading5" xml:space="preserve"><value>Abschnitt</value></data>
+  <data name="QuickNote_Heading6" xml:space="preserve"><value>Unterabschnitt</value></data>
+  <data name="QuickNote_List" xml:space="preserve"><value>Liste</value></data>
+  <data name="QuickNote_ListPlaceholder" xml:space="preserve"><value>Liste</value></data>
+  <data name="QuickNote_Strikethrough" xml:space="preserve"><value>Durchstreichen</value></data>
+  <data name="QuickNote_InsertLink" xml:space="preserve"><value>Link einfügen</value></data>
+  <data name="QuickNote_LinkText" xml:space="preserve"><value>Text</value></data>
+  <data name="QuickNote_LinkUrl" xml:space="preserve"><value>URL</value></data>
   <data name="SettingsWindow_RotationProfilesButton" xml:space="preserve"><value>Profile...</value></data>
   <data name="SettingsWindow_RotationProfilesAll" xml:space="preserve"><value>Rotationsprofile: alle Profile</value></data>
   <data name="SettingsWindow_RotationProfilesNoneAvailable" xml:space="preserve"><value>Rotationsprofile: ausgewählte Profile sind nicht verfügbar</value></data>
