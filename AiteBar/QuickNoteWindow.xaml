@@ -119,13 +119,112 @@
             </Setter>
         </Style>
 
-        <Style x:Key="FormatComboStyle" TargetType="ComboBox" BasedOn="{StaticResource BaseComboBoxStyle}">
-            <Setter Property="MinWidth" Value="108"/>
+        <Style x:Key="FormatComboStyle" TargetType="ComboBox">
+            <Setter Property="Width" Value="44"/>
+            <Setter Property="Height" Value="32"/>
             <Setter Property="Margin" Value="0,0,5,0"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Foreground" Value="#AFAFB7"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderBrush" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Focusable" Value="False"/>
             <Setter Property="IsTabStop" Value="False"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+            <Setter Property="UseLayoutRounding" Value="True"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                            <Border x:Name="Chrome"
+                                    Background="{TemplateBinding Background}"
+                                    CornerRadius="8"
+                                    SnapsToDevicePixels="True">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="14"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <ToggleButton x:Name="PART_DropDownToggle"
+                                                  Grid.ColumnSpan="2"
+                                                  Background="Transparent"
+                                                  BorderThickness="0"
+                                                  Focusable="False"
+                                                  ClickMode="Press"
+                                                  IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                        <ToggleButton.Template>
+                                            <ControlTemplate TargetType="ToggleButton">
+                                                <Border Background="Transparent"/>
+                                            </ControlTemplate>
+                                        </ToggleButton.Template>
+                                    </ToggleButton>
+
+                                    <TextBlock Text="{TemplateBinding Tag}"
+                                               FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
+                                               FontSize="18"
+                                               Foreground="{TemplateBinding Foreground}"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"
+                                               IsHitTestVisible="False"/>
+
+                                    <Path x:Name="Arrow"
+                                          Grid.Column="1"
+                                          Width="6"
+                                          Height="4"
+                                          HorizontalAlignment="Left"
+                                          VerticalAlignment="Center"
+                                          Fill="{TemplateBinding Foreground}"
+                                          Data="M 0 0 L 3 4 L 6 0 Z"
+                                          IsHitTestVisible="False"/>
+                                </Grid>
+                            </Border>
+
+                            <Popup x:Name="PART_Popup"
+                                   Placement="Bottom"
+                                   IsOpen="{TemplateBinding IsDropDownOpen}"
+                                   AllowsTransparency="True"
+                                   Focusable="False"
+                                   PopupAnimation="Fade">
+                                <Border x:Name="DropDownBorder"
+                                        MinWidth="188"
+                                        MaxHeight="300"
+                                        Background="{StaticResource FormControlBackground}"
+                                        BorderBrush="{StaticResource FormControlBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="6"
+                                        SnapsToDevicePixels="True">
+                                    <ScrollViewer Margin="3"
+                                                  CanContentScroll="True"
+                                                  SnapsToDevicePixels="True">
+                                        <ItemsPresenter/>
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsDropDownOpen" Value="True">
+                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
+                            </Trigger>
+                            <Trigger Property="HasItems" Value="False">
+                                <Setter TargetName="DropDownBorder" Property="MinHeight" Value="40"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="#777777"/>
+                                <Setter TargetName="Chrome" Property="Opacity" Value="0.55"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
         </Style>
 
         <Style x:Key="QuickNoteScrollBarStyle"
@@ -180,7 +279,7 @@
                         <Button Content="&#xF199;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Undo}" Click="BtnUndo_Click"/>
                         <Button Content="&#xF16E;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Redo}" Click="BtnRedo_Click"/>
                         <Rectangle Width="1" Height="18" Fill="#30FFFFFF" Margin="2,0,7,0"/>
-                        <ComboBox x:Name="CmbHeading" Style="{StaticResource FormatComboStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Heading}" DropDownOpened="FormatCombo_DropDownOpened" SelectionChanged="CmbHeading_SelectionChanged" SelectedIndex="0">
+                        <ComboBox x:Name="CmbHeading" Style="{StaticResource FormatComboStyle}" Tag="&#xED1F;" ToolTip="{local:Loc ResourceKey=QuickNote_Heading}" DropDownOpened="FormatCombo_DropDownOpened" SelectionChanged="CmbHeading_SelectionChanged" SelectedIndex="0">
                             <ComboBoxItem Content="{local:Loc ResourceKey=QuickNote_BodyText}" Tag="0"/>
                             <ComboBoxItem Content="{local:Loc ResourceKey=QuickNote_TitleHeading}" Tag="1"/>
                             <ComboBoxItem Content="{local:Loc ResourceKey=QuickNote_SubtitleHeading}" Tag="2"/>
@@ -189,7 +288,7 @@
                             <ComboBoxItem Content="{local:Loc ResourceKey=QuickNote_Heading5}" Tag="5"/>
                             <ComboBoxItem Content="{local:Loc ResourceKey=QuickNote_Heading6}" Tag="6"/>
                         </ComboBox>
-                        <ComboBox x:Name="CmbList" Style="{StaticResource FormatComboStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_List}" DropDownOpened="FormatCombo_DropDownOpened" SelectionChanged="CmbList_SelectionChanged" SelectedIndex="0" MinWidth="96">
+                        <ComboBox x:Name="CmbList" Style="{StaticResource FormatComboStyle}" Tag="&#xECDA;" ToolTip="{local:Loc ResourceKey=QuickNote_List}" DropDownOpened="FormatCombo_DropDownOpened" SelectionChanged="CmbList_SelectionChanged" SelectedIndex="0">
                             <ComboBoxItem Content="{local:Loc ResourceKey=QuickNote_ListPlaceholder}" Tag=""/>
                             <ComboBoxItem Content="{local:Loc ResourceKey=QuickNote_BulletList}" Tag="bullet"/>
                             <ComboBoxItem Content="{local:Loc ResourceKey=QuickNote_NumberedList}" Tag="numbered"/>
