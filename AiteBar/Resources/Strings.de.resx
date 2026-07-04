@@ -111,6 +111,7 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="QuickNote_Clear" xml:space="preserve"><value>Notiz leeren</value></data>
   <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Schnellnotiz leeren?</value></data>
   <data name="QuickNote_Stats" xml:space="preserve"><value>{0} Zeichen - {1} Zeilen</value></data>
+  <data name="QuickNote_SelectedStats" xml:space="preserve"><value>Ausgewählt: {0} Zeichen mit Leerzeichen - {1} Zeichen ohne Leerzeichen</value></data>
   <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.md</value></data>
   <data name="QuickNote_Menu" xml:space="preserve"><value>Notizmenü</value></data>
   <data name="QuickNote_Theme" xml:space="preserve"><value>Notizfarbe</value></data>
@@ -137,7 +138,6 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="QuickNote_Heading5" xml:space="preserve"><value>Abschnitt</value></data>
   <data name="QuickNote_Heading6" xml:space="preserve"><value>Unterabschnitt</value></data>
   <data name="QuickNote_List" xml:space="preserve"><value>Liste</value></data>
-  <data name="QuickNote_ListPlaceholder" xml:space="preserve"><value>Liste</value></data>
   <data name="QuickNote_Strikethrough" xml:space="preserve"><value>Durchstreichen</value></data>
   <data name="QuickNote_InsertLink" xml:space="preserve"><value>Link einfügen</value></data>
   <data name="QuickNote_LinkText" xml:space="preserve"><value>Text</value></data>

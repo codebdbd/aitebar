@@ -60,6 +60,26 @@ namespace AiteBar
             LoadMarkdown(document, markdown);
         }
 
+        public void Load(FlowDocument document)
+        {
+            string markdown = ReadMarkdown();
+            LoadMarkdown(document, markdown);
+        }
+
+        public string ReadMarkdown()
+        {
+            EnsureNoteDirectory();
+            if (!File.Exists(NotePath))
+            {
+                _lastKnownWriteTimeUtc = DateTime.MinValue;
+                return string.Empty;
+            }
+
+            string markdown = File.ReadAllText(NotePath);
+            _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(NotePath);
+            return markdown;
+        }
+
         public async Task<string> ReadMarkdownAsync()
         {
             EnsureNoteDirectory();
@@ -83,7 +103,8 @@ namespace AiteBar
         public async Task SaveAsync(FlowDocument document)
         {
             EnsureNoteDirectory();
-            await File.WriteAllTextAsync(NotePath, QuickNoteMarkdown.ToMarkdown(document));
+            string markdown = QuickNoteMarkdown.ToMarkdown(document);
+            await File.WriteAllTextAsync(NotePath, markdown);
             _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(NotePath);
         }
 
@@ -93,7 +114,8 @@ namespace AiteBar
             string conflictPath = Path.Combine(
                 Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder,
                 $"QuickNote.conflict-{DateTime.Now:yyyyMMdd-HHmmss}.md");
-            await File.WriteAllTextAsync(conflictPath, QuickNoteMarkdown.ToMarkdown(document));
+            string markdown = QuickNoteMarkdown.ToMarkdown(document);
+            await File.WriteAllTextAsync(conflictPath, markdown);
             LastConflictCopyPath = conflictPath;
             CleanupOldConflictCopies();
             return conflictPath;

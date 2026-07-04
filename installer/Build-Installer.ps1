@@ -62,9 +62,15 @@ New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
 # Cleanup any temporary files left by previous Inno Setup runs (before)
 Get-ChildItem -Path $installerDir -Filter "*.tmp" -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue
 
-& $iscc "/Qp" "/DAppVersion=$appVersion" $issPath
-if ($LASTEXITCODE -ne 0) {
-    throw "ISCC.exe failed with exit code $LASTEXITCODE"
+Push-Location $PSScriptRoot
+try {
+    & $iscc "/Qp" "/DAppVersion=$appVersion" $issPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "ISCC.exe failed with exit code $LASTEXITCODE"
+    }
+}
+finally {
+    Pop-Location
 }
 
 # Cleanup any temporary files left by Inno Setup (after)

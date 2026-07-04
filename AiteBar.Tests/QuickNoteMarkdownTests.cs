@@ -190,6 +190,75 @@ public sealed class QuickNoteMarkdownTests
     }
 
     [Fact]
+    public void LoadMarkdown_RendersAndSavesBulletListAsFlowDocumentList()
+    {
+        string markdown = RunSta(() =>
+        {
+            var document = new FlowDocument();
+            QuickNoteMarkdown.LoadMarkdown(document, "- one\n- two");
+            var list = Assert.IsType<System.Windows.Documents.List>(document.Blocks.FirstBlock);
+
+            Assert.Equal(TextMarkerStyle.Disc, list.MarkerStyle);
+            Assert.Equal(2, list.ListItems.Count);
+
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("- one\n- two", markdown.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public void LoadMarkdown_PreservesIndentedBulletListMarkers()
+    {
+        string markdown = RunSta(() =>
+        {
+            var document = new FlowDocument();
+            QuickNoteMarkdown.LoadMarkdown(document, "  - one\n  - two");
+
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("  - one\n  - two", markdown.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public void LoadMarkdown_RendersAndSavesNumberedListAsFlowDocumentList()
+    {
+        string markdown = RunSta(() =>
+        {
+            var document = new FlowDocument();
+            QuickNoteMarkdown.LoadMarkdown(document, "1. one\n2. two");
+            var list = Assert.IsType<System.Windows.Documents.List>(document.Blocks.FirstBlock);
+
+            Assert.Equal(TextMarkerStyle.Decimal, list.MarkerStyle);
+            Assert.Equal(2, list.ListItems.Count);
+
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("1. one\n2. two", markdown.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public void ToMarkdown_IndentsNestedVisualListsInsideListItems()
+    {
+        string markdown = RunSta(() =>
+        {
+            var parent = new System.Windows.Documents.List { MarkerStyle = TextMarkerStyle.Disc };
+            var item = new ListItem(new Paragraph(new Run("parent")));
+            var child = new System.Windows.Documents.List { MarkerStyle = TextMarkerStyle.Disc };
+            child.ListItems.Add(new ListItem(new Paragraph(new Run("child"))));
+            item.Blocks.Add(child);
+            parent.ListItems.Add(item);
+            var document = new FlowDocument(parent);
+
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("- parent\n  - child", markdown.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
     public void HeadingFontSizes_DecreaseByHeadingLevel()
     {
         Assert.Equal(32, QuickNoteMarkdown.GetHeadingFontSizeForLevel(1));
@@ -227,6 +296,30 @@ public sealed class QuickNoteMarkdownTests
         });
 
         Assert.Equal("# Visible title\nBody", markdown.Replace("\r\n", "\n"));
+    }
+
+    [Fact]
+    public void ToMarkdown_DoesNotSaveHeadingWhenLoadedHeadingTextWasResetToBodySize()
+    {
+        string markdown = RunSta(() =>
+        {
+            var bodyRun = new Run("Visible title")
+            {
+                FontSize = QuickNoteMarkdown.GetHeadingFontSizeForLevel(0),
+                FontWeight = FontWeights.Normal
+            };
+            var headingSpan = new Span(bodyRun)
+            {
+                Tag = "heading:1",
+                FontSize = QuickNoteMarkdown.GetHeadingFontSizeForLevel(1),
+                FontWeight = FontWeights.SemiBold
+            };
+            var document = new FlowDocument(new Paragraph(headingSpan));
+
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal("Visible title", markdown);
     }
 
     [Fact]

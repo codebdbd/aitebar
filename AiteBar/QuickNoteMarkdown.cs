@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Documents;
 using System.Windows.Media;
+using FlowList = System.Windows.Documents.List;
 using MediaFontFamily = System.Windows.Media.FontFamily;
 
 namespace AiteBar
@@ -20,8 +21,8 @@ namespace AiteBar
         private static readonly Regex UrlRegex = new(@"(?i)\b(?:https?://|www\.)[^\s<>()""']+", RegexOptions.Compiled);
         private static readonly Regex EmailRegex = new(@"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", RegexOptions.Compiled);
         private static readonly Regex PhoneRegex = new(@"(?i)\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b", RegexOptions.Compiled);
-        private static readonly Regex BulletMarkerRegex = new(@"^\s*[-*]\s+", RegexOptions.Compiled);
-        private static readonly Regex NumberMarkerRegex = new(@"^\s*\d+\.\s+", RegexOptions.Compiled);
+        private static readonly Regex BulletMarkerRegex = new(@"^(?<indent>\s*)[-*]\s+", RegexOptions.Compiled);
+        private static readonly Regex NumberMarkerRegex = new(@"^(?<indent>\s*)\d+\.\s+", RegexOptions.Compiled);
         private static readonly Regex AnyListMarkerRegex = new(@"^(?<indent>\s*)(?:[-*]\s+|\d+\.\s+)", RegexOptions.Compiled);
         private static readonly Regex HeadingMarkerRegex = new(@"^(?<indent>\s*)(?<marker>#{1,6})\s+", RegexOptions.Compiled);
         private const string HeadingTagPrefix = "heading:";
@@ -76,34 +77,93 @@ namespace AiteBar
         public static void LoadMarkdown(FlowDocument document, string markdown)
         {
             document.Blocks.Clear();
-            var paragraph = CreateParagraph();
             string[] lines = NormalizeLineEndings(markdown).Split('\n');
+            int index = 0;
+            var listStack = new Stack<(FlowList List, int IndentLevel)>();
 
-            for (int i = 0; i < lines.Length; i++)
+            while (index < lines.Length)
             {
-                if (i > 0)
+                string line = lines[index];
+                if (TryReadListLine(line, out bool numbered, out string listText, out string indent))
                 {
-                    paragraph.Inlines.Add(new LineBreak());
+                    int indentLevel = indent.Length;
+                    
+                    // Pop stack to find the correct parent level
+                    while (listStack.Count > 0 && listStack.Peek().IndentLevel >= indentLevel)
+                    {
+                        listStack.Pop();
+                    }
+
+                    FlowList currentList;
+                    bool isNewList = true;
+                    
+                    if (listStack.Count == 0)
+                    {
+                        // Top-level list: check if previous block was a list of same type AND same indent
+                        if (document.Blocks.LastBlock is FlowList lastTopLevel &&
+                            lastTopLevel.MarkerStyle == (numbered ? TextMarkerStyle.Decimal : TextMarkerStyle.Disc) &&
+                            GetListIndent(lastTopLevel) == indent)
+                        {
+                            currentList = lastTopLevel;
+                            isNewList = false;
+                        }
+                        else
+                        {
+                            currentList = CreateList(numbered, indent);
+                            document.Blocks.Add(currentList);
+                        }
+                    }
+                    else
+                    {
+                        // Nested list: check if last item of parent has a list of same type
+                        var (parentList, _) = listStack.Peek();
+                        if (parentList.ListItems.Count == 0)
+                        {
+                            parentList.ListItems.Add(CreateListItem(string.Empty));
+                        }
+                        var lastItemParent = parentList.ListItems.Last();
+                        if (lastItemParent.Blocks.LastBlock is FlowList lastNestedList &&
+                            lastNestedList.MarkerStyle == (numbered ? TextMarkerStyle.Decimal : TextMarkerStyle.Disc))
+                        {
+                            currentList = lastNestedList;
+                            isNewList = false;
+                        }
+                        else
+                        {
+                            currentList = CreateList(numbered, indent);
+                            lastItemParent.Blocks.Add(currentList);
+                        }
+                    }
+                    
+                    // Add current list item
+                    currentList.ListItems.Add(CreateListItem(listText));
+                    
+                    // Push to stack only if it was a new list
+                    if (isNewList)
+                    {
+                        listStack.Push((currentList, indentLevel));
+                    }
+                    else
+                    {
+                        // If we reused an existing list at this indent, we need to restore it to the top of stack
+                        // Because we popped it earlier when checking indent level
+                        listStack.Push((currentList, indentLevel));
+                    }
+                    
+                    index++;
+                    continue;
                 }
 
-                if (TryReadHeadingLine(lines[i], out int headingLevel, out string headingText))
-                {
-                    var heading = CreateHeadingSpan(headingLevel);
-                    AddMarkdownInlines(heading.Inlines, headingText);
-                    paragraph.Inlines.Add(heading);
-                }
-                else
-                {
-                    AddMarkdownInlines(paragraph.Inlines, lines[i]);
-                }
+                // Not a list line - clear stack and add paragraph
+                listStack.Clear();
+                document.Blocks.Add(CreateParagraphFromMarkdownLine(line));
+                index++;
             }
 
-            if (!paragraph.Inlines.Any())
+            if (!document.Blocks.Any())
             {
-                paragraph.Inlines.Add(CreateRun(string.Empty));
+                document.Blocks.Add(CreateParagraph(CreateRun(string.Empty)));
             }
-
-            document.Blocks.Add(paragraph);
         }
 
         public static string ToMarkdown(FlowDocument document)
@@ -112,17 +172,23 @@ namespace AiteBar
             bool firstParagraph = true;
             foreach (Block block in document.Blocks)
             {
-                if (block is not Paragraph paragraph)
-                {
-                    continue;
-                }
-
                 if (!firstParagraph)
                 {
                     builder.AppendLine();
                 }
 
-                AppendParagraphMarkdown(builder, paragraph);
+                if (block is Paragraph paragraph)
+                {
+                    AppendParagraphMarkdown(builder, paragraph);
+                }
+                else if (block is FlowList list)
+                {
+                    AppendListMarkdown(builder, list);
+                }
+                else
+                {
+                    continue;
+                }
 
                 firstParagraph = false;
             }
@@ -454,6 +520,35 @@ namespace AiteBar
             return !string.IsNullOrWhiteSpace(headingText);
         }
 
+        private static bool TryReadListLine(string line, out bool numbered, out string itemText) =>
+            TryReadListLine(line, out numbered, out itemText, out _);
+
+        private static bool TryReadListLine(string line, out bool numbered, out string itemText, out string indent)
+        {
+            numbered = false;
+            itemText = line;
+            indent = string.Empty;
+
+            Match numberMatch = NumberMarkerRegex.Match(line);
+            if (numberMatch.Success)
+            {
+                numbered = true;
+                indent = numberMatch.Groups["indent"].Value;
+                itemText = line[numberMatch.Length..];
+                return true;
+            }
+
+            Match bulletMatch = BulletMarkerRegex.Match(line);
+            if (bulletMatch.Success)
+            {
+                indent = bulletMatch.Groups["indent"].Value;
+                itemText = line[bulletMatch.Length..];
+                return true;
+            }
+
+            return false;
+        }
+
         private static void FlushPlain(InlineCollection inlines, StringBuilder plain)
         {
             if (plain.Length == 0)
@@ -482,6 +577,43 @@ namespace AiteBar
             }
 
             return paragraph;
+        }
+
+        private static Paragraph CreateParagraphFromMarkdownLine(string line)
+        {
+            if (TryReadHeadingLine(line, out int headingLevel, out string headingText))
+            {
+                var heading = CreateHeadingSpan(headingLevel);
+                AddMarkdownInlines(heading.Inlines, headingText);
+                return CreateParagraph(heading);
+            }
+
+            var paragraph = CreateParagraph();
+            AddMarkdownInlines(paragraph.Inlines, line);
+            if (!paragraph.Inlines.Any())
+            {
+                paragraph.Inlines.Add(CreateRun(string.Empty));
+            }
+
+            return paragraph;
+        }
+
+        private static FlowList CreateList(bool numbered, string indent = "") =>
+            new()
+            {
+                MarkerStyle = numbered ? TextMarkerStyle.Decimal : TextMarkerStyle.Disc,
+                Margin = new Thickness(0),
+                Tag = string.IsNullOrEmpty(indent) ? null : "indent:" + indent
+            };
+
+        private static ListItem CreateListItem(string markdownText)
+        {
+            var item = new ListItem
+            {
+                Margin = new Thickness(0)
+            };
+            item.Blocks.Add(CreateParagraphFromMarkdownLine(markdownText));
+            return item;
         }
 
         private static Run CreateRun(string text, MediaFontFamily? fontFamily = null) =>
@@ -547,6 +679,69 @@ namespace AiteBar
             AppendLineMarkdown(builder, line);
         }
 
+        private static void AppendListMarkdown(StringBuilder builder, FlowList list) =>
+            AppendListMarkdown(builder, list, 0);
+
+        private static void AppendListMarkdown(StringBuilder builder, FlowList list, int nestingLevel)
+        {
+            bool numbered = list.MarkerStyle is TextMarkerStyle.Decimal or TextMarkerStyle.LowerLatin or TextMarkerStyle.UpperLatin or TextMarkerStyle.LowerRoman or TextMarkerStyle.UpperRoman;
+            string indent = GetListIndent(list);
+            // If no stored indent (nested list), compute from nesting level
+            if (string.IsNullOrEmpty(indent) && nestingLevel > 0)
+            {
+                indent = new string(' ', nestingLevel * 2);
+            }
+            string continuationIndent = indent + "  ";
+            int number = 1;
+            bool firstItem = true;
+
+            foreach (ListItem item in list.ListItems)
+            {
+                if (!firstItem)
+                {
+                    builder.AppendLine();
+                }
+
+                builder.Append(indent);
+                builder.Append(numbered ? $"{number}. " : "- ");
+                AppendListItemMarkdown(builder, item, continuationIndent, nestingLevel);
+                number++;
+                firstItem = false;
+            }
+        }
+
+        private static void AppendListItemMarkdown(StringBuilder builder, ListItem item, string continuationIndent, int currentNestingLevel)
+        {
+            bool firstBlock = true;
+            foreach (Block block in item.Blocks)
+            {
+                if (block is FlowList nestedList)
+                {
+                    if (!firstBlock)
+                    {
+                        builder.AppendLine();
+                    }
+
+                    AppendListMarkdown(builder, nestedList, currentNestingLevel + 1);
+                    firstBlock = false;
+                    continue;
+                }
+
+                if (!firstBlock)
+                {
+                    builder.AppendLine();
+                    builder.Append(continuationIndent);
+                }
+
+                if (block is Paragraph paragraph)
+                {
+                    AppendParagraphMarkdown(builder, paragraph);
+                }
+
+                firstBlock = false;
+            }
+        }
+
         private static void AppendLineMarkdown(StringBuilder builder, IReadOnlyList<Inline> line)
         {
             if (TryGetHeadingLevelForLine(line, out int headingLevel))
@@ -573,22 +768,23 @@ namespace AiteBar
 
                 if (inline is Span span)
                 {
-                    if (TryGetHeadingLevel(span, out headingLevel))
-                    {
-                        return true;
-                    }
-
                     Inline? firstText = span.Inlines.FirstInline;
                     while (firstText != null)
                     {
                         if (firstText is Run { Text.Length: > 0 } childRun && !string.IsNullOrWhiteSpace(childRun.Text))
                         {
-                            return TryGetHeadingLevelFromLocalFontSize(childRun, out headingLevel) ||
-                                   TryGetHeadingLevelFromLocalFontSize(span, out headingLevel);
+                            if (HasLocalFontSize(childRun))
+                            {
+                                return TryGetHeadingLevelFromLocalFontSize(childRun, out headingLevel);
+                            }
+
+                            return TryGetHeadingLevelFromLocalFontSize(span, out headingLevel);
                         }
 
                         firstText = firstText.NextInline;
                     }
+
+                    return TryGetHeadingLevelFromLocalFontSize(span, out headingLevel);
                 }
 
                 if (inline is Hyperlink hyperlink)
@@ -598,8 +794,12 @@ namespace AiteBar
                     {
                         if (firstText is Run { Text.Length: > 0 } linkRun && !string.IsNullOrWhiteSpace(linkRun.Text))
                         {
-                            return TryGetHeadingLevelFromLocalFontSize(linkRun, out headingLevel) ||
-                                   TryGetHeadingLevelFromLocalFontSize(hyperlink, out headingLevel);
+                            if (HasLocalFontSize(linkRun))
+                            {
+                                return TryGetHeadingLevelFromLocalFontSize(linkRun, out headingLevel);
+                            }
+
+                            return TryGetHeadingLevelFromLocalFontSize(hyperlink, out headingLevel);
                         }
 
                         firstText = firstText.NextInline;
@@ -621,6 +821,9 @@ namespace AiteBar
             headingLevel = 0;
             return false;
         }
+
+        private static bool HasLocalFontSize(TextElement element) =>
+            element.ReadLocalValue(TextElement.FontSizeProperty) is double;
 
         private static bool TryGetHeadingLevelFromFontSize(double fontSize, out int headingLevel)
         {
@@ -711,6 +914,16 @@ namespace AiteBar
 
             return int.TryParse(tag[HeadingTagPrefix.Length..], out headingLevel) &&
                    headingLevel is >= 1 and <= 6;
+        }
+
+        private static string GetListIndent(FlowList list, string? fallbackIndent = null)
+        {
+            if (list.Tag is string tag && tag.StartsWith("indent:", StringComparison.Ordinal))
+            {
+                return tag["indent:".Length..];
+            }
+
+            return fallbackIndent ?? string.Empty;
         }
 
         private static void AppendStyledText(StringBuilder builder, string text, bool bold, bool italic, bool code, bool underline, bool strikethrough)

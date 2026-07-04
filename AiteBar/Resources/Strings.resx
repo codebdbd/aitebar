@@ -200,6 +200,7 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_Clear" xml:space="preserve"><value>Clear note</value></data>
   <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Clear the quick note?</value></data>
   <data name="QuickNote_Stats" xml:space="preserve"><value>{0} chars - {1} lines</value></data>
+  <data name="QuickNote_SelectedStats" xml:space="preserve"><value>Selected: {0} characters with spaces - {1} characters without spaces</value></data>
   <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.md</value></data>
   <data name="QuickNote_Menu" xml:space="preserve"><value>Note menu</value></data>
   <data name="QuickNote_Theme" xml:space="preserve"><value>Note color</value></data>
@@ -226,7 +227,6 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_Heading5" xml:space="preserve"><value>Section</value></data>
   <data name="QuickNote_Heading6" xml:space="preserve"><value>Subsection</value></data>
   <data name="QuickNote_List" xml:space="preserve"><value>List</value></data>
-  <data name="QuickNote_ListPlaceholder" xml:space="preserve"><value>List</value></data>
   <data name="QuickNote_Strikethrough" xml:space="preserve"><value>Strikethrough</value></data>
   <data name="QuickNote_InsertLink" xml:space="preserve"><value>Insert link</value></data>
   <data name="QuickNote_LinkText" xml:space="preserve"><value>Text</value></data>

@@ -442,6 +442,9 @@
   <data name="QuickNote_Stats" xml:space="preserve">
     <value>{0} символов - {1} строк</value>
   </data>
+  <data name="QuickNote_SelectedStats" xml:space="preserve">
+    <value>Выделено: {0} символов с пробелами - {1} символов без пробелов</value>
+  </data>
   <data name="QuickNote_FooterFile" xml:space="preserve">
     <value>QuickNote.md</value>
   </data>
@@ -518,9 +521,6 @@
     <value>Заголовок 6</value>
   </data>
   <data name="QuickNote_List" xml:space="preserve">
-    <value>Список</value>
-  </data>
-  <data name="QuickNote_ListPlaceholder" xml:space="preserve">
     <value>Список</value>
   </data>
   <data name="QuickNote_Strikethrough" xml:space="preserve">

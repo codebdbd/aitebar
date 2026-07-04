@@ -1,4 +1,5 @@
 using System.Threading;
+using System.Windows;
 using System.Windows.Documents;
 using AiteBar;
 
@@ -30,6 +31,46 @@ public sealed class QuickNoteDocumentHelperTests
             {
                 TextPointer pointer = QuickNoteDocumentHelper.GetTextPointerAtOffset(document, offset)!;
                 Assert.Equal(offset, QuickNoteDocumentHelper.GetTextOffset(document, pointer));
+            }
+        });
+    }
+
+    [Fact]
+    public void GetTextPointerAtOffset_RoundTripsOffsetsAcrossParagraphBlocks()
+    {
+        RunSta(() =>
+        {
+            var document = new FlowDocument();
+            document.Blocks.Add(new Paragraph(new Run("one")));
+            document.Blocks.Add(new Paragraph(new Run("two")));
+            string text = QuickNoteDocumentHelper.NormalizeLineEndings(
+                new TextRange(document.ContentStart, document.ContentEnd).Text).TrimEnd('\n');
+
+            for (int offset = 0; offset <= text.Length; offset++)
+            {
+                TextPointer pointer = QuickNoteDocumentHelper.GetTextPointerAtOffset(document, offset)!;
+                Assert.True(QuickNoteDocumentHelper.GetTextOffset(document, pointer) >= offset);
+            }
+        });
+    }
+
+    [Fact]
+    public void GetTextPointerAtOffset_RoundTripsOffsetsAcrossListBlocks()
+    {
+        RunSta(() =>
+        {
+            var document = new FlowDocument();
+            var list = new System.Windows.Documents.List { MarkerStyle = TextMarkerStyle.Disc };
+            list.ListItems.Add(new ListItem(new Paragraph(new Run("one"))));
+            list.ListItems.Add(new ListItem(new Paragraph(new Run("two"))));
+            document.Blocks.Add(list);
+            string text = QuickNoteDocumentHelper.NormalizeLineEndings(
+                new TextRange(document.ContentStart, document.ContentEnd).Text).TrimEnd('\n');
+
+            for (int offset = 0; offset <= text.Length; offset++)
+            {
+                TextPointer pointer = QuickNoteDocumentHelper.GetTextPointerAtOffset(document, offset)!;
+                Assert.True(QuickNoteDocumentHelper.GetTextOffset(document, pointer) >= offset);
             }
         });
     }

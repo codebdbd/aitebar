@@ -48,6 +48,7 @@
   <data name="QuickNote_Clear" xml:space="preserve"><value>Очистити нотатку</value></data>
   <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Очистити швидку нотатку?</value></data>
   <data name="QuickNote_Stats" xml:space="preserve"><value>{0} символів - {1} рядків</value></data>
+  <data name="QuickNote_SelectedStats" xml:space="preserve"><value>Виділено: {0} символів з пробілами - {1} символів без пробілів</value></data>
   <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.md</value></data>
   <data name="QuickNote_Menu" xml:space="preserve"><value>Меню нотатки</value></data>
   <data name="QuickNote_Theme" xml:space="preserve"><value>Колір нотатки</value></data>
@@ -74,7 +75,6 @@
   <data name="QuickNote_Heading5" xml:space="preserve"><value>Заголовок 5</value></data>
   <data name="QuickNote_Heading6" xml:space="preserve"><value>Заголовок 6</value></data>
   <data name="QuickNote_List" xml:space="preserve"><value>Список</value></data>
-  <data name="QuickNote_ListPlaceholder" xml:space="preserve"><value>Список</value></data>
   <data name="QuickNote_Strikethrough" xml:space="preserve"><value>Закреслити</value></data>
   <data name="QuickNote_InsertLink" xml:space="preserve"><value>Вставити посилання</value></data>
   <data name="QuickNote_LinkText" xml:space="preserve"><value>Текст</value></data>

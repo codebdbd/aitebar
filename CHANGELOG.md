@@ -9,9 +9,23 @@
 
 ## [Unreleased]
 
-Пока нет незарелизенных изменений.
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Quick Note formatting**: Исправлено форматирование маркированных и нумерованных списков: списки теперь отображаются визуально, как в Windows Notepad, без вставки Markdown-маркеров в текст редактора.
+- **Quick Note formatting**: Fixed bullet and numbered list formatting: lists are now rendered visually, similar to Windows Notepad, without inserting Markdown markers into the editor text.
+- **Quick Note clear formatting**: Очистка форматирования теперь удаляет визуальные списки и не переносит выделение на соседние строки.
+- **Quick Note clear formatting**: Clear formatting now removes visual lists and no longer moves selection to unrelated lines.
+- **Quick Note clear formatting**: Исправлена очистка выделенного списка из нескольких строк: команда больше не очищает только последний пункт.
+- **Quick Note clear formatting**: Fixed clearing multi-line selected lists so the command no longer clears only the last item.
+- **Quick Note performance**: Снижены микрозависания при выделении и форматировании текста за счет отложенного обновления статистики, сохранения live-выделения и локальной проверки ссылок.
+- **Quick Note performance**: Reduced small stalls during selection and formatting by debouncing footer statistics, preserving live selection, and using local link detection.
+- **Quick Note startup**: Текст заметки теперь загружается до первого показа окна, чтобы окно не открывалось пустым с последующим появлением содержимого.
+- **Quick Note startup**: Note text is now loaded before the first window paint, avoiding an empty window followed by delayed content.
 
-No unreleased changes yet.
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Quick Note toolbar**: Меню списков теперь содержит только два действия: маркированный список и нумерованный список.
+- **Quick Note toolbar**: The list menu now contains only two actions: bullet list and numbered list.
+- **Quick Note status**: При выделении текста статус показывает количество символов с пробелами и без пробелов.
+- **Quick Note status**: When text is selected, the status area shows character counts with and without spaces.
 
 ## [1.10.0] - 2026-06-18
 
