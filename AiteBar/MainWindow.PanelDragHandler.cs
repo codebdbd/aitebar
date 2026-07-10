@@ -63,10 +63,11 @@ public partial class MainWindow
         else
         {
             // Reset settings via service
-            var settings = _settingsService.Settings;
-            settings.Edge = _dragStartEdge;
-            settings.MonitorIndex = _dragStartMonitorIndex;
-            _settingsService.Settings = settings;
+            _settingsService.UpdateSettings(s =>
+            {
+                s.Edge = _dragStartEdge;
+                s.MonitorIndex = _dragStartMonitorIndex;
+            });
 
             UpdateOrientation();
         }
@@ -100,10 +101,11 @@ public partial class MainWindow
         }
 
         // Update settings via service
-            var settings = _settingsService.Settings;
-            settings.MonitorIndex = nextMonitorIndex;
-            settings.Edge = nextEdge;
-            _settingsService.Settings = settings;
+            _settingsService.UpdateSettings(s =>
+            {
+                s.MonitorIndex = nextMonitorIndex;
+                s.Edge = nextEdge;
+            });
 
             _panelDragChanged = true;
             UpdateOrientation();

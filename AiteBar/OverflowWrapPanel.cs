@@ -56,8 +56,9 @@ public sealed class OverflowWrapPanel : WpfPanel
 
     protected override WpfSize MeasureOverride(WpfSize availableSize)
     {
-        WpfSize itemSize = MeasureChildren();
-        int count = GetVisibleChildren().Count;
+        List<UIElement> visible = GetVisibleChildren();
+        WpfSize itemSize = MeasureChildren(visible);
+        int count = visible.Count;
         if (count == 0)
         {
             return new WpfSize();
@@ -70,7 +71,8 @@ public sealed class OverflowWrapPanel : WpfPanel
 
     protected override WpfSize ArrangeOverride(WpfSize finalSize)
     {
-        WpfSize itemSize = GetMaxDesiredChildSize();
+        List<UIElement> visible = GetVisibleChildren();
+        WpfSize itemSize = GetMaxDesiredChildSize(visible);
         if (itemSize.Width <= 0 || itemSize.Height <= 0)
         {
             return finalSize;
@@ -78,31 +80,31 @@ public sealed class OverflowWrapPanel : WpfPanel
 
         if (Orientation == WpfOrientation.Vertical)
         {
-            ArrangeVertical(finalSize, itemSize);
+            ArrangeVertical(visible, finalSize, itemSize);
         }
         else
         {
-            ArrangeHorizontal(finalSize, itemSize);
+            ArrangeHorizontal(visible, finalSize, itemSize);
         }
 
         return finalSize;
     }
 
-    private WpfSize MeasureChildren()
+    private static WpfSize MeasureChildren(List<UIElement> children)
     {
-        foreach (UIElement child in GetVisibleChildren())
+        foreach (UIElement child in children)
         {
             child.Measure(new WpfSize(double.PositiveInfinity, double.PositiveInfinity));
         }
 
-        return GetMaxDesiredChildSize();
+        return GetMaxDesiredChildSize(children);
     }
 
-    private WpfSize GetMaxDesiredChildSize()
+    private static WpfSize GetMaxDesiredChildSize(List<UIElement> children)
     {
         double width = 0;
         double height = 0;
-        foreach (UIElement child in GetVisibleChildren())
+        foreach (UIElement child in children)
         {
             width = Math.Max(width, child.DesiredSize.Width);
             height = Math.Max(height, child.DesiredSize.Height);
@@ -152,7 +154,7 @@ public sealed class OverflowWrapPanel : WpfPanel
             leadingReserve + (firstColumnCount * itemSize.Height),
             Math.Max(
                 overflowReserve + (secondColumnCount * itemSize.Height),
-                thirdColumnCount * itemSize.Height));
+                overflowReserve + (thirdColumnCount * itemSize.Height)));
 
         return new WpfSize(3 * itemSize.Width, totalHeight);
     }
@@ -167,9 +169,8 @@ public sealed class OverflowWrapPanel : WpfPanel
         return new WpfSize(visibleColumns * itemSize.Width, visibleRows * itemSize.Height);
     }
 
-    private void ArrangeVertical(WpfSize finalSize, WpfSize itemSize)
+    private void ArrangeVertical(List<UIElement> children, WpfSize finalSize, WpfSize itemSize)
     {
-        List<UIElement> children = GetVisibleChildren();
         int count = children.Count;
         double leadingReserve = Math.Max(0, LeadingPrimaryReserve);
         double overflowReserve = Math.Max(0, OverflowPrimaryReserve);
@@ -202,7 +203,7 @@ public sealed class OverflowWrapPanel : WpfPanel
             {
                 column = 2;
                 row = index - firstColumnCount - secondColumnCount;
-                verticalOffset = 0;
+                verticalOffset = overflowReserve;
             }
 
             children[index].Arrange(new Rect(
@@ -213,9 +214,8 @@ public sealed class OverflowWrapPanel : WpfPanel
         }
     }
 
-    private void ArrangeHorizontal(WpfSize finalSize, WpfSize itemSize)
+    private void ArrangeHorizontal(List<UIElement> children, WpfSize finalSize, WpfSize itemSize)
     {
-        List<UIElement> children = GetVisibleChildren();
         int count = children.Count;
         int columnsPerRow = GetCapacity(finalSize.Width, itemSize.Width, count);
 
@@ -248,7 +248,7 @@ public sealed class OverflowWrapPanel : WpfPanel
 
     public Rect GetArrangedRectForIndex(int index, int totalCount, WpfSize finalSize)
     {
-        WpfSize itemSize = GetMaxDesiredChildSize();
+        WpfSize itemSize = GetMaxDesiredChildSize(GetVisibleChildren());
         if (itemSize.Width <= 0 || itemSize.Height <= 0)
         {
             return new Rect();
@@ -284,7 +284,7 @@ public sealed class OverflowWrapPanel : WpfPanel
             {
                 column = 2;
                 row = index - firstColumnCount - secondColumnCount;
-                verticalOffset = 0;
+                verticalOffset = overflowReserve;
             }
 
             return new Rect(

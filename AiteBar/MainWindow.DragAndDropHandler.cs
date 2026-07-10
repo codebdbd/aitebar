@@ -143,47 +143,45 @@ public partial class MainWindow
                         // Insert the dragged one in the new position
                         visibleUtilityIds.Insert(insertIndexInVisible, draggedItem.Id);
 
-                        // Now build the full UtilityButtonOrder including possibly hidden ones
-                        // Get settings from service (clone)
-                        var settings = _settingsService.Settings;
-
-                        var fullOrder = new List<string>();
-                        foreach (var id in settings.UtilityButtonOrder)
+                        // Update UtilityButtonOrder atomically: read current order, rebuild, write back — all inside one lock
+                        _settingsService.UpdateSettings(s =>
                         {
-                            if (id != draggedItem.Id)
+                            var currentOrder = s.UtilityButtonOrder;
+
+                            var fullOrder = new List<string>();
+                            foreach (var id in currentOrder)
                             {
-                                fullOrder.Add(id);
+                                if (id != draggedItem.Id)
+                                {
+                                    fullOrder.Add(id);
+                                }
                             }
-                        }
 
-                        // Merge visible order with full order, keeping hidden ones in their original positions
-                        var finalOrder = new List<string>();
-                        int visibleIndex = 0;
-                        foreach (var id in fullOrder)
-                        {
-                            if (visibleUtilityIds.Contains(id))
+                            // Merge visible order with full order, keeping hidden ones in their original positions
+                            var finalOrder = new List<string>();
+                            int visibleIndex = 0;
+                            foreach (var id in fullOrder)
                             {
-                                // If it's a visible button, take the next from visible order
+                                if (visibleUtilityIds.Contains(id))
+                                {
+                                    finalOrder.Add(visibleUtilityIds[visibleIndex]);
+                                    visibleIndex++;
+                                }
+                                else
+                                {
+                                    finalOrder.Add(id);
+                                }
+                            }
+
+                            // Add any remaining visible buttons at the end
+                            while (visibleIndex < visibleUtilityIds.Count)
+                            {
                                 finalOrder.Add(visibleUtilityIds[visibleIndex]);
                                 visibleIndex++;
                             }
-                            else
-                            {
-                                // Keep hidden buttons in their original position
-                                finalOrder.Add(id);
-                            }
-                        }
 
-                        // Add any remaining visible buttons at the end
-                        while (visibleIndex < visibleUtilityIds.Count)
-                        {
-                            finalOrder.Add(visibleUtilityIds[visibleIndex]);
-                            visibleIndex++;
-                        }
-
-                        // Update settings clone and save it to service
-                        settings.UtilityButtonOrder = finalOrder;
-                        _settingsService.Settings = settings;
+                            s.UtilityButtonOrder = finalOrder;
+                        });
                         await SaveSettingsWithNotificationAsync();
                     }
                 }

@@ -43,6 +43,43 @@ public sealed class PanelLayoutHelperTests
     }
 
     [Fact]
+    public void Calculate_Horizontal_KeepsTwoControlButtonsInOneRow()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: false,
+            availablePrimary: 600,
+            panelPercent: 100,
+            totalButtonCount: 6,
+            controlButtonCount: 2,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(97, metrics.FixedWidth);
+        Assert.Equal(44, metrics.FixedHeight);
+        Assert.Equal(264, metrics.UserWidth);
+        Assert.Equal(422, metrics.PanelWidth);
+        Assert.Equal(52, metrics.PanelHeight);
+    }
+
+    [Fact]
+    public void Calculate_Horizontal_StacksTwoControlButtonsOnlyWhenButtonsWrap()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: false,
+            availablePrimary: 400,
+            panelPercent: 100,
+            totalButtonCount: 10,
+            controlButtonCount: 2,
+            trailingControlButtonCount: 0);
+
+        Assert.True(metrics.UseMultiColumnControls);
+        Assert.Equal(53, metrics.FixedWidth);
+        Assert.Equal(88, metrics.FixedHeight);
+        Assert.Equal(308, metrics.UserWidth);
+        Assert.Equal(369, metrics.PanelWidth);
+        Assert.Equal(96, metrics.PanelHeight);
+    }
+
+    [Fact]
     public void Calculate_Vertical_MirrorsGeometryAcrossAxes()
     {
         var metrics = PanelLayoutHelper.Calculate(
@@ -81,6 +118,25 @@ public sealed class PanelLayoutHelperTests
     }
 
     [Fact]
+    public void Calculate_Vertical_KeepsTwoControlButtonsStackedWhenButtonsFitOneColumn()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 600,
+            panelPercent: 100,
+            totalButtonCount: 6,
+            controlButtonCount: 2,
+            trailingControlButtonCount: 1);
+
+        Assert.False(metrics.UseMultiColumnControls);
+        Assert.Equal(52, metrics.PanelWidth);
+        Assert.Equal(97, metrics.FixedHeight);
+        Assert.Equal(44, metrics.UserWidth);
+        Assert.Equal(361, metrics.UserHeight);
+        Assert.Equal(1, metrics.UserBands);
+    }
+
+    [Fact]
     public void Calculate_Vertical_AddsSecondColumnOnlyOnOverflow()
     {
         var metrics = PanelLayoutHelper.Calculate(
@@ -98,6 +154,25 @@ public sealed class PanelLayoutHelperTests
         Assert.Equal(2, metrics.UserBands);
         Assert.Equal(53, metrics.UserLeadingReserve);
         Assert.Equal(metrics.UserLeadingReserve, metrics.UserOverflowReserve);
+    }
+
+    [Fact]
+    public void Calculate_Vertical_ExpandsControlsWhenSecondColumnHasSingleButton()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 450,
+            panelPercent: 100,
+            totalButtonCount: 8,
+            controlButtonCount: 2,
+            trailingControlButtonCount: 1);
+
+        Assert.Equal(2, metrics.UserBands);
+        Assert.True(metrics.UseMultiColumnControls);
+        Assert.Equal(96, metrics.PanelWidth);
+        Assert.Equal(53, metrics.FixedHeight);
+        Assert.Equal(88, metrics.UserWidth);
+        Assert.Equal(361, metrics.UserHeight);
     }
 
     [Fact]
