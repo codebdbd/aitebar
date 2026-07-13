@@ -383,7 +383,7 @@ public sealed class QRCodeService
             throw new InvalidDataException(LocalizationService.Get("QRCodeGenerator_ErrorInvalidLogo"));
         }
 
-        float boxSize = outputSize * Math.Clamp(logoSizePercent, 8, 20) / 100f;
+        float boxSize = (float)outputSize * Math.Clamp(logoSizePercent, 8, 20) / 100f;
         float backingSize = boxSize * 1.22f;
         var backing = CenterRect(outputSize, backingSize);
         var target = FitRect(logo.Width, logo.Height, CenterRect(outputSize, boxSize));
@@ -442,7 +442,7 @@ public sealed class QRCodeService
             return;
         }
 
-        float boxSize = outputSize * Math.Clamp(logoSizePercent, 8, 20) / 100f;
+        float boxSize = (float)outputSize * Math.Clamp(logoSizePercent, 8, 20) / 100f;
         float backingSize = boxSize * 1.22f;
         SKRect backing = CenterRect(outputSize, backingSize);
         SKRect target = FitRect(logoData.Width, logoData.Height, CenterRect(outputSize, boxSize));
