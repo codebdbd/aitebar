@@ -357,7 +357,8 @@ internal class TaskbarPositionIndicatorService : IDisposable
                     return true;
 
                 // Skip minimized windows
-                var placement = new NativeMethods.WINDOWPLACEMENT { length = Marshal.SizeOf<NativeMethods.WINDOWPLACEMENT>() };
+                var placement = default(NativeMethods.WINDOWPLACEMENT);
+                placement.length = Marshal.SizeOf<NativeMethods.WINDOWPLACEMENT>();
                 if (!NativeMethods.GetWindowPlacement(hWnd, out placement))
                     return true;
                 if (placement.showCmd == NativeMethods.SW_SHOWMINIMIZED)
