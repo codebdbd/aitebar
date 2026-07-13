@@ -269,7 +269,7 @@ public sealed class FileSorterService
                 EnsureDirectoryWritable(originalDirectory);
 
                 // Try original path first; only use unique path if original is taken
-                string restorePath = await MoveFileWithRetryAsync(
+                _ = await MoveFileWithRetryAsync(
                     entry.DestinationPath,
                     () =>
                     {
