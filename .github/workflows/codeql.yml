@@ -35,6 +35,11 @@ jobs:
           languages: csharp
           build-mode: manual
           queries: security-and-quality
+          config: |
+            paths-ignore:
+              - '**/obj/**'
+              - '**/*.g.cs'
+              - '**/*.g.i.cs'
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
