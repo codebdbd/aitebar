@@ -33,24 +33,8 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: csharp
-          build-mode: manual
+          build-mode: none
           queries: security-and-quality
-          config: |
-            paths-ignore:
-              - '**/obj/**'
-              - '**/*.g.cs'
-              - '**/*.g.i.cs'
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          global-json-file: global.json
-
-      - name: Restore locked dependencies
-        run: dotnet restore .\AiteBar.sln --locked-mode
-
-      - name: Build Release
-        run: dotnet build .\AiteBar.sln -c Release --no-restore
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@v4
