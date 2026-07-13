@@ -165,7 +165,7 @@ public sealed class FileSorterService
 
         foreach (string filePath in Directory.EnumerateFiles(rootFullPath).ToList())
         {
-            FileInfo? fileInfo = null;
+            FileInfo? fileInfo;
             try
             {
                 fileInfo = new FileInfo(filePath);

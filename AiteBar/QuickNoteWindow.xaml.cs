@@ -760,7 +760,7 @@ namespace AiteBar
             string after = run.Text[splitOffset..];
 
             run.Text = before;
-            Inline anchor = run;
+            Inline anchor;
             if (string.IsNullOrEmpty(before))
             {
                 siblings.InsertBefore(run, hyperlink);

@@ -36,8 +36,8 @@ internal static class TelemetryService
         }
 
         SentrySettings? settingsFromFile = await LoadSettingsFromFileAsync();
-        string? dsn = null;
-        string? environment = null;
+        string? dsn;
+        string? environment;
         double tracesSampleRate = 0.0;
         bool sendDefaultPii = false;
 
