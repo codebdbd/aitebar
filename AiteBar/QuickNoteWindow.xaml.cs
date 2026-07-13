@@ -1491,7 +1491,6 @@ namespace AiteBar
 
         private System.Drawing.Rectangle GetWorkArea()
         {
-            var screens = Forms.Screen.AllScreens;
             // Находим экран, где сейчас находится окно или используем основной
             var currentScreen = Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(this).Handle);
             return currentScreen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? GetVirtualScreenFallback();
