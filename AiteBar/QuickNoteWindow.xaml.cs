@@ -227,7 +227,7 @@ namespace AiteBar
             {
                 do
                 {
-                    if (!_loaded || (!_hasPendingChanges && !force))
+                    if (!_hasPendingChanges && !force)
                     {
                         return true;
                     }
