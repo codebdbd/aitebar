@@ -55,7 +55,7 @@ jobs:
           "Inno Setup version: $version"
 
       - name: Restore locked dependencies
-        run: dotnet restore .\AiteBar.sln --locked-mode
+        run: dotnet restore .\AiteBar.sln
 
       - name: Verify tag matches project version
         shell: pwsh

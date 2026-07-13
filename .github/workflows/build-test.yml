@@ -32,7 +32,7 @@ jobs:
           global-json-file: global.json
 
       - name: Restore locked dependencies
-        run: dotnet restore .\AiteBar.sln --locked-mode
+        run: dotnet restore .\AiteBar.sln
 
       - name: Build Release
         run: dotnet build .\AiteBar.sln -c Release --no-restore
