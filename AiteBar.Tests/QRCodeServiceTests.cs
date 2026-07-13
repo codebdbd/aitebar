@@ -466,14 +466,6 @@ public sealed class QRCodeServiceTests
     [Fact]
     public async Task GenerateAsync_EmptyPayload_ReturnsEmptyString()
     {
-        var options = new QRCodeGenerationOptions
-        {
-            ContentType = QRCodeContentType.Phone,
-            PhoneNumber = ""
-        };
-
-        // Phone with empty number returns "tel:" which is not empty enough to fail validation
-        // but let's test the empty case for Text type directly
         var textOptions = new QRCodeGenerationOptions
         {
             ContentType = QRCodeContentType.Text,
