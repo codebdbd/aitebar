@@ -565,7 +565,7 @@ namespace AiteBar
             
             // Если это веб-ссылка и иконка не выбрана — пытаемся скачать favicon
             var actionType = GetSelectedActionType();
-            if (!_isLoadingElementData && actionType == ActionType.Web && !string.IsNullOrWhiteSpace(TxtActionValue.Text))
+            if (actionType == ActionType.Web && !string.IsNullOrWhiteSpace(TxtActionValue.Text))
             {
                 QueueFaviconDownload(TxtActionValue.Text);
             }
