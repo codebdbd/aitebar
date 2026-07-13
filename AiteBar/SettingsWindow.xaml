@@ -18,46 +18,7 @@
                 <ResourceDictionary Source="SettingsWindowResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
-        <!-- TabControl Style -->
-        <Style TargetType="TabControl">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Padding" Value="0"/>
-        </Style>
 
-        <Style TargetType="TabItem">
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TabItem">
-                        <Border x:Name="Bd" Background="Transparent" BorderThickness="0,0,0,2" BorderBrush="Transparent" Margin="0,0,20,0" Padding="10,8">
-                            <ContentPresenter ContentSource="Header" TextElement.Foreground="{TemplateBinding Foreground}" TextElement.FontSize="14" TextElement.FontWeight="SemiBold"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="False">
-                                <Setter Property="Foreground" Value="{DynamicResource MutedText}"/>
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Cursor" Value="Hand"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </Trigger>
-                            <MultiTrigger>
-                                <MultiTrigger.Conditions>
-                                    <Condition Property="IsKeyboardFocused" Value="True"/>
-                                    <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
-                                </MultiTrigger.Conditions>
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
-                                <Setter Property="Foreground" Value="White"/>
-                            </MultiTrigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
         </ResourceDictionary>
     </Window.Resources>
 

@@ -47,7 +47,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
 
-    private const string DonatePageUrl = "https://suvorov.pp.ua/donate/";
+    private const string DonatePageUrl = "https://codebdbd.github.io/";
     private const double TopPanelVisibleOffset = 12;
     private bool _isPanelDragging = false;
     private bool _panelDragChanged = false;

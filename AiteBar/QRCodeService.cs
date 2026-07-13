@@ -155,8 +155,7 @@ public sealed class QRCodeService
     private GenerationContext PrepareGenerationContext(QRCodeGenerationOptions options)
     {
         bool logoForcesHighEcc = HasLogo(options) && options.EccLevel != QRCodeEccLevel.H;
-        var (normalizedOptions, darkInvalid, lightInvalid) = NormalizeOptions(options);
-        string payload = BuildPayload(normalizedOptions);
+        var (normalizedOptions, payload, darkInvalid, lightInvalid) = NormalizeOptions(options);
         QRCodeData qrData = GenerateQrDataCore(payload, normalizedOptions.EccLevel);
         
         SKColor skDarkColor = ParseNormalizedSkColor(normalizedOptions.DarkColor);
@@ -260,7 +259,7 @@ public sealed class QRCodeService
         return moduleCount <= 21 ? 1 : ((moduleCount - 21) / 4) + 1;
     }
 
-    internal static (QRCodeGenerationOptions options, bool darkInvalid, bool lightInvalid) NormalizeOptions(QRCodeGenerationOptions options)
+    internal static (QRCodeGenerationOptions options, string payload, bool darkInvalid, bool lightInvalid) NormalizeOptions(QRCodeGenerationOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -310,8 +309,9 @@ public sealed class QRCodeService
             LogoSizePercent = Math.Clamp(options.LogoSizePercent, 8, 20)
         };
 
-        ValidatePayloadSource(normalized);
-        return (normalized, darkInvalid, lightInvalid);
+        string payload = BuildPayload(normalized);
+        ValidatePayloadText(payload, GetPayloadParameterName(normalized.ContentType));
+        return (normalized, payload, darkInvalid, lightInvalid);
     }
 
     internal static string BuildPayload(QRCodeGenerationOptions normalizedOptions)
@@ -411,7 +411,6 @@ public sealed class QRCodeService
         canvas.Clear(skLightColor);
 
         using var paint = new SKPaint { IsAntialias = false, Color = skDarkColor, Style = SKPaintStyle.Fill };
-        using var lightPaint = new SKPaint { IsAntialias = false, Color = skLightColor, Style = SKPaintStyle.Fill };
         if (layout.Offset != 0)
         {
             canvas.Translate(layout.Offset, layout.Offset);
@@ -637,13 +636,6 @@ public sealed class QRCodeService
         }
     }
 
-    private static void ValidatePayloadSource(QRCodeGenerationOptions options)
-    {
-        string payload = BuildPayload(options);
-
-        ValidatePayloadText(payload, GetPayloadParameterName(options.ContentType));
-    }
-
     private static string NormalizeUrlPayload(string text)
     {
         string candidate = text.Trim();
@@ -859,7 +851,7 @@ public sealed class QRCodeService
             Convert.ToByte(normalizedColor.Substring(5, 2), 16));
     }
 
-    private static (string normalizedColor, bool wasInvalid) NormalizeColor(string? color, string fallback)
+    internal static (string normalizedColor, bool wasInvalid) NormalizeColor(string? color, string fallback)
     {
         string candidate = string.IsNullOrWhiteSpace(color) ? fallback : color.Trim();
         if (!candidate.StartsWith('#'))

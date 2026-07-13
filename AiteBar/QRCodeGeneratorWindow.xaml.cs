@@ -16,7 +16,7 @@ namespace AiteBar;
 [SupportedOSPlatform("windows6.1")]
 public partial class QRCodeGeneratorWindow : DarkWindow
 {
-    private const int DefaultMargin = 4;
+    private const int DefaultMargin = 1;
     private const int DefaultLogoSizePercent = 15;
     private const int PreviewDebounceMs = 180;
     private static readonly Uri DefaultLogoUri = new("pack://application:,,,/Resources/Design/qr-logo.svg", UriKind.Absolute);
@@ -631,67 +631,6 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         }
     }
 
-    private void PasteFromClipboard_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            if (Clipboard.ContainsText())
-            {
-                string text = Clipboard.GetText();
-                if (!string.IsNullOrWhiteSpace(text))
-                {
-                    AutoFillFromText(text);
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Logger.Log(ex);
-        }
-    }
-
-    private void AutoFillFromText(string text)
-    {
-        text = text.Trim();
-        if (text.StartsWith("WIFI:", StringComparison.OrdinalIgnoreCase))
-        {
-            SetSelectedValue(CmbContentType, QRCodeContentType.Wifi);
-            // Minimal heuristic for wifi copy
-            int idx = text.IndexOf("S:", StringComparison.OrdinalIgnoreCase);
-            if (idx > 0)
-            {
-                int endIdx = text.IndexOf(';', idx);
-                if (endIdx > idx)
-                {
-                    TxtWifiSsid.Text = text.Substring(idx + 2, endIdx - idx - 2);
-                }
-            }
-        }
-        else if (text.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
-        {
-            SetSelectedValue(CmbContentType, QRCodeContentType.Email);
-            int emailStart = 7;
-            int emailEnd = text.IndexOf('?');
-            if (emailEnd < 0) emailEnd = text.Length;
-            TxtEmailAddress.Text = text.Substring(emailStart, emailEnd - emailStart);
-        }
-        else if (text.StartsWith("tel:", StringComparison.OrdinalIgnoreCase))
-        {
-            SetSelectedValue(CmbContentType, QRCodeContentType.Phone);
-            TxtPhoneNumber.Text = text.Substring(4);
-        }
-        else if (text.StartsWith("http://", StringComparison.OrdinalIgnoreCase) || text.StartsWith("https://", StringComparison.OrdinalIgnoreCase) || text.StartsWith("www.", StringComparison.OrdinalIgnoreCase))
-        {
-            SetSelectedValue(CmbContentType, QRCodeContentType.Url);
-            TxtInput.Text = text;
-        }
-        else
-        {
-            SetSelectedValue(CmbContentType, QRCodeContentType.Text);
-            TxtInput.Text = text;
-        }
-    }
-
     private static T GetSelectedValue<T>(ComboBox comboBox, T fallback)
     {
         if (comboBox.SelectedItem is ComboItem<T> item)
@@ -718,6 +657,23 @@ public partial class QRCodeGeneratorWindow : DarkWindow
         if (e.Key == Key.Escape)
         {
             Close();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.S && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            if (BtnSavePng.IsEnabled)
+                BtnSavePng_Click(this, new RoutedEventArgs());
+            e.Handled = true;
+            return;
+        }
+
+        bool isTextEditingControl = Keyboard.FocusedElement is System.Windows.Controls.Primitives.TextBoxBase;
+        if (QRCodeShortcutHelper.ShouldCopyImage(e.Key, Keyboard.Modifiers, isTextEditingControl))
+        {
+            if (BtnCopyPng.IsEnabled)
+                BtnCopyPng_Click(this, new RoutedEventArgs());
             e.Handled = true;
         }
     }

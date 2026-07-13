@@ -8,7 +8,7 @@ When creating or changing an ExecPlan, follow `PLANS.md` completely. An ExecPlan
 
 ## О проекте
 
-`AiteBar` — desktop-утилита для Windows: скрываемая edge-панель быстрого доступа с кнопками пользовательских действий, встроенными утилитами, контекстами и системной интеграцией через tray/hotkeys.
+`AiteBar` — desktop-утилита для Windows: скрываемая edge-панель быстрого доступа с кнопками пользовательских действий, встроенными утилитами, контекстами и системной интеграцией через tray/hotkeys. Лицензия: MIT.
 
 Репозиторий содержит:
 - основное приложение `AiteBar`
@@ -174,6 +174,10 @@ artifacts\installer
 - [docs/functions.md](docs/functions.md) — карта функций.
 - [docs/USER_MANUAL.md](docs/USER_MANUAL.md) — пользовательское поведение.
 - [docs/SENTRY_SETUP.md](docs/SENTRY_SETUP.md) — включение Sentry и приоритет конфигурации.
+- [SECURITY.md](SECURITY.md) — политика безопасности и поддерживаемые версии.
+- [PRIVACY.md](PRIVACY.md) — политика конфиденциальности и обработка данных.
+- [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) — сторонние компоненты и лицензии.
+- [LICENSE](LICENSE) — лицензия проекта (MIT).
 
 Не добавлять в `AGENTS.md` ссылки на файлы, которых нет в репозитории. Не фиксировать здесь быстро устаревающие числа вроде количества тестов или текущей версии без явной необходимости.
 

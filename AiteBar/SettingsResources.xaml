@@ -80,4 +80,66 @@
         </Setter>
     </Style>
 
+    <!-- Segmented Control (RadioButton group) -->
+    <Style x:Key="SegmentedContainerStyle" TargetType="Border">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderBrush" Value="#3A3A3E"/>
+        <Setter Property="BorderThickness" Value="1"/>
+    </Style>
+
+    <Style x:Key="SegmentedRadioButtonStyle" TargetType="RadioButton">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Foreground" Value="{DynamicResource MutedText}"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="HorizontalAlignment" Value="Left"/>
+        <Setter Property="VerticalAlignment" Value="Stretch"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="MinWidth" Value="60"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="UseLayoutRounding" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="#3A3A3E"
+                                BorderThickness="0,0,1,0"
+                                Padding="12,7">
+                            <ContentPresenter x:Name="Content"
+                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="#2A2A2E"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource AccentColor}"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource FormControlDisabledForegroundBrush}"/>
+                            <Setter Property="Opacity" Value="0.55"/>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True"/>
+                                <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter Property="Background" Value="#2A2A2E"/>
+                        </MultiTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

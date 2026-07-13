@@ -248,99 +248,75 @@
 
 
 
-                        <StackPanel Margin="0,0,0,12">
-
-                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Language}" Style="{StaticResource FieldLabelStyle}"/>
-
-                            <ComboBox x:Name="CmbLanguage" SelectionChanged="CmbLanguage_SelectionChanged"/>
-
-                        </StackPanel>
-
-
-
-                        <Grid Margin="0,0,0,12">
-
-                            <Grid.ColumnDefinitions>
-
-                                <ColumnDefinition Width="*"/>
-
-                                <ColumnDefinition Width="14"/>
-
-                                <ColumnDefinition Width="*"/>
-
-                            </Grid.ColumnDefinitions>
+                        <DockPanel Margin="0,0,0,12" LastChildFill="False">
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Language}" Style="{StaticResource FieldLabelStyle}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <Border Style="{StaticResource SegmentedContainerStyle}" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="SegLangAuto" GroupName="Language" Content="{local:Loc ResourceKey=Language_Auto}" Tag="auto" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegLanguage_Click"/>
+                                    <RadioButton x:Name="SegLangEn" GroupName="Language" Content="{local:Loc ResourceKey=Language_English}" Tag="en" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegLanguage_Click"/>
+                                    <RadioButton x:Name="SegLangDe" GroupName="Language" Content="{local:Loc ResourceKey=Language_Deutsch}" Tag="de" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegLanguage_Click"/>
+                                    <RadioButton x:Name="SegLangUk" GroupName="Language" Content="{local:Loc ResourceKey=Language_Ukrainian}" Tag="uk" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegLanguage_Click"/>
+                                    <RadioButton x:Name="SegLangRu" GroupName="Language" Content="{local:Loc ResourceKey=Language_Russian}" Tag="ru" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegLanguage_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </DockPanel>
 
 
 
-                            <StackPanel Grid.Column="0">
-
-                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Edge}" Style="{StaticResource FieldLabelStyle}"/>
-
-                                <ComboBox x:Name="CmbEdge"/>
-
-                            </StackPanel>
-
-
-
-                            <StackPanel Grid.Column="2">
-
-                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Monitor}" Style="{StaticResource FieldLabelStyle}"/>
-
-                                <ComboBox x:Name="CmbMonitor"/>
-
-                            </StackPanel>
-
-                        </Grid>
+                        <DockPanel Margin="0,0,0,12" LastChildFill="False">
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Edge}" Style="{StaticResource FieldLabelStyle}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <Border Style="{StaticResource SegmentedContainerStyle}" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="SegEdgeTop" GroupName="Edge" Content="{local:Loc ResourceKey=Dock_Top}" Tag="Top" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegEdge_Click"/>
+                                    <RadioButton x:Name="SegEdgeBottom" GroupName="Edge" Content="{local:Loc ResourceKey=Dock_Bottom}" Tag="Bottom" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegEdge_Click"/>
+                                    <RadioButton x:Name="SegEdgeLeft" GroupName="Edge" Content="{local:Loc ResourceKey=Dock_Left}" Tag="Left" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegEdge_Click"/>
+                                    <RadioButton x:Name="SegEdgeRight" GroupName="Edge" Content="{local:Loc ResourceKey=Dock_Right}" Tag="Right" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegEdge_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </DockPanel>
 
 
 
-                        <StackPanel Margin="0,0,0,12">
-
-                            <DockPanel Margin="0,0,0,3">
-
-                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PanelSize}" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
-
-                                <TextBlock x:Name="TxtPanelSize" DockPanel.Dock="Right" Foreground="White" FontSize="12" Margin="8,0,0,0"/>
-
-                            </DockPanel>
-
-                            <Slider x:Name="SldPanelSize" Minimum="50" Maximum="100" Value="80" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldPanelSize_ValueChanged"/>
-
-                        </StackPanel>
+                        <DockPanel Margin="0,0,0,12" LastChildFill="False">
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PanelSize}" Style="{StaticResource FieldLabelStyle}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <Border Style="{StaticResource SegmentedContainerStyle}" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="SegPanelSize50" GroupName="PanelSize" Content="{local:Loc ResourceKey=SegmentSize_Small}" Tag="50" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegPanelSize_Click"/>
+                                    <RadioButton x:Name="SegPanelSize70" GroupName="PanelSize" Content="{local:Loc ResourceKey=SegmentSize_Medium}" Tag="70" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegPanelSize_Click"/>
+                                    <RadioButton x:Name="SegPanelSize90" GroupName="PanelSize" Content="{local:Loc ResourceKey=SegmentSize_Large}" Tag="90" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegPanelSize_Click"/>
+                                    <RadioButton x:Name="SegPanelSize100" GroupName="PanelSize" Content="{local:Loc ResourceKey=SegmentSize_XL}" Tag="100" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegPanelSize_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </DockPanel>
 
 
 
-                        <StackPanel Margin="0,0,0,12">
-
-                            <DockPanel Margin="0,0,0,3">
-
-                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ActivationZone}" Style="{StaticResource FieldLabelStyle}" Margin="0"
-
-                                           ToolTip="{local:Loc ResourceKey=AppSettingsWindow_ActivationZoneTooltip}"/>
-
-                                <TextBlock x:Name="TxtZoneSize" DockPanel.Dock="Right" Foreground="White" FontSize="12" Margin="8,0,0,0"/>
-
-                            </DockPanel>
-
-                            <Slider x:Name="SldZoneSize" Minimum="5" Maximum="100" Value="30" TickFrequency="5" IsSnapToTickEnabled="True" ValueChanged="SldZoneSize_ValueChanged"/>
-
-                        </StackPanel>
+                        <DockPanel Margin="0,0,0,12" LastChildFill="False">
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ActivationZone}" Style="{StaticResource FieldLabelStyle}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"
+                                       ToolTip="{local:Loc ResourceKey=AppSettingsWindow_ActivationZoneTooltip}"/>
+                            <Border Style="{StaticResource SegmentedContainerStyle}" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="SegZone10" GroupName="Zone" Content="10" Tag="10" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegZone_Click"/>
+                                    <RadioButton x:Name="SegZone30" GroupName="Zone" Content="30" Tag="30" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegZone_Click"/>
+                                    <RadioButton x:Name="SegZone50" GroupName="Zone" Content="50" Tag="50" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegZone_Click"/>
+                                    <RadioButton x:Name="SegZone100" GroupName="Zone" Content="100" Tag="100" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegZone_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </DockPanel>
 
 
 
-                        <StackPanel>
-
-                            <DockPanel Margin="0,0,0,3">
-
-                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Delay}" Style="{StaticResource FieldLabelStyle}" Margin="0"/>
-
-                                <TextBlock x:Name="TxtDelay" DockPanel.Dock="Right" Foreground="White" FontSize="12" Margin="8,0,0,0"/>
-
-                            </DockPanel>
-
-                            <Slider x:Name="SldDelay" Minimum="0" Maximum="2000" Value="150" TickFrequency="50" IsSnapToTickEnabled="True" ValueChanged="SldDelay_ValueChanged"/>
-
-                        </StackPanel>
+                        <DockPanel LastChildFill="False">
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Delay}" Style="{StaticResource FieldLabelStyle}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <Border Style="{StaticResource SegmentedContainerStyle}" HorizontalAlignment="Left">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton x:Name="SegDelay100" GroupName="Delay" Content="100" Tag="100" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegDelay_Click"/>
+                                    <RadioButton x:Name="SegDelay200" GroupName="Delay" Content="200" Tag="200" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegDelay_Click"/>
+                                    <RadioButton x:Name="SegDelay300" GroupName="Delay" Content="300" Tag="300" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegDelay_Click"/>
+                                    <RadioButton x:Name="SegDelay500" GroupName="Delay" Content="500" Tag="500" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegDelay_Click"/>
+                                </StackPanel>
+                            </Border>
+                        </DockPanel>
 
 
 
@@ -353,6 +329,8 @@
                             </StackPanel.Resources>
 
                             <CheckBox x:Name="ChkShowTaskbarPositionIndicator" Content="{local:Loc ResourceKey=AppSettingsWindow_ShowTaskbarPositionIndicator}"/>
+
+                            <CheckBox x:Name="ChkSecondaryMonitor" Content="{local:Loc ResourceKey=AppSettingsWindow_SecondaryMonitor}"/>
 
                             <CheckBox x:Name="ChkCheckForUpdatesEnabled" Content="{local:Loc ResourceKey=AppSettingsWindow_CheckForUpdates}"/>
 

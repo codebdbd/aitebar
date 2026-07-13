@@ -21,7 +21,7 @@
   <data name="SettingsWindow_IconColor" xml:space="preserve"><value>Symbolfarbe</value></data>
   <data name="SettingsWindow_HexCode" xml:space="preserve"><value>HEX-Code</value></data>
   <data name="SettingsWindow_HexPlaceholder" xml:space="preserve"><value>Beispiel: #FFFFFF</value></data>
-  <data name="AppSettingsWindow_GeneralHint" xml:space="preserve"><value>Position und Anzeigeverhalten der Leiste konfigurieren.</value></data>
+  <data name="AppSettingsWindow_GeneralHint" xml:space="preserve"><value>Sprache, Panelposition, Darstellungseinstellungen und Updates.</value></data>
   <data name="AppSettingsWindow_PanelSize" xml:space="preserve"><value>Leistengröße</value></data>
   <data name="AppSettingsWindow_ActivationZone" xml:space="preserve"><value>Aktivierungszone, %</value></data>
   <data name="AppSettingsWindow_ActivationZoneTooltip" xml:space="preserve"><value>Größe des Bereichs am Bildschirmrand, der die Leiste beim Zeigen öffnet.</value></data>
@@ -153,6 +153,16 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Auswahl aufheben</value></data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Nach Updates suchen</value></data>
+  <data name="AppSettingsWindow_SecondaryMonitor" xml:space="preserve"><value>Auf dem zweiten Monitor anzeigen</value></data>
+  <data name="Language_Auto" xml:space="preserve"><value>Auto</value></data>
+  <data name="Language_English" xml:space="preserve"><value>English</value></data>
+  <data name="Language_Deutsch" xml:space="preserve"><value>Deutsch</value></data>
+  <data name="Language_Ukrainian" xml:space="preserve"><value>Українська</value></data>
+  <data name="Language_Russian" xml:space="preserve"><value>Русский</value></data>
+  <data name="SegmentSize_Small" xml:space="preserve"><value>Minimal</value></data>
+  <data name="SegmentSize_Medium" xml:space="preserve"><value>Mittel</value></data>
+  <data name="SegmentSize_Large" xml:space="preserve"><value>Optimal</value></data>
+  <data name="SegmentSize_XL" xml:space="preserve"><value>Maximal</value></data>
   <data name="Update_OpenReleasePage" xml:space="preserve"><value>GitHub-Release-Seite öffnen</value></data>
   <data name="TimerStopwatch_Timer" xml:space="preserve"><value>Timer</value></data>
   <data name="TimerStopwatch_Stopwatch" xml:space="preserve"><value>Stoppuhr</value></data>
@@ -305,7 +315,7 @@ Fortfahren?</value></data>
   <data name="About_AppData" xml:space="preserve"><value>Anwendungsdaten</value></data>
   <data name="About_OpenDataFolder" xml:space="preserve"><value>Datenordner öffnen</value></data>
   <data name="About_Resources" xml:space="preserve"><value>Ressourcen</value></data>
-  <data name="About_Website" xml:space="preserve"><value>Programmseite</value></data>
+  <data name="About_Website" xml:space="preserve"><value>Projekt unterstützen</value></data>
   <data name="About_Repository" xml:space="preserve"><value>GitHub-Repository</value></data>
   <data name="About_Licenses" xml:space="preserve"><value>Lizenzen</value></data>
   <data name="About_ProgramFolder" xml:space="preserve"><value>Programmordner</value></data>

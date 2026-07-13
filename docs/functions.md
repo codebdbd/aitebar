@@ -2276,7 +2276,7 @@ Tray-меню.
 | `Color` | Цвет glyph | HEX | `#E3E3E3` |
 | `ImagePath` | Пользовательская image-иконка | Локальный путь | пусто |
 | `Ctrl`, `Shift`, `Alt`, `Win`, `Key` | Hotkey-действие | Флаги + key | false / `None` |
-| `ActivationHotkey` | Глобальная горячая клавиша запуска кнопки | `HotkeyBinding` | пустой binding |
+| `ActivationHotkey` | Глобальная горячая клавиша запуска кнопки (существует в модели и импорте/экспорте, но не зарегистрирована через `RegisterHotKey`) | `HotkeyBinding` | пустой binding |
 | `ContextId` | Панель кнопки | ID панели | `context-1` |
 
 ---

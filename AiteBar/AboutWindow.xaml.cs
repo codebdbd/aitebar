@@ -8,7 +8,7 @@ namespace AiteBar;
 
 public partial class AboutWindow : DarkWindow
 {
-    private const string ProductUrl = "https://codebdbd.github.io/products/aitebar";
+    private const string SupportUrl = "https://codebdbd.github.io/";
     private const string RepositoryUrl = "https://github.com/codebdbd/aitebar";
     private readonly string _dataDirectory;
 
@@ -32,7 +32,7 @@ public partial class AboutWindow : DarkWindow
 
     private void BtnWebsite_Click(object sender, RoutedEventArgs e)
     {
-        OpenTarget(ProductUrl);
+        OpenTarget(SupportUrl);
     }
 
     private void BtnRepository_Click(object sender, RoutedEventArgs e)

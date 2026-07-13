@@ -12,7 +12,7 @@ public sealed class AppSettingsWindowIntegrationTests
         string settingsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "AppSettingsWindow.xaml.cs"));
 
         Assert.Contains("private string _selectedUiCulture = LocalizationService.AutoCulture;", settingsCode);
-        Assert.Contains("private async void CmbLanguage_SelectionChanged", settingsCode);
+        Assert.Contains("private async void SegLanguage_Click", settingsCode);
         Assert.Contains("_selectedUiCulture = LocalizationService.NormalizeCultureName(selectedCulture);", settingsCode);
         Assert.Contains("_settings.UiCulture = _selectedUiCulture;", settingsCode);
         Assert.Contains("_mainWindow.GetSettingsService().NormalizeAppState();", settingsCode);
@@ -20,7 +20,7 @@ public sealed class AppSettingsWindowIntegrationTests
         Assert.Contains("LocalizationService.EnsureAppliedCulture();", settingsCode);
         Assert.Contains("LocalizationService.RefreshLocalizedBindings(this);", settingsCode);
         Assert.Contains("string language = _selectedUiCulture;", settingsCode);
-        Assert.Contains("SetComboValue(CmbLanguage, _selectedUiCulture);", settingsCode);
+        Assert.Contains("SelectSegmentByTag(language, SegLangAuto, SegLangEn, SegLangDe, SegLangUk, SegLangRu);", settingsCode);
         Assert.Contains("private void RefreshLocalizedUi()", settingsCode);
         Assert.Contains("CaptureContextRowDrafts()", settingsCode);
         Assert.Contains("ApplyContextRowDrafts(drafts);", settingsCode);

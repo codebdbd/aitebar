@@ -9,7 +9,37 @@
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-07-13
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Quick Note formatting**: Добавлены заголовки, зачёркивание, ссылки, визуальные маркированные и нумерованные списки, а также сохранение расширенного форматирования через Markdown-compatible разметку.
+- **Quick Note formatting**: Added headings, strikethrough, links, visual bullet and numbered lists, and persistence of extended formatting through Markdown-compatible markup.
+- **Clipboard Manager workflow**: Добавлены копирование текста в одну строку, расширенные фильтры и операции очистки, закрепление записей и настройка сохранения истории между сессиями.
+- **Clipboard Manager workflow**: Added single-line text copying, expanded filters and clear actions, pinned entries, and a setting for history persistence between sessions.
+- **QR Code workflow**: Добавлены сочетания `Ctrl+S` для сохранения PNG и `Ctrl+C` для копирования готового QR-кода, когда фокус не находится в текстовом редакторе.
+- **QR Code workflow**: Added `Ctrl+S` to save PNG and `Ctrl+C` to copy the generated QR code when focus is outside a text editor.
+- **Project policies**: Добавлены MIT license, privacy policy, обновлённая security policy и Markdown-справка по сторонним компонентам.
+- **Project policies**: Added the MIT license, privacy policy, updated security policy, and Markdown third-party notices.
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Поддержка проекта**: Пункты поддержки в tray-меню и окне «О программе» теперь ведут на `https://codebdbd.github.io/`; ссылка в About переименована в «Поддержать проект».
+- **Project support**: Support actions in the tray menu and About window now open `https://codebdbd.github.io/`; the About link is renamed to “Support the project”.
+- **Program settings**: Общие настройки получили компактные segmented controls для языка, края панели, размера, зоны активации и задержки; существующие нестандартные значения и выбранные дополнительные мониторы сохраняются до явного изменения пользователем.
+- **Program settings**: General settings now use compact segmented controls for language, panel edge, size, activation zone, and delay; existing custom values and selected secondary monitors remain intact until the user explicitly changes them.
+- **Panel behavior**: Улучшены перенос кнопок, стабильность размеров между контекстами, клавиатурная навигация, drag-and-drop края/монитора и атомарное сохранение настроек.
+- **Panel behavior**: Improved button wrapping, size stability across contexts, keyboard navigation, edge/monitor drag-and-drop, and atomic settings updates.
+- **Clipboard Manager reliability**: Длинный текст теперь ограничивается безопасным лимитом вместо полного отбрасывания, история сохраняется атомарно, а список виртуализирован без увеличения лимитов памяти.
+- **Clipboard Manager reliability**: Long text is now truncated to the safe limit instead of being discarded, history is saved atomically, and the list is virtualized without increasing memory limits.
+- **QR Code reliability**: Нормализация опций и payload объединена в один проход, расширены focused tests генерации, цветов и типов содержимого.
+- **QR Code reliability**: Option and payload normalization now use one pass, with expanded focused tests for generation, colors, and content types.
+- **Documentation**: Обновлены README, руководство пользователя, карта функций, security/privacy guidance и индекс технической документации.
+- **Documentation**: Updated README, user manual, feature map, security/privacy guidance, and the technical documentation index.
+
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Program settings data safety**: Исправлено незаметное округление существующих размеров панели и задержки при сохранении несвязанных настроек, а также сброс третьего и последующих мониторов на монитор №2.
+- **Program settings data safety**: Fixed silent rounding of existing panel sizes and delays while saving unrelated settings, and prevented third-or-later monitor selections from being reset to monitor 2.
+- **QR Code shortcuts**: `Ctrl+C` больше не перехватывает обычное копирование выделенного текста в полях QR Code Generator.
+- **QR Code shortcuts**: `Ctrl+C` no longer overrides normal selected-text copying inside QR Code Generator fields.
 - **Quick Note formatting**: Исправлено форматирование маркированных и нумерованных списков: списки теперь отображаются визуально, как в Windows Notepad, без вставки Markdown-маркеров в текст редактора.
 - **Quick Note formatting**: Fixed bullet and numbered list formatting: lists are now rendered visually, similar to Windows Notepad, without inserting Markdown markers into the editor text.
 - **Quick Note clear formatting**: Очистка форматирования теперь удаляет визуальные списки и не переносит выделение на соседние строки.

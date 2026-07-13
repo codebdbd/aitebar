@@ -458,9 +458,9 @@
 
                      ScrollViewer.VerticalScrollBarVisibility="Visible"
 
-                     ScrollViewer.CanContentScroll="False"
+                     ScrollViewer.CanContentScroll="True"
 
-                     VirtualizingStackPanel.IsVirtualizing="False"
+                     VirtualizingStackPanel.IsVirtualizing="True"
 
                      KeyboardNavigation.TabNavigation="Continue">
 

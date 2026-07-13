@@ -103,7 +103,7 @@ For modular Python projects use the "Command" type.</value></data>
   <data name="SettingsWindow_SaveFailed" xml:space="preserve"><value>Could not save the button. Check the entered values and try again.</value></data>
   <data name="AppSettingsWindow_Title" xml:space="preserve"><value>Program settings</value></data>
   <data name="AppSettingsWindow_General" xml:space="preserve"><value>General settings</value></data>
-  <data name="AppSettingsWindow_GeneralHint" xml:space="preserve"><value>Configure panel position and appearance behavior.</value></data>
+  <data name="AppSettingsWindow_GeneralHint" xml:space="preserve"><value>Language, panel position, appearance settings, and updates.</value></data>
   <data name="AppSettingsWindow_Language" xml:space="preserve"><value>Language</value></data>
   <data name="AppSettingsWindow_LanguageAuto" xml:space="preserve"><value>Auto (Windows)</value></data>
   <data name="AppSettingsWindow_Edge" xml:space="preserve"><value>Panel position</value></data>
@@ -325,7 +325,7 @@ Continue?</value></data>
   <data name="About_AppData" xml:space="preserve"><value>Application data</value></data>
   <data name="About_OpenDataFolder" xml:space="preserve"><value>Open data folder</value></data>
   <data name="About_Resources" xml:space="preserve"><value>Resources</value></data>
-  <data name="About_Website" xml:space="preserve"><value>Program page</value></data>
+  <data name="About_Website" xml:space="preserve"><value>Support the project</value></data>
   <data name="About_Repository" xml:space="preserve"><value>GitHub repository</value></data>
   <data name="About_Licenses" xml:space="preserve"><value>Licenses</value></data>
   <data name="About_ProgramFolder" xml:space="preserve"><value>Program folder</value></data>
@@ -369,6 +369,16 @@ Open the GitHub release page?</value></data>
   <data name="RotationProfiles_SelectAll" xml:space="preserve"><value>Select all</value></data>
   <data name="RotationProfiles_Clear" xml:space="preserve"><value>Clear selection</value></data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="AppSettingsWindow_SecondaryMonitor" xml:space="preserve"><value>Show on secondary monitor</value></data>
+  <data name="Language_Auto" xml:space="preserve"><value>Auto</value></data>
+  <data name="Language_English" xml:space="preserve"><value>English</value></data>
+  <data name="Language_Deutsch" xml:space="preserve"><value>Deutsch</value></data>
+  <data name="Language_Ukrainian" xml:space="preserve"><value>Українська</value></data>
+  <data name="Language_Russian" xml:space="preserve"><value>Русский</value></data>
+  <data name="SegmentSize_Small" xml:space="preserve"><value>Minimal</value></data>
+  <data name="SegmentSize_Medium" xml:space="preserve"><value>Medium</value></data>
+  <data name="SegmentSize_Large" xml:space="preserve"><value>Optimal</value></data>
+  <data name="SegmentSize_XL" xml:space="preserve"><value>Maximum</value></data>
   <data name="Update_OpenReleasePage" xml:space="preserve"><value>Open GitHub release page</value></data>
   <data name="SettingsWindow_InvalidHotkey" xml:space="preserve"><value>Choose a key for the hotkey action.</value></data>
   <data name="SettingsWindow_ActivationHotkey" xml:space="preserve"><value>Global shortcut for this button</value></data>

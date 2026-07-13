@@ -12,10 +12,7 @@ public sealed class RuntimeLocalizationWindowSourceTests
 
         Assert.Contains("private void RefreshLocalizedUi()", code);
         Assert.Contains("ReloadLocalizedChoiceLists();", code);
-        Assert.Contains("LoadLanguageList();", code);
         Assert.Contains("LoadKeyList();", code);
-        Assert.Contains("ReloadEdgeList(edgeTag);", code);
-        Assert.Contains("ReloadMonitorList(monitorTag);", code);
         Assert.Contains("RefreshContextRowTooltips();", code);
         Assert.Contains("protected override void OnLocalizationChanged()", code);
     }

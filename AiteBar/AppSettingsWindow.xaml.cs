@@ -26,6 +26,9 @@ public partial class AppSettingsWindow : DarkWindow
     private readonly AppSettings _settings;
     private readonly List<(CheckBox EnabledCheckBox, TextBox NameTextBox, Border BadgeBorder)> _contextRows = new();
     private bool _isLoadingSettings;
+    private bool _panelSizeSelectionChanged;
+    private bool _activationZoneSelectionChanged;
+    private bool _activationDelaySelectionChanged;
     private readonly string _originalUiCulture;
     private string _selectedUiCulture = LocalizationService.AutoCulture;
 
@@ -39,22 +42,10 @@ public partial class AppSettingsWindow : DarkWindow
         _originalUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
 
         _isLoadingSettings = true;
-        LoadLanguageList();
         LoadKeyList();
         LoadSettings();
         _isLoadingSettings = false;
         RefreshLocalizedUi();
-    }
-
-    private void LoadLanguageList()
-    {
-        CmbLanguage.Items.Clear();
-        CmbLanguage.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("AppSettingsWindow_LanguageAuto"), Tag = LocalizationService.AutoCulture });
-        CmbLanguage.Items.Add(new ComboBoxItem { Content = "English", Tag = "en" });
-        CmbLanguage.Items.Add(new ComboBoxItem { Content = "Deutsch", Tag = "de" });
-        CmbLanguage.Items.Add(new ComboBoxItem { Content = "Українська", Tag = "uk" });
-        CmbLanguage.Items.Add(new ComboBoxItem { Content = "Русский", Tag = "ru" });
-        CmbLanguage.SelectedIndex = 0;
     }
 
     private void LoadKeyList()
@@ -133,15 +124,12 @@ public partial class AppSettingsWindow : DarkWindow
         string colorPickerKey = GetComboTag(CmbColorPickerKey) ?? "None";
         string timerStopwatchKey = GetComboTag(CmbTimerStopwatchKey) ?? "None";
         string qrCodeGeneratorKey = GetComboTag(CmbQRCodeGeneratorKey) ?? "None";
-        object? edgeTag = (CmbEdge.SelectedItem as ComboBoxItem)?.Tag;
-        object? monitorTag = (CmbMonitor.SelectedItem as ComboBoxItem)?.Tag;
+        string edge = GetSelectedSegmentTag(SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
+        bool isSecondaryMonitor = ChkSecondaryMonitor.IsChecked == true;
 
         _isLoadingSettings = true;
         try
         {
-            LoadLanguageList();
-            SetComboValue(CmbLanguage, language);
-
             LoadKeyList();
             SetKeyComboValue(CmbShowPanelKey, showPanelKey);
             SetKeyComboValue(CmbNextContextKey, nextContextKey);
@@ -153,8 +141,10 @@ public partial class AppSettingsWindow : DarkWindow
             SetKeyComboValue(CmbTimerStopwatchKey, timerStopwatchKey);
             SetKeyComboValue(CmbQRCodeGeneratorKey, qrCodeGeneratorKey);
 
-            ReloadEdgeList(edgeTag);
-            ReloadMonitorList(monitorTag);
+            SelectSegmentByTag(language, SegLangAuto, SegLangEn, SegLangDe, SegLangUk, SegLangRu);
+            SelectSegmentByTag(edge, SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
+            ChkSecondaryMonitor.IsChecked = isSecondaryMonitor;
+            UpdateMonitorCheckbox();
         }
         finally
         {
@@ -218,55 +208,46 @@ public partial class AppSettingsWindow : DarkWindow
         badgeBorder.Background = (System.Windows.Media.Brush)(converter.ConvertFromString(colorString) ?? System.Windows.Media.Brushes.DimGray);
     }
 
-    private void ReloadEdgeList(object? selectedEdge)
+    private static string GetSelectedSegmentTag(System.Windows.Controls.RadioButton a, System.Windows.Controls.RadioButton b, System.Windows.Controls.RadioButton c, System.Windows.Controls.RadioButton d)
     {
-        CmbEdge.Items.Clear();
-        CmbEdge.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Dock_Top"), Tag = DockEdge.Top });
-        CmbEdge.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Dock_Bottom"), Tag = DockEdge.Bottom });
-        CmbEdge.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Dock_Left"), Tag = DockEdge.Left });
-        CmbEdge.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Dock_Right"), Tag = DockEdge.Right });
-
-        foreach (ComboBoxItem item in CmbEdge.Items)
-        {
-            if (Equals(item.Tag, selectedEdge))
-            {
-                CmbEdge.SelectedItem = item;
-                break;
-            }
-        }
-
-        if (CmbEdge.SelectedIndex < 0)
-        {
-            CmbEdge.SelectedIndex = 0;
-        }
+        if (a.IsChecked == true) return a.Tag!.ToString()!;
+        if (b.IsChecked == true) return b.Tag!.ToString()!;
+        if (c.IsChecked == true) return c.Tag!.ToString()!;
+        return d.Tag!.ToString()!;
     }
 
-    private void ReloadMonitorList(object? selectedMonitor)
+    private static string? GetSelectedSegmentTag(System.Windows.Controls.RadioButton a, System.Windows.Controls.RadioButton b, System.Windows.Controls.RadioButton c, System.Windows.Controls.RadioButton d, System.Windows.Controls.RadioButton e)
     {
-        CmbMonitor.Items.Clear();
+        if (a.IsChecked == true) return a.Tag!.ToString()!;
+        if (b.IsChecked == true) return b.Tag!.ToString()!;
+        if (c.IsChecked == true) return c.Tag!.ToString()!;
+        if (d.IsChecked == true) return d.Tag!.ToString()!;
+        return e.Tag!.ToString()!;
+    }
+
+    private static void SelectSegmentByTag(string tag, System.Windows.Controls.RadioButton a, System.Windows.Controls.RadioButton b, System.Windows.Controls.RadioButton c, System.Windows.Controls.RadioButton d)
+    {
+        if (string.Equals(a.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) a.IsChecked = true;
+        else if (string.Equals(b.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) b.IsChecked = true;
+        else if (string.Equals(c.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) c.IsChecked = true;
+        else d.IsChecked = true;
+    }
+
+    private static void SelectSegmentByTag(string tag, System.Windows.Controls.RadioButton a, System.Windows.Controls.RadioButton b, System.Windows.Controls.RadioButton c, System.Windows.Controls.RadioButton d, System.Windows.Controls.RadioButton e)
+    {
+        if (string.Equals(a.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) a.IsChecked = true;
+        else if (string.Equals(b.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) b.IsChecked = true;
+        else if (string.Equals(c.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) c.IsChecked = true;
+        else if (string.Equals(d.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) d.IsChecked = true;
+        else e.IsChecked = true;
+    }
+
+    private void UpdateMonitorCheckbox()
+    {
         var screens = System.Windows.Forms.Screen.AllScreens;
-        for (int i = 0; i < screens.Length; i++)
-        {
-            CmbMonitor.Items.Add(new ComboBoxItem
-            {
-                Content = LocalizationService.Format("Monitor_Format", i + 1, screens[i].Primary ? LocalizationService.Get("Monitor_PrimarySuffix") : string.Empty),
-                Tag = i
-            });
-        }
-
-        foreach (ComboBoxItem item in CmbMonitor.Items)
-        {
-            if (Equals(item.Tag, selectedMonitor))
-            {
-                CmbMonitor.SelectedItem = item;
-                break;
-            }
-        }
-
-        if (CmbMonitor.SelectedIndex < 0)
-        {
-            CmbMonitor.SelectedIndex = CmbMonitor.Items.Count > 0 ? 0 : -1;
-        }
+        bool hasSecondary = screens.Length > 1;
+        ChkSecondaryMonitor.IsEnabled = hasSecondary;
+        if (!hasSecondary) ChkSecondaryMonitor.IsChecked = false;
     }
 
     private static void LoadHotkeyBinding(HotkeyBinding binding, ToggleButton chkCtrl, ToggleButton chkAlt, ToggleButton chkShift, ToggleButton chkWin, ComboBox cmbKey)
@@ -392,7 +373,7 @@ public partial class AppSettingsWindow : DarkWindow
         ChkShowTaskbarPositionIndicator.IsChecked = _settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
         ChkCheckForUpdatesEnabled.IsChecked = _settings.CheckForUpdatesEnabled;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
-        SetComboValue(CmbLanguage, _selectedUiCulture);
+        SelectSegmentByTag(_selectedUiCulture, SegLangAuto, SegLangEn, SegLangDe, SegLangUk, SegLangRu);
 
         LoadHotkeyBinding(
             new HotkeyBinding
@@ -418,15 +399,13 @@ public partial class AppSettingsWindow : DarkWindow
         LoadHotkeyBinding(_settings.TimerStopwatchHotkey, ChkTimerStopwatchCtrl, ChkTimerStopwatchAlt, ChkTimerStopwatchShift, ChkTimerStopwatchWin, CmbTimerStopwatchKey);
         LoadHotkeyBinding(_settings.QRCodeGeneratorHotkey, ChkQRCodeGeneratorCtrl, ChkQRCodeGeneratorAlt, ChkQRCodeGeneratorShift, ChkQRCodeGeneratorWin, CmbQRCodeGeneratorKey);
 
-        ReloadEdgeList(_settings.Edge);
-        ReloadMonitorList(_settings.MonitorIndex);
+        SelectSegmentByTag(_settings.Edge.ToString(), SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
+        ChkSecondaryMonitor.IsChecked = _settings.MonitorIndex > 0;
+        UpdateMonitorCheckbox();
 
-        SldZoneSize.Value = _settings.ActivationZoneSizePercent;
-        TxtZoneSize.Text = $"{(int)SldZoneSize.Value}%";
-        SldPanelSize.Value = _settings.PanelSizePercent;
-        TxtPanelSize.Text = $"{(int)SldPanelSize.Value}%";
-        SldDelay.Value = _settings.ActivationDelayMs;
-        TxtDelay.Text = $"{(int)SldDelay.Value}";
+        SelectSegment(SegPanelSize50, SegPanelSize70, SegPanelSize90, SegPanelSize100, (int)_settings.PanelSizePercent);
+        SelectSegment(SegZone10, SegZone30, SegZone50, SegZone100, (int)_settings.ActivationZoneSizePercent);
+        SelectSegment(SegDelay100, SegDelay200, SegDelay300, SegDelay500, (int)_settings.ActivationDelayMs);
 
         BuildContextRows(_mainWindow.GetAllContextsSnapshot());
     }
@@ -492,29 +471,45 @@ public partial class AppSettingsWindow : DarkWindow
         return (System.Windows.Media.Brush)(converter.ConvertFromString(colorString) ?? System.Windows.Media.Brushes.DimGray);
     }
 
-    private void SldZoneSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private static void SelectSegment(System.Windows.Controls.RadioButton a, System.Windows.Controls.RadioButton b, System.Windows.Controls.RadioButton c, System.Windows.Controls.RadioButton d, int value)
     {
-        if (TxtZoneSize != null) TxtZoneSize.Text = $"{(int)e.NewValue}%";
+        int valA = int.Parse(a.Tag!.ToString()!);
+        int valB = int.Parse(b.Tag!.ToString()!);
+        int valC = int.Parse(c.Tag!.ToString()!);
+        int valD = int.Parse(d.Tag!.ToString()!);
+
+        int distA = Math.Abs(value - valA);
+        int distB = Math.Abs(value - valB);
+        int distC = Math.Abs(value - valC);
+        int distD = Math.Abs(value - valD);
+
+        int min = Math.Min(distA, Math.Min(distB, Math.Min(distC, distD)));
+        if (min == distA) a.IsChecked = true;
+        else if (min == distB) b.IsChecked = true;
+        else if (min == distC) c.IsChecked = true;
+        else d.IsChecked = true;
     }
 
-    private void SldPanelSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    private static int GetSegmentValue(System.Windows.Controls.RadioButton a, System.Windows.Controls.RadioButton b, System.Windows.Controls.RadioButton c, System.Windows.Controls.RadioButton d)
     {
-        if (TxtPanelSize != null) TxtPanelSize.Text = $"{(int)e.NewValue}%";
+        if (a.IsChecked == true) return int.Parse(a.Tag!.ToString()!);
+        if (b.IsChecked == true) return int.Parse(b.Tag!.ToString()!);
+        if (c.IsChecked == true) return int.Parse(c.Tag!.ToString()!);
+        return int.Parse(d.Tag!.ToString()!);
     }
 
-    private void SldDelay_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-        if (TxtDelay != null) TxtDelay.Text = $"{(int)e.NewValue}";
-    }
+    private void SegPanelSize_Click(object sender, RoutedEventArgs e) => _panelSizeSelectionChanged = true;
+    private void SegZone_Click(object sender, RoutedEventArgs e) => _activationZoneSelectionChanged = true;
+    private void SegDelay_Click(object sender, RoutedEventArgs e) => _activationDelaySelectionChanged = true;
 
-    private async void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void SegLanguage_Click(object sender, RoutedEventArgs e)
     {
         if (_isLoadingSettings)
         {
             return;
         }
 
-        string selectedCulture = (CmbLanguage.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? LocalizationService.AutoCulture;
+        string selectedCulture = GetSelectedSegmentTag(SegLangAuto, SegLangEn, SegLangDe, SegLangUk, SegLangRu)!;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(selectedCulture);
         _settings.UiCulture = _selectedUiCulture;
         LocalizationService.ApplyCulture(_selectedUiCulture);
@@ -524,6 +519,8 @@ public partial class AppSettingsWindow : DarkWindow
         LocalizationService.RefreshLocalizedBindings(this);
         RefreshLocalizedUi();
     }
+
+    private void SegEdge_Click(object sender, RoutedEventArgs e) { }
 
     private async void BtnSave_Click(object sender, RoutedEventArgs e)
     {
@@ -580,19 +577,28 @@ public partial class AppSettingsWindow : DarkWindow
             settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;
             settings.UiCulture = _selectedUiCulture;
 
-            if (CmbEdge.SelectedItem is ComboBoxItem edgeItem && edgeItem.Tag is DockEdge edge)
+            string edgeStr = GetSelectedSegmentTag(SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
+            if (Enum.TryParse<DockEdge>(edgeStr, out var edge))
             {
                 settings.Edge = edge;
             }
 
-            if (CmbMonitor.SelectedItem is ComboBoxItem monitorItem)
-            {
-                settings.MonitorIndex = (int)(monitorItem.Tag ?? 0);
-            }
+            settings.MonitorIndex = AppSettingsSelectionHelper.ResolveMonitorIndex(
+                settings.MonitorIndex,
+                ChkSecondaryMonitor.IsChecked == true);
 
-            settings.ActivationZoneSizePercent = SldZoneSize.Value;
-            settings.PanelSizePercent = SldPanelSize.Value;
-            settings.ActivationDelayMs = (int)SldDelay.Value;
+            settings.ActivationZoneSizePercent = AppSettingsSelectionHelper.ResolveSegmentedValue(
+                settings.ActivationZoneSizePercent,
+                GetSegmentValue(SegZone10, SegZone30, SegZone50, SegZone100),
+                _activationZoneSelectionChanged);
+            settings.PanelSizePercent = AppSettingsSelectionHelper.ResolveSegmentedValue(
+                settings.PanelSizePercent,
+                GetSegmentValue(SegPanelSize50, SegPanelSize70, SegPanelSize90, SegPanelSize100),
+                _panelSizeSelectionChanged);
+            settings.ActivationDelayMs = AppSettingsSelectionHelper.ResolveSegmentedValue(
+                settings.ActivationDelayMs,
+                GetSegmentValue(SegDelay100, SegDelay200, SegDelay300, SegDelay500),
+                _activationDelaySelectionChanged);
 
             for (int i = 0; i < settings.Contexts.Count && i < _contextRows.Count; i++)
             {

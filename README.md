@@ -13,7 +13,7 @@ AiteBar — Your Personal Command Center for Windows. Turn the edge of your scre
 - **Import/export panels**: Transfer ready-made button sets between computers using `.aitebarpanel`
 
 #### Web & Browser Tools
-- **Browser and profile support**: Chrome, Edge, Brave, Yandex, Opera, Opera GX, Vivaldi, Firefox
+- **Browser and profile support**: Chrome, Edge, Brave, Yandex, Firefox (Opera, Opera GX, Vivaldi supported in code)
 - **Launch modes**: App Mode, Incognito/Private, Fullscreen
 - **Profile rotation**: Automatic browser profile switching
 
@@ -54,12 +54,17 @@ AiteBar — Your Personal Command Center for Windows. Turn the edge of your scre
 - [User Manual](docs/USER_MANUAL.md)
 - [Features Map](docs/functions.md)
 - [Architecture](docs/architecture.md)
+- [Technical Reference](docs/technical-reference.md)
 
 ### Requirements
 - OS: Windows 10 / Windows 11
+- .NET 10 SDK (for building from source)
 
 ### Data Storage
 - Configuration and user data are stored in `C:\Users\user\AppData\Roaming\Codebdbd\Aite Bar`
+
+### License
+[MIT License](LICENSE)
 
 ---
 
@@ -74,7 +79,7 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 - **Импорт/экспорт панелей**: Переноси готовые наборы кнопок между компьютерами через `.aitebarpanel`
 
 #### Веб-инструменты и браузеры
-- **Поддержка браузеров и профилей**: Chrome, Edge, Brave, Yandex, Opera, Opera GX, Vivaldi, Firefox
+- **Поддержка браузеров и профилей**: Chrome, Edge, Brave, Yandex, Firefox (Opera, Opera GX, Vivaldi поддерживаются в коде)
 - **Режимы запуска**: App Mode, Incognito/Private, Fullscreen
 - **Ротация профилей**: Автоматическое переключение браузерных профилей
 
@@ -83,7 +88,7 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 - **Указатель положения панели**: Маленький индикатор на панели задач, показывающий, где находится панель и позволяющий быстро открыть её
 - **Глобальные горячие клавиши**: Быстрый доступ к панели и действиям
 - **Встроенные инструменты**: Скриншот, запись экрана, калькулятор, проводник, загрузки, таймер и секундомер, пипетка цвета, Quick Note, сортировщик файлов, конвертер иконок, генератор QR-кодов, менеджер буфера обмена, показ рабочего стола, папка приложений, Copilot
-- **Drag-and-drop**: Добавляй файлы, папки, .url и ссылки перетаскиванием
+- **Drag-and-drop**: Добавляй файлы, папки, `.url` и ссылки перетаскиванием
 
 #### Типы действий
 - Открыть URL в выбранном браузере
@@ -115,12 +120,17 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 - [Руководство пользователя](docs/USER_MANUAL.md)
 - [Карта функций](docs/functions.md)
 - [Архитектура](docs/architecture.md)
+- [Техническая справка](docs/technical-reference.md)
 
 ### Требования
 - ОС: Windows 10 / Windows 11
+- .NET 10 SDK (для сборки из исходников)
 
 ### Хранение данных
 - Конфигурация и пользовательские данные хранятся в `C:\Users\user\AppData\Roaming\Codebdbd\Aite Bar`
+
+### Лицензия
+[MIT License](LICENSE)
 
 ---
 

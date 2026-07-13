@@ -254,7 +254,7 @@ namespace AiteBar
                 return null;
             }
 
-            return text.Length > MaxTextLength ? null : text;
+            return text.Length > MaxTextLength ? text[..MaxTextLength] : text;
         }
 
         private static byte[]? NormalizeClipboardImage(byte[]? imageBytes)
@@ -307,15 +307,13 @@ namespace AiteBar
                 return;
             }
 
-            List<ClipboardHistoryEntry> pinned = _entries.Where(entry => entry.IsPinned).ToList();
-            List<ClipboardHistoryEntry> regular = _entries.Where(entry => !entry.IsPinned).Take(Math.Max(0, MaxEntries - pinned.Count)).ToList();
+            List<ClipboardHistoryEntry> pinned = _entries.Where(entry => entry.IsPinned).Take(MaxEntries).ToList();
+            int remaining = MaxEntries - pinned.Count;
+            List<ClipboardHistoryEntry> regular = _entries.Where(entry => !entry.IsPinned).Take(remaining).ToList();
 
             _entries.Clear();
-            _entries.AddRange(pinned.Take(MaxEntries));
-            if (_entries.Count < MaxEntries)
-            {
-                _entries.AddRange(regular.Take(MaxEntries - _entries.Count));
-            }
+            _entries.AddRange(pinned);
+            _entries.AddRange(regular);
         }
 
         private void LoadHistory()
@@ -436,7 +434,9 @@ namespace AiteBar
                 };
 
                 string json = JsonSerializer.Serialize(document, _jsonOptions);
-                File.WriteAllText(_historyFile, json);
+                string tempFile = _historyFile + ".tmp";
+                File.WriteAllText(tempFile, json);
+                File.Move(tempFile, _historyFile, overwrite: true);
             }
             catch (Exception ex)
             {

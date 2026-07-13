@@ -125,6 +125,92 @@ public sealed class ClipboardHistoryServiceTests : IDisposable
         Assert.Equal("alpha beta gamma delta", result);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void ClipboardTextTransforms_ToSingleLine_EmptyOrWhitespace_ReturnsEmpty(string input)
+    {
+        string result = ClipboardTextTransforms.ToSingleLine(input);
+
+        Assert.Equal(string.Empty, result);
+    }
+
+    [Fact]
+    public void ClipboardTextTransforms_ToSingleLine_SingleLineUnchanged()
+    {
+        string result = ClipboardTextTransforms.ToSingleLine("hello world");
+
+        Assert.Equal("hello world", result);
+    }
+
+    [Fact]
+    public void ClipboardTextTransforms_ToDisplayText_ShortText_ReturnsFullText()
+    {
+        string result = ClipboardTextTransforms.ToDisplayText("hello");
+
+        Assert.Equal("hello", result);
+    }
+
+    [Fact]
+    public void ClipboardTextTransforms_ToDisplayText_LongText_TruncatesWithEllipsis()
+    {
+        string longText = new string('a', 100);
+
+        string result = ClipboardTextTransforms.ToDisplayText(longText, 50);
+
+        Assert.Equal(53, result.Length); // 50 chars + "..."
+        Assert.EndsWith("...", result);
+    }
+
+    [Fact]
+    public void ClipboardTextTransforms_ToDisplayText_EmptyString_ReturnsEmpty()
+    {
+        string result = ClipboardTextTransforms.ToDisplayText("");
+
+        Assert.Equal(string.Empty, result);
+    }
+
+    [Fact]
+    public void ClipboardTextTransforms_ToDisplayText_MultiLine_CollapsesToSingleLine()
+    {
+        string result = ClipboardTextTransforms.ToDisplayText("line1\nline2\nline3");
+
+        Assert.DoesNotContain("\n", result);
+        Assert.Contains("line1", result);
+        Assert.Contains("line2", result);
+        Assert.Contains("line3", result);
+    }
+
+    [Fact]
+    public void ClipboardTextTransforms_CountLines_EmptyString_ReturnsZero()
+    {
+        Assert.Equal(0, ClipboardTextTransforms.CountLines(""));
+    }
+
+    [Fact]
+    public void ClipboardTextTransforms_CountLines_Null_ReturnsZero()
+    {
+        Assert.Equal(0, ClipboardTextTransforms.CountLines(null!));
+    }
+
+    [Fact]
+    public void ClipboardTextTransforms_CountLines_SingleLine_ReturnsOne()
+    {
+        Assert.Equal(1, ClipboardTextTransforms.CountLines("hello"));
+    }
+
+    [Fact]
+    public void ClipboardTextTransforms_CountLines_MultipleLines_ReturnsCorrectCount()
+    {
+        Assert.Equal(3, ClipboardTextTransforms.CountLines("line1\nline2\nline3"));
+    }
+
+    [Fact]
+    public void ClipboardTextTransforms_CountLines_WindowsLineEndings()
+    {
+        Assert.Equal(3, ClipboardTextTransforms.CountLines("line1\r\nline2\r\nline3"));
+    }
+
     [Fact]
     public void CopyBackSuppression_IgnoresMatchingPayloadImmediately()
     {
@@ -163,6 +249,143 @@ public sealed class ClipboardHistoryServiceTests : IDisposable
         bool ignored = (bool)InvokePrivate(service, "ShouldIgnoreClipboardPayload", "beta", null)!;
 
         Assert.False(ignored);
+    }
+
+    [Fact]
+    public void ClearAllHistory_RemovesEverythingIncludingPinned()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+
+        service.RecordClipboardData("first", null, new DateTime(2026, 6, 27, 10, 0, 0));
+        service.RecordClipboardData("second", null, new DateTime(2026, 6, 27, 10, 1, 0));
+        string pinnedId = service.Entries.First().Id;
+        service.TogglePin(pinnedId);
+
+        Assert.Equal(2, service.Entries.Count);
+
+        service.ClearAllHistory();
+
+        Assert.Empty(service.Entries);
+        Assert.False(File.Exists(path));
+    }
+
+    [Fact]
+    public void DeleteEntry_NonexistentId_ReturnsFalse()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+
+        bool result = service.DeleteEntry("nonexistent-id");
+
+        Assert.False(result);
+        Assert.Empty(service.Entries);
+    }
+
+    [Fact]
+    public void CopyEntryAsSingleLine_ExistingId_EntryExists()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+        service.RecordClipboardData("line1\r\nline2\r\nline3", null);
+
+        string entryId = service.Entries.First().Id;
+
+        // CopyEntryAsSingleLine internally calls CopyEntryToClipboard which uses Clipboard.SetText.
+        // In test environment without STA thread, Clipboard.SetText throws, so the method returns false.
+        // We verify the entry exists and the method doesn't throw.
+        bool result = service.CopyEntryAsSingleLine(entryId);
+
+        // Result is false because Clipboard.SetText fails in test env, but no exception was thrown
+        Assert.False(result);
+        Assert.Single(service.Entries);
+    }
+
+    [Fact]
+    public void CopyEntryAsSingleLine_NonexistentId_ReturnsFalse()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+
+        bool result = service.CopyEntryAsSingleLine("nonexistent-id");
+
+        Assert.False(result);
+    }
+
+    [Fact]
+    public void RecordClipboardData_LongText_TruncatesToMaxTextLength()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+        string longText = new string('A', 15000);
+
+        service.RecordClipboardData(longText, null);
+
+        Assert.Single(service.Entries);
+        Assert.Equal(10240, service.Entries[0].Text.Length);
+    }
+
+    [Fact]
+    public void RecordClipboardData_EmptyImageBytes_Ignored()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+
+        bool result = service.RecordClipboardData(null, []);
+
+        Assert.False(result);
+        Assert.Empty(service.Entries);
+    }
+
+    [Fact]
+    public void RecordClipboardData_NullTextAndNullImage_ReturnsFalse()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+
+        bool result = service.RecordClipboardData(null, null);
+
+        Assert.False(result);
+        Assert.Empty(service.Entries);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("\t\n\r")]
+    public void RecordClipboardData_WhitespaceOnlyText_Ignored(string text)
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+
+        bool result = service.RecordClipboardData(text, null);
+
+        Assert.False(result);
+        Assert.Empty(service.Entries);
+    }
+
+    [Fact]
+    public void ConfigurePersistence_EnabledAfterDisable_SavesFile()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: false);
+        service.RecordClipboardData("test", null, new DateTime(2026, 6, 27, 10, 0, 0));
+
+        service.ConfigurePersistence(true);
+
+        Assert.True(File.Exists(path));
+        Assert.True(service.PersistHistory);
+    }
+
+    [Fact]
+    public void TogglePin_NonexistentId_ReturnsFalse()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+
+        bool result = service.TogglePin("nonexistent-id");
+
+        Assert.False(result);
     }
 
     private static object? InvokePrivate(object target, string methodName, params object?[]? args)

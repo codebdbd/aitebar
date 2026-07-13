@@ -4,4 +4,14 @@
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ReleaseVerificationRoot)' != '' And $([System.String]::Copy('$(MSBuildProjectDirectory)').EndsWith('\AiteBar.Tests'))">
+    <BaseIntermediateOutputPath>$(ReleaseVerificationRoot)\obj\AiteBar.Tests\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(ReleaseVerificationRoot)\bin\AiteBar.Tests\</BaseOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ReleaseVerificationRoot)' != '' And $([System.String]::Copy('$(MSBuildProjectDirectory)').EndsWith('\AiteBar'))">
+    <BaseIntermediateOutputPath>$(ReleaseVerificationRoot)\obj\AiteBar\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(ReleaseVerificationRoot)\bin\AiteBar\</BaseOutputPath>
+  </PropertyGroup>
 </Project>

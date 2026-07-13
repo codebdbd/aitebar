@@ -59,7 +59,7 @@
             <Style x:Key="CompactTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource BaseTextBoxStyle}">
                 <Setter Property="Height" Value="32"/>
                 <Setter Property="Margin" Value="0"/>
-                <Setter Property="Padding" Value="9,0"/>
+                <Setter Property="Padding" Value="4,0"/>
                 <Setter Property="ContextMenu" Value="{StaticResource TextEditingContextMenu}"/>
             </Style>
 
@@ -162,9 +162,6 @@
                                 <TextBlock Text="&#xE71B;" Style="{StaticResource IconTextStyle}"/>
                                 <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Content}" Style="{StaticResource SectionTitleStyle}"/>
                             </StackPanel>
-                            <Button x:Name="BtnPasteClipboard" Click="PasteFromClipboard_Click" ToolTip="{local:Loc ResourceKey=QRCodeGenerator_PasteFromClipboard}" Background="Transparent" BorderThickness="0" Padding="4" HorizontalAlignment="Right" VerticalAlignment="Center" Cursor="Hand">
-                                <TextBlock Text="&#xE77F;" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource AccentColor}" />
-                            </Button>
                         </Grid>
                         <Grid Grid.Row="2">
                             <Grid.ColumnDefinitions>
@@ -182,7 +179,7 @@
                             <TextBlock x:Name="LblInputTextType" Text="{local:Loc ResourceKey=QRCodeGenerator_TypeUrl}" Style="{StaticResource FieldLabelStyle}"/>
                             <Grid Grid.Column="1">
                                 <TextBox x:Name="TxtInput" TextWrapping="NoWrap" VerticalScrollBarVisibility="Disabled" MaxLength="4296" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
-                                <TextBlock x:Name="TxtInputPlaceholder" Text="{local:Loc ResourceKey=QRCodeGenerator_InputPlaceholder}" Foreground="{StaticResource MutedText}" FontSize="12" Margin="9,0,0,0" IsHitTestVisible="False" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtInputPlaceholder" Text="{local:Loc ResourceKey=QRCodeGenerator_InputPlaceholder}" Foreground="{StaticResource MutedText}" FontSize="12" IsHitTestVisible="False" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="6,0,0,0"/>
                             </Grid>
                         </Grid>
                         <Grid x:Name="WifiPanel" Grid.Row="4" Visibility="Collapsed">

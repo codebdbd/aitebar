@@ -59,6 +59,27 @@ internal static class ClipboardTextTransforms
 
     private static string CollapseWhitespace(string value)
     {
+        if (value.Length == 0)
+        {
+            return value;
+        }
+
+        bool hasNewlinesOrTabs = false;
+        for (int i = 0; i < value.Length; i++)
+        {
+            char ch = value[i];
+            if (ch == '\n' || ch == '\r' || ch == '\t')
+            {
+                hasNewlinesOrTabs = true;
+                break;
+            }
+        }
+
+        if (!hasNewlinesOrTabs)
+        {
+            return value.Trim();
+        }
+
         var builder = new StringBuilder(value.Length);
         bool previousWasWhitespace = false;
 

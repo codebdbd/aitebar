@@ -311,7 +311,7 @@ namespace AiteBar
 
         private ListBox GetEntriesList()
         {
-            return (ListBox)(FindName("EntriesList") ?? throw new InvalidOperationException("EntriesList was not found."));
+            return EntriesList;
         }
 
         private static void FocusSelectedListBoxItem(ListBox listBox)
