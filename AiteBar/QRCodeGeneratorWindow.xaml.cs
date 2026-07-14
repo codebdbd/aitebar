@@ -168,10 +168,11 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             return;
         }
 
-        CancellationTokenSource? previousCts = Interlocked.Exchange(ref _previewRequestCts, new CancellationTokenSource());
+        var nextCts = new CancellationTokenSource();
+        CancellationTokenSource? previousCts = Interlocked.Exchange(ref _previewRequestCts, nextCts);
         previousCts?.Cancel();
         previousCts?.Dispose();
-        CancellationToken token = _previewRequestCts!.Token;
+        CancellationToken token = nextCts.Token;
 
         _ = RefreshPreviewAsync(token);
     }
