@@ -168,7 +168,7 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             return;
         }
 
-        var nextCts = new CancellationTokenSource();
+        var nextCts = new CancellationTokenSource(); // lgtm[cs/local-not-disposed] ownership transferred to _previewRequestCts, disposed in OnClosed
         CancellationTokenSource? previousCts = Interlocked.Exchange(ref _previewRequestCts, nextCts);
         previousCts?.Cancel();
         previousCts?.Dispose();
