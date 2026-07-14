@@ -411,14 +411,14 @@ public sealed class QRCodeService
         canvas.Clear(skLightColor);
 
         using var paint = new SKPaint { IsAntialias = false, Color = skDarkColor, Style = SKPaintStyle.Fill };
-        if (layout.Offset != 0)
+        if ((int)layout.Offset != 0)
         {
             canvas.Translate(layout.Offset, layout.Offset);
         }
 
         DrawModules(canvas, data, margin, layout.ModuleSize, paint);
         cancellationToken.ThrowIfCancellationRequested();
-        if (layout.Offset != 0)
+        if ((int)layout.Offset != 0)
         {
             canvas.Translate(-layout.Offset, -layout.Offset);
         }
