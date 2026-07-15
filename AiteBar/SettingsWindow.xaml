@@ -46,7 +46,7 @@
                         <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_ButtonName}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
                         <Grid Margin="0,0,0,15">
                             <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged"/>
-                            <TextBlock x:Name="TxtNamePlaceholder" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_ButtonNamePlaceholder}"/>
+                            <TextBlock x:Name="TxtNamePlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_ButtonNamePlaceholder}"/>
                             <TextBlock x:Name="TxtNameError" Margin="2,34,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
                         </Grid>
 
@@ -71,9 +71,9 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBox x:Name="TxtActionValue" TextChanged="TxtActionValue_TextChanged"/>
-                                <TextBlock x:Name="TxtActionPlaceholder" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False"/>
+                                <TextBlock x:Name="TxtActionPlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False"/>
                                 <TextBlock x:Name="TxtActionValueError" Grid.ColumnSpan="2" Margin="2,34,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
-                                <Button x:Name="BtnBrowse" Grid.Column="1" Width="80" Margin="5,0,0,0" Click="BtnBrowse_Click" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Browse}"/>
+                                <Button x:Name="BtnBrowse" Grid.Column="1" Width="80" Margin="5,0,0,0" Click="BtnBrowse_Click" Style="{StaticResource FormSelectionButtonStyle}" Content="{local:Loc ResourceKey=Common_Browse}"/>
                             </Grid>
 
                             <!-- Browser Settings -->
@@ -115,7 +115,7 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <CheckBox x:Name="ChkRotation" Content="{local:Loc ResourceKey=SettingsWindow_Rotation}" Checked="ChkRotation_Changed" Unchecked="ChkRotation_Changed"/>
-                                            <Button x:Name="BtnRotationProfiles" Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Click="BtnRotationProfiles_Click" Margin="10,0,0,0" Width="32" Height="32" Padding="0" SnapsToDevicePixels="True" UseLayoutRounding="True">
+                                            <Button x:Name="BtnRotationProfiles" Grid.Column="1" Style="{StaticResource FormSelectionButtonStyle}" Click="BtnRotationProfiles_Click" Margin="10,0,0,0" Width="36" Padding="0" SnapsToDevicePixels="True" UseLayoutRounding="True">
                                                 <TextBlock Text="&#xE908;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Ideal" TextOptions.TextRenderingMode="Auto"/>
                                             </Button>
                                         </Grid>
@@ -164,8 +164,8 @@
                                     </Border>
 
                                     <StackPanel Grid.Column="1" Margin="15,0,0,0" VerticalAlignment="Center">
-                                        <Button x:Name="BtnOpenCatalog" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_ChooseFromLibrary}" Click="BtnOpenCatalog_Click" Margin="0,0,0,10"/>
-                                        <Button x:Name="BtnSelectCustomIcon" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_CustomIcon}" Click="BtnSelectCustomIcon_Click"/>
+                                        <Button x:Name="BtnOpenCatalog" Style="{StaticResource FormSelectionButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_ChooseFromLibrary}" Click="BtnOpenCatalog_Click" Margin="0,0,0,10"/>
+                                        <Button x:Name="BtnSelectCustomIcon" Style="{StaticResource FormSelectionButtonStyle}" Content="{local:Loc ResourceKey=SettingsWindow_CustomIcon}" Click="BtnSelectCustomIcon_Click"/>
                                     </StackPanel>
                                 </Grid>
 
@@ -180,7 +180,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="#" VerticalAlignment="Center" Foreground="{StaticResource MutedText}" Margin="0,0,5,0"/>
                                     <TextBox x:Name="TxtHexColor" Grid.Column="1" TextChanged="TxtHexColor_TextChanged"/>
-                                    <TextBlock x:Name="TxtHexPlaceholder" Grid.Column="1" Margin="10,0" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_HexPlaceholder}" Visibility="Collapsed"/>
+                                    <TextBlock x:Name="TxtHexPlaceholder" Grid.Column="1" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_HexPlaceholder}" Visibility="Collapsed"/>
                                 </Grid>
                             </StackPanel>
                         </Border>
@@ -193,8 +193,8 @@
                 <Border BorderBrush="#3A3A3E" BorderThickness="0,1,0,0" Margin="0,0,0,15"/>
                 <DockPanel LastChildFill="False">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" DockPanel.Dock="Right">
-                    <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Width="130" Margin="0,0,10,0" IsCancel="True"/>
-                    <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Width="180" IsDefault="True"/>
+                    <Button x:Name="BtnCancel" Style="{StaticResource CommandButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Width="150" Margin="0,0,10,0" IsCancel="True"/>
+                    <Button x:Name="BtnSave" Style="{StaticResource PrimaryCommandButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Width="180" IsDefault="True"/>
                     </StackPanel>
                 </DockPanel>
             </StackPanel>

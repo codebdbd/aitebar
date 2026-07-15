@@ -33,7 +33,7 @@
         <StackPanel x:Name="IdleStatePanel">
             <TextBlock Text="{local:Loc ResourceKey=FileSorter_LocationLabel}" Style="{StaticResource FieldLabelStyle}"/>
             <ComboBox x:Name="CmbLocation"
-                      Height="32"
+                      Height="{StaticResource FormControlHeight}"
                       SelectionChanged="CmbLocation_SelectionChanged"/>
             <TextBlock x:Name="TxtCustomPath"
                        Visibility="Collapsed"
@@ -43,7 +43,7 @@
                        Margin="2,8,2,0"/>
             <Button x:Name="BtnSort"
                     Content="{local:Loc ResourceKey=FileSorter_SortButton}"
-                    Style="{StaticResource ActionButtonStyle}"
+                    Style="{StaticResource PrimaryCommandButtonStyle}"
                     Margin="0,16,0,0"
                     Click="BtnSort_Click"/>
         </StackPanel>

@@ -24,6 +24,8 @@
 - **Release artifacts**: Local installer builds now refresh `SHA256SUMS.txt` after optional signing.
 
 ### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Command buttons**: Основные и вторичные действия в таймере, сортировщике, конвертере ICO, генераторе QR, редакторе кнопки и настройках программы используют единую геометрию, типографику и состояния взаимодействия.
+- **Command buttons**: Primary and secondary actions in Timer, File Sorter, ICO Converter, QR Generator, button editor, and application settings now share consistent geometry, typography, and interaction states.
 - **Clipboard Manager window**: Кнопка сворачивания скрывает окно обратно в AiteBar без закрытия; повторное нажатие кнопки утилиты восстанавливает тот же экземпляр с сохранённым состоянием.
 - **Clipboard Manager window**: Minimize hides the window back into AiteBar without closing it; pressing the utility button again restores the same instance with its state intact.
 - **Internal architecture**: Централизованы описания встроенных утилит, снижены аллокации при refresh панели, добавлено кэширование профилей браузеров и улучшена изоляция async/UI-путей.

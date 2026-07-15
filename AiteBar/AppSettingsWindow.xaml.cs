@@ -422,11 +422,12 @@ public partial class AppSettingsWindow : DarkWindow
     {
         PanelContextsList.Children.Clear();
         _contextRows.Clear();
+        double formControlHeight = (double)FindResource("FormControlHeight");
 
         for (int i = 0; i < contexts.Count; i++)
         {
             PanelContext context = contexts[i];
-            var row = new Grid { Height = 34, Margin = new Thickness(0, 0, 0, 5) };
+            var row = new Grid { Height = formControlHeight, Margin = new Thickness(0, 0, 0, 5) };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(34) });

@@ -101,6 +101,7 @@
         <Setter Property="Margin" Value="0"/>
         <Setter Property="Padding" Value="0"/>
         <Setter Property="MinWidth" Value="60"/>
+        <Setter Property="Height" Value="{StaticResource FormControlHeight}"/>
         <Setter Property="SnapsToDevicePixels" Value="True"/>
         <Setter Property="UseLayoutRounding" Value="True"/>
         <Setter Property="Template">

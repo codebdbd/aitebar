@@ -34,7 +34,7 @@
             </Style>
 
             <Style x:Key="PanelBorderStyle" TargetType="Border">
-                <Setter Property="Background" Value="#141922"/>
+                <Setter Property="Background" Value="#192A41"/>
                 <Setter Property="BorderBrush" Value="#263241"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="CornerRadius" Value="6"/>
@@ -42,7 +42,7 @@
             </Style>
 
             <Style x:Key="InspectorSectionStyle" TargetType="Border">
-                <Setter Property="Background" Value="#121720"/>
+                <Setter Property="Background" Value="#192A41"/>
                 <Setter Property="BorderBrush" Value="#263241"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="CornerRadius" Value="6"/>
@@ -51,43 +51,16 @@
             </Style>
 
             <Style x:Key="CompactComboStyle" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
-                <Setter Property="Height" Value="32"/>
+                <Setter Property="Height" Value="{StaticResource FormControlHeight}"/>
                 <Setter Property="Margin" Value="0"/>
                 <Setter Property="MinWidth" Value="120"/>
             </Style>
 
             <Style x:Key="CompactTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource BaseTextBoxStyle}">
-                <Setter Property="Height" Value="32"/>
+                <Setter Property="Height" Value="{StaticResource FormControlHeight}"/>
                 <Setter Property="Margin" Value="0"/>
                 <Setter Property="Padding" Value="4,0"/>
                 <Setter Property="ContextMenu" Value="{StaticResource TextEditingContextMenu}"/>
-            </Style>
-
-            <Style x:Key="MiniButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
-                <Setter Property="Height" Value="32"/>
-                <Setter Property="Padding" Value="14,0"/>
-                <Setter Property="MinWidth" Value="88"/>
-            </Style>
-
-            <Style x:Key="IconSquareButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
-                <Setter Property="Width" Value="38"/>
-                <Setter Property="Height" Value="38"/>
-                <Setter Property="Padding" Value="0"/>
-                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
-                <Setter Property="FontSize" Value="17"/>
-            </Style>
-
-            <Style x:Key="FooterButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
-                <Setter Property="Height" Value="52"/>
-                <Setter Property="Padding" Value="18,0"/>
-                <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-            </Style>
-
-            <Style x:Key="FooterPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource ActionButtonStyle}">
-                <Setter Property="Height" Value="34"/>
-                <Setter Property="Padding" Value="16,0"/>
-                <Setter Property="HorizontalAlignment" Value="Stretch"/>
             </Style>
 
             <Style x:Key="ColorSwatchStyle" TargetType="Border">
@@ -179,7 +152,7 @@
                             <TextBlock x:Name="LblInputTextType" Text="{local:Loc ResourceKey=QRCodeGenerator_TypeUrl}" Style="{StaticResource FieldLabelStyle}"/>
                             <Grid Grid.Column="1">
                                 <TextBox x:Name="TxtInput" TextWrapping="NoWrap" VerticalScrollBarVisibility="Disabled" MaxLength="4296" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
-                                <TextBlock x:Name="TxtInputPlaceholder" Text="{local:Loc ResourceKey=QRCodeGenerator_InputPlaceholder}" Foreground="{StaticResource MutedText}" FontSize="12" IsHitTestVisible="False" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="6,0,0,0"/>
+                                <TextBlock x:Name="TxtInputPlaceholder" Text="{local:Loc ResourceKey=QRCodeGenerator_InputPlaceholder}" Foreground="{StaticResource MutedText}" FontSize="12" IsHitTestVisible="False" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="{StaticResource FormInputPlaceholderMargin}"/>
                             </Grid>
                         </Grid>
                         <Grid x:Name="WifiPanel" Grid.Row="4" Visibility="Collapsed">
@@ -416,25 +389,25 @@
                 <ColumnDefinition Width="8"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Button x:Name="BtnSavePng" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False" Click="BtnSavePng_Click">
+            <Button x:Name="BtnSavePng" Style="{StaticResource CommandButtonStyle}" IsEnabled="False" Click="BtnSavePng_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_SavePng}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
-            <Button x:Name="BtnSaveSvg" Grid.Column="2" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False" Click="BtnSaveSvg_Click">
+            <Button x:Name="BtnSaveSvg" Grid.Column="2" Style="{StaticResource CommandButtonStyle}" IsEnabled="False" Click="BtnSaveSvg_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_SaveSvg}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
-            <Button x:Name="BtnCopyPng" Grid.Column="4" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False" Click="BtnCopyPng_Click">
+            <Button x:Name="BtnCopyPng" Grid.Column="4" Style="{StaticResource CommandButtonStyle}" IsEnabled="False" Click="BtnCopyPng_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_CopyPng}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
-            <Button x:Name="BtnCopySvg" Grid.Column="6" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="False" Click="BtnCopySvg_Click">
+            <Button x:Name="BtnCopySvg" Grid.Column="6" Style="{StaticResource CommandButtonStyle}" IsEnabled="False" Click="BtnCopySvg_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                     <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_CopySvg}" FontWeight="SemiBold"/>

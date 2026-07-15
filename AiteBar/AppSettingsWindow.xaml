@@ -52,7 +52,7 @@
 
                 <Setter Property="Width" Value="62"/>
 
-                <Setter Property="Height" Value="32"/>
+                <Setter Property="Height" Value="{StaticResource FormControlHeight}"/>
 
                 <Setter Property="Margin" Value="0,0,6,0"/>
 
@@ -681,9 +681,9 @@
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
 
-            <Button Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource SecondaryButtonStyle}" Click="BtnCancel_Click" Width="130" Margin="0,0,10,0" IsCancel="True"/>
+            <Button Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource CommandButtonStyle}" Click="BtnCancel_Click" Width="150" Margin="0,0,10,0" IsCancel="True"/>
 
-            <Button Content="{local:Loc ResourceKey=Common_Save}" Style="{StaticResource ActionButtonStyle}" Click="BtnSave_Click" Width="180" IsDefault="True"/>
+            <Button Content="{local:Loc ResourceKey=Common_Save}" Style="{StaticResource PrimaryCommandButtonStyle}" Click="BtnSave_Click" Width="180" IsDefault="True"/>
 
         </StackPanel>
 

@@ -408,7 +408,7 @@
 
                            FontSize="12"
 
-                           Margin="8,0"
+                           Margin="{StaticResource FormInputPlaceholderMargin}"
 
                            IsHitTestVisible="False"
 

@@ -39,7 +39,7 @@
 
         <Grid Grid.Row="1" Margin="0,0,0,10">
             <TextBox x:Name="TxtSearch" TextChanged="TxtSearch_TextChanged"/>
-            <TextBlock x:Name="TxtSearchPlaceholder" Text="{local:Loc ResourceKey=RotationProfiles_SearchPlaceholder}" Margin="10,0" VerticalAlignment="Center" Foreground="#666666" IsHitTestVisible="False"/>
+            <TextBlock x:Name="TxtSearchPlaceholder" Text="{local:Loc ResourceKey=RotationProfiles_SearchPlaceholder}" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="#666666" IsHitTestVisible="False"/>
         </Grid>
 
         <Border Grid.Row="2" Background="#383838" BorderBrush="#3A3A3E" BorderThickness="1" CornerRadius="6" Padding="4">
