@@ -25,6 +25,7 @@ namespace AiteBar
         private static string _appliedCulturePreference = AutoCulture;
         private static CultureInfo _resolvedCulture = ResolveCulture(AutoCulture);
 
+        public static CultureInfo ResolvedCulture => _resolvedCulture;
         public static LocalizedStringProvider Strings { get; } = new();
         public static event EventHandler? CultureChanged;
 
@@ -95,31 +96,80 @@ namespace AiteBar
         public static void RefreshLocalizedBindings(DependencyObject root)
         {
             var visited = new HashSet<DependencyObject>();
-            RefreshLocalizedBindings(root, visited);
+            // First pass: scan main tree for Window, ContextMenu and ToolTip
+            ScanMainTree(root, visited);
         }
 
-        private static void RefreshLocalizedBindings(DependencyObject root, HashSet<DependencyObject> visited)
+        private static void ScanMainTree(DependencyObject root, HashSet<DependencyObject> visited)
         {
             if (!visited.Add(root))
             {
                 return;
             }
 
+            // Update Window title
+            if (root is Window window)
+            {
+                UpdateBinding(window, Window.TitleProperty);
+            }
+
+            // Check for ContextMenu and ToolTip on FrameworkElements
+            if (root is FrameworkElement frameworkElement)
+            {
+                UpdateBinding(frameworkElement, FrameworkElement.ToolTipProperty);
+
+                // If ToolTip is a DependencyObject, walk its entire tree
+                if (frameworkElement.ToolTip is DependencyObject toolTip)
+                {
+                    WalkDetachedTree(toolTip, visited);
+                }
+
+                // Walk entire ContextMenu tree
+                if (frameworkElement.ContextMenu != null)
+                {
+                    WalkDetachedTree(frameworkElement.ContextMenu, visited);
+                }
+            }
+
+            // Continue scanning main tree for other elements with ContextMenu/ToolTip
+            if (root is Visual or System.Windows.Media.Media3D.Visual3D)
+            {
+                int visualChildren = VisualTreeHelper.GetChildrenCount(root);
+                for (int i = 0; i < visualChildren; i++)
+                {
+                    ScanMainTree(VisualTreeHelper.GetChild(root, i), visited);
+                }
+            }
+
+            foreach (object child in LogicalTreeHelper.GetChildren(root))
+            {
+                if (child is DependencyObject dependencyObject)
+                {
+                    ScanMainTree(dependencyObject, visited);
+                }
+            }
+        }
+
+        private static void WalkDetachedTree(DependencyObject root, HashSet<DependencyObject> visited)
+        {
+            if (!visited.Add(root))
+            {
+                return;
+            }
+
+            // Update all relevant properties on elements in detached trees (ContextMenu, ToolTip)
             if (root is FrameworkElement frameworkElement)
             {
                 UpdateBinding(frameworkElement, FrameworkElement.ToolTipProperty);
 
                 if (frameworkElement.ContextMenu != null)
                 {
-                    RefreshLocalizedBindings(frameworkElement.ContextMenu, visited);
+                    WalkDetachedTree(frameworkElement.ContextMenu, visited);
                 }
             }
 
             switch (root)
             {
-                case Window window:
-                    UpdateBinding(window, Window.TitleProperty);
-                    break;
                 case HeaderedItemsControl headeredItemsControl:
                     UpdateBinding(headeredItemsControl, HeaderedItemsControl.HeaderProperty);
                     break;
@@ -141,12 +191,13 @@ namespace AiteBar
                     break;
             }
 
+            // Walk all children of detached tree elements
             if (root is Visual or System.Windows.Media.Media3D.Visual3D)
             {
                 int visualChildren = VisualTreeHelper.GetChildrenCount(root);
                 for (int i = 0; i < visualChildren; i++)
                 {
-                    RefreshLocalizedBindings(VisualTreeHelper.GetChild(root, i), visited);
+                    WalkDetachedTree(VisualTreeHelper.GetChild(root, i), visited);
                 }
             }
 
@@ -154,7 +205,7 @@ namespace AiteBar
             {
                 if (child is DependencyObject dependencyObject)
                 {
-                    RefreshLocalizedBindings(dependencyObject, visited);
+                    WalkDetachedTree(dependencyObject, visited);
                 }
             }
         }
@@ -189,10 +240,8 @@ namespace AiteBar
 
         private static void ApplyResolvedCulture(CultureInfo culture)
         {
-            CultureInfo.CurrentCulture = culture;
-            CultureInfo.CurrentUICulture = culture;
-            CultureInfo.DefaultThreadCurrentCulture = culture;
-            CultureInfo.DefaultThreadCurrentUICulture = culture;
+            // No longer mutate global CultureInfo properties to avoid side effects on other applications
+            // All app code now uses LocalizationService.ResolvedCulture explicitly
         }
     }
 

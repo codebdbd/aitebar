@@ -22,8 +22,9 @@ startup_log.txt
 
 # Internal AI / Prompt files
 
-
+.mimocode/
 PLANS.md
+RELEASE_READINESS_EXECPLAN.md
 
 AiteBar/codex_instructions_fixes_r5.md
 

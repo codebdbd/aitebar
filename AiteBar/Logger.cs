@@ -64,10 +64,15 @@ namespace AiteBar
                     do
                     {
                         hasMore = false;
+                        var batch = new List<string>();
                         while (_logQueue.TryDequeue(out string? logEntry))
                         {
-                            await WriteLogEntryAsync(logEntry);
+                            batch.Add(logEntry);
                             hasMore = true;
+                        }
+                        if (batch.Count > 0)
+                        {
+                            await WriteLogBatchAsync(batch);
                         }
                         // Double-check inside loop without recursion
                         if (!hasMore && !_logQueue.IsEmpty)
@@ -91,12 +96,13 @@ namespace AiteBar
             });
         }
 
-        private static async Task WriteLogEntryAsync(string logEntry)
+        private static async Task WriteLogBatchAsync(List<string> logBatch)
         {
             try
             {
                 EnsureLogFileReady();
-                await File.AppendAllTextAsync(LogPath, logEntry);
+                string combinedLog = string.Concat(logBatch);
+                await File.AppendAllTextAsync(LogPath, combinedLog);
             }
             catch (Exception logEx)
             {

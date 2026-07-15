@@ -585,7 +585,7 @@ public sealed class QRCodeService
         var warnings = new List<string>();
         if (contrastRatio < MinRecommendedContrastRatio)
         {
-            warnings.Add(LocalizationService.Format("QRCodeGenerator_WarningLowContrast", contrastRatio.ToString("0.0", CultureInfo.CurrentCulture)));
+            warnings.Add(LocalizationService.Format("QRCodeGenerator_WarningLowContrast", contrastRatio.ToString("0.0", LocalizationService.ResolvedCulture)));
         }
 
         if (!string.IsNullOrWhiteSpace(options.LogoSvgContent))
@@ -596,7 +596,7 @@ public sealed class QRCodeService
             }
             if (options.LogoSizePercent > 15)
             {
-                warnings.Add(LocalizationService.Format("QRCodeGenerator_WarningLargeLogo", options.LogoSizePercent.ToString(CultureInfo.CurrentCulture)));
+                warnings.Add(LocalizationService.Format("QRCodeGenerator_WarningLargeLogo", options.LogoSizePercent.ToString(LocalizationService.ResolvedCulture)));
             }
         }
 

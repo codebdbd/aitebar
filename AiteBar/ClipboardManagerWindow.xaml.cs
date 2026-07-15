@@ -238,14 +238,14 @@ namespace AiteBar
                 return LocalizationService.Format(
                     "ClipboardManager_ImageSummary",
                     kilobytes,
-                    entry.Timestamp.ToString("g", CultureInfo.CurrentCulture));
+                    entry.Timestamp.ToString("g", LocalizationService.ResolvedCulture));
             }
 
             return LocalizationService.Format(
                 "ClipboardManager_TextSummary",
                 entry.Text.Length,
                 ClipboardTextTransforms.CountLines(entry.Text),
-                entry.Timestamp.ToString("g", CultureInfo.CurrentCulture));
+                entry.Timestamp.ToString("g", LocalizationService.ResolvedCulture));
         }
 
         private string BuildEntriesSignature(string searchText, IReadOnlyList<ClipboardHistoryEntry> entries)

@@ -57,7 +57,6 @@ namespace AiteBar
                 var next = CloneAppSettings(_appSettings);
                 next.Elements = [.. _elements];
                 update(next);
-                next.Elements = [.. _elements];
                 _appSettings = CloneAppSettings(next);
                 _elements = _appSettings.Elements;
             }

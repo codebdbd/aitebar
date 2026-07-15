@@ -266,7 +266,7 @@ namespace AiteBar
             }
         }
 
-        private void UpdatePreview()
+        private async void UpdatePreview()
         {
             if (!string.IsNullOrEmpty(_selectedImagePath) && File.Exists(_selectedImagePath))
             {
@@ -274,7 +274,7 @@ namespace AiteBar
                 PreviewImage.Visibility = Visibility.Visible;
                 try
                 {
-                    PreviewImage.Source = LoadPreviewImage(_selectedImagePath);
+                    PreviewImage.Source = await LoadPreviewImageAsync(_selectedImagePath);
                 }
                 catch (Exception ex)
                 {
@@ -298,9 +298,9 @@ namespace AiteBar
             }
         }
 
-        private static BitmapImage LoadPreviewImage(string imagePath)
+        private static async Task<BitmapImage> LoadPreviewImageAsync(string imagePath)
         {
-            byte[] imageBytes = File.ReadAllBytes(imagePath);
+            byte[] imageBytes = await File.ReadAllBytesAsync(imagePath).ConfigureAwait(false);
             using var stream = new MemoryStream(imageBytes);
             var bitmap = new BitmapImage();
             bitmap.BeginInit();

@@ -2,6 +2,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using AiteBar;
 using Xunit;
@@ -922,5 +923,300 @@ public sealed class AppSettingsServiceTests
         FileSorterWindow.SetLastFileSortOperation(service, null);
 
         Assert.Null(FileSorterWindow.GetLastFileSortOperation(service));
+    }
+
+    [Fact]
+    public void CloneAppSettings_CopiesAllProperties()
+    {
+        var original = new AppSettings
+        {
+            GlobalHotkeyCtrl = true,
+            GlobalHotkeyAlt = false,
+            GlobalHotkeyShift = true,
+            GlobalHotkeyWin = true,
+            GlobalHotkeyKey = "F5",
+
+            ShowPresetSearch = false,
+            ShowPresetScreenshot = false,
+            ShowPresetVideo = false,
+            ShowPresetCalc = false,
+            ShowPresetExplorer = false,
+            ShowPresetDownloads = false,
+            ShowPresetFileSorter = false,
+            ShowPresetIconConverter = false,
+            ShowPresetColorPicker = true,
+            ShowPresetQuickNote = true,
+            ShowPresetQRCodeGenerator = true,
+            ShowPresetClipboardManager = true,
+            ShowPresetTimerStopwatch = false,
+            ShowPresetShowDesktop = false,
+            ShowPresetAppsFolder = false,
+            ShowPresetCopilot = false,
+
+            ClipboardManagerPersistHistory = false,
+            QuickNoteThemeId = "light",
+            QuickNotePinned = true,
+            QuickNoteLeft = 100.5,
+            QuickNoteTop = 200.5,
+            QuickNoteWidth = 400.0,
+            QuickNoteHeight = 300.0,
+            TimerSoundEnabled = false,
+            TimerIsStopwatchMode = true,
+            TimerDuration = TimeSpan.FromHours(1),
+
+            Edge = DockEdge.Right,
+            MonitorIndex = 2,
+            ActivationZoneSizePercent = 50,
+            PanelSizePercent = 65,
+            ActivationDelayMs = 300,
+            UiCulture = "de",
+            ActiveContextId = "context-3",
+            CheckForUpdatesEnabled = false,
+            ShowTaskbarPositionIndicator = false,
+
+            NextContextHotkey = new HotkeyBinding { Ctrl = true, Alt = false, Shift = true, Win = false, Key = "A" },
+            PreviousContextHotkey = new HotkeyBinding { Ctrl = false, Alt = true, Shift = false, Win = true, Key = "B" },
+            AddButtonHotkey = new HotkeyBinding { Ctrl = true, Alt = true, Shift = false, Win = false, Key = "C" },
+            FileSorterHotkey = new HotkeyBinding { Ctrl = false, Alt = false, Shift = true, Win = true, Key = "D" },
+            QuickNoteHotkey = new HotkeyBinding { Ctrl = true, Alt = false, Shift = false, Win = true, Key = "E" },
+            ColorPickerHotkey = new HotkeyBinding { Ctrl = false, Alt = true, Shift = true, Win = false, Key = "F" },
+            TimerStopwatchHotkey = new HotkeyBinding { Ctrl = true, Alt = true, Shift = true, Win = false, Key = "G" },
+            QRCodeGeneratorHotkey = new HotkeyBinding { Ctrl = false, Alt = false, Shift = false, Win = true, Key = "H" },
+
+            Contexts =
+            [
+                new PanelContext { Id = "ctx-1", Name = "Custom", IsNameCustomized = true, IconGlyph = "\uE111", IsEnabled = true, Color = "#FF0000" },
+                new PanelContext { Id = "ctx-2", Name = "Panel 2", IsNameCustomized = false, IconGlyph = "\uE222", IsEnabled = false, Color = "#00FF00" }
+            ],
+
+            Elements =
+            [
+                new CustomElement
+                {
+                    Id = "el-1",
+                    Name = "Button 1",
+                    Icon = "\uF001",
+                    IconFont = "test-font",
+                    Color = "#123456",
+                    ActionType = nameof(ActionType.Web),
+                    ActionValue = "https://example.com",
+                    Browser = BrowserType.Firefox,
+                    ChromeProfile = "Profile 1",
+                    RotationProfilePaths = ["path/a", "path/b"],
+                    IsAppMode = true,
+                    IsIncognito = true,
+                    UseRotation = true,
+                    OpenFullscreen = true,
+                    IsTopmost = true,
+                    LastUsedProfile = "Profile 1",
+                    Alt = true,
+                    Ctrl = true,
+                    Shift = true,
+                    Win = true,
+                    Key = "X",
+                    ImagePath = "/tmp/icon.png",
+                    ContextId = "ctx-2"
+                }
+            ],
+
+            UtilityButtonOrder = ["Search", "Calculator", "FileSorter"],
+
+            LastFileSortOperation = new FileSortUndoState
+            {
+                RootPath = @"C:\Downloads",
+                Entries = [new FileSortOperationEntry { SourcePath = "a.txt", DestinationPath = "b.txt" }]
+            },
+
+            Sentry = new SentrySettings
+            {
+                Dsn = "https://example@sentry.io/123",
+                IsEnabled = true,
+                Environment = "production",
+                TracesSampleRate = 0.5,
+                SendDefaultPii = true
+            }
+        };
+
+        AppSettings clone = InvokeCloneAppSettings(original);
+
+        // Scalar properties
+        Assert.True(clone.GlobalHotkeyCtrl);
+        Assert.False(clone.GlobalHotkeyAlt);
+        Assert.True(clone.GlobalHotkeyShift);
+        Assert.True(clone.GlobalHotkeyWin);
+        Assert.Equal("F5", clone.GlobalHotkeyKey);
+
+        Assert.False(clone.ShowPresetSearch);
+        Assert.False(clone.ShowPresetScreenshot);
+        Assert.False(clone.ShowPresetVideo);
+        Assert.False(clone.ShowPresetCalc);
+        Assert.False(clone.ShowPresetExplorer);
+        Assert.False(clone.ShowPresetDownloads);
+        Assert.False(clone.ShowPresetFileSorter);
+        Assert.False(clone.ShowPresetIconConverter);
+        Assert.True(clone.ShowPresetColorPicker);
+        Assert.True(clone.ShowPresetQuickNote);
+        Assert.True(clone.ShowPresetQRCodeGenerator);
+        Assert.True(clone.ShowPresetClipboardManager);
+        Assert.False(clone.ShowPresetTimerStopwatch);
+        Assert.False(clone.ShowPresetShowDesktop);
+        Assert.False(clone.ShowPresetAppsFolder);
+        Assert.False(clone.ShowPresetCopilot);
+
+        Assert.False(clone.ClipboardManagerPersistHistory);
+        Assert.Equal("light", clone.QuickNoteThemeId);
+        Assert.True(clone.QuickNotePinned);
+        Assert.Equal(100.5, clone.QuickNoteLeft);
+        Assert.Equal(200.5, clone.QuickNoteTop);
+        Assert.Equal(400.0, clone.QuickNoteWidth);
+        Assert.Equal(300.0, clone.QuickNoteHeight);
+        Assert.False(clone.TimerSoundEnabled);
+        Assert.True(clone.TimerIsStopwatchMode);
+        Assert.Equal(TimeSpan.FromHours(1), clone.TimerDuration);
+
+        Assert.Equal(DockEdge.Right, clone.Edge);
+        Assert.Equal(2, clone.MonitorIndex);
+        Assert.Equal(50, clone.ActivationZoneSizePercent);
+        Assert.Equal(65, clone.PanelSizePercent);
+        Assert.Equal(300, clone.ActivationDelayMs);
+        Assert.Equal("de", clone.UiCulture);
+        Assert.Equal("context-3", clone.ActiveContextId);
+        Assert.False(clone.CheckForUpdatesEnabled);
+        Assert.False(clone.ShowTaskbarPositionIndicator);
+
+        // HotkeyBinding deep copies
+        AssertCloneHotkeyBinding(original.NextContextHotkey, clone.NextContextHotkey);
+        AssertCloneHotkeyBinding(original.PreviousContextHotkey, clone.PreviousContextHotkey);
+        AssertCloneHotkeyBinding(original.AddButtonHotkey, clone.AddButtonHotkey);
+        AssertCloneHotkeyBinding(original.FileSorterHotkey, clone.FileSorterHotkey);
+        AssertCloneHotkeyBinding(original.QuickNoteHotkey, clone.QuickNoteHotkey);
+        AssertCloneHotkeyBinding(original.ColorPickerHotkey, clone.ColorPickerHotkey);
+        AssertCloneHotkeyBinding(original.TimerStopwatchHotkey, clone.TimerStopwatchHotkey);
+        AssertCloneHotkeyBinding(original.QRCodeGeneratorHotkey, clone.QRCodeGeneratorHotkey);
+
+        // Contexts deep copy
+        Assert.Equal(2, clone.Contexts.Count);
+        Assert.Equal("ctx-1", clone.Contexts[0].Id);
+        Assert.Equal("Custom", clone.Contexts[0].Name);
+        Assert.True(clone.Contexts[0].IsNameCustomized);
+        Assert.Equal("\uE111", clone.Contexts[0].IconGlyph);
+        Assert.True(clone.Contexts[0].IsEnabled);
+        Assert.Equal("#FF0000", clone.Contexts[0].Color);
+
+        Assert.Equal("ctx-2", clone.Contexts[1].Id);
+        Assert.False(clone.Contexts[1].IsEnabled);
+        Assert.Equal("#00FF00", clone.Contexts[1].Color);
+
+        // Verify context list is a new instance
+        Assert.NotSame(original.Contexts, clone.Contexts);
+
+        // Elements deep copy
+        Assert.Single(clone.Elements);
+        var el = clone.Elements[0];
+        Assert.Equal("el-1", el.Id);
+        Assert.Equal("Button 1", el.Name);
+        Assert.Equal("\uF001", el.Icon);
+        Assert.Equal("test-font", el.IconFont);
+        Assert.Equal("#123456", el.Color);
+        Assert.Equal(nameof(ActionType.Web), el.ActionType);
+        Assert.Equal("https://example.com", el.ActionValue);
+        Assert.Equal(BrowserType.Firefox, el.Browser);
+        Assert.Equal("Profile 1", el.ChromeProfile);
+        Assert.Equal(["path/a", "path/b"], el.RotationProfilePaths);
+        Assert.True(el.IsAppMode);
+        Assert.True(el.IsIncognito);
+        Assert.True(el.UseRotation);
+        Assert.True(el.OpenFullscreen);
+        Assert.True(el.IsTopmost);
+        Assert.Equal("Profile 1", el.LastUsedProfile);
+        Assert.True(el.Alt);
+        Assert.True(el.Ctrl);
+        Assert.True(el.Shift);
+        Assert.True(el.Win);
+        Assert.Equal("X", el.Key);
+        Assert.Equal("/tmp/icon.png", el.ImagePath);
+        Assert.Equal("ctx-2", el.ContextId);
+
+        // Verify element list and rotation paths are new instances
+        Assert.NotSame(original.Elements, clone.Elements);
+        Assert.NotSame(original.Elements[0].RotationProfilePaths, clone.Elements[0].RotationProfilePaths);
+
+        // UtilityButtonOrder deep copy
+        Assert.Equal(["Search", "Calculator", "FileSorter"], clone.UtilityButtonOrder);
+        Assert.NotSame(original.UtilityButtonOrder, clone.UtilityButtonOrder);
+
+        // LastFileSortOperation deep copy
+        Assert.NotNull(clone.LastFileSortOperation);
+        Assert.Equal(@"C:\Downloads", clone.LastFileSortOperation.RootPath);
+        Assert.Single(clone.LastFileSortOperation.Entries);
+        Assert.Equal("a.txt", clone.LastFileSortOperation.Entries[0].SourcePath);
+        Assert.Equal("b.txt", clone.LastFileSortOperation.Entries[0].DestinationPath);
+        Assert.NotSame(original.LastFileSortOperation, clone.LastFileSortOperation);
+        Assert.NotSame(original.LastFileSortOperation.Entries, clone.LastFileSortOperation.Entries);
+
+        // Sentry deep copy
+        Assert.NotNull(clone.Sentry);
+        Assert.Equal("https://example@sentry.io/123", clone.Sentry.Dsn);
+        Assert.True(clone.Sentry.IsEnabled);
+        Assert.Equal("production", clone.Sentry.Environment);
+        Assert.Equal(0.5, clone.Sentry.TracesSampleRate);
+        Assert.True(clone.Sentry.SendDefaultPii);
+        Assert.NotSame(original.Sentry, clone.Sentry);
+    }
+
+    [Fact]
+    public void CloneAppSettings_MutatingCloneDoesNotAffectOriginal()
+    {
+        var original = new AppSettings
+        {
+            GlobalHotkeyKey = "D4",
+            Edge = DockEdge.Left,
+            NextContextHotkey = new HotkeyBinding { Ctrl = true, Key = "1" },
+            Contexts = [new PanelContext { Id = "ctx-1", Name = "Original" }],
+            Elements = [new CustomElement { Id = "el-1", Name = "Original", RotationProfilePaths = ["a"] }],
+            Sentry = new SentrySettings { Dsn = "dsn" }
+        };
+
+        AppSettings clone = InvokeCloneAppSettings(original);
+
+        // Mutate clone
+        clone.GlobalHotkeyKey = "F12";
+        clone.Edge = DockEdge.Bottom;
+        clone.NextContextHotkey.Key = "9";
+        clone.NextContextHotkey.Ctrl = false;
+        clone.Contexts[0].Name = "Changed";
+        clone.Elements[0].Name = "Changed";
+        clone.Elements[0].RotationProfilePaths.Add("b");
+        clone.Sentry.Dsn = "changed";
+
+        // Original must be unaffected
+        Assert.Equal("D4", original.GlobalHotkeyKey);
+        Assert.Equal(DockEdge.Left, original.Edge);
+        Assert.Equal("1", original.NextContextHotkey.Key);
+        Assert.True(original.NextContextHotkey.Ctrl);
+        Assert.Equal("Original", original.Contexts[0].Name);
+        Assert.Equal("Original", original.Elements[0].Name);
+        Assert.Equal(["a"], original.Elements[0].RotationProfilePaths);
+        Assert.Equal("dsn", original.Sentry.Dsn);
+    }
+
+    private static void AssertCloneHotkeyBinding(HotkeyBinding original, HotkeyBinding clone)
+    {
+        Assert.NotSame(original, clone);
+        Assert.Equal(original.Ctrl, clone.Ctrl);
+        Assert.Equal(original.Alt, clone.Alt);
+        Assert.Equal(original.Shift, clone.Shift);
+        Assert.Equal(original.Win, clone.Win);
+        Assert.Equal(original.Key, clone.Key);
+    }
+
+    private static AppSettings InvokeCloneAppSettings(AppSettings settings)
+    {
+        MethodInfo method = typeof(AppSettingsService).GetMethod(
+            "CloneAppSettings",
+            BindingFlags.NonPublic | BindingFlags.Static)
+            ?? throw new InvalidOperationException("CloneAppSettings method not found");
+
+        return (AppSettings)method.Invoke(null, [settings])!;
     }
 }

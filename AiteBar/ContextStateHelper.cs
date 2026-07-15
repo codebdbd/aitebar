@@ -32,7 +32,7 @@ namespace AiteBar
 
         public static string GetDefaultContextId(int index) => $"context-{index + 1}";
 
-        public static string GetDefaultContextName(int index) => GetDefaultContextName(index, CultureInfo.CurrentUICulture);
+        public static string GetDefaultContextName(int index) => GetDefaultContextName(index, LocalizationService.ResolvedCulture);
 
         public static string GetDefaultContextName(int index, CultureInfo culture) => LocalizationService.Format("Panel_DefaultNameFormat", culture, index + 1);
 
@@ -41,7 +41,7 @@ namespace AiteBar
 
         public static List<PanelContext> NormalizeContexts(IReadOnlyList<PanelContext>? source)
         {
-            return NormalizeContexts(source, CultureInfo.CurrentUICulture);
+            return NormalizeContexts(source, LocalizationService.ResolvedCulture);
         }
 
         public static List<PanelContext> NormalizeContexts(IReadOnlyList<PanelContext>? source, CultureInfo culture)
@@ -92,8 +92,18 @@ namespace AiteBar
                 : enabledContexts[0].Id;
         }
 
-        public static IReadOnlyList<PanelContext> GetEnabledContexts(IReadOnlyList<PanelContext> contexts) =>
-            contexts.Where(context => context.IsEnabled).ToList();
+        public static IReadOnlyList<PanelContext> GetEnabledContexts(IReadOnlyList<PanelContext> contexts)
+        {
+            var enabled = new List<PanelContext>(FixedContextCount);
+            foreach (var context in contexts)
+            {
+                if (context.IsEnabled)
+                {
+                    enabled.Add(context);
+                }
+            }
+            return enabled;
+        }
 
         public static string? GetRelativeEnabledContextId(string activeContextId, IReadOnlyList<PanelContext> contexts, int direction)
         {
@@ -103,7 +113,15 @@ namespace AiteBar
                 return null;
             }
 
-            int currentIndex = enabledContexts.ToList().FindIndex(context => string.Equals(context.Id, activeContextId, StringComparison.Ordinal));
+            int currentIndex = -1;
+            for (int i = 0; i < enabledContexts.Count; i++)
+            {
+                if (string.Equals(enabledContexts[i].Id, activeContextId, StringComparison.Ordinal))
+                {
+                    currentIndex = i;
+                    break;
+                }
+            }
             if (currentIndex < 0)
             {
                 currentIndex = 0;
