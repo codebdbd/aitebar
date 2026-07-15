@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using Sentry;
 
@@ -12,7 +13,8 @@ internal static class TelemetryService
 {
     private static readonly object SyncRoot = new();
     private static IDisposable? _sentryHandle;
-    private static bool _initialized;
+    private static Task? _initializationTask;
+    private static CancellationTokenSource? _initializationCts;
 
     public static bool IsEnabled { get; private set; }
 
@@ -23,19 +25,58 @@ internal static class TelemetryService
         InitializeAsync().GetAwaiter().GetResult();
     }
 
-    public static async Task InitializeAsync()
+    public static Task InitializeAsync()
     {
         lock (SyncRoot)
         {
-            if (_initialized)
+            if (_initializationTask != null)
             {
-                return;
+                return _initializationTask;
             }
 
-            _initialized = true;
+            var cancellationSource = new CancellationTokenSource();
+            var completionSource = new TaskCompletionSource(
+                TaskCreationOptions.RunContinuationsAsynchronously);
+            _initializationCts = cancellationSource;
+            _initializationTask = completionSource.Task;
+            _ = RunInitializationAsync(cancellationSource, completionSource);
+            return _initializationTask;
         }
+    }
 
-        SentrySettings? settingsFromFile = await LoadSettingsFromFileAsync();
+    private static async Task RunInitializationAsync(
+        CancellationTokenSource cancellationSource,
+        TaskCompletionSource completionSource)
+    {
+        try
+        {
+            await InitializeCoreAsync(cancellationSource).ConfigureAwait(false);
+            completionSource.TrySetResult();
+        }
+        catch (OperationCanceledException) when (cancellationSource.IsCancellationRequested)
+        {
+            completionSource.TrySetResult();
+        }
+        catch (Exception ex)
+        {
+            lock (SyncRoot)
+            {
+                if (ReferenceEquals(_initializationTask, completionSource.Task))
+                {
+                    _initializationTask = null;
+                    _initializationCts = null;
+                }
+            }
+
+            cancellationSource.Dispose();
+            completionSource.TrySetException(ex);
+        }
+    }
+
+    private static async Task InitializeCoreAsync(CancellationTokenSource cancellationSource)
+    {
+        CancellationToken cancellationToken = cancellationSource.Token;
+        SentrySettings? settingsFromFile = await LoadSettingsFromFileAsync(cancellationToken).ConfigureAwait(false);
         string? dsn;
         string? environment;
         double tracesSampleRate = 0.0;
@@ -83,19 +124,28 @@ internal static class TelemetryService
             sendDefaultPii = settingsFromFile.SendDefaultPii;
         }
 
-        _sentryHandle = SentrySdk.Init(options =>
+        lock (SyncRoot)
         {
-            options.Dsn = dsn;
-            options.Release = $"aitebar@{GetAppVersion()}";
-            options.Environment = environment;
-            options.SendDefaultPii = sendDefaultPii;
-            options.TracesSampleRate = tracesSampleRate;
-        });
+            if (cancellationToken.IsCancellationRequested ||
+                !ReferenceEquals(_initializationCts, cancellationSource))
+            {
+                return;
+            }
 
-        IsEnabled = true;
+            _sentryHandle = SentrySdk.Init(options =>
+            {
+                options.Dsn = dsn;
+                options.Release = $"aitebar@{GetAppVersion()}";
+                options.Environment = environment;
+                options.SendDefaultPii = sendDefaultPii;
+                options.TracesSampleRate = tracesSampleRate;
+            });
+
+            IsEnabled = true;
+        }
     }
 
-    private static async Task<SentrySettings?> LoadSettingsFromFileAsync()
+    private static async Task<SentrySettings?> LoadSettingsFromFileAsync(CancellationToken cancellationToken)
     {
         string settingsPath = PathHelper.SettingsFile;
         if (!File.Exists(settingsPath))
@@ -107,13 +157,13 @@ internal static class TelemetryService
         {
             try
             {
-                string json = await File.ReadAllTextAsync(settingsPath);
+                string json = await File.ReadAllTextAsync(settingsPath, cancellationToken).ConfigureAwait(false);
                 var settings = JsonSerializer.Deserialize<AppSettings>(json);
                 return settings?.Sentry;
             }
             catch (IOException)
             {
-                await Task.Delay(100 * (1 << attempt));
+                await Task.Delay(100 * (1 << attempt), cancellationToken).ConfigureAwait(false);
             }
             catch
             {
@@ -204,13 +254,19 @@ internal static class TelemetryService
 
     public static void Shutdown()
     {
+        CancellationTokenSource? cancellationSource;
         lock (SyncRoot)
         {
+            cancellationSource = _initializationCts;
+            _initializationCts = null;
+            _initializationTask = null;
             _sentryHandle?.Dispose();
             _sentryHandle = null;
-            _initialized = false;
             IsEnabled = false;
         }
+
+        cancellationSource?.Cancel();
+        cancellationSource?.Dispose();
     }
 
     private static string GetAppVersion()

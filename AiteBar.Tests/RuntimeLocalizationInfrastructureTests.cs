@@ -6,7 +6,7 @@ using System.Windows.Data;
 
 namespace AiteBar.Tests;
 
-[Collection("WpfTestCollection")]
+[Collection("LocalizationStateTestCollection")]
 public sealed class RuntimeLocalizationInfrastructureTests
 {
     [Fact]
@@ -55,7 +55,7 @@ public sealed class RuntimeLocalizationInfrastructureTests
     [Fact]
     public void LocalizationService_Get_UsesAppliedCultureAcrossThreads()
     {
-        string originalCulture = LocalizationService.NormalizeCultureName(Thread.CurrentThread.CurrentUICulture.Name);
+        string originalCulture = LocalizationService.ResolvedCulture.Name;
 
         try
         {
@@ -81,7 +81,7 @@ public sealed class RuntimeLocalizationInfrastructureTests
     {
         RunSta(() =>
         {
-            string originalCulture = LocalizationService.NormalizeCultureName(Thread.CurrentThread.CurrentUICulture.Name);
+            string originalCulture = LocalizationService.ResolvedCulture.Name;
 
             try
             {

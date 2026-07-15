@@ -10,16 +10,20 @@ namespace AiteBar
 
         // Для тестов: возможность переопределить корневую папку данных
         private static string? _appDataFolderOverride;
+        private static string? _appDataFolderFallbackOverride;
         private static readonly object _appDataLock = new();
+        internal static string DefaultAppDataFolder => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            AppCompany,
+            AppName);
+
         public static string AppDataFolder
         {
             get
             {
                 lock (_appDataLock)
                 {
-                    return _appDataFolderOverride ?? Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                        AppCompany, AppName);
+                    return _appDataFolderOverride ?? _appDataFolderFallbackOverride ?? DefaultAppDataFolder;
                 }
             }
         }
@@ -43,6 +47,14 @@ namespace AiteBar
             lock (_appDataLock)
             {
                 _appDataFolderOverride = null;
+            }
+        }
+
+        internal static void SetAppDataFolderFallbackOverride(string? path)
+        {
+            lock (_appDataLock)
+            {
+                _appDataFolderFallbackOverride = string.IsNullOrWhiteSpace(path) ? null : path;
             }
         }
 

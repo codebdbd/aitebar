@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 namespace AiteBar;
 
@@ -55,7 +56,7 @@ public class ActionService
         {
             if (onBeforeExecute != null)
             {
-                await onBeforeExecute();
+                await onBeforeExecute().ConfigureAwait(false);
             }
 
             if (Enum.TryParse<ActionType>(el.ActionType, out ActionType actionType))
@@ -63,19 +64,19 @@ public class ActionService
                 switch (actionType)
                 {
                     case ActionType.Hotkey:
-                        return await ExecuteHotkeyAsync(el);
+                        return await ExecuteHotkeyAsync(el).ConfigureAwait(false);
                     case ActionType.Web:
-                        await ExecuteWebActionAsync(el);
+                        await ExecuteWebActionAsync(el).ConfigureAwait(false);
                         break;
                     case ActionType.Program:
                     case ActionType.File:
                     case ActionType.Folder:
-                    {
-                        using var _ = _runtime.StartProcess(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true });
-                        break;
-                    }
+                        {
+                            using var _ = _runtime.StartProcess(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true });
+                            break;
+                        }
                     case ActionType.ScriptFile:
-                        await StartScriptFileAsync(el.ActionValue);
+                        await StartScriptFileAsync(el.ActionValue).ConfigureAwait(false);
                         break;
                     case ActionType.Command:
                         ExecuteCommand(el.ActionValue);
@@ -136,7 +137,7 @@ public class ActionService
                     var input = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = vk } } };
                     SendKeyboardInputOrThrow(input, $"modifier key down: VK={vk}");
                     pressedModifiers.Add(vk);
-                    await _runtime.DelayAsync(KeyDelayMs);
+                    await _runtime.DelayAsync(KeyDelayMs).ConfigureAwait(false);
                 }
             }
 
@@ -145,15 +146,15 @@ public class ActionService
                 var downInput = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk } } };
                 SendKeyboardInputOrThrow(downInput, $"main key down: VK={mainVk}");
                 mainKeyDown = true;
-                await _runtime.DelayAsync(KeyDelayMs);
+                await _runtime.DelayAsync(KeyDelayMs).ConfigureAwait(false);
 
                 var upInput = new NativeMethods.INPUT { type = NativeMethods.INPUT_KEYBOARD, U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = mainVk, dwFlags = NativeMethods.KEYEVENTF_KEYUP } } };
                 SendKeyboardInputOrThrow(upInput, $"main key up: VK={mainVk}");
                 mainKeyDown = false;
-                await _runtime.DelayAsync(KeyDelayMs);
+                await _runtime.DelayAsync(KeyDelayMs).ConfigureAwait(false);
             }
 
-            await ReleaseInjectedModifiersAsync(pressedModifiers, KeyDelayMs, throwOnFailure: true);
+            await ReleaseInjectedModifiersAsync(pressedModifiers, KeyDelayMs, throwOnFailure: true).ConfigureAwait(false);
             return ActionExecutionResult.Ok;
         }
         catch (Exception ex)
@@ -182,7 +183,7 @@ public class ActionService
                 TrySendKeyUp(mainVk, "main key cleanup");
             }
 
-            await ReleaseInjectedModifiersAsync(pressedModifiers, KeyDelayMs, throwOnFailure: false);
+            await ReleaseInjectedModifiersAsync(pressedModifiers, KeyDelayMs, throwOnFailure: false).ConfigureAwait(false);
         }
     }
 
@@ -219,7 +220,7 @@ public class ActionService
             }
 
             pressedModifiers.RemoveAt(index);
-            await _runtime.DelayAsync(delayMs);
+            await _runtime.DelayAsync(delayMs).ConfigureAwait(false);
         }
     }
 
@@ -244,13 +245,13 @@ public class ActionService
     {
         string prof = el.UseRotation ? AdvanceRotationProfile(el) : el.ChromeProfile;
         el.LastUsedProfile = prof;
-        await _settingsService.SaveAsync();
+        await _settingsService.SaveAsync().ConfigureAwait(false);
 
         ProcessStartInfo psi = BuildWebActionProcessStartInfo(el, prof);
         using var proc = _runtime.StartProcess(psi);
         if (proc != null && el.OpenFullscreen)
         {
-            await TryEnterFullscreenAsync(proc);
+            await TryEnterFullscreenAsync(proc).ConfigureAwait(false);
         }
     }
 
@@ -340,7 +341,7 @@ public class ActionService
     {
         if (string.IsNullOrWhiteSpace(text)) return;
 
-        if (onBeforeExecute != null) await onBeforeExecute();
+        if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
 
         // Try Chrome first, then Edge, then system default browser
         var browserPath = BrowserHelper.GetExecutablePath(BrowserType.Chrome);
@@ -371,53 +372,53 @@ public class ActionService
 
     public async Task StartScreenshotAsync(Func<Task>? onBeforeExecute = null)
     {
-        if (onBeforeExecute != null) await onBeforeExecute();
+        if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
         using var _ = _runtime.StartProcess(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true });
     }
 
     public async Task StartRecordVideoAsync(Func<Task>? onBeforeExecute = null)
     {
-        if (onBeforeExecute != null) await onBeforeExecute();
+        if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
         using var _ = _runtime.StartProcess(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true });
     }
 
     public async Task StartCalculatorAsync(Func<Task>? onBeforeExecute = null)
     {
-        if (onBeforeExecute != null) await onBeforeExecute();
+        if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
         using var _ = _runtime.StartProcess("calc.exe");
     }
 
     public async Task StartExplorerAsync(Func<Task>? onBeforeExecute = null)
     {
-        if (onBeforeExecute != null) await onBeforeExecute();
+        if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
         using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("explorer.exe"));
     }
 
     public async Task StartDownloadsAsync(Func<Task>? onBeforeExecute = null)
     {
-        if (onBeforeExecute != null) await onBeforeExecute();
+        if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
         using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:Downloads"));
     }
 
     public async Task StartShowDesktopAsync(Func<Task>? onBeforeExecute = null)
     {
-        if (onBeforeExecute != null) await onBeforeExecute();
+        if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
         using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:::{3080F90D-D7AD-11D9-BD98-0000947B0257}"));
     }
 
     public async Task StartAppsFolderAsync(Func<Task>? onBeforeExecute = null)
     {
-        if (onBeforeExecute != null) await onBeforeExecute();
+        if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
         using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:AppsFolder"));
     }
 
     public async Task StartCopilotAsync(Func<Task>? onBeforeExecute = null)
     {
-        if (onBeforeExecute != null) await onBeforeExecute();
-        
+        if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
+
         const int KeyDelayMs = 30;
         var pressedModifiers = new List<byte>();
-        
+
         try
         {
             // Press Win key
@@ -428,8 +429,8 @@ public class ActionService
             };
             SendKeyboardInputOrThrow(winDownInput, "Win key down");
             pressedModifiers.Add(NativeMethods.VK_LWIN);
-            await _runtime.DelayAsync(KeyDelayMs);
-            
+            await _runtime.DelayAsync(KeyDelayMs).ConfigureAwait(false);
+
             // Press C key
             var cDownInput = new NativeMethods.INPUT
             {
@@ -437,8 +438,8 @@ public class ActionService
                 U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = 0x43 } }
             };
             SendKeyboardInputOrThrow(cDownInput, "C key down");
-            await _runtime.DelayAsync(KeyDelayMs);
-            
+            await _runtime.DelayAsync(KeyDelayMs).ConfigureAwait(false);
+
             // Release C key
             var cUpInput = new NativeMethods.INPUT
             {
@@ -446,11 +447,11 @@ public class ActionService
                 U = new NativeMethods.INPUTUNION { ki = new NativeMethods.KEYBDINPUT { wVk = 0x43, dwFlags = NativeMethods.KEYEVENTF_KEYUP } }
             };
             SendKeyboardInputOrThrow(cUpInput, "C key up");
-            await _runtime.DelayAsync(KeyDelayMs);
+            await _runtime.DelayAsync(KeyDelayMs).ConfigureAwait(false);
         }
         finally
         {
-            await ReleaseInjectedModifiersAsync(pressedModifiers, KeyDelayMs, throwOnFailure: false);
+            await ReleaseInjectedModifiersAsync(pressedModifiers, KeyDelayMs, throwOnFailure: false).ConfigureAwait(false);
         }
     }
 
@@ -459,7 +460,7 @@ public class ActionService
         var utility = UtilityRegistry.GetById(utilityId);
         if (utility != null)
         {
-            await utility.LaunchAsync(_settingsService, _runtime.GetMainWindow(), onBeforeExecute);
+            await utility.LaunchAsync(_settingsService, _runtime.GetMainWindow(), onBeforeExecute).ConfigureAwait(false);
         }
     }
 
@@ -477,7 +478,7 @@ public class ActionService
 
         var psi = CreateScriptProcessStartInfo(scriptPath);
         using var proc = _runtime.StartProcess(psi) ?? throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
-        await Task.CompletedTask;
+        await Task.CompletedTask.ConfigureAwait(false);
     }
 
     internal static ProcessStartInfo CreateScriptProcessStartInfo(string scriptPath)
@@ -541,12 +542,12 @@ public class ActionService
     {
         for (int i = 0; i < FullscreenActivationAttempts; i++)
         {
-            await _runtime.DelayAsync(FullscreenWindowPollDelayMs);
+            await _runtime.DelayAsync(FullscreenWindowPollDelayMs).ConfigureAwait(false);
             proc.Refresh();
             if (proc.MainWindowHandle == IntPtr.Zero) continue;
 
             _runtime.SetForegroundWindow(proc.MainWindowHandle);
-            await _runtime.DelayAsync(FullscreenForegroundDelayMs);
+            await _runtime.DelayAsync(FullscreenForegroundDelayMs).ConfigureAwait(false);
             SendVirtualKey((byte)KeyInterop.VirtualKeyFromKey(Key.F11));
             break;
         }
@@ -590,8 +591,12 @@ internal sealed class ActionServiceRuntime : IActionServiceRuntime
 
     public bool Confirm(string message, Window? owner)
     {
-        var dialog = new DarkDialog(message, isConfirm: true) { Owner = owner };
-        return dialog.ShowDialog() == true;
+        Dispatcher? dispatcher = owner?.Dispatcher ?? Application.Current?.Dispatcher;
+        return InvokeOnUiDispatcher(dispatcher, () =>
+        {
+            var dialog = new DarkDialog(message, isConfirm: true) { Owner = owner };
+            return dialog.ShowDialog() == true;
+        });
     }
 
     public IActionProcessHandle? StartProcess(ProcessStartInfo startInfo)
@@ -606,7 +611,21 @@ internal sealed class ActionServiceRuntime : IActionServiceRuntime
         return process == null ? null : new ActionProcessHandle(process);
     }
 
-    public Window? GetMainWindow() => System.Windows.Application.Current?.MainWindow;
+    public Window? GetMainWindow()
+    {
+        Application? application = Application.Current;
+        return application == null
+            ? null
+            : InvokeOnUiDispatcher(application.Dispatcher, () => application.MainWindow);
+    }
+
+    internal static T InvokeOnUiDispatcher<T>(Dispatcher? dispatcher, Func<T> action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        return dispatcher == null || dispatcher.CheckAccess()
+            ? action()
+            : dispatcher.Invoke(action);
+    }
 
     [DllImport("user32.dll")]
     private static extern short GetAsyncKeyState(int vKey);

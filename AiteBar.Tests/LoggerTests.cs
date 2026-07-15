@@ -50,6 +50,24 @@ public sealed class LoggerTests
     }
 
     [Fact]
+    public async Task Log_ConcurrentBurstPersistsEveryEntryBeforeFlushCompletes()
+    {
+        using var scope = new LogArtifactScope();
+        const int entryCount = 200;
+
+        await Task.WhenAll(Enumerable.Range(0, entryCount)
+            .Select(index => Task.Run(() =>
+                Logger.Log(new InvalidOperationException($"concurrent-entry-{index:D3}")))));
+        await Logger.WaitForFlushAsync();
+
+        string content = File.ReadAllText(PathHelper.LogFile);
+        for (int index = 0; index < entryCount; index++)
+        {
+            Assert.Contains($"concurrent-entry-{index:D3}", content, StringComparison.Ordinal);
+        }
+    }
+
+    [Fact]
     public async Task Log_RotatesOversizedLogAndKeepsAtMostThreeBackups()
     {
         using var scope = new LogArtifactScope();

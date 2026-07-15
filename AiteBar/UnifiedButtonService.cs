@@ -8,26 +8,6 @@ internal sealed class UnifiedButtonService
 {
     private readonly AppSettingsService _settingsService;
 
-    private static readonly List<UtilityButtonDef> UtilityButtons = new()
-    {
-        new("Search", "\uEA7C", "#3ABEFF", "ShowPresetSearch", "Main_SearchTooltip"),
-        new("Screenshot", "\uF68E", "#60A5FA", "ShowPresetScreenshot", "Main_ScreenshotTooltip"),
-        new("Record", "\uF535", "#FB7185", "ShowPresetVideo", "Main_RecordTooltip"),
-        new("Calc", "\uF06C", "#A3E635", "ShowPresetCalc", "Main_CalcTooltip"),
-        new("Explorer", "\uF42F", "#F59E0B", "ShowPresetExplorer", "Main_ExplorerTooltip"),
-        new("Downloads", "\uF151", "#34D399", "ShowPresetDownloads", "Main_DownloadsTooltip"),
-        new("FileSorter", "\uF202", "#60A5FA", "ShowPresetFileSorter", "Main_FileSorterTooltip"),
-        new("IconConverter", "\uE721", "#2DD4BF", "ShowPresetIconConverter", "Main_IconConverterTooltip"),
-        new("TimerStopwatch", "\uED88", "#38BDF8", "ShowPresetTimerStopwatch", "Main_TimerStopwatchTooltip"),
-        new("ColorPicker", "\uE5FE", "#A855F7", "ShowPresetColorPicker", "Main_ColorPickerTooltip"),
-        new("QuickNote", "\uF56F", "#22D3EE", "ShowPresetQuickNote", "Main_QuickNoteTooltip"),
-        new("QRCodeGenerator", "\uF635", "#60A5FA", "ShowPresetQRCodeGenerator", "Main_QRCodeGeneratorTooltip"),
-        new("ClipboardManager", "\uE34E", "#F59E0B", "ShowPresetClipboardManager", "Main_ClipboardManagerTooltip"),
-        new("ShowDesktop", "\uE4AB", "#6366F1", "ShowPresetShowDesktop", "Main_ShowDesktopTooltip"),
-        new("AppsFolder", "\uF732", "#A855F7", "ShowPresetAppsFolder", "Main_AppsFolderTooltip"),
-        new("Copilot", "\uF1F9", "#007ACC", "ShowPresetCopilot", "Main_CopilotTooltip")
-    };
-
     public UnifiedButtonService(AppSettingsService settingsService)
     {
         _settingsService = settingsService;
@@ -35,20 +15,31 @@ internal sealed class UnifiedButtonService
 
     public List<UnifiedButton> BuildUnifiedList(string activeContextId)
     {
+        AppSettings settings = _settingsService.Settings;
+        IReadOnlyList<CustomElement> elements = _settingsService.Elements;
+        return BuildUnifiedList(activeContextId, settings, elements);
+    }
+
+    internal List<UnifiedButton> BuildUnifiedList(
+        string activeContextId,
+        AppSettings settings,
+        IReadOnlyList<CustomElement> elements)
+    {
         var result = new List<UnifiedButton>();
-        bool isPrimaryContext = string.Equals(activeContextId, _settingsService.GetPrimaryContextId(), StringComparison.Ordinal);
+        string primaryContextId = settings.Contexts.FirstOrDefault()?.Id ?? ContextStateHelper.GetDefaultContextId(0);
+        bool isPrimaryContext = string.Equals(activeContextId, primaryContextId, StringComparison.Ordinal);
 
         // Add utilities only in primary context
         if (isPrimaryContext)
         {
             // Get visible utility definitions, ordered by UtilityButtonOrder, then the rest
-            var visibleUtilityDefs = UtilityButtons.Where(def => GetUtilityVisibility(def.SettingsKey)).ToList();
+            var visibleUtilityDefs = UtilityButtonCatalog.All.Where(definition => definition.IsVisible(settings)).ToList();
 
             // Order by UtilityButtonOrder if exists
-            var orderedUtilityDefs = new List<UtilityButtonDef>();
-            var remainingUtilityDefs = new List<UtilityButtonDef>(visibleUtilityDefs);
+            var orderedUtilityDefs = new List<UtilityButtonDefinition>();
+            var remainingUtilityDefs = new List<UtilityButtonDefinition>(visibleUtilityDefs);
 
-            foreach (var id in _settingsService.Settings.UtilityButtonOrder)
+            foreach (var id in settings.UtilityButtonOrder)
             {
                 var def = remainingUtilityDefs.FirstOrDefault(d => d.Id == id);
                 if (def != null)
@@ -71,14 +62,13 @@ internal sealed class UnifiedButtonService
                     Color = def.Color,
                     Type = UnifiedButtonType.Utility,
                     Order = result.Count,
-                    IsVisible = true,
-                    SettingsKey = def.SettingsKey
+                    IsVisible = true
                 });
             }
         }
 
         // Add user buttons
-        var userElements = _settingsService.Elements
+        var userElements = elements
             .Where(e => e.ContextId == activeContextId)
             .ToList();
         foreach (var el in userElements)
@@ -99,11 +89,4 @@ internal sealed class UnifiedButtonService
 
         return result;
     }
-
-    private bool GetUtilityVisibility(string settingsKey)
-        {
-            return _settingsService.GetUtilityVisibility(settingsKey);
-        }
 }
-
-public record UtilityButtonDef(string Id, string Icon, string Color, string SettingsKey, string TooltipKey);

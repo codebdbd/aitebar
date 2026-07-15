@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
-        Icon="pack://application:,,,/Resources/app.ico"
+        Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
         Width="580" Height="430" MinWidth="460" MinHeight="320"
         WindowStartupLocation="CenterOwner" WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" Foreground="White" ResizeMode="CanResize"

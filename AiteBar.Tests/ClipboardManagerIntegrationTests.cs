@@ -24,7 +24,6 @@ public sealed class ClipboardManagerIntegrationTests : IDisposable
         string repoRoot = FindRepoRoot();
         string appXaml = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "App.xaml.cs"));
         string mainWindowCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.xaml.cs"));
-        string unifiedButtonServiceCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "UnifiedButtonService.cs"));
         string settingsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "AppSettingsWindow.xaml.cs"));
         string modelsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "Models.cs"));
         string clipboardUtilityCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "ClipboardManagerUtility.cs"));
@@ -33,14 +32,16 @@ public sealed class ClipboardManagerIntegrationTests : IDisposable
         Assert.Contains("[Utility]", clipboardUtilityCode);
         Assert.Contains("public bool ShowPresetClipboardManager { get; set; } = false;", modelsCode);
         Assert.Contains("public bool ClipboardManagerPersistHistory { get; set; } = true;", modelsCode);
-        Assert.Contains("ShowPresetClipboardManager", unifiedButtonServiceCode);
-        Assert.Contains("if (AppSettings.ShowPresetClipboardManager) count++;", mainWindowCode);
         Assert.Contains("case \"ClipboardManager\":", mainWindowCode);
         Assert.Contains("LaunchUtilityAsync(\"ClipboardManager\", HideDock)", mainWindowCode);
-        Assert.Contains("ChkShowPresetClipboardManager.IsChecked = _settings.ShowPresetClipboardManager", settingsCode);
-        Assert.Contains("settings.ShowPresetClipboardManager = ChkShowPresetClipboardManager.IsChecked ?? false", settingsCode);
         Assert.Contains("ChkClipboardManagerPersistHistory.IsChecked = _settings.ClipboardManagerPersistHistory", settingsCode);
         Assert.Contains("settings.ClipboardManagerPersistHistory = ChkClipboardManagerPersistHistory.IsChecked ?? true", settingsCode);
+
+        Assert.Equal("ClipboardManager", UtilityButtonCatalog.ClipboardManager.Id);
+        var settings = new AppSettings();
+        Assert.False(UtilityButtonCatalog.ClipboardManager.IsVisible(settings));
+        UtilityButtonCatalog.ClipboardManager.SetVisible(settings, true);
+        Assert.True(settings.ShowPresetClipboardManager);
 
         UtilityRegistry.RegisterAllFromAssembly(typeof(ClipboardManagerUtility).Assembly);
         Assert.Contains(UtilityRegistry.GetAll(), utility => utility.Id == "ClipboardManager");
@@ -57,6 +58,23 @@ public sealed class ClipboardManagerIntegrationTests : IDisposable
 
         XElement persistenceCheckbox = FindNamedElement(settingsWindow, "ChkClipboardManagerPersistHistory");
         Assert.Equal("{local:Loc ResourceKey=ClipboardManager_PersistHistorySetting}", persistenceCheckbox.Attribute("Content")?.Value);
+    }
+
+    [Fact]
+    public void ClipboardManager_WindowSupportsRecoverableMinimization()
+    {
+        string repoRoot = FindRepoRoot();
+        XDocument clipboardWindow = XDocument.Load(Path.Combine(repoRoot, "AiteBar", "ClipboardManagerWindow.xaml"));
+        XElement root = clipboardWindow.Root!;
+        string utilityCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "ClipboardManagerUtility.cs"));
+        string registryCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "UtilityRegistry.cs"));
+
+        Assert.Equal("CanMinimize", root.Attribute("ResizeMode")?.Value);
+        Assert.Equal("False", root.Attribute("ShowInTaskbar")?.Value);
+        Assert.Equal("Window_StateChanged", root.Attribute("StateChanged")?.Value);
+        Assert.Contains("Owner = owner", utilityCode, StringComparison.Ordinal);
+        Assert.Contains("RestoreExistingWindow", utilityCode, StringComparison.Ordinal);
+        Assert.Contains("RestoreExistingWindow(_window)", registryCode, StringComparison.Ordinal);
     }
 
     private static XElement FindNamedElement(XDocument document, string name)

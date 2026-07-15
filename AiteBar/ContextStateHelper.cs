@@ -81,54 +81,94 @@ namespace AiteBar
 
         public static string NormalizeActiveContextId(string? activeContextId, IReadOnlyList<PanelContext> contexts)
         {
-            var enabledContexts = GetEnabledContexts(contexts);
-            if (enabledContexts.Count == 0)
+            int activeIndex = FindEnabledContextIndex(contexts, activeContextId);
+            if (activeIndex >= 0)
             {
-                return GetDefaultContextId(0);
+                return activeContextId!;
             }
 
-            return enabledContexts.Any(context => string.Equals(context.Id, activeContextId, StringComparison.Ordinal))
-                ? activeContextId!
-                : enabledContexts[0].Id;
+            return GetEnabledContextAt(contexts, 0)?.Id ?? GetDefaultContextId(0);
         }
 
-        public static IReadOnlyList<PanelContext> GetEnabledContexts(IReadOnlyList<PanelContext> contexts)
+        public static int CountEnabledContexts(IReadOnlyList<PanelContext> contexts)
         {
-            var enabled = new List<PanelContext>(FixedContextCount);
-            foreach (var context in contexts)
+            int count = 0;
+            for (int i = 0; i < contexts.Count; i++)
             {
-                if (context.IsEnabled)
+                if (contexts[i].IsEnabled)
                 {
-                    enabled.Add(context);
+                    count++;
                 }
             }
-            return enabled;
+
+            return count;
         }
 
-        public static string? GetRelativeEnabledContextId(string activeContextId, IReadOnlyList<PanelContext> contexts, int direction)
+        public static int FindEnabledContextIndex(IReadOnlyList<PanelContext> contexts, string? contextId)
         {
-            var enabledContexts = GetEnabledContexts(contexts);
-            if (enabledContexts.Count == 0)
+            int enabledIndex = 0;
+            for (int i = 0; i < contexts.Count; i++)
+            {
+                PanelContext context = contexts[i];
+                if (!context.IsEnabled)
+                {
+                    continue;
+                }
+
+                if (string.Equals(context.Id, contextId, StringComparison.Ordinal))
+                {
+                    return enabledIndex;
+                }
+
+                enabledIndex++;
+            }
+
+            return -1;
+        }
+
+        public static PanelContext? GetEnabledContextAt(IReadOnlyList<PanelContext> contexts, int enabledIndex)
+        {
+            if (enabledIndex < 0)
             {
                 return null;
             }
 
-            int currentIndex = -1;
-            for (int i = 0; i < enabledContexts.Count; i++)
+            int currentEnabledIndex = 0;
+            for (int i = 0; i < contexts.Count; i++)
             {
-                if (string.Equals(enabledContexts[i].Id, activeContextId, StringComparison.Ordinal))
+                PanelContext context = contexts[i];
+                if (!context.IsEnabled)
                 {
-                    currentIndex = i;
-                    break;
+                    continue;
                 }
+
+                if (currentEnabledIndex == enabledIndex)
+                {
+                    return context;
+                }
+
+                currentEnabledIndex++;
             }
+
+            return null;
+        }
+
+        public static string? GetRelativeEnabledContextId(string activeContextId, IReadOnlyList<PanelContext> contexts, int direction)
+        {
+            int enabledCount = CountEnabledContexts(contexts);
+            if (enabledCount == 0)
+            {
+                return null;
+            }
+
+            int currentIndex = FindEnabledContextIndex(contexts, activeContextId);
             if (currentIndex < 0)
             {
                 currentIndex = 0;
             }
 
-            int nextIndex = WrapIndex(currentIndex + direction, enabledContexts.Count);
-            return enabledContexts[nextIndex].Id;
+            int nextIndex = WrapIndex(currentIndex + direction, enabledCount);
+            return GetEnabledContextAt(contexts, nextIndex)?.Id;
         }
 
         public static int WrapIndex(int index, int count)

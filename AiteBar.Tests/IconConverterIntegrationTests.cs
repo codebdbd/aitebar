@@ -11,17 +11,18 @@ public sealed class IconConverterIntegrationTests
     {
         string repoRoot = FindRepoRoot();
         string appXaml = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "App.xaml.cs"));
-        string unifiedButtonServiceCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "UnifiedButtonService.cs"));
-        string settingsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "AppSettingsWindow.xaml.cs"));
         string modelsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "Models.cs"));
         string iconConverterUtilityCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "IconConverterUtility.cs"));
 
         Assert.Contains("RegisterAllFromAssembly", appXaml);
         Assert.Contains("[Utility]", iconConverterUtilityCode);
         Assert.Contains("public bool ShowPresetIconConverter { get; set; } = true;", modelsCode);
-        Assert.Contains("ShowPresetIconConverter", unifiedButtonServiceCode);
-        Assert.Contains("ChkShowPresetIconConverter.IsChecked = _settings.ShowPresetIconConverter", settingsCode);
-        Assert.Contains("settings.ShowPresetIconConverter = ChkShowPresetIconConverter.IsChecked ?? false", settingsCode);
+
+        Assert.Equal("IconConverter", UtilityButtonCatalog.IconConverter.Id);
+        var settings = new AppSettings();
+        Assert.True(UtilityButtonCatalog.IconConverter.IsVisible(settings));
+        UtilityButtonCatalog.IconConverter.SetVisible(settings, false);
+        Assert.False(settings.ShowPresetIconConverter);
     }
 
     [Fact]

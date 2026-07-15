@@ -75,6 +75,26 @@ public partial class AppSettingsWindow : DarkWindow
         yield return CmbQRCodeGeneratorKey;
     }
 
+    private (CheckBox CheckBox, UtilityButtonDefinition Definition)[] GetUtilityVisibilityBindings() =>
+    [
+        (ChkShowPresetSearch, UtilityButtonCatalog.Search),
+        (ChkShowPresetScreenshot, UtilityButtonCatalog.Screenshot),
+        (ChkShowPresetVideo, UtilityButtonCatalog.Record),
+        (ChkShowPresetCalc, UtilityButtonCatalog.Calculator),
+        (ChkShowPresetExplorer, UtilityButtonCatalog.Explorer),
+        (ChkShowPresetDownloads, UtilityButtonCatalog.Downloads),
+        (ChkShowPresetFileSorter, UtilityButtonCatalog.FileSorter),
+        (ChkShowPresetIconConverter, UtilityButtonCatalog.IconConverter),
+        (ChkShowPresetTimerStopwatch, UtilityButtonCatalog.TimerStopwatch),
+        (ChkShowPresetColorPicker, UtilityButtonCatalog.ColorPicker),
+        (ChkShowPresetQuickNote, UtilityButtonCatalog.QuickNote),
+        (ChkShowPresetQRCodeGenerator, UtilityButtonCatalog.QRCodeGenerator),
+        (ChkShowPresetClipboardManager, UtilityButtonCatalog.ClipboardManager),
+        (ChkShowPresetShowDesktop, UtilityButtonCatalog.ShowDesktop),
+        (ChkShowPresetAppsFolder, UtilityButtonCatalog.AppsFolder),
+        (ChkShowPresetCopilot, UtilityButtonCatalog.Copilot)
+    ];
+
     private static void SetKeyComboValue(ComboBox combo, string? key)
     {
         foreach (ComboBoxItem item in combo.Items)
@@ -353,22 +373,10 @@ public partial class AppSettingsWindow : DarkWindow
     private void LoadSettings()
     {
         // Load all settings from config
-        ChkShowPresetSearch.IsChecked = _settings.ShowPresetSearch;
-        ChkShowPresetScreenshot.IsChecked = _settings.ShowPresetScreenshot;
-        ChkShowPresetVideo.IsChecked = _settings.ShowPresetVideo;
-        ChkShowPresetCalc.IsChecked = _settings.ShowPresetCalc;
-        ChkShowPresetExplorer.IsChecked = _settings.ShowPresetExplorer;
-        ChkShowPresetDownloads.IsChecked = _settings.ShowPresetDownloads;
-        ChkShowPresetFileSorter.IsChecked = _settings.ShowPresetFileSorter;
-        ChkShowPresetIconConverter.IsChecked = _settings.ShowPresetIconConverter;
-        ChkShowPresetTimerStopwatch.IsChecked = _settings.ShowPresetTimerStopwatch;
-        ChkShowPresetColorPicker.IsChecked = _settings.ShowPresetColorPicker;
-        ChkShowPresetQuickNote.IsChecked = _settings.ShowPresetQuickNote;
-        ChkShowPresetQRCodeGenerator.IsChecked = _settings.ShowPresetQRCodeGenerator;
-        ChkShowPresetClipboardManager.IsChecked = _settings.ShowPresetClipboardManager;
-        ChkShowPresetShowDesktop.IsChecked = _settings.ShowPresetShowDesktop;
-        ChkShowPresetAppsFolder.IsChecked = _settings.ShowPresetAppsFolder;
-        ChkShowPresetCopilot.IsChecked = _settings.ShowPresetCopilot;
+        foreach (var (checkBox, definition) in GetUtilityVisibilityBindings())
+        {
+            checkBox.IsChecked = definition.IsVisible(_settings);
+        }
         ChkClipboardManagerPersistHistory.IsChecked = _settings.ClipboardManagerPersistHistory;
         ChkShowTaskbarPositionIndicator.IsChecked = _settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
         ChkCheckForUpdatesEnabled.IsChecked = _settings.CheckForUpdatesEnabled;
@@ -556,22 +564,10 @@ public partial class AppSettingsWindow : DarkWindow
             settings.TimerStopwatchHotkey = timerStopwatchBinding;
             settings.QRCodeGeneratorHotkey = qrCodeGeneratorBinding;
 
-            settings.ShowPresetSearch = ChkShowPresetSearch.IsChecked ?? false;
-            settings.ShowPresetScreenshot = ChkShowPresetScreenshot.IsChecked ?? false;
-            settings.ShowPresetVideo = ChkShowPresetVideo.IsChecked ?? false;
-            settings.ShowPresetCalc = ChkShowPresetCalc.IsChecked ?? false;
-            settings.ShowPresetExplorer = ChkShowPresetExplorer.IsChecked ?? false;
-            settings.ShowPresetDownloads = ChkShowPresetDownloads.IsChecked ?? false;
-            settings.ShowPresetFileSorter = ChkShowPresetFileSorter.IsChecked ?? false;
-            settings.ShowPresetIconConverter = ChkShowPresetIconConverter.IsChecked ?? false;
-            settings.ShowPresetTimerStopwatch = ChkShowPresetTimerStopwatch.IsChecked ?? false;
-            settings.ShowPresetColorPicker = ChkShowPresetColorPicker.IsChecked ?? false;
-            settings.ShowPresetQuickNote = ChkShowPresetQuickNote.IsChecked ?? false;
-            settings.ShowPresetQRCodeGenerator = ChkShowPresetQRCodeGenerator.IsChecked ?? false;
-            settings.ShowPresetClipboardManager = ChkShowPresetClipboardManager.IsChecked ?? false;
-            settings.ShowPresetShowDesktop = ChkShowPresetShowDesktop.IsChecked ?? false;
-            settings.ShowPresetAppsFolder = ChkShowPresetAppsFolder.IsChecked ?? false;
-            settings.ShowPresetCopilot = ChkShowPresetCopilot.IsChecked ?? false;
+            foreach (var (checkBox, definition) in GetUtilityVisibilityBindings())
+            {
+                definition.SetVisible(settings, checkBox.IsChecked ?? false);
+            }
             settings.ClipboardManagerPersistHistory = ChkClipboardManagerPersistHistory.IsChecked ?? true;
             settings.ShowTaskbarPositionIndicator = ChkShowTaskbarPositionIndicator.IsChecked ?? true;
             settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;

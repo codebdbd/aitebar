@@ -6,7 +6,7 @@
 
         xmlns:local="clr-namespace:AiteBar"
 
-        Icon="pack://application:,,,/Resources/app.ico"
+        Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
 
         Title="{local:Loc ResourceKey=ClipboardManager_Title}"
 
@@ -14,11 +14,13 @@
 
         WindowStartupLocation="CenterScreen" Background="#191919" Foreground="#DCDCDC"
 
-        WindowStyle="SingleBorderWindow" ResizeMode="NoResize"
+        WindowStyle="SingleBorderWindow" ResizeMode="CanMinimize"
 
         ShowInTaskbar="False" Topmost="True"
 
-        PreviewKeyDown="Window_PreviewKeyDown">
+        PreviewKeyDown="Window_PreviewKeyDown"
+
+        StateChanged="Window_StateChanged">
 
 
 

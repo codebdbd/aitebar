@@ -106,6 +106,66 @@ public sealed class TelemetryServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Initialize_ConcurrentCallersAwaitTheSamePendingInitialization()
+    {
+        await WithSettingsFile(
+            new AppSettings
+            {
+                Sentry = new SentrySettings
+                {
+                    IsEnabled = true,
+                    Dsn = "https://public@example.com/1"
+                }
+            },
+            async () =>
+            {
+                Task firstInitialization;
+                Task secondInitialization;
+                using (File.Open(PathHelper.SettingsFile, FileMode.Open, FileAccess.Read, FileShare.None))
+                {
+                    firstInitialization = TelemetryService.InitializeAsync();
+                    await Task.Delay(25);
+                    secondInitialization = TelemetryService.InitializeAsync();
+
+                    Assert.Same(firstInitialization, secondInitialization);
+                    Assert.False(secondInitialization.IsCompleted);
+                }
+
+                await Task.WhenAll(firstInitialization, secondInitialization);
+                Assert.True(TelemetryService.IsEnabled);
+            });
+    }
+
+    [Fact]
+    public async Task Shutdown_DuringPendingInitializationPreventsLateEnablement()
+    {
+        await WithSettingsFile(
+            new AppSettings
+            {
+                Sentry = new SentrySettings
+                {
+                    IsEnabled = true,
+                    Dsn = "https://public@example.com/1"
+                }
+            },
+            async () =>
+            {
+                Task initialization;
+                using (File.Open(PathHelper.SettingsFile, FileMode.Open, FileAccess.Read, FileShare.None))
+                {
+                    initialization = TelemetryService.InitializeAsync();
+                    await Task.Delay(25);
+                    Assert.False(initialization.IsCompleted);
+
+                    TelemetryService.Shutdown();
+                }
+
+                await initialization;
+                Assert.False(TelemetryService.IsEnabled);
+            });
+    }
+
+    [Fact]
     public async Task Initialize_WithEnvironmentDsn_EnablesTelemetry()
     {
         Environment.SetEnvironmentVariable("AITEBAR_SENTRY_DSN", "https://public@example.com/1");

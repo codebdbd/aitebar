@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -6,21 +7,18 @@ using System.Runtime.Versioning;
 namespace AiteBar
 {
     [SupportedOSPlatform("windows6.1")]
-    public class NativeIntegrationService : IDisposable
+    public sealed class NativeIntegrationService : IDisposable
     {
         private NativeMethods.LowLevelMouseProc? _mouseProc;
         private IntPtr _mouseHook = IntPtr.Zero;
-        private IntPtr _windowHandle;
+        private bool _disposed;
 
         public event Action<int, int>? MouseDownOutside;
 
-        public NativeIntegrationService(IntPtr windowHandle)
-        {
-            _windowHandle = windowHandle;
-        }
-
         public void InstallMouseHook()
         {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+
             try
             {
                 if (_mouseHook != IntPtr.Zero) return;
@@ -38,8 +36,15 @@ namespace AiteBar
         public void UninstallMouseHook()
         {
             if (_mouseHook == IntPtr.Zero) return;
-            NativeMethods.UnhookWindowsHookEx(_mouseHook);
+
+            if (!NativeMethods.UnhookWindowsHookEx(_mouseHook))
+            {
+                Logger.Log(new Win32Exception(Marshal.GetLastWin32Error(), "Failed to uninstall the low-level mouse hook."));
+                return;
+            }
+
             _mouseHook = IntPtr.Zero;
+            _mouseProc = null;
         }
 
         private IntPtr MouseHookCallback(int nCode, IntPtr wParam, IntPtr lParam)
@@ -59,15 +64,16 @@ namespace AiteBar
             return NativeMethods.CallNextHookEx(_mouseHook, nCode, wParam, lParam);
         }
 
-        ~NativeIntegrationService()
-        {
-            UninstallMouseHook();
-        }
-
         public void Dispose()
         {
+            if (_disposed)
+            {
+                return;
+            }
+
             UninstallMouseHook();
-            GC.SuppressFinalize(this);
+            MouseDownOutside = null;
+            _disposed = true;
         }
     }
 }

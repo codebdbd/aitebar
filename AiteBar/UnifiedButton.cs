@@ -14,9 +14,6 @@ public sealed class UnifiedButton
     public int Order { get; set; }
     public bool IsVisible { get; set; } = true;
 
-    // For utilities
-    public string? SettingsKey { get; set; }
-
     // For user buttons
     public CustomElement? SourceElement { get; set; }
 }

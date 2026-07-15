@@ -35,6 +35,21 @@ public sealed class ReleaseVersionTests
         Assert.False(File.Exists(Path.Combine(repoRoot, "AiteBar", "installer", "Build-Installer.ps1")));
     }
 
+    [Fact]
+    public void BuildInstaller_GeneratesChecksumAfterOptionalSigning()
+    {
+        string repoRoot = FindRepoRoot();
+        string script = File.ReadAllText(Path.Combine(repoRoot, "installer", "Build-Installer.ps1"));
+
+        int signingBlock = script.IndexOf("if ($Sign)", StringComparison.Ordinal);
+        int hashGeneration = script.IndexOf("Get-FileHash -Algorithm SHA256", StringComparison.Ordinal);
+        int checksumWrite = script.IndexOf("SHA256SUMS.txt", StringComparison.Ordinal);
+
+        Assert.True(signingBlock >= 0);
+        Assert.True(hashGeneration > signingBlock);
+        Assert.True(checksumWrite > signingBlock);
+    }
+
     private static string FindRepoRoot()
     {
         string? current = AppContext.BaseDirectory;

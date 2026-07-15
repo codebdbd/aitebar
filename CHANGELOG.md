@@ -9,6 +9,26 @@
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-07-15
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Quick Note data safety**: Окно заметки больше не закрывается, если финальное сохранение содержимого завершилось ошибкой.
+- **Quick Note data safety**: The note window no longer closes when its final content save fails.
+- **Runtime reliability**: Устранена гонка между инициализацией и остановкой телеметрии; ошибка снятия Win32 mouse hook больше не приводит к потере callback delegate.
+- **Runtime reliability**: Closed the telemetry initialization/shutdown race and retained the Win32 mouse-hook callback when unhooking fails.
+- **Single-instance startup**: Второй экземпляр больше не пытается освободить mutex, которым владеет основной процесс, и не пишет необработанное исключение при завершении.
+- **Single-instance startup**: A second instance no longer attempts to release the primary process mutex or logs an unhandled shutdown exception.
+- **Icon preview**: Устаревшее асинхронное чтение изображения больше не может перезаписать более новое превью.
+- **Icon preview**: A stale asynchronous image read can no longer overwrite a newer preview.
+- **Release artifacts**: Локальная сборка инсталлятора теперь обновляет `SHA256SUMS.txt` после опциональной подписи.
+- **Release artifacts**: Local installer builds now refresh `SHA256SUMS.txt` after optional signing.
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Clipboard Manager window**: Кнопка сворачивания скрывает окно обратно в AiteBar без закрытия; повторное нажатие кнопки утилиты восстанавливает тот же экземпляр с сохранённым состоянием.
+- **Clipboard Manager window**: Minimize hides the window back into AiteBar without closing it; pressing the utility button again restores the same instance with its state intact.
+- **Internal architecture**: Централизованы описания встроенных утилит, снижены аллокации при refresh панели, добавлено кэширование профилей браузеров и улучшена изоляция async/UI-путей.
+- **Internal architecture**: Centralized built-in utility metadata, reduced panel-refresh allocations, cached browser profiles, and improved async/UI-path isolation.
+
 ## [1.11.0] - 2026-07-13
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

@@ -42,7 +42,7 @@ namespace AiteBar
                 if (!_isFlushing)
                     return Task.CompletedTask;
 
-                _flushCompleteTcs ??= new TaskCompletionSource<bool>();
+                _flushCompleteTcs ??= new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                 return _flushCompleteTcs.Task;
             }
         }
@@ -60,37 +60,55 @@ namespace AiteBar
             {
                 try
                 {
-                    bool hasMore;
-                    do
+                    while (true)
                     {
-                        hasMore = false;
                         var batch = new List<string>();
                         while (_logQueue.TryDequeue(out string? logEntry))
                         {
                             batch.Add(logEntry);
-                            hasMore = true;
                         }
+
                         if (batch.Count > 0)
                         {
-                            await WriteLogBatchAsync(batch);
+                            await WriteLogBatchAsync(batch).ConfigureAwait(false);
                         }
-                        // Double-check inside loop without recursion
-                        if (!hasMore && !_logQueue.IsEmpty)
+
+                        TaskCompletionSource<bool>? completionSource;
+                        lock (_flushLock)
                         {
-                            hasMore = true;
+                            if (!_logQueue.IsEmpty)
+                            {
+                                continue;
+                            }
+
+                            _isFlushing = false;
+                            completionSource = _flushCompleteTcs;
+                            _flushCompleteTcs = null;
                         }
-                    } while (hasMore);
+
+                        completionSource?.TrySetResult(true);
+                        return;
+                    }
                 }
                 finally
                 {
+                    TaskCompletionSource<bool>? completionSource = null;
+                    bool restartFlush = false;
                     lock (_flushLock)
                     {
-                        _isFlushing = false;
-                        if (_flushCompleteTcs != null)
+                        if (_isFlushing)
                         {
-                            _flushCompleteTcs.SetResult(true);
+                            _isFlushing = false;
+                            completionSource = _flushCompleteTcs;
                             _flushCompleteTcs = null;
+                            restartFlush = !_logQueue.IsEmpty;
                         }
+                    }
+
+                    completionSource?.TrySetResult(true);
+                    if (restartFlush)
+                    {
+                        FlushQueue();
                     }
                 }
             });

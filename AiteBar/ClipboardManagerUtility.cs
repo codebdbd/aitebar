@@ -15,12 +15,21 @@ namespace AiteBar
 
         protected override ClipboardManagerWindow CreateWindow(AppSettingsService settingsService, Window? owner)
         {
-            return new ClipboardManagerWindow(ClipboardHistoryService.Instance) { Owner = owner };
+            return new ClipboardManagerWindow(ClipboardHistoryService.Instance)
+            {
+                Owner = owner
+            };
         }
 
         protected override void ShowWindow(ClipboardManagerWindow window, AppSettingsService settingsService)
         {
             window.ShowNearPanel(settingsService);
+        }
+
+        protected override bool RestoreExistingWindow(ClipboardManagerWindow window)
+        {
+            window.RestoreFromAiteBar();
+            return true;
         }
     }
 }

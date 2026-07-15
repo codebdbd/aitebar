@@ -8,6 +8,7 @@ using Xunit;
 
 namespace AiteBar.Tests;
 
+[Collection("LocalizationStateTestCollection")]
 public sealed class LocalizationServiceTests
 {
     private static readonly string[] LocalizedCultures = ["de", "uk", "ru"];
@@ -98,29 +99,34 @@ public sealed class LocalizationServiceTests
     }
 
     [Fact]
-    public void ApplyCulture_SetsCurrentAndDefaultThreadCultures()
+    public void ApplyCulture_UpdatesResolvedCultureWithoutMutatingThreadCultures()
     {
-        string originalPreference = LocalizationService.NormalizeCultureName(CultureInfo.CurrentUICulture.Name);
+        string originalResolvedCulture = LocalizationService.ResolvedCulture.Name;
+        CultureInfo originalCulture = CultureInfo.CurrentCulture;
+        CultureInfo originalUiCulture = CultureInfo.CurrentUICulture;
+        CultureInfo? originalDefaultCulture = CultureInfo.DefaultThreadCurrentCulture;
+        CultureInfo? originalDefaultUiCulture = CultureInfo.DefaultThreadCurrentUICulture;
 
         try
         {
             LocalizationService.ApplyCulture("de");
 
-            Assert.Equal("de", CultureInfo.CurrentCulture.TwoLetterISOLanguageName);
-            Assert.Equal("de", CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
-            Assert.Equal("de", CultureInfo.DefaultThreadCurrentCulture?.TwoLetterISOLanguageName);
-            Assert.Equal("de", CultureInfo.DefaultThreadCurrentUICulture?.TwoLetterISOLanguageName);
+            Assert.Equal("de", LocalizationService.ResolvedCulture.TwoLetterISOLanguageName);
+            Assert.Equal(originalCulture, CultureInfo.CurrentCulture);
+            Assert.Equal(originalUiCulture, CultureInfo.CurrentUICulture);
+            Assert.Equal(originalDefaultCulture, CultureInfo.DefaultThreadCurrentCulture);
+            Assert.Equal(originalDefaultUiCulture, CultureInfo.DefaultThreadCurrentUICulture);
         }
         finally
         {
-            LocalizationService.ApplyCulture(originalPreference);
+            LocalizationService.ApplyCulture(originalResolvedCulture);
         }
     }
 
     [Fact]
     public void ApplyCulture_SameCulture_DoesNotRaiseCultureChangedTwice()
     {
-        string originalPreference = LocalizationService.NormalizeCultureName(CultureInfo.CurrentUICulture.Name);
+        string originalPreference = LocalizationService.ResolvedCulture.Name;
         int eventCount = 0;
 
         void Handler(object? sender, EventArgs e) => Interlocked.Increment(ref eventCount);

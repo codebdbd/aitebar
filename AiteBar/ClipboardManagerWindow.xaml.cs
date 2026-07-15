@@ -70,6 +70,29 @@ namespace AiteBar
             TxtSearch.Focus();
         }
 
+        internal void RestoreFromAiteBar()
+        {
+            WindowState = WindowState.Normal;
+            if (!IsVisible)
+            {
+                Show();
+            }
+
+            Activate();
+            TxtSearch.Focus();
+        }
+
+        private void Window_StateChanged(object? sender, EventArgs e)
+        {
+            if (WindowState != WindowState.Minimized)
+            {
+                return;
+            }
+
+            WindowState = WindowState.Normal;
+            Hide();
+        }
+
         protected override void OnInitialized(EventArgs e)
         {
             base.OnInitialized(e);

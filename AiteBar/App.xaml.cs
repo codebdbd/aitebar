@@ -10,6 +10,7 @@ namespace AiteBar;
 public partial class App : System.Windows.Application
 {
     private static Mutex? _mutex;
+    private static bool _ownsMutex;
 
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -26,6 +27,7 @@ public partial class App : System.Windows.Application
             AppSettingsService settingsService = await LoadSettingsAndApplyCultureAsync();
             const string mutexName = "Global\\AiteBar_Mutex_Unique_String_123";
             _mutex = new Mutex(true, mutexName, out bool createdNew);
+            _ownsMutex = createdNew;
 
             if (!createdNew)
             {
@@ -67,15 +69,33 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        if (_mutex != null)
-        {
-            _mutex.ReleaseMutex();
-            _mutex.Dispose();
-        }
+        DisposeInstanceMutex(_mutex, _ownsMutex);
+        _mutex = null;
+        _ownsMutex = false;
 
         TelemetryService.Flush(TimeSpan.FromSeconds(2));
         TelemetryService.Shutdown();
         base.OnExit(e);
+    }
+
+    internal static void DisposeInstanceMutex(Mutex? mutex, bool ownsMutex)
+    {
+        if (mutex == null)
+        {
+            return;
+        }
+
+        try
+        {
+            if (ownsMutex)
+            {
+                mutex.ReleaseMutex();
+            }
+        }
+        finally
+        {
+            mutex.Dispose();
+        }
     }
 
     private void RegisterExceptionHandlers()

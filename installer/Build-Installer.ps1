@@ -134,4 +134,19 @@ if ($Sign) {
     Write-Host "Code signing skipped. Pass -Sign with a PFX certificate to sign the installer."
 }
 
+$checksumPath = Join-Path $installerDir "SHA256SUMS.txt"
+$checksumTempPath = "$checksumPath.tmp"
+$installerHash = Get-FileHash -Algorithm SHA256 -LiteralPath $installers[0].FullName
+$checksumLine = "$($installerHash.Hash)  $($installers[0].Name)`r`n"
+
+try {
+    [System.IO.File]::WriteAllText($checksumTempPath, $checksumLine, [System.Text.Encoding]::ASCII)
+    [System.IO.File]::Move($checksumTempPath, $checksumPath, $true)
+}
+finally {
+    if (Test-Path $checksumTempPath) {
+        Remove-Item -LiteralPath $checksumTempPath -Force
+    }
+}
+
 Write-Host "Installer created in $installerDir"

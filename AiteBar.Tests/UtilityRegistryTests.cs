@@ -132,6 +132,11 @@ public class CrashingTestUtility : UtilityBase<CrashingTestWindow>
     {
         throw new System.NotImplementedException();
     }
+
+    protected override System.Threading.Tasks.Task ShowUnavailableMessageAsync(System.Windows.Window? owner)
+    {
+        return System.Threading.Tasks.Task.CompletedTask;
+    }
 }
 
 public class CrashingTestWindow : System.Windows.Window

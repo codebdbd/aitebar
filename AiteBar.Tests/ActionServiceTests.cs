@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using AiteBar;
 using Xunit;
 
@@ -14,6 +15,44 @@ namespace AiteBar.Tests;
 
 public sealed class ActionServiceTests
 {
+    [Fact]
+    public async Task ActionServiceRuntime_InvokeOnUiDispatcher_MarshalsBackgroundCaller()
+    {
+        var dispatcherReady = new TaskCompletionSource<(Dispatcher Dispatcher, int ThreadId)>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var dispatcherThread = new Thread(() =>
+        {
+            Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
+            dispatcherReady.SetResult((dispatcher, Environment.CurrentManagedThreadId));
+            Dispatcher.Run();
+        })
+        {
+            IsBackground = true
+        };
+        dispatcherThread.SetApartmentState(ApartmentState.STA);
+        dispatcherThread.Start();
+
+        (Dispatcher dispatcher, int dispatcherThreadId) = await dispatcherReady.Task;
+        try
+        {
+            int actionThreadId = 0;
+            bool result = await Task.Run(() =>
+                ActionServiceRuntime.InvokeOnUiDispatcher(dispatcher, () =>
+                {
+                    actionThreadId = Environment.CurrentManagedThreadId;
+                    return true;
+                }));
+
+            Assert.True(result);
+            Assert.Equal(dispatcherThreadId, actionThreadId);
+        }
+        finally
+        {
+            dispatcher.InvokeShutdown();
+            Assert.True(dispatcherThread.Join(TimeSpan.FromSeconds(5)));
+        }
+    }
+
     [Fact]
     public void BuildWebActionProcessStartInfo_FirefoxProfile_UsesSeparateArguments()
     {

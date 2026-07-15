@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -21,9 +22,17 @@ namespace AiteBar
     {
         private static readonly string LocalAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         private static readonly string AppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        private static readonly TimeSpan ProfileCacheLifetime = TimeSpan.FromSeconds(15);
+        private static readonly ConcurrentDictionary<BrowserType, ProfileCacheEntry> ProfileCache = new();
+        private static readonly ConcurrentDictionary<BrowserType, object> ProfileCacheLocks = new();
         
         // Для тестов: переопределение путей к данным браузеров
-        private static readonly System.Collections.Concurrent.ConcurrentDictionary<BrowserType, string> _userDataPathOverrides = new();
+        private static readonly ConcurrentDictionary<BrowserType, string> _userDataPathOverrides = new();
+
+        private sealed record ProfileCacheEntry(
+            string BasePath,
+            DateTimeOffset ExpiresAtUtc,
+            BrowserProfileInfo[] Profiles);
 
         public static string GetExecutablePath(BrowserType type)
         {
@@ -116,16 +125,24 @@ namespace AiteBar
         public static void SetUserDataPathOverride(BrowserType type, string path)
         {
             _userDataPathOverrides[type] = path;
+            ClearProfileCache(type);
         }
 
         public static void ClearUserDataPathOverride(BrowserType type)
         {
             ((IDictionary<BrowserType, string>)_userDataPathOverrides).Remove(type);
+            ClearProfileCache(type);
         }
 
         public static void ClearAllUserDataPathOverrides()
         {
             _userDataPathOverrides.Clear();
+            ProfileCache.Clear();
+        }
+
+        public static void ClearProfileCache(BrowserType type)
+        {
+            ProfileCache.TryRemove(type, out _);
         }
 
         public static BrowserType GetSystemDefaultBrowser()
@@ -151,6 +168,33 @@ namespace AiteBar
         public static List<BrowserProfileInfo> GetProfiles(BrowserType type)
         {
             string basePath = GetUserDataPath(type);
+            DateTimeOffset now = DateTimeOffset.UtcNow;
+            if (TryGetCachedProfiles(type, basePath, now, out List<BrowserProfileInfo> cachedProfiles))
+            {
+                return cachedProfiles;
+            }
+
+            object cacheLock = ProfileCacheLocks.GetOrAdd(type, static _ => new object());
+            lock (cacheLock)
+            {
+                now = DateTimeOffset.UtcNow;
+                if (TryGetCachedProfiles(type, basePath, now, out cachedProfiles))
+                {
+                    return cachedProfiles;
+                }
+
+                List<BrowserProfileInfo> loadedProfiles = LoadProfiles(type, basePath);
+                BrowserProfileInfo[] cacheSnapshot = CloneProfiles(loadedProfiles).ToArray();
+                ProfileCache[type] = new ProfileCacheEntry(
+                    basePath,
+                    now.Add(ProfileCacheLifetime),
+                    cacheSnapshot);
+                return CloneProfiles(cacheSnapshot);
+            }
+        }
+
+        private static List<BrowserProfileInfo> LoadProfiles(BrowserType type, string basePath)
+        {
             if (!Directory.Exists(basePath)) return [];
 
             List<BrowserProfileInfo> result = [];
@@ -210,6 +254,40 @@ namespace AiteBar
                 result.Add(new BrowserProfileInfo { DisplayName = displayName, ProfilePath = dir });
             }
             return [.. result.OrderBy(p => p.DisplayName)];
+        }
+
+        private static bool TryGetCachedProfiles(
+            BrowserType type,
+            string basePath,
+            DateTimeOffset now,
+            out List<BrowserProfileInfo> profiles)
+        {
+            if (ProfileCache.TryGetValue(type, out ProfileCacheEntry? entry) &&
+                string.Equals(entry.BasePath, basePath, StringComparison.OrdinalIgnoreCase) &&
+                now < entry.ExpiresAtUtc)
+            {
+                profiles = CloneProfiles(entry.Profiles);
+                return true;
+            }
+
+            profiles = [];
+            return false;
+        }
+
+        private static List<BrowserProfileInfo> CloneProfiles(IEnumerable<BrowserProfileInfo> profiles)
+        {
+            var clones = new List<BrowserProfileInfo>();
+            foreach (BrowserProfileInfo profile in profiles)
+            {
+                clones.Add(new BrowserProfileInfo
+                {
+                    DisplayName = profile.DisplayName,
+                    ProfilePath = profile.ProfilePath,
+                    LaunchProfileName = profile.LaunchProfileName
+                });
+            }
+
+            return clones;
         }
 
         private static List<BrowserProfileInfo> GetFirefoxProfiles(string basePath)

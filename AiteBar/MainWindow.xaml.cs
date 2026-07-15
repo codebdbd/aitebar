@@ -126,6 +126,11 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private void OnSettingsChanged(object? sender, EventArgs e)
     {
+        UiDispatcher.Run(Dispatcher, ApplySettingsChanged);
+    }
+
+    private void ApplySettingsChanged()
+    {
         ClipboardHistoryService.Instance.ConfigurePersistence(AppSettings.ClipboardManagerPersistHistory);
         UnregisterGlobalHotkey();
         RegisterGlobalHotkey();
@@ -261,19 +266,19 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private (bool changed, int animationDirection) TryActivateContext(string contextId)
     {
-        if (string.IsNullOrWhiteSpace(contextId) || string.Equals(AppSettings.ActiveContextId, contextId, StringComparison.Ordinal))
+        AppSettings settings = AppSettings;
+        if (string.IsNullOrWhiteSpace(contextId) || string.Equals(settings.ActiveContextId, contextId, StringComparison.Ordinal))
         {
             return (false, 0);
         }
 
-        List<PanelContext> enabledContextsList = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts).ToList();
-        int targetIndex = enabledContextsList.FindIndex(context => string.Equals(context.Id, contextId, StringComparison.Ordinal));
+        int targetIndex = ContextStateHelper.FindEnabledContextIndex(settings.Contexts, contextId);
         if (targetIndex < 0)
         {
             return (false, 0);
         }
 
-        int currentIndex = enabledContextsList.FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
+        int currentIndex = ContextStateHelper.FindEnabledContextIndex(settings.Contexts, settings.ActiveContextId);
         if (currentIndex < 0)
         {
             currentIndex = 0;
@@ -290,40 +295,13 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private string? GetNextContextId(int direction)
     {
-        var enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
-        if (enabledContexts.Count == 0)
-        {
-            return null;
-        }
-
-        int currentIndex = -1;
-        for (int i = 0; i < enabledContexts.Count; i++)
-        {
-            if (string.Equals(enabledContexts[i].Id, AppSettings.ActiveContextId, StringComparison.Ordinal))
-            {
-                currentIndex = i;
-                break;
-            }
-        }
-        
-        if (currentIndex < 0)
-        {
-            currentIndex = 0;
-        }
-
-        int nextIndex = ContextStateHelper.WrapIndex(currentIndex + direction, enabledContexts.Count);
-        return enabledContexts[nextIndex].Id;
+        AppSettings settings = AppSettings;
+        return ContextStateHelper.GetRelativeEnabledContextId(settings.ActiveContextId, settings.Contexts, direction);
     }
 
     private string? GetContextIdByIndex(int index)
     {
-        IReadOnlyList<PanelContext> enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts);
-        if (index < 0 || index >= enabledContexts.Count)
-        {
-            return null;
-        }
-
-        return enabledContexts[index].Id;
+        return ContextStateHelper.GetEnabledContextAt(AppSettings.Contexts, index)?.Id;
     }
 
     private Brush GetCachedBrush(string colorHex)
@@ -399,6 +377,11 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private void BuildPanelContextMenu()
     {
+        BuildPanelContextMenu(AppSettings.ActiveContextId);
+    }
+
+    private void BuildPanelContextMenu(string activeContextId)
+    {
         ContextMenu menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
         menu.Opened += (s, e) => _isElementContextMenuOpen = true;
         menu.Closed += (s, e) => _isElementContextMenuOpen = false;
@@ -407,7 +390,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         foreach (PanelContext context in GetContextsSnapshot())
         {
-            bool isActive = string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal);
+            bool isActive = string.Equals(context.Id, activeContextId, StringComparison.Ordinal);
             string targetContextId = context.Id;
 
             MenuItem item = CreateMenuItem(
@@ -730,15 +713,25 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private Screen? GetTargetScreen()
     {
+        return GetTargetScreen(AppSettings.MonitorIndex);
+    }
+
+    private static Screen? GetTargetScreen(int monitorIndex)
+    {
         Screen[] screens = Screen.AllScreens;
-        return (AppSettings.MonitorIndex >= 0 && AppSettings.MonitorIndex < screens.Length)
-            ? screens[AppSettings.MonitorIndex]
+        return (monitorIndex >= 0 && monitorIndex < screens.Length)
+            ? screens[monitorIndex]
             : Screen.PrimaryScreen;
     }
 
     private (double AvailableWidth, double AvailableHeight) CalculateAvailableSize()
     {
-        Screen? screen = GetTargetScreen();
+        return CalculateAvailableSize(AppSettings.MonitorIndex);
+    }
+
+    private (double AvailableWidth, double AvailableHeight) CalculateAvailableSize(int monitorIndex)
+    {
+        Screen? screen = GetTargetScreen(monitorIndex);
         Rectangle? workArea = screen?.WorkingArea;
         double availableWidth = workArea.HasValue
             ? Math.Max(150, (workArea.Value.Width / _cachedDpi) - PanelScreenPadding)
@@ -754,12 +747,13 @@ public partial class MainWindow : Window, ISettingsWindowContext
         bool isVertical,
         double availableWidth,
         double availableHeight,
-        int totalButtonCount)
+        int totalButtonCount,
+        double panelSizePercent)
     {
         return PanelLayoutHelper.Calculate(
             isVertical: isVertical,
             availablePrimary: isVertical ? availableHeight : availableWidth,
-            panelPercent: AppSettings.PanelSizePercent,
+            panelPercent: panelSizePercent,
             totalButtonCount: totalButtonCount,
             controlButtonCount: 2,
             trailingControlButtonCount: 1);
@@ -768,23 +762,32 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private PanelLayoutHelper.PanelLayoutMetrics ComputeStablePrimaryPanelMetrics(
         bool isVertical,
         double availableWidth,
-        double availableHeight)
+        double availableHeight,
+        AppSettings settings,
+        IReadOnlyList<CustomElement> elements)
     {
         PanelLayoutHelper.PanelLayoutMetrics activeMetrics = ComputePanelMetrics(
             isVertical,
             availableWidth,
             availableHeight,
-            _unifiedButtons.Count);
+            _unifiedButtons.Count,
+            settings.PanelSizePercent);
         double maxPrimary = isVertical ? activeMetrics.PanelHeight : activeMetrics.PanelWidth;
 
-        foreach (PanelContext context in ContextStateHelper.GetEnabledContexts(AppSettings.Contexts))
+        foreach (PanelContext context in settings.Contexts)
         {
-            int contextButtonCount = _unifiedButtonService.BuildUnifiedList(context.Id).Count;
+            if (!context.IsEnabled)
+            {
+                continue;
+            }
+
+            int contextButtonCount = _unifiedButtonService.BuildUnifiedList(context.Id, settings, elements).Count;
             PanelLayoutHelper.PanelLayoutMetrics contextMetrics = ComputePanelMetrics(
                 isVertical,
                 availableWidth,
                 availableHeight,
-                contextButtonCount);
+                contextButtonCount,
+                settings.PanelSizePercent);
 
             double contextPrimary = isVertical ? contextMetrics.PanelHeight : contextMetrics.PanelWidth;
             if (contextPrimary > maxPrimary)
@@ -798,10 +801,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
             : activeMetrics with { PanelWidth = maxPrimary };
     }
 
-    private void ApplyPanelSizeConstraints(PanelLayoutHelper.PanelLayoutMetrics metrics)
+    private void ApplyPanelSizeConstraints(PanelLayoutHelper.PanelLayoutMetrics metrics, bool isVertical)
     {
-        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
-
         RootBorder.MaxWidth = double.PositiveInfinity;
         RootBorder.MaxHeight = double.PositiveInfinity;
         RootBorder.MinWidth = 0;
@@ -872,24 +873,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private int GetVisibleSystemButtonCount()
     {
-        int count = 0;
-        if (AppSettings.ShowPresetSearch) count++;
-        if (AppSettings.ShowPresetScreenshot) count++;
-        if (AppSettings.ShowPresetVideo) count++;
-        if (AppSettings.ShowPresetCalc) count++;
-        if (AppSettings.ShowPresetExplorer) count++;
-        if (AppSettings.ShowPresetDownloads) count++;
-        if (AppSettings.ShowPresetFileSorter) count++;
-        if (AppSettings.ShowPresetIconConverter) count++;
-        if (AppSettings.ShowPresetTimerStopwatch) count++;
-        if (AppSettings.ShowPresetColorPicker) count++;
-        if (AppSettings.ShowPresetQuickNote) count++;
-        if (AppSettings.ShowPresetQRCodeGenerator) count++;
-        if (AppSettings.ShowPresetClipboardManager) count++;
-        if (AppSettings.ShowPresetShowDesktop) count++;
-        if (AppSettings.ShowPresetAppsFolder) count++;
-        if (AppSettings.ShowPresetCopilot) count++;
-        return count;
+        return UtilityButtonCatalog.CountVisible(AppSettings);
     }
 
     private static readonly HashSet<HotkeyCommand> AllowedHotkeysWithOwnedWindows = new()
@@ -1065,7 +1049,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private (Rect WorkArea, Rect Bounds) GetTargetScreenMetrics()
     {
-        var screen = GetTargetScreen();
+        return GetTargetScreenMetrics(AppSettings.MonitorIndex);
+    }
+
+    private (Rect WorkArea, Rect Bounds) GetTargetScreenMetrics(int monitorIndex)
+    {
+        var screen = GetTargetScreen(monitorIndex);
 
         // Если экран не найден, используем PrimaryScreen. Если и его нет, используем системные параметры.
         var primary = Screen.PrimaryScreen;
@@ -1085,7 +1074,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private (double X, double Y) GetDockCoordinates(bool hide)
     {
-        var metrics = GetTargetScreenMetrics();
+        return GetDockCoordinates(hide, AppSettings);
+    }
+
+    private (double X, double Y) GetDockCoordinates(bool hide, AppSettings settings)
+    {
+        var metrics = GetTargetScreenMetrics(settings.MonitorIndex);
         var workArea = metrics.WorkArea;
         var bounds = metrics.Bounds;
 
@@ -1111,7 +1105,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         if (height <= 0) height = 50;
 
         return PanelPositionHelper.GetDockCoordinates(
-            AppSettings.Edge,
+            settings.Edge,
             workArea,
             bounds,
             width,
@@ -1123,12 +1117,17 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private bool _isPositioning = false;
     private void PositionWindowImmediately(bool shown)
     {
+        PositionWindowImmediately(shown, AppSettings);
+    }
+
+    private void PositionWindowImmediately(bool shown, AppSettings settings)
+    {
         if (_isPositioning) return;
         _isPositioning = true;
         try
         {
             this.UpdateLayout();
-            var coordinates = GetDockCoordinates(hide: !shown);
+            var coordinates = GetDockCoordinates(hide: !shown, settings);
             Left = coordinates.X;
             Top = coordinates.Y;
             UpdatePanelBounds();
@@ -1176,8 +1175,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             return;
         }
 
-        IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-        _nativeService = new NativeIntegrationService(hwnd);
+        _nativeService = new NativeIntegrationService();
         _nativeService.MouseDownOutside += (x, y) =>
         {
             _positionIndicatorService.HandleGlobalMouseDown(x, y);
@@ -1274,14 +1272,24 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private void UpdateOrientation(bool reposition = true, bool applySizeConstraints = true)
     {
-        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
+        UpdateOrientation(AppSettings, reposition, applySizeConstraints);
+    }
+
+    private void UpdateOrientation(AppSettings settings, bool reposition = true, bool applySizeConstraints = true)
+    {
+        bool isVertical = settings.Edge == DockEdge.Left || settings.Edge == DockEdge.Right;
         var orientation = System.Windows.Controls.Orientation.Horizontal;
         if (isVertical) orientation = System.Windows.Controls.Orientation.Vertical;
 
         if (applySizeConstraints)
         {
-            var (availableWidth, availableHeight) = CalculateAvailableSize();
-            _lastMetrics = ComputePanelMetrics(isVertical, availableWidth, availableHeight, _unifiedButtons.Count);
+            var (availableWidth, availableHeight) = CalculateAvailableSize(settings.MonitorIndex);
+            _lastMetrics = ComputePanelMetrics(
+                isVertical,
+                availableWidth,
+                availableHeight,
+                _unifiedButtons.Count,
+                settings.PanelSizePercent);
         }
 
         if (isVertical) { this.MinWidth = 0; this.MinHeight = 150; }
@@ -1337,13 +1345,13 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         if (applySizeConstraints)
         {
-            ApplyPanelSizeConstraints(_lastMetrics);
+            ApplyPanelSizeConstraints(_lastMetrics, isVertical);
         }
 
-        ApplyPanelToolTipPlacement();
+        ApplyPanelToolTipPlacement(settings.Edge);
         if (reposition)
         {
-            PositionWindowImmediately(_shown);
+            PositionWindowImmediately(_shown, settings);
         }
     }
 
@@ -1362,10 +1370,14 @@ public partial class MainWindow : Window, ISettingsWindowContext
         }
 
         int panelVersion = unchecked(++_panelRefreshVersion);
-        
+
+        _settingsService.NormalizeAppState();
+        AppSettings settings = _settingsService.Settings;
+        IReadOnlyList<CustomElement> elements = _settingsService.Elements;
+
         // Calculate a simple hash of current elements to detect changes
         int currentElementsVersion = 0;
-        foreach (var element in Elements)
+        foreach (var element in elements)
         {
             currentElementsVersion = unchecked(currentElementsVersion * 397 + (element.Id?.GetHashCode() ?? 0));
         }
@@ -1375,15 +1387,14 @@ public partial class MainWindow : Window, ISettingsWindowContext
             _buttonImageCache.Clear();
             _lastElementsVersion = currentElementsVersion;
         }
-        
-        _settingsService.NormalizeAppState();
-        BuildPanelContextMenu();
-        string activeContextId = AppSettings.ActiveContextId;
+
+        BuildPanelContextMenu(settings.ActiveContextId);
+        string activeContextId = settings.ActiveContextId;
 
         UnifiedButtonsPanel.Children.Clear();
         _unifiedButtons.Clear();
 
-        _currentUnifiedButtons = _unifiedButtonService.BuildUnifiedList(activeContextId);
+        _currentUnifiedButtons = _unifiedButtonService.BuildUnifiedList(activeContextId, settings, elements);
 
         foreach (var item in _currentUnifiedButtons)
         {
@@ -1392,10 +1403,15 @@ public partial class MainWindow : Window, ISettingsWindowContext
             _unifiedButtons.Add(btn);
         }
 
-        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
-        var (availableWidth, availableHeight) = CalculateAvailableSize();
+        bool isVertical = settings.Edge == DockEdge.Left || settings.Edge == DockEdge.Right;
+        var (availableWidth, availableHeight) = CalculateAvailableSize(settings.MonitorIndex);
 
-        _lastMetrics = ComputeStablePrimaryPanelMetrics(isVertical, availableWidth, availableHeight);
+        _lastMetrics = ComputeStablePrimaryPanelMetrics(
+            isVertical,
+            availableWidth,
+            availableHeight,
+            settings,
+            elements);
 
         bool hasUnifiedButtons = UnifiedButtonsPanel.Children.Count > 0;
 
@@ -1403,27 +1419,30 @@ public partial class MainWindow : Window, ISettingsWindowContext
         SepSystem.Visibility = hasUnifiedButtons ? Visibility.Visible : Visibility.Collapsed;
         SepAppSettings.Visibility = hasUnifiedButtons ? Visibility.Visible : Visibility.Collapsed;
 
-        UpdateContextIndicator();
+        UpdateContextIndicator(settings);
 
-        UpdateOrientation(reposition: false, applySizeConstraints: false);
-        ApplyPanelSizeConstraints(_lastMetrics);
-        AnimateContextTransitionIfNeeded();
-        ApplyPanelToolTipPlacement();
+        UpdateOrientation(settings, reposition: false, applySizeConstraints: false);
+        ApplyPanelSizeConstraints(_lastMetrics, isVertical);
+        AnimateContextTransitionIfNeeded(isVertical);
+        ApplyPanelToolTipPlacement(settings.Edge);
 
-        PositionWindowImmediately(_shown);
+        PositionWindowImmediately(_shown, settings);
     }
 
-    private void UpdateContextIndicator()
+    private void UpdateContextIndicator(AppSettings settings)
     {
-        var enabledContexts = ContextStateHelper.GetEnabledContexts(AppSettings.Contexts).ToList();
-        int activeIndex = enabledContexts.FindIndex(context => string.Equals(context.Id, AppSettings.ActiveContextId, StringComparison.Ordinal));
+        int enabledCount = ContextStateHelper.CountEnabledContexts(settings.Contexts);
+        int activeIndex = ContextStateHelper.FindEnabledContextIndex(settings.Contexts, settings.ActiveContextId);
         if (activeIndex < 0) activeIndex = 0;
 
         ContextIndicatorText.Text = (activeIndex + 1).ToString();
-        if (activeIndex < enabledContexts.Count)
+        if (activeIndex < enabledCount)
         {
-            string colorHex = enabledContexts[activeIndex].Color;
-            ContextIndicatorCircle.Background = GetCachedBrush(colorHex);
+            PanelContext? activeContext = ContextStateHelper.GetEnabledContextAt(settings.Contexts, activeIndex);
+            if (activeContext != null)
+            {
+                ContextIndicatorCircle.Background = GetCachedBrush(activeContext.Color);
+            }
         }
     }
 
@@ -1513,12 +1532,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
             {
                 await RunPanelInteractionAsync(async () =>
                 {
-                    if (item.SettingsKey != null)
-                    {
-                        _settingsService.SetUtilityVisibility(item.SettingsKey, false);
-                        await SaveSettingsWithNotificationAsync();
-                        RefreshPanel();
-                    }
+                    _settingsService.SetUtilityVisibility(item.Id, false);
+                    await SaveSettingsWithNotificationAsync();
+                    RefreshPanel();
                 });
             });
         }
@@ -1606,7 +1622,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private void ApplyPanelToolTipPlacement()
     {
-        var placement = GetPanelToolTipPlacement(AppSettings.Edge);
+        ApplyPanelToolTipPlacement(AppSettings.Edge);
+    }
+
+    private void ApplyPanelToolTipPlacement(DockEdge edge)
+    {
+        var placement = GetPanelToolTipPlacement(edge);
         const double tooltipGap = 4d;
         const double tooltipVerticalCenterOffset = 4d;
 
@@ -1670,7 +1691,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
 
 
-    private void AnimateContextTransitionIfNeeded()
+    private void AnimateContextTransitionIfNeeded(bool isVertical)
     {
         if (_pendingContextAnimationDirection == 0 || UnifiedButtonsPanel.Children.Count == 0)
         {
@@ -1680,8 +1701,6 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         int direction = _pendingContextAnimationDirection;
         _pendingContextAnimationDirection = 0;
-        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
-
         if (UnifiedButtonsPanel.RenderTransform is not TranslateTransform transform)
         {
             transform = new TranslateTransform();

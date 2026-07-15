@@ -22,6 +22,7 @@ namespace AiteBar
         private List<BrowserProfileInfo> _availableProfiles = [];
         private List<string> _rotationProfilePaths = [];
         private int _profileLoadVersion;
+        private int _previewLoadVersion;
         private CancellationTokenSource? _faviconCts;
         private bool _isLoadingElementData;
 
@@ -268,16 +269,30 @@ namespace AiteBar
 
         private async void UpdatePreview()
         {
-            if (!string.IsNullOrEmpty(_selectedImagePath) && File.Exists(_selectedImagePath))
+            int requestVersion = ++_previewLoadVersion;
+            string imagePath = _selectedImagePath;
+
+            if (!string.IsNullOrEmpty(imagePath) && File.Exists(imagePath))
             {
                 PreviewIcon.Visibility = Visibility.Collapsed;
                 PreviewImage.Visibility = Visibility.Visible;
                 try
                 {
-                    PreviewImage.Source = await LoadPreviewImageAsync(_selectedImagePath);
+                    BitmapImage image = await LoadPreviewImageAsync(imagePath);
+                    if (!IsCurrentPreviewRequest(requestVersion, _previewLoadVersion, imagePath, _selectedImagePath))
+                    {
+                        return;
+                    }
+
+                    PreviewImage.Source = image;
                 }
                 catch (Exception ex)
                 {
+                    if (!IsCurrentPreviewRequest(requestVersion, _previewLoadVersion, imagePath, _selectedImagePath))
+                    {
+                        return;
+                    }
+
                     Logger.Log(ex);
                     PreviewImage.Source = null;
                     PreviewImage.Visibility = Visibility.Collapsed;
@@ -297,6 +312,14 @@ namespace AiteBar
                 PreviewIcon.Foreground = _brushConverter.ConvertFromString(_selectedColor) as Brush ?? Brushes.White;
             }
         }
+
+        internal static bool IsCurrentPreviewRequest(
+            int requestVersion,
+            int currentVersion,
+            string requestPath,
+            string selectedPath) =>
+            requestVersion == currentVersion &&
+            string.Equals(requestPath, selectedPath, StringComparison.Ordinal);
 
         private static async Task<BitmapImage> LoadPreviewImageAsync(string imagePath)
         {

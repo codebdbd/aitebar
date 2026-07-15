@@ -176,6 +176,68 @@ public sealed class BrowserHelperTests
     }
 
     [Fact]
+    public void GetProfiles_CachesDiskSnapshotUntilExplicitInvalidation()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string profilePath = Path.Combine(tempRoot, "Profile 900005");
+        string preferencesPath = Path.Combine(profilePath, "Preferences");
+        BrowserHelper.SetUserDataPathOverride(BrowserType.Yandex, tempRoot);
+
+        try
+        {
+            Directory.CreateDirectory(profilePath);
+            File.WriteAllText(preferencesPath, """{"profile":{"name":"Original"}}""");
+
+            var first = BrowserHelper.GetProfiles(BrowserType.Yandex);
+            File.WriteAllText(preferencesPath, """{"profile":{"name":"Changed"}}""");
+            var cached = BrowserHelper.GetProfiles(BrowserType.Yandex);
+
+            Assert.Equal("Original", first.Single().DisplayName);
+            Assert.Equal("Original", cached.Single().DisplayName);
+
+            BrowserHelper.ClearProfileCache(BrowserType.Yandex);
+            var refreshed = BrowserHelper.GetProfiles(BrowserType.Yandex);
+
+            Assert.Equal("Changed", refreshed.Single().DisplayName);
+        }
+        finally
+        {
+            BrowserHelper.ClearUserDataPathOverride(BrowserType.Yandex);
+            TryDeleteDirectory(tempRoot);
+        }
+    }
+
+    [Fact]
+    public void GetProfiles_ReturnsCopiesThatCannotMutateCachedSnapshot()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string profilePath = Path.Combine(tempRoot, "Profile 900006");
+        BrowserHelper.SetUserDataPathOverride(BrowserType.Yandex, tempRoot);
+
+        try
+        {
+            Directory.CreateDirectory(profilePath);
+            File.WriteAllText(
+                Path.Combine(profilePath, "Preferences"),
+                """{"profile":{"name":"Original"}}""");
+
+            var first = BrowserHelper.GetProfiles(BrowserType.Yandex);
+            first[0].DisplayName = "Mutated";
+            first.Clear();
+
+            var second = BrowserHelper.GetProfiles(BrowserType.Yandex);
+
+            Assert.Single(second);
+            Assert.Equal("Original", second[0].DisplayName);
+        }
+        finally
+        {
+            BrowserHelper.ClearUserDataPathOverride(BrowserType.Yandex);
+            TryDeleteDirectory(tempRoot);
+        }
+    }
+
+    [Fact]
     public void GetProfiles_ChromiumPreferences_AllowsConcurrentWriter()
     {
         string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));

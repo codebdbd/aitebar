@@ -31,7 +31,7 @@ namespace AiteBar
         private const int WMSZ_BOTTOM = 6;
         private const int WMSZ_BOTTOMLEFT = 7;
         private const int WMSZ_BOTTOMRIGHT = 8;
-        private readonly QuickNoteService _noteService;
+        private readonly IQuickNotePersistence _noteService;
         private readonly AppSettingsService _settingsService;
         private readonly DispatcherTimer _saveTimer;
         private readonly DispatcherTimer _geometrySaveTimer;
@@ -56,12 +56,20 @@ namespace AiteBar
         private List<TextBlock>? _cachedTextBlocks;
         private List<System.Windows.Controls.Button>? _cachedButtons;
         private List<ToggleButton>? _cachedToggleButtons;
+        private bool _closeSaveInProgress;
+        private bool _closeAfterSave;
+        private bool _disposed;
 
         public QuickNoteWindow(QuickNoteService noteService, AppSettingsService settingsService)
+            : this(new QuickNotePersistence(noteService), settingsService)
+        {
+        }
+
+        internal QuickNoteWindow(IQuickNotePersistence noteService, AppSettingsService settingsService)
         {
             InitializeComponent();
-            _noteService = noteService;
-            _settingsService = settingsService;
+            _noteService = noteService ?? throw new ArgumentNullException(nameof(noteService));
+            _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _theme = QuickNoteThemeCatalog.Find(_settingsService.Settings.QuickNoteThemeId);
             _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
             _saveTimer.Tick += async (_, _) => await SaveNowAsync();
@@ -117,9 +125,46 @@ namespace AiteBar
 
         private async void Window_Closing(object? sender, CancelEventArgs e)
         {
-            // Сохраняем перед закрытием
-            await SaveNowAsync(force: true);
-            await SaveGeometryNowAsync();
+            if (_closeAfterSave)
+            {
+                return;
+            }
+
+            e.Cancel = true;
+            if (_closeSaveInProgress)
+            {
+                return;
+            }
+
+            _closeSaveInProgress = true;
+            StopTimers();
+            try
+            {
+                if (!await SaveNowAsync(force: true))
+                {
+                    return;
+                }
+
+                try
+                {
+                    await SaveGeometryNowAsync();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+
+                _closeAfterSave = true;
+                Close();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+            finally
+            {
+                _closeSaveInProgress = false;
+            }
         }
 
         protected override void OnClosed(EventArgs e)
@@ -130,10 +175,21 @@ namespace AiteBar
 
         public void Dispose()
         {
-            _saveSemaphore?.Dispose();
-            _saveTimer?.Stop();
-            _geometrySaveTimer?.Stop();
-            _footerStatsTimer?.Stop();
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            StopTimers();
+            _saveSemaphore.Dispose();
+        }
+
+        private void StopTimers()
+        {
+            _saveTimer.Stop();
+            _geometrySaveTimer.Stop();
+            _footerStatsTimer.Stop();
         }
 
         private void TxtNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
@@ -207,7 +263,7 @@ namespace AiteBar
                 : System.Windows.Input.Cursors.IBeam;
         }
 
-        private async Task<bool> SaveNowAsync(bool force = false)
+        internal async Task<bool> SaveNowAsync(bool force = false)
         {
             _saveTimer.Stop();
             if (!_loaded || (!_hasPendingChanges && !force))
@@ -215,8 +271,12 @@ namespace AiteBar
                 return true;
             }
 
-            // If we can't acquire the semaphore immediately, mark that we need to save again after the current one finishes
-            if (!await _saveSemaphore.WaitAsync(0))
+            if (force)
+            {
+                await _saveSemaphore.WaitAsync();
+            }
+            // If a timer save can't acquire the semaphore immediately, coalesce it with the current save.
+            else if (!await _saveSemaphore.WaitAsync(0))
             {
                 _saveAgainAfterCurrent = true;
                 return true;

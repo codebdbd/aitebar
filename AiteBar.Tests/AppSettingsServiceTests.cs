@@ -9,6 +9,7 @@ using Xunit;
 
 namespace AiteBar.Tests;
 
+[Collection("LocalizationStateTestCollection")]
 public sealed class AppSettingsServiceTests
 {
     [Fact]
@@ -557,14 +558,12 @@ public sealed class AppSettingsServiceTests
     }
 
     [Fact]
-    public void GetContextDisplayName_NonCustomizedDefaultContext_ReturnsCurrentCultureDisplayName()
+    public void GetContextDisplayName_NonCustomizedDefaultContext_ReturnsAppliedCultureDisplayName()
     {
-        CultureInfo originalCulture = CultureInfo.CurrentCulture;
-        CultureInfo originalUiCulture = CultureInfo.CurrentUICulture;
+        string originalCulture = LocalizationService.ResolvedCulture.Name;
         try
         {
-            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de");
-            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de");
+            LocalizationService.ApplyCulture("de");
 
             var service = new AppSettingsService();
             var settings = service.Settings;
@@ -580,8 +579,7 @@ public sealed class AppSettingsServiceTests
         }
         finally
         {
-            CultureInfo.CurrentCulture = originalCulture;
-            CultureInfo.CurrentUICulture = originalUiCulture;
+            LocalizationService.ApplyCulture(originalCulture);
         }
     }
 
@@ -736,12 +734,10 @@ public sealed class AppSettingsServiceTests
     [Fact]
     public void GetEnabledContextsSnapshot_LocalizesNonCustomizedDefaultNamesAtReadTime()
     {
-        CultureInfo originalCulture = CultureInfo.CurrentCulture;
-        CultureInfo originalUiCulture = CultureInfo.CurrentUICulture;
+        string originalCulture = LocalizationService.ResolvedCulture.Name;
         try
         {
-            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("uk");
-            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("uk");
+            LocalizationService.ApplyCulture("uk");
 
             var service = new AppSettingsService();
             var settings = service.Settings;
@@ -759,20 +755,17 @@ public sealed class AppSettingsServiceTests
         }
         finally
         {
-            CultureInfo.CurrentCulture = originalCulture;
-            CultureInfo.CurrentUICulture = originalUiCulture;
+            LocalizationService.ApplyCulture(originalCulture);
         }
     }
 
     [Fact]
     public void GetAllContextsSnapshot_LocalizesNonCustomizedDefaultNamesAtReadTime()
     {
-        CultureInfo originalCulture = CultureInfo.CurrentCulture;
-        CultureInfo originalUiCulture = CultureInfo.CurrentUICulture;
+        string originalCulture = LocalizationService.ResolvedCulture.Name;
         try
         {
-            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("de");
-            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("de");
+            LocalizationService.ApplyCulture("de");
 
             var service = new AppSettingsService();
             var settings = service.Settings;
@@ -790,20 +783,17 @@ public sealed class AppSettingsServiceTests
         }
         finally
         {
-            CultureInfo.CurrentCulture = originalCulture;
-            CultureInfo.CurrentUICulture = originalUiCulture;
+            LocalizationService.ApplyCulture(originalCulture);
         }
     }
 
     [Fact]
-    public void NormalizeAppState_LocalizesNonCustomizedDefaultContextNamesToCurrentCulture()
+    public void NormalizeAppState_LocalizesNonCustomizedDefaultContextNamesToAppliedCulture()
     {
-        CultureInfo originalCulture = CultureInfo.CurrentCulture;
-        CultureInfo originalUiCulture = CultureInfo.CurrentUICulture;
+        string originalCulture = LocalizationService.ResolvedCulture.Name;
         try
         {
-            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("ru");
-            CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("ru");
+            LocalizationService.ApplyCulture("ru");
 
             var service = new AppSettingsService();
             var settings = service.Settings;
@@ -824,8 +814,7 @@ public sealed class AppSettingsServiceTests
         }
         finally
         {
-            CultureInfo.CurrentCulture = originalCulture;
-            CultureInfo.CurrentUICulture = originalUiCulture;
+            LocalizationService.ApplyCulture(originalCulture);
         }
     }
 
@@ -872,6 +861,37 @@ public sealed class AppSettingsServiceTests
         Assert.Single(service.Elements);
         Assert.Equal("button-1", service.Elements[0].Id);
         Assert.Equal(75, service.Settings.PanelSizePercent);
+    }
+
+    [Fact]
+    public void UpdateSettings_DoesNotPublishElementMutationsOrRetainedCallbackState()
+    {
+        var service = new AppSettingsService();
+        var settings = service.Settings;
+        settings.Elements =
+        [
+            new CustomElement
+            {
+                Id = "button-1",
+                Name = "Original",
+                ContextId = "context-1"
+            }
+        ];
+        service.Settings = settings;
+
+        AppSettings? retained = null;
+        service.UpdateSettings(next =>
+        {
+            retained = next;
+            next.PanelSizePercent = 75;
+            next.Elements[0].Name = "Callback mutation";
+        });
+
+        retained!.PanelSizePercent = 50;
+        retained.Elements[0].Name = "Late mutation";
+
+        Assert.Equal(75, service.Settings.PanelSizePercent);
+        Assert.Equal("Original", Assert.Single(service.Elements).Name);
     }
 
     [Fact]
@@ -1187,7 +1207,7 @@ public sealed class AppSettingsServiceTests
         clone.Contexts[0].Name = "Changed";
         clone.Elements[0].Name = "Changed";
         clone.Elements[0].RotationProfilePaths.Add("b");
-        clone.Sentry.Dsn = "changed";
+        clone.Sentry!.Dsn = "changed";
 
         // Original must be unaffected
         Assert.Equal("D4", original.GlobalHotkeyKey);

@@ -10,12 +10,25 @@ namespace AiteBar.Tests
         [Fact]
         public void AppDataFolder_ShouldBeUnderRoaming()
         {
-            var folder = PathHelper.AppDataFolder;
+            var folder = PathHelper.DefaultAppDataFolder;
             var roaming = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 
             Assert.StartsWith(roaming, folder);
             Assert.Contains(PathHelper.AppCompany, folder);
             Assert.Contains(PathHelper.AppName, folder);
+        }
+
+        [Fact]
+        public void ClearAppDataFolderOverride_RestoresTestProcessFallback()
+        {
+            string explicitOverride = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+            PathHelper.SetAppDataFolderOverride(explicitOverride);
+
+            Assert.Equal(explicitOverride, PathHelper.AppDataFolder);
+
+            PathHelper.ClearAppDataFolderOverride();
+
+            Assert.Equal(TestProcessPathIsolation.Root, PathHelper.AppDataFolder);
         }
 
         [Fact]

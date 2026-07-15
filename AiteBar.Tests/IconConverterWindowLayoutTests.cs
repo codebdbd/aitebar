@@ -11,7 +11,7 @@ using AiteBar;
 
 namespace AiteBar.Tests;
 
-[Collection("WpfTestCollection")]
+[Collection("LocalizationStateTestCollection")]
 public sealed class IconConverterWindowLayoutTests : IDisposable
 {
     private readonly string _tempDir;
@@ -55,6 +55,7 @@ public sealed class IconConverterWindowLayoutTests : IDisposable
         await RunStaAsync(() =>
         {
             EnsureApplicationResources();
+            string originalCulture = LocalizationService.ResolvedCulture.Name;
             LocalizationService.ApplyCulture("ru");
 
             var settingsService = new AppSettingsService(
@@ -90,7 +91,7 @@ public sealed class IconConverterWindowLayoutTests : IDisposable
             finally
             {
                 window.Close();
-                LocalizationService.ApplyCulture(CultureInfo.CurrentUICulture.Name);
+                LocalizationService.ApplyCulture(originalCulture);
             }
         });
     }

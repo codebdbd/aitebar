@@ -20,6 +20,9 @@ namespace AiteBar
         private AppSettings _appSettings = new();
         private List<CustomElement> _elements = new();
 
+        /// <summary>
+        /// Raised synchronously on the thread that changes settings. UI subscribers must dispatch to their UI thread.
+        /// </summary>
         public event EventHandler? SettingsChanged;
 
         public AppSettingsService(string? configFile = null, string? settingsFile = null)
@@ -55,8 +58,8 @@ namespace AiteBar
             lock (_stateLock)
             {
                 var next = CloneAppSettings(_appSettings);
-                next.Elements = [.. _elements];
                 update(next);
+                next.Elements = [.. _elements];
                 _appSettings = CloneAppSettings(next);
                 _elements = _appSettings.Elements;
             }
@@ -928,54 +931,14 @@ namespace AiteBar
             ContextId = s.ContextId
         };
 
-        public bool GetUtilityVisibility(string key)
+        public void SetUtilityVisibility(string utilityId, bool visible)
         {
-            var settings = Settings;
-            return key switch
+            if (!UtilityButtonCatalog.TryGet(utilityId, out UtilityButtonDefinition? definition))
             {
-                "ShowPresetSearch" => settings.ShowPresetSearch,
-                "ShowPresetScreenshot" => settings.ShowPresetScreenshot,
-                "ShowPresetVideo" => settings.ShowPresetVideo,
-                "ShowPresetCalc" => settings.ShowPresetCalc,
-                "ShowPresetExplorer" => settings.ShowPresetExplorer,
-                "ShowPresetDownloads" => settings.ShowPresetDownloads,
-                "ShowPresetFileSorter" => settings.ShowPresetFileSorter,
-                "ShowPresetIconConverter" => settings.ShowPresetIconConverter,
-                "ShowPresetTimerStopwatch" => settings.ShowPresetTimerStopwatch,
-                "ShowPresetColorPicker" => settings.ShowPresetColorPicker,
-                "ShowPresetQuickNote" => settings.ShowPresetQuickNote,
-                "ShowPresetQRCodeGenerator" => settings.ShowPresetQRCodeGenerator,
-                "ShowPresetClipboardManager" => settings.ShowPresetClipboardManager,
-                "ShowPresetShowDesktop" => settings.ShowPresetShowDesktop,
-                "ShowPresetAppsFolder" => settings.ShowPresetAppsFolder,
-                "ShowPresetCopilot" => settings.ShowPresetCopilot,
-                _ => false
-            };
-        }
-
-        public void SetUtilityVisibility(string key, bool visible)
-        {
-            var settings = Settings;
-            switch (key)
-            {
-                case "ShowPresetSearch": settings.ShowPresetSearch = visible; break;
-                case "ShowPresetScreenshot": settings.ShowPresetScreenshot = visible; break;
-                case "ShowPresetVideo": settings.ShowPresetVideo = visible; break;
-                case "ShowPresetCalc": settings.ShowPresetCalc = visible; break;
-                case "ShowPresetExplorer": settings.ShowPresetExplorer = visible; break;
-                case "ShowPresetDownloads": settings.ShowPresetDownloads = visible; break;
-                case "ShowPresetFileSorter": settings.ShowPresetFileSorter = visible; break;
-                case "ShowPresetIconConverter": settings.ShowPresetIconConverter = visible; break;
-                case "ShowPresetTimerStopwatch": settings.ShowPresetTimerStopwatch = visible; break;
-                case "ShowPresetColorPicker": settings.ShowPresetColorPicker = visible; break;
-                case "ShowPresetQuickNote": settings.ShowPresetQuickNote = visible; break;
-                case "ShowPresetQRCodeGenerator": settings.ShowPresetQRCodeGenerator = visible; break;
-                case "ShowPresetClipboardManager": settings.ShowPresetClipboardManager = visible; break;
-                case "ShowPresetShowDesktop": settings.ShowPresetShowDesktop = visible; break;
-                case "ShowPresetAppsFolder": settings.ShowPresetAppsFolder = visible; break;
-                case "ShowPresetCopilot": settings.ShowPresetCopilot = visible; break;
+                return;
             }
-            Settings = settings;
+
+            UpdateSettings(settings => definition.SetVisible(settings, visible));
         }
     }
 }

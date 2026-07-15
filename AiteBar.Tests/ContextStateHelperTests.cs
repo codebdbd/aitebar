@@ -7,23 +7,28 @@ using Xunit;
 
 namespace AiteBar.Tests;
 
+[Collection("LocalizationStateTestCollection")]
 public sealed class ContextStateHelperTests : IDisposable
 {
     private readonly CultureInfo _originalCulture;
     private readonly CultureInfo _originalUICulture;
+    private readonly string _originalResolvedCulture;
 
     public ContextStateHelperTests()
     {
         _originalCulture = CultureInfo.CurrentCulture;
         _originalUICulture = CultureInfo.CurrentUICulture;
+        _originalResolvedCulture = LocalizationService.ResolvedCulture.Name;
         CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en");
         CultureInfo.CurrentUICulture = CultureInfo.GetCultureInfo("en");
+        LocalizationService.ApplyCulture("en");
     }
 
     public void Dispose()
     {
         CultureInfo.CurrentCulture = _originalCulture;
         CultureInfo.CurrentUICulture = _originalUICulture;
+        LocalizationService.ApplyCulture(_originalResolvedCulture);
     }
 
     [Fact]
@@ -155,6 +160,37 @@ public sealed class ContextStateHelperTests : IDisposable
         string? nextContextId = ContextStateHelper.GetRelativeEnabledContextId("context-1", contexts, 1);
 
         Assert.Equal("context-3", nextContextId);
+    }
+
+    [Fact]
+    public void EnabledContextQueries_DoNotAllocateTemporaryCollections()
+    {
+        PanelContext[] contexts =
+        [
+            new() { Id = "context-1", IsEnabled = true },
+            new() { Id = "context-2", IsEnabled = false },
+            new() { Id = "context-3", IsEnabled = true }
+        ];
+
+        for (int i = 0; i < 100; i++)
+        {
+            _ = ContextStateHelper.CountEnabledContexts(contexts);
+            _ = ContextStateHelper.FindEnabledContextIndex(contexts, "context-3");
+            _ = ContextStateHelper.GetEnabledContextAt(contexts, 1);
+            _ = ContextStateHelper.GetRelativeEnabledContextId("context-1", contexts, 1);
+        }
+
+        long allocatedBefore = GC.GetAllocatedBytesForCurrentThread();
+        for (int i = 0; i < 1_000; i++)
+        {
+            _ = ContextStateHelper.CountEnabledContexts(contexts);
+            _ = ContextStateHelper.FindEnabledContextIndex(contexts, "context-3");
+            _ = ContextStateHelper.GetEnabledContextAt(contexts, 1);
+            _ = ContextStateHelper.GetRelativeEnabledContextId("context-1", contexts, 1);
+        }
+        long allocatedAfter = GC.GetAllocatedBytesForCurrentThread();
+
+        Assert.Equal(allocatedBefore, allocatedAfter);
     }
 
     [Theory]

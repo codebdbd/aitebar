@@ -36,8 +36,18 @@ public abstract class UtilityBase<TWindow> : IUtility where TWindow : Window
     {
         try
         {
+            if (_window != null && RestoreExistingWindow(_window))
+            {
+                return;
+            }
+
             if (_window is { IsVisible: true })
             {
+                if (_window.WindowState == WindowState.Minimized)
+                {
+                    _window.WindowState = WindowState.Normal;
+                }
+
                 _window.Activate();
                 return;
             }
@@ -61,19 +71,25 @@ public abstract class UtilityBase<TWindow> : IUtility where TWindow : Window
             TelemetryService.CaptureException(ex, "utility_crash", 
                 new Dictionary<string, string?> { ["utility_id"] = Id });
             
-            if (System.Windows.Application.Current != null)
-            {
-                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    new DarkDialog(LocalizationService.Format("Utility_Unavailable", Id)).ShowDialog();
-                });
-            }
+            await ShowUnavailableMessageAsync(owner);
         }
     }
 
     protected abstract TWindow CreateWindow(AppSettingsService settingsService, Window? owner);
     protected abstract void ShowWindow(TWindow window, AppSettingsService settingsService);
+    protected virtual bool RestoreExistingWindow(TWindow window) => false;
     protected virtual void OnWindowClosed(TWindow window) { }
+
+    protected virtual async Task ShowUnavailableMessageAsync(Window? owner)
+    {
+        if (System.Windows.Application.Current != null)
+        {
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                new DarkDialog(LocalizationService.Format("Utility_Unavailable", Id)) { Owner = owner }.ShowDialog();
+            });
+        }
+    }
 }
 
 public static class UtilityRegistry

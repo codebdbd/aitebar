@@ -57,6 +57,14 @@ internal class TaskbarPositionIndicatorService : IDisposable
 
     private void AppSettingsService_SettingsChanged(object? sender, EventArgs e)
     {
+        MainWindow? mainWindow = _mainWindow;
+        if (_disposed || mainWindow == null) return;
+
+        UiDispatcher.Run(mainWindow.Dispatcher, ApplySettingsChanged);
+    }
+
+    private void ApplySettingsChanged()
+    {
         if (_disposed) return;
 
         Debug.WriteLine("TaskbarPositionIndicatorService.SettingsChanged");
@@ -447,7 +455,6 @@ internal class TaskbarPositionIndicatorService : IDisposable
     public void Dispose()
     {
         Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(bool disposing)
@@ -492,9 +499,5 @@ internal class TaskbarPositionIndicatorService : IDisposable
         }
     }
 
-    ~TaskbarPositionIndicatorService()
-    {
-        Dispose(false);
-    }
 }
 
