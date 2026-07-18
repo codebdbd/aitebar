@@ -993,6 +993,8 @@ public sealed class AppSettingsServiceTests
             ActiveContextId = "context-3",
             CheckForUpdatesEnabled = false,
             ShowTaskbarPositionIndicator = false,
+            TaskbarIndicatorPositionX = 0.75,
+            TaskbarIndicatorPositionY = 0.25,
 
             NextContextHotkey = new HotkeyBinding { Ctrl = true, Alt = false, Shift = true, Win = false, Key = "A" },
             PreviousContextHotkey = new HotkeyBinding { Ctrl = false, Alt = true, Shift = false, Win = true, Key = "B" },
@@ -1002,6 +1004,8 @@ public sealed class AppSettingsServiceTests
             ColorPickerHotkey = new HotkeyBinding { Ctrl = false, Alt = true, Shift = true, Win = false, Key = "F" },
             TimerStopwatchHotkey = new HotkeyBinding { Ctrl = true, Alt = true, Shift = true, Win = false, Key = "G" },
             QRCodeGeneratorHotkey = new HotkeyBinding { Ctrl = false, Alt = false, Shift = false, Win = true, Key = "H" },
+            IconConverterHotkey = new HotkeyBinding { Ctrl = true, Alt = false, Shift = true, Win = false, Key = "I" },
+            ClipboardManagerHotkey = new HotkeyBinding { Ctrl = true, Alt = true, Shift = false, Win = false, Key = "V" },
 
             Contexts =
             [
@@ -1103,6 +1107,8 @@ public sealed class AppSettingsServiceTests
         Assert.Equal("context-3", clone.ActiveContextId);
         Assert.False(clone.CheckForUpdatesEnabled);
         Assert.False(clone.ShowTaskbarPositionIndicator);
+        Assert.Equal(0.75, clone.TaskbarIndicatorPositionX);
+        Assert.Equal(0.25, clone.TaskbarIndicatorPositionY);
 
         // HotkeyBinding deep copies
         AssertCloneHotkeyBinding(original.NextContextHotkey, clone.NextContextHotkey);
@@ -1113,6 +1119,8 @@ public sealed class AppSettingsServiceTests
         AssertCloneHotkeyBinding(original.ColorPickerHotkey, clone.ColorPickerHotkey);
         AssertCloneHotkeyBinding(original.TimerStopwatchHotkey, clone.TimerStopwatchHotkey);
         AssertCloneHotkeyBinding(original.QRCodeGeneratorHotkey, clone.QRCodeGeneratorHotkey);
+        AssertCloneHotkeyBinding(original.IconConverterHotkey, clone.IconConverterHotkey);
+        AssertCloneHotkeyBinding(original.ClipboardManagerHotkey, clone.ClipboardManagerHotkey);
 
         // Contexts deep copy
         Assert.Equal(2, clone.Contexts.Count);

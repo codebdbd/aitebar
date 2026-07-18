@@ -13,10 +13,12 @@ public enum HotkeyCommand
     PreviousContext,
     AddButton,
     FileSorter,
+    IconConverter,
     QuickNote,
     ColorPicker,
     TimerStopwatch,
-    QRCodeGenerator
+    QRCodeGenerator,
+    ClipboardManager
 }
 
 public sealed record HotkeyDefinition(HotkeyCommand? Command, int Id, string DisplayName, HotkeyBinding Binding);
@@ -56,6 +58,8 @@ public sealed class HotkeyService
     internal const int ColorPickerId = 9006;
     internal const int TimerStopwatchId = 9007;
     internal const int QRCodeGeneratorId = 9008;
+    internal const int IconConverterId = 9009;
+    internal const int ClipboardManagerId = 9010;
 
     internal const uint ModAlt = 0x0001;
     internal const uint ModControl = 0x0002;
@@ -69,10 +73,12 @@ public sealed class HotkeyService
         new HotkeyDescriptor(HotkeyCommand.PreviousContext, PreviousContextId, "AppSettingsWindow_PreviousPanel"),
         new HotkeyDescriptor(HotkeyCommand.AddButton, AddButtonId, "AppSettingsWindow_AddButton"),
         new HotkeyDescriptor(HotkeyCommand.FileSorter, FileSorterId, "Tool_FileSorter"),
+        new HotkeyDescriptor(HotkeyCommand.IconConverter, IconConverterId, "Tool_IconConverter"),
         new HotkeyDescriptor(HotkeyCommand.QuickNote, QuickNoteId, "Tool_QuickNote"),
         new HotkeyDescriptor(HotkeyCommand.ColorPicker, ColorPickerId, "Tool_ColorPicker"),
         new HotkeyDescriptor(HotkeyCommand.TimerStopwatch, TimerStopwatchId, "Tool_TimerStopwatch"),
-        new HotkeyDescriptor(HotkeyCommand.QRCodeGenerator, QRCodeGeneratorId, "Tool_QRCodeGenerator")
+        new HotkeyDescriptor(HotkeyCommand.QRCodeGenerator, QRCodeGeneratorId, "Tool_QRCodeGenerator"),
+        new HotkeyDescriptor(HotkeyCommand.ClipboardManager, ClipboardManagerId, "Tool_ClipboardManager")
     ];
 
     private static readonly IReadOnlyDictionary<int, HotkeyCommand> CommandsById =
@@ -109,10 +115,12 @@ public sealed class HotkeyService
             [HotkeyCommand.PreviousContext] = settings.PreviousContextHotkey,
             [HotkeyCommand.AddButton] = settings.AddButtonHotkey,
             [HotkeyCommand.FileSorter] = settings.FileSorterHotkey,
+            [HotkeyCommand.IconConverter] = settings.IconConverterHotkey,
             [HotkeyCommand.QuickNote] = settings.QuickNoteHotkey,
             [HotkeyCommand.ColorPicker] = settings.ColorPickerHotkey,
             [HotkeyCommand.TimerStopwatch] = settings.TimerStopwatchHotkey,
-            [HotkeyCommand.QRCodeGenerator] = settings.QRCodeGeneratorHotkey
+            [HotkeyCommand.QRCodeGenerator] = settings.QRCodeGeneratorHotkey,
+            [HotkeyCommand.ClipboardManager] = settings.ClipboardManagerHotkey
         };
 
         return Descriptors

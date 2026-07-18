@@ -12,7 +12,8 @@ public sealed class RuntimeLocalizationWindowSourceTests
 
         Assert.Contains("private void RefreshLocalizedUi()", code);
         Assert.Contains("ReloadLocalizedChoiceLists();", code);
-        Assert.Contains("LoadKeyList();", code);
+        Assert.Contains("LoadLanguageList();", code);
+        Assert.Contains("captureBox.RefreshDisplay();", code);
         Assert.Contains("RefreshContextRowTooltips();", code);
         Assert.Contains("protected override void OnLocalizationChanged()", code);
     }
@@ -54,7 +55,6 @@ public sealed class RuntimeLocalizationWindowSourceTests
         string iconPickerCode = ReadCode("AiteBar", "IconPickerWindow.xaml.cs");
         string quickNoteCode = ReadCode("AiteBar", "QuickNoteWindow.xaml.cs");
         string rotationCode = ReadCode("AiteBar", "RotationProfileSelectionWindow.xaml.cs");
-        string aboutCode = ReadCode("AiteBar", "AboutWindow.xaml.cs");
         string dialogCode = ReadCode("AiteBar", "DarkDialog.xaml.cs");
         string promptCode = ReadCode("AiteBar", "TextPromptDialog.xaml.cs");
         string screenPickerCode = ReadCode("AiteBar", "ScreenColorPickerWindow.cs");
@@ -80,9 +80,6 @@ public sealed class RuntimeLocalizationWindowSourceTests
         Assert.Contains("RenderProfiles();", rotationCode);
         Assert.Contains("protected override void OnLocalizationChanged()", rotationCode);
 
-        Assert.Contains("UpdateVersionText();", aboutCode);
-        Assert.Contains("protected override void OnLocalizationChanged()", aboutCode);
-
         Assert.Contains("private readonly bool _isConfirmDialog;", dialogCode);
         Assert.Contains("protected override void OnLocalizationChanged()", dialogCode);
 
@@ -106,7 +103,6 @@ public sealed class RuntimeLocalizationWindowSourceTests
             "AiteBar\\TimerStopwatchWindow.xaml.cs",
             "AiteBar\\QuickNoteWindow.xaml.cs",
             "AiteBar\\RotationProfileSelectionWindow.xaml.cs",
-            "AiteBar\\AboutWindow.xaml.cs",
             "AiteBar\\DarkDialog.xaml.cs",
             "AiteBar\\TextPromptDialog.xaml.cs"
         ];

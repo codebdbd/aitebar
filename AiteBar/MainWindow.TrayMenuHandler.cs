@@ -50,9 +50,9 @@ public partial class MainWindow
         var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
 
         menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Open), LocalizationService.Get("Menu_Open"), (s, e) => ShowDock()));
-        menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Settings), LocalizationService.Get("Menu_ProgramSettings"), (s, e) => new AppSettingsWindow(this) { Owner = this }.ShowDialog()));
+        menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Settings), LocalizationService.Get("Menu_ProgramSettings"), async (s, e) => await ShowAppSettingsWindow(AppSettingsSection.General)));
         menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Update), LocalizationService.Get("Update_Check"), async (s, e) => await UpdateCheckUi.CheckForUpdatesAsync(this)));
-        menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Info), LocalizationService.Get("Menu_About"), (s, e) => new AboutWindow { Owner = this }.ShowDialog()));
+        menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Info), LocalizationService.Get("Menu_About"), async (s, e) => await ShowAppSettingsWindow(AppSettingsSection.About)));
         menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Donate), LocalizationService.Get("Menu_Donate"), (s, e) => OpenUrl(DonatePageUrl)));
         menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Exit), LocalizationService.Get("Menu_Exit"), (s, e) =>
         {

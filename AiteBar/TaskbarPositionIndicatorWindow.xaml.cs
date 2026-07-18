@@ -13,6 +13,15 @@ public partial class TaskbarPositionIndicatorWindow : Window
     public event EventHandler? TogglePanelRequested;
     public event EventHandler? ShowSettingsRequested;
     public event EventHandler? HideIndicatorRequested;
+    public event EventHandler<IndicatorDragEventArgs>? DragRequested;
+    public event EventHandler<IndicatorDragEventArgs>? DragCompleted;
+
+    private const int DragThresholdPixels = 4;
+    private NativeMethods.Win32Point _dragStart;
+    private int _dragOffsetX;
+    private int _dragOffsetY;
+    private bool _isPointerDown;
+    private bool _isDragging;
 
     private static FontFamily? _menuIconFont;
     private static FontFamily MenuIconFont => _menuIconFont ??= FontHelper.Resolve(FontHelper.FluentKey);
@@ -95,9 +104,80 @@ public partial class TaskbarPositionIndicatorWindow : Window
         ToolTipService.SetToolTip(ArrowText, text);
     }
 
-    private void Window_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    protected override void OnMouseLeftButtonDown(MouseButtonEventArgs e)
     {
-        TogglePanelRequested?.Invoke(this, EventArgs.Empty);
+        base.OnMouseLeftButtonDown(e);
+        var point = new NativeMethods.Win32Point();
+        if (!NativeMethods.GetCursorPos(ref point))
+        {
+            return;
+        }
+
+        var helper = new System.Windows.Interop.WindowInteropHelper(this);
+        if (!NativeMethods.GetWindowRect(helper.Handle, out var windowRect))
+        {
+            return;
+        }
+
+        _dragStart = point;
+        _dragOffsetX = point.X - windowRect.Left;
+        _dragOffsetY = point.Y - windowRect.Top;
+        _isPointerDown = true;
+        _isDragging = false;
+        Mouse.Capture(this);
+        e.Handled = true;
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        if (!_isPointerDown || e.LeftButton != MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        var point = new NativeMethods.Win32Point();
+        if (!NativeMethods.GetCursorPos(ref point))
+        {
+            return;
+        }
+
+        if (!_isDragging &&
+            Math.Abs(point.X - _dragStart.X) < DragThresholdPixels &&
+            Math.Abs(point.Y - _dragStart.Y) < DragThresholdPixels)
+        {
+            return;
+        }
+
+        _isDragging = true;
+        DragRequested?.Invoke(this, new IndicatorDragEventArgs(point.X - _dragOffsetX, point.Y - _dragOffsetY));
+        e.Handled = true;
+    }
+
+    protected override void OnMouseLeftButtonUp(MouseButtonEventArgs e)
+    {
+        base.OnMouseLeftButtonUp(e);
+        if (!_isPointerDown)
+        {
+            return;
+        }
+
+        _isPointerDown = false;
+        Mouse.Capture(null);
+        if (_isDragging)
+        {
+            var point = new NativeMethods.Win32Point();
+            if (NativeMethods.GetCursorPos(ref point))
+            {
+                DragCompleted?.Invoke(this, new IndicatorDragEventArgs(point.X - _dragOffsetX, point.Y - _dragOffsetY));
+            }
+        }
+        else
+        {
+            TogglePanelRequested?.Invoke(this, EventArgs.Empty);
+        }
+
+        _isDragging = false;
         e.Handled = true;
     }
 
@@ -122,4 +202,10 @@ public partial class TaskbarPositionIndicatorWindow : Window
         base.OnMouseLeave(e);
         IndicatorBorder.Background = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x00, 0x7A, 0xCC));
     }
+}
+
+public sealed class IndicatorDragEventArgs(int left, int top) : EventArgs
+{
+    public int Left { get; } = left;
+    public int Top { get; } = top;
 }

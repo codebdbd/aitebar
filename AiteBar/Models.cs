@@ -166,16 +166,21 @@ public class AppSettings
     public HotkeyBinding PreviousContextHotkey { get; set; } = new();
     public HotkeyBinding AddButtonHotkey { get; set; } = new();
     public HotkeyBinding FileSorterHotkey { get; set; } = new();
+    public HotkeyBinding IconConverterHotkey { get; set; } = new();
     public HotkeyBinding QuickNoteHotkey { get; set; } = new();
     public HotkeyBinding ColorPickerHotkey { get; set; } = new();
     public HotkeyBinding TimerStopwatchHotkey { get; set; } = new();
     public HotkeyBinding QRCodeGeneratorHotkey { get; set; } = new();
+    public HotkeyBinding ClipboardManagerHotkey { get; set; } = new();
     public FileSortUndoState? LastFileSortOperation { get; set; }
 
     public List<CustomElement> Elements { get; set; } = new();
     public List<string> UtilityButtonOrder { get; set; } = new();
     public bool CheckForUpdatesEnabled { get; set; } = true;
     public bool? ShowTaskbarPositionIndicator { get; set; } = true;
+    public double? TaskbarIndicatorPositionX { get; set; }
+    public double? TaskbarIndicatorPositionY { get; set; }
+    public AiSettings Ai { get; set; } = new();
     public SentrySettings? Sentry { get; set; }
 }
 

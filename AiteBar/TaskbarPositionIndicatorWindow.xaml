@@ -5,8 +5,7 @@
         Width="28" Height="28"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ShowInTaskbar="False" Topmost="True" ShowActivated="False"
-        ResizeMode="NoResize"
-        MouseLeftButtonUp="Window_MouseLeftButtonUp"
+        ResizeMode="NoResize" Cursor="SizeAll"
         MouseRightButtonUp="Window_MouseRightButtonUp">
     <Window.Resources>
         <Style x:Key="DarkContextMenuStyle" TargetType="ContextMenu">

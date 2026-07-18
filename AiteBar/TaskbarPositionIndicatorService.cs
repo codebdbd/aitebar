@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Threading;
+using WpfSize = System.Windows.Size;
 
 namespace AiteBar;
 
@@ -23,6 +24,7 @@ internal class TaskbarPositionIndicatorService : IDisposable
     private DispatcherTimer? _visibilityTimer;
     private DispatcherTimer? _zOrderTimer;
     private bool _isSuppressedByFullscreen;
+    private bool _isDragging;
 
     public void Initialize(AppSettingsService appSettingsService, MainWindow mainWindow)
     {
@@ -99,6 +101,8 @@ internal class TaskbarPositionIndicatorService : IDisposable
                 _window.ShowSettingsRequested += Window_ShowSettingsRequested;
                 Debug.WriteLine("Subscribing to HideIndicatorRequested");
                 _window.HideIndicatorRequested += Window_HideIndicatorRequested;
+                _window.DragRequested += Window_DragRequested;
+                _window.DragCompleted += Window_DragCompleted;
                 Debug.WriteLine("Subscribing to _window.Loaded");
                 _window.Loaded += Window_Loaded;
                 // Don't subscribe to Closed, since we won't close the window
@@ -169,24 +173,67 @@ internal class TaskbarPositionIndicatorService : IDisposable
         Debug.WriteLine("TaskbarPositionIndicatorService.UpdatePosition");
         if (_window == null || _mainWindow == null || _appSettingsService == null) return;
 
+        if (_isDragging)
+        {
+            var draggingHandle = new WindowInteropHelper(_window).Handle;
+            NativeMethods.SetWindowPos(
+                draggingHandle,
+                NativeMethods.HWND_TOPMOST,
+                0,
+                0,
+                0,
+                0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
+            return;
+        }
+
         try
         {
             var settings = _appSettingsService.Settings;
-            var taskbarInfo = TaskbarGeometryHelper.GetTaskbarInfo(settings.MonitorIndex);
-            var position = TaskbarGeometryHelper.CalculateIndicatorPosition(taskbarInfo, IndicatorSize);
-            Debug.WriteLine($"Taskbar info: Edge {taskbarInfo.Edge}, Bounds {taskbarInfo.Bounds}");
+            var helper = new WindowInteropHelper(_window);
+            double dpiScale = GetWindowDpiScale(helper.Handle);
+            double physicalIndicatorSize = Math.Max(1, Math.Round(IndicatorSize * dpiScale));
+            var indicatorSize = new WpfSize(physicalIndicatorSize, physicalIndicatorSize);
+            var monitorBounds = TaskbarGeometryHelper.GetMonitorBounds(settings.MonitorIndex);
+            Point position;
+
+            if (settings.TaskbarIndicatorPositionX.HasValue && settings.TaskbarIndicatorPositionY.HasValue)
+            {
+                position = IndicatorPositionHelper.FromNormalized(
+                    monitorBounds,
+                    indicatorSize,
+                    settings.TaskbarIndicatorPositionX.Value,
+                    settings.TaskbarIndicatorPositionY.Value);
+            }
+            else
+            {
+                var taskbarInfo = TaskbarGeometryHelper.GetTaskbarInfo(settings.MonitorIndex);
+                position = IndicatorPositionHelper.Clamp(
+                    monitorBounds,
+                    indicatorSize,
+                    TaskbarGeometryHelper.CalculateIndicatorPosition(taskbarInfo, physicalIndicatorSize));
+                Debug.WriteLine($"Taskbar info: Edge {taskbarInfo.Edge}, Bounds {taskbarInfo.Bounds}");
+            }
             Debug.WriteLine($"Position calculated: X {position.X}, Y {position.Y}");
 
-            var helper = new WindowInteropHelper(_window);
-            NativeMethods.SetWindowPos(
-                helper.Handle,
-                NativeMethods.HWND_TOPMOST,
-                (int)position.X,
-                (int)position.Y,
-                (int)IndicatorSize,
-                (int)IndicatorSize,
-                NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW
-            );
+            SetIndicatorPosition(helper.Handle, position, indicatorSize);
+
+            // A move to a monitor with another DPI changes the WPF window DPI. Recalculate once
+            // with the destination DPI so its physical bounds still match its 28-DIP content.
+            double destinationDpiScale = GetWindowDpiScale(helper.Handle);
+            if (Math.Abs(destinationDpiScale - dpiScale) > 0.01)
+            {
+                physicalIndicatorSize = Math.Max(1, Math.Round(IndicatorSize * destinationDpiScale));
+                indicatorSize = new WpfSize(physicalIndicatorSize, physicalIndicatorSize);
+                position = settings.TaskbarIndicatorPositionX.HasValue && settings.TaskbarIndicatorPositionY.HasValue
+                    ? IndicatorPositionHelper.FromNormalized(
+                        monitorBounds,
+                        indicatorSize,
+                        settings.TaskbarIndicatorPositionX.Value,
+                        settings.TaskbarIndicatorPositionY.Value)
+                    : IndicatorPositionHelper.Clamp(monitorBounds, indicatorSize, position);
+                SetIndicatorPosition(helper.Handle, position, indicatorSize);
+            }
 
             _window.UpdateArrow(settings.Edge);
             _window.UpdateTooltip(GetTooltipText(settings));
@@ -196,6 +243,87 @@ internal class TaskbarPositionIndicatorService : IDisposable
             Debug.WriteLine($"UpdatePosition exception: {ex}");
             Logger.Log(ex);
         }
+    }
+
+    private static double GetWindowDpiScale(IntPtr hwnd)
+    {
+        try
+        {
+            uint dpi = NativeMethods.GetDpiForWindow(hwnd);
+            return dpi == 0 ? 1.0 : dpi / 96.0;
+        }
+        catch (EntryPointNotFoundException)
+        {
+            return 1.0;
+        }
+    }
+
+    private static void SetIndicatorPosition(IntPtr hwnd, Point position, WpfSize size)
+    {
+        NativeMethods.SetWindowPos(
+            hwnd,
+            NativeMethods.HWND_TOPMOST,
+            (int)Math.Round(position.X),
+            (int)Math.Round(position.Y),
+            (int)Math.Round(size.Width),
+            (int)Math.Round(size.Height),
+            NativeMethods.SWP_NOACTIVATE | NativeMethods.SWP_SHOWWINDOW);
+    }
+
+    private void Window_DragRequested(object? sender, IndicatorDragEventArgs e)
+    {
+        _isDragging = true;
+        MoveDraggedIndicator(e.Left, e.Top);
+    }
+
+    private async void Window_DragCompleted(object? sender, IndicatorDragEventArgs e)
+    {
+        if (_disposed || _window == null || _appSettingsService == null)
+        {
+            return;
+        }
+
+        try
+        {
+            Point position = MoveDraggedIndicator(e.Left, e.Top);
+            IntPtr hwnd = new WindowInteropHelper(_window).Handle;
+            double physicalIndicatorSize = Math.Max(1, Math.Round(IndicatorSize * GetWindowDpiScale(hwnd)));
+            var size = new WpfSize(physicalIndicatorSize, physicalIndicatorSize);
+            Rect monitorBounds = TaskbarGeometryHelper.GetMonitorBounds(_appSettingsService.Settings.MonitorIndex);
+            Point normalized = IndicatorPositionHelper.ToNormalized(monitorBounds, size, position);
+
+            _isDragging = false;
+            _appSettingsService.UpdateSettings(settings =>
+            {
+                settings.TaskbarIndicatorPositionX = normalized.X;
+                settings.TaskbarIndicatorPositionY = normalized.Y;
+            });
+            await _appSettingsService.SaveAsync();
+        }
+        catch (Exception ex)
+        {
+            _isDragging = false;
+            Logger.Log(ex);
+        }
+    }
+
+    private Point MoveDraggedIndicator(int requestedLeft, int requestedTop)
+    {
+        if (_window == null || _appSettingsService == null)
+        {
+            return new Point(requestedLeft, requestedTop);
+        }
+
+        IntPtr hwnd = new WindowInteropHelper(_window).Handle;
+        double physicalIndicatorSize = Math.Max(1, Math.Round(IndicatorSize * GetWindowDpiScale(hwnd)));
+        var size = new WpfSize(physicalIndicatorSize, physicalIndicatorSize);
+        Rect monitorBounds = TaskbarGeometryHelper.GetMonitorBounds(_appSettingsService.Settings.MonitorIndex);
+        Point position = IndicatorPositionHelper.Clamp(
+            monitorBounds,
+            size,
+            new Point(requestedLeft, requestedTop));
+        SetIndicatorPosition(hwnd, position, size);
+        return position;
     }
 
     public void Refresh()
@@ -490,6 +618,8 @@ internal class TaskbarPositionIndicatorService : IDisposable
                 _window.TogglePanelRequested -= Window_TogglePanelRequested;
                 _window.ShowSettingsRequested -= Window_ShowSettingsRequested;
                 _window.HideIndicatorRequested -= Window_HideIndicatorRequested;
+                _window.DragRequested -= Window_DragRequested;
+                _window.DragCompleted -= Window_DragCompleted;
                 _window.Loaded -= Window_Loaded;
                 _hwndSource?.RemoveHook(WndProc);
                 _hwndSource = null;

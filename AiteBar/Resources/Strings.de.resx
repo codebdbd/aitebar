@@ -24,7 +24,7 @@
   <data name="AppSettingsWindow_GeneralHint" xml:space="preserve"><value>Sprache, Panelposition, Darstellungseinstellungen und Updates.</value></data>
   <data name="AppSettingsWindow_PanelSize" xml:space="preserve"><value>Leistengröße</value></data>
   <data name="AppSettingsWindow_ActivationZone" xml:space="preserve"><value>Aktivierungszone, %</value></data>
-  <data name="AppSettingsWindow_ActivationZoneTooltip" xml:space="preserve"><value>Größe des Bereichs am Bildschirmrand, der die Leiste beim Zeigen öffnet.</value></data>
+  <data name="AppSettingsWindow_ActivationZoneTooltip" xml:space="preserve"><value>Der reagierende Teil des gewählten Randes: 10 % nur in der Mitte, 100 % am gesamten Rand.</value></data>
   <data name="AppSettingsWindow_Delay" xml:space="preserve"><value>Einblendverzögerung, ms</value></data>
   <data name="AppSettingsWindow_ContextNamesTooltip" xml:space="preserve"><value>Diese Namen werden im Leistenmenü und in den Schaltflächeneinstellungen verwendet.</value></data>
   <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>Diese Namen werden im Leistenmenü und bei der Auswahl einer Leiste für Schaltflächen verwendet.</value></data>
@@ -192,6 +192,8 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="SettingsWindow_ActivationHotkeyReserved" xml:space="preserve"><value>Dieses Tastenkürzel ist von Windows reserviert. Wählen Sie eine andere Kombination.</value></data>
   <data name="HotkeyModifierRequiredMessage" xml:space="preserve"><value>Globale Tastenkürzel müssen Ctrl, Alt, Shift oder Win enthalten:
 {0}</value></data>
+  <data name="HotkeyGlobalReservedMessage" xml:space="preserve"><value>Diese Tastenkürzel sind von Windows reserviert:
+{0}</value></data>
   <data name="Tool_FileSorter" xml:space="preserve"><value>Dateisortierung</value></data>
   <data name="Main_FileSorterTooltip" xml:space="preserve"><value>Dateien in Ordner sortieren</value></data>
   <data name="FileSorter_Title" xml:space="preserve"><value>Dateisortierung</value></data>
@@ -312,6 +314,7 @@ Fortfahren?</value></data>
   <data name="About_Developer" xml:space="preserve"><value>Entwickler: Codebdbd</value></data>
   <data name="About_License" xml:space="preserve"><value>Lizenz: Proprietär (Alle Rechte vorbehalten)</value></data>
   <data name="About_Technologies" xml:space="preserve"><value>Technologien</value></data>
+  <data name="About_TechnologiesValue" xml:space="preserve"><value>.NET 10 · WPF</value></data>
   <data name="About_AppData" xml:space="preserve"><value>Anwendungsdaten</value></data>
   <data name="About_OpenDataFolder" xml:space="preserve"><value>Datenordner öffnen</value></data>
   <data name="About_Resources" xml:space="preserve"><value>Ressourcen</value></data>
@@ -578,6 +581,82 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="QRCodeGenerator_Png800Subtext" xml:space="preserve"><value>Als PNG-Bild speichern</value></data>
   <data name="QRCodeGenerator_VectorSubtext" xml:space="preserve"><value>Als SVG-Vektor speichern</value></data>
   <data name="QRCodeGenerator_ClipboardSubtext" xml:space="preserve"><value>In Zwischenablage kopieren</value></data>
+  <data name="HotkeyCapture_Prompt" xml:space="preserve"><value>Tastenkombination drücken</value></data>
+  <data name="HotkeyCapture_Clear" xml:space="preserve"><value>Tastenkombination löschen</value></data>
+  <data name="AppSettingsWindow_LanguageHint" xml:space="preserve"><value>Wählen Sie die Sprache der Programmoberfläche.</value></data>
+  <data name="AppSettingsWindow_EdgeHint" xml:space="preserve"><value>Wählen Sie den Bildschirmrand, an dem die Leiste erscheint.</value></data>
+  <data name="AppSettingsWindow_PanelSizeHint" xml:space="preserve"><value>Länge der Leiste am gewählten Rand: 50 % ist der halbe Bildschirm, 100 % der gesamte Rand.</value></data>
+  <data name="AppSettingsWindow_DelayHint" xml:space="preserve"><value>Verweildauer des Zeigers am Rand: 100 ms öffnet schnell, 500 ms verhindert versehentliches Öffnen.</value></data>
+  <data name="AppSettingsWindow_ShowTaskbarPositionIndicatorHint" xml:space="preserve"><value>Zeigt die aktuelle Position der Leiste im Windows-Taskleistenbereich.</value></data>
+  <data name="AppSettingsWindow_SecondaryMonitorHint" xml:space="preserve"><value>Platziert die Leiste auf dem zweiten Bildschirm, falls verfügbar.</value></data>
+  <data name="AppSettingsWindow_CheckForUpdatesHint" xml:space="preserve"><value>Automatisch nach einer neueren AiteBar-Version suchen.</value></data>
+  <data name="HotkeyCapture_RowHint" xml:space="preserve"><value>Klicken Sie in das Feld und drücken Sie die gewünschte Tastenkombination.</value></data>
+  <data name="AppSettingsWindow_DelayMinLabel" xml:space="preserve"><value>100 ms</value></data>
+  <data name="AppSettingsWindow_Delay200Label" xml:space="preserve"><value>200 ms</value></data>
+  <data name="AppSettingsWindow_Delay300Label" xml:space="preserve"><value>300 ms</value></data>
+  <data name="AppSettingsWindow_DelayMaxLabel" xml:space="preserve"><value>500 ms</value></data>
+  <data name="AppSettingsWindow_KeepOnTop" xml:space="preserve"><value>Immer im Vordergrund</value></data>
+  <data name="AppSettingsWindow_KeepOnTopHint" xml:space="preserve"><value>Dieses Einstellungsfenster bis zum Schließen über anderen Anwendungen halten.</value></data>
+  <data name="QuickTool_QuickNote_Title" xml:space="preserve"><value>Schnellnotiz</value></data>
+  <data name="QuickTool_QuickNote_Description" xml:space="preserve"><value>Öffnet ein Fenster zum Erstellen und Formatieren einer Notiz.</value></data>
+  <data name="QuickTool_QRCodeGenerator_Title" xml:space="preserve"><value>QR-Code-Generator</value></data>
+  <data name="QuickTool_QRCodeGenerator_Description" xml:space="preserve"><value>Erstellt einen QR-Code aus Text oder einem Link.</value></data>
+  <data name="QuickTool_Downloads_Title" xml:space="preserve"><value>Downloads</value></data>
+  <data name="QuickTool_Downloads_Description" xml:space="preserve"><value>Öffnet den Systemordner „Downloads“.</value></data>
+  <data name="QuickTool_Video_Title" xml:space="preserve"><value>Bildschirmaufnahme</value></data>
+  <data name="QuickTool_Video_Description" xml:space="preserve"><value>Öffnet das Windows-Werkzeug zum Aufzeichnen des Bildschirms.</value></data>
+  <data name="QuickTool_Copilot_Title" xml:space="preserve"><value>Copilot-KI-Assistent</value></data>
+  <data name="QuickTool_Copilot_Description" xml:space="preserve"><value>Öffnet Microsoft Copilot, wenn er auf diesem System verfügbar ist.</value></data>
+  <data name="QuickTool_Calculator_Title" xml:space="preserve"><value>Rechner</value></data>
+  <data name="QuickTool_Calculator_Description" xml:space="preserve"><value>Öffnet den Windows-Rechner.</value></data>
+  <data name="QuickTool_IconConverter_Title" xml:space="preserve"><value>Icon-Konverter</value></data>
+  <data name="QuickTool_IconConverter_Description" xml:space="preserve"><value>Konvertiert Bilder in Symbole im ICO-Format.</value></data>
+  <data name="QuickTool_ClipboardManager_Title" xml:space="preserve"><value>Zwischenablageverwaltung</value></data>
+  <data name="QuickTool_ClipboardManager_Description" xml:space="preserve"><value>Zeigt den Verlauf kopierter Texte und Bilder.</value></data>
+  <data name="QuickTool_ColorPicker_Title" xml:space="preserve"><value>Farbpipette</value></data>
+  <data name="QuickTool_ColorPicker_Description" xml:space="preserve"><value>Ermittelt eine Bildschirmfarbe und kopiert ihren Farbcode.</value></data>
+  <data name="QuickTool_Search_Title" xml:space="preserve"><value>Suche</value></data>
+  <data name="QuickTool_Search_Description" xml:space="preserve"><value>Sucht im Internet nach dem Text, der sich aktuell in der Zwischenablage befindet.</value></data>
+  <data name="QuickTool_ShowDesktop_Title" xml:space="preserve"><value>Desktop anzeigen</value></data>
+  <data name="QuickTool_ShowDesktop_Description" xml:space="preserve"><value>Minimiert geöffnete Fenster und zeigt den Desktop an.</value></data>
+  <data name="QuickTool_AppsFolder_Title" xml:space="preserve"><value>Windows-Apps</value></data>
+  <data name="QuickTool_AppsFolder_Description" xml:space="preserve"><value>Öffnet die Systemliste der installierten Anwendungen.</value></data>
+  <data name="QuickTool_Explorer_Title" xml:space="preserve"><value>Datei-Explorer</value></data>
+  <data name="QuickTool_Explorer_Description" xml:space="preserve"><value>Öffnet den Windows-Datei-Explorer für Dateien und Ordner.</value></data>
+  <data name="QuickTool_Screenshot_Title" xml:space="preserve"><value>Screenshot</value></data>
+  <data name="QuickTool_Screenshot_Description" xml:space="preserve"><value>Öffnet das Windows-Werkzeug zum Auswählen eines Bereichs und Erstellen eines Screenshots.</value></data>
+  <data name="QuickTool_FileSorter_Title" xml:space="preserve"><value>Dateisortierer</value></data>
+  <data name="QuickTool_FileSorter_Description" xml:space="preserve"><value>Sortiert Dateien nach den ausgewählten Regeln in Ordner.</value></data>
+  <data name="QuickTool_TimerStopwatch_Title" xml:space="preserve"><value>Timer und Stoppuhr</value></data>
+  <data name="QuickTool_TimerStopwatch_Description" xml:space="preserve"><value>Startet Timer und misst die verstrichene Zeit.</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Löschen</value></data>
+  <data name="AiSettings_Title" xml:space="preserve"><value>KI-Dienste</value></data>
+  <data name="AiSettings_Description" xml:space="preserve"><value>Kostenlose Kontingente von KI-Diensten für aktuelle und zukünftige AiteBar-Werkzeuge verbinden.</value></data>
+  <data name="AiSettings_FreeOnly" xml:space="preserve"><value>Nur kostenlose Tarife</value></data>
+  <data name="AiSettings_FreeOnlyHint" xml:space="preserve"><value>AiteBar wechselt nicht automatisch zu Modellen, die ausdrücklich als kostenpflichtig markiert sind.</value></data>
+  <data name="AiSettings_PrivacyWarning" xml:space="preserve"><value>Text oder Dateien werden erst nach einer ausdrücklichen Benutzeraktion an den gewählten externen Dienst gesendet. Prüfen Sie vor der Nutzung dessen Datenschutzbedingungen.</value></data>
+  <data name="AiSettings_Connections" xml:space="preserve"><value>API-Verbindungen</value></data>
+  <data name="AiSettings_ConnectionsHint" xml:space="preserve"><value>Mehrere Konten oder Projekte können hinzugefügt werden. Verbindungen werden innerhalb eines Dienstes nach Priorität verwendet.</value></data>
+  <data name="AiSettings_AddConnection" xml:space="preserve"><value>Verbindung hinzufügen</value></data>
+  <data name="AiSettings_AddConnectionHint" xml:space="preserve"><value>Der API-Schlüssel wird in der Windows-Anmeldeinformationsverwaltung gespeichert und nicht in die AiteBar-Einstellungsdatei geschrieben.</value></data>
+  <data name="AiSettings_NoConnections" xml:space="preserve"><value>Noch ist kein KI-Dienst verbunden.</value></data>
+  <data name="AiSettings_Provider" xml:space="preserve"><value>Dienst</value></data>
+  <data name="AiSettings_GetApiKey" xml:space="preserve"><value>API-Schlüssel auf der offiziellen Website erstellen</value></data>
+  <data name="AiSettings_ConnectionName" xml:space="preserve"><value>Verbindungsname</value></data>
+  <data name="AiSettings_QuotaScope" xml:space="preserve"><value>Konto oder Projekt</value></data>
+  <data name="AiSettings_QuotaScopeHint" xml:space="preserve"><value>Für Schlüssel mit gemeinsamem Kontingent denselben Wert verwenden, zum Beispiel „Privates Google-Projekt“.</value></data>
+  <data name="AiSettings_ApiKey" xml:space="preserve"><value>API-Schlüssel</value></data>
+  <data name="AiSettings_ApiKeySecurityHint" xml:space="preserve"><value>Der gespeicherte Schlüssel wird nicht erneut angezeigt und erscheint weder in Protokollen noch in Einstellungssicherungen.</value></data>
+  <data name="AiSettings_Add" xml:space="preserve"><value>Hinzufügen</value></data>
+  <data name="AiSettings_ConnectionDetails" xml:space="preserve"><value>{0} · Kontingent: {1}</value></data>
+  <data name="AiSettings_MoveUp" xml:space="preserve"><value>Priorität erhöhen</value></data>
+  <data name="AiSettings_MoveDown" xml:space="preserve"><value>Priorität verringern</value></data>
+  <data name="AiSettings_Test" xml:space="preserve"><value>Prüfen</value></data>
+  <data name="AiSettings_Testing" xml:space="preserve"><value>Prüfung…</value></data>
+  <data name="AiSettings_StatusNotChecked" xml:space="preserve"><value>Nicht geprüft</value></data>
+  <data name="AiSettings_StatusAvailable" xml:space="preserve"><value>Verbunden · {0} Modelle verfügbar</value></data>
+  <data name="AiSettings_StatusError" xml:space="preserve"><value>Verbindungsfehler: {0}</value></data>
+  <data name="AiSettings_CredentialSaveFailed" xml:space="preserve"><value>Der API-Schlüssel konnte nicht in der Windows-Anmeldeinformationsverwaltung gespeichert werden.</value></data>
 </root>
 
 

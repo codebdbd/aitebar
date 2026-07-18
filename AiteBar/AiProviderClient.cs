@@ -1,0 +1,544 @@
+using System.Globalization;
+using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
+
+namespace AiteBar;
+
+internal sealed class AiProviderClient
+{
+    private static readonly HttpClient SharedHttpClient = CreateHttpClient();
+    private readonly HttpClient _httpClient;
+    private readonly IAiCredentialStore _credentialStore;
+
+    public AiProviderClient(IAiCredentialStore credentialStore)
+        : this(SharedHttpClient, credentialStore)
+    {
+    }
+
+    internal AiProviderClient(HttpClient httpClient, IAiCredentialStore credentialStore)
+    {
+        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _credentialStore = credentialStore ?? throw new ArgumentNullException(nameof(credentialStore));
+    }
+
+    public async Task<AiConnectionCheckResult> CheckConnectionAsync(
+        AiConnectionSettings connection,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            IReadOnlyList<AiModelDescriptor> models = await GetModelsAsync(connection, cancellationToken).ConfigureAwait(false);
+            return new AiConnectionCheckResult(true, AiConnectionState.Available, models.Count);
+        }
+        catch (AiProviderHttpException ex)
+        {
+            return new AiConnectionCheckResult(
+                false,
+                MapConnectionState(ex.StatusCode),
+                0,
+                ex.Message);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return new AiConnectionCheckResult(false, AiConnectionState.Unavailable, 0, ex.Message);
+        }
+    }
+
+    public async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+        AiConnectionSettings connection,
+        CancellationToken cancellationToken)
+    {
+        (AiProviderDefinition provider, string apiKey) = ResolveConnection(connection);
+        Uri uri = BuildModelsUri(provider, apiKey);
+        using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+        ApplyAuthentication(request, provider, apiKey);
+        using HttpResponseMessage response = await _httpClient.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken).ConfigureAwait(false);
+        using JsonDocument document = await ReadJsonResponseAsync(response, cancellationToken).ConfigureAwait(false);
+
+        return provider.Protocol switch
+        {
+            AiProviderProtocol.OpenRouter => ParseOpenRouterModels(provider, document.RootElement),
+            AiProviderProtocol.Gemini => ParseGeminiModels(provider, document.RootElement),
+            AiProviderProtocol.GitHubModels => ParseGitHubModels(provider, document.RootElement),
+            _ => ParseOpenAiModels(provider, document.RootElement)
+        };
+    }
+
+    public async Task<AiProviderResponse> GenerateAsync(
+        AiConnectionSettings connection,
+        AiModelDescriptor model,
+        AiChatRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.Messages.Count == 0)
+        {
+            throw new ArgumentException("At least one AI chat message is required.", nameof(request));
+        }
+
+        (AiProviderDefinition provider, string apiKey) = ResolveConnection(connection);
+        return provider.Protocol == AiProviderProtocol.Gemini
+            ? await GenerateGeminiAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false)
+            : await GenerateOpenAiCompatibleAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<AiProviderResponse> GenerateOpenAiCompatibleAsync(
+        AiProviderDefinition provider,
+        string apiKey,
+        AiModelDescriptor model,
+        AiChatRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (provider.ChatCompletionsUri == null)
+        {
+            throw new InvalidOperationException($"Provider '{provider.Id}' does not define a chat endpoint.");
+        }
+
+        var payload = new Dictionary<string, object?>
+        {
+            ["model"] = model.ModelId,
+            ["messages"] = request.Messages.Select(message => new { role = message.Role, content = message.Content }).ToArray(),
+            ["max_tokens"] = Math.Clamp(request.MaxOutputTokens, 1, 32768),
+            ["stream"] = false
+        };
+        if (request.Temperature is double temperature)
+        {
+            payload["temperature"] = Math.Clamp(temperature, 0d, 2d);
+        }
+
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, provider.ChatCompletionsUri)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+        };
+        ApplyAuthentication(httpRequest, provider, apiKey);
+        using HttpResponseMessage response = await _httpClient.SendAsync(
+            httpRequest,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken).ConfigureAwait(false);
+        using JsonDocument document = await ReadJsonResponseAsync(response, cancellationToken).ConfigureAwait(false);
+        JsonElement root = document.RootElement;
+
+        string content = root.TryGetProperty("choices", out JsonElement choices) &&
+                         choices.ValueKind == JsonValueKind.Array &&
+                         choices.GetArrayLength() > 0 &&
+                         choices[0].TryGetProperty("message", out JsonElement message) &&
+                         message.TryGetProperty("content", out JsonElement contentElement)
+            ? ReadTextContent(contentElement)
+            : string.Empty;
+
+        int? promptTokens = null;
+        int? completionTokens = null;
+        if (root.TryGetProperty("usage", out JsonElement usage))
+        {
+            promptTokens = ReadNullableInt(usage, "prompt_tokens");
+            completionTokens = ReadNullableInt(usage, "completion_tokens");
+        }
+
+        return new AiProviderResponse(content, provider.Id, model.ModelId, promptTokens, completionTokens);
+    }
+
+    private async Task<AiProviderResponse> GenerateGeminiAsync(
+        AiProviderDefinition provider,
+        string apiKey,
+        AiModelDescriptor model,
+        AiChatRequest request,
+        CancellationToken cancellationToken)
+    {
+        string modelId = Uri.EscapeDataString(model.ModelId);
+        var uri = new Uri($"https://generativelanguage.googleapis.com/v1beta/models/{modelId}:generateContent?key={Uri.EscapeDataString(apiKey)}");
+        var contents = request.Messages
+            .Where(message => !string.Equals(message.Role, "system", StringComparison.OrdinalIgnoreCase))
+            .Select(message => new
+            {
+                role = string.Equals(message.Role, "assistant", StringComparison.OrdinalIgnoreCase) ? "model" : "user",
+                parts = new[] { new { text = message.Content } }
+            })
+            .ToArray();
+        string? systemText = string.Join("\n\n", request.Messages
+            .Where(message => string.Equals(message.Role, "system", StringComparison.OrdinalIgnoreCase))
+            .Select(message => message.Content));
+        var generationConfig = new Dictionary<string, object?>
+        {
+            ["maxOutputTokens"] = Math.Clamp(request.MaxOutputTokens, 1, 32768)
+        };
+        if (request.Temperature is double temperature)
+        {
+            generationConfig["temperature"] = Math.Clamp(temperature, 0d, 2d);
+        }
+
+        var payload = new Dictionary<string, object?>
+        {
+            ["contents"] = contents,
+            ["generationConfig"] = generationConfig
+        };
+        if (!string.IsNullOrWhiteSpace(systemText))
+        {
+            payload["systemInstruction"] = new { parts = new[] { new { text = systemText } } };
+        }
+
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, uri)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+        };
+        using HttpResponseMessage response = await _httpClient.SendAsync(
+            httpRequest,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken).ConfigureAwait(false);
+        using JsonDocument document = await ReadJsonResponseAsync(response, cancellationToken).ConfigureAwait(false);
+        JsonElement root = document.RootElement;
+
+        string content = string.Empty;
+        if (root.TryGetProperty("candidates", out JsonElement candidates) &&
+            candidates.ValueKind == JsonValueKind.Array && candidates.GetArrayLength() > 0 &&
+            candidates[0].TryGetProperty("content", out JsonElement candidateContent) &&
+            candidateContent.TryGetProperty("parts", out JsonElement parts) &&
+            parts.ValueKind == JsonValueKind.Array)
+        {
+            content = string.Join(string.Empty, parts.EnumerateArray()
+                .Where(part => part.TryGetProperty("text", out _))
+                .Select(part => part.GetProperty("text").GetString()));
+        }
+
+        int? promptTokens = null;
+        int? completionTokens = null;
+        if (root.TryGetProperty("usageMetadata", out JsonElement usage))
+        {
+            promptTokens = ReadNullableInt(usage, "promptTokenCount");
+            completionTokens = ReadNullableInt(usage, "candidatesTokenCount");
+        }
+
+        return new AiProviderResponse(content, provider.Id, model.ModelId, promptTokens, completionTokens);
+    }
+
+    internal static IReadOnlyList<AiModelDescriptor> ParseOpenRouterModels(
+        AiProviderDefinition provider,
+        JsonElement root)
+    {
+        if (!root.TryGetProperty("data", out JsonElement data) || data.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        var result = new List<AiModelDescriptor>();
+        foreach (JsonElement item in data.EnumerateArray())
+        {
+            string? id = ReadString(item, "id");
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                continue;
+            }
+
+            AiCostStatus cost = string.Equals(id, "openrouter/free", StringComparison.Ordinal)
+                ? AiCostStatus.VerifiedFree
+                : ResolveOpenRouterCost(item);
+            result.Add(new AiModelDescriptor(
+                provider.Id,
+                id,
+                ReadString(item, "name") ?? id,
+                ResolveCapabilities(item),
+                ReadNullableInt(item, "context_length"),
+                cost));
+        }
+
+        return result;
+    }
+
+    internal static IReadOnlyList<AiModelDescriptor> ParseOpenAiModels(
+        AiProviderDefinition provider,
+        JsonElement root)
+    {
+        if (!root.TryGetProperty("data", out JsonElement data) || data.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        return data.EnumerateArray()
+            .Select(item =>
+            {
+                string? id = ReadString(item, "id");
+                return string.IsNullOrWhiteSpace(id)
+                    ? null
+                    : new AiModelDescriptor(
+                        provider.Id,
+                        id,
+                        ReadString(item, "name") ?? id,
+                        ResolveCapabilities(item),
+                        ReadNullableInt(item, "context_length") ?? ReadNullableInt(item, "max_context_length"),
+                        provider.DefaultCostStatus,
+                        ReadBoolean(item, "deprecated"));
+            })
+            .Where(model => model != null)
+            .Cast<AiModelDescriptor>()
+            .ToArray();
+    }
+
+    internal static IReadOnlyList<AiModelDescriptor> ParseGitHubModels(
+        AiProviderDefinition provider,
+        JsonElement root)
+    {
+        if (root.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        var result = new List<AiModelDescriptor>();
+        foreach (JsonElement item in root.EnumerateArray())
+        {
+            string? id = ReadString(item, "id");
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                continue;
+            }
+
+            int? context = null;
+            if (item.TryGetProperty("limits", out JsonElement limits))
+            {
+                context = ReadNullableInt(limits, "max_input_tokens");
+            }
+            result.Add(new AiModelDescriptor(
+                provider.Id,
+                id,
+                ReadString(item, "name") ?? id,
+                ResolveCapabilities(item),
+                context,
+                provider.DefaultCostStatus));
+        }
+        return result;
+    }
+
+    internal static IReadOnlyList<AiModelDescriptor> ParseGeminiModels(
+        AiProviderDefinition provider,
+        JsonElement root)
+    {
+        if (!root.TryGetProperty("models", out JsonElement models) || models.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        var result = new List<AiModelDescriptor>();
+        foreach (JsonElement item in models.EnumerateArray())
+        {
+            if (!SupportsGeminiGeneration(item))
+            {
+                continue;
+            }
+            string? rawName = ReadString(item, "name");
+            if (string.IsNullOrWhiteSpace(rawName))
+            {
+                continue;
+            }
+            string id = rawName.StartsWith("models/", StringComparison.Ordinal) ? rawName[7..] : rawName;
+            AiCapabilities capabilities = AiCapabilities.Text;
+            if (ReadBoolean(item, "thinking"))
+            {
+                capabilities |= AiCapabilities.Reasoning;
+            }
+            result.Add(new AiModelDescriptor(
+                provider.Id,
+                id,
+                ReadString(item, "displayName") ?? id,
+                capabilities,
+                ReadNullableInt(item, "inputTokenLimit"),
+                provider.DefaultCostStatus));
+        }
+        return result;
+    }
+
+    private (AiProviderDefinition Provider, string ApiKey) ResolveConnection(AiConnectionSettings connection)
+    {
+        ArgumentNullException.ThrowIfNull(connection);
+        if (!AiProviderCatalog.TryGet(connection.ProviderId, out AiProviderDefinition provider))
+        {
+            throw new InvalidOperationException($"Unknown AI provider '{connection.ProviderId}'.");
+        }
+        string? apiKey = _credentialStore.Read(connection.CredentialTarget);
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            throw new AiProviderHttpException(HttpStatusCode.Unauthorized, "The API key is missing.");
+        }
+        return (provider, apiKey);
+    }
+
+    private static Uri BuildModelsUri(AiProviderDefinition provider, string apiKey)
+    {
+        if (provider.Protocol == AiProviderProtocol.Gemini)
+        {
+            return new Uri($"{provider.ModelsUri}?pageSize=1000&key={Uri.EscapeDataString(apiKey)}");
+        }
+        return provider.ModelsUri;
+    }
+
+    private static void ApplyAuthentication(
+        HttpRequestMessage request,
+        AiProviderDefinition provider,
+        string apiKey)
+    {
+        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        if (!provider.ApiKeyInQuery)
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        }
+        if (provider.Protocol == AiProviderProtocol.GitHubModels)
+        {
+            request.Headers.Add("X-GitHub-Api-Version", "2026-03-10");
+        }
+        if (provider.Id == "openrouter")
+        {
+            request.Headers.TryAddWithoutValidation("HTTP-Referer", "https://github.com/codebdbd/aitebar");
+            request.Headers.TryAddWithoutValidation("X-Title", "AiteBar");
+        }
+    }
+
+    private static async Task<JsonDocument> ReadJsonResponseAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        if (!response.IsSuccessStatusCode)
+        {
+            TimeSpan? retryAfter = response.Headers.RetryAfter?.Delta;
+            string message = $"AI provider returned HTTP {(int)response.StatusCode}.";
+            throw new AiProviderHttpException(response.StatusCode, message, retryAfter);
+        }
+        Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidDataException("AI provider returned invalid JSON.", ex);
+        }
+    }
+
+    private static AiCostStatus ResolveOpenRouterCost(JsonElement item)
+    {
+        if (!item.TryGetProperty("pricing", out JsonElement pricing))
+        {
+            return AiCostStatus.Unknown;
+        }
+        return IsZeroPrice(pricing, "prompt") && IsZeroPrice(pricing, "completion")
+            ? AiCostStatus.VerifiedFree
+            : AiCostStatus.Paid;
+    }
+
+    private static bool IsZeroPrice(JsonElement pricing, string propertyName)
+    {
+        if (!pricing.TryGetProperty(propertyName, out JsonElement value))
+        {
+            return false;
+        }
+        return value.ValueKind switch
+        {
+            JsonValueKind.Number => value.TryGetDecimal(out decimal number) && number == 0m,
+            JsonValueKind.String => decimal.TryParse(value.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out decimal number) && number == 0m,
+            _ => false
+        };
+    }
+
+    private static AiCapabilities ResolveCapabilities(JsonElement item)
+    {
+        AiCapabilities capabilities = AiCapabilities.Text;
+        if (ContainsString(item, "capabilities", "streaming") || ReadBoolean(item, "streaming"))
+        {
+            capabilities |= AiCapabilities.Streaming;
+        }
+        if (ContainsString(item, "capabilities", "tool-calling") ||
+            ContainsString(item, "supported_parameters", "tools") ||
+            ReadNestedBoolean(item, "capabilities", "tools"))
+        {
+            capabilities |= AiCapabilities.Tools;
+        }
+        if (ContainsString(item, "capabilities", "structured-outputs") ||
+            ContainsString(item, "supported_parameters", "response_format") ||
+            ReadNestedBoolean(item, "capabilities", "structured_outputs"))
+        {
+            capabilities |= AiCapabilities.StructuredOutput;
+        }
+        if (ReadNestedBoolean(item, "capabilities", "vision") ||
+            ContainsString(item, "supported_input_modalities", "image"))
+        {
+            capabilities |= AiCapabilities.Vision;
+        }
+        if (ReadNestedBoolean(item, "capabilities", "reasoning"))
+        {
+            capabilities |= AiCapabilities.Reasoning;
+        }
+        return capabilities;
+    }
+
+    private static bool SupportsGeminiGeneration(JsonElement item) =>
+        ContainsString(item, "supportedGenerationMethods", "generateContent") ||
+        ContainsString(item, "supportedActions", "generateContent");
+
+    private static bool ContainsString(JsonElement item, string propertyName, string value)
+    {
+        if (!item.TryGetProperty(propertyName, out JsonElement array))
+        {
+            return false;
+        }
+        if (array.ValueKind == JsonValueKind.Array)
+        {
+            return array.EnumerateArray().Any(element =>
+                element.ValueKind == JsonValueKind.String &&
+                string.Equals(element.GetString(), value, StringComparison.OrdinalIgnoreCase));
+        }
+        if (array.ValueKind == JsonValueKind.Object && array.TryGetProperty(value, out JsonElement objectValue))
+        {
+            return objectValue.ValueKind == JsonValueKind.True;
+        }
+        return false;
+    }
+
+    private static bool ReadNestedBoolean(JsonElement item, string objectName, string propertyName) =>
+        item.TryGetProperty(objectName, out JsonElement nested) && ReadBoolean(nested, propertyName);
+
+    private static bool ReadBoolean(JsonElement item, string propertyName) =>
+        item.TryGetProperty(propertyName, out JsonElement value) && value.ValueKind == JsonValueKind.True;
+
+    private static string? ReadString(JsonElement item, string propertyName) =>
+        item.TryGetProperty(propertyName, out JsonElement value) && value.ValueKind == JsonValueKind.String
+            ? value.GetString()
+            : null;
+
+    private static int? ReadNullableInt(JsonElement item, string propertyName) =>
+        item.TryGetProperty(propertyName, out JsonElement value) && value.TryGetInt32(out int number)
+            ? number
+            : null;
+
+    private static string ReadTextContent(JsonElement content)
+    {
+        if (content.ValueKind == JsonValueKind.String)
+        {
+            return content.GetString() ?? string.Empty;
+        }
+        if (content.ValueKind == JsonValueKind.Array)
+        {
+            return string.Join(string.Empty, content.EnumerateArray()
+                .Where(part => part.TryGetProperty("text", out _))
+                .Select(part => part.GetProperty("text").GetString()));
+        }
+        return string.Empty;
+    }
+
+    private static AiConnectionState MapConnectionState(HttpStatusCode statusCode) => statusCode switch
+    {
+        HttpStatusCode.Unauthorized => AiConnectionState.InvalidCredential,
+        HttpStatusCode.Forbidden => AiConnectionState.PermissionDenied,
+        HttpStatusCode.TooManyRequests => AiConnectionState.CoolingDown,
+        HttpStatusCode.PaymentRequired => AiConnectionState.QuotaExhausted,
+        _ => AiConnectionState.Unavailable
+    };
+
+    private static HttpClient CreateHttpClient() => new()
+    {
+        Timeout = TimeSpan.FromSeconds(30)
+    };
+}

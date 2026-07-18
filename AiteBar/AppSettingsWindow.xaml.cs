@@ -1,5 +1,9 @@
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
+using System.Reflection;
 using System.Runtime.Versioning;
+using System.Windows.Automation;
 using System.Windows.Data;
 
 namespace AiteBar;
@@ -20,59 +24,183 @@ public class ColorBrushConverter : IValueConverter
 [SupportedOSPlatform("windows6.1")]
 public partial class AppSettingsWindow : DarkWindow
 {
+    private const string SupportUrl = "https://codebdbd.github.io/";
+    private const string RepositoryUrl = "https://github.com/codebdbd/aitebar";
     private sealed record ContextRowDraft(string Name, bool IsEnabled, bool IsNameCustomized);
 
     private readonly MainWindow _mainWindow;
     private readonly AppSettings _settings;
+    private readonly string _dataDirectory;
     private readonly List<(CheckBox EnabledCheckBox, TextBox NameTextBox, Border BadgeBorder)> _contextRows = new();
+    private readonly IAiCredentialStore _aiCredentialStore = new WindowsAiCredentialStore();
+    private readonly AiProviderClient _aiProviderClient;
+    private readonly List<AiConnectionSettings> _aiConnections = [];
+    private readonly HashSet<string> _pendingAiCredentialTargets = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _removedAiCredentialTargets = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, AiConnectionCheckResult> _aiConnectionChecks = new(StringComparer.Ordinal);
+    private bool _aiSettingsCommitted;
     private bool _isLoadingSettings;
     private bool _panelSizeSelectionChanged;
     private bool _activationZoneSelectionChanged;
     private bool _activationDelaySelectionChanged;
     private readonly string _originalUiCulture;
     private string _selectedUiCulture = LocalizationService.AutoCulture;
+    private bool _isSynchronizingNavigation;
+    private bool _isWindowLoaded;
+    private AppSettingsSection _requestedSection;
 
-    public AppSettingsWindow(MainWindow mainWindow)
+    public AppSettingsWindow(MainWindow mainWindow, AppSettingsSection initialSection = AppSettingsSection.General)
     {
+        _aiProviderClient = new AiProviderClient(_aiCredentialStore);
         InitializeComponent();
         LocalizationService.EnsureAppliedCulture();
         LocalizationService.RefreshLocalizedBindings(this);
         _mainWindow = mainWindow;
         _settings = _mainWindow.GetAppSettings();
+        _dataDirectory = PathHelper.AppDataFolder;
+        _requestedSection = initialSection;
         _originalUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
 
         _isLoadingSettings = true;
-        LoadKeyList();
+        LoadLanguageList();
         LoadSettings();
+        NormalizeDiscreteSettings();
+        _panelSizeSelectionChanged = false;
+        _activationZoneSelectionChanged = false;
+        _activationDelaySelectionChanged = false;
         _isLoadingSettings = false;
         RefreshLocalizedUi();
+        Closed += (_, _) => CleanupPendingAiCredentials();
     }
 
-    private void LoadKeyList()
+    private FrameworkElement[] GetSettingsSections() =>
+    [
+        GeneralSettingsSection,
+        ContextSettingsSection,
+        HotkeySettingsSection,
+        QuickToolsSettingsSection,
+        AiProvidersSettingsSection,
+        AboutSettingsSection
+    ];
+
+    private void Window_Loaded(object sender, RoutedEventArgs e)
     {
-        foreach (var combo in GetHotkeyCombos())
+        _isWindowLoaded = true;
+        NavigateToSection(_requestedSection);
+    }
+
+    private void BtnKeepOnTop_Click(object sender, RoutedEventArgs e)
+    {
+        Topmost = BtnKeepOnTop.IsChecked == true;
+    }
+
+    private void SettingsNavigationList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_isWindowLoaded || _isSynchronizingNavigation || SettingsNavigationList.SelectedIndex < 0)
         {
-            combo.Items.Clear();
-            combo.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Common_NotAssigned"), Tag = "None" });
-            foreach (HotkeyKeyOption key in HotkeyKeyCatalog.GlobalHotkeyKeys)
-            {
-                combo.Items.Add(new ComboBoxItem { Content = key.DisplayName, Tag = key.Key });
-            }
-            combo.SelectedIndex = 0;
+            return;
+        }
+
+        ScrollToSection(SettingsNavigationList.SelectedIndex);
+    }
+
+    private void SettingsScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
+    {
+        if (!_isWindowLoaded || _isSynchronizingNavigation)
+        {
+            return;
+        }
+
+        FrameworkElement[] sections = GetSettingsSections();
+        double[] sectionTops = sections
+            .Select(GetSectionTop)
+            .ToArray();
+        int activeIndex = AppSettingsSectionNavigationHelper.GetActiveSectionIndex(
+            sectionTops,
+            SettingsScrollViewer.VerticalOffset,
+            SettingsScrollViewer.ViewportHeight,
+            SettingsScrollViewer.ExtentHeight);
+
+        SetNavigationSelection(activeIndex);
+    }
+
+    private void ScrollToSection(int sectionIndex)
+    {
+        FrameworkElement[] sections = GetSettingsSections();
+        if (sectionIndex < 0 || sectionIndex >= sections.Length)
+        {
+            return;
+        }
+
+        double targetOffset = AppSettingsSectionNavigationHelper.GetTargetOffset(
+            GetSectionTop(sections[sectionIndex]),
+            SettingsScrollViewer.ScrollableHeight);
+        SettingsScrollViewer.ScrollToVerticalOffset(targetOffset);
+    }
+
+    private static double GetSectionTop(FrameworkElement section) =>
+        LayoutInformation.GetLayoutSlot(section).Top;
+
+    private void SetNavigationSelection(int sectionIndex)
+    {
+        if (sectionIndex < 0 || SettingsNavigationList.SelectedIndex == sectionIndex)
+        {
+            return;
+        }
+
+        _isSynchronizingNavigation = true;
+        try
+        {
+            SettingsNavigationList.SelectedIndex = sectionIndex;
+        }
+        finally
+        {
+            _isSynchronizingNavigation = false;
         }
     }
 
-    private IEnumerable<ComboBox> GetHotkeyCombos()
+    private void QueueScrollToSection(int sectionIndex)
     {
-        yield return CmbShowPanelKey;
-        yield return CmbNextContextKey;
-        yield return CmbPrevContextKey;
-        yield return CmbAddButtonKey;
-        yield return CmbFileSorterKey;
-        yield return CmbQuickNoteKey;
-        yield return CmbColorPickerKey;
-        yield return CmbTimerStopwatchKey;
-        yield return CmbQRCodeGeneratorKey;
+        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
+        {
+            if (!_isWindowLoaded)
+            {
+                return;
+            }
+
+            SetNavigationSelection(sectionIndex);
+            ScrollToSection(sectionIndex);
+        });
+    }
+
+    public void NavigateToSection(AppSettingsSection section)
+    {
+        _requestedSection = section;
+        int sectionIndex = (int)section;
+        if (!_isWindowLoaded)
+        {
+            return;
+        }
+
+        if (section == AppSettingsSection.General)
+        {
+            SetNavigationSelection(sectionIndex);
+            SettingsScrollViewer.ScrollToTop();
+            return;
+        }
+
+        QueueScrollToSection(sectionIndex);
+    }
+
+    private void LoadLanguageList()
+    {
+        CmbLanguage.Items.Clear();
+        CmbLanguage.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("AppSettingsWindow_LanguageAuto"), Tag = LocalizationService.AutoCulture });
+        CmbLanguage.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Language_English"), Tag = "en" });
+        CmbLanguage.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Language_Deutsch"), Tag = "de" });
+        CmbLanguage.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Language_Ukrainian"), Tag = "uk" });
+        CmbLanguage.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("Language_Russian"), Tag = "ru" });
+        CmbLanguage.SelectedIndex = 0;
     }
 
     private (CheckBox CheckBox, UtilityButtonDefinition Definition)[] GetUtilityVisibilityBindings() =>
@@ -95,23 +223,6 @@ public partial class AppSettingsWindow : DarkWindow
         (ChkShowPresetCopilot, UtilityButtonCatalog.Copilot)
     ];
 
-    private static void SetKeyComboValue(ComboBox combo, string? key)
-    {
-        foreach (ComboBoxItem item in combo.Items)
-        {
-            if (string.Equals(item.Tag?.ToString(), key, StringComparison.Ordinal))
-            {
-                combo.SelectedItem = item;
-                break;
-            }
-        }
-
-        if (combo.SelectedIndex < 0)
-        {
-            combo.SelectedIndex = 0;
-        }
-    }
-
     private static void SetComboValue(ComboBox combo, string? value)
     {
         foreach (ComboBoxItem item in combo.Items)
@@ -129,42 +240,24 @@ public partial class AppSettingsWindow : DarkWindow
         }
     }
 
-    private static string? GetComboTag(ComboBox combo) =>
-        (combo.SelectedItem as ComboBoxItem)?.Tag?.ToString();
-
     private void ReloadLocalizedChoiceLists()
     {
         string language = _selectedUiCulture;
-        string showPanelKey = GetComboTag(CmbShowPanelKey) ?? "None";
-        string nextContextKey = GetComboTag(CmbNextContextKey) ?? "None";
-        string previousContextKey = GetComboTag(CmbPrevContextKey) ?? "None";
-        string addButtonKey = GetComboTag(CmbAddButtonKey) ?? "None";
-        string fileSorterKey = GetComboTag(CmbFileSorterKey) ?? "None";
-        string quickNoteKey = GetComboTag(CmbQuickNoteKey) ?? "None";
-        string colorPickerKey = GetComboTag(CmbColorPickerKey) ?? "None";
-        string timerStopwatchKey = GetComboTag(CmbTimerStopwatchKey) ?? "None";
-        string qrCodeGeneratorKey = GetComboTag(CmbQRCodeGeneratorKey) ?? "None";
         string edge = GetSelectedSegmentTag(SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
         bool isSecondaryMonitor = ChkSecondaryMonitor.IsChecked == true;
 
         _isLoadingSettings = true;
         try
         {
-            LoadKeyList();
-            SetKeyComboValue(CmbShowPanelKey, showPanelKey);
-            SetKeyComboValue(CmbNextContextKey, nextContextKey);
-            SetKeyComboValue(CmbPrevContextKey, previousContextKey);
-            SetKeyComboValue(CmbAddButtonKey, addButtonKey);
-            SetKeyComboValue(CmbFileSorterKey, fileSorterKey);
-            SetKeyComboValue(CmbQuickNoteKey, quickNoteKey);
-            SetKeyComboValue(CmbColorPickerKey, colorPickerKey);
-            SetKeyComboValue(CmbTimerStopwatchKey, timerStopwatchKey);
-            SetKeyComboValue(CmbQRCodeGeneratorKey, qrCodeGeneratorKey);
-
-            SelectSegmentByTag(language, SegLangAuto, SegLangEn, SegLangDe, SegLangUk, SegLangRu);
+            LoadLanguageList();
+            SetComboValue(CmbLanguage, language);
             SelectSegmentByTag(edge, SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
             ChkSecondaryMonitor.IsChecked = isSecondaryMonitor;
             UpdateMonitorCheckbox();
+            foreach (HotkeyCaptureBox captureBox in GetHotkeyCaptureBoxes())
+            {
+                captureBox.RefreshDisplay();
+            }
         }
         finally
         {
@@ -174,11 +267,482 @@ public partial class AppSettingsWindow : DarkWindow
 
     private void RefreshLocalizedUi()
     {
+        int selectedSectionIndex = Math.Max(0, SettingsNavigationList.SelectedIndex);
         List<ContextRowDraft> drafts = CaptureContextRowDrafts();
         ReloadLocalizedChoiceLists();
         BuildContextRows(_mainWindow.GetAllContextsSnapshot());
         ApplyContextRowDrafts(drafts);
         RefreshContextRowTooltips();
+        RefreshAutomationNames();
+        SortQuickToolRows();
+        BuildAiConnectionRows();
+        UpdateAboutVersionText();
+
+        if (_isWindowLoaded)
+        {
+            QueueScrollToSection(selectedSectionIndex);
+        }
+    }
+
+    private (Grid Row, string TitleResourceKey)[] GetQuickToolRows() =>
+    [
+        (QuickToolRowQuickNote, "QuickTool_QuickNote_Title"),
+        (QuickToolRowQRCodeGenerator, "QuickTool_QRCodeGenerator_Title"),
+        (QuickToolRowDownloads, "QuickTool_Downloads_Title"),
+        (QuickToolRowVideo, "QuickTool_Video_Title"),
+        (QuickToolRowCopilot, "QuickTool_Copilot_Title"),
+        (QuickToolRowCalculator, "QuickTool_Calculator_Title"),
+        (QuickToolRowIconConverter, "QuickTool_IconConverter_Title"),
+        (QuickToolRowClipboardManager, "QuickTool_ClipboardManager_Title"),
+        (QuickToolRowColorPicker, "QuickTool_ColorPicker_Title"),
+        (QuickToolRowSearch, "QuickTool_Search_Title"),
+        (QuickToolRowShowDesktop, "QuickTool_ShowDesktop_Title"),
+        (QuickToolRowAppsFolder, "QuickTool_AppsFolder_Title"),
+        (QuickToolRowExplorer, "QuickTool_Explorer_Title"),
+        (QuickToolRowScreenshot, "QuickTool_Screenshot_Title"),
+        (QuickToolRowFileSorter, "QuickTool_FileSorter_Title"),
+        (QuickToolRowTimerStopwatch, "QuickTool_TimerStopwatch_Title")
+    ];
+
+    private void SortQuickToolRows()
+    {
+        (Grid Row, string TitleResourceKey)[] rows = GetQuickToolRows()
+            .OrderBy(
+                item => LocalizationService.Get(item.TitleResourceKey),
+                StringComparer.Create(LocalizationService.ResolvedCulture, ignoreCase: true))
+            .ToArray();
+
+        QuickToolsList.Children.Clear();
+        for (int index = 0; index < rows.Length; index++)
+        {
+            rows[index].Row.Margin = index switch
+            {
+                0 => new Thickness(0, 0, 0, 12),
+                _ when index == rows.Length - 1 => new Thickness(0, 12, 0, 0),
+                _ => new Thickness(0, 12, 0, 12)
+            };
+            QuickToolsList.Children.Add(rows[index].Row);
+
+            if (index < rows.Length - 1)
+            {
+                QuickToolsList.Children.Add(new Border
+                {
+                    Style = (Style)FindResource("ModernDividerStyle")
+                });
+            }
+        }
+    }
+
+    private void UpdateAboutVersionText()
+    {
+        Version? version = Assembly.GetExecutingAssembly().GetName().Version;
+        TxtAboutVersion.Text = LocalizationService.Format("About_VersionFormat", version?.Major, version?.Minor, version?.Build);
+    }
+
+    private void BuildAiConnectionRows()
+    {
+        AiConnectionsList.Children.Clear();
+        TxtAiConnectionsEmpty.Visibility = _aiConnections.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        AiConnectionSettings[] ordered = _aiConnections
+            .OrderBy(connection => GetAiProviderRank(connection.ProviderId))
+            .ThenBy(connection => connection.Priority)
+            .ThenBy(connection => connection.DisplayName, StringComparer.CurrentCultureIgnoreCase)
+            .ToArray();
+
+        for (int index = 0; index < ordered.Length; index++)
+        {
+            AiConnectionSettings connection = ordered[index];
+            AiProviderCatalog.TryGet(connection.ProviderId, out AiProviderDefinition provider);
+            var row = new Grid { Margin = new Thickness(0, 12, 0, 12) };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var details = new StackPanel { Margin = new Thickness(0, 0, 16, 0), VerticalAlignment = VerticalAlignment.Center };
+            details.Children.Add(new TextBlock
+            {
+                Text = connection.DisplayName,
+                Style = (Style)FindResource("ModernSettingTitleStyle"),
+                TextTrimming = TextTrimming.CharacterEllipsis
+            });
+            details.Children.Add(new TextBlock
+            {
+                Text = LocalizationService.Format("AiSettings_ConnectionDetails", provider.DisplayName, connection.QuotaScopeId),
+                Style = (Style)FindResource("ModernSettingDescriptionStyle"),
+                TextWrapping = TextWrapping.Wrap
+            });
+            details.Children.Add(new TextBlock
+            {
+                Text = GetAiConnectionStatusText(connection.Id),
+                Foreground = (System.Windows.Media.Brush)FindResource("AccentColor"),
+                FontSize = 11,
+                Margin = new Thickness(0, 3, 0, 0),
+                TextWrapping = TextWrapping.Wrap
+            });
+            row.Children.Add(details);
+
+            var actions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
+            AiConnectionSettings[] providerConnections = ordered
+                .Where(item => string.Equals(item.ProviderId, connection.ProviderId, StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+            int providerIndex = Array.FindIndex(providerConnections, item => item.Id == connection.Id);
+            actions.Children.Add(CreateAiRowButton("↑", "AiSettings_MoveUp", connection.Id, BtnAiMoveUp_Click, 32, providerIndex > 0));
+            actions.Children.Add(CreateAiRowButton("↓", "AiSettings_MoveDown", connection.Id, BtnAiMoveDown_Click, 32, providerIndex < providerConnections.Length - 1));
+            actions.Children.Add(CreateAiRowButton(LocalizationService.Get("AiSettings_Test"), "AiSettings_Test", connection.Id, BtnAiTest_Click, 90));
+            actions.Children.Add(CreateAiRowButton(LocalizationService.Get("Common_Delete"), "Common_Delete", connection.Id, BtnAiRemove_Click, 90));
+            Grid.SetColumn(actions, 1);
+            row.Children.Add(actions);
+            AiConnectionsList.Children.Add(row);
+
+            if (index < ordered.Length - 1)
+            {
+                AiConnectionsList.Children.Add(new Border { Style = (Style)FindResource("ModernDividerStyle") });
+            }
+        }
+    }
+
+    private Button CreateAiRowButton(
+        string content,
+        string tooltipResourceKey,
+        string connectionId,
+        RoutedEventHandler handler,
+        double width,
+        bool isEnabled = true)
+    {
+        var button = new Button
+        {
+            Content = content,
+            ToolTip = LocalizationService.Get(tooltipResourceKey),
+            Tag = connectionId,
+            Style = (Style)FindResource("CommandButtonStyle"),
+            Width = width,
+            Height = 32,
+            IsEnabled = isEnabled,
+            Margin = new Thickness(6, 0, 0, 0)
+        };
+        button.Click += handler;
+        return button;
+    }
+
+    private string GetAiConnectionStatusText(string connectionId)
+    {
+        if (!_aiConnectionChecks.TryGetValue(connectionId, out AiConnectionCheckResult? result))
+        {
+            return LocalizationService.Get("AiSettings_StatusNotChecked");
+        }
+        return result.IsSuccess
+            ? LocalizationService.Format("AiSettings_StatusAvailable", result.ModelCount)
+            : LocalizationService.Format("AiSettings_StatusError", result.ErrorMessage ?? string.Empty);
+    }
+
+    private static int GetAiProviderRank(string providerId)
+    {
+        for (int index = 0; index < AiProviderCatalog.DefaultProviderOrder.Count; index++)
+        {
+            if (string.Equals(AiProviderCatalog.DefaultProviderOrder[index], providerId, StringComparison.OrdinalIgnoreCase))
+            {
+                return index;
+            }
+        }
+        return int.MaxValue;
+    }
+
+    private void BtnAiAddConnection_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new AiConnectionDialog { Owner = this };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        string id = Guid.NewGuid().ToString("N");
+        string target = AiProviderCatalog.CreateCredentialTarget(id);
+        try
+        {
+            _aiCredentialStore.Write(target, dialog.ApiKey);
+            int priority = _aiConnections.Count(connection =>
+                string.Equals(connection.ProviderId, dialog.ProviderId, StringComparison.OrdinalIgnoreCase));
+            _aiConnections.Add(new AiConnectionSettings
+            {
+                Id = id,
+                ProviderId = dialog.ProviderId,
+                DisplayName = dialog.ConnectionName,
+                CredentialTarget = target,
+                QuotaScopeId = dialog.QuotaScopeId,
+                Priority = priority,
+                IsEnabled = true
+            });
+            _pendingAiCredentialTargets.Add(target);
+            BuildAiConnectionRows();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            new DarkDialog(LocalizationService.Get("AiSettings_CredentialSaveFailed")) { Owner = this }.ShowDialog();
+        }
+    }
+
+    private async void BtnAiTest_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.Tag is not string connectionId)
+        {
+            return;
+        }
+        AiConnectionSettings? connection = _aiConnections.FirstOrDefault(item => item.Id == connectionId);
+        if (connection == null)
+        {
+            return;
+        }
+
+        button.IsEnabled = false;
+        button.Content = LocalizationService.Get("AiSettings_Testing");
+        try
+        {
+            _aiConnectionChecks[connection.Id] = await _aiProviderClient.CheckConnectionAsync(connection, CancellationToken.None);
+        }
+        finally
+        {
+            BuildAiConnectionRows();
+        }
+    }
+
+    private void BtnAiRemove_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.Tag is not string connectionId)
+        {
+            return;
+        }
+        AiConnectionSettings? connection = _aiConnections.FirstOrDefault(item => item.Id == connectionId);
+        if (connection == null)
+        {
+            return;
+        }
+
+        _aiConnections.Remove(connection);
+        _aiConnectionChecks.Remove(connection.Id);
+        if (_pendingAiCredentialTargets.Remove(connection.CredentialTarget))
+        {
+            TryDeleteAiCredential(connection.CredentialTarget);
+        }
+        else
+        {
+            _removedAiCredentialTargets.Add(connection.CredentialTarget);
+        }
+        NormalizeAiPriorities(connection.ProviderId);
+        BuildAiConnectionRows();
+    }
+
+    private void BtnAiMoveUp_Click(object sender, RoutedEventArgs e) => MoveAiConnection(sender, -1);
+    private void BtnAiMoveDown_Click(object sender, RoutedEventArgs e) => MoveAiConnection(sender, 1);
+
+    private void MoveAiConnection(object sender, int offset)
+    {
+        if (sender is not Button button || button.Tag is not string connectionId)
+        {
+            return;
+        }
+        AiConnectionSettings? current = _aiConnections.FirstOrDefault(connection => connection.Id == connectionId);
+        if (current == null)
+        {
+            return;
+        }
+        AiConnectionSettings[] providerConnections = _aiConnections
+            .Where(connection => string.Equals(connection.ProviderId, current.ProviderId, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(connection => connection.Priority)
+            .ToArray();
+        int currentIndex = Array.FindIndex(providerConnections, connection => connection.Id == connectionId);
+        int targetIndex = currentIndex + offset;
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= providerConnections.Length)
+        {
+            return;
+        }
+        (providerConnections[currentIndex].Priority, providerConnections[targetIndex].Priority) =
+            (providerConnections[targetIndex].Priority, providerConnections[currentIndex].Priority);
+        BuildAiConnectionRows();
+    }
+
+    private void NormalizeAiPriorities(string providerId)
+    {
+        AiConnectionSettings[] connections = _aiConnections
+            .Where(connection => string.Equals(connection.ProviderId, providerId, StringComparison.OrdinalIgnoreCase))
+            .OrderBy(connection => connection.Priority)
+            .ToArray();
+        for (int index = 0; index < connections.Length; index++)
+        {
+            connections[index].Priority = index;
+        }
+    }
+
+    private void CleanupPendingAiCredentials()
+    {
+        if (_aiSettingsCommitted)
+        {
+            return;
+        }
+        foreach (string target in _pendingAiCredentialTargets.ToArray())
+        {
+            TryDeleteAiCredential(target);
+        }
+        _pendingAiCredentialTargets.Clear();
+    }
+
+    private void CommitAiCredentialChanges()
+    {
+        foreach (string target in _removedAiCredentialTargets)
+        {
+            TryDeleteAiCredential(target);
+        }
+        _removedAiCredentialTargets.Clear();
+        _pendingAiCredentialTargets.Clear();
+        _aiSettingsCommitted = true;
+    }
+
+    private void TryDeleteAiCredential(string target)
+    {
+        try
+        {
+            _aiCredentialStore.Delete(target);
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+    }
+
+    private static void OpenAboutTarget(string target)
+    {
+        Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
+    }
+
+    private async void BtnAboutCheckUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        await UpdateCheckUi.CheckForUpdatesAsync(this);
+    }
+
+    private void BtnAboutWebsite_Click(object sender, RoutedEventArgs e)
+    {
+        OpenAboutTarget(SupportUrl);
+    }
+
+    private void BtnAboutRepository_Click(object sender, RoutedEventArgs e)
+    {
+        OpenAboutTarget(RepositoryUrl);
+    }
+
+    private void BtnAboutLicenses_Click(object sender, RoutedEventArgs e)
+    {
+        string noticesPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "THIRD_PARTY_NOTICES.txt");
+        if (!File.Exists(noticesPath))
+        {
+            noticesPath = Path.Combine(AppContext.BaseDirectory, "THIRD_PARTY_NOTICES.txt");
+        }
+
+        if (!File.Exists(noticesPath))
+        {
+            noticesPath = Path.Combine(Directory.GetCurrentDirectory(), "THIRD_PARTY_NOTICES.txt");
+        }
+
+        if (!File.Exists(noticesPath))
+        {
+            new DarkDialog(LocalizationService.Get("About_NoticesMissing")) { Owner = this }.ShowDialog();
+            return;
+        }
+
+        OpenAboutTarget(noticesPath);
+    }
+
+    private void BtnAboutOpenDataFolder_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Directory.CreateDirectory(_dataDirectory);
+            OpenAboutTarget(_dataDirectory);
+        }
+        catch (Exception ex)
+        {
+            new DarkDialog(LocalizationService.Format("About_OpenDataFolderFailed", ex.Message)) { Owner = this }.ShowDialog();
+        }
+    }
+
+    private void BtnAboutOpenProgramFolder_Click(object sender, RoutedEventArgs e)
+    {
+        string? exeDirectory = Path.GetDirectoryName(Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName);
+        if (string.IsNullOrWhiteSpace(exeDirectory) || !Directory.Exists(exeDirectory))
+        {
+            new DarkDialog(LocalizationService.Get("About_ProgramFolderUnknown")) { Owner = this }.ShowDialog();
+            return;
+        }
+
+        OpenAboutTarget(exeDirectory);
+    }
+
+    private void RefreshAutomationNames()
+    {
+        AutomationProperties.SetName(CmbLanguage, LocalizationService.Get("AppSettingsWindow_Language"));
+        AutomationProperties.SetName(ChkShowTaskbarPositionIndicator, LocalizationService.Get("AppSettingsWindow_ShowTaskbarPositionIndicator"));
+        AutomationProperties.SetName(ChkSecondaryMonitor, LocalizationService.Get("AppSettingsWindow_SecondaryMonitor"));
+        AutomationProperties.SetName(ChkCheckForUpdatesEnabled, LocalizationService.Get("AppSettingsWindow_CheckForUpdates"));
+
+        (CheckBox CheckBox, string ResourceKey)[] utilitySwitches =
+        [
+            (ChkShowPresetSearch, "Tool_Search"),
+            (ChkShowPresetScreenshot, "Tool_Screenshot"),
+            (ChkShowPresetVideo, "Tool_Video"),
+            (ChkShowPresetCalc, "Tool_Calculator"),
+            (ChkShowPresetExplorer, "Tool_Explorer"),
+            (ChkShowPresetDownloads, "Tool_Downloads"),
+            (ChkShowPresetFileSorter, "Tool_FileSorter"),
+            (ChkShowPresetIconConverter, "Tool_IconConverter"),
+            (ChkShowPresetTimerStopwatch, "Tool_TimerStopwatch"),
+            (ChkShowPresetColorPicker, "Tool_ColorPicker"),
+            (ChkShowPresetQuickNote, "Tool_QuickNote"),
+            (ChkShowPresetQRCodeGenerator, "Tool_QRCodeGenerator"),
+            (ChkShowPresetClipboardManager, "Tool_ClipboardManager"),
+            (ChkShowPresetShowDesktop, "Tool_ShowDesktop"),
+            (ChkShowPresetAppsFolder, "Tool_AppsFolder"),
+            (ChkShowPresetCopilot, "Tool_Copilot"),
+            (ChkClipboardManagerPersistHistory, "ClipboardManager_PersistHistorySetting")
+        ];
+        foreach ((CheckBox checkBox, string resourceKey) in utilitySwitches)
+        {
+            AutomationProperties.SetName(checkBox, LocalizationService.Get(resourceKey));
+        }
+
+        (HotkeyCaptureBox CaptureBox, string ResourceKey)[] hotkeyFields =
+        [
+            (HotkeyShowPanel, "AppSettingsWindow_ShowPanel"),
+            (HotkeyNextContext, "AppSettingsWindow_NextPanel"),
+            (HotkeyPreviousContext, "AppSettingsWindow_PreviousPanel"),
+            (HotkeyAddButton, "AppSettingsWindow_AddButton"),
+            (HotkeyFileSorter, "Tool_FileSorter"),
+            (HotkeyIconConverter, "Tool_IconConverter"),
+            (HotkeyQuickNote, "Tool_QuickNote"),
+            (HotkeyColorPicker, "Tool_ColorPicker"),
+            (HotkeyTimerStopwatch, "Tool_TimerStopwatch"),
+            (HotkeyQRCodeGenerator, "Tool_QRCodeGenerator"),
+            (HotkeyClipboardManager, "Tool_ClipboardManager")
+        ];
+        foreach ((HotkeyCaptureBox captureBox, string resourceKey) in hotkeyFields)
+        {
+            AutomationProperties.SetName(captureBox, LocalizationService.Get(resourceKey));
+        }
+    }
+
+    private static string? GetComboTag(ComboBox combo) =>
+        (combo.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+
+    private IEnumerable<HotkeyCaptureBox> GetHotkeyCaptureBoxes()
+    {
+        yield return HotkeyShowPanel;
+        yield return HotkeyNextContext;
+        yield return HotkeyPreviousContext;
+        yield return HotkeyAddButton;
+        yield return HotkeyFileSorter;
+        yield return HotkeyIconConverter;
+        yield return HotkeyQuickNote;
+        yield return HotkeyColorPicker;
+        yield return HotkeyTimerStopwatch;
+        yield return HotkeyQRCodeGenerator;
+        yield return HotkeyClipboardManager;
     }
 
     private List<ContextRowDraft> CaptureContextRowDrafts()
@@ -219,6 +783,9 @@ public partial class AppSettingsWindow : DarkWindow
             _contextRows[i].EnabledCheckBox.ToolTip = i == 0
                 ? LocalizationService.Get("AppSettingsWindow_PrimaryPanelAlwaysEnabled")
                 : LocalizationService.Get("AppSettingsWindow_PanelEnabled");
+            AutomationProperties.SetName(
+                _contextRows[i].EnabledCheckBox,
+                $"{_contextRows[i].NameTextBox.Text}: {LocalizationService.Get("AppSettingsWindow_PanelEnabled")}");
         }
     }
 
@@ -236,15 +803,6 @@ public partial class AppSettingsWindow : DarkWindow
         return d.Tag!.ToString()!;
     }
 
-    private static string? GetSelectedSegmentTag(System.Windows.Controls.RadioButton a, System.Windows.Controls.RadioButton b, System.Windows.Controls.RadioButton c, System.Windows.Controls.RadioButton d, System.Windows.Controls.RadioButton e)
-    {
-        if (a.IsChecked == true) return a.Tag!.ToString()!;
-        if (b.IsChecked == true) return b.Tag!.ToString()!;
-        if (c.IsChecked == true) return c.Tag!.ToString()!;
-        if (d.IsChecked == true) return d.Tag!.ToString()!;
-        return e.Tag!.ToString()!;
-    }
-
     private static void SelectSegmentByTag(string tag, System.Windows.Controls.RadioButton a, System.Windows.Controls.RadioButton b, System.Windows.Controls.RadioButton c, System.Windows.Controls.RadioButton d)
     {
         if (string.Equals(a.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) a.IsChecked = true;
@@ -253,41 +811,12 @@ public partial class AppSettingsWindow : DarkWindow
         else d.IsChecked = true;
     }
 
-    private static void SelectSegmentByTag(string tag, System.Windows.Controls.RadioButton a, System.Windows.Controls.RadioButton b, System.Windows.Controls.RadioButton c, System.Windows.Controls.RadioButton d, System.Windows.Controls.RadioButton e)
-    {
-        if (string.Equals(a.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) a.IsChecked = true;
-        else if (string.Equals(b.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) b.IsChecked = true;
-        else if (string.Equals(c.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) c.IsChecked = true;
-        else if (string.Equals(d.Tag?.ToString(), tag, StringComparison.OrdinalIgnoreCase)) d.IsChecked = true;
-        else e.IsChecked = true;
-    }
-
     private void UpdateMonitorCheckbox()
     {
         var screens = System.Windows.Forms.Screen.AllScreens;
         bool hasSecondary = screens.Length > 1;
         ChkSecondaryMonitor.IsEnabled = hasSecondary;
         if (!hasSecondary) ChkSecondaryMonitor.IsChecked = false;
-    }
-
-    private static void LoadHotkeyBinding(HotkeyBinding binding, ToggleButton chkCtrl, ToggleButton chkAlt, ToggleButton chkShift, ToggleButton chkWin, ComboBox cmbKey)
-    {
-        chkCtrl.IsChecked = binding.Ctrl;
-        chkAlt.IsChecked = binding.Alt;
-        chkShift.IsChecked = binding.Shift;
-        chkWin.IsChecked = binding.Win;
-        SetKeyComboValue(cmbKey, binding.Key);
-    }
-
-    private static HotkeyBinding BuildHotkeyBinding(ToggleButton chkCtrl, ToggleButton chkAlt, ToggleButton chkShift, ToggleButton chkWin, ComboBox cmbKey)
-    {
-        var binding = new HotkeyBinding();
-        binding.Ctrl = chkCtrl.IsChecked ?? false;
-        binding.Alt = chkAlt.IsChecked ?? false;
-        binding.Shift = chkShift.IsChecked ?? false;
-        binding.Win = chkWin.IsChecked ?? false;
-        binding.Key = (cmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? "None";
-        return binding;
     }
 
     private static string? GetHotkeyToken(HotkeyBinding binding)
@@ -316,10 +845,12 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding previousBinding,
         HotkeyBinding addButtonBinding,
         HotkeyBinding fileSorterBinding,
+        HotkeyBinding iconConverterBinding,
         HotkeyBinding quickNoteBinding,
         HotkeyBinding colorPickerBinding,
         HotkeyBinding timerStopwatchBinding,
-        HotkeyBinding qrCodeGeneratorBinding)
+        HotkeyBinding qrCodeGeneratorBinding,
+        HotkeyBinding clipboardManagerBinding)
     {
         var registrations = new (string Name, HotkeyBinding Binding)[]
         {
@@ -328,10 +859,12 @@ public partial class AppSettingsWindow : DarkWindow
             (LocalizationService.Get("AppSettingsWindow_PreviousPanel"), previousBinding),
             (LocalizationService.Get("AppSettingsWindow_AddButton"), addButtonBinding),
             (LocalizationService.Get("Tool_FileSorter"), fileSorterBinding),
+            (LocalizationService.Get("Tool_IconConverter"), iconConverterBinding),
             (LocalizationService.Get("Tool_QuickNote"), quickNoteBinding),
             (LocalizationService.Get("Tool_ColorPicker"), colorPickerBinding),
             (LocalizationService.Get("Tool_TimerStopwatch"), timerStopwatchBinding),
-            (LocalizationService.Get("Tool_QRCodeGenerator"), qrCodeGeneratorBinding)
+            (LocalizationService.Get("Tool_QRCodeGenerator"), qrCodeGeneratorBinding),
+            (LocalizationService.Get("Tool_ClipboardManager"), clipboardManagerBinding)
         };
 
         var missingModifiers = registrations
@@ -357,17 +890,32 @@ public partial class AppSettingsWindow : DarkWindow
             .Select(group => string.Join(", ", group.Select(item => item.Name)))
             .ToList();
 
-        if (duplicates.Count == 0)
+        if (duplicates.Count > 0)
         {
-            return true;
+            new DarkDialog(
+                LocalizationService.Format("HotkeyConflictMessage", string.Join("\n", duplicates)))
+            {
+                Owner = this
+            }.ShowDialog();
+            return false;
         }
 
-        new DarkDialog(
-            LocalizationService.Format("HotkeyConflictMessage", string.Join("\n", duplicates)))
+        var reserved = registrations
+            .Where(item => HasAssignedKey(item.Binding) && HotkeyValidationHelper.IsReservedHotkey(item.Binding))
+            .Select(item => item.Name)
+            .ToList();
+
+        if (reserved.Count > 0)
         {
-            Owner = this
-        }.ShowDialog();
-        return false;
+            new DarkDialog(
+                LocalizationService.Format("HotkeyGlobalReservedMessage", string.Join("\n", reserved)))
+            {
+                Owner = this
+            }.ShowDialog();
+            return false;
+        }
+
+        return true;
     }
 
     private void LoadSettings()
@@ -381,41 +929,71 @@ public partial class AppSettingsWindow : DarkWindow
         ChkShowTaskbarPositionIndicator.IsChecked = _settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
         ChkCheckForUpdatesEnabled.IsChecked = _settings.CheckForUpdatesEnabled;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
-        SelectSegmentByTag(_selectedUiCulture, SegLangAuto, SegLangEn, SegLangDe, SegLangUk, SegLangRu);
+        SetComboValue(CmbLanguage, _selectedUiCulture);
 
-        LoadHotkeyBinding(
-            new HotkeyBinding
-            {
-                Ctrl = _settings.GlobalHotkeyCtrl,
-                Alt = _settings.GlobalHotkeyAlt,
-                Shift = _settings.GlobalHotkeyShift,
-                Win = _settings.GlobalHotkeyWin,
-                Key = _settings.GlobalHotkeyKey
-            },
-            ChkShowPanelCtrl,
-            ChkShowPanelAlt,
-            ChkShowPanelShift,
-            ChkShowPanelWin,
-            CmbShowPanelKey);
-
-        LoadHotkeyBinding(_settings.NextContextHotkey, ChkNextContextCtrl, ChkNextContextAlt, ChkNextContextShift, ChkNextContextWin, CmbNextContextKey);
-        LoadHotkeyBinding(_settings.PreviousContextHotkey, ChkPrevContextCtrl, ChkPrevContextAlt, ChkPrevContextShift, ChkPrevContextWin, CmbPrevContextKey);
-        LoadHotkeyBinding(_settings.AddButtonHotkey, ChkAddButtonCtrl, ChkAddButtonAlt, ChkAddButtonShift, ChkAddButtonWin, CmbAddButtonKey);
-        LoadHotkeyBinding(_settings.FileSorterHotkey, ChkFileSorterCtrl, ChkFileSorterAlt, ChkFileSorterShift, ChkFileSorterWin, CmbFileSorterKey);
-        LoadHotkeyBinding(_settings.QuickNoteHotkey, ChkQuickNoteCtrl, ChkQuickNoteAlt, ChkQuickNoteShift, ChkQuickNoteWin, CmbQuickNoteKey);
-        LoadHotkeyBinding(_settings.ColorPickerHotkey, ChkColorPickerCtrl, ChkColorPickerAlt, ChkColorPickerShift, ChkColorPickerWin, CmbColorPickerKey);
-        LoadHotkeyBinding(_settings.TimerStopwatchHotkey, ChkTimerStopwatchCtrl, ChkTimerStopwatchAlt, ChkTimerStopwatchShift, ChkTimerStopwatchWin, CmbTimerStopwatchKey);
-        LoadHotkeyBinding(_settings.QRCodeGeneratorHotkey, ChkQRCodeGeneratorCtrl, ChkQRCodeGeneratorAlt, ChkQRCodeGeneratorShift, ChkQRCodeGeneratorWin, CmbQRCodeGeneratorKey);
+        HotkeyShowPanel.SetBinding(new HotkeyBinding
+        {
+            Ctrl = _settings.GlobalHotkeyCtrl,
+            Alt = _settings.GlobalHotkeyAlt,
+            Shift = _settings.GlobalHotkeyShift,
+            Win = _settings.GlobalHotkeyWin,
+            Key = _settings.GlobalHotkeyKey
+        });
+        HotkeyNextContext.SetBinding(_settings.NextContextHotkey);
+        HotkeyPreviousContext.SetBinding(_settings.PreviousContextHotkey);
+        HotkeyAddButton.SetBinding(_settings.AddButtonHotkey);
+        HotkeyFileSorter.SetBinding(_settings.FileSorterHotkey);
+        HotkeyIconConverter.SetBinding(_settings.IconConverterHotkey);
+        HotkeyQuickNote.SetBinding(_settings.QuickNoteHotkey);
+        HotkeyColorPicker.SetBinding(_settings.ColorPickerHotkey);
+        HotkeyTimerStopwatch.SetBinding(_settings.TimerStopwatchHotkey);
+        HotkeyQRCodeGenerator.SetBinding(_settings.QRCodeGeneratorHotkey);
+        HotkeyClipboardManager.SetBinding(_settings.ClipboardManagerHotkey);
 
         SelectSegmentByTag(_settings.Edge.ToString(), SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
         ChkSecondaryMonitor.IsChecked = _settings.MonitorIndex > 0;
         UpdateMonitorCheckbox();
 
-        SelectSegment(SegPanelSize50, SegPanelSize70, SegPanelSize90, SegPanelSize100, (int)_settings.PanelSizePercent);
-        SelectSegment(SegZone10, SegZone30, SegZone50, SegZone100, (int)_settings.ActivationZoneSizePercent);
-        SelectSegment(SegDelay100, SegDelay200, SegDelay300, SegDelay500, (int)_settings.ActivationDelayMs);
+        SliderPanelSize.Value = AppSettingsDiscreteChoiceHelper.GetNearestIndex(
+            AppSettingsDiscreteChoiceHelper.PanelSizeValues,
+            _settings.PanelSizePercent);
+        SliderActivationZone.Value = AppSettingsDiscreteChoiceHelper.GetNearestIndex(
+            AppSettingsDiscreteChoiceHelper.ActivationZoneValues,
+            _settings.ActivationZoneSizePercent);
+        SliderActivationDelay.Value = AppSettingsDiscreteChoiceHelper.GetNearestIndex(
+            AppSettingsDiscreteChoiceHelper.ActivationDelayValues,
+            _settings.ActivationDelayMs);
+        UpdateSliderValueLabels();
 
         BuildContextRows(_mainWindow.GetAllContextsSnapshot());
+        _aiConnections.Clear();
+        _aiConnections.AddRange((_settings.Ai?.Connections ?? []).Select(CloneAiConnection));
+        BuildAiConnectionRows();
+    }
+
+    private static AiConnectionSettings CloneAiConnection(AiConnectionSettings connection) => new()
+    {
+        Id = connection.Id,
+        ProviderId = connection.ProviderId,
+        DisplayName = connection.DisplayName,
+        CredentialTarget = connection.CredentialTarget,
+        QuotaScopeId = connection.QuotaScopeId,
+        Priority = connection.Priority,
+        IsEnabled = connection.IsEnabled,
+        PreferredModelId = connection.PreferredModelId
+    };
+
+    private void NormalizeDiscreteSettings()
+    {
+        _settings.PanelSizePercent = AppSettingsDiscreteChoiceHelper.GetValue(
+            AppSettingsDiscreteChoiceHelper.PanelSizeValues,
+            SliderPanelSize.Value);
+        _settings.ActivationZoneSizePercent = AppSettingsDiscreteChoiceHelper.GetValue(
+            AppSettingsDiscreteChoiceHelper.ActivationZoneValues,
+            SliderActivationZone.Value);
+        _settings.ActivationDelayMs = AppSettingsDiscreteChoiceHelper.GetValue(
+            AppSettingsDiscreteChoiceHelper.ActivationDelayValues,
+            SliderActivationDelay.Value);
     }
 
     private void BuildContextRows(IReadOnlyList<PanelContext> contexts)
@@ -423,14 +1001,13 @@ public partial class AppSettingsWindow : DarkWindow
         PanelContextsList.Children.Clear();
         _contextRows.Clear();
         double formControlHeight = (double)FindResource("FormControlHeight");
-
         for (int i = 0; i < contexts.Count; i++)
         {
             PanelContext context = contexts[i];
-            var row = new Grid { Height = formControlHeight, Margin = new Thickness(0, 0, 0, 5) };
+            var row = new Grid { Height = formControlHeight + 20 };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(34) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
 
             var badge = new Border
             {
@@ -453,7 +1030,13 @@ public partial class AppSettingsWindow : DarkWindow
             Grid.SetColumn(badge, 0);
             row.Children.Add(badge);
 
-            var nameTextBox = new TextBox { Text = context.Name };
+            var nameTextBox = new TextBox
+            {
+                Text = context.Name,
+                Height = formControlHeight,
+                Margin = new Thickness(0, 0, 16, 0),
+                VerticalContentAlignment = VerticalAlignment.Center
+            };
             Grid.SetColumn(nameTextBox, 1);
             row.Children.Add(nameTextBox);
 
@@ -461,15 +1044,26 @@ public partial class AppSettingsWindow : DarkWindow
             {
                 IsChecked = context.IsEnabled,
                 IsEnabled = i != 0,
-                Style = (Style)FindResource("CenteredCheckBoxStyle"),
+                Style = (Style)FindResource("ModernSwitchStyle"),
                 ToolTip = i == 0
                     ? LocalizationService.Get("AppSettingsWindow_PrimaryPanelAlwaysEnabled")
                     : LocalizationService.Get("AppSettingsWindow_PanelEnabled")
             };
+            AutomationProperties.SetName(
+                enabledCheckBox,
+                $"{context.Name}: {LocalizationService.Get("AppSettingsWindow_PanelEnabled")}");
             Grid.SetColumn(enabledCheckBox, 2);
             row.Children.Add(enabledCheckBox);
 
             PanelContextsList.Children.Add(row);
+            if (i < contexts.Count - 1)
+            {
+                PanelContextsList.Children.Add(new Border
+                {
+                    Height = 1,
+                    Background = (System.Windows.Media.Brush)FindResource("ModernRowDivider")
+                });
+            }
             _contextRows.Add((enabledCheckBox, nameTextBox, badge));
         }
     }
@@ -480,50 +1074,90 @@ public partial class AppSettingsWindow : DarkWindow
         return (System.Windows.Media.Brush)(converter.ConvertFromString(colorString) ?? System.Windows.Media.Brushes.DimGray);
     }
 
-    private static void SelectSegment(System.Windows.Controls.RadioButton a, System.Windows.Controls.RadioButton b, System.Windows.Controls.RadioButton c, System.Windows.Controls.RadioButton d, int value)
+    private void SliderPanelSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        int valA = int.Parse(a.Tag!.ToString()!);
-        int valB = int.Parse(b.Tag!.ToString()!);
-        int valC = int.Parse(c.Tag!.ToString()!);
-        int valD = int.Parse(d.Tag!.ToString()!);
+        if (!_isLoadingSettings)
+        {
+            _panelSizeSelectionChanged = true;
+        }
 
-        int distA = Math.Abs(value - valA);
-        int distB = Math.Abs(value - valB);
-        int distC = Math.Abs(value - valC);
-        int distD = Math.Abs(value - valD);
-
-        int min = Math.Min(distA, Math.Min(distB, Math.Min(distC, distD)));
-        if (min == distA) a.IsChecked = true;
-        else if (min == distB) b.IsChecked = true;
-        else if (min == distC) c.IsChecked = true;
-        else d.IsChecked = true;
+        UpdateSliderValueLabels();
     }
 
-    private static int GetSegmentValue(System.Windows.Controls.RadioButton a, System.Windows.Controls.RadioButton b, System.Windows.Controls.RadioButton c, System.Windows.Controls.RadioButton d)
+    private void SliderActivationZone_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (a.IsChecked == true) return int.Parse(a.Tag!.ToString()!);
-        if (b.IsChecked == true) return int.Parse(b.Tag!.ToString()!);
-        if (c.IsChecked == true) return int.Parse(c.Tag!.ToString()!);
-        return int.Parse(d.Tag!.ToString()!);
+        if (!_isLoadingSettings)
+        {
+            _activationZoneSelectionChanged = true;
+        }
+
+        UpdateSliderValueLabels();
     }
 
-    private void SegPanelSize_Click(object sender, RoutedEventArgs e) => _panelSizeSelectionChanged = true;
-    private void SegZone_Click(object sender, RoutedEventArgs e) => _activationZoneSelectionChanged = true;
-    private void SegDelay_Click(object sender, RoutedEventArgs e) => _activationDelaySelectionChanged = true;
+    private void SliderActivationDelay_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+        if (!_isLoadingSettings)
+        {
+            _activationDelaySelectionChanged = true;
+        }
 
-    private async void SegLanguage_Click(object sender, RoutedEventArgs e)
+        UpdateSliderValueLabels();
+    }
+
+    private void UpdateSliderValueLabels()
+    {
+        if (SliderPanelSize == null || SliderActivationZone == null || SliderActivationDelay == null ||
+            LblPanelSize50 == null || LblPanelSize70 == null || LblPanelSize90 == null || LblPanelSize100 == null ||
+            LblActivationZone10 == null || LblActivationZone30 == null || LblActivationZone50 == null || LblActivationZone100 == null ||
+            LblActivationDelay100 == null || LblActivationDelay200 == null || LblActivationDelay300 == null || LblActivationDelay500 == null)
+        {
+            return;
+        }
+
+        UpdateSliderScaleSelection(SliderPanelSize.Value, LblPanelSize50, LblPanelSize70, LblPanelSize90, LblPanelSize100);
+        UpdateSliderScaleSelection(SliderActivationZone.Value, LblActivationZone10, LblActivationZone30, LblActivationZone50, LblActivationZone100);
+        UpdateSliderScaleSelection(SliderActivationDelay.Value, LblActivationDelay100, LblActivationDelay200, LblActivationDelay300, LblActivationDelay500);
+    }
+
+    private void UpdateSliderScaleSelection(double sliderValue, params TextBlock[] labels)
+    {
+        int selectedIndex = Math.Clamp((int)Math.Round(sliderValue), 0, labels.Length - 1);
+        var accentBrush = (System.Windows.Media.Brush)FindResource("AccentColor");
+        var mutedBrush = (System.Windows.Media.Brush)FindResource("MutedText");
+
+        for (int index = 0; index < labels.Length; index++)
+        {
+            labels[index].Foreground = index == selectedIndex ? accentBrush : mutedBrush;
+            labels[index].FontWeight = index == selectedIndex ? FontWeights.SemiBold : FontWeights.Normal;
+        }
+    }
+
+    private async void CmbLanguage_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (_isLoadingSettings)
         {
             return;
         }
 
-        string selectedCulture = GetSelectedSegmentTag(SegLangAuto, SegLangEn, SegLangDe, SegLangUk, SegLangRu)!;
+        string selectedCulture = GetComboTag(CmbLanguage) ?? LocalizationService.AutoCulture;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(selectedCulture);
         _settings.UiCulture = _selectedUiCulture;
         LocalizationService.ApplyCulture(_selectedUiCulture);
         _mainWindow.GetSettingsService().NormalizeAppState();
-        await _mainWindow.GetSettingsService().SaveAsync();
+        try
+        {
+            await _mainWindow.GetSettingsService().SaveAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            new DarkDialog(LocalizationService.Format("Settings_SaveFailed", ex.Message))
+            {
+                Owner = this
+            }.ShowDialog();
+            return;
+        }
+
         LocalizationService.EnsureAppliedCulture();
         LocalizationService.RefreshLocalizedBindings(this);
         RefreshLocalizedUi();
@@ -533,17 +1167,19 @@ public partial class AppSettingsWindow : DarkWindow
 
     private async void BtnSave_Click(object sender, RoutedEventArgs e)
     {
-        var globalBinding = BuildHotkeyBinding(ChkShowPanelCtrl, ChkShowPanelAlt, ChkShowPanelShift, ChkShowPanelWin, CmbShowPanelKey);
-        var nextBinding = BuildHotkeyBinding(ChkNextContextCtrl, ChkNextContextAlt, ChkNextContextShift, ChkNextContextWin, CmbNextContextKey);
-        var previousBinding = BuildHotkeyBinding(ChkPrevContextCtrl, ChkPrevContextAlt, ChkPrevContextShift, ChkPrevContextWin, CmbPrevContextKey);
-        var addButtonBinding = BuildHotkeyBinding(ChkAddButtonCtrl, ChkAddButtonAlt, ChkAddButtonShift, ChkAddButtonWin, CmbAddButtonKey);
-        var fileSorterBinding = BuildHotkeyBinding(ChkFileSorterCtrl, ChkFileSorterAlt, ChkFileSorterShift, ChkFileSorterWin, CmbFileSorterKey);
-        var quickNoteBinding = BuildHotkeyBinding(ChkQuickNoteCtrl, ChkQuickNoteAlt, ChkQuickNoteShift, ChkQuickNoteWin, CmbQuickNoteKey);
-        var colorPickerBinding = BuildHotkeyBinding(ChkColorPickerCtrl, ChkColorPickerAlt, ChkColorPickerShift, ChkColorPickerWin, CmbColorPickerKey);
-        var timerStopwatchBinding = BuildHotkeyBinding(ChkTimerStopwatchCtrl, ChkTimerStopwatchAlt, ChkTimerStopwatchShift, ChkTimerStopwatchWin, CmbTimerStopwatchKey);
-        var qrCodeGeneratorBinding = BuildHotkeyBinding(ChkQRCodeGeneratorCtrl, ChkQRCodeGeneratorAlt, ChkQRCodeGeneratorShift, ChkQRCodeGeneratorWin, CmbQRCodeGeneratorKey);
+        HotkeyBinding globalBinding = HotkeyShowPanel.GetBinding();
+        HotkeyBinding nextBinding = HotkeyNextContext.GetBinding();
+        HotkeyBinding previousBinding = HotkeyPreviousContext.GetBinding();
+        HotkeyBinding addButtonBinding = HotkeyAddButton.GetBinding();
+        HotkeyBinding fileSorterBinding = HotkeyFileSorter.GetBinding();
+        HotkeyBinding iconConverterBinding = HotkeyIconConverter.GetBinding();
+        HotkeyBinding quickNoteBinding = HotkeyQuickNote.GetBinding();
+        HotkeyBinding colorPickerBinding = HotkeyColorPicker.GetBinding();
+        HotkeyBinding timerStopwatchBinding = HotkeyTimerStopwatch.GetBinding();
+        HotkeyBinding qrCodeGeneratorBinding = HotkeyQRCodeGenerator.GetBinding();
+        HotkeyBinding clipboardManagerBinding = HotkeyClipboardManager.GetBinding();
 
-        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, fileSorterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding))
+        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding))
         {
             return;
         }
@@ -560,10 +1196,12 @@ public partial class AppSettingsWindow : DarkWindow
             settings.PreviousContextHotkey = previousBinding;
             settings.AddButtonHotkey = addButtonBinding;
             settings.FileSorterHotkey = fileSorterBinding;
+            settings.IconConverterHotkey = iconConverterBinding;
             settings.QuickNoteHotkey = quickNoteBinding;
             settings.ColorPickerHotkey = colorPickerBinding;
             settings.TimerStopwatchHotkey = timerStopwatchBinding;
             settings.QRCodeGeneratorHotkey = qrCodeGeneratorBinding;
+            settings.ClipboardManagerHotkey = clipboardManagerBinding;
 
             foreach (var (checkBox, definition) in GetUtilityVisibilityBindings())
             {
@@ -573,6 +1211,12 @@ public partial class AppSettingsWindow : DarkWindow
             settings.ShowTaskbarPositionIndicator = ChkShowTaskbarPositionIndicator.IsChecked ?? true;
             settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;
             settings.UiCulture = _selectedUiCulture;
+            settings.Ai = new AiSettings
+            {
+                FreeTierOnly = true,
+                ProviderOrder = [.. (_settings.Ai?.ProviderOrder ?? AiProviderCatalog.DefaultProviderOrder)],
+                Connections = _aiConnections.Select(CloneAiConnection).ToList()
+            };
 
             string edgeStr = GetSelectedSegmentTag(SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
             if (Enum.TryParse<DockEdge>(edgeStr, out var edge))
@@ -586,15 +1230,21 @@ public partial class AppSettingsWindow : DarkWindow
 
             settings.ActivationZoneSizePercent = AppSettingsSelectionHelper.ResolveSegmentedValue(
                 settings.ActivationZoneSizePercent,
-                GetSegmentValue(SegZone10, SegZone30, SegZone50, SegZone100),
+                AppSettingsDiscreteChoiceHelper.GetValue(
+                    AppSettingsDiscreteChoiceHelper.ActivationZoneValues,
+                    SliderActivationZone.Value),
                 _activationZoneSelectionChanged);
             settings.PanelSizePercent = AppSettingsSelectionHelper.ResolveSegmentedValue(
                 settings.PanelSizePercent,
-                GetSegmentValue(SegPanelSize50, SegPanelSize70, SegPanelSize90, SegPanelSize100),
+                AppSettingsDiscreteChoiceHelper.GetValue(
+                    AppSettingsDiscreteChoiceHelper.PanelSizeValues,
+                    SliderPanelSize.Value),
                 _panelSizeSelectionChanged);
             settings.ActivationDelayMs = AppSettingsSelectionHelper.ResolveSegmentedValue(
                 settings.ActivationDelayMs,
-                GetSegmentValue(SegDelay100, SegDelay200, SegDelay300, SegDelay500),
+                AppSettingsDiscreteChoiceHelper.GetValue(
+                    AppSettingsDiscreteChoiceHelper.ActivationDelayValues,
+                    SliderActivationDelay.Value),
                 _activationDelaySelectionChanged);
 
             for (int i = 0; i < settings.Contexts.Count && i < _contextRows.Count; i++)
@@ -624,6 +1274,7 @@ public partial class AppSettingsWindow : DarkWindow
         }
 
         LocalizationService.ApplyCulture(_selectedUiCulture);
+        CommitAiCredentialChanges();
         _mainWindow.RefreshPanel();
 
         if (failedHotkeys.Count > 0)

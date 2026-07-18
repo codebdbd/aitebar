@@ -39,6 +39,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private readonly ActionService _actionService;
     private readonly HotkeyService _hotkeyService = new();
     private readonly PanelPackageService _panelPackageService;
+    private readonly AiGateway _aiGateway;
     private readonly TaskbarPositionIndicatorService _positionIndicatorService = new();
     private NativeIntegrationService? _nativeService;
 
@@ -75,6 +76,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private readonly Dictionary<string, Brush> _brushCache = new(StringComparer.OrdinalIgnoreCase);
     private bool _isLocalizationSubscribed;
     private bool _focusPanelButtonsOnShow = true;
+    private AppSettingsWindow? _appSettingsWindow;
+    private bool _isOpeningAppSettingsWindow;
 
     private const double PanelScreenPadding = Constants.PanelScreenPadding;
     private const double ButtonPitch = Constants.ButtonOuterSize;
@@ -98,6 +101,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         _settingsService = settingsService;
         _settingsPreloaded = settingsPreloaded;
         _actionService = new ActionService(_settingsService);
+        _aiGateway = new AiGateway(_settingsService);
         _panelPackageService = new PanelPackageService(_settingsService);
         _unifiedButtonService = new UnifiedButtonService(_settingsService);
         Top = -2000;
@@ -139,6 +143,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     public AppSettings GetAppSettings() => _settingsService.Settings;
     public AppSettingsService GetSettingsService() => _settingsService;
     public ActionService GetActionService() => _actionService;
+    public AiGateway GetAiGateway() => _aiGateway;
 
     private void SubscribeToLocalizationChanges()
     {
@@ -947,6 +952,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
             case HotkeyCommand.FileSorter:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("FileSorter", HideDock));
                 break;
+            case HotkeyCommand.IconConverter:
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("IconConverter", HideDock));
+                break;
             case HotkeyCommand.QuickNote:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("QuickNote", HideDock));
                 break;
@@ -958,6 +966,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 break;
             case HotkeyCommand.QRCodeGenerator:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("QRCodeGenerator", HideDock));
+                break;
+            case HotkeyCommand.ClipboardManager:
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("ClipboardManager", HideDock));
                 break;
         }
     }
@@ -1954,31 +1965,47 @@ public partial class MainWindow : Window, ISettingsWindowContext
     }
 
     private async void BtnAdd_Click(object sender, RoutedEventArgs e) { await OpenAddButtonWindowAsync(); }
-    public async Task ShowAppSettingsWindow()
+    public async Task ShowAppSettingsWindow(AppSettingsSection section = AppSettingsSection.General)
     {
+        if (_appSettingsWindow != null)
+        {
+            if (_appSettingsWindow.WindowState == WindowState.Minimized)
+            {
+                _appSettingsWindow.WindowState = WindowState.Normal;
+            }
+
+            _appSettingsWindow.NavigateToSection(section);
+            _appSettingsWindow.Show();
+            _appSettingsWindow.Activate();
+            return;
+        }
+
+        if (_isOpeningAppSettingsWindow)
+        {
+            return;
+        }
+
+        _isOpeningAppSettingsWindow = true;
         try
         {
             await HideDock();
-            new AppSettingsWindow(this).ShowDialog();
+            var settingsWindow = new AppSettingsWindow(this, section);
+            _appSettingsWindow = settingsWindow;
+            settingsWindow.Closed += (_, _) => _appSettingsWindow = null;
+            settingsWindow.Show();
+            settingsWindow.Activate();
         }
         catch (Exception ex)
         {
             Logger.Log(ex);
         }
+        finally
+        {
+            _isOpeningAppSettingsWindow = false;
+        }
     }
 
-    private async void BtnAppSettings_Click(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                await HideDock();
-                new AppSettingsWindow(this).ShowDialog();
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(ex);
-            }
-        }
+    private async void BtnAppSettings_Click(object sender, RoutedEventArgs e) => await ShowAppSettingsWindow();
 
     private static T? FindParent<T>(DependencyObject child) where T : DependencyObject
     {

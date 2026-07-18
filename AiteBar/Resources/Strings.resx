@@ -110,7 +110,7 @@ For modular Python projects use the "Command" type.</value></data>
   <data name="AppSettingsWindow_Monitor" xml:space="preserve"><value>Monitor</value></data>
   <data name="AppSettingsWindow_PanelSize" xml:space="preserve"><value>Panel size</value></data>
   <data name="AppSettingsWindow_ActivationZone" xml:space="preserve"><value>Activation zone, %</value></data>
-  <data name="AppSettingsWindow_ActivationZoneTooltip" xml:space="preserve"><value>Size of the area at the screen edge that shows the panel on hover.</value></data>
+  <data name="AppSettingsWindow_ActivationZoneTooltip" xml:space="preserve"><value>The part of the selected edge that responds to the pointer: 10% is center only; 100% is the entire edge.</value></data>
   <data name="AppSettingsWindow_Delay" xml:space="preserve"><value>Appearance delay, ms</value></data>
   <data name="AppSettingsWindow_ContextNames" xml:space="preserve"><value>Panel names</value></data>
   <data name="AppSettingsWindow_ContextNamesTooltip" xml:space="preserve"><value>These names are used in the panel menu and button settings.</value></data>
@@ -322,6 +322,7 @@ Continue?</value></data>
   <data name="About_Developer" xml:space="preserve"><value>Developer: Codebdbd</value></data>
   <data name="About_License" xml:space="preserve"><value>License: Proprietary (All rights reserved)</value></data>
   <data name="About_Technologies" xml:space="preserve"><value>Technologies</value></data>
+  <data name="About_TechnologiesValue" xml:space="preserve"><value>.NET 10 · WPF</value></data>
   <data name="About_AppData" xml:space="preserve"><value>Application data</value></data>
   <data name="About_OpenDataFolder" xml:space="preserve"><value>Open data folder</value></data>
   <data name="About_Resources" xml:space="preserve"><value>Resources</value></data>
@@ -386,6 +387,8 @@ Open the GitHub release page?</value></data>
   <data name="SettingsWindow_ActivationHotkeyModifierRequired" xml:space="preserve"><value>The button shortcut must include Ctrl, Alt, Shift, or Win.</value></data>
   <data name="SettingsWindow_ActivationHotkeyReserved" xml:space="preserve"><value>This button shortcut is reserved by Windows. Choose another combination.</value></data>
   <data name="HotkeyModifierRequiredMessage" xml:space="preserve"><value>Global hotkeys must include Ctrl, Alt, Shift, or Win:
+{0}</value></data>
+  <data name="HotkeyGlobalReservedMessage" xml:space="preserve"><value>These hotkeys are reserved by Windows:
 {0}</value></data>
   <data name="Tool_FileSorter" xml:space="preserve"><value>File sorter</value></data>
   <data name="Main_FileSorterTooltip" xml:space="preserve"><value>Sort files in a folder</value></data>
@@ -635,6 +638,82 @@ Open the GitHub release page?</value></data>
   <data name="QRCodeGenerator_Png800Subtext" xml:space="preserve"><value>Save as PNG image</value></data>
   <data name="QRCodeGenerator_VectorSubtext" xml:space="preserve"><value>Save as SVG vector</value></data>
   <data name="QRCodeGenerator_ClipboardSubtext" xml:space="preserve"><value>Copy to clipboard</value></data>
+  <data name="HotkeyCapture_Prompt" xml:space="preserve"><value>Press a shortcut</value></data>
+  <data name="HotkeyCapture_Clear" xml:space="preserve"><value>Clear shortcut</value></data>
+  <data name="AppSettingsWindow_LanguageHint" xml:space="preserve"><value>Choose the language used by the application interface.</value></data>
+  <data name="AppSettingsWindow_EdgeHint" xml:space="preserve"><value>Choose the screen edge where the panel appears.</value></data>
+  <data name="AppSettingsWindow_PanelSizeHint" xml:space="preserve"><value>Panel length along the selected edge: 50% is half the screen; 100% fills the edge.</value></data>
+  <data name="AppSettingsWindow_DelayHint" xml:space="preserve"><value>How long to hold the pointer at the edge: 100 ms opens quickly; 500 ms prevents accidental openings.</value></data>
+  <data name="AppSettingsWindow_ShowTaskbarPositionIndicatorHint" xml:space="preserve"><value>Show the current panel position in the Windows taskbar area.</value></data>
+  <data name="AppSettingsWindow_SecondaryMonitorHint" xml:space="preserve"><value>Place the panel on the secondary display when one is available.</value></data>
+  <data name="AppSettingsWindow_CheckForUpdatesHint" xml:space="preserve"><value>Check automatically when a newer AiteBar version is available.</value></data>
+  <data name="HotkeyCapture_RowHint" xml:space="preserve"><value>Click the field, then press the desired shortcut.</value></data>
+  <data name="AppSettingsWindow_DelayMinLabel" xml:space="preserve"><value>100 ms</value></data>
+  <data name="AppSettingsWindow_Delay200Label" xml:space="preserve"><value>200 ms</value></data>
+  <data name="AppSettingsWindow_Delay300Label" xml:space="preserve"><value>300 ms</value></data>
+  <data name="AppSettingsWindow_DelayMaxLabel" xml:space="preserve"><value>500 ms</value></data>
+  <data name="AppSettingsWindow_KeepOnTop" xml:space="preserve"><value>Always on top</value></data>
+  <data name="AppSettingsWindow_KeepOnTopHint" xml:space="preserve"><value>Keep this settings window above other applications until it is closed.</value></data>
+  <data name="QuickTool_QuickNote_Title" xml:space="preserve"><value>Quick note</value></data>
+  <data name="QuickTool_QuickNote_Description" xml:space="preserve"><value>Opens a window for creating and formatting a note.</value></data>
+  <data name="QuickTool_QRCodeGenerator_Title" xml:space="preserve"><value>QR code generator</value></data>
+  <data name="QuickTool_QRCodeGenerator_Description" xml:space="preserve"><value>Creates a QR code from text or a link.</value></data>
+  <data name="QuickTool_Downloads_Title" xml:space="preserve"><value>Downloads</value></data>
+  <data name="QuickTool_Downloads_Description" xml:space="preserve"><value>Opens the system Downloads folder.</value></data>
+  <data name="QuickTool_Video_Title" xml:space="preserve"><value>Screen recording</value></data>
+  <data name="QuickTool_Video_Description" xml:space="preserve"><value>Opens the Windows tool for recording video from the screen.</value></data>
+  <data name="QuickTool_Copilot_Title" xml:space="preserve"><value>Copilot AI assistant</value></data>
+  <data name="QuickTool_Copilot_Description" xml:space="preserve"><value>Opens Microsoft Copilot if it is available on this system.</value></data>
+  <data name="QuickTool_Calculator_Title" xml:space="preserve"><value>Calculator</value></data>
+  <data name="QuickTool_Calculator_Description" xml:space="preserve"><value>Opens Windows Calculator.</value></data>
+  <data name="QuickTool_IconConverter_Title" xml:space="preserve"><value>Icon converter</value></data>
+  <data name="QuickTool_IconConverter_Description" xml:space="preserve"><value>Converts images to ICO icons.</value></data>
+  <data name="QuickTool_ClipboardManager_Title" xml:space="preserve"><value>Clipboard manager</value></data>
+  <data name="QuickTool_ClipboardManager_Description" xml:space="preserve"><value>Shows the history of copied text and images.</value></data>
+  <data name="QuickTool_ColorPicker_Title" xml:space="preserve"><value>Color picker</value></data>
+  <data name="QuickTool_ColorPicker_Description" xml:space="preserve"><value>Picks a color anywhere on the screen and copies its code.</value></data>
+  <data name="QuickTool_Search_Title" xml:space="preserve"><value>Search</value></data>
+  <data name="QuickTool_Search_Description" xml:space="preserve"><value>Searches the internet for the text currently in the clipboard.</value></data>
+  <data name="QuickTool_ShowDesktop_Title" xml:space="preserve"><value>Show desktop</value></data>
+  <data name="QuickTool_ShowDesktop_Description" xml:space="preserve"><value>Minimizes open windows and shows the desktop.</value></data>
+  <data name="QuickTool_AppsFolder_Title" xml:space="preserve"><value>Windows apps</value></data>
+  <data name="QuickTool_AppsFolder_Description" xml:space="preserve"><value>Opens the system list of installed applications.</value></data>
+  <data name="QuickTool_Explorer_Title" xml:space="preserve"><value>File Explorer</value></data>
+  <data name="QuickTool_Explorer_Description" xml:space="preserve"><value>Opens Windows File Explorer for working with files and folders.</value></data>
+  <data name="QuickTool_Screenshot_Title" xml:space="preserve"><value>Screenshot</value></data>
+  <data name="QuickTool_Screenshot_Description" xml:space="preserve"><value>Opens the Windows tool to select an area and take a screenshot.</value></data>
+  <data name="QuickTool_FileSorter_Title" xml:space="preserve"><value>File sorter</value></data>
+  <data name="QuickTool_FileSorter_Description" xml:space="preserve"><value>Sorts files into folders according to the selected rules.</value></data>
+  <data name="QuickTool_TimerStopwatch_Title" xml:space="preserve"><value>Timer and stopwatch</value></data>
+  <data name="QuickTool_TimerStopwatch_Description" xml:space="preserve"><value>Starts timers and measures elapsed time.</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="AiSettings_Title" xml:space="preserve"><value>AI services</value></data>
+  <data name="AiSettings_Description" xml:space="preserve"><value>Connect free AI service quotas for current and future AiteBar tools.</value></data>
+  <data name="AiSettings_FreeOnly" xml:space="preserve"><value>Free tiers only</value></data>
+  <data name="AiSettings_FreeOnlyHint" xml:space="preserve"><value>AiteBar does not automatically fall back to models explicitly marked as paid.</value></data>
+  <data name="AiSettings_PrivacyWarning" xml:space="preserve"><value>Text or files processed by an AI tool are sent to the selected external service only after an explicit user action. Review that service's privacy terms before use.</value></data>
+  <data name="AiSettings_Connections" xml:space="preserve"><value>API connections</value></data>
+  <data name="AiSettings_ConnectionsHint" xml:space="preserve"><value>Add multiple accounts or projects. Connections are tried in priority order within each service.</value></data>
+  <data name="AiSettings_AddConnection" xml:space="preserve"><value>Add connection</value></data>
+  <data name="AiSettings_AddConnectionHint" xml:space="preserve"><value>The API key is stored in Windows Credential Manager and is not written to the AiteBar settings file.</value></data>
+  <data name="AiSettings_NoConnections" xml:space="preserve"><value>No AI services are connected yet.</value></data>
+  <data name="AiSettings_Provider" xml:space="preserve"><value>Service</value></data>
+  <data name="AiSettings_GetApiKey" xml:space="preserve"><value>Get an API key on the official website</value></data>
+  <data name="AiSettings_ConnectionName" xml:space="preserve"><value>Connection name</value></data>
+  <data name="AiSettings_QuotaScope" xml:space="preserve"><value>Account or project</value></data>
+  <data name="AiSettings_QuotaScopeHint" xml:space="preserve"><value>Use the same value for keys that share one quota, for example “Personal Google project”.</value></data>
+  <data name="AiSettings_ApiKey" xml:space="preserve"><value>API key</value></data>
+  <data name="AiSettings_ApiKeySecurityHint" xml:space="preserve"><value>The saved key is never displayed again and is not included in logs or settings backups.</value></data>
+  <data name="AiSettings_Add" xml:space="preserve"><value>Add</value></data>
+  <data name="AiSettings_ConnectionDetails" xml:space="preserve"><value>{0} · quota: {1}</value></data>
+  <data name="AiSettings_MoveUp" xml:space="preserve"><value>Higher priority</value></data>
+  <data name="AiSettings_MoveDown" xml:space="preserve"><value>Lower priority</value></data>
+  <data name="AiSettings_Test" xml:space="preserve"><value>Test</value></data>
+  <data name="AiSettings_Testing" xml:space="preserve"><value>Testing…</value></data>
+  <data name="AiSettings_StatusNotChecked" xml:space="preserve"><value>Not checked</value></data>
+  <data name="AiSettings_StatusAvailable" xml:space="preserve"><value>Connected · {0} models available</value></data>
+  <data name="AiSettings_StatusError" xml:space="preserve"><value>Connection error: {0}</value></data>
+  <data name="AiSettings_CredentialSaveFailed" xml:space="preserve"><value>The API key could not be saved in Windows Credential Manager.</value></data>
 </root>
 
 

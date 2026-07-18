@@ -8,13 +8,15 @@
 
         Icon="pack://application:,,,/Resources/app.ico"
 
-        Title="{local:Loc ResourceKey=AppSettingsWindow_Title}" Width="720" Height="560"
+        Title="{local:Loc ResourceKey=AppSettingsWindow_Title}" Width="1200" Height="680"
 
-        WindowStartupLocation="CenterOwner" Background="#191919" Foreground="#DCDCDC"
+        MinWidth="960" MinHeight="600"
 
-        WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
+        WindowStartupLocation="CenterScreen" Background="#191919" Foreground="#DCDCDC"
 
-        Topmost="True">
+        WindowStyle="SingleBorderWindow" ResizeMode="CanResize" ShowInTaskbar="True"
+
+        Topmost="False" Loaded="Window_Loaded">
 
 
 
@@ -206,6 +208,543 @@
 
             </Style>
 
+            <SolidColorBrush x:Key="ModernCardBackground" Color="#20252D"/>
+            <SolidColorBrush x:Key="ModernRowDivider" Color="#303945"/>
+
+            <Style x:Key="ModernSectionAnchorStyle" TargetType="Border">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Margin" Value="0,0,0,32"/>
+                <Setter Property="VerticalAlignment" Value="Top"/>
+            </Style>
+
+            <Style x:Key="ModernSettingsCardStyle" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource ModernCardBackground}"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="CornerRadius" Value="8"/>
+                <Setter Property="Padding" Value="20"/>
+                <Setter Property="Margin" Value="0,0,0,16"/>
+                <Setter Property="SnapsToDevicePixels" Value="True"/>
+            </Style>
+
+            <Style x:Key="ModernSettingTitleStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#F4F7FA"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+            </Style>
+
+            <Style x:Key="ModernSectionTitleStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#F6F8FB"/>
+                <Setter Property="FontSize" Value="22"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Margin" Value="0,0,0,4"/>
+            </Style>
+
+            <Style x:Key="ModernSettingDescriptionStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#9EA9B7"/>
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="Margin" Value="0,4,0,0"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+            </Style>
+
+            <Style x:Key="ModernDividerStyle" TargetType="Border">
+                <Setter Property="Height" Value="1"/>
+                <Setter Property="Background" Value="{StaticResource ModernRowDivider}"/>
+                <Setter Property="Margin" Value="0"/>
+            </Style>
+
+            <Style x:Key="ModernSwitchStyle" TargetType="CheckBox">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Width" Value="44"/>
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="HorizontalAlignment" Value="Right"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="CheckBox">
+                            <Grid Width="44" Height="24" SnapsToDevicePixels="True">
+                                <Border x:Name="Track" Background="#46505D" CornerRadius="12"/>
+                                <Ellipse x:Name="Thumb" Width="18" Height="18" Margin="3"
+                                         HorizontalAlignment="Left" Fill="#F4F7FA"/>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Track" Property="Background" Value="#596574"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentColor}"/>
+                                    <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="Track" Property="BorderBrush" Value="#FFFFFF"/>
+                                    <Setter TargetName="Track" Property="BorderThickness" Value="1"/>
+                                </MultiTrigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.45"/>
+                                    <Setter Property="Cursor" Value="Arrow"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="ModernSelectionCardStyle" TargetType="RadioButton">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Width" Value="126"/>
+                <Setter Property="Height" Value="92"/>
+                <Setter Property="Margin" Value="0,0,8,0"/>
+                <Setter Property="Foreground" Value="#D8E0EA"/>
+                <Setter Property="Background" Value="#252C35"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="RadioButton">
+                            <Border x:Name="Card" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="6" Padding="10">
+                                <Grid>
+                                    <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                      VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                                    <Border x:Name="SelectedBadge" Width="20" Height="20" CornerRadius="10"
+                                            HorizontalAlignment="Right" VerticalAlignment="Top"
+                                            Margin="0,-5,-5,0" Background="{DynamicResource AccentColor}"
+                                            Visibility="Collapsed">
+                                        <TextBlock Text="✓" Foreground="White" FontWeight="Bold"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Card" Property="Background" Value="#2B3440"/>
+                                    <Setter TargetName="Card" Property="BorderBrush" Value="#5D6A79"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+                                    <Setter TargetName="Card" Property="Background" Value="#223349"/>
+                                    <Setter TargetName="SelectedBadge" Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="Card" Property="BorderThickness" Value="2"/>
+                                </MultiTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="ModernSliderScaleLabelStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#8E99A7"/>
+                <Setter Property="FontSize" Value="10"/>
+                <Setter Property="LineHeight" Value="14"/>
+                <Setter Property="MinWidth" Value="42"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="TextAlignment" Value="Center"/>
+                <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+            </Style>
+
+            <Style x:Key="ModernSliderStyle" TargetType="Slider">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="IsMoveToPointEnabled" Value="True"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Slider">
+                            <Grid Height="32" SnapsToDevicePixels="True">
+                                <Border x:Name="SliderFocusRing"
+                                        Height="14"
+                                        Margin="7,0"
+                                        Background="Transparent"
+                                        BorderBrush="{DynamicResource AccentColor}"
+                                        BorderThickness="1"
+                                        CornerRadius="7"
+                                        Opacity="0"
+                                        VerticalAlignment="Center"/>
+                                <Border x:Name="SliderTrackBackground"
+                                        Height="6"
+                                        Margin="13,0"
+                                        Background="#3B4654"
+                                        CornerRadius="3"
+                                        VerticalAlignment="Center"/>
+                                <ProgressBar x:Name="SliderActiveTrack"
+                                             Height="6"
+                                             Margin="13,0"
+                                             Minimum="{TemplateBinding Minimum}"
+                                             Maximum="{TemplateBinding Maximum}"
+                                             Value="{TemplateBinding Value}"
+                                             Background="Transparent"
+                                             Foreground="{DynamicResource AccentColor}"
+                                             IsHitTestVisible="False"
+                                             VerticalAlignment="Center">
+                                    <ProgressBar.Template>
+                                        <ControlTemplate TargetType="ProgressBar">
+                                            <Grid x:Name="PART_Track">
+                                                <Border x:Name="PART_Indicator"
+                                                        Background="{TemplateBinding Foreground}"
+                                                        CornerRadius="3"
+                                                        HorizontalAlignment="Left"/>
+                                            </Grid>
+                                        </ControlTemplate>
+                                    </ProgressBar.Template>
+                                </ProgressBar>
+                                <Grid Margin="13,0" IsHitTestVisible="False">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Ellipse x:Name="SliderTick1" Grid.Column="0" Width="4" Height="4" Fill="#AAB4C0"/>
+                                    <Ellipse x:Name="SliderTick2" Grid.Column="2" Width="4" Height="4" Fill="#AAB4C0"/>
+                                    <Ellipse x:Name="SliderTick3" Grid.Column="4" Width="4" Height="4" Fill="#AAB4C0"/>
+                                    <Ellipse x:Name="SliderTick4" Grid.Column="6" Width="4" Height="4" Fill="#AAB4C0"/>
+                                </Grid>
+                                <Track x:Name="PART_Track">
+                                    <Track.DecreaseRepeatButton>
+                                        <RepeatButton Command="{x:Static Slider.DecreaseLarge}"
+                                                      Background="Transparent"
+                                                      Focusable="False">
+                                            <RepeatButton.Template>
+                                                <ControlTemplate TargetType="RepeatButton">
+                                                    <Border Height="6"
+                                                            Background="{TemplateBinding Background}"
+                                                            CornerRadius="3"
+                                                            VerticalAlignment="Center"/>
+                                                </ControlTemplate>
+                                            </RepeatButton.Template>
+                                        </RepeatButton>
+                                    </Track.DecreaseRepeatButton>
+                                    <Track.IncreaseRepeatButton>
+                                        <RepeatButton Command="{x:Static Slider.IncreaseLarge}"
+                                                      Background="Transparent"
+                                                      Focusable="False">
+                                            <RepeatButton.Template>
+                                                <ControlTemplate TargetType="RepeatButton">
+                                                    <Border Height="6"
+                                                            Background="{TemplateBinding Background}"
+                                                            CornerRadius="3"
+                                                            VerticalAlignment="Center"/>
+                                                </ControlTemplate>
+                                            </RepeatButton.Template>
+                                        </RepeatButton>
+                                    </Track.IncreaseRepeatButton>
+                                    <Track.Thumb>
+                                        <Thumb Width="26" Height="26" Focusable="False">
+                                            <Thumb.Template>
+                                                <ControlTemplate TargetType="Thumb">
+                                                    <Grid Width="26" Height="26">
+                                                        <Ellipse x:Name="SliderThumbHalo"
+                                                                 Fill="{DynamicResource AccentColor}"
+                                                                 Opacity="0"/>
+                                                        <Ellipse x:Name="SliderThumbCore"
+                                                                 Width="18"
+                                                                 Height="18"
+                                                                 Fill="{DynamicResource AccentColor}"
+                                                                 Stroke="#F4F7FA"
+                                                                 StrokeThickness="2"/>
+                                                    </Grid>
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter TargetName="SliderThumbHalo" Property="Opacity" Value="0.22"/>
+                                                            <Setter TargetName="SliderThumbCore" Property="Width" Value="20"/>
+                                                            <Setter TargetName="SliderThumbCore" Property="Height" Value="20"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsDragging" Value="True">
+                                                            <Setter TargetName="SliderThumbHalo" Property="Opacity" Value="0.38"/>
+                                                            <Setter TargetName="SliderThumbCore" Property="Width" Value="20"/>
+                                                            <Setter TargetName="SliderThumbCore" Property="Height" Value="20"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsEnabled" Value="False">
+                                                            <Setter Property="Opacity" Value="0.55"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </Thumb.Template>
+                                        </Thumb>
+                                    </Track.Thumb>
+                                </Track>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="SliderFocusRing" Property="Opacity" Value="0.7"/>
+                                </MultiTrigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.45"/>
+                                    <Setter Property="Cursor" Value="Arrow"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style TargetType="local:HotkeyCaptureBox">
+                <Setter Property="Height" Value="36"/>
+                <Setter Property="Width" Value="250"/>
+                <Setter Property="Foreground" Value="#F2F5F8"/>
+                <Setter Property="Background" Value="#2D2D2D"/>
+                <Setter Property="BorderBrush" Value="#46515F"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="HorizontalContentAlignment" Value="Left"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="NotAssignedText" Value="{local:Loc ResourceKey=Common_NotAssigned}"/>
+                <Setter Property="CapturePromptText" Value="{local:Loc ResourceKey=HotkeyCapture_Prompt}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="local:HotkeyCaptureBox">
+                            <Border x:Name="Field" Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4">
+                                <Grid Margin="12,0,2,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ContentPresenter VerticalAlignment="Center"
+                                                      HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
+                                    <Button x:Name="ClearButton"
+                                            Grid.Column="1"
+                                            Width="32"
+                                            Height="32"
+                                            Content="&#xF368;"
+                                            FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
+                                            FontSize="16"
+                                            Foreground="#AAB4C0"
+                                            Background="Transparent"
+                                            BorderThickness="0"
+                                            Padding="0"
+                                            Focusable="False"
+                                            Command="{x:Static local:HotkeyCaptureBox.ClearCommand}"
+                                            CommandTarget="{Binding RelativeSource={RelativeSource TemplatedParent}}"
+                                            ToolTip="{local:Loc ResourceKey=HotkeyCapture_Clear}"
+                                            AutomationProperties.Name="{local:Loc ResourceKey=HotkeyCapture_Clear}">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border x:Name="ClearButtonSurface"
+                                                        Background="{TemplateBinding Background}"
+                                                        CornerRadius="4">
+                                                    <ContentPresenter HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ClearButtonSurface" Property="Background" Value="#3A4654"/>
+                                                        <Setter Property="Foreground" Value="#F4F7FA"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter TargetName="ClearButtonSurface" Property="Background" Value="#465567"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="HasAssignedBinding" Value="False">
+                                    <Setter TargetName="ClearButton" Property="Visibility" Value="Collapsed"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Field" Property="BorderBrush" Value="#687788"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                    <Setter TargetName="Field" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+                                    <Setter TargetName="Field" Property="BorderThickness" Value="2"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="SettingsNavigationListStyle" TargetType="ListBox">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Disabled"/>
+            </Style>
+
+            <Style x:Key="SettingsNavigationItemStyle" TargetType="ListBoxItem">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Height" Value="36"/>
+                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="Padding" Value="14,0"/>
+                <Setter Property="Foreground" Value="{DynamicResource MutedText}"/>
+                <Setter Property="FontSize" Value="13"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Border x:Name="ItemBorder"
+                                    Background="Transparent"
+                                    CornerRadius="4"
+                                    SnapsToDevicePixels="True">
+                                <Grid>
+                                    <Border x:Name="SelectionIndicator"
+                                            Width="3"
+                                            Margin="0,8,0,8"
+                                            HorizontalAlignment="Left"
+                                            Background="{DynamicResource AccentColor}"
+                                            CornerRadius="2"
+                                            Visibility="Collapsed"/>
+                                    <StackPanel Margin="{TemplateBinding Padding}"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Center">
+                                        <TextBlock x:Name="NavigationIcon"
+                                                   Width="22"
+                                                   Margin="0,0,8,0"
+                                                   Text="{TemplateBinding Tag}"
+                                                   FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
+                                                   FontSize="18"
+                                                   FontWeight="Normal"
+                                                   Foreground="{TemplateBinding Foreground}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   TextAlignment="Center"
+                                                   SnapsToDevicePixels="True"/>
+                                        <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                          VerticalAlignment="Center"
+                                                          RecognizesAccessKey="True"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="#2D2D2D"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="ItemBorder" Property="Background" Value="#252526"/>
+                                    <Setter TargetName="SelectionIndicator" Property="Visibility" Value="Visible"/>
+                                    <Setter Property="Foreground" Value="White"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+                                    <Setter TargetName="ItemBorder" Property="BorderThickness" Value="1"/>
+                                </MultiTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="AboutActionButtonStyle" TargetType="Button">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Foreground" Value="#DCE6F2"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Padding" Value="10,9"/>
+                <Setter Property="Margin" Value="0,1"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <Border x:Name="Surface"
+                                    Background="{TemplateBinding Background}"
+                                    CornerRadius="4"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                                  VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Surface" Property="Background" Value="#30363E"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="Surface" Property="Background" Value="#39424D"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="Surface" Property="Background" Value="#303E4D"/>
+                                </MultiTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="SettingsTopmostToggleStyle" TargetType="ToggleButton">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Height" Value="44"/>
+                <Setter Property="Padding" Value="14,0"/>
+                <Setter Property="Foreground" Value="{DynamicResource MutedText}"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border x:Name="ToggleSurface" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" CornerRadius="4">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="ToggleSurface" Property="Background" Value="#2D2D2D"/>
+                                    <Setter Property="Foreground" Value="#F4F7FA"/>
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="ToggleSurface" Property="Background" Value="#383838"/>
+                                </Trigger>
+                                <Trigger Property="IsChecked" Value="True">
+                                    <Setter TargetName="ToggleSurface" Property="Background" Value="#25384A"/>
+                                    <Setter Property="Foreground" Value="{DynamicResource AccentColor}"/>
+                                </Trigger>
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsKeyboardFocused" Value="True"/>
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                                    </MultiTrigger.Conditions>
+                                    <Setter TargetName="ToggleSurface" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+                                    <Setter TargetName="ToggleSurface" Property="BorderThickness" Value="1"/>
+                                </MultiTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
 
 
         </ResourceDictionary>
@@ -214,7 +753,17 @@
 
 
 
-    <Grid Margin="14">
+    <Grid x:Name="SettingsLayoutRoot" Margin="16">
+
+        <Grid.ColumnDefinitions>
+
+            <ColumnDefinition Width="255"/>
+
+            <ColumnDefinition Width="24"/>
+
+            <ColumnDefinition Width="*"/>
+
+        </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
 
@@ -226,15 +775,89 @@
 
 
 
-        <TabControl Grid.Row="0"
-                    Style="{StaticResource UnderlineTabControlStyle}">
+        <Border x:Name="SettingsNavigationPanel"
+                Grid.Row="0"
+                Grid.RowSpan="2"
+                Grid.Column="0"
+                Padding="0"
+                Background="Transparent"
+                BorderBrush="Transparent"
+                BorderThickness="0"
+                CornerRadius="0">
 
-            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_General}"
-                     Style="{StaticResource UnderlineTabItemStyle}">
+            <ListBox x:Name="SettingsNavigationList"
+                     Style="{StaticResource SettingsNavigationListStyle}"
+                     SelectionChanged="SettingsNavigationList_SelectionChanged"
+                     SelectedIndex="0">
 
-                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
+                <ListBoxItem Style="{StaticResource SettingsNavigationItemStyle}"
+                             Tag="&#xF587;"
+                             ToolTip="{local:Loc ResourceKey=AppSettingsWindow_General}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=AppSettingsWindow_General}"
+                             Content="{local:Loc ResourceKey=AppSettingsWindow_General}"/>
+
+                <ListBoxItem Style="{StaticResource SettingsNavigationItemStyle}"
+                             Tag="&#xE8B0;"
+                             ToolTip="{local:Loc ResourceKey=AppSettingsWindow_ContextNames}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=AppSettingsWindow_ContextNames}"
+                             Content="{local:Loc ResourceKey=AppSettingsWindow_ContextNames}"/>
+
+                <ListBoxItem Style="{StaticResource SettingsNavigationItemStyle}"
+                             Tag="&#xF4B8;"
+                             ToolTip="{local:Loc ResourceKey=AppSettingsWindow_Hotkeys}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=AppSettingsWindow_Hotkeys}"
+                             Content="{local:Loc ResourceKey=AppSettingsWindow_Hotkeys}"/>
+
+                <ListBoxItem Style="{StaticResource SettingsNavigationItemStyle}"
+                             Tag="&#xF82E;"
+                             ToolTip="{local:Loc ResourceKey=AppSettingsWindow_QuickTools}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=AppSettingsWindow_QuickTools}"
+                             Content="{local:Loc ResourceKey=AppSettingsWindow_QuickTools}"/>
+
+                <ListBoxItem Style="{StaticResource SettingsNavigationItemStyle}"
+                             Tag="&#xF15A;"
+                             ToolTip="{local:Loc ResourceKey=AiSettings_Title}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=AiSettings_Title}"
+                             Content="{local:Loc ResourceKey=AiSettings_Title}"/>
+
+                <ListBoxItem Style="{StaticResource SettingsNavigationItemStyle}"
+                             Tag="&#xF4A2;"
+                             ToolTip="{local:Loc ResourceKey=About_Title}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=About_Title}"
+                             Content="{local:Loc ResourceKey=About_Title}"/>
+
+            </ListBox>
+
+        </Border>
+
+        <Grid x:Name="SettingsContentHost"
+              Grid.Row="0"
+              Grid.RowSpan="2"
+              Grid.Column="2"
+              MaxWidth="1000"
+              HorizontalAlignment="Stretch">
+
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+        <ScrollViewer x:Name="SettingsScrollViewer"
+                      Grid.Row="0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      CanContentScroll="False"
+                      ScrollChanged="SettingsScrollViewer_ScrollChanged">
+
+            <StackPanel x:Name="SettingsScrollContent" Margin="0,0,14,0">
+
+                <Border x:Name="GeneralSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
 
                     <StackPanel>
+
+                        <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_General}"
+
+                                   Style="{StaticResource ModernSectionTitleStyle}"/>
 
                         <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_GeneralHint}"
 
@@ -244,112 +867,121 @@
 
                                    TextWrapping="Wrap"
 
-                                   Margin="0,0,0,14"/>
+                                   Margin="0,0,0,18"/>
 
 
 
-                        <DockPanel Margin="0,0,0,12" LastChildFill="False">
-                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Language}" Style="{StaticResource FieldLabelStyle}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                            <Border Style="{StaticResource SegmentedContainerStyle}" HorizontalAlignment="Left">
-                                <StackPanel Orientation="Horizontal">
-                                    <RadioButton x:Name="SegLangAuto" GroupName="Language" Content="{local:Loc ResourceKey=Language_Auto}" Tag="auto" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegLanguage_Click"/>
-                                    <RadioButton x:Name="SegLangEn" GroupName="Language" Content="{local:Loc ResourceKey=Language_English}" Tag="en" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegLanguage_Click"/>
-                                    <RadioButton x:Name="SegLangDe" GroupName="Language" Content="{local:Loc ResourceKey=Language_Deutsch}" Tag="de" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegLanguage_Click"/>
-                                    <RadioButton x:Name="SegLangUk" GroupName="Language" Content="{local:Loc ResourceKey=Language_Ukrainian}" Tag="uk" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegLanguage_Click"/>
-                                    <RadioButton x:Name="SegLangRu" GroupName="Language" Content="{local:Loc ResourceKey=Language_Russian}" Tag="ru" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegLanguage_Click"/>
+                        <Border Style="{StaticResource ModernSettingsCardStyle}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="250"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel VerticalAlignment="Center" Margin="0,0,20,0">
+                                    <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Language}" Style="{StaticResource ModernSettingTitleStyle}"/>
+                                    <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_LanguageHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/>
                                 </StackPanel>
-                            </Border>
-                        </DockPanel>
+                                <ComboBox x:Name="CmbLanguage" Grid.Column="1" Height="36"
+                                          SelectionChanged="CmbLanguage_SelectionChanged"/>
+                            </Grid>
+                        </Border>
 
 
 
-                        <DockPanel Margin="0,0,0,12" LastChildFill="False">
-                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Edge}" Style="{StaticResource FieldLabelStyle}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                            <Border Style="{StaticResource SegmentedContainerStyle}" HorizontalAlignment="Left">
-                                <StackPanel Orientation="Horizontal">
-                                    <RadioButton x:Name="SegEdgeTop" GroupName="Edge" Content="{local:Loc ResourceKey=Dock_Top}" Tag="Top" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegEdge_Click"/>
-                                    <RadioButton x:Name="SegEdgeBottom" GroupName="Edge" Content="{local:Loc ResourceKey=Dock_Bottom}" Tag="Bottom" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegEdge_Click"/>
-                                    <RadioButton x:Name="SegEdgeLeft" GroupName="Edge" Content="{local:Loc ResourceKey=Dock_Left}" Tag="Left" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegEdge_Click"/>
-                                    <RadioButton x:Name="SegEdgeRight" GroupName="Edge" Content="{local:Loc ResourceKey=Dock_Right}" Tag="Right" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegEdge_Click"/>
+                        <Border Style="{StaticResource ModernSettingsCardStyle}">
+                            <StackPanel>
+                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Edge}" Style="{StaticResource ModernSettingTitleStyle}"/>
+                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_EdgeHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/>
+                                <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                    <RadioButton x:Name="SegEdgeTop" GroupName="Edge" Tag="Top" Style="{StaticResource ModernSelectionCardStyle}" Click="SegEdge_Click">
+                                        <StackPanel HorizontalAlignment="Center"><Border Width="64" Height="34" BorderBrush="#697687" BorderThickness="1" CornerRadius="3"><Border Height="6" Background="{DynamicResource AccentColor}" VerticalAlignment="Top"/></Border><TextBlock Text="{local:Loc ResourceKey=Dock_Top}" Margin="0,8,0,0" HorizontalAlignment="Center"/></StackPanel>
+                                    </RadioButton>
+                                    <RadioButton x:Name="SegEdgeBottom" GroupName="Edge" Tag="Bottom" Style="{StaticResource ModernSelectionCardStyle}" Click="SegEdge_Click">
+                                        <StackPanel HorizontalAlignment="Center"><Border Width="64" Height="34" BorderBrush="#697687" BorderThickness="1" CornerRadius="3"><Border Height="6" Background="{DynamicResource AccentColor}" VerticalAlignment="Bottom"/></Border><TextBlock Text="{local:Loc ResourceKey=Dock_Bottom}" Margin="0,8,0,0" HorizontalAlignment="Center"/></StackPanel>
+                                    </RadioButton>
+                                    <RadioButton x:Name="SegEdgeLeft" GroupName="Edge" Tag="Left" Style="{StaticResource ModernSelectionCardStyle}" Click="SegEdge_Click">
+                                        <StackPanel HorizontalAlignment="Center"><Border Width="64" Height="34" BorderBrush="#697687" BorderThickness="1" CornerRadius="3"><Border Width="6" Background="{DynamicResource AccentColor}" HorizontalAlignment="Left"/></Border><TextBlock Text="{local:Loc ResourceKey=Dock_Left}" Margin="0,8,0,0" HorizontalAlignment="Center"/></StackPanel>
+                                    </RadioButton>
+                                    <RadioButton x:Name="SegEdgeRight" GroupName="Edge" Tag="Right" Style="{StaticResource ModernSelectionCardStyle}" Click="SegEdge_Click" Margin="0">
+                                        <StackPanel HorizontalAlignment="Center"><Border Width="64" Height="34" BorderBrush="#697687" BorderThickness="1" CornerRadius="3"><Border Width="6" Background="{DynamicResource AccentColor}" HorizontalAlignment="Right"/></Border><TextBlock Text="{local:Loc ResourceKey=Dock_Right}" Margin="0,8,0,0" HorizontalAlignment="Center"/></StackPanel>
+                                    </RadioButton>
                                 </StackPanel>
-                            </Border>
-                        </DockPanel>
+                            </StackPanel>
+                        </Border>
 
 
 
-                        <DockPanel Margin="0,0,0,12" LastChildFill="False">
-                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PanelSize}" Style="{StaticResource FieldLabelStyle}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                            <Border Style="{StaticResource SegmentedContainerStyle}" HorizontalAlignment="Left">
-                                <StackPanel Orientation="Horizontal">
-                                    <RadioButton x:Name="SegPanelSize50" GroupName="PanelSize" Content="{local:Loc ResourceKey=SegmentSize_Small}" Tag="50" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegPanelSize_Click"/>
-                                    <RadioButton x:Name="SegPanelSize70" GroupName="PanelSize" Content="{local:Loc ResourceKey=SegmentSize_Medium}" Tag="70" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegPanelSize_Click"/>
-                                    <RadioButton x:Name="SegPanelSize90" GroupName="PanelSize" Content="{local:Loc ResourceKey=SegmentSize_Large}" Tag="90" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegPanelSize_Click"/>
-                                    <RadioButton x:Name="SegPanelSize100" GroupName="PanelSize" Content="{local:Loc ResourceKey=SegmentSize_XL}" Tag="100" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegPanelSize_Click"/>
-                                </StackPanel>
-                            </Border>
-                        </DockPanel>
+                        <Border Style="{StaticResource ModernSettingsCardStyle}">
+                            <StackPanel>
+                                <StackPanel><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PanelSize}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PanelSizeHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel>
+                                <Slider x:Name="SliderPanelSize" Minimum="0" Maximum="3" TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="1" Margin="8,12,8,0" Style="{StaticResource ModernSliderStyle}" ValueChanged="SliderPanelSize_ValueChanged"/>
+                                <Grid Height="18" Margin="8,3,8,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="LblPanelSize50" Grid.Column="0" Text="50%" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                    <TextBlock x:Name="LblPanelSize70" Grid.Column="2" Text="70%" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                    <TextBlock x:Name="LblPanelSize90" Grid.Column="4" Text="90%" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                    <TextBlock x:Name="LblPanelSize100" Grid.Column="6" Text="100%" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
 
 
 
-                        <DockPanel Margin="0,0,0,12" LastChildFill="False">
-                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ActivationZone}" Style="{StaticResource FieldLabelStyle}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"
-                                       ToolTip="{local:Loc ResourceKey=AppSettingsWindow_ActivationZoneTooltip}"/>
-                            <Border Style="{StaticResource SegmentedContainerStyle}" HorizontalAlignment="Left">
-                                <StackPanel Orientation="Horizontal">
-                                    <RadioButton x:Name="SegZone10" GroupName="Zone" Content="10" Tag="10" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegZone_Click"/>
-                                    <RadioButton x:Name="SegZone30" GroupName="Zone" Content="30" Tag="30" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegZone_Click"/>
-                                    <RadioButton x:Name="SegZone50" GroupName="Zone" Content="50" Tag="50" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegZone_Click"/>
-                                    <RadioButton x:Name="SegZone100" GroupName="Zone" Content="100" Tag="100" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegZone_Click"/>
-                                </StackPanel>
-                            </Border>
-                        </DockPanel>
+                        <Border Style="{StaticResource ModernSettingsCardStyle}">
+                            <StackPanel>
+                                <StackPanel><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ActivationZone}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ActivationZoneTooltip}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel>
+                                <Slider x:Name="SliderActivationZone" Minimum="0" Maximum="3" TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="1" Margin="8,12,8,0" Style="{StaticResource ModernSliderStyle}" ValueChanged="SliderActivationZone_ValueChanged"/>
+                                <Grid Height="18" Margin="8,3,8,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="LblActivationZone10" Grid.Column="0" Text="10%" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                    <TextBlock x:Name="LblActivationZone30" Grid.Column="2" Text="30%" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                    <TextBlock x:Name="LblActivationZone50" Grid.Column="4" Text="50%" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                    <TextBlock x:Name="LblActivationZone100" Grid.Column="6" Text="100%" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
 
 
 
-                        <DockPanel LastChildFill="False">
-                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Delay}" Style="{StaticResource FieldLabelStyle}" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,12,0"/>
-                            <Border Style="{StaticResource SegmentedContainerStyle}" HorizontalAlignment="Left">
-                                <StackPanel Orientation="Horizontal">
-                                    <RadioButton x:Name="SegDelay100" GroupName="Delay" Content="100" Tag="100" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegDelay_Click"/>
-                                    <RadioButton x:Name="SegDelay200" GroupName="Delay" Content="200" Tag="200" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegDelay_Click"/>
-                                    <RadioButton x:Name="SegDelay300" GroupName="Delay" Content="300" Tag="300" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegDelay_Click"/>
-                                    <RadioButton x:Name="SegDelay500" GroupName="Delay" Content="500" Tag="500" Style="{StaticResource SegmentedRadioButtonStyle}" Click="SegDelay_Click"/>
-                                </StackPanel>
-                            </Border>
-                        </DockPanel>
+                        <Border Style="{StaticResource ModernSettingsCardStyle}">
+                            <StackPanel>
+                                <StackPanel><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Delay}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_DelayHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel>
+                                <Slider x:Name="SliderActivationDelay" Minimum="0" Maximum="3" TickFrequency="1" IsSnapToTickEnabled="True" SmallChange="1" LargeChange="1" Margin="8,12,8,0" Style="{StaticResource ModernSliderStyle}" ValueChanged="SliderActivationDelay_ValueChanged"/>
+                                <Grid Height="18" Margin="8,3,8,0">
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="LblActivationDelay100" Grid.Column="0" Text="{local:Loc ResourceKey=AppSettingsWindow_DelayMinLabel}" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                    <TextBlock x:Name="LblActivationDelay200" Grid.Column="2" Text="{local:Loc ResourceKey=AppSettingsWindow_Delay200Label}" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                    <TextBlock x:Name="LblActivationDelay300" Grid.Column="4" Text="{local:Loc ResourceKey=AppSettingsWindow_Delay300Label}" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                    <TextBlock x:Name="LblActivationDelay500" Grid.Column="6" Text="{local:Loc ResourceKey=AppSettingsWindow_DelayMaxLabel}" Style="{StaticResource ModernSliderScaleLabelStyle}"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
 
 
 
-                        <StackPanel Margin="0,16,0,0">
-
-                            <StackPanel.Resources>
-
-                                <Style TargetType="CheckBox" BasedOn="{StaticResource CompactCheckBoxStyle}"/>
-
-                            </StackPanel.Resources>
-
-                            <CheckBox x:Name="ChkShowTaskbarPositionIndicator" Content="{local:Loc ResourceKey=AppSettingsWindow_ShowTaskbarPositionIndicator}"/>
-
-                            <CheckBox x:Name="ChkSecondaryMonitor" Content="{local:Loc ResourceKey=AppSettingsWindow_SecondaryMonitor}"/>
-
-                            <CheckBox x:Name="ChkCheckForUpdatesEnabled" Content="{local:Loc ResourceKey=AppSettingsWindow_CheckForUpdates}"/>
-
-                        </StackPanel>
+                        <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0">
+                            <StackPanel>
+                                <Grid Margin="0,2,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ShowTaskbarPositionIndicator}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ShowTaskbarPositionIndicatorHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowTaskbarPositionIndicator" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Border Style="{StaticResource ModernDividerStyle}"/>
+                                <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_SecondaryMonitor}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_SecondaryMonitorHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkSecondaryMonitor" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Border Style="{StaticResource ModernDividerStyle}"/>
+                                <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_CheckForUpdates}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_CheckForUpdatesHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkCheckForUpdatesEnabled" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Border Style="{StaticResource ModernDividerStyle}"/>
+                                <Grid Margin="0,12,0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=ClipboardManager_PersistHistorySetting}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=ClipboardManager_PersistHistoryHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkClipboardManagerPersistHistory" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}" Content="{local:Loc ResourceKey=ClipboardManager_PersistHistorySetting}"/></Grid>
+                            </StackPanel>
+                        </Border>
 
                     </StackPanel>
 
                 </Border>
 
-            </TabItem>
-
-
-
-            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_ContextNames}"
-                     Style="{StaticResource UnderlineTabItemStyle}">
-
-                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
+                <Border x:Name="ContextSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
 
                     <StackPanel>
+
+                        <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ContextNames}"
+
+                                   Style="{StaticResource ModernSectionTitleStyle}"/>
 
                         <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ContextNamesHint}"
 
@@ -359,26 +991,19 @@
 
                                    TextWrapping="Wrap"
 
-                                   Margin="0,0,0,8"/>
+                                   Margin="0,0,0,18"/>
 
 
 
-                        <StackPanel x:Name="PanelContextsList"/>
+                        <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0">
+                            <StackPanel x:Name="PanelContextsList"/>
+                        </Border>
 
                     </StackPanel>
 
                 </Border>
 
-            </TabItem>
-
-
-
-            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_Hotkeys}"
-                     Style="{StaticResource UnderlineTabItemStyle}">
-
-                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
-
-                    <ScrollViewer>
+                <Border x:Name="HotkeySettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
 
                         <StackPanel Margin="0,0,0,4">
 
@@ -388,6 +1013,10 @@
 
                             </StackPanel.Resources>
 
+                            <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_Hotkeys}"
+
+                                       Style="{StaticResource ModernSectionTitleStyle}"/>
+
                             <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_HotkeysHint}"
 
                                        Foreground="{StaticResource MutedText}"
@@ -396,200 +1025,94 @@
 
                                        TextWrapping="Wrap"
 
-                                       Margin="0,0,0,14"/>
+                                       Margin="0,0,0,4"/>
 
-                            
+                            <TextBlock Text="{local:Loc ResourceKey=HotkeyCapture_RowHint}"
+                                       Foreground="{StaticResource MutedText}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="0,0,0,18"/>
+
+                            <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0">
+                                <StackPanel>
+
 
                             <!-- Показать панель -->
 
-                            <DockPanel Margin="0,0,0,12">
-
-                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ShowPanel}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-
-                                <ToggleButton x:Name="ChkShowPanelCtrl" Content="Ctrl"/>
-
-                                <ToggleButton x:Name="ChkShowPanelShift" Content="Shift"/>
-
-                                <ToggleButton x:Name="ChkShowPanelAlt" Content="Alt"/>
-
-                                <ToggleButton x:Name="ChkShowPanelWin" Content="Win"/>
-
-                                <ComboBox x:Name="CmbShowPanelKey" Width="200" VerticalAlignment="Center"/>
-
-                            </DockPanel>
+                            <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ShowPanel}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyShowPanel" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
 
                             
 
                             <!-- Следующая панель -->
 
-                            <DockPanel Margin="0,0,0,12">
-
-                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_NextPanel}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-
-                                <ToggleButton x:Name="ChkNextContextCtrl" Content="Ctrl"/>
-
-                                <ToggleButton x:Name="ChkNextContextShift" Content="Shift"/>
-
-                                <ToggleButton x:Name="ChkNextContextAlt" Content="Alt"/>
-
-                                <ToggleButton x:Name="ChkNextContextWin" Content="Win"/>
-
-                                <ComboBox x:Name="CmbNextContextKey" Width="200" VerticalAlignment="Center"/>
-
-                            </DockPanel>
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_NextPanel}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyNextContext" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
 
                             
 
                             <!-- Предыдущая панель -->
 
-                            <DockPanel Margin="0,0,0,12">
-
-                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PreviousPanel}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-
-                                <ToggleButton x:Name="ChkPrevContextCtrl" Content="Ctrl"/>
-
-                                <ToggleButton x:Name="ChkPrevContextShift" Content="Shift"/>
-
-                                <ToggleButton x:Name="ChkPrevContextAlt" Content="Alt"/>
-
-                                <ToggleButton x:Name="ChkPrevContextWin" Content="Win"/>
-
-                                <ComboBox x:Name="CmbPrevContextKey" Width="200" VerticalAlignment="Center"/>
-
-                            </DockPanel>
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_PreviousPanel}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyPreviousContext" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
 
                             
 
                             <!-- Добавить кнопку -->
 
-                            <DockPanel Margin="0,0,0,12">
-
-                                <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_AddButton}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-
-                                <ToggleButton x:Name="ChkAddButtonCtrl" Content="Ctrl"/>
-
-                                <ToggleButton x:Name="ChkAddButtonShift" Content="Shift"/>
-
-                                <ToggleButton x:Name="ChkAddButtonAlt" Content="Alt"/>
-
-                                <ToggleButton x:Name="ChkAddButtonWin" Content="Win"/>
-
-                                <ComboBox x:Name="CmbAddButtonKey" Width="200" VerticalAlignment="Center"/>
-
-                            </DockPanel>
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_AddButton}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyAddButton" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
 
 
 
-                            <DockPanel Margin="0,0,0,12">
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_FileSorter}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyFileSorter" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
 
-                                <TextBlock Text="{local:Loc ResourceKey=Tool_FileSorter}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-
-                                <ToggleButton x:Name="ChkFileSorterCtrl" Content="Ctrl"/>
-
-                                <ToggleButton x:Name="ChkFileSorterShift" Content="Shift"/>
-
-                                <ToggleButton x:Name="ChkFileSorterAlt" Content="Alt"/>
-
-                                <ToggleButton x:Name="ChkFileSorterWin" Content="Win"/>
-
-                                <ComboBox x:Name="CmbFileSorterKey" Width="200" VerticalAlignment="Center"/>
-
-                            </DockPanel>
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_IconConverter}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyIconConverter" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
 
                             
 
                             <!-- Быстрая заметка -->
 
-                            <DockPanel Margin="0,0,0,12">
-
-                                <TextBlock Text="{local:Loc ResourceKey=Tool_QuickNote}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-
-                                <ToggleButton x:Name="ChkQuickNoteCtrl" Content="Ctrl"/>
-
-                                <ToggleButton x:Name="ChkQuickNoteShift" Content="Shift"/>
-
-                                <ToggleButton x:Name="ChkQuickNoteAlt" Content="Alt"/>
-
-                                <ToggleButton x:Name="ChkQuickNoteWin" Content="Win"/>
-
-                                <ComboBox x:Name="CmbQuickNoteKey" Width="200" VerticalAlignment="Center"/>
-
-                            </DockPanel>
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_QuickNote}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyQuickNote" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
 
                             
 
                             <!-- Пипетка цвета -->
 
-                            <DockPanel Margin="0,0,0,12">
-
-                                <TextBlock Text="{local:Loc ResourceKey=Tool_ColorPicker}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-
-                                <ToggleButton x:Name="ChkColorPickerCtrl" Content="Ctrl"/>
-
-                                <ToggleButton x:Name="ChkColorPickerShift" Content="Shift"/>
-
-                                <ToggleButton x:Name="ChkColorPickerAlt" Content="Alt"/>
-
-                                <ToggleButton x:Name="ChkColorPickerWin" Content="Win"/>
-
-                                <ComboBox x:Name="CmbColorPickerKey" Width="200" VerticalAlignment="Center"/>
-
-                            </DockPanel>
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_ColorPicker}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyColorPicker" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
 
                             
 
                             <!-- Таймер/Секундомер -->
 
-                            <DockPanel>
-
-                                <TextBlock Text="{local:Loc ResourceKey=Tool_TimerStopwatch}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
-
-                                <ToggleButton x:Name="ChkTimerStopwatchCtrl" Content="Ctrl"/>
-
-                                <ToggleButton x:Name="ChkTimerStopwatchShift" Content="Shift"/>
-
-                                <ToggleButton x:Name="ChkTimerStopwatchAlt" Content="Alt"/>
-
-                                <ToggleButton x:Name="ChkTimerStopwatchWin" Content="Win"/>
-
-                                <ComboBox x:Name="CmbTimerStopwatchKey" Width="200" VerticalAlignment="Center"/>
-
-                            </DockPanel>
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_TimerStopwatch}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyTimerStopwatch" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
 
 
 
-                            <DockPanel Margin="0,12,0,0">
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_QRCodeGenerator}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyQRCodeGenerator" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
 
-                                <TextBlock Text="{local:Loc ResourceKey=Tool_QRCodeGenerator}" Style="{StaticResource FieldLabelStyle}" Width="140" VerticalAlignment="Center"/>
+                            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_ClipboardManager}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyClipboardManager" Grid.Column="1"/></Grid>
 
-                                <ToggleButton x:Name="ChkQRCodeGeneratorCtrl" Content="Ctrl"/>
-
-                                <ToggleButton x:Name="ChkQRCodeGeneratorShift" Content="Shift"/>
-
-                                <ToggleButton x:Name="ChkQRCodeGeneratorAlt" Content="Alt"/>
-
-                                <ToggleButton x:Name="ChkQRCodeGeneratorWin" Content="Win"/>
-
-                                <ComboBox x:Name="CmbQRCodeGeneratorKey" Width="200" VerticalAlignment="Center"/>
-
-                            </DockPanel>
+                                </StackPanel>
+                            </Border>
 
                         </StackPanel>
 
-                    </ScrollViewer>
-
                 </Border>
 
-            </TabItem>
-
-
-
-            <TabItem Header="{local:Loc ResourceKey=AppSettingsWindow_QuickTools}"
-                     Style="{StaticResource UnderlineTabItemStyle}">
-
-                <Border Style="{StaticResource CardStyle}" Margin="0,12,0,0" VerticalAlignment="Top">
+                <Border x:Name="QuickToolsSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
 
                     <StackPanel>
+
+                        <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_QuickTools}"
+
+                                   Style="{StaticResource ModernSectionTitleStyle}"/>
 
                         <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_QuickToolsHint}"
 
@@ -599,93 +1122,185 @@
 
                                    TextWrapping="Wrap"
 
-                                   Margin="0,0,0,14"/>
+                                   Margin="0,0,0,18"/>
 
-                        <UniformGrid Columns="2">
-
-                            <UniformGrid.Resources>
-
-                                <Style TargetType="CheckBox" BasedOn="{StaticResource CompactCheckBoxStyle}"/>
-
-                            </UniformGrid.Resources>
-
-                            <CheckBox x:Name="ChkShowPresetSearch" Content="{local:Loc ResourceKey=Tool_Search}"/>
-
-                            <CheckBox x:Name="ChkShowPresetScreenshot" Content="{local:Loc ResourceKey=Tool_Screenshot}"/>
-
-                            <CheckBox x:Name="ChkShowPresetVideo" Content="{local:Loc ResourceKey=Tool_Video}"/>
-
-                            <CheckBox x:Name="ChkShowPresetCalc" Content="{local:Loc ResourceKey=Tool_Calculator}"/>
-
-                            <CheckBox x:Name="ChkShowPresetExplorer" Content="{local:Loc ResourceKey=Tool_Explorer}"/>
-
-                            <CheckBox x:Name="ChkShowPresetDownloads" Content="{local:Loc ResourceKey=Tool_Downloads}"/>
-
-                            <CheckBox x:Name="ChkShowPresetFileSorter" Content="{local:Loc ResourceKey=Tool_FileSorter}"/>
-
-                            <CheckBox x:Name="ChkShowPresetIconConverter" Content="{local:Loc ResourceKey=Tool_IconConverter}"/>
-
-                            <CheckBox x:Name="ChkShowPresetTimerStopwatch" Content="{local:Loc ResourceKey=Tool_TimerStopwatch}"/>
-
-                            <CheckBox x:Name="ChkShowPresetColorPicker" Content="{local:Loc ResourceKey=Tool_ColorPicker}"/>
-
-                            <CheckBox x:Name="ChkShowPresetQuickNote" Content="{local:Loc ResourceKey=Tool_QuickNote}"/>
-
-                            <CheckBox x:Name="ChkShowPresetQRCodeGenerator" Content="{local:Loc ResourceKey=Tool_QRCodeGenerator}"/>
-
-                            <CheckBox x:Name="ChkShowPresetClipboardManager" Content="{local:Loc ResourceKey=Tool_ClipboardManager}"/>
-
-                            <CheckBox x:Name="ChkShowPresetShowDesktop" Content="{local:Loc ResourceKey=Tool_ShowDesktop}"/>
-
-                            <CheckBox x:Name="ChkShowPresetAppsFolder" Content="{local:Loc ResourceKey=Tool_AppsFolder}"/>
-
-                            <CheckBox x:Name="ChkShowPresetCopilot" Content="{local:Loc ResourceKey=Tool_Copilot}"/>
-
-                        </UniformGrid>
-
-
-
-                        <Border Margin="0,14,0,0" Padding="10" Background="#383838" BorderBrush="#263140" BorderThickness="1" CornerRadius="6">
-
-                            <StackPanel>
-
-                                <CheckBox x:Name="ChkClipboardManagerPersistHistory"
-
-                                          Style="{StaticResource CompactCheckBoxStyle}"
-
-                                          Content="{local:Loc ResourceKey=ClipboardManager_PersistHistorySetting}"/>
-
-                                <TextBlock Margin="0,6,0,0"
-
-                                           Text="{local:Loc ResourceKey=ClipboardManager_PersistHistoryHint}"
-
-                                           Foreground="{StaticResource MutedText}"
-
-                                           FontSize="11"
-
-                                           TextWrapping="Wrap"/>
-
+                        <Border Style="{StaticResource ModernSettingsCardStyle}">
+                            <StackPanel x:Name="QuickToolsList">
+                                <Grid x:Name="QuickToolRowQuickNote" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_QuickNote_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_QuickNote_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetQuickNote" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowQRCodeGenerator" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_QRCodeGenerator_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_QRCodeGenerator_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetQRCodeGenerator" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowDownloads" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_Downloads_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_Downloads_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetDownloads" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowVideo" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_Video_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_Video_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetVideo" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowCopilot" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_Copilot_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_Copilot_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetCopilot" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowCalculator" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_Calculator_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_Calculator_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetCalc" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowIconConverter" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_IconConverter_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_IconConverter_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetIconConverter" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}" Content="{local:Loc ResourceKey=Tool_IconConverter}"/></Grid>
+                                <Grid x:Name="QuickToolRowClipboardManager" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_ClipboardManager_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_ClipboardManager_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetClipboardManager" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}" Content="{local:Loc ResourceKey=Tool_ClipboardManager}"/></Grid>
+                                <Grid x:Name="QuickToolRowColorPicker" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_ColorPicker_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_ColorPicker_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetColorPicker" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowSearch" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_Search_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_Search_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetSearch" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowShowDesktop" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_ShowDesktop_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_ShowDesktop_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetShowDesktop" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowAppsFolder" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_AppsFolder_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_AppsFolder_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetAppsFolder" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowExplorer" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_Explorer_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_Explorer_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetExplorer" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowScreenshot" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_Screenshot_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_Screenshot_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetScreenshot" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowFileSorter" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_FileSorter_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_FileSorter_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetFileSorter" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowTimerStopwatch" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_TimerStopwatch_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_TimerStopwatch_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetTimerStopwatch" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
                             </StackPanel>
-
                         </Border>
 
                     </StackPanel>
 
                 </Border>
 
-            </TabItem>
+                <Border x:Name="AiProvidersSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc ResourceKey=AiSettings_Title}"
+                                   Style="{StaticResource ModernSectionTitleStyle}"/>
+                        <TextBlock Text="{local:Loc ResourceKey=AiSettings_Description}"
+                                   Foreground="{StaticResource MutedText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,18"/>
 
-        </TabControl>
+                        <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0,0,0,16">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Margin="0,0,20,0">
+                                        <TextBlock Text="{local:Loc ResourceKey=AiSettings_FreeOnly}" Style="{StaticResource ModernSettingTitleStyle}"/>
+                                        <TextBlock Text="{local:Loc ResourceKey=AiSettings_FreeOnlyHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/>
+                                    </StackPanel>
+                                    <CheckBox Grid.Column="1" IsChecked="True" IsEnabled="False" Style="{StaticResource ModernSwitchStyle}"/>
+                                </Grid>
+                                <Border Style="{StaticResource ModernDividerStyle}" Margin="0,14"/>
+                                <TextBlock Text="{local:Loc ResourceKey=AiSettings_PrivacyWarning}"
+                                           Style="{StaticResource ModernSettingDescriptionStyle}"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Margin="0,0,20,0">
+                                        <TextBlock Text="{local:Loc ResourceKey=AiSettings_Connections}" Style="{StaticResource ModernSettingTitleStyle}"/>
+                                        <TextBlock Text="{local:Loc ResourceKey=AiSettings_ConnectionsHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/>
+                                    </StackPanel>
+                                    <Button Grid.Column="1"
+                                            Content="{local:Loc ResourceKey=AiSettings_AddConnection}"
+                                            Style="{StaticResource CommandButtonStyle}"
+                                            MinWidth="170"
+                                            Height="36"
+                                            Click="BtnAiAddConnection_Click"/>
+                                </Grid>
+                                <StackPanel x:Name="AiConnectionsList"/>
+                                <TextBlock x:Name="TxtAiConnectionsEmpty"
+                                           Text="{local:Loc ResourceKey=AiSettings_NoConnections}"
+                                           Style="{StaticResource ModernSettingDescriptionStyle}"
+                                           Margin="0,10,0,2"
+                                           TextWrapping="Wrap"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+                <Border x:Name="AboutSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0">
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc ResourceKey=About_Title}"
+                                   Style="{StaticResource ModernSectionTitleStyle}"/>
+                        <TextBlock Text="{local:Loc ResourceKey=About_Description}"
+                                   Foreground="{StaticResource MutedText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Margin="0,0,0,18"/>
+
+                        <Border Style="{StaticResource ModernSettingsCardStyle}">
+                            <StackPanel>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="64"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Image Width="48" Height="48"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Top"
+                                           Source="pack://application:,,,/Resources/app.ico"/>
+                                    <StackPanel Grid.Column="1" Margin="14,0,0,0">
+                                        <TextBlock Text="AiteBar" FontSize="20" FontWeight="SemiBold" Foreground="#F4F7FA"/>
+                                        <TextBlock x:Name="TxtAboutVersion" Style="{StaticResource ModernSettingDescriptionStyle}" Margin="0,3,0,0"/>
+                                    </StackPanel>
+                                </Grid>
+                                <Border Style="{StaticResource ModernDividerStyle}" Margin="0,16,0,14"/>
+                                <TextBlock Text="{local:Loc ResourceKey=About_Developer}" Style="{StaticResource ModernSettingDescriptionStyle}"/>
+                                <TextBlock Text="© 2026 Codebdbd" Style="{StaticResource ModernSettingDescriptionStyle}" Margin="0,3,0,0"/>
+                                <TextBlock Text="{local:Loc ResourceKey=About_License}" Style="{StaticResource ModernSettingDescriptionStyle}" Margin="0,3,0,0"/>
+                                <TextBlock Text="{local:Loc ResourceKey=About_TechnologiesValue}" Style="{StaticResource ModernSettingDescriptionStyle}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0">
+                            <StackPanel>
+                                <TextBlock Text="{local:Loc ResourceKey=About_Resources}" Style="{StaticResource ModernSettingTitleStyle}" Margin="10,0,10,8"/>
+                                <Button Style="{StaticResource AboutActionButtonStyle}" Click="BtnAboutCheckUpdates_Click">
+                                    <Grid><TextBlock Text="{local:Loc ResourceKey=Update_Check}"/><TextBlock Text="&#xF190;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" HorizontalAlignment="Right"/></Grid>
+                                </Button>
+                                <Button Style="{StaticResource AboutActionButtonStyle}" Click="BtnAboutWebsite_Click">
+                                    <Grid><TextBlock Text="{local:Loc ResourceKey=About_Website}"/><TextBlock Text="&#xF45A;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" HorizontalAlignment="Right"/></Grid>
+                                </Button>
+                                <Button Style="{StaticResource AboutActionButtonStyle}" Click="BtnAboutRepository_Click">
+                                    <Grid><TextBlock Text="{local:Loc ResourceKey=About_Repository}"/><TextBlock Text="&#xF2EF;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" HorizontalAlignment="Right"/></Grid>
+                                </Button>
+                                <Button Style="{StaticResource AboutActionButtonStyle}" Click="BtnAboutLicenses_Click">
+                                    <Grid><TextBlock Text="{local:Loc ResourceKey=About_Licenses}"/><TextBlock Text="&#xE557;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" HorizontalAlignment="Right"/></Grid>
+                                </Button>
+                                <Button Style="{StaticResource AboutActionButtonStyle}" Click="BtnAboutOpenDataFolder_Click">
+                                    <Grid><TextBlock Text="{local:Loc ResourceKey=About_OpenDataFolder}"/><TextBlock Text="&#xF42E;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" HorizontalAlignment="Right"/></Grid>
+                                </Button>
+                                <Button Style="{StaticResource AboutActionButtonStyle}" Click="BtnAboutOpenProgramFolder_Click">
+                                    <Grid><TextBlock Text="{local:Loc ResourceKey=About_ProgramFolder}"/><TextBlock Text="&#xF42E;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" HorizontalAlignment="Right"/></Grid>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                </Border>
+
+            </StackPanel>
+
+        </ScrollViewer>
 
 
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,8,0,0">
+        <Grid x:Name="SettingsFooter" Grid.Row="1" Margin="0,12,14,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
 
-            <Button Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource CommandButtonStyle}" Click="BtnCancel_Click" Width="150" Margin="0,0,10,0" IsCancel="True"/>
+            <ToggleButton x:Name="BtnKeepOnTop"
+                          Grid.Column="0"
+                          Style="{StaticResource SettingsTopmostToggleStyle}"
+                          IsChecked="False"
+                          Click="BtnKeepOnTop_Click"
+                          ToolTip="{local:Loc ResourceKey=AppSettingsWindow_KeepOnTopHint}"
+                          AutomationProperties.Name="{local:Loc ResourceKey=AppSettingsWindow_KeepOnTop}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="&#xF601;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_KeepOnTop}" VerticalAlignment="Center"/>
+                </StackPanel>
+            </ToggleButton>
 
-            <Button Content="{local:Loc ResourceKey=Common_Save}" Style="{StaticResource PrimaryCommandButtonStyle}" Click="BtnSave_Click" Width="180" IsDefault="True"/>
+            <StackPanel Grid.Column="2" Orientation="Horizontal">
+                <Button x:Name="BtnCancel" Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource CommandButtonStyle}" Click="BtnCancel_Click" Width="150" Margin="0,0,10,0" IsCancel="True"/>
+                <Button x:Name="BtnSave" Content="{local:Loc ResourceKey=Common_Save}" Style="{StaticResource PrimaryCommandButtonStyle}" Click="BtnSave_Click" Width="180" IsDefault="True"/>
+            </StackPanel>
+        </Grid>
 
-        </StackPanel>
+        </Grid>
 
     </Grid>
 

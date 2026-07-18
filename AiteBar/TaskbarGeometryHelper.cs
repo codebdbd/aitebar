@@ -144,6 +144,28 @@ internal static class TaskbarGeometryHelper
         return new Point(x, y);
     }
 
+    public static Rect GetMonitorBounds(int monitorIndex)
+    {
+        IntPtr monitor = GetMonitorFromIndex(monitorIndex);
+        if (monitor != IntPtr.Zero)
+        {
+            var monitorInfo = new NativeMethods.MONITORINFO();
+            if (NativeMethods.GetMonitorInfo(monitor, monitorInfo))
+            {
+                return new Rect(
+                    monitorInfo.rcMonitor.Left,
+                    monitorInfo.rcMonitor.Top,
+                    monitorInfo.rcMonitor.Right - monitorInfo.rcMonitor.Left,
+                    monitorInfo.rcMonitor.Bottom - monitorInfo.rcMonitor.Top);
+            }
+        }
+
+        var primary = System.Windows.Forms.Screen.PrimaryScreen;
+        return primary == null
+            ? new Rect(0, 0, 1, 1)
+            : new Rect(primary.Bounds.Left, primary.Bounds.Top, primary.Bounds.Width, primary.Bounds.Height);
+    }
+
     public static string GetArrowGlyph(DockEdge edge)
     {
         return edge switch

@@ -19,7 +19,7 @@ AiteBar — Your Personal Command Center for Windows. Turn the edge of your scre
 
 #### Quick Actions
 - **Hidden edge panel**: Appears when hovering over the screen edge
-- **Panel position indicator**: Small indicator on the taskbar showing where the panel is located and allowing quick access
+- **Panel position indicator**: Draggable, DPI-safe indicator that stays inside the selected monitor and provides quick panel access
 - **Global hotkeys**: Quick access to the panel and actions
 - **Built-in tools**: Screenshot, screen recording, calculator, file explorer, downloads, timer and stopwatch, color picker, Quick Note, file sorter, icon converter, QR code generator, clipboard manager, show desktop, apps folder, Copilot
 - **Drag-and-drop**: Add files, folders, .url shortcuts and links by dragging
@@ -42,7 +42,7 @@ AiteBar — Your Personal Command Center for Windows. Turn the edge of your scre
 2. Run `AiteBar-Setup.exe`.
 3. Install the program like a regular Windows application.
 4. After installation, launch `AiteBar` from the Start menu. The program will appear in the Windows system tray.
-5. To check for updates, use the `Check for updates` item in the tray menu or the `About` window.
+5. To check for updates, use the `Check for updates` item in the tray menu or the final `About` section in application settings.
 
 ### Usage
 - **Button settings**: Right-click on any button to edit it.
@@ -85,7 +85,7 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 
 #### Быстрые действия
 - **Скрытая edge-панель**: Появляется при наведении на край экрана
-- **Указатель положения панели**: Маленький индикатор на панели задач, показывающий, где находится панель и позволяющий быстро открыть её
+- **Указатель положения панели**: Перетаскиваемый DPI-безопасный индикатор, который остаётся в границах выбранного монитора и позволяет быстро открыть панель
 - **Глобальные горячие клавиши**: Быстрый доступ к панели и действиям
 - **Встроенные инструменты**: Скриншот, запись экрана, калькулятор, проводник, загрузки, таймер и секундомер, пипетка цвета, Quick Note, сортировщик файлов, конвертер иконок, генератор QR-кодов, менеджер буфера обмена, показ рабочего стола, папка приложений, Copilot
 - **Drag-and-drop**: Добавляй файлы, папки, `.url` и ссылки перетаскиванием
@@ -108,7 +108,7 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 2. Запустите `AiteBar-Setup.exe`.
 3. Установите программу как обычное Windows-приложение.
 4. После установки запустите `AiteBar` из меню Пуск. Программа появится в системном трее Windows.
-5. Для проверки новых версий используйте пункт `Check for updates` в tray-меню или окне `About`.
+5. Для проверки новых версий используйте пункт `Check for updates` в tray-меню или последний раздел `About` в настройках программы.
 
 ### Управление
 - **Настройка кнопок**: Кликните ПКМ (правой кнопкой мыши) по любой кнопке для её редактирования.
@@ -118,6 +118,7 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 
 ### Документация
 - [Руководство пользователя](docs/USER_MANUAL.md)
+- [Подключение AI-сервисов](docs/AI_PROVIDERS.md)
 - [Карта функций](docs/functions.md)
 - [Архитектура](docs/architecture.md)
 - [Техническая справка](docs/technical-reference.md)

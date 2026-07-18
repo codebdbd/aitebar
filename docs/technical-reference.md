@@ -69,6 +69,8 @@ AiteBar запускается как один экземпляр. Если по
 | `NextContextHotkey` | не назначено | Следующая панель |
 | `PreviousContextHotkey` | не назначено | Предыдущая панель |
 | `AddButtonHotkey` | не назначено | Добавить кнопку |
+| `IconConverterHotkey` | не назначено | Запустить Icon Converter |
+| `ClipboardManagerHotkey` | не назначено | Запустить Clipboard Manager |
 | `ShowPresetSearch` | `true` | Показывать поиск |
 | `ShowPresetScreenshot` | `true` | Показывать скриншот |
 | `ShowPresetVideo` | `true` | Показывать запись видео |
@@ -110,10 +112,12 @@ AiteBar запускается как один экземпляр. Если по
 - предыдущая панель;
 - добавить кнопку;
 - запустить File Sorter;
+- запустить Icon Converter;
 - запустить Quick Note;
 - запустить Color Picker;
 - запустить Timer/Stopwatch;
 - запустить QR Code Generator.
+- запустить Clipboard Manager.
 
 Внутри окна настроек нельзя сохранить две одинаковые назначенные комбинации. Если Windows не даёт зарегистрировать hotkey, настройки сохраняются, но приложение показывает предупреждение, а комбинация не работает до изменения.
 

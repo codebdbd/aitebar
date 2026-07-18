@@ -193,7 +193,7 @@
     <value>Зона активации, %</value>
   </data>
   <data name="AppSettingsWindow_ActivationZoneTooltip" xml:space="preserve">
-    <value>Размер области у края экрана, при наведении на которую панель появляется.</value>
+    <value>Участок выбранного края, который реагирует на курсор: 10% — только центр, 100% — весь край.</value>
   </data>
   <data name="AppSettingsWindow_Delay" xml:space="preserve">
     <value>Задержка появления, мс</value>
@@ -742,6 +742,10 @@
     <value>Глобальные горячие клавиши должны содержать Ctrl, Alt, Shift или Win:
 {0}</value>
   </data>
+  <data name="HotkeyGlobalReservedMessage" xml:space="preserve">
+    <value>Эти сочетания зарезервированы Windows:
+{0}</value>
+  </data>
   <data name="Tool_FileSorter" xml:space="preserve">
     <value>Сортировка файлов</value>
   </data>
@@ -889,6 +893,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="About_Developer" xml:space="preserve"><value>Разработчик: Codebdbd</value></data>
   <data name="About_License" xml:space="preserve"><value>Лицензия: проприетарная (Все права защищены)</value></data>
   <data name="About_Technologies" xml:space="preserve"><value>Технологии</value></data>
+  <data name="About_TechnologiesValue" xml:space="preserve"><value>.NET 10 · WPF</value></data>
   <data name="About_AppData" xml:space="preserve"><value>Данные приложения</value></data>
   <data name="About_OpenDataFolder" xml:space="preserve"><value>Открыть папку данных</value></data>
   <data name="About_Resources" xml:space="preserve"><value>Ресурсы</value></data>
@@ -1153,6 +1158,82 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QRCodeGenerator_Png800Subtext" xml:space="preserve"><value>Сохранить как изображение PNG</value></data>
   <data name="QRCodeGenerator_VectorSubtext" xml:space="preserve"><value>Сохранить как вектор SVG</value></data>
   <data name="QRCodeGenerator_ClipboardSubtext" xml:space="preserve"><value>Копировать в буфер обмена</value></data>
+  <data name="HotkeyCapture_Prompt" xml:space="preserve"><value>Нажмите сочетание</value></data>
+  <data name="HotkeyCapture_Clear" xml:space="preserve"><value>Очистить сочетание</value></data>
+  <data name="AppSettingsWindow_LanguageHint" xml:space="preserve"><value>Выберите язык интерфейса программы.</value></data>
+  <data name="AppSettingsWindow_EdgeHint" xml:space="preserve"><value>Выберите край экрана, у которого появляется панель.</value></data>
+  <data name="AppSettingsWindow_PanelSizeHint" xml:space="preserve"><value>Длина панели вдоль выбранного края: 50% — половина экрана, 100% — весь край.</value></data>
+  <data name="AppSettingsWindow_DelayHint" xml:space="preserve"><value>Сколько удерживать курсор у края: 100 мс — быстрый показ, 500 мс — меньше случайных открытий.</value></data>
+  <data name="AppSettingsWindow_ShowTaskbarPositionIndicatorHint" xml:space="preserve"><value>Показывать текущее положение панели в области панели задач Windows.</value></data>
+  <data name="AppSettingsWindow_SecondaryMonitorHint" xml:space="preserve"><value>Размещать панель на втором мониторе, если он доступен.</value></data>
+  <data name="AppSettingsWindow_CheckForUpdatesHint" xml:space="preserve"><value>Автоматически проверять наличие новой версии AiteBar.</value></data>
+  <data name="HotkeyCapture_RowHint" xml:space="preserve"><value>Нажмите поле, затем введите нужное сочетание.</value></data>
+  <data name="AppSettingsWindow_DelayMinLabel" xml:space="preserve"><value>100 мс</value></data>
+  <data name="AppSettingsWindow_Delay200Label" xml:space="preserve"><value>200 мс</value></data>
+  <data name="AppSettingsWindow_Delay300Label" xml:space="preserve"><value>300 мс</value></data>
+  <data name="AppSettingsWindow_DelayMaxLabel" xml:space="preserve"><value>500 мс</value></data>
+  <data name="AppSettingsWindow_KeepOnTop" xml:space="preserve"><value>Поверх других окон</value></data>
+  <data name="AppSettingsWindow_KeepOnTopHint" xml:space="preserve"><value>Закрепить окно настроек поверх других программ до его закрытия.</value></data>
+  <data name="QuickTool_QuickNote_Title" xml:space="preserve"><value>Быстрая заметка</value></data>
+  <data name="QuickTool_QuickNote_Description" xml:space="preserve"><value>Открывает окно для создания и форматирования заметки.</value></data>
+  <data name="QuickTool_QRCodeGenerator_Title" xml:space="preserve"><value>Генератор QR-кодов</value></data>
+  <data name="QuickTool_QRCodeGenerator_Description" xml:space="preserve"><value>Создаёт QR-код из текста или ссылки.</value></data>
+  <data name="QuickTool_Downloads_Title" xml:space="preserve"><value>Загрузки</value></data>
+  <data name="QuickTool_Downloads_Description" xml:space="preserve"><value>Открывает системную папку «Загрузки».</value></data>
+  <data name="QuickTool_Video_Title" xml:space="preserve"><value>Запись экрана</value></data>
+  <data name="QuickTool_Video_Description" xml:space="preserve"><value>Открывает средство Windows для записи видео с экрана.</value></data>
+  <data name="QuickTool_Copilot_Title" xml:space="preserve"><value>ИИ-помощник Copilot</value></data>
+  <data name="QuickTool_Copilot_Description" xml:space="preserve"><value>Открывает Microsoft Copilot, если он доступен в системе.</value></data>
+  <data name="QuickTool_Calculator_Title" xml:space="preserve"><value>Калькулятор</value></data>
+  <data name="QuickTool_Calculator_Description" xml:space="preserve"><value>Открывает стандартный калькулятор Windows.</value></data>
+  <data name="QuickTool_IconConverter_Title" xml:space="preserve"><value>Конвертер иконок</value></data>
+  <data name="QuickTool_IconConverter_Description" xml:space="preserve"><value>Преобразует изображения в значки формата ICO.</value></data>
+  <data name="QuickTool_ClipboardManager_Title" xml:space="preserve"><value>Менеджер буфера обмена</value></data>
+  <data name="QuickTool_ClipboardManager_Description" xml:space="preserve"><value>Показывает историю скопированного текста и изображений.</value></data>
+  <data name="QuickTool_ColorPicker_Title" xml:space="preserve"><value>Пипетка</value></data>
+  <data name="QuickTool_ColorPicker_Description" xml:space="preserve"><value>Определяет цвет в выбранной точке экрана и копирует его код.</value></data>
+  <data name="QuickTool_Search_Title" xml:space="preserve"><value>Поиск</value></data>
+  <data name="QuickTool_Search_Description" xml:space="preserve"><value>Ищет в интернете текст, который сейчас находится в буфере обмена.</value></data>
+  <data name="QuickTool_ShowDesktop_Title" xml:space="preserve"><value>Показать рабочий стол</value></data>
+  <data name="QuickTool_ShowDesktop_Description" xml:space="preserve"><value>Сворачивает открытые окна и показывает рабочий стол.</value></data>
+  <data name="QuickTool_AppsFolder_Title" xml:space="preserve"><value>Приложения Windows</value></data>
+  <data name="QuickTool_AppsFolder_Description" xml:space="preserve"><value>Открывает системный список установленных приложений.</value></data>
+  <data name="QuickTool_Explorer_Title" xml:space="preserve"><value>Проводник</value></data>
+  <data name="QuickTool_Explorer_Description" xml:space="preserve"><value>Открывает Проводник Windows для работы с файлами и папками.</value></data>
+  <data name="QuickTool_Screenshot_Title" xml:space="preserve"><value>Снимок экрана</value></data>
+  <data name="QuickTool_Screenshot_Description" xml:space="preserve"><value>Открывает средство Windows для выбора области и создания снимка.</value></data>
+  <data name="QuickTool_FileSorter_Title" xml:space="preserve"><value>Сортировщик файлов</value></data>
+  <data name="QuickTool_FileSorter_Description" xml:space="preserve"><value>Раскладывает файлы по папкам согласно выбранным правилам.</value></data>
+  <data name="QuickTool_TimerStopwatch_Title" xml:space="preserve"><value>Таймер и секундомер</value></data>
+  <data name="QuickTool_TimerStopwatch_Description" xml:space="preserve"><value>Позволяет запускать таймер и измерять прошедшее время.</value></data>
+  <data name="Common_Delete" xml:space="preserve"><value>Удалить</value></data>
+  <data name="AiSettings_Title" xml:space="preserve"><value>Нейросети</value></data>
+  <data name="AiSettings_Description" xml:space="preserve"><value>Подключайте бесплатные лимиты AI-сервисов для текущих и будущих инструментов AiteBar.</value></data>
+  <data name="AiSettings_FreeOnly" xml:space="preserve"><value>Только бесплатные тарифы</value></data>
+  <data name="AiSettings_FreeOnlyHint" xml:space="preserve"><value>AiteBar не переключается автоматически на модели, явно обозначенные как платные.</value></data>
+  <data name="AiSettings_PrivacyWarning" xml:space="preserve"><value>Текст или файлы передаются выбранному внешнему сервису только после явного действия пользователя. Перед использованием ознакомьтесь с его условиями конфиденциальности.</value></data>
+  <data name="AiSettings_Connections" xml:space="preserve"><value>Подключения API</value></data>
+  <data name="AiSettings_ConnectionsHint" xml:space="preserve"><value>Можно добавить несколько аккаунтов или проектов. Внутри сервиса подключения используются по приоритету.</value></data>
+  <data name="AiSettings_AddConnection" xml:space="preserve"><value>Добавить подключение</value></data>
+  <data name="AiSettings_AddConnectionHint" xml:space="preserve"><value>API-ключ хранится в Диспетчере учётных данных Windows и не записывается в файл настроек AiteBar.</value></data>
+  <data name="AiSettings_NoConnections" xml:space="preserve"><value>Ни один AI-сервис пока не подключён.</value></data>
+  <data name="AiSettings_Provider" xml:space="preserve"><value>Сервис</value></data>
+  <data name="AiSettings_GetApiKey" xml:space="preserve"><value>Получить API-ключ на официальном сайте</value></data>
+  <data name="AiSettings_ConnectionName" xml:space="preserve"><value>Название подключения</value></data>
+  <data name="AiSettings_QuotaScope" xml:space="preserve"><value>Аккаунт или проект</value></data>
+  <data name="AiSettings_QuotaScopeHint" xml:space="preserve"><value>Укажите одинаковое значение для ключей с общей квотой, например «Личный проект Google».</value></data>
+  <data name="AiSettings_ApiKey" xml:space="preserve"><value>API-ключ</value></data>
+  <data name="AiSettings_ApiKeySecurityHint" xml:space="preserve"><value>Сохранённый ключ больше не отображается и не попадает в журналы или резервные копии настроек.</value></data>
+  <data name="AiSettings_Add" xml:space="preserve"><value>Добавить</value></data>
+  <data name="AiSettings_ConnectionDetails" xml:space="preserve"><value>{0} · квота: {1}</value></data>
+  <data name="AiSettings_MoveUp" xml:space="preserve"><value>Повысить приоритет</value></data>
+  <data name="AiSettings_MoveDown" xml:space="preserve"><value>Понизить приоритет</value></data>
+  <data name="AiSettings_Test" xml:space="preserve"><value>Проверить</value></data>
+  <data name="AiSettings_Testing" xml:space="preserve"><value>Проверка…</value></data>
+  <data name="AiSettings_StatusNotChecked" xml:space="preserve"><value>Не проверено</value></data>
+  <data name="AiSettings_StatusAvailable" xml:space="preserve"><value>Подключено · доступно моделей: {0}</value></data>
+  <data name="AiSettings_StatusError" xml:space="preserve"><value>Ошибка подключения: {0}</value></data>
+  <data name="AiSettings_CredentialSaveFailed" xml:space="preserve"><value>Не удалось сохранить API-ключ в Диспетчере учётных данных Windows.</value></data>
 </root>
 
 

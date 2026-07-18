@@ -24,6 +24,9 @@ AiteBar - desktop-утилита для Windows: скрываемая edge-па�
   - Открыть настройки программы через кнопку ⚙️ на панели
   - Указатель положения панели
     - Показать/скрыть указатель
+    - Перетащить указатель в удобное место выбранного монитора
+    - Сохранить относительное положение при изменении DPI или разрешения
+    - Не допустить выхода указателя за видимые границы монитора
     - Показать подсказку с положением панели при наведении
     - Контекстное меню указателя с быстрым доступом к панели и настройкам
 
@@ -143,9 +146,12 @@ AiteBar - desktop-утилита для Windows: скрываемая edge-па�
   - Назначить hotkey предыдущей панели
   - Назначить hotkey добавления кнопки
   - Назначить hotkey File Sorter
+  - Назначить hotkey Icon Converter
   - Назначить hotkey Quick Note
   - Назначить hotkey Color Picker
   - Назначить hotkey Timer/Stopwatch
+  - Назначить hotkey QR Code Generator
+  - Назначить hotkey Clipboard Manager
   - Включить/отключить встроенные быстрые инструменты
   - Изменить порядок кнопок встроенных утилит
   - Сохранить или отменить настройки
@@ -2007,17 +2013,17 @@ HEX-цвет `#RRGGBB` или `#AARRGGBB`.
 
 ### Где находится
 
-Tray menu -> `О программе`.
+Последний пункт левого меню настроек; tray menu -> `О программе` открывает сразу этот раздел.
 
 ### Как использовать
 
 1. Открыть tray menu.
 2. Выбрать `О программе`.
-3. Нажать нужную кнопку.
+3. В открывшемся окне настроек нажать нужную кнопку раздела.
 
 ### Входные данные
 
-Кнопки окна About.
+Кнопки раздела «О программе» в `AppSettingsWindow`.
 
 ### Результат
 
@@ -2033,7 +2039,7 @@ Tray menu -> `О программе`.
 
 ### Подтверждение в коде
 
-`AiteBar/AboutWindow.xaml`, `AiteBar/AboutWindow.xaml.cs`.
+`AiteBar/AppSettingsWindow.xaml`, `AiteBar/AppSettingsWindow.xaml.cs`, `AiteBar/MainWindow.TrayMenuHandler.cs`.
 
 ## Закрытие приложения
 
@@ -2237,6 +2243,13 @@ Tray-меню.
 | `NextContextHotkey` | Hotkey следующей панели | HotkeyBinding | пустой binding |
 | `PreviousContextHotkey` | Hotkey предыдущей панели | HotkeyBinding | пустой binding |
 | `AddButtonHotkey` | Hotkey добавления кнопки | HotkeyBinding | пустой binding |
+| `FileSorterHotkey` | Hotkey File Sorter | HotkeyBinding | пустой binding |
+| `IconConverterHotkey` | Hotkey Icon Converter | HotkeyBinding | пустой binding |
+| `QuickNoteHotkey` | Hotkey Quick Note | HotkeyBinding | пустой binding |
+| `ColorPickerHotkey` | Hotkey Color Picker | HotkeyBinding | пустой binding |
+| `TimerStopwatchHotkey` | Hotkey Timer/Stopwatch | HotkeyBinding | пустой binding |
+| `QRCodeGeneratorHotkey` | Hotkey QR Code Generator | HotkeyBinding | пустой binding |
+| `ClipboardManagerHotkey` | Hotkey Clipboard Manager | HotkeyBinding | пустой binding |
 | `ShowPresetSearch` | Показывать поиск | true/false | `true` |
 | `ShowPresetScreenshot` | Показывать скриншот | true/false | `true` |
 | `ShowPresetVideo` | Показывать запись видео | true/false | `true` |
@@ -2497,6 +2510,10 @@ Tray-меню.
 - Открыть program folder.
 - Открыть online help.
 - Открыть donate page.
+- Добавить несколько подключений AI-сервисов.
+- Проверить API-ключ без отправки inference-запроса.
+- Изменить приоритет подключений с независимыми квотами.
+- Удалить AI-подключение и сохранённый Windows credential.
 - Закрыть приложение.
 
 ## Сверка покрытия

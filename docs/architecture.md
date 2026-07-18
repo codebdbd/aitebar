@@ -92,7 +92,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `MainWindow` — основная панель с кнопками
 - `TaskbarPositionIndicatorWindow` — индикатор положения панели на панели задач
 - `SettingsWindow` — редактирование отдельной кнопки
-- `AppSettingsWindow` — общие настройки приложения
+- `AppSettingsWindow` — общие настройки приложения и раздел «О программе»
 - `QuickNoteWindow` — быстрые заметки с Markdown
 - `TimerStopwatchWindow` — таймер и секундомер
 - `ScreenColorPickerWindow` — цветовой пикер
@@ -101,7 +101,6 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `QRCodeGeneratorWindow` — окно генератора QR-кодов
 - `ClipboardManagerWindow` — окно менеджера буфера обмена
 - `IconPickerWindow` — выбор иконки
-- `AboutWindow` — окно "О программе"
 - `DarkDialog` — диалоговое окно с подтверждением
 - `TextPromptDialog` — диалоговое окно для ввода текста
 - `RotationProfileSelectionWindow` — выбор профилей для ротации
@@ -876,10 +875,9 @@ PanelPackageService.ExportCurrentPanelAsync(packagePath)
 Основные окна (WPF Windows):
 - **MainWindow** — основная панель с кнопками
 - **SettingsWindow** — редактирование отдельной кнопки
-- **AppSettingsWindow** — общие настройки приложения
+- **AppSettingsWindow** — общие настройки приложения и сведения «О программе»
 - **QuickNoteWindow** — быстрые заметки с Markdown
 - **IconPickerWindow** — выбор иконки
-- **AboutWindow** — окно "О программе"
 - **DarkDialog** — диалоговое окно с подтверждением
 - **TextPromptDialog** — диалоговое окно для ввода текста
 - **RotationProfileSelectionWindow** — выбор профилей для ротации
@@ -1020,7 +1018,7 @@ API отсутствует, так как это desktop-приложение б
 - GlobalHotkeyKey (string) — основная клавиша глобальной горячей клавиши
 - ShowPresetSearch/Screenshot/Video/Calc/Explorer/Downloads/ColorPicker/QuickNote/FileSorter/IconConverter/QRCodeGenerator/ClipboardManager/TimerStopwatch/ShowDesktop/AppsFolder/Copilot (bool) — показывать ли соответствующие системные кнопки и встроенные утилиты
 - ClipboardManagerPersistHistory (bool) — сохранять ли историю Clipboard Manager между сессиями
-- FileSorterHotkey/QuickNoteHotkey/ColorPickerHotkey/TimerStopwatchHotkey/QRCodeGeneratorHotkey (HotkeyBinding) — горячие клавиши встроенных утилит
+- FileSorterHotkey/IconConverterHotkey/QuickNoteHotkey/ColorPickerHotkey/TimerStopwatchHotkey/QRCodeGeneratorHotkey/ClipboardManagerHotkey (HotkeyBinding) — горячие клавиши всех встроенных utility-окон
 - QuickNoteThemeId (string) — тема быстрых заметок
 - Edge (DockEdge) — сторона экрана для панели
 - MonitorIndex (int) — индекс монитора
@@ -1392,6 +1390,14 @@ PanelPackageMapper → (нет зависимостей)
 - Рефакторинг MainWindow.xaml.cs — разбить на более мелкие классы
 - Внедрение MVVM для лучшей тестируемости и разделения ответственности
 - Добавление более подробного логирования
+
+## AI provider gateway
+
+`AiGateway` — единая точка доступа будущих AI-утилит к внешним моделям. Он читает только несекретную маршрутизацию из `AppSettingsService`, выбирает подключение по provider order и priority, учитывает общий `QuotaScopeId` и передаёт запрос в `AiProviderClient`. После `429` все подключения того же quota scope временно пропускаются. `401` блокирует только конкретный ключ.
+
+`AiProviderClient` нормализует каталоги OpenRouter, Cerebras, Gemini, Groq, GitHub Models и Mistral в `AiModelDescriptor`. OpenAI-compatible сервисы используют общий transport; Gemini имеет отдельное преобразование request/response. Секреты получает `IAiCredentialStore`; production-реализация `WindowsAiCredentialStore` работает с Windows Credential Manager. API-ключ не является частью `AppSettings` и не сериализуется в JSON.
+
+Пользовательская настройка и ограничения описаны в [AI_PROVIDERS.md](AI_PROVIDERS.md).
 
 ## Рекомендации по развитию проекта
 1. Разбить MainWindow.xaml.cs на несколько специализированных классов (например, PanelVisibilityManager, TrayIconManager, HotkeyManager, ButtonPanelManager)

@@ -122,6 +122,24 @@ namespace AiteBar
                 ActiveContextId = original.ActiveContextId,
                 CheckForUpdatesEnabled = original.CheckForUpdatesEnabled,
                 ShowTaskbarPositionIndicator = original.ShowTaskbarPositionIndicator,
+                TaskbarIndicatorPositionX = original.TaskbarIndicatorPositionX,
+                TaskbarIndicatorPositionY = original.TaskbarIndicatorPositionY,
+                Ai = new AiSettings
+                {
+                    FreeTierOnly = original.Ai?.FreeTierOnly ?? true,
+                    ProviderOrder = [.. (original.Ai?.ProviderOrder ?? [])],
+                    Connections = original.Ai?.Connections?.Select(connection => new AiConnectionSettings
+                    {
+                        Id = connection.Id,
+                        ProviderId = connection.ProviderId,
+                        DisplayName = connection.DisplayName,
+                        CredentialTarget = connection.CredentialTarget,
+                        QuotaScopeId = connection.QuotaScopeId,
+                        Priority = connection.Priority,
+                        IsEnabled = connection.IsEnabled,
+                        PreferredModelId = connection.PreferredModelId
+                    }).ToList() ?? []
+                },
                 NextContextHotkey = new HotkeyBinding
                 {
                     Ctrl = original.NextContextHotkey.Ctrl,
@@ -154,6 +172,14 @@ namespace AiteBar
                     Win = original.FileSorterHotkey.Win,
                     Key = original.FileSorterHotkey.Key
                 },
+                IconConverterHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.IconConverterHotkey.Ctrl,
+                    Alt = original.IconConverterHotkey.Alt,
+                    Shift = original.IconConverterHotkey.Shift,
+                    Win = original.IconConverterHotkey.Win,
+                    Key = original.IconConverterHotkey.Key
+                },
                 QuickNoteHotkey = new HotkeyBinding
                 {
                     Ctrl = original.QuickNoteHotkey.Ctrl,
@@ -185,6 +211,14 @@ namespace AiteBar
                     Shift = original.QRCodeGeneratorHotkey.Shift,
                     Win = original.QRCodeGeneratorHotkey.Win,
                     Key = original.QRCodeGeneratorHotkey.Key
+                },
+                ClipboardManagerHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.ClipboardManagerHotkey.Ctrl,
+                    Alt = original.ClipboardManagerHotkey.Alt,
+                    Shift = original.ClipboardManagerHotkey.Shift,
+                    Win = original.ClipboardManagerHotkey.Win,
+                    Key = original.ClipboardManagerHotkey.Key
                 },
                 Contexts = original.Contexts?.Select(ctx => new PanelContext
                 {
@@ -580,6 +614,13 @@ namespace AiteBar
                     changed = true;
                 }
                 _appSettings.Contexts = normalizedContexts;
+
+                AiSettings normalizedAi = AiSettingsNormalizer.Normalize(_appSettings.Ai, out bool aiChanged);
+                if (aiChanged)
+                {
+                    changed = true;
+                }
+                _appSettings.Ai = normalizedAi;
 
                 string normalizedActiveContextId = ContextStateHelper.NormalizeActiveContextId(_appSettings.ActiveContextId, _appSettings.Contexts);
                 if (!string.Equals(_appSettings.ActiveContextId, normalizedActiveContextId, StringComparison.Ordinal))

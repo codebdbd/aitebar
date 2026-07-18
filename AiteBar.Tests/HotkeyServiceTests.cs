@@ -143,13 +143,17 @@ public sealed class HotkeyServiceTests
 
         Assert.True(service.TryGetCommand(HotkeyService.ShowPanelId, out var showPanel));
         Assert.True(service.TryGetCommand(HotkeyService.FileSorterId, out var fileSorter));
+        Assert.True(service.TryGetCommand(HotkeyService.IconConverterId, out var iconConverter));
         Assert.True(service.TryGetCommand(HotkeyService.TimerStopwatchId, out var timerStopwatch));
         Assert.True(service.TryGetCommand(HotkeyService.QRCodeGeneratorId, out var qrCodeGenerator));
+        Assert.True(service.TryGetCommand(HotkeyService.ClipboardManagerId, out var clipboardManager));
         Assert.False(service.TryGetCommand(123, out _));
         Assert.Equal(HotkeyCommand.ShowPanel, showPanel);
         Assert.Equal(HotkeyCommand.FileSorter, fileSorter);
+        Assert.Equal(HotkeyCommand.IconConverter, iconConverter);
         Assert.Equal(HotkeyCommand.TimerStopwatch, timerStopwatch);
         Assert.Equal(HotkeyCommand.QRCodeGenerator, qrCodeGenerator);
+        Assert.Equal(HotkeyCommand.ClipboardManager, clipboardManager);
     }
 
     [Fact]
@@ -173,10 +177,12 @@ public sealed class HotkeyServiceTests
                 HotkeyCommand.PreviousContext,
                 HotkeyCommand.AddButton,
                 HotkeyCommand.FileSorter,
+                HotkeyCommand.IconConverter,
                 HotkeyCommand.QuickNote,
                 HotkeyCommand.ColorPicker,
                 HotkeyCommand.TimerStopwatch,
-                HotkeyCommand.QRCodeGenerator
+                HotkeyCommand.QRCodeGenerator,
+                HotkeyCommand.ClipboardManager
             ],
             definitions.Select(definition => definition.Command));
         Assert.Equal("name:AppSettingsWindow_ShowPanel", definitions[0].DisplayName);

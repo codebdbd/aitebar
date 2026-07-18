@@ -246,16 +246,12 @@ AiteBar использует единую тёмную цветовую схем
   - Hover: `Background=#555555`
   - Focus: `BorderBrush=#3ABEFF`
 
-### AboutWindow
+### Раздел «О программе»
 
-- **Фон**: `#1E1E1E`
-- **Размер**: `Width=540`, фиксированная высота
-- **Section header**: `FontSize=13`, `FontWeight=SemiBold`, `Foreground=#F0F0F0`
-- **Muted text**: `Foreground=#B8B8B8`, `FontSize=13`
-- **Primary button**: `Background=#4285F4`, `CornerRadius=4`
-  - Hover: `#5A95F5`
-- **Info box**: `Background=#252525`, `BorderBrush=#3A3A3A`, `CornerRadius=6`
-- **Link button**: `Foreground=#7FB3FF`, `TextDecorations=Underline`
+- Находится последним пунктом навигации `AppSettingsWindow`; отдельное окно не используется.
+- Наследует фон, типографику и ограничение ширины правой колонки окна настроек.
+- Показывает иконку приложения, версию, разработчика, лицензию и стек.
+- Действия ресурсов оформлены плоскими строками без контурных рамок; hover использует приглушенную заливку.
 
 ### RotationProfileSelectionWindow
 

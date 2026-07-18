@@ -106,6 +106,16 @@ AiteBar automatically creates backups of your settings:
 - Data collected: None (only reads release information)
 - Privacy: No personal data is sent
 
+### User-Configured AI Services
+
+- Supported services: OpenRouter, Cerebras, Google Gemini, Groq, GitHub Models, and Mistral AI.
+- Status: Disabled until the user adds an API connection. A saved connection does not send data by itself.
+- Data transmission: Text or files are sent only after an explicit action in an AI-powered tool and only to the service selected by the routing configuration.
+- Credentials: API keys are stored in Windows Credential Manager. The settings file stores only a credential reference and non-secret routing metadata.
+- Logging: API keys, prompts, model responses, and Authorization headers are excluded from local logs and Sentry events.
+- Provider terms: External services process submitted content under their own privacy and retention policies. Users should review those policies before connecting a service.
+- Documentation: See [docs/AI_PROVIDERS.md](docs/AI_PROVIDERS.md).
+
 ## Children's Privacy
 
 AiteBar is not directed at children under 13. We do not knowingly collect personal information from children.
