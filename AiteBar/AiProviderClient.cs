@@ -150,6 +150,8 @@ internal sealed class AiProviderClient
         CancellationToken cancellationToken)
     {
         string modelId = Uri.EscapeDataString(model.ModelId);
+        // Note: Gemini API requires passing the key in the query string.
+        // This is a known limitation of their API and may result in the key being logged in server access logs.
         var uri = new Uri($"https://generativelanguage.googleapis.com/v1beta/models/{modelId}:generateContent?key={Uri.EscapeDataString(apiKey)}");
         var contents = request.Messages
             .Where(message => !string.Equals(message.Role, "system", StringComparison.OrdinalIgnoreCase))
@@ -201,7 +203,7 @@ internal sealed class AiProviderClient
         {
             content = string.Join(string.Empty, parts.EnumerateArray()
                 .Where(part => part.TryGetProperty("text", out _))
-                .Select(part => part.GetProperty("text").GetString()));
+                .Select(part => part.GetProperty("text").GetString() ?? string.Empty));
         }
 
         int? promptTokens = null;
@@ -301,6 +303,8 @@ internal sealed class AiProviderClient
     {
         if (provider.Protocol == AiProviderProtocol.Gemini)
         {
+            // Note: Gemini API requires passing the key in the query string.
+            // This is a known limitation of their API and may result in the key being logged in server access logs.
             return new Uri($"{provider.ModelsUri}?pageSize=1000&key={Uri.EscapeDataString(apiKey)}");
         }
         return provider.ModelsUri;
@@ -326,6 +330,49 @@ internal sealed class AiProviderClient
         {
             TimeSpan? retryAfter = response.Headers.RetryAfter?.Delta;
             string message = $"AI provider returned HTTP {(int)response.StatusCode}.";
+            
+            // Try to read and parse error message from response body
+            try
+            {
+                string errorContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+                if (!string.IsNullOrWhiteSpace(errorContent))
+                {
+                    using JsonDocument errorDoc = JsonDocument.Parse(errorContent);
+                    // Try common error structures
+                    string? extractedMessage = null;
+                    
+                    // OpenAI-compatible format: { "error": { "message": "..." } }
+                    if (errorDoc.RootElement.TryGetProperty("error", out JsonElement errorProp))
+                    {
+                        extractedMessage = ReadString(errorProp, "message");
+                    }
+                    
+                    // Gemini format: { "error": { "message": "..." } } or similar
+                    if (string.IsNullOrWhiteSpace(extractedMessage))
+                    {
+                        extractedMessage = ReadString(errorDoc.RootElement, "message");
+                    }
+                    
+                    if (!string.IsNullOrWhiteSpace(extractedMessage))
+                    {
+                        message = extractedMessage;
+                    }
+                    else
+                    {
+                        // If we can't parse the message, include the raw content (truncated if too long)
+                        const int maxLength = 500;
+                        string truncated = errorContent.Length > maxLength 
+                            ? errorContent.Substring(0, maxLength) + "..." 
+                            : errorContent;
+                        message = $"AI provider returned HTTP {(int)response.StatusCode}. Response: {truncated}";
+                    }
+                }
+            }
+            catch
+            {
+                // If reading/parsing fails, just use the original message
+            }
+            
             throw new AiProviderHttpException(response.StatusCode, message, retryAfter);
         }
         Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
@@ -419,7 +466,7 @@ internal sealed class AiProviderClient
         {
             return string.Join(string.Empty, content.EnumerateArray()
                 .Where(part => part.TryGetProperty("text", out _))
-                .Select(part => part.GetProperty("text").GetString()));
+                .Select(part => part.GetProperty("text").GetString() ?? string.Empty));
         }
         return string.Empty;
     }

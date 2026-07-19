@@ -62,9 +62,10 @@ internal static class AiProviderCatalog
 
     public static bool TryGet(string providerId, out AiProviderDefinition definition)
     {
-        definition = All.FirstOrDefault(provider =>
-            string.Equals(provider.Id, providerId, StringComparison.OrdinalIgnoreCase))!;
-        return definition != null;
+        AiProviderDefinition? found = All.FirstOrDefault(provider =>
+            string.Equals(provider.Id, providerId, StringComparison.OrdinalIgnoreCase));
+        definition = found!;
+        return found != null;
     }
 
     public static string CreateCredentialTarget(string connectionId) =>
@@ -82,7 +83,7 @@ internal static class AiSettingsNormalizer
         foreach (string providerId in settings.ProviderOrder ?? [])
         {
             if (AiProviderCatalog.TryGet(providerId, out AiProviderDefinition definition) &&
-                !providerOrder.Contains(definition.Id, StringComparer.Ordinal))
+                !providerOrder.Contains(definition.Id, StringComparer.OrdinalIgnoreCase))
             {
                 providerOrder.Add(definition.Id);
             }
@@ -94,7 +95,7 @@ internal static class AiSettingsNormalizer
 
         foreach (string providerId in AiProviderCatalog.DefaultProviderOrder)
         {
-            if (!providerOrder.Contains(providerId, StringComparer.Ordinal))
+            if (!providerOrder.Contains(providerId, StringComparer.OrdinalIgnoreCase))
             {
                 providerOrder.Add(providerId);
                 changed = true;

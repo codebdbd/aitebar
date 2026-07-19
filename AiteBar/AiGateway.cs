@@ -12,6 +12,7 @@ public sealed class AiGateway
     private readonly ConcurrentDictionary<string, AiConnectionRuntimeStatus> _connectionStatuses = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, AiConnectionRuntimeStatus> _quotaStatuses = new(StringComparer.Ordinal);
     private readonly ConcurrentDictionary<string, CachedModels> _modelCache = new(StringComparer.Ordinal);
+    private readonly SemaphoreSlim _modelCacheSemaphore = new(1, 1);
 
     public AiGateway(AppSettingsService settingsService)
         : this(settingsService, new AiProviderClient(new WindowsAiCredentialStore()), TimeProvider.System)
@@ -156,15 +157,34 @@ public sealed class AiGateway
         CancellationToken cancellationToken)
     {
         DateTimeOffset now = _timeProvider.GetUtcNow();
+        // First check without lock for fast path
         if (_modelCache.TryGetValue(connection.Id, out CachedModels? cached) &&
             now - cached.RefreshedAt < ModelCacheLifetime)
         {
             return cached.Models;
         }
 
-        IReadOnlyList<AiModelDescriptor> models = await _providerClient.GetModelsAsync(connection, cancellationToken).ConfigureAwait(false);
-        _modelCache[connection.Id] = new CachedModels(models, now);
-        return models;
+        // Enter lock for cache update
+        await _modelCacheSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            // Double-check after acquiring lock
+            now = _timeProvider.GetUtcNow();
+            if (_modelCache.TryGetValue(connection.Id, out cached) &&
+                now - cached.RefreshedAt < ModelCacheLifetime)
+            {
+                return cached.Models;
+            }
+
+            // Actually fetch the models
+            IReadOnlyList<AiModelDescriptor> models = await _providerClient.GetModelsAsync(connection, cancellationToken).ConfigureAwait(false);
+            _modelCache[connection.Id] = new CachedModels(models, now);
+            return models;
+        }
+        finally
+        {
+            _modelCacheSemaphore.Release();
+        }
     }
 
     private static AiModelDescriptor? SelectModel(

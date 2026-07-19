@@ -408,7 +408,9 @@ public partial class AppSettingsWindow : DarkWindow
             Tag = connectionId,
             Style = (Style)FindResource("CommandButtonStyle"),
             Width = width,
-            Height = 32,
+            Height = 36,
+            Padding = new Thickness(15, 0, 15, 0),
+            FontSize = 12,
             IsEnabled = isEnabled,
             Margin = new Thickness(6, 0, 0, 0)
         };
