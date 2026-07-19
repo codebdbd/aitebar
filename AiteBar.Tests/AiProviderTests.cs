@@ -29,9 +29,9 @@ public sealed class AiProviderTests
             ProviderOrder = ["unknown", "cerebras", "cerebras"],
             Connections =
             [
-                Connection("valid", "cerebras", "AiteBar/AI/valid", "account-a"),
-                Connection("unsafe", "cerebras", "OtherApp/credential", "account-b"),
-                Connection("unknown", "missing", "AiteBar/AI/unknown", "account-c")
+                Connection("valid", "cerebras", "AiteBar/AI/valid"),
+                Connection("unsafe", "cerebras", "OtherApp/credential"),
+                Connection("unknown", "missing", "AiteBar/AI/unknown")
             ]
         };
 
@@ -47,12 +47,11 @@ public sealed class AiProviderTests
     }
 
     [Fact]
-    public async Task Gateway_SkipsAnotherKeyInSameQuotaScopeAfterRateLimit()
+    public async Task Gateway_TriesNextConnectionAfterRateLimit()
     {
         var credentials = new MemoryCredentialStore();
         credentials.Write("AiteBar/AI/one", "key-one");
         credentials.Write("AiteBar/AI/two", "key-two");
-        credentials.Write("AiteBar/AI/three", "key-three");
 
         var handler = new RoutingHandler();
         var client = new AiProviderClient(new HttpClient(handler), credentials);
@@ -65,9 +64,8 @@ public sealed class AiProviderTests
                 ProviderOrder = ["cerebras"],
                 Connections =
                 [
-                    Connection("one", "cerebras", "AiteBar/AI/one", "shared"),
-                    Connection("two", "cerebras", "AiteBar/AI/two", "shared"),
-                    Connection("three", "cerebras", "AiteBar/AI/three", "independent")
+                    Connection("one", "cerebras", "AiteBar/AI/one"),
+                    Connection("two", "cerebras", "AiteBar/AI/two")
                 ]
             }
         };
@@ -79,10 +77,9 @@ public sealed class AiProviderTests
         });
 
         Assert.Equal("ok", response.Content);
-        Assert.Equal("three", response.ConnectionId);
+        Assert.Equal("two", response.ConnectionId);
         Assert.Contains("key-one", handler.SeenKeys);
-        Assert.DoesNotContain("key-two", handler.SeenKeys);
-        Assert.Contains("key-three", handler.SeenKeys);
+        Assert.Contains("key-two", handler.SeenKeys);
         Assert.Equal(AiConnectionState.CoolingDown,
             gateway.GetQuotaStatus(settingsService.Settings.Ai.Connections[0])?.State);
     }
@@ -100,7 +97,7 @@ public sealed class AiProviderTests
             {
                 Ai = new AiSettings
                 {
-                    Connections = [Connection("id", "cerebras", "AiteBar/AI/id", "personal")]
+                    Connections = [Connection("id", "cerebras", "AiteBar/AI/id")]
                 }
             };
 
@@ -149,14 +146,12 @@ public sealed class AiProviderTests
     private static AiConnectionSettings Connection(
         string id,
         string providerId,
-        string target,
-        string quotaScope) => new()
+        string target) => new()
     {
         Id = id,
         ProviderId = providerId,
         DisplayName = id,
         CredentialTarget = target,
-        QuotaScopeId = quotaScope,
         IsEnabled = true
     };
 
@@ -188,10 +183,6 @@ public sealed class AiProviderTests
                 var limited = Json(HttpStatusCode.TooManyRequests, "{\"error\":{\"message\":\"limited\"}}");
                 limited.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.FromMinutes(5));
                 return Task.FromResult(limited);
-            }
-            if (key == "key-two")
-            {
-                throw new Xunit.Sdk.XunitException("A connection in the same quota scope must be skipped.");
             }
             return Task.FromResult(Json(HttpStatusCode.OK,
                 "{\"choices\":[{\"message\":{\"content\":\"ok\"}}],\"usage\":{\"prompt_tokens\":1,\"completion_tokens\":1}}"));

@@ -24,7 +24,6 @@ public partial class AiConnectionDialog : DarkWindow
 
     public string ProviderId => (CmbProvider.SelectedItem as ProviderOption)?.Id ?? string.Empty;
     public string ConnectionName => TxtDisplayName.Text.Trim();
-    public string QuotaScopeId => TxtQuotaScope.Text.Trim();
     public string ApiKey => PwdApiKey.Password.Trim();
 
     private void CmbProvider_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -65,7 +64,6 @@ public partial class AiConnectionDialog : DarkWindow
         }
         BtnAdd.IsEnabled = CmbProvider.SelectedItem != null &&
                            !string.IsNullOrWhiteSpace(TxtDisplayName.Text) &&
-                           !string.IsNullOrWhiteSpace(TxtQuotaScope.Text) &&
                            !string.IsNullOrWhiteSpace(PwdApiKey.Password);
     }
 

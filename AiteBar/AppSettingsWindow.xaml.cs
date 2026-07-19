@@ -365,7 +365,7 @@ public partial class AppSettingsWindow : DarkWindow
             });
             details.Children.Add(new TextBlock
             {
-                Text = LocalizationService.Format("AiSettings_ConnectionDetails", provider.DisplayName, connection.QuotaScopeId),
+                Text = LocalizationService.Format("AiSettings_ConnectionDetails", provider.DisplayName),
                 Style = (Style)FindResource("ModernSettingDescriptionStyle"),
                 TextWrapping = TextWrapping.Wrap
             });
@@ -458,7 +458,6 @@ public partial class AppSettingsWindow : DarkWindow
                 ProviderId = dialog.ProviderId,
                 DisplayName = dialog.ConnectionName,
                 CredentialTarget = target,
-                QuotaScopeId = dialog.QuotaScopeId,
                 IsEnabled = true
             });
             _pendingAiCredentialTargets.Add(target);
@@ -925,7 +924,6 @@ public partial class AppSettingsWindow : DarkWindow
         ProviderId = connection.ProviderId,
         DisplayName = connection.DisplayName,
         CredentialTarget = connection.CredentialTarget,
-        QuotaScopeId = connection.QuotaScopeId,
         IsEnabled = connection.IsEnabled,
         PreferredModelId = connection.PreferredModelId
     };

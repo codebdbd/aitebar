@@ -1220,12 +1220,10 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiSettings_Provider" xml:space="preserve"><value>Сервис</value></data>
   <data name="AiSettings_GetApiKey" xml:space="preserve"><value>Получить API-ключ на официальном сайте</value></data>
   <data name="AiSettings_ConnectionName" xml:space="preserve"><value>Название подключения</value></data>
-  <data name="AiSettings_QuotaScope" xml:space="preserve"><value>Аккаунт или проект</value></data>
-  <data name="AiSettings_QuotaScopeHint" xml:space="preserve"><value>Укажите одинаковое значение для ключей с общей квотой, например «Личный проект Google».</value></data>
   <data name="AiSettings_ApiKey" xml:space="preserve"><value>API-ключ</value></data>
   <data name="AiSettings_ApiKeySecurityHint" xml:space="preserve"><value>Сохранённый ключ больше не отображается и не попадает в журналы или резервные копии настроек.</value></data>
   <data name="AiSettings_Add" xml:space="preserve"><value>Добавить</value></data>
-  <data name="AiSettings_ConnectionDetails" xml:space="preserve"><value>{0} · квота: {1}</value></data>
+  <data name="AiSettings_ConnectionDetails" xml:space="preserve"><value>{0}</value></data>
   <data name="AiSettings_Test" xml:space="preserve"><value>Проверить</value></data>
   <data name="AiSettings_Testing" xml:space="preserve"><value>Проверка…</value></data>
   <data name="AiSettings_StatusNotChecked" xml:space="preserve"><value>Не проверено</value></data>

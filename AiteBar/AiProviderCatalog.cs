@@ -119,12 +119,8 @@ internal static class AiSettingsNormalizer
             string displayName = string.IsNullOrWhiteSpace(connection.DisplayName)
                 ? provider.DisplayName
                 : connection.DisplayName.Trim();
-            string quotaScope = string.IsNullOrWhiteSpace(connection.QuotaScopeId)
-                ? connection.Id
-                : connection.QuotaScopeId.Trim();
 
             if (!string.Equals(displayName, connection.DisplayName, StringComparison.Ordinal) ||
-                !string.Equals(quotaScope, connection.QuotaScopeId, StringComparison.Ordinal) ||
                 !string.Equals(provider.Id, connection.ProviderId, StringComparison.Ordinal))
             {
                 changed = true;
@@ -136,7 +132,6 @@ internal static class AiSettingsNormalizer
                 ProviderId = provider.Id,
                 DisplayName = displayName,
                 CredentialTarget = connection.CredentialTarget,
-                QuotaScopeId = quotaScope,
                 IsEnabled = connection.IsEnabled,
                 PreferredModelId = string.IsNullOrWhiteSpace(connection.PreferredModelId)
                     ? null

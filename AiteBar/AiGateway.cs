@@ -248,7 +248,7 @@ public sealed class AiGateway
     }
 
     private static string GetQuotaKey(AiConnectionSettings connection) =>
-        $"{connection.ProviderId}:{connection.QuotaScopeId}";
+        $"{connection.ProviderId}:{connection.Id}";
 
     private sealed record CachedModels(IReadOnlyList<AiModelDescriptor> Models, DateTimeOffset RefreshedAt);
 }

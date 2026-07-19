@@ -33,7 +33,6 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Margin="0,0,0,16">
@@ -56,19 +55,13 @@
                 <TextBox x:Name="TxtDisplayName" TextChanged="Input_TextChanged"/>
             </StackPanel>
 
-            <StackPanel Grid.Row="3" Margin="0,0,0,14">
-                <TextBlock Text="{local:Loc ResourceKey=AiSettings_QuotaScope}" FontWeight="SemiBold" Margin="0,0,0,6"/>
-                <TextBox x:Name="TxtQuotaScope" TextChanged="Input_TextChanged"/>
-                <TextBlock Text="{local:Loc ResourceKey=AiSettings_QuotaScopeHint}" Foreground="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0"/>
-            </StackPanel>
-
-            <StackPanel Grid.Row="4" Margin="0,0,0,20">
+            <StackPanel Grid.Row="3" Margin="0,0,0,20">
                 <TextBlock Text="{local:Loc ResourceKey=AiSettings_ApiKey}" FontWeight="SemiBold" Margin="0,0,0,6"/>
                 <PasswordBox x:Name="PwdApiKey" PasswordChanged="Input_PasswordChanged"/>
                 <TextBlock Text="{local:Loc ResourceKey=AiSettings_ApiKeySecurityHint}" Foreground="{StaticResource MutedText}" FontSize="11" TextWrapping="Wrap" Margin="0,5,0,0"/>
             </StackPanel>
 
-            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource CommandButtonStyle}" Width="130" Click="BtnCancel_Click" IsCancel="True"/>
                 <Button x:Name="BtnAdd" Content="{local:Loc ResourceKey=AiSettings_Add}" Style="{StaticResource PrimaryCommandButtonStyle}" Width="150" Margin="10,0,0,0" Click="BtnAdd_Click" IsDefault="True"/>
             </StackPanel>
