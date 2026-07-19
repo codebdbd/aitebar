@@ -124,7 +124,6 @@ public sealed class AiGateway
         return (settings.Connections ?? [])
             .Where(connection => connection.IsEnabled && AiProviderCatalog.TryGet(connection.ProviderId, out _))
             .OrderBy(connection => providerRanks.GetValueOrDefault(connection.ProviderId, int.MaxValue))
-            .ThenBy(connection => connection.Priority)
             .ThenBy(connection => connection.DisplayName, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
     }
@@ -195,15 +194,6 @@ public sealed class AiGateway
             }
         }
 
-        if (string.Equals(connection.ProviderId, "openrouter", StringComparison.OrdinalIgnoreCase))
-        {
-            AiModelDescriptor? freeRouter = candidates.FirstOrDefault(model =>
-                string.Equals(model.ModelId, "openrouter/free", StringComparison.Ordinal));
-            if (freeRouter != null)
-            {
-                return freeRouter;
-            }
-        }
         return candidates.FirstOrDefault();
     }
 

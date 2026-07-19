@@ -135,7 +135,6 @@ namespace AiteBar
                         DisplayName = connection.DisplayName,
                         CredentialTarget = connection.CredentialTarget,
                         QuotaScopeId = connection.QuotaScopeId,
-                        Priority = connection.Priority,
                         IsEnabled = connection.IsEnabled,
                         PreferredModelId = connection.PreferredModelId
                     }).ToList() ?? []

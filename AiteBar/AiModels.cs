@@ -47,7 +47,6 @@ public sealed class AiConnectionSettings
     public string DisplayName { get; set; } = string.Empty;
     public string CredentialTarget { get; set; } = string.Empty;
     public string QuotaScopeId { get; set; } = string.Empty;
-    public int Priority { get; set; }
     public bool IsEnabled { get; set; } = true;
     public string? PreferredModelId { get; set; }
 }

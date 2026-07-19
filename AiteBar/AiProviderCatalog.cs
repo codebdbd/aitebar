@@ -3,9 +3,7 @@ namespace AiteBar;
 internal enum AiProviderProtocol
 {
     OpenAiCompatible,
-    OpenRouter,
-    Gemini,
-    GitHubModels
+    Gemini
 }
 
 internal sealed record AiProviderDefinition(
@@ -24,14 +22,6 @@ internal static class AiProviderCatalog
 
     public static IReadOnlyList<AiProviderDefinition> All { get; } =
     [
-        new(
-            "openrouter",
-            "OpenRouter",
-            new Uri("https://openrouter.ai/api/v1/models"),
-            new Uri("https://openrouter.ai/api/v1/chat/completions"),
-            new Uri("https://openrouter.ai/keys"),
-            AiProviderProtocol.OpenRouter,
-            AiCostStatus.Unknown),
         new(
             "cerebras",
             "Cerebras",
@@ -56,14 +46,6 @@ internal static class AiProviderCatalog
             new Uri("https://api.groq.com/openai/v1/chat/completions"),
             new Uri("https://console.groq.com/keys"),
             AiProviderProtocol.OpenAiCompatible,
-            AiCostStatus.FreeTierAvailable),
-        new(
-            "github",
-            "GitHub Models",
-            new Uri("https://models.github.ai/catalog/models"),
-            new Uri("https://models.github.ai/inference/chat/completions"),
-            new Uri("https://github.com/settings/tokens"),
-            AiProviderProtocol.GitHubModels,
             AiCostStatus.FreeTierAvailable),
         new(
             "mistral",
@@ -140,11 +122,9 @@ internal static class AiSettingsNormalizer
             string quotaScope = string.IsNullOrWhiteSpace(connection.QuotaScopeId)
                 ? connection.Id
                 : connection.QuotaScopeId.Trim();
-            int priority = Math.Max(0, connection.Priority);
 
             if (!string.Equals(displayName, connection.DisplayName, StringComparison.Ordinal) ||
                 !string.Equals(quotaScope, connection.QuotaScopeId, StringComparison.Ordinal) ||
-                priority != connection.Priority ||
                 !string.Equals(provider.Id, connection.ProviderId, StringComparison.Ordinal))
             {
                 changed = true;
@@ -157,7 +137,6 @@ internal static class AiSettingsNormalizer
                 DisplayName = displayName,
                 CredentialTarget = connection.CredentialTarget,
                 QuotaScopeId = quotaScope,
-                Priority = priority,
                 IsEnabled = connection.IsEnabled,
                 PreferredModelId = string.IsNullOrWhiteSpace(connection.PreferredModelId)
                     ? null

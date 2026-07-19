@@ -649,8 +649,6 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="AiSettings_ApiKeySecurityHint" xml:space="preserve"><value>Der gespeicherte Schlüssel wird nicht erneut angezeigt und erscheint weder in Protokollen noch in Einstellungssicherungen.</value></data>
   <data name="AiSettings_Add" xml:space="preserve"><value>Hinzufügen</value></data>
   <data name="AiSettings_ConnectionDetails" xml:space="preserve"><value>{0} · Kontingent: {1}</value></data>
-  <data name="AiSettings_MoveUp" xml:space="preserve"><value>Priorität erhöhen</value></data>
-  <data name="AiSettings_MoveDown" xml:space="preserve"><value>Priorität verringern</value></data>
   <data name="AiSettings_Test" xml:space="preserve"><value>Prüfen</value></data>
   <data name="AiSettings_Testing" xml:space="preserve"><value>Prüfung…</value></data>
   <data name="AiSettings_StatusNotChecked" xml:space="preserve"><value>Nicht geprüft</value></data>

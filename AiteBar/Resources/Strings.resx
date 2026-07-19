@@ -706,8 +706,6 @@ Open the GitHub release page?</value></data>
   <data name="AiSettings_ApiKeySecurityHint" xml:space="preserve"><value>The saved key is never displayed again and is not included in logs or settings backups.</value></data>
   <data name="AiSettings_Add" xml:space="preserve"><value>Add</value></data>
   <data name="AiSettings_ConnectionDetails" xml:space="preserve"><value>{0} · quota: {1}</value></data>
-  <data name="AiSettings_MoveUp" xml:space="preserve"><value>Higher priority</value></data>
-  <data name="AiSettings_MoveDown" xml:space="preserve"><value>Lower priority</value></data>
   <data name="AiSettings_Test" xml:space="preserve"><value>Test</value></data>
   <data name="AiSettings_Testing" xml:space="preserve"><value>Testing…</value></data>
   <data name="AiSettings_StatusNotChecked" xml:space="preserve"><value>Not checked</value></data>

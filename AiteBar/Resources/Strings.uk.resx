@@ -643,8 +643,6 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiSettings_ApiKeySecurityHint" xml:space="preserve"><value>Збережений ключ більше не відображається і не потрапляє до журналів або резервних копій налаштувань.</value></data>
   <data name="AiSettings_Add" xml:space="preserve"><value>Додати</value></data>
   <data name="AiSettings_ConnectionDetails" xml:space="preserve"><value>{0} · квота: {1}</value></data>
-  <data name="AiSettings_MoveUp" xml:space="preserve"><value>Підвищити пріоритет</value></data>
-  <data name="AiSettings_MoveDown" xml:space="preserve"><value>Знизити пріоритет</value></data>
   <data name="AiSettings_Test" xml:space="preserve"><value>Перевірити</value></data>
   <data name="AiSettings_Testing" xml:space="preserve"><value>Перевірка…</value></data>
   <data name="AiSettings_StatusNotChecked" xml:space="preserve"><value>Не перевірено</value></data>

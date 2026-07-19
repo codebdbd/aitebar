@@ -13,8 +13,10 @@ public sealed class AiProviderTests
     {
         string[] ids = AiProviderCatalog.All.Select(provider => provider.Id).ToArray();
 
-        Assert.Equal(["openrouter", "cerebras", "gemini", "groq", "github", "mistral"], ids);
+        Assert.Equal(["cerebras", "gemini", "groq", "mistral"], ids);
         Assert.DoesNotContain("deepinfra", ids);
+        Assert.DoesNotContain("openrouter", ids);
+        Assert.DoesNotContain("github", ids);
         Assert.All(AiProviderCatalog.All, provider => Assert.Equal("https", provider.ModelsUri.Scheme));
     }
 
@@ -27,9 +29,9 @@ public sealed class AiProviderTests
             ProviderOrder = ["unknown", "cerebras", "cerebras"],
             Connections =
             [
-                Connection("valid", "cerebras", "AiteBar/AI/valid", "account-a", 2),
-                Connection("unsafe", "cerebras", "OtherApp/credential", "account-b", 0),
-                Connection("unknown", "missing", "AiteBar/AI/unknown", "account-c", 0)
+                Connection("valid", "cerebras", "AiteBar/AI/valid", "account-a"),
+                Connection("unsafe", "cerebras", "OtherApp/credential", "account-b"),
+                Connection("unknown", "missing", "AiteBar/AI/unknown", "account-c")
             ]
         };
 
@@ -42,25 +44,6 @@ public sealed class AiProviderTests
         Assert.Equal("cerebras", normalized.ProviderOrder[0]);
         Assert.Equal(AiProviderCatalog.DefaultProviderOrder.Count, normalized.ProviderOrder.Count);
         Assert.Equal(normalized.ProviderOrder.Count, normalized.ProviderOrder.Distinct(StringComparer.Ordinal).Count());
-    }
-
-    [Fact]
-    public void OpenRouterParser_OnlyMarksZeroInputAndOutputPricingAsVerifiedFree()
-    {
-        AiProviderCatalog.TryGet("openrouter", out AiProviderDefinition provider);
-        using JsonDocument json = JsonDocument.Parse("""
-            {"data":[
-              {"id":"openrouter/free","name":"Free router"},
-              {"id":"vendor/free","pricing":{"prompt":"0","completion":"0"}},
-              {"id":"vendor/paid","pricing":{"prompt":"0","completion":"0.1"}}
-            ]}
-            """);
-
-        IReadOnlyList<AiModelDescriptor> models = AiProviderClient.ParseOpenRouterModels(provider, json.RootElement);
-
-        Assert.Equal(AiCostStatus.VerifiedFree, models.Single(model => model.ModelId == "openrouter/free").CostStatus);
-        Assert.Equal(AiCostStatus.VerifiedFree, models.Single(model => model.ModelId == "vendor/free").CostStatus);
-        Assert.Equal(AiCostStatus.Paid, models.Single(model => model.ModelId == "vendor/paid").CostStatus);
     }
 
     [Fact]
@@ -79,12 +62,12 @@ public sealed class AiProviderTests
             Ai = new AiSettings
             {
                 FreeTierOnly = true,
-                ProviderOrder = ["openrouter"],
+                ProviderOrder = ["cerebras"],
                 Connections =
                 [
-                    Connection("one", "openrouter", "AiteBar/AI/one", "shared", 0),
-                    Connection("two", "openrouter", "AiteBar/AI/two", "shared", 1),
-                    Connection("three", "openrouter", "AiteBar/AI/three", "independent", 2)
+                    Connection("one", "cerebras", "AiteBar/AI/one", "shared"),
+                    Connection("two", "cerebras", "AiteBar/AI/two", "shared"),
+                    Connection("three", "cerebras", "AiteBar/AI/three", "independent")
                 ]
             }
         };
@@ -117,7 +100,7 @@ public sealed class AiProviderTests
             {
                 Ai = new AiSettings
                 {
-                    Connections = [Connection("id", "cerebras", "AiteBar/AI/id", "personal", 0)]
+                    Connections = [Connection("id", "cerebras", "AiteBar/AI/id", "personal")]
                 }
             };
 
@@ -167,15 +150,13 @@ public sealed class AiProviderTests
         string id,
         string providerId,
         string target,
-        string quotaScope,
-        int priority) => new()
+        string quotaScope) => new()
     {
         Id = id,
         ProviderId = providerId,
         DisplayName = id,
         CredentialTarget = target,
         QuotaScopeId = quotaScope,
-        Priority = priority,
         IsEnabled = true
     };
 
@@ -200,7 +181,7 @@ public sealed class AiProviderTests
             if (request.Method == HttpMethod.Get)
             {
                 return Task.FromResult(Json(HttpStatusCode.OK,
-                    "{\"data\":[{\"id\":\"openrouter/free\",\"name\":\"Free router\"}]}"));
+                    "{\"data\":[{\"id\":\"cerebras-llama-3.3-70b\",\"name\":\"Llama 3.3 70B\"}]}"));
             }
             if (key == "key-one")
             {

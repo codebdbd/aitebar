@@ -345,7 +345,6 @@ public partial class AppSettingsWindow : DarkWindow
         TxtAiConnectionsEmpty.Visibility = _aiConnections.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
         AiConnectionSettings[] ordered = _aiConnections
             .OrderBy(connection => GetAiProviderRank(connection.ProviderId))
-            .ThenBy(connection => connection.Priority)
             .ThenBy(connection => connection.DisplayName, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
 
@@ -381,12 +380,6 @@ public partial class AppSettingsWindow : DarkWindow
             row.Children.Add(details);
 
             var actions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-            AiConnectionSettings[] providerConnections = ordered
-                .Where(item => string.Equals(item.ProviderId, connection.ProviderId, StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-            int providerIndex = Array.FindIndex(providerConnections, item => item.Id == connection.Id);
-            actions.Children.Add(CreateAiRowButton("↑", "AiSettings_MoveUp", connection.Id, BtnAiMoveUp_Click, 32, providerIndex > 0));
-            actions.Children.Add(CreateAiRowButton("↓", "AiSettings_MoveDown", connection.Id, BtnAiMoveDown_Click, 32, providerIndex < providerConnections.Length - 1));
             actions.Children.Add(CreateAiRowButton(LocalizationService.Get("AiSettings_Test"), "AiSettings_Test", connection.Id, BtnAiTest_Click, 90));
             actions.Children.Add(CreateAiRowButton(LocalizationService.Get("Common_Delete"), "Common_Delete", connection.Id, BtnAiRemove_Click, 90));
             Grid.SetColumn(actions, 1);
@@ -459,8 +452,6 @@ public partial class AppSettingsWindow : DarkWindow
         try
         {
             _aiCredentialStore.Write(target, dialog.ApiKey);
-            int priority = _aiConnections.Count(connection =>
-                string.Equals(connection.ProviderId, dialog.ProviderId, StringComparison.OrdinalIgnoreCase));
             _aiConnections.Add(new AiConnectionSettings
             {
                 Id = id,
@@ -468,7 +459,6 @@ public partial class AppSettingsWindow : DarkWindow
                 DisplayName = dialog.ConnectionName,
                 CredentialTarget = target,
                 QuotaScopeId = dialog.QuotaScopeId,
-                Priority = priority,
                 IsEnabled = true
             });
             _pendingAiCredentialTargets.Add(target);
@@ -527,49 +517,7 @@ public partial class AppSettingsWindow : DarkWindow
         {
             _removedAiCredentialTargets.Add(connection.CredentialTarget);
         }
-        NormalizeAiPriorities(connection.ProviderId);
         BuildAiConnectionRows();
-    }
-
-    private void BtnAiMoveUp_Click(object sender, RoutedEventArgs e) => MoveAiConnection(sender, -1);
-    private void BtnAiMoveDown_Click(object sender, RoutedEventArgs e) => MoveAiConnection(sender, 1);
-
-    private void MoveAiConnection(object sender, int offset)
-    {
-        if (sender is not Button button || button.Tag is not string connectionId)
-        {
-            return;
-        }
-        AiConnectionSettings? current = _aiConnections.FirstOrDefault(connection => connection.Id == connectionId);
-        if (current == null)
-        {
-            return;
-        }
-        AiConnectionSettings[] providerConnections = _aiConnections
-            .Where(connection => string.Equals(connection.ProviderId, current.ProviderId, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(connection => connection.Priority)
-            .ToArray();
-        int currentIndex = Array.FindIndex(providerConnections, connection => connection.Id == connectionId);
-        int targetIndex = currentIndex + offset;
-        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= providerConnections.Length)
-        {
-            return;
-        }
-        (providerConnections[currentIndex].Priority, providerConnections[targetIndex].Priority) =
-            (providerConnections[targetIndex].Priority, providerConnections[currentIndex].Priority);
-        BuildAiConnectionRows();
-    }
-
-    private void NormalizeAiPriorities(string providerId)
-    {
-        AiConnectionSettings[] connections = _aiConnections
-            .Where(connection => string.Equals(connection.ProviderId, providerId, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(connection => connection.Priority)
-            .ToArray();
-        for (int index = 0; index < connections.Length; index++)
-        {
-            connections[index].Priority = index;
-        }
     }
 
     private void CleanupPendingAiCredentials()
@@ -978,7 +926,6 @@ public partial class AppSettingsWindow : DarkWindow
         DisplayName = connection.DisplayName,
         CredentialTarget = connection.CredentialTarget,
         QuotaScopeId = connection.QuotaScopeId,
-        Priority = connection.Priority,
         IsEnabled = connection.IsEnabled,
         PreferredModelId = connection.PreferredModelId
     };

@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -64,9 +63,7 @@ internal sealed class AiProviderClient
 
         return provider.Protocol switch
         {
-            AiProviderProtocol.OpenRouter => ParseOpenRouterModels(provider, document.RootElement),
             AiProviderProtocol.Gemini => ParseGeminiModels(provider, document.RootElement),
-            AiProviderProtocol.GitHubModels => ParseGitHubModels(provider, document.RootElement),
             _ => ParseOpenAiModels(provider, document.RootElement)
         };
     }
@@ -218,39 +215,6 @@ internal sealed class AiProviderClient
         return new AiProviderResponse(content, provider.Id, model.ModelId, promptTokens, completionTokens);
     }
 
-    internal static IReadOnlyList<AiModelDescriptor> ParseOpenRouterModels(
-        AiProviderDefinition provider,
-        JsonElement root)
-    {
-        if (!root.TryGetProperty("data", out JsonElement data) || data.ValueKind != JsonValueKind.Array)
-        {
-            return [];
-        }
-
-        var result = new List<AiModelDescriptor>();
-        foreach (JsonElement item in data.EnumerateArray())
-        {
-            string? id = ReadString(item, "id");
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                continue;
-            }
-
-            AiCostStatus cost = string.Equals(id, "openrouter/free", StringComparison.Ordinal)
-                ? AiCostStatus.VerifiedFree
-                : ResolveOpenRouterCost(item);
-            result.Add(new AiModelDescriptor(
-                provider.Id,
-                id,
-                ReadString(item, "name") ?? id,
-                ResolveCapabilities(item),
-                ReadNullableInt(item, "context_length"),
-                cost));
-        }
-
-        return result;
-    }
-
     internal static IReadOnlyList<AiModelDescriptor> ParseOpenAiModels(
         AiProviderDefinition provider,
         JsonElement root)
@@ -278,40 +242,6 @@ internal sealed class AiProviderClient
             .Where(model => model != null)
             .Cast<AiModelDescriptor>()
             .ToArray();
-    }
-
-    internal static IReadOnlyList<AiModelDescriptor> ParseGitHubModels(
-        AiProviderDefinition provider,
-        JsonElement root)
-    {
-        if (root.ValueKind != JsonValueKind.Array)
-        {
-            return [];
-        }
-
-        var result = new List<AiModelDescriptor>();
-        foreach (JsonElement item in root.EnumerateArray())
-        {
-            string? id = ReadString(item, "id");
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                continue;
-            }
-
-            int? context = null;
-            if (item.TryGetProperty("limits", out JsonElement limits))
-            {
-                context = ReadNullableInt(limits, "max_input_tokens");
-            }
-            result.Add(new AiModelDescriptor(
-                provider.Id,
-                id,
-                ReadString(item, "name") ?? id,
-                ResolveCapabilities(item),
-                context,
-                provider.DefaultCostStatus));
-        }
-        return result;
     }
 
     internal static IReadOnlyList<AiModelDescriptor> ParseGeminiModels(
@@ -386,15 +316,6 @@ internal sealed class AiProviderClient
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
         }
-        if (provider.Protocol == AiProviderProtocol.GitHubModels)
-        {
-            request.Headers.Add("X-GitHub-Api-Version", "2026-03-10");
-        }
-        if (provider.Id == "openrouter")
-        {
-            request.Headers.TryAddWithoutValidation("HTTP-Referer", "https://github.com/codebdbd/aitebar");
-            request.Headers.TryAddWithoutValidation("X-Title", "AiteBar");
-        }
     }
 
     private static async Task<JsonDocument> ReadJsonResponseAsync(
@@ -416,31 +337,6 @@ internal sealed class AiProviderClient
         {
             throw new InvalidDataException("AI provider returned invalid JSON.", ex);
         }
-    }
-
-    private static AiCostStatus ResolveOpenRouterCost(JsonElement item)
-    {
-        if (!item.TryGetProperty("pricing", out JsonElement pricing))
-        {
-            return AiCostStatus.Unknown;
-        }
-        return IsZeroPrice(pricing, "prompt") && IsZeroPrice(pricing, "completion")
-            ? AiCostStatus.VerifiedFree
-            : AiCostStatus.Paid;
-    }
-
-    private static bool IsZeroPrice(JsonElement pricing, string propertyName)
-    {
-        if (!pricing.TryGetProperty(propertyName, out JsonElement value))
-        {
-            return false;
-        }
-        return value.ValueKind switch
-        {
-            JsonValueKind.Number => value.TryGetDecimal(out decimal number) && number == 0m,
-            JsonValueKind.String => decimal.TryParse(value.GetString(), NumberStyles.Float, CultureInfo.InvariantCulture, out decimal number) && number == 0m,
-            _ => false
-        };
     }
 
     private static AiCapabilities ResolveCapabilities(JsonElement item)
