@@ -326,6 +326,12 @@ namespace AiteBar
                 : Visibility.Collapsed;
         }
 
+        private void TxtSearch_GotFocus(object sender, RoutedEventArgs e) =>
+            TxtSearchPlaceholder.Visibility = Visibility.Collapsed;
+
+        private void TxtSearch_LostFocus(object sender, RoutedEventArgs e) =>
+            UpdateSearchPlaceholder();
+
         private void SetFilter(ClipboardManagerFilter filter)
         {
             _activeFilter = filter;

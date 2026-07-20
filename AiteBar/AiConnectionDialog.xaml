@@ -13,15 +13,6 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="SettingsWindowResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <Style TargetType="PasswordBox">
-                <Setter Property="Height" Value="36"/>
-                <Setter Property="Padding" Value="10,0"/>
-                <Setter Property="Foreground" Value="#F4F7FA"/>
-                <Setter Property="Background" Value="#2D2D2D"/>
-                <Setter Property="BorderBrush" Value="#50545B"/>
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
-            </Style>
         </ResourceDictionary>
     </Window.Resources>
 

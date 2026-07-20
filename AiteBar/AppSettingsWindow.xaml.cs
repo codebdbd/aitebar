@@ -982,7 +982,8 @@ public partial class AppSettingsWindow : DarkWindow
                 Text = context.Name,
                 Height = formControlHeight,
                 Margin = new Thickness(0, 0, 16, 0),
-                VerticalContentAlignment = VerticalAlignment.Center
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Style = (Style)FindResource("BaseTextBoxStyle")
             };
             Grid.SetColumn(nameTextBox, 1);
             row.Children.Add(nameTextBox);

@@ -45,9 +45,9 @@
                     <StackPanel Grid.Column="0" Margin="0,0,30,0">
                         <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_ButtonName}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
                         <Grid Margin="0,0,0,15">
-                            <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged"/>
-                            <TextBlock x:Name="TxtNamePlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_ButtonNamePlaceholder}"/>
-                            <TextBlock x:Name="TxtNameError" Margin="2,34,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
+                            <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged" GotFocus="TxtName_GotFocus" LostFocus="TxtName_LostFocus"/>
+                            <TextBlock x:Name="TxtNamePlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="{StaticResource PlaceholderForegroundBrush}" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_ButtonNamePlaceholder}"/>
+                            <TextBlock x:Name="TxtNameError" Margin="2,42,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
                         </Grid>
 
                         <UniformGrid Columns="2" Margin="0,0,0,15">
@@ -70,9 +70,9 @@
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtActionValue" TextChanged="TxtActionValue_TextChanged"/>
-                                <TextBlock x:Name="TxtActionPlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False"/>
-                                <TextBlock x:Name="TxtActionValueError" Grid.ColumnSpan="2" Margin="2,34,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
+                                <TextBox x:Name="TxtActionValue" TextChanged="TxtActionValue_TextChanged" GotFocus="TxtActionValue_GotFocus" LostFocus="TxtActionValue_LostFocus"/>
+                                <TextBlock x:Name="TxtActionPlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="{StaticResource PlaceholderForegroundBrush}" IsHitTestVisible="False"/>
+                                <TextBlock x:Name="TxtActionValueError" Grid.ColumnSpan="2" Margin="2,42,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
                                 <Button x:Name="BtnBrowse" Grid.Column="1" Width="80" Margin="5,0,0,0" Click="BtnBrowse_Click" Style="{StaticResource FormSelectionButtonStyle}" Content="{local:Loc ResourceKey=Common_Browse}"/>
                             </Grid>
 
@@ -180,7 +180,7 @@
                                     </Grid.ColumnDefinitions>
                                     <TextBlock Text="#" VerticalAlignment="Center" Foreground="{StaticResource MutedText}" Margin="0,0,5,0"/>
                                     <TextBox x:Name="TxtHexColor" Grid.Column="1" TextChanged="TxtHexColor_TextChanged"/>
-                                    <TextBlock x:Name="TxtHexPlaceholder" Grid.Column="1" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="#555" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_HexPlaceholder}" Visibility="Collapsed"/>
+                                    <TextBlock x:Name="TxtHexPlaceholder" Grid.Column="1" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="{StaticResource PlaceholderForegroundBrush}" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_HexPlaceholder}" Visibility="Collapsed"/>
                                 </Grid>
                             </StackPanel>
                         </Border>

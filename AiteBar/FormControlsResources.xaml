@@ -3,7 +3,7 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:local="clr-namespace:AiteBar">
     <sys:Double x:Key="FormControlHeight">36</sys:Double>
-    <Thickness x:Key="FormInputPlaceholderMargin">5,0,0,0</Thickness>
+    <Thickness x:Key="FormInputPlaceholderMargin">8,0,0,0</Thickness>
 
     <SolidColorBrush x:Key="FormControlBackground" Color="#383838"/>
     <SolidColorBrush x:Key="FormControlBackgroundHover" Color="#404040"/>
@@ -16,6 +16,7 @@
     <SolidColorBrush x:Key="FormControlMutedForegroundBrush" Color="#BFC3C8"/>
     <SolidColorBrush x:Key="FormControlDisabledForegroundBrush" Color="#777777"/>
     <SolidColorBrush x:Key="FormControlErrorBorderBrush" Color="#E85A5A"/>
+    <SolidColorBrush x:Key="PlaceholderForegroundBrush" Color="#666666"/>
 
     <!-- ============================================ -->
     <!-- BUTTON STYLES - UNIFIED FOR ALL WINDOWS      -->
@@ -242,6 +243,21 @@
     </Style>
 
     <Style TargetType="TextBox" BasedOn="{StaticResource BaseTextBoxStyle}"/>
+
+    <Style x:Key="BasePasswordBoxStyle" TargetType="PasswordBox">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Background" Value="{StaticResource FormInputBackground}"/>
+        <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
+        <Setter Property="Height" Value="{StaticResource FormControlHeight}"/>
+        <Setter Property="Padding" Value="4,0"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="UseLayoutRounding" Value="True"/>
+    </Style>
+
+    <Style TargetType="PasswordBox" BasedOn="{StaticResource BasePasswordBoxStyle}"/>
 
     <Style x:Key="BaseComboBoxItemStyle" TargetType="ComboBoxItem">
         <Setter Property="Background" Value="Transparent"/>
@@ -501,4 +517,153 @@
         <Setter Property="Margin" Value="8,5,8,5"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
+
+    <!-- ============================================ -->
+    <!-- SLIDER STYLE - UNIFIED FOR ALL WINDOWS       -->
+    <!-- ============================================ -->
+
+    <Style x:Key="BaseSliderStyle" TargetType="Slider">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="IsMoveToPointEnabled" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Slider">
+                    <Grid Height="32" SnapsToDevicePixels="True">
+                        <Border x:Name="SliderFocusRing"
+                                Height="14"
+                                Margin="7,0"
+                                Background="Transparent"
+                                BorderBrush="{DynamicResource AccentColor}"
+                                BorderThickness="1"
+                                CornerRadius="7"
+                                Opacity="0"
+                                VerticalAlignment="Center"/>
+                        <Border x:Name="SliderTrackBackground"
+                                Height="6"
+                                Margin="13,0"
+                                Background="#3B4654"
+                                CornerRadius="3"
+                                VerticalAlignment="Center"/>
+                        <ProgressBar x:Name="SliderActiveTrack"
+                                     Height="6"
+                                     Margin="13,0"
+                                     Minimum="{TemplateBinding Minimum}"
+                                     Maximum="{TemplateBinding Maximum}"
+                                     Value="{TemplateBinding Value}"
+                                     Background="Transparent"
+                                     Foreground="{DynamicResource AccentColor}"
+                                     IsHitTestVisible="False"
+                                     VerticalAlignment="Center">
+                            <ProgressBar.Template>
+                                <ControlTemplate TargetType="ProgressBar">
+                                    <Grid x:Name="PART_Track">
+                                        <Border x:Name="PART_Indicator"
+                                                Background="{TemplateBinding Foreground}"
+                                                CornerRadius="3"
+                                                HorizontalAlignment="Left"/>
+                                    </Grid>
+                                </ControlTemplate>
+                            </ProgressBar.Template>
+                        </ProgressBar>
+                        <Grid Margin="13,0" IsHitTestVisible="False">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Ellipse x:Name="SliderTick1" Grid.Column="0" Width="4" Height="4" Fill="#AAB4C0"/>
+                            <Ellipse x:Name="SliderTick2" Grid.Column="2" Width="4" Height="4" Fill="#AAB4C0"/>
+                            <Ellipse x:Name="SliderTick3" Grid.Column="4" Width="4" Height="4" Fill="#AAB4C0"/>
+                            <Ellipse x:Name="SliderTick4" Grid.Column="6" Width="4" Height="4" Fill="#AAB4C0"/>
+                        </Grid>
+                        <Track x:Name="PART_Track">
+                            <Track.DecreaseRepeatButton>
+                                <RepeatButton Command="{x:Static Slider.DecreaseLarge}"
+                                              Background="Transparent"
+                                              Focusable="False">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Height="6"
+                                                    Background="{TemplateBinding Background}"
+                                                    CornerRadius="3"
+                                                    VerticalAlignment="Center"/>
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.DecreaseRepeatButton>
+                            <Track.IncreaseRepeatButton>
+                                <RepeatButton Command="{x:Static Slider.IncreaseLarge}"
+                                              Background="Transparent"
+                                              Focusable="False">
+                                    <RepeatButton.Template>
+                                        <ControlTemplate TargetType="RepeatButton">
+                                            <Border Height="6"
+                                                    Background="{TemplateBinding Background}"
+                                                    CornerRadius="3"
+                                                    VerticalAlignment="Center"/>
+                                        </ControlTemplate>
+                                    </RepeatButton.Template>
+                                </RepeatButton>
+                            </Track.IncreaseRepeatButton>
+                            <Track.Thumb>
+                                <Thumb Width="26" Height="26" Focusable="False">
+                                    <Thumb.Template>
+                                        <ControlTemplate TargetType="Thumb">
+                                            <Grid Width="26" Height="26">
+                                                <Ellipse x:Name="SliderThumbHalo"
+                                                         Fill="{DynamicResource AccentColor}"
+                                                         Opacity="0"/>
+                                                <Ellipse x:Name="SliderThumbCore"
+                                                         Width="18"
+                                                         Height="18"
+                                                         Fill="{DynamicResource AccentColor}"
+                                                         Stroke="#F4F7FA"
+                                                         StrokeThickness="2"/>
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="SliderThumbHalo" Property="Opacity" Value="0.22"/>
+                                                    <Setter TargetName="SliderThumbCore" Property="Width" Value="20"/>
+                                                    <Setter TargetName="SliderThumbCore" Property="Height" Value="20"/>
+                                                </Trigger>
+                                                <Trigger Property="IsDragging" Value="True">
+                                                    <Setter TargetName="SliderThumbHalo" Property="Opacity" Value="0.38"/>
+                                                    <Setter TargetName="SliderThumbCore" Property="Width" Value="20"/>
+                                                    <Setter TargetName="SliderThumbCore" Property="Height" Value="20"/>
+                                                </Trigger>
+                                                <Trigger Property="IsEnabled" Value="False">
+                                                    <Setter Property="Opacity" Value="0.55"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Thumb.Template>
+                                </Thumb>
+                            </Track.Thumb>
+                        </Track>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True"/>
+                                <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="SliderFocusRing" Property="Opacity" Value="0.7"/>
+                        </MultiTrigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.45"/>
+                            <Setter Property="Cursor" Value="Arrow"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style TargetType="Slider" BasedOn="{StaticResource BaseSliderStyle}"/>
 </ResourceDictionary>

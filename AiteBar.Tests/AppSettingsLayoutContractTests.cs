@@ -190,9 +190,9 @@ public sealed class AppSettingsLayoutContractTests
     [Fact]
     public void ModernSlider_UsesDiscreteTrackTicksAndInteractiveVisualStates()
     {
-        XDocument window = LoadWindow();
-        XElement style = Assert.Single(window.Descendants(PresentationNamespace + "Style"),
-            element => element.Attribute(XamlNamespace + "Key")?.Value == "ModernSliderStyle");
+        XDocument resources = LoadXaml("FormControlsResources.xaml");
+        XElement style = Assert.Single(resources.Descendants(PresentationNamespace + "Style"),
+            element => element.Attribute(XamlNamespace + "Key")?.Value == "BaseSliderStyle");
 
         Assert.Contains(style.Elements(PresentationNamespace + "Setter"), setter =>
             setter.Attribute("Property")?.Value == "Height" && setter.Attribute("Value")?.Value == "32");
@@ -357,6 +357,9 @@ public sealed class AppSettingsLayoutContractTests
 
     private static XDocument LoadWindow() =>
         XDocument.Load(Path.Combine(FindRepoRoot(), "AiteBar", "AppSettingsWindow.xaml"));
+
+    private static XDocument LoadXaml(string fileName) =>
+        XDocument.Load(Path.Combine(FindRepoRoot(), "AiteBar", fileName));
 
     private static string FindRepoRoot()
     {

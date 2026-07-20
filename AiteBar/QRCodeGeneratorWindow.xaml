@@ -56,13 +56,6 @@
                 <Setter Property="MinWidth" Value="120"/>
             </Style>
 
-            <Style x:Key="CompactTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource BaseTextBoxStyle}">
-                <Setter Property="Height" Value="{StaticResource FormControlHeight}"/>
-                <Setter Property="Margin" Value="0"/>
-                <Setter Property="Padding" Value="4,0"/>
-                <Setter Property="ContextMenu" Value="{StaticResource TextEditingContextMenu}"/>
-            </Style>
-
             <Style x:Key="ColorSwatchStyle" TargetType="Border">
                 <Setter Property="Width" Value="32"/>
                 <Setter Property="Height" Value="32"/>
@@ -151,7 +144,7 @@
                             </Grid.ColumnDefinitions>
                             <TextBlock x:Name="LblInputTextType" Text="{local:Loc ResourceKey=QRCodeGenerator_TypeUrl}" Style="{StaticResource FieldLabelStyle}"/>
                             <Grid Grid.Column="1">
-                                <TextBox x:Name="TxtInput" TextWrapping="NoWrap" VerticalScrollBarVisibility="Disabled" MaxLength="4296" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                                <TextBox x:Name="TxtInput" TextWrapping="NoWrap" VerticalScrollBarVisibility="Disabled" MaxLength="4296" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged" GotFocus="TxtInput_GotFocus" LostFocus="TxtInput_LostFocus"/>
                                 <TextBlock x:Name="TxtInputPlaceholder" Text="{local:Loc ResourceKey=QRCodeGenerator_InputPlaceholder}" Foreground="{StaticResource MutedText}" FontSize="12" IsHitTestVisible="False" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="{StaticResource FormInputPlaceholderMargin}"/>
                             </Grid>
                         </Grid>
@@ -168,7 +161,7 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_WifiSsidPlaceholder}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtWifiSsid" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtWifiSsid" Grid.Column="1" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                             <TextBlock Grid.Row="2" Text="{local:Loc ResourceKey=QRCodeGenerator_WifiPasswordPlaceholder}" Style="{StaticResource FieldLabelStyle}"/>
                             <Grid Grid.Row="2" Grid.Column="1">
                                 <Grid.ColumnDefinitions>
@@ -176,7 +169,7 @@
                                     <ColumnDefinition Width="8"/>
                                     <ColumnDefinition Width="118"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtWifiPassword" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                                <TextBox x:Name="TxtWifiPassword" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                                 <ComboBox x:Name="CmbWifiSecurity" Grid.Column="2" Style="{StaticResource CompactComboStyle}" SelectionChanged="Options_Changed"/>
                             </Grid>
                             <CheckBox x:Name="ChkWifiHidden" Grid.Row="4" Grid.Column="1" Content="{local:Loc ResourceKey=QRCodeGenerator_WifiHidden}" Checked="Options_Changed" Unchecked="Options_Changed"/>
@@ -196,13 +189,13 @@
                             </Grid.ColumnDefinitions>
                             
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_EmailAddress}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtEmailAddress" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtEmailAddress" Grid.Column="1" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                             
                             <TextBlock Grid.Row="2" Text="{local:Loc ResourceKey=QRCodeGenerator_EmailSubject}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtEmailSubject" Grid.Row="2" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtEmailSubject" Grid.Row="2" Grid.Column="1" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                             
                             <TextBlock Grid.Row="4" Text="{local:Loc ResourceKey=QRCodeGenerator_EmailBody}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtEmailBody" Grid.Row="4" Grid.Column="1" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtEmailBody" Grid.Row="4" Grid.Column="1" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                         </Grid>
 
                         <Grid x:Name="PhonePanel" Grid.Row="4" Visibility="Collapsed">
@@ -211,7 +204,7 @@
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_PhoneNumber}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtPhoneNumber" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtPhoneNumber" Grid.Column="1" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                         </Grid>
 
                         <Grid x:Name="SmsPanel" Grid.Row="4" Visibility="Collapsed">
@@ -226,10 +219,10 @@
                             </Grid.ColumnDefinitions>
                             
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_PhoneNumber}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtSmsPhone" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtSmsPhone" Grid.Column="1" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                             
                             <TextBlock Grid.Row="2" Text="{local:Loc ResourceKey=QRCodeGenerator_SmsMessage}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtSmsMessage" Grid.Row="2" Grid.Column="1" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtSmsMessage" Grid.Row="2" Grid.Column="1" Height="60" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                         </Grid>
 
                         <Grid x:Name="VCardPanel" Grid.Row="4" Visibility="Collapsed">
@@ -256,15 +249,15 @@
                                     <ColumnDefinition Width="8"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtVCardFirstName" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged" ToolTip="{local:Loc ResourceKey=QRCodeGenerator_VCardFirstName}"/>
-                                <TextBox x:Name="TxtVCardLastName" Grid.Column="2" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged" ToolTip="{local:Loc ResourceKey=QRCodeGenerator_VCardLastName}"/>
+                                <TextBox x:Name="TxtVCardFirstName" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged" ToolTip="{local:Loc ResourceKey=QRCodeGenerator_VCardFirstName}"/>
+                                <TextBox x:Name="TxtVCardLastName" Grid.Column="2" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged" ToolTip="{local:Loc ResourceKey=QRCodeGenerator_VCardLastName}"/>
                             </Grid>
                             
                             <TextBlock Grid.Row="2" Text="{local:Loc ResourceKey=QRCodeGenerator_VCardPhone}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtVCardPhone" Grid.Row="2" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtVCardPhone" Grid.Row="2" Grid.Column="1" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                             
                             <TextBlock Grid.Row="4" Text="{local:Loc ResourceKey=QRCodeGenerator_VCardEmail}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtVCardEmail" Grid.Row="4" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtVCardEmail" Grid.Row="4" Grid.Column="1" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                             
                             <TextBlock Grid.Row="6" Text="{local:Loc ResourceKey=QRCodeGenerator_VCardCompany}" Style="{StaticResource FieldLabelStyle}"/>
                             <Grid Grid.Row="6" Grid.Column="1">
@@ -273,12 +266,12 @@
                                     <ColumnDefinition Width="8"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtVCardCompany" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged" ToolTip="{local:Loc ResourceKey=QRCodeGenerator_VCardCompany}"/>
-                                <TextBox x:Name="TxtVCardJobTitle" Grid.Column="2" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged" ToolTip="{local:Loc ResourceKey=QRCodeGenerator_VCardJobTitle}"/>
+                                <TextBox x:Name="TxtVCardCompany" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged" ToolTip="{local:Loc ResourceKey=QRCodeGenerator_VCardCompany}"/>
+                                <TextBox x:Name="TxtVCardJobTitle" Grid.Column="2" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged" ToolTip="{local:Loc ResourceKey=QRCodeGenerator_VCardJobTitle}"/>
                             </Grid>
                             
                             <TextBlock Grid.Row="8" Text="{local:Loc ResourceKey=QRCodeGenerator_VCardWebsite}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtVCardWebsite" Grid.Row="8" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtVCardWebsite" Grid.Row="8" Grid.Column="1" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                         </Grid>
                     </Grid>
                 </Border>
@@ -308,7 +301,7 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_ColorCode}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtDarkColor" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtDarkColor" Grid.Column="1" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                             <Border x:Name="DarkColorSwatch" Grid.Column="3" Style="{StaticResource ColorSwatchStyle}" Background="#000000" MouseLeftButtonUp="DarkColorSwatch_Click"/>
                         </Grid>
                         <Grid Grid.Row="4">
@@ -319,7 +312,7 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_ColorBackground}" Style="{StaticResource FieldLabelStyle}"/>
-                            <TextBox x:Name="TxtLightColor" Grid.Column="1" Style="{StaticResource CompactTextBoxStyle}" TextChanged="TxtInput_TextChanged"/>
+                            <TextBox x:Name="TxtLightColor" Grid.Column="1" Margin="0" ContextMenu="{StaticResource TextEditingContextMenu}" TextChanged="TxtInput_TextChanged"/>
                             <Border x:Name="LightColorSwatch" Grid.Column="3" Style="{StaticResource ColorSwatchStyle}" Background="#FFFFFF" MouseLeftButtonUp="LightColorSwatch_Click"/>
                         </Grid>
                     <Grid Grid.Row="6">

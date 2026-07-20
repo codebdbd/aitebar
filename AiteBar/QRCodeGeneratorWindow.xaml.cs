@@ -566,6 +566,12 @@ public partial class QRCodeGeneratorWindow : DarkWindow
             : Visibility.Collapsed;
     }
 
+    private void TxtInput_GotFocus(object sender, RoutedEventArgs e) =>
+        TxtInputPlaceholder.Visibility = Visibility.Collapsed;
+
+    private void TxtInput_LostFocus(object sender, RoutedEventArgs e) =>
+        UpdateInputPlaceholder();
+
     private void ApplyQualityPreset()
     {
         _isApplyingPreset = true;

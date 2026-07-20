@@ -93,6 +93,17 @@ public partial class RotationProfileSelectionWindow : DarkWindow
         UpdateSaveButtonState();
     }
 
+    private void TxtSearch_GotFocus(object sender, RoutedEventArgs e) =>
+        TxtSearchPlaceholder.Visibility = Visibility.Collapsed;
+
+    private void TxtSearch_LostFocus(object sender, RoutedEventArgs e)
+    {
+        if (TxtSearchPlaceholder != null)
+            TxtSearchPlaceholder.Visibility = string.IsNullOrEmpty(TxtSearch.Text)
+                ? Visibility.Visible
+                : Visibility.Collapsed;
+    }
+
     private void BtnSelectAll_Click(object sender, RoutedEventArgs e)
     {
         _selectedProfilePaths.Clear();

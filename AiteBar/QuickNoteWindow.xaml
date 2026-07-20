@@ -14,7 +14,7 @@
     <Window.Resources>
         <SolidColorBrush x:Key="QuickNoteHoverBrush" Color="#303238"/>
         <SolidColorBrush x:Key="QuickNoteHoverForegroundBrush" Color="#F4F4F6"/>
-        <Style x:Key="IconButtonStyle" TargetType="Button">
+        <Style x:Key="QuickNoteIconButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="32"/>
             <Setter Property="Height" Value="32"/>
             <Setter Property="Margin" Value="2,0,0,0"/>
@@ -43,7 +43,7 @@
             </Setter>
         </Style>
 
-        <Style x:Key="DangerIconButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
+        <Style x:Key="DangerIconButtonStyle" TargetType="Button" BasedOn="{StaticResource QuickNoteIconButtonStyle}">
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter Property="Foreground" Value="#FF7272"/>
@@ -300,7 +300,7 @@
                           ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
                           Checked="BtnPin_Checked"
                           Unchecked="BtnPin_Checked"/>
-                        <Button Content="⋯" FontFamily="Segoe UI" FontSize="22" Style="{StaticResource IconButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Menu}" Click="BtnMenu_Click">
+                        <Button Content="⋯" FontFamily="Segoe UI" FontSize="22" Style="{StaticResource QuickNoteIconButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Menu}" Click="BtnMenu_Click">
                             <Button.ContextMenu>
                                 <ContextMenu Style="{StaticResource DarkContextMenu}">
                                     <MenuItem Header="{local:Loc ResourceKey=QuickNote_Theme}" Click="BtnTheme_Click">
@@ -326,7 +326,7 @@
                                 </ContextMenu>
                             </Button.ContextMenu>
                         </Button>
-                        <Button Content="&#xF36A;" Style="{StaticResource IconButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
+                        <Button Content="&#xF36A;" Style="{StaticResource QuickNoteIconButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
                     </StackPanel>
                 </Grid>
             </Border>

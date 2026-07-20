@@ -847,6 +847,18 @@ namespace AiteBar
                 : Visibility.Collapsed;
         }
 
+        private void TxtName_GotFocus(object sender, RoutedEventArgs e) =>
+            TxtNamePlaceholder.Visibility = Visibility.Collapsed;
+
+        private void TxtName_LostFocus(object sender, RoutedEventArgs e) =>
+            UpdateNamePlaceholderVisibility();
+
+        private void TxtActionValue_GotFocus(object sender, RoutedEventArgs e) =>
+            TxtActionPlaceholder.Visibility = Visibility.Collapsed;
+
+        private void TxtActionValue_LostFocus(object sender, RoutedEventArgs e) =>
+            UpdateActionPlaceholderVisibility();
+
         private async void BtnSave_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button saveButton) saveButton.IsEnabled = false;

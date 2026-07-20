@@ -51,7 +51,7 @@ public sealed class FormControlHeightTests
 
         Assert.Equal("#2D2D2D", inputBackground.Attribute("Color")?.Value);
         Assert.Equal("#2D2D2D", inputHoverBackground.Attribute("Color")?.Value);
-        Assert.Equal("5,0,0,0", placeholderMargin.Value);
+        Assert.Equal("8,0,0,0", placeholderMargin.Value);
 
         XElement textBoxStyle = FindStyle(resources, "BaseTextBoxStyle");
         AssertSetter(textBoxStyle, "Background", "{StaticResource FormInputBackground}");
@@ -139,7 +139,6 @@ public sealed class FormControlHeightTests
     [InlineData("SettingsResources.xaml", "SegmentedRadioButtonStyle")]
     [InlineData("AppSettingsWindow.xaml", "HotkeyModifierButtonStyle")]
     [InlineData("QRCodeGeneratorWindow.xaml", "CompactComboStyle")]
-    [InlineData("QRCodeGeneratorWindow.xaml", "CompactTextBoxStyle")]
     [InlineData("QuickNoteWindow.xaml", "FormatComboStyle")]
     [InlineData("IconPickerWindow.xaml", "SearchTextBoxStyle")]
     [InlineData("IconConverterWindow.xaml", "OptionRadioButtonStyle")]
@@ -206,7 +205,7 @@ public sealed class FormControlHeightTests
             Assert.Equal(36d, selectionButton.Height);
             Assert.Equal(new Thickness(4, 0, 4, 0), textBox.Padding);
             Assert.Equal(
-                new Thickness(5, 0, 0, 0),
+                new Thickness(8, 0, 0, 0),
                 Assert.IsType<Thickness>(Application.Current.FindResource("FormInputPlaceholderMargin")));
             Assert.Equal(
                 Color.FromRgb(0x2D, 0x2D, 0x2D),
