@@ -211,41 +211,41 @@ public sealed class TextProcessingViewModel : INotifyPropertyChanged
 
     public async Task LoadModelsAsync()
     {
-        Models.Clear();
-        Models.Add(new ModelItem(null, null, LocalizationService.Get("TextProcessing_ModelAuto"), true));
+        var allModels = new List<ModelItem>
+        {
+            new(null, null, LocalizationService.Get("TextProcessing_ModelAuto"), true)
+        };
 
         AppSettings settings = _settingsService.Settings;
         AiSettings? aiSettings = settings.Ai;
-        if (aiSettings?.Connections == null || aiSettings.Connections.Count == 0)
+        if (aiSettings?.Connections != null)
         {
-            IsModelAvailable = false;
-            return;
-        }
-
-        var eligible = new List<ModelItem>();
-        foreach (AiConnectionSettings connection in aiSettings.Connections.Where(c => c.IsEnabled))
-        {
-            try
+            foreach (AiConnectionSettings connection in aiSettings.Connections.Where(c => c.IsEnabled))
             {
-                IReadOnlyList<AiModelDescriptor> models = await _gateway.GetModelsAsync(connection, CancellationToken.None).ConfigureAwait(false);
-                foreach (AiModelDescriptor model in models.Where(m =>
-                    !m.IsDeprecated &&
-                    (m.Capabilities & AiCapabilities.Text) == AiCapabilities.Text &&
-                    m.CostStatus is AiCostStatus.VerifiedFree or AiCostStatus.FreeTierAvailable))
+                try
                 {
-                    string display = $"{connection.DisplayName} — {model.DisplayName}";
-                    eligible.Add(new ModelItem(connection.ProviderId, model.ModelId, display, true));
+                    IReadOnlyList<AiModelDescriptor> models = await _gateway.GetModelsAsync(connection, CancellationToken.None).ConfigureAwait(false);
+                    foreach (AiModelDescriptor model in models.Where(m =>
+                        !m.IsDeprecated &&
+                        (m.Capabilities & AiCapabilities.Text) == AiCapabilities.Text &&
+                        m.CostStatus is AiCostStatus.VerifiedFree or AiCostStatus.FreeTierAvailable))
+                    {
+                        string display = $"{connection.DisplayName} — {model.DisplayName}";
+                        allModels.Add(new ModelItem(connection.ProviderId, model.ModelId, display, true));
+                    }
+                }
+                catch
+                {
+                    // Connection unavailable, skip
                 }
             }
-            catch
-            {
-                // Connection unavailable, skip
-            }
         }
 
-        foreach (ModelItem item in eligible.OrderBy(m => m.Display))
+        Models.Clear();
+        var sortedModels = allModels.Take(1).Concat(allModels.Skip(1).OrderBy(m => m.Display)).ToList();
+        foreach (var model in sortedModels)
         {
-            Models.Add(item);
+            Models.Add(model);
         }
 
         IsModelAvailable = Models.Count > 1;
@@ -260,12 +260,6 @@ public sealed class TextProcessingViewModel : INotifyPropertyChanged
         if (!IsModelAvailable) return;
 
         StatusMessage = string.Empty;
-
-        if (IsOverLimit)
-        {
-            StatusMessage = LocalizationService.Get("TextProcessing_ErrorTooLong");
-            return;
-        }
 
         string textToShow = _isShowingOriginal ? _originalText : InputText;
         if (_hasSuccessfulResult && !_isShowingOriginal && _isModifiedManually)
