@@ -723,7 +723,7 @@ Open the GitHub release page?</value></data>
   <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Applies proper quotes, dashes, spaces, and other typographic marks based on the text language.</value></data>
   <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Removes technical artifacts, extra line breaks, and service characters from copied PDFs, documents, and web pages.</value></data>
   <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Proofread</value></data>
-  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Format</value></data>
+  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Process</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Clean up</value></data>
   <data name="TextProcessing_ButtonPaste" xml:space="preserve"><value>Paste</value></data>
   <data name="TextProcessing_ButtonCopy" xml:space="preserve"><value>Copy</value></data>

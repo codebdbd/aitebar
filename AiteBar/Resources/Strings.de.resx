@@ -666,7 +666,7 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Setzt korrekte Anführungszeichen, Gedankenstriche, Leerzeichen und andere typografische Zeichen gemäß der Textsprache.</value></data>
   <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Entfernt technische Artefakte, überflüssige Zeilenumbrüche und dienstzeichen nach dem Kopieren aus PDFs, Dokumenten und Webseiten.</value></data>
   <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Korrigieren</value></data>
-  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Formatieren</value></data>
+  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Verarbeiten</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Bereinigen</value></data>
   <data name="TextProcessing_ButtonPaste" xml:space="preserve"><value>Einfügen</value></data>
   <data name="TextProcessing_ButtonCopy" xml:space="preserve"><value>Kopieren</value></data>

@@ -1243,7 +1243,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Расставляет правильные кавычки, тире, пробелы и другие типографские знаки с учётом языка текста.</value></data>
   <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Удаляет технический мусор, лишние переносы и служебные символы после копирования из PDF, документов и веб-страниц.</value></data>
   <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Проверить</value></data>
-  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Оформить</value></data>
+  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Обработать</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Очистить текст</value></data>
   <data name="TextProcessing_ButtonPaste" xml:space="preserve"><value>Вставить</value></data>
   <data name="TextProcessing_ButtonCopy" xml:space="preserve"><value>Копировать</value></data>

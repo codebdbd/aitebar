@@ -216,6 +216,18 @@
             </StackPanel>
         </Border>
 
+        <!-- Status message -->
+        <Border DockPanel.Dock="Top" Style="{StaticResource ModeInfoBarStyle}"
+                Margin="0,0,0,16" MinHeight="40" 
+                Visibility="{Binding HasStatusMessage, Converter={StaticResource BoolToVis}}">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xEA39;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
+                           FontSize="16" Foreground="#FFB400" VerticalAlignment="Center" Margin="0,0,10,0"/>
+                <TextBlock x:Name="TxtStatusMessage" Text="{Binding StatusMessage}" TextWrapping="Wrap"
+                           FontSize="15" Foreground="#B0B0B5" VerticalAlignment="Center"/>
+            </StackPanel>
+        </Border>
+
         <!-- Bottom panel: Model selector (left) + Process button (right, aligned with editor) -->
         <Grid DockPanel.Dock="Bottom" Height="52" Margin="0,20,0,0">
             <Grid.ColumnDefinitions>

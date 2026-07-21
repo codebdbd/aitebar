@@ -12,7 +12,7 @@ public sealed class TextProcessingUtility : UtilityBase<TextProcessingWindow>
 
     public override string Id => "TextProcessing";
     public override string DisplayNameKey => "Tool_TextProcessing";
-    public override string IconGlyph => "\uE8A5";
+    public override string IconGlyph => "\uF7DA";
     public override string IconColor => "#007ACC";
 
     protected override TextProcessingWindow CreateWindow(AppSettingsService settingsService, Window? owner)

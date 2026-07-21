@@ -92,7 +92,7 @@ public sealed class TextProcessingViewModel : INotifyPropertyChanged
     public bool HasSuccessfulResult
     {
         get => _hasSuccessfulResult;
-        set { _hasSuccessfulResult = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsToggleVersionVisible)); OnPropertyChanged(nameof(IsRepeatEnabled)); }
+        set { _hasSuccessfulResult = value; OnPropertyChanged(); OnPropertyChanged(nameof(IsToggleVersionVisible)); }
     }
 
     public bool IsModifiedManually
@@ -113,7 +113,6 @@ public sealed class TextProcessingViewModel : INotifyPropertyChanged
             OnPropertyChanged(nameof(IsModelSelectorEnabled));
             OnPropertyChanged(nameof(IsPasteEnabled));
             OnPropertyChanged(nameof(IsClearEnabled));
-            OnPropertyChanged(nameof(IsRepeatEnabled));
             OnPropertyChanged(nameof(IsToggleVersionVisible));
             OnPropertyChanged(nameof(IsMainButtonEnabled));
             OnPropertyChanged(nameof(MainButtonText));
@@ -204,9 +203,8 @@ public sealed class TextProcessingViewModel : INotifyPropertyChanged
     }
     public bool IsPasteEnabled => !_isProcessing;
     public bool IsClearEnabled => !_isProcessing && CharacterCount > 0;
-    public bool IsRepeatEnabled => !_isProcessing && _hasSuccessfulResult;
     public bool IsToggleVersionVisible => _hasSuccessfulResult && !_isProcessing;
-    public bool IsMainButtonEnabled => !_isProcessing && CharacterCount > 0 && IsModelAvailable && !IsOverLimit;
+    public bool IsMainButtonEnabled => !_isProcessing && CharacterCount > 0 && (IsAutoModel || IsModelAvailable) && !IsOverLimit;
     public bool IsOverLimit => CharacterCount > TextProcessingService.MaxInputLength;
     public string ModeButtonText => CurrentMode switch
     {
@@ -306,7 +304,7 @@ public sealed class TextProcessingViewModel : INotifyPropertyChanged
         if (IsProcessing) return;
         if (string.IsNullOrWhiteSpace(InputText)) return;
         if (CharacterCount > TextProcessingService.MaxInputLength) return;
-        if (!IsModelAvailable) return;
+        if (!IsAutoModel && !IsModelAvailable) return;
 
         StatusMessage = string.Empty;
 

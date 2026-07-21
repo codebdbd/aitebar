@@ -176,13 +176,6 @@ public sealed class TextProcessingViewModelTests
     }
 
     [Fact]
-    public void IsRepeatEnabled_NoResult_False()
-    {
-        var vm = CreateViewModel();
-        Assert.False(vm.IsRepeatEnabled);
-    }
-
-    [Fact]
     public void IsToggleVersionVisible_NoResult_False()
     {
         var vm = CreateViewModel();

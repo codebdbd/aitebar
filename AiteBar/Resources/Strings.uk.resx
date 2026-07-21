@@ -660,7 +660,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Розставляє правильні лапки, тире, пробіли та інші типографські знаки з урахуванням мови тексту.</value></data>
   <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Видаляє технічне сміття, зайві переноси та службові символи після копіювання з PDF, документів та веб-сторінок.</value></data>
   <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Перевірити</value></data>
-  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Оформити</value></data>
+  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Обробити</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Очистити текст</value></data>
   <data name="TextProcessing_ButtonPaste" xml:space="preserve"><value>Вставити</value></data>
   <data name="TextProcessing_ButtonCopy" xml:space="preserve"><value>Копіювати</value></data>
