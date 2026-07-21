@@ -254,10 +254,26 @@ public sealed class TextProcessingViewModel : INotifyPropertyChanged
                 try
                 {
                     IReadOnlyList<AiModelDescriptor> models = await _gateway.GetModelsAsync(connection, CancellationToken.None).ConfigureAwait(false);
-                    foreach (AiModelDescriptor model in models.Where(m =>
+                    var eligibleModels = models.Where(m =>
                         !m.IsDeprecated &&
                         (m.Capabilities & AiCapabilities.Text) == AiCapabilities.Text &&
-                        m.CostStatus is AiCostStatus.VerifiedFree or AiCostStatus.FreeTierAvailable))
+                        m.CostStatus is AiCostStatus.VerifiedFree or AiCostStatus.FreeTierAvailable).ToList();
+
+                    // Add preferred model first if present and eligible
+                    if (!string.IsNullOrWhiteSpace(connection.PreferredModelId))
+                    {
+                        var preferredModel = eligibleModels.FirstOrDefault(m =>
+                            string.Equals(m.ModelId, connection.PreferredModelId, StringComparison.OrdinalIgnoreCase));
+                        if (preferredModel != null)
+                        {
+                            string display = $"{connection.DisplayName} — {preferredModel.DisplayName}";
+                            allModels.Add(new ModelItem(connection.ProviderId, preferredModel.ModelId, display, true));
+                            eligibleModels.Remove(preferredModel);
+                        }
+                    }
+
+                    // Add remaining eligible models
+                    foreach (AiModelDescriptor model in eligibleModels)
                     {
                         string display = $"{connection.DisplayName} — {model.DisplayName}";
                         allModels.Add(new ModelItem(connection.ProviderId, model.ModelId, display, true));
@@ -271,8 +287,12 @@ public sealed class TextProcessingViewModel : INotifyPropertyChanged
         }
 
         Models.Clear();
-        var sortedModels = allModels.Take(1).Concat(allModels.Skip(1).OrderBy(m => m.Display)).ToList();
-        foreach (var model in sortedModels)
+        // Keep auto model first, then sort the rest but keep preferred models in their order relative to connections
+        var autoModel = allModels[0];
+        var otherModels = allModels.Skip(1).ToList();
+        otherModels.Sort((a, b) => string.Compare(a.Display, b.Display, StringComparison.CurrentCultureIgnoreCase));
+        Models.Add(autoModel);
+        foreach (var model in otherModels)
         {
             Models.Add(model);
         }
