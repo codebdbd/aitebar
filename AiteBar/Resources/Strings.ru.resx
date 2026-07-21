@@ -1250,6 +1250,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ButtonRepeat" xml:space="preserve"><value>Повторить</value></data>
   <data name="TextProcessing_ButtonShowOriginal" xml:space="preserve"><value>Показать исходный</value></data>
   <data name="TextProcessing_ButtonShowResult" xml:space="preserve"><value>Показать результат</value></data>
+  <data name="TextProcessing_ButtonBeforeProcessing" xml:space="preserve"><value>До обработки</value></data>
+  <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>После обработки</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Очистить</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Отменить</value></data>
   <data name="TextProcessing_Placeholder" xml:space="preserve"><value>Введите текст или вставьте его из буфера обмена</value></data>

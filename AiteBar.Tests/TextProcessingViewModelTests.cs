@@ -57,8 +57,9 @@ public sealed class TextProcessingViewModelTests
     public void SwitchMode_DuringProcessing_Ignored()
     {
         var vm = CreateViewModel();
+        vm.IsProcessing = true;
         vm.SwitchMode(TextProcessingMode.Cleanup);
-        Assert.Equal(TextProcessingMode.Cleanup, vm.CurrentMode);
+        Assert.Equal(TextProcessingMode.Proofread, vm.CurrentMode);
     }
 
     [Fact]

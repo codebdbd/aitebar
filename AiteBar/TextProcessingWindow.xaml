@@ -296,12 +296,12 @@
 
             <!-- Side panel: 80x80 icon buttons -->
             <StackPanel Grid.Column="2" Margin="0">
-                <!-- Paste -->
+                <!-- Вставить -->
                 <Button x:Name="BtnPaste"
                         Style="{StaticResource SideActionStyle}"
                         Click="BtnPaste_Click" Margin="0,0,0,12">
                     <StackPanel>
-                        <TextBlock Text="&#xE77F;" FontSize="48"
+                        <TextBlock Text="&#xF2D6;" FontSize="48"
                                    FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
                                    HorizontalAlignment="Center"/>
                         <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonPaste}"
@@ -309,13 +309,13 @@
                     </StackPanel>
                 </Button>
 
-                <!-- Copy -->
+                <!-- Копировать -->
                 <Button x:Name="BtnCopy"
                         Style="{StaticResource SideActionStyle}"
                         Click="BtnCopy_Click" Margin="0,0,0,12"
                         IsEnabled="False">
                     <StackPanel>
-                        <TextBlock Text="&#xE8C8;" FontSize="48"
+                        <TextBlock Text="&#xF32C;" FontSize="48"
                                    FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
                                    HorizontalAlignment="Center"/>
                         <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonCopy}"
@@ -323,41 +323,27 @@
                     </StackPanel>
                 </Button>
 
-                <!-- Repeat -->
-                <Button x:Name="BtnRepeat"
-                        Style="{StaticResource SideActionStyle}"
-                        Click="BtnRepeat_Click" Margin="0,0,0,12"
-                        IsEnabled="False">
-                    <StackPanel>
-                        <TextBlock Text="&#xE72C;" FontSize="48"
-                                   FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonRepeat}"
-                                   FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Button>
-
-                <!-- Show original / Show result -->
+                <!-- До/После обработки -->
                 <Button x:Name="BtnToggleVersion"
                         Style="{StaticResource SideActionStyle}"
                         Click="BtnToggleVersion_Click" Margin="0,0,0,12"
                         Visibility="Collapsed">
                     <StackPanel>
-                        <TextBlock x:Name="ToggleVersionIcon" Text="&#xE749;" FontSize="48"
+                        <TextBlock x:Name="ToggleVersionIcon" Text="&#xF629;" FontSize="48"
                                    FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
                                    HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="ToggleVersionLabel"
+                        <TextBlock x:Name="ToggleVersionLabel" Text="{local:Loc ResourceKey=TextProcessing_ButtonBeforeProcessing}"
                                    FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0"/>
                     </StackPanel>
                 </Button>
 
-                <!-- Clear -->
+                <!-- Очистить -->
                 <Button x:Name="BtnClear"
                         Style="{StaticResource SideActionStyle}"
                         Click="BtnClear_Click" Margin="0,0,0,12"
                         IsEnabled="False">
                     <StackPanel>
-                        <TextBlock Text="&#xE74D;" FontSize="48"
+                        <TextBlock Text="&#xF34D;" FontSize="48"
                                    FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
                                    HorizontalAlignment="Center"/>
                         <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonClear}"

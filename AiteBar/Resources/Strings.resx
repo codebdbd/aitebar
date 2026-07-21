@@ -730,6 +730,8 @@ Open the GitHub release page?</value></data>
   <data name="TextProcessing_ButtonRepeat" xml:space="preserve"><value>Repeat</value></data>
   <data name="TextProcessing_ButtonShowOriginal" xml:space="preserve"><value>Show original</value></data>
   <data name="TextProcessing_ButtonShowResult" xml:space="preserve"><value>Show result</value></data>
+  <data name="TextProcessing_ButtonBeforeProcessing" xml:space="preserve"><value>Before</value></data>
+  <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>After</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Clear</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="TextProcessing_Placeholder" xml:space="preserve"><value>Enter text or paste from clipboard</value></data>

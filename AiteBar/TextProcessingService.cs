@@ -142,8 +142,7 @@ public sealed partial class TextProcessingService
             "Ergebnis:",
             "Виправлений текст:",
             "Оформлений текст:",
-            "Очищений текст:",
-            "Результат:"
+            "Очищений текст:"
         ];
 
         foreach (string prefix in prefixes)

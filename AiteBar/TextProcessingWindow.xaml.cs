@@ -106,10 +106,20 @@ public partial class TextProcessingWindow : DarkWindow
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
         _isLoadingState = true;
-        _viewModel.RestoreMode();
-        ApplyModeToUI();
-        await _viewModel.LoadModelsAsync();
-        _isLoadingState = false;
+        try
+        {
+            _viewModel.RestoreMode();
+            ApplyModeToUI();
+            await _viewModel.LoadModelsAsync();
+        }
+        catch
+        {
+            // Model loading failed — window remains functional
+        }
+        finally
+        {
+            _isLoadingState = false;
+        }
         TxtEditor.Focus();
     }
 
@@ -220,7 +230,6 @@ public partial class TextProcessingWindow : DarkWindow
         TxtEditor.Text = string.Empty;
         TxtPlaceholder.Visibility = Visibility.Visible;
         BtnCopy.IsEnabled = false;
-        BtnRepeat.IsEnabled = false;
         BtnToggleVersion.Visibility = Visibility.Collapsed;
         _isDirty = false;
     }
@@ -231,7 +240,6 @@ public partial class TextProcessingWindow : DarkWindow
         {
             string text = Clipboard.GetText();
             TxtEditor.Text = text;
-            _viewModel.InputText = text;
             TxtPlaceholder.Visibility = Visibility.Collapsed;
             BtnCopy.IsEnabled = true;
             _isDirty = true;
@@ -240,7 +248,6 @@ public partial class TextProcessingWindow : DarkWindow
             _viewModel.ProcessedText = string.Empty;
             _viewModel.HasSuccessfulResult = false;
             _viewModel.IsShowingOriginal = false;
-            BtnRepeat.IsEnabled = false;
             BtnToggleVersion.Visibility = Visibility.Collapsed;
         }
     }
@@ -251,11 +258,6 @@ public partial class TextProcessingWindow : DarkWindow
         {
             Clipboard.SetText(TxtEditor.Text);
         }
-    }
-
-    private async void BtnRepeat_Click(object sender, RoutedEventArgs e)
-    {
-        await ProcessAsync();
     }
 
     private void BtnToggleVersion_Click(object sender, RoutedEventArgs e)
@@ -277,12 +279,12 @@ public partial class TextProcessingWindow : DarkWindow
         {
             TxtEditor.Text = _viewModel.InputText;
             TxtPlaceholder.Visibility = Visibility.Collapsed;
-            BtnRepeat.IsEnabled = true;
             BtnToggleVersion.Visibility = _viewModel.HasSuccessfulResult
                 ? Visibility.Visible
                 : Visibility.Collapsed;
             UpdateToggleVersionLabel();
             TxtCounters.Text = $"{_viewModel.CharacterCountText} · {_viewModel.WordCountText}";
+            _isDirty = false;
         }
     }
 
@@ -297,7 +299,6 @@ public partial class TextProcessingWindow : DarkWindow
             BtnModeCleanup.IsEnabled = _viewModel.IsModeSwitcherEnabled;
             CmbModels.IsEnabled = _viewModel.IsModelSelectorEnabled;
             BtnPaste.IsEnabled = _viewModel.IsPasteEnabled;
-            BtnRepeat.IsEnabled = _viewModel.IsRepeatEnabled;
             BtnClear.IsEnabled = _viewModel.IsClearEnabled;
             BtnToggleVersion.Visibility = _viewModel.IsToggleVersionVisible
                 ? Visibility.Visible
@@ -340,8 +341,16 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void UpdateToggleVersionLabel()
     {
-        ToggleVersionLabel.Text = _viewModel.ToggleButtonText;
-        ToggleVersionIcon.Text = _viewModel.IsShowingOriginal ? "\uE749" : "\uE749";
+        if (_viewModel.IsShowingOriginal)
+        {
+            ToggleVersionIcon.Text = "\uF56A";
+            ToggleVersionLabel.Text = LocalizationService.Get("TextProcessing_ButtonAfterProcessing");
+        }
+        else
+        {
+            ToggleVersionIcon.Text = "\uF629";
+            ToggleVersionLabel.Text = LocalizationService.Get("TextProcessing_ButtonBeforeProcessing");
+        }
     }
 
     private void SaveWindowState()

@@ -673,6 +673,8 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_ButtonRepeat" xml:space="preserve"><value>Wiederholen</value></data>
   <data name="TextProcessing_ButtonShowOriginal" xml:space="preserve"><value>Original anzeigen</value></data>
   <data name="TextProcessing_ButtonShowResult" xml:space="preserve"><value>Ergebnis anzeigen</value></data>
+  <data name="TextProcessing_ButtonBeforeProcessing" xml:space="preserve"><value>Vorher</value></data>
+  <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>Nachher</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Löschen</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="TextProcessing_Placeholder" xml:space="preserve"><value>Text eingeben oder aus der Zwischenablage einfügen</value></data>

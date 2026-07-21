@@ -101,7 +101,7 @@ internal static class UtilityButtonCatalog
         (settings, visible) => settings.ShowPresetCopilot = visible);
 
     public static UtilityButtonDefinition TextProcessing { get; } = new(
-        "TextProcessing", "\uE8A5", "#007ACC", "Main_TextProcessingTooltip",
+        "TextProcessing", "\uF7DA", "#007ACC", "Main_TextProcessingTooltip",
         settings => settings.ShowPresetTextProcessing,
         (settings, visible) => settings.ShowPresetTextProcessing = visible);
 
