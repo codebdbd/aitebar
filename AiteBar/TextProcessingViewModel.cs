@@ -170,9 +170,38 @@ public sealed class TextProcessingViewModel : INotifyPropertyChanged
 
     public bool HasStatusMessage => !string.IsNullOrEmpty(_statusMessage);
 
-    public bool IsEditorEnabled => !_isProcessing && _isEditorEnabled;
-    public bool IsModeSwitcherEnabled => !_isProcessing && _isModeSwitcherEnabled;
-    public bool IsModelSelectorEnabled => !_isProcessing && _isModelSelectorEnabled;
+    public bool IsEditorEnabled
+    {
+        get => !_isProcessing && _isEditorEnabled;
+        set
+        {
+            if (_isEditorEnabled == value) return;
+            _isEditorEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsModeSwitcherEnabled
+    {
+        get => !_isProcessing && _isModeSwitcherEnabled;
+        set
+        {
+            if (_isModeSwitcherEnabled == value) return;
+            _isModeSwitcherEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool IsModelSelectorEnabled
+    {
+        get => !_isProcessing && _isModelSelectorEnabled;
+        set
+        {
+            if (_isModelSelectorEnabled == value) return;
+            _isModelSelectorEnabled = value;
+            OnPropertyChanged();
+        }
+    }
     public bool IsPasteEnabled => !_isProcessing;
     public bool IsClearEnabled => !_isProcessing && CharacterCount > 0;
     public bool IsRepeatEnabled => !_isProcessing && _hasSuccessfulResult;
