@@ -100,6 +100,11 @@ internal static class UtilityButtonCatalog
         settings => settings.ShowPresetCopilot,
         (settings, visible) => settings.ShowPresetCopilot = visible);
 
+    public static UtilityButtonDefinition TextProcessing { get; } = new(
+        "TextProcessing", "\uE8A5", "#007ACC", "Main_TextProcessingTooltip",
+        settings => settings.ShowPresetTextProcessing,
+        (settings, visible) => settings.ShowPresetTextProcessing = visible);
+
     public static IReadOnlyList<UtilityButtonDefinition> All { get; } =
     [
         Search,
@@ -117,7 +122,8 @@ internal static class UtilityButtonCatalog
         ClipboardManager,
         ShowDesktop,
         AppsFolder,
-        Copilot
+        Copilot,
+        TextProcessing
     ];
 
     private static readonly IReadOnlyDictionary<string, UtilityButtonDefinition> ById =

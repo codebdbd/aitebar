@@ -710,6 +710,51 @@ Open the GitHub release page?</value></data>
   <data name="AiSettings_StatusAvailable" xml:space="preserve"><value>Connected · {0} models available</value></data>
   <data name="AiSettings_StatusError" xml:space="preserve"><value>Connection error: {0}</value></data>
   <data name="AiSettings_CredentialSaveFailed" xml:space="preserve"><value>The API key could not be saved in Windows Credential Manager.</value></data>
+  <data name="Tool_TextProcessing" xml:space="preserve"><value>Text processing</value></data>
+  <data name="Main_TextProcessingTooltip" xml:space="preserve"><value>Text processing</value></data>
+  <data name="QuickTool_TextProcessing_Title" xml:space="preserve"><value>Text processing</value></data>
+  <data name="QuickTool_TextProcessing_Description" xml:space="preserve"><value>Checks, typographic formatting, and text cleanup without changing meaning.</value></data>
+  <data name="TextProcessing_Title" xml:space="preserve"><value>Text processing</value></data>
+  <data name="TextProcessing_Description" xml:space="preserve"><value>Checks, typographic formatting, and text cleanup without changing meaning.</value></data>
+  <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Proofread text</value></data>
+  <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Typography</value></data>
+  <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Clean up text</value></data>
+  <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Fixes spelling, grammar, and punctuation errors without changing wording. Does not replace quotes, dashes, or other characters with typographic ones.</value></data>
+  <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Applies proper quotes, dashes, spaces, and other typographic marks based on the text language.</value></data>
+  <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Removes technical artifacts, extra line breaks, and service characters from copied PDFs, documents, and web pages.</value></data>
+  <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Proofread</value></data>
+  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Format</value></data>
+  <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Clean up</value></data>
+  <data name="TextProcessing_ButtonPaste" xml:space="preserve"><value>Paste</value></data>
+  <data name="TextProcessing_ButtonCopy" xml:space="preserve"><value>Copy</value></data>
+  <data name="TextProcessing_ButtonRepeat" xml:space="preserve"><value>Repeat</value></data>
+  <data name="TextProcessing_ButtonShowOriginal" xml:space="preserve"><value>Show original</value></data>
+  <data name="TextProcessing_ButtonShowResult" xml:space="preserve"><value>Show result</value></data>
+  <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Clear</value></data>
+  <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="TextProcessing_Placeholder" xml:space="preserve"><value>Enter text or paste from clipboard</value></data>
+  <data name="TextProcessing_ModelLabel" xml:space="preserve"><value>Processing model</value></data>
+  <data name="TextProcessing_ModelAuto" xml:space="preserve"><value>Automatically</value></data>
+  <data name="TextProcessing_DataWarning" xml:space="preserve"><value>After processing starts, the text will be sent to the selected AI service.</value></data>
+  <data name="TextProcessing_Characters" xml:space="preserve"><value>{0} characters</value></data>
+  <data name="TextProcessing_Words" xml:space="preserve"><value>{0} words</value></data>
+  <data name="TextProcessing_ErrorTooLong" xml:space="preserve"><value>Text is too long. Maximum size is 50,000 characters.</value></data>
+  <data name="TextProcessing_ErrorContextOverflow" xml:space="preserve"><value>Text does not fit in the selected model's context. Choose another model or shorten the text.</value></data>
+  <data name="TextProcessing_ErrorNoModels" xml:space="preserve"><value>No AI connections added. Add a connection in the program settings.</value></data>
+  <data name="TextProcessing_ErrorEmptyResponse" xml:space="preserve"><value>The AI returned an empty response. Try again.</value></data>
+  <data name="TextProcessing_ErrorGeneric" xml:space="preserve"><value>Processing failed. Try again.</value></data>
+  <data name="TextProcessing_ConfirmRepeat" xml:space="preserve"><value>Re-processing will replace the edited result. Continue?</value></data>
+  <data name="TextProcessing_ConfirmClose" xml:space="preserve"><value>Close the window? The entered text will not be saved.</value></data>
+  <data name="TextProcessing_ModelUnavailable" xml:space="preserve"><value>Previously selected model is no longer available. Automatic selection is enabled.</value></data>
+  <data name="TextProcessing_ErrorUnauthorized" xml:space="preserve"><value>Authentication error. Check your AI connection settings.</value></data>
+  <data name="TextProcessing_ErrorForbidden" xml:space="preserve"><value>Access denied. Check your AI connection settings.</value></data>
+  <data name="TextProcessing_ErrorQuota" xml:space="preserve"><value>Quota limit reached for this service. Try another model or wait.</value></data>
+  <data name="TextProcessing_ErrorRateLimit" xml:space="preserve"><value>Too many requests. Please wait and try again.</value></data>
+  <data name="TextProcessing_ErrorUnavailable" xml:space="preserve"><value>Service temporarily unavailable. Try another model.</value></data>
+  <data name="TextProcessing_ErrorTimeout" xml:space="preserve"><value>Request timed out. Try again or choose another model.</value></data>
+  <data name="TextProcessing_ErrorNetwork" xml:space="preserve"><value>Network error. Check your internet connection.</value></data>
+  <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Processing was cancelled.</value></data>
+  <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Open settings</value></data>
 </root>
 
 

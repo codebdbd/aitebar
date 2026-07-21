@@ -103,6 +103,7 @@ namespace AiteBar
                 ShowPresetShowDesktop = original.ShowPresetShowDesktop,
                 ShowPresetAppsFolder = original.ShowPresetAppsFolder,
                 ShowPresetCopilot = original.ShowPresetCopilot,
+                ShowPresetTextProcessing = original.ShowPresetTextProcessing,
                 ClipboardManagerPersistHistory = original.ClipboardManagerPersistHistory,
                 QuickNoteThemeId = original.QuickNoteThemeId,
                 QuickNotePinned = original.QuickNotePinned,
@@ -253,7 +254,16 @@ namespace AiteBar
                     ImagePath = el.ImagePath,
                     ContextId = el.ContextId
                 }).ToList() ?? [],
-                UtilityButtonOrder = [.. (original.UtilityButtonOrder ?? [])]
+                UtilityButtonOrder = [.. (original.UtilityButtonOrder ?? [])],
+                TextProcessingLeft = original.TextProcessingLeft,
+                TextProcessingTop = original.TextProcessingTop,
+                TextProcessingWidth = original.TextProcessingWidth,
+                TextProcessingHeight = original.TextProcessingHeight,
+                TextProcessingWindowState = original.TextProcessingWindowState,
+                TextProcessingLastMode = original.TextProcessingLastMode,
+                TextProcessingSelectedModelId = original.TextProcessingSelectedModelId,
+                TextProcessingSelectedProviderId = original.TextProcessingSelectedProviderId,
+                TextProcessingIsAutoModel = original.TextProcessingIsAutoModel
             };
 
             if (original.LastFileSortOperation != null)

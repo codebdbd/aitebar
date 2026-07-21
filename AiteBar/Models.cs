@@ -143,6 +143,7 @@ public class AppSettings
         public bool ShowPresetShowDesktop { get; set; } = true;
         public bool ShowPresetAppsFolder { get; set; } = true;
         public bool ShowPresetCopilot { get; set; } = true;
+        public bool ShowPresetTextProcessing { get; set; } = true;
     public bool ClipboardManagerPersistHistory { get; set; } = true;
     public string QuickNoteThemeId { get; set; } = "dark";
     public bool QuickNotePinned { get; set; } = false;
@@ -173,6 +174,16 @@ public class AppSettings
     public HotkeyBinding QRCodeGeneratorHotkey { get; set; } = new();
     public HotkeyBinding ClipboardManagerHotkey { get; set; } = new();
     public FileSortUndoState? LastFileSortOperation { get; set; }
+
+    public double? TextProcessingLeft { get; set; }
+    public double? TextProcessingTop { get; set; }
+    public double? TextProcessingWidth { get; set; }
+    public double? TextProcessingHeight { get; set; }
+    public string? TextProcessingWindowState { get; set; }
+    public int TextProcessingLastMode { get; set; }
+    public string? TextProcessingSelectedModelId { get; set; }
+    public string? TextProcessingSelectedProviderId { get; set; }
+    public bool TextProcessingIsAutoModel { get; set; } = true;
 
     public List<CustomElement> Elements { get; set; } = new();
     public List<string> UtilityButtonOrder { get; set; } = new();

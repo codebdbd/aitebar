@@ -1230,6 +1230,51 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiSettings_StatusAvailable" xml:space="preserve"><value>Подключено · доступно моделей: {0}</value></data>
   <data name="AiSettings_StatusError" xml:space="preserve"><value>Ошибка подключения: {0}</value></data>
   <data name="AiSettings_CredentialSaveFailed" xml:space="preserve"><value>Не удалось сохранить API-ключ в Диспетчере учётных данных Windows.</value></data>
+  <data name="Tool_TextProcessing" xml:space="preserve"><value>Обработка текста</value></data>
+  <data name="Main_TextProcessingTooltip" xml:space="preserve"><value>Обработка текста</value></data>
+  <data name="QuickTool_TextProcessing_Title" xml:space="preserve"><value>Обработка текста</value></data>
+  <data name="QuickTool_TextProcessing_Description" xml:space="preserve"><value>Проверка, типографическая обработка и очистка текста без изменения его смысла.</value></data>
+  <data name="TextProcessing_Title" xml:space="preserve"><value>Обработка текста</value></data>
+  <data name="TextProcessing_Description" xml:space="preserve"><value>Проверка, типографическая обработка и очистка текста без изменения его смысла.</value></data>
+  <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Проверка текста</value></data>
+  <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Типографика</value></data>
+  <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Очистка текста</value></data>
+  <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Исправляет орфографические, грамматические и пунктуационные ошибки без изменения формулировок. Не заменяет кавычки, тире и другие символы на типографские.</value></data>
+  <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Расставляет правильные кавычки, тире, пробелы и другие типографские знаки с учётом языка текста.</value></data>
+  <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Удаляет технический мусор, лишние переносы и служебные символы после копирования из PDF, документов и веб-страниц.</value></data>
+  <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Проверить</value></data>
+  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Оформить</value></data>
+  <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Очистить текст</value></data>
+  <data name="TextProcessing_ButtonPaste" xml:space="preserve"><value>Вставить</value></data>
+  <data name="TextProcessing_ButtonCopy" xml:space="preserve"><value>Копировать</value></data>
+  <data name="TextProcessing_ButtonRepeat" xml:space="preserve"><value>Повторить</value></data>
+  <data name="TextProcessing_ButtonShowOriginal" xml:space="preserve"><value>Показать исходный</value></data>
+  <data name="TextProcessing_ButtonShowResult" xml:space="preserve"><value>Показать результат</value></data>
+  <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Очистить</value></data>
+  <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Отменить</value></data>
+  <data name="TextProcessing_Placeholder" xml:space="preserve"><value>Введите текст или вставьте его из буфера обмена</value></data>
+  <data name="TextProcessing_ModelLabel" xml:space="preserve"><value>Модель обработки</value></data>
+  <data name="TextProcessing_ModelAuto" xml:space="preserve"><value>Автоматически</value></data>
+  <data name="TextProcessing_DataWarning" xml:space="preserve"><value>После запуска обработки текст будет отправлен выбранному AI-сервису.</value></data>
+  <data name="TextProcessing_Characters" xml:space="preserve"><value>{0} символов</value></data>
+  <data name="TextProcessing_Words" xml:space="preserve"><value>{0} слов</value></data>
+  <data name="TextProcessing_ErrorTooLong" xml:space="preserve"><value>Текст слишком длинный. Максимальный размер — 50 000 символов.</value></data>
+  <data name="TextProcessing_ErrorContextOverflow" xml:space="preserve"><value>Текст не помещается в контекст выбранной модели. Выберите другую модель или сократите текст.</value></data>
+  <data name="TextProcessing_ErrorNoModels" xml:space="preserve"><value>Не добавлена ни одна нейросеть. Добавьте подключение в настройках программы.</value></data>
+  <data name="TextProcessing_ErrorEmptyResponse" xml:space="preserve"><value>ИИ вернул пустой ответ. Попробуйте ещё раз.</value></data>
+  <data name="TextProcessing_ErrorGeneric" xml:space="preserve"><value>Ошибка обработки. Попробуйте ещё раз.</value></data>
+  <data name="TextProcessing_ConfirmRepeat" xml:space="preserve"><value>Повторная обработка заменит изменённый результат. Продолжить?</value></data>
+  <data name="TextProcessing_ConfirmClose" xml:space="preserve"><value>Закрыть окно? Введённый текст не сохраняется.</value></data>
+  <data name="TextProcessing_ModelUnavailable" xml:space="preserve"><value>Ранее выбранная модель больше недоступна. Включён автоматический выбор.</value></data>
+  <data name="TextProcessing_ErrorUnauthorized" xml:space="preserve"><value>Ошибка авторизации. Проверьте настройки подключения к ИИ.</value></data>
+  <data name="TextProcessing_ErrorForbidden" xml:space="preserve"><value>Доступ запрещён. Проверьте настройки подключения к ИИ.</value></data>
+  <data name="TextProcessing_ErrorQuota" xml:space="preserve"><value>Достигнут лимит квоты для этого сервиса. Попробуйте другую модель или подождите.</value></data>
+  <data name="TextProcessing_ErrorRateLimit" xml:space="preserve"><value>Слишком много запросов. Подождите и попробуйте ещё раз.</value></data>
+  <data name="TextProcessing_ErrorUnavailable" xml:space="preserve"><value>Сервис временно недоступен. Попробуйте другую модель.</value></data>
+  <data name="TextProcessing_ErrorTimeout" xml:space="preserve"><value>Время ожидания истекло. Попробуйте ещё раз или выберите другую модель.</value></data>
+  <data name="TextProcessing_ErrorNetwork" xml:space="preserve"><value>Ошибка сети. Проверьте подключение к интернету.</value></data>
+  <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Обработка отменена.</value></data>
+  <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Открыть настройки</value></data>
 </root>
 
 

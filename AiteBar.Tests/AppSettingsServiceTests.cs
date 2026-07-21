@@ -972,6 +972,17 @@ public sealed class AppSettingsServiceTests
             ShowPresetShowDesktop = false,
             ShowPresetAppsFolder = false,
             ShowPresetCopilot = false,
+            ShowPresetTextProcessing = false,
+
+            TextProcessingLeft = 100.0,
+            TextProcessingTop = 200.0,
+            TextProcessingWidth = 1280.0,
+            TextProcessingHeight = 840.0,
+            TextProcessingWindowState = "Maximized",
+            TextProcessingLastMode = 1,
+            TextProcessingSelectedModelId = "model-1",
+            TextProcessingSelectedProviderId = "provider-1",
+            TextProcessingIsAutoModel = false,
 
             ClipboardManagerPersistHistory = false,
             QuickNoteThemeId = "light",
@@ -1086,6 +1097,17 @@ public sealed class AppSettingsServiceTests
         Assert.False(clone.ShowPresetShowDesktop);
         Assert.False(clone.ShowPresetAppsFolder);
         Assert.False(clone.ShowPresetCopilot);
+        Assert.False(clone.ShowPresetTextProcessing);
+
+        Assert.Equal(100.0, clone.TextProcessingLeft);
+        Assert.Equal(200.0, clone.TextProcessingTop);
+        Assert.Equal(1280.0, clone.TextProcessingWidth);
+        Assert.Equal(840.0, clone.TextProcessingHeight);
+        Assert.Equal("Maximized", clone.TextProcessingWindowState);
+        Assert.Equal(1, clone.TextProcessingLastMode);
+        Assert.Equal("model-1", clone.TextProcessingSelectedModelId);
+        Assert.Equal("provider-1", clone.TextProcessingSelectedProviderId);
+        Assert.False(clone.TextProcessingIsAutoModel);
 
         Assert.False(clone.ClipboardManagerPersistHistory);
         Assert.Equal("light", clone.QuickNoteThemeId);

@@ -1613,6 +1613,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                     case "Copilot":
                         await _actionService.StartCopilotAsync(HideDock);
                         break;
+                    case "TextProcessing":
+                        await _actionService.LaunchUtilityAsync("TextProcessing", HideDock);
+                        break;
                 }
             });
         }

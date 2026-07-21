@@ -107,6 +107,13 @@ public sealed class AiGateway
         _modelCache.TryRemove(connectionId, out _);
     }
 
+    public async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
+        AiConnectionSettings connection,
+        CancellationToken cancellationToken = default)
+    {
+        return await GetModelsCachedAsync(connection, cancellationToken).ConfigureAwait(false);
+    }
+
     private IReadOnlyList<AiConnectionSettings> BuildCandidates(AiSettings settings, AiChatRequest request)
     {
         var providerOrder = new List<string>();

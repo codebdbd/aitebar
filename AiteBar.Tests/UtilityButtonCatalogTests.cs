@@ -22,7 +22,8 @@ public sealed class UtilityButtonCatalogTests
         "ClipboardManager",
         "ShowDesktop",
         "AppsFolder",
-        "Copilot"
+        "Copilot",
+        "TextProcessing"
     ];
 
     [Fact]

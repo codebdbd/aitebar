@@ -653,6 +653,51 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="AiSettings_StatusAvailable" xml:space="preserve"><value>Verbunden · {0} Modelle verfügbar</value></data>
   <data name="AiSettings_StatusError" xml:space="preserve"><value>Verbindungsfehler: {0}</value></data>
   <data name="AiSettings_CredentialSaveFailed" xml:space="preserve"><value>Der API-Schlüssel konnte nicht in der Windows-Anmeldeinformationsverwaltung gespeichert werden.</value></data>
+  <data name="Tool_TextProcessing" xml:space="preserve"><value>Textverarbeitung</value></data>
+  <data name="Main_TextProcessingTooltip" xml:space="preserve"><value>Textverarbeitung</value></data>
+  <data name="QuickTool_TextProcessing_Title" xml:space="preserve"><value>Textverarbeitung</value></data>
+  <data name="QuickTool_TextProcessing_Description" xml:space="preserve"><value>Überprüfung, typografische Formatierung und Textbereinigung ohne Sinnesänderung.</value></data>
+  <data name="TextProcessing_Title" xml:space="preserve"><value>Textverarbeitung</value></data>
+  <data name="TextProcessing_Description" xml:space="preserve"><value>Überprüfung, typografische Formatierung und Textbereinigung ohne Sinnesänderung.</value></data>
+  <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Text korrigieren</value></data>
+  <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Typografie</value></data>
+  <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Text bereinigen</value></data>
+  <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Korrigiert Rechtschreib-, Grammatik- und Zeichensetzungsfehler ohne Änderung der Formulierungen. Ersetzt keine Anführungszeichen, Gedankenstriche oder andere Zeichen durch typografische.</value></data>
+  <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Setzt korrekte Anführungszeichen, Gedankenstriche, Leerzeichen und andere typografische Zeichen gemäß der Textsprache.</value></data>
+  <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Entfernt technische Artefakte, überflüssige Zeilenumbrüche und dienstzeichen nach dem Kopieren aus PDFs, Dokumenten und Webseiten.</value></data>
+  <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Korrigieren</value></data>
+  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Formatieren</value></data>
+  <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Bereinigen</value></data>
+  <data name="TextProcessing_ButtonPaste" xml:space="preserve"><value>Einfügen</value></data>
+  <data name="TextProcessing_ButtonCopy" xml:space="preserve"><value>Kopieren</value></data>
+  <data name="TextProcessing_ButtonRepeat" xml:space="preserve"><value>Wiederholen</value></data>
+  <data name="TextProcessing_ButtonShowOriginal" xml:space="preserve"><value>Original anzeigen</value></data>
+  <data name="TextProcessing_ButtonShowResult" xml:space="preserve"><value>Ergebnis anzeigen</value></data>
+  <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Löschen</value></data>
+  <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="TextProcessing_Placeholder" xml:space="preserve"><value>Text eingeben oder aus der Zwischenablage einfügen</value></data>
+  <data name="TextProcessing_ModelLabel" xml:space="preserve"><value>Verarbeitungsmodell</value></data>
+  <data name="TextProcessing_ModelAuto" xml:space="preserve"><value>Automatisch</value></data>
+  <data name="TextProcessing_DataWarning" xml:space="preserve"><value>Nach Start der Verarbeitung wird der Text an den ausgewählten KI-Dienst gesendet.</value></data>
+  <data name="TextProcessing_Characters" xml:space="preserve"><value>{0} Zeichen</value></data>
+  <data name="TextProcessing_Words" xml:space="preserve"><value>{0} Wörter</value></data>
+  <data name="TextProcessing_ErrorTooLong" xml:space="preserve"><value>Text ist zu lang. Maximale Größe ist 50.000 Zeichen.</value></data>
+  <data name="TextProcessing_ErrorContextOverflow" xml:space="preserve"><value>Text passt nicht in den Kontext des ausgewählten Modells. Wählen Sie ein anderes Modell oder kürzen Sie den Text.</value></data>
+  <data name="TextProcessing_ErrorNoModels" xml:space="preserve"><value>Keine KI-Verbindungen hinzugefügt. Fügen Sie eine Verbindung in den Programmeinstellungen hinzu.</value></data>
+  <data name="TextProcessing_ErrorEmptyResponse" xml:space="preserve"><value>Die KI hat eine leere Antwort zurückgegeben. Versuchen Sie es erneut.</value></data>
+  <data name="TextProcessing_ErrorGeneric" xml:space="preserve"><value>Verarbeitung fehlgeschlagen. Versuchen Sie es erneut.</value></data>
+  <data name="TextProcessing_ConfirmRepeat" xml:space="preserve"><value>Die erneute Verarbeitung ersetzt das bearbeitete Ergebnis. Fortfahren?</value></data>
+  <data name="TextProcessing_ConfirmClose" xml:space="preserve"><value>Fenster schließen? Der eingegebene Text wird nicht gespeichert.</value></data>
+  <data name="TextProcessing_ModelUnavailable" xml:space="preserve"><value>Das zuvor ausgewählte Modell ist nicht mehr verfügbar. Automatische Auswahl ist aktiviert.</value></data>
+  <data name="TextProcessing_ErrorUnauthorized" xml:space="preserve"><value>Authentifizierungsfehler. Überprüfen Sie Ihre KI-Verbindungseinstellungen.</value></data>
+  <data name="TextProcessing_ErrorForbidden" xml:space="preserve"><value>Zugriff verweigert. Überprüfen Sie Ihre KI-Verbindungseinstellungen.</value></data>
+  <data name="TextProcessing_ErrorQuota" xml:space="preserve"><value>Kontingentgrenze für diesen Dienst erreicht. Versuchen Sie ein anderes Modell oder warten Sie.</value></data>
+  <data name="TextProcessing_ErrorRateLimit" xml:space="preserve"><value>Zu viele Anfragen. Bitte warten Sie und versuchen Sie es erneut.</value></data>
+  <data name="TextProcessing_ErrorUnavailable" xml:space="preserve"><value>Dienst vorübergehend nicht verfügbar. Versuchen Sie ein anderes Modell.</value></data>
+  <data name="TextProcessing_ErrorTimeout" xml:space="preserve"><value>Zeitüberschreitung. Versuchen Sie es erneut oder wählen Sie ein anderes Modell.</value></data>
+  <data name="TextProcessing_ErrorNetwork" xml:space="preserve"><value>Netzwerkfehler. Überprüfen Sie Ihre Internetverbindung.</value></data>
+  <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Verarbeitung wurde abgebrochen.</value></data>
+  <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Einstellungen öffnen</value></data>
 </root>
 
 

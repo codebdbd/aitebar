@@ -220,7 +220,8 @@ public partial class AppSettingsWindow : DarkWindow
         (ChkShowPresetClipboardManager, UtilityButtonCatalog.ClipboardManager),
         (ChkShowPresetShowDesktop, UtilityButtonCatalog.ShowDesktop),
         (ChkShowPresetAppsFolder, UtilityButtonCatalog.AppsFolder),
-        (ChkShowPresetCopilot, UtilityButtonCatalog.Copilot)
+        (ChkShowPresetCopilot, UtilityButtonCatalog.Copilot),
+        (ChkShowPresetTextProcessing, UtilityButtonCatalog.TextProcessing)
     ];
 
     private static void SetComboValue(ComboBox combo, string? value)
@@ -301,7 +302,8 @@ public partial class AppSettingsWindow : DarkWindow
         (QuickToolRowExplorer, "QuickTool_Explorer_Title"),
         (QuickToolRowScreenshot, "QuickTool_Screenshot_Title"),
         (QuickToolRowFileSorter, "QuickTool_FileSorter_Title"),
-        (QuickToolRowTimerStopwatch, "QuickTool_TimerStopwatch_Title")
+        (QuickToolRowTimerStopwatch, "QuickTool_TimerStopwatch_Title"),
+        (QuickToolRowTextProcessing, "QuickTool_TextProcessing_Title")
     ];
 
     private void SortQuickToolRows()
@@ -649,6 +651,7 @@ public partial class AppSettingsWindow : DarkWindow
             (ChkShowPresetShowDesktop, "Tool_ShowDesktop"),
             (ChkShowPresetAppsFolder, "Tool_AppsFolder"),
             (ChkShowPresetCopilot, "Tool_Copilot"),
+            (ChkShowPresetTextProcessing, "Tool_TextProcessing"),
             (ChkClipboardManagerPersistHistory, "ClipboardManager_PersistHistorySetting")
         ];
         foreach ((CheckBox checkBox, string resourceKey) in utilitySwitches)

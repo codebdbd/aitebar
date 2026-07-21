@@ -24,11 +24,13 @@ public sealed class AppSettingsLayoutContractTests
         "ChkShowPresetExplorer", "ChkShowPresetDownloads", "ChkShowPresetFileSorter", "ChkShowPresetIconConverter",
         "ChkShowPresetTimerStopwatch", "ChkShowPresetColorPicker", "ChkShowPresetQuickNote", "ChkShowPresetQRCodeGenerator",
         "ChkShowPresetClipboardManager", "ChkShowPresetShowDesktop", "ChkShowPresetAppsFolder", "ChkShowPresetCopilot",
+        "ChkShowPresetTextProcessing",
         "ChkClipboardManagerPersistHistory", "QuickToolsList",
         "QuickToolRowQuickNote", "QuickToolRowQRCodeGenerator", "QuickToolRowDownloads", "QuickToolRowVideo",
         "QuickToolRowCopilot", "QuickToolRowCalculator", "QuickToolRowIconConverter", "QuickToolRowClipboardManager",
         "QuickToolRowColorPicker", "QuickToolRowSearch", "QuickToolRowShowDesktop", "QuickToolRowAppsFolder",
-        "QuickToolRowExplorer", "QuickToolRowScreenshot", "QuickToolRowFileSorter", "QuickToolRowTimerStopwatch"
+        "QuickToolRowExplorer", "QuickToolRowScreenshot", "QuickToolRowFileSorter", "QuickToolRowTimerStopwatch",
+        "QuickToolRowTextProcessing"
     ];
 
     [Fact]
@@ -332,7 +334,7 @@ public sealed class AppSettingsLayoutContractTests
             row.Descendants(PresentationNamespace + "TextBlock").Count(text =>
                 text.Attribute("Text")?.Value == "{local:Loc ResourceKey=HotkeyCapture_RowHint}") > 0);
 
-        Assert.Equal(16, quickToolsList.Elements(PresentationNamespace + "Grid").Count());
+        Assert.Equal(17, quickToolsList.Elements(PresentationNamespace + "Grid").Count());
         Assert.Contains("private void SortQuickToolRows()", code);
         Assert.Contains("StringComparer.Create(LocalizationService.ResolvedCulture, ignoreCase: true)", code);
         Assert.Contains("SortQuickToolRows();", code);
