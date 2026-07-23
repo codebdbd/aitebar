@@ -719,11 +719,11 @@ Open the GitHub release page?</value></data>
   <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Proofread text</value></data>
   <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Typography</value></data>
   <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Clean up text</value></data>
-  <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Fixes spelling, grammar, and punctuation errors without changing wording. Does not replace quotes, dashes, or other characters with typographic ones.</value></data>
-  <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Applies proper quotes, dashes, spaces, and other typographic marks based on the text language.</value></data>
-  <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Removes technical artifacts, extra line breaks, and service characters from copied PDFs, documents, and web pages.</value></data>
-  <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Proofread</value></data>
-  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Process</value></data>
+  <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Fixes spelling, grammar, and punctuation errors.</value></data>
+  <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Applies proper quotes, dashes, spaces, and other typographic marks.</value></data>
+  <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Removes technical artifacts, extra line breaks, and service characters from PDF and HTML.</value></data>
+  <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Proofread text</value></data>
+  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Apply typography</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Clean up</value></data>
   <data name="TextProcessing_ButtonPaste" xml:space="preserve"><value>Paste</value></data>
   <data name="TextProcessing_ButtonCopy" xml:space="preserve"><value>Copy</value></data>
@@ -734,10 +734,11 @@ Open the GitHub release page?</value></data>
   <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>After</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Clear</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="TextProcessing_ButtonProcess" xml:space="preserve"><value>Process</value></data>
   <data name="TextProcessing_Placeholder" xml:space="preserve"><value>Enter text or paste from clipboard</value></data>
-  <data name="TextProcessing_ModelLabel" xml:space="preserve"><value>Processing model</value></data>
+  <data name="TextProcessing_ModelLabel" xml:space="preserve"><value>Model:</value></data>
   <data name="TextProcessing_ModelAuto" xml:space="preserve"><value>Automatically</value></data>
-  <data name="TextProcessing_DataWarning" xml:space="preserve"><value>After processing starts, the text will be sent to the selected AI service.</value></data>
+  <data name="TextProcessing_DataWarning" xml:space="preserve"><value>Text is sent to the selected AI service only after you start processing.</value></data>
   <data name="TextProcessing_Characters" xml:space="preserve"><value>{0} characters</value></data>
   <data name="TextProcessing_Words" xml:space="preserve"><value>{0} words</value></data>
   <data name="TextProcessing_ErrorTooLong" xml:space="preserve"><value>Text is too long. Maximum size is 50,000 characters.</value></data>
@@ -757,6 +758,8 @@ Open the GitHub release page?</value></data>
   <data name="TextProcessing_ErrorNetwork" xml:space="preserve"><value>Network error. Check your internet connection.</value></data>
   <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Processing was cancelled.</value></data>
   <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Open settings</value></data>
+  <data name="TextProcessing_ModelLoading" xml:space="preserve"><value>Loading available models…</value></data>
+  <data name="TextProcessing_ErrorClipboard" xml:space="preserve"><value>Could not access the clipboard. Try again.</value></data>
 </root>
 
 

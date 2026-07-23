@@ -1,381 +1,910 @@
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
+using System.Linq;
+using System.Net.Http;
 using System.Runtime.Versioning;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Media;
+using Forms = System.Windows.Forms;
 
 namespace AiteBar;
 
 [SupportedOSPlatform("windows6.1")]
 public partial class TextProcessingWindow : DarkWindow
 {
-    private readonly TextProcessingViewModel _viewModel;
+    private const double PreferredWidth = 1280;
+    private const double PreferredHeight = 840;
+    private const double PreferredMinWidth = 1000;
+    private const double PreferredMinHeight = 700;
+    private const double WorkAreaRatio = 0.9;
+
+    private readonly TextProcessingService _service;
     private readonly AppSettingsService _settingsService;
-    private bool _isLoadingState;
+    private readonly AiGateway _gateway;
+    private readonly ObservableCollection<ModelItem> _models = [];
+    private CancellationTokenSource? _processingCts;
+    private CancellationTokenSource? _loadModelsCts;
+    private bool _isLoadingState = true;
+    private bool _isLoadingModels;
+    private bool _isApplyingEditorText;
     private bool _isDirty;
+    private bool _isProcessing;
+    private bool _hasClipboardText;
+    private bool _hasEligibleModel;
+    private bool _hasSuccessfulResult;
+    private bool _isShowingOriginal;
+    private bool _isModifiedManually;
+    private TextProcessingMode _currentMode = TextProcessingMode.Proofread;
+    private string _originalText = string.Empty;
+    private string _processedText = string.Empty;
+    private bool _isAutoModel = true;
+    private string? _selectedProviderId;
+    private string? _selectedModelId;
+    private string _lastOriginalText = string.Empty;
+    private TextProcessingMode _lastMode;
+    private bool _lastWasAutoModel = true;
+    private string? _lastProviderId;
+    private string? _lastModelId;
 
-    public TextProcessingWindow(TextProcessingViewModel viewModel, AppSettingsService settingsService)
+    public TextProcessingWindow(TextProcessingService service, AppSettingsService settingsService)
     {
-        _isLoadingState = true;
-        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
+        _service = service ?? throw new ArgumentNullException(nameof(service));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
-
+        _gateway = new AiGateway(settingsService);
         InitializeComponent();
-        DataContext = _viewModel;
-
-        _viewModel.ShowNotification += OnShowNotification;
-        _viewModel.ConfirmAction = OnConfirmAction;
-        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
-
-        BtnProcess.Content = _viewModel.MainButtonText;
-        TxtModeDescription.Text = _viewModel.ModeDescription;
+        CmbModels.ItemsSource = _models;
+        ApplyModeToUi();
+        RefreshUiState();
     }
 
     public void ShowNearPanel(AppSettingsService settingsService)
     {
-        AppSettings settings = settingsService.Settings;
-        var screens = System.Windows.Forms.Screen.AllScreens;
-        var screen = settings.MonitorIndex >= 0 && settings.MonitorIndex < screens.Length
-            ? screens[settings.MonitorIndex]
-            : System.Windows.Forms.Screen.PrimaryScreen;
-        var work = screen?.WorkingArea ?? System.Windows.Forms.Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
-
-        Width = Math.Min(1280, work.Width * 0.9);
-        Height = Math.Min(840, work.Height * 0.9);
-        Left = work.Left + (work.Width - Width) / 2;
-        Top = work.Top + (work.Height - Height) / 2;
-
-        RestoreWindowState(settings);
+        ResetModeToProofread();
+        RestoreWindowState(settingsService.Settings);
         Show();
         Activate();
-        TxtEditor.Focus();
+        FocusEditor();
     }
 
     internal void RestoreFromAiteBar()
     {
-        WindowState = WindowState.Normal;
+        ResetModeToProofread();
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
         if (!IsVisible)
         {
             Show();
         }
-
         Activate();
-        TxtEditor.Focus();
-    }
-
-    private void RestoreWindowState(AppSettings settings)
-    {
-        if (settings.TextProcessingWidth.HasValue && settings.TextProcessingHeight.HasValue)
-        {
-            double w = settings.TextProcessingWidth.Value;
-            double h = settings.TextProcessingHeight.Value;
-            var work = System.Windows.Forms.Screen.PrimaryScreen?.WorkingArea
-                ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
-
-            if (w >= MinWidth && h >= MinHeight && w <= work.Width * 0.95 && h <= work.Height * 0.95)
-            {
-                Width = w;
-                Height = h;
-            }
-        }
-
-        if (settings.TextProcessingLeft.HasValue && settings.TextProcessingTop.HasValue)
-        {
-            double l = settings.TextProcessingLeft.Value;
-            double t = settings.TextProcessingTop.Value;
-            var work = System.Windows.Forms.Screen.PrimaryScreen?.WorkingArea
-                ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
-
-            if (l >= work.Left - 100 && l <= work.Right - 100 &&
-                t >= work.Top - 100 && t <= work.Bottom - 100)
-            {
-                Left = l;
-                Top = t;
-                WindowStartupLocation = WindowStartupLocation.Manual;
-            }
-        }
-
-        if (string.Equals(settings.TextProcessingWindowState, "Maximized", StringComparison.Ordinal))
-        {
-            WindowState = WindowState.Maximized;
-        }
+        FocusEditor();
     }
 
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
         _isLoadingState = true;
+        _currentMode = TextProcessingMode.Proofread;
+        ApplyModeToUi();
+        RefreshClipboardAvailability(showError: false);
+        _loadModelsCts = new CancellationTokenSource();
         try
         {
-            _viewModel.RestoreMode();
-            ApplyModeToUI();
-            await _viewModel.LoadModelsAsync();
+            await LoadModelsAsync(_loadModelsCts.Token);
         }
-        catch
+        catch (OperationCanceledException)
         {
-            // Model loading failed — window remains functional
+            // Closing while the model catalogue loads is expected.
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            SetStatus(LocalizationService.Get("TextProcessing_ErrorNoModels"));
         }
         finally
         {
+            _isLoadingModels = false;
             _isLoadingState = false;
+            _loadModelsCts?.Dispose();
+            _loadModelsCts = null;
+            RefreshUiState();
+            FocusEditor();
         }
-        TxtEditor.Focus();
+    }
+
+    private void Window_Activated(object? sender, EventArgs e)
+    {
+        RefreshClipboardAvailability(showError: false);
+        RefreshUiState();
     }
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
-        if (_isDirty && _viewModel.HasUnsavedContent())
+        if (_isDirty && !string.IsNullOrWhiteSpace(TxtEditor.Text))
         {
-            var result = new DarkDialog(
-                LocalizationService.Get("TextProcessing_ConfirmClose"),
-                isConfirm: true) { Owner = this }.ShowDialog();
-
-            if (result != true)
+            bool close = new DarkDialog(LocalizationService.Get("TextProcessing_ConfirmClose"), isConfirm: true)
+            {
+                Owner = this
+            }.ShowDialog() == true;
+            if (!close)
             {
                 e.Cancel = true;
                 return;
             }
         }
-
         SaveWindowState();
-        _viewModel.SaveMode();
+        _processingCts?.Cancel();
+        _loadModelsCts?.Cancel();
+        _processingCts?.Dispose();
+        _loadModelsCts?.Dispose();
     }
 
     private void Window_StateChanged(object? sender, EventArgs e)
     {
         if (WindowState == WindowState.Minimized)
         {
-            WindowState = WindowState.Normal;
             Hide();
+            WindowState = WindowState.Normal;
+            return;
         }
-    }
-
-    private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        if (_isLoadingState) return;
-        SaveWindowState();
-    }
-
-    private void Window_LocationChanged(object? sender, EventArgs e)
-    {
-        if (_isLoadingState) return;
-        if (Left > -10000 && Top > -10000)
+        if (!_isLoadingState)
         {
             SaveWindowState();
         }
     }
 
-    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (!_isLoadingState && WindowState == WindowState.Normal)
+        {
+            SaveWindowState();
+        }
+    }
+
+    private void Window_LocationChanged(object? sender, EventArgs e)
+    {
+        if (!_isLoadingState && WindowState == WindowState.Normal && Left > -10000 && Top > -10000)
+        {
+            SaveWindowState();
+        }
+    }
+
+    private async void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control)
         {
             e.Handled = true;
-            _ = ProcessAsync();
+            if (!_isProcessing)
+            {
+                await ProcessAsync(repeatLast: false);
+            }
         }
-        else if (e.Key == Key.Escape && _viewModel.IsProcessing)
+        else if (e.Key == Key.Escape && _isProcessing)
         {
             e.Handled = true;
-            _viewModel.CancelProcessing();
+            CancelProcessing();
         }
     }
 
-    private void ModeSegment_Click(object sender, RoutedEventArgs e)
+    private void ModeTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isLoadingState || _viewModel == null || TxtModeDescription == null || BtnProcess == null) return;
-        if (sender is not System.Windows.Controls.RadioButton rb || rb.Tag is not string tag) return;
-
-        switch (tag)
+        if (_isLoadingState || _isProcessing || ModeTabs.SelectedItem is not TabItem { Tag: string tag })
         {
-            case "Proofread": _viewModel.SwitchMode(TextProcessingMode.Proofread); break;
-            case "Typography": _viewModel.SwitchMode(TextProcessingMode.Typography); break;
-            case "Cleanup": _viewModel.SwitchMode(TextProcessingMode.Cleanup); break;
+            return;
         }
-        TxtModeDescription.Text = _viewModel.ModeDescription;
-        BtnProcess.Content = _viewModel.MainButtonText;
+        _currentMode = tag switch
+        {
+            "Proofread" => TextProcessingMode.Proofread,
+            "Typography" => TextProcessingMode.Typography,
+            "Cleanup" => TextProcessingMode.Cleanup,
+            _ => _currentMode
+        };
+        ApplyModeToUi();
+        RefreshUiState();
     }
 
     private void TxtEditor_TextChanged(object sender, TextChangedEventArgs e)
     {
-        if (_isLoadingState || _viewModel == null || TxtPlaceholder == null || BtnCopy == null || BtnClear == null) return;
-        _viewModel.InputText = TxtEditor.Text;
-        TxtPlaceholder.Visibility = string.IsNullOrEmpty(TxtEditor.Text)
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        BtnCopy.IsEnabled = !string.IsNullOrEmpty(TxtEditor.Text);
-        BtnClear.IsEnabled = !string.IsNullOrEmpty(TxtEditor.Text);
+        if (_isApplyingEditorText)
+        {
+            return;
+        }
+        if (_hasSuccessfulResult)
+        {
+            if (_isShowingOriginal)
+            {
+                _originalText = TxtEditor.Text;
+            }
+            else
+            {
+                _processedText = TxtEditor.Text;
+            }
+            _isModifiedManually = true;
+        }
         _isDirty = true;
+        SetStatus(string.Empty);
+        RefreshUiState();
     }
 
     private void CmbModels_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isLoadingState || _viewModel == null || CmbModels == null) return;
-        if (CmbModels.SelectedItem is ModelItem item)
+        if (_isLoadingState || CmbModels.SelectedItem is not ModelItem item)
         {
-            _viewModel.IsAutoModel = item.ModelId == null;
-            _viewModel.SelectedModelId = item.ModelId;
-            _viewModel.SelectedProviderId = item.ProviderId;
-            _viewModel.SelectedModelDisplay = item.Display;
+            return;
+        }
+        _isAutoModel = item.ModelId == null;
+        _selectedProviderId = item.ProviderId;
+        _selectedModelId = item.ModelId;
+        SaveModelSelection();
+        SetStatus(string.Empty);
+        RefreshUiState();
+    }
+
+    private void CmbModels_DropDownOpened(object sender, EventArgs e)
+    {
+        if (CmbModels.Template.FindName("DropDownBorder", CmbModels) is FrameworkElement dropDown)
+        {
+            dropDown.MinWidth = 0;
+            dropDown.Width = CmbModels.ActualWidth;
+            dropDown.MaxWidth = CmbModels.ActualWidth;
         }
     }
 
     private async void BtnProcess_Click(object sender, RoutedEventArgs e)
     {
-        await ProcessAsync();
+        if (_isProcessing)
+        {
+            CancelProcessing();
+            return;
+        }
+        await ProcessAsync(repeatLast: false);
     }
 
-    private void BtnClear_Click(object sender, RoutedEventArgs e)
+    private async void BtnRepeat_Click(object sender, RoutedEventArgs e) =>
+        await ProcessAsync(repeatLast: true);
+
+    private void BtnToggleVersion_Click(object sender, RoutedEventArgs e)
     {
-        _viewModel.Clear();
-        TxtEditor.Text = string.Empty;
-        TxtPlaceholder.Visibility = Visibility.Visible;
-        BtnCopy.IsEnabled = false;
-        BtnToggleVersion.Visibility = Visibility.Collapsed;
-        _isDirty = false;
+        if (_isProcessing || !_hasSuccessfulResult)
+        {
+            return;
+        }
+
+        _isShowingOriginal = !_isShowingOriginal;
+        SetEditorText(_isShowingOriginal ? _originalText : _processedText);
+        RefreshUiState();
+        FocusEditor();
     }
+
+    private void BtnClear_Click(object sender, RoutedEventArgs e) => Clear();
 
     private void BtnPaste_Click(object sender, RoutedEventArgs e)
     {
-        if (Clipboard.ContainsText())
+        try
         {
-            string text = Clipboard.GetText();
-            TxtEditor.Text = text;
-            TxtPlaceholder.Visibility = Visibility.Collapsed;
-            BtnCopy.IsEnabled = true;
+            if (!Clipboard.ContainsText())
+            {
+                RefreshClipboardAvailability(showError: false);
+                RefreshUiState();
+                return;
+            }
+            ResetResultHistory();
+            SetEditorText(Clipboard.GetText());
             _isDirty = true;
-
-            _viewModel.OriginalText = string.Empty;
-            _viewModel.ProcessedText = string.Empty;
-            _viewModel.HasSuccessfulResult = false;
-            _viewModel.IsShowingOriginal = false;
-            BtnToggleVersion.Visibility = Visibility.Collapsed;
+            SetStatus(string.Empty);
+            RefreshClipboardAvailability(showError: false);
+            RefreshUiState();
+            FocusEditor();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            SetStatus(LocalizationService.Get("TextProcessing_ErrorClipboard"));
+            RefreshClipboardAvailability(showError: false);
+            RefreshUiState();
         }
     }
 
     private void BtnCopy_Click(object sender, RoutedEventArgs e)
     {
-        if (!string.IsNullOrEmpty(TxtEditor.Text))
+        try
         {
-            Clipboard.SetText(TxtEditor.Text);
+            if (!string.IsNullOrWhiteSpace(TxtEditor.Text))
+            {
+                Clipboard.SetText(TxtEditor.Text);
+            }
+            RefreshClipboardAvailability(showError: false);
+            RefreshUiState();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            SetStatus(LocalizationService.Get("TextProcessing_ErrorClipboard"));
         }
     }
 
-    private void BtnToggleVersion_Click(object sender, RoutedEventArgs e)
+    private async Task ProcessAsync(bool repeatLast)
     {
-        _viewModel.ToggleVersion();
-        TxtEditor.Text = _viewModel.InputText;
-        TxtPlaceholder.Visibility = string.IsNullOrEmpty(TxtEditor.Text)
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        TxtCounters.Text = $"{_viewModel.CharacterCountText} · {_viewModel.WordCountText}";
-        UpdateToggleVersionLabel();
-    }
-
-    private async System.Threading.Tasks.Task ProcessAsync()
-    {
-        await _viewModel.ProcessAsync();
-
-        if (!string.IsNullOrEmpty(_viewModel.ProcessedText) && !_viewModel.IsProcessing)
+        if (_isProcessing)
         {
-            TxtEditor.Text = _viewModel.InputText;
-            TxtPlaceholder.Visibility = Visibility.Collapsed;
-            BtnToggleVersion.Visibility = _viewModel.HasSuccessfulResult
-                ? Visibility.Visible
-                : Visibility.Collapsed;
-            UpdateToggleVersionLabel();
-            TxtCounters.Text = $"{_viewModel.CharacterCountText} · {_viewModel.WordCountText}";
+            return;
+        }
+
+        string input;
+        TextProcessingMode mode;
+        bool useAutoModel;
+        string? providerId;
+        string? modelId;
+        if (repeatLast)
+        {
+            if (!_hasSuccessfulResult || string.IsNullOrWhiteSpace(_lastOriginalText))
+            {
+                return;
+            }
+            input = _lastOriginalText;
+            mode = _lastMode;
+            useAutoModel = _lastWasAutoModel;
+            providerId = _lastProviderId;
+            modelId = _lastModelId;
+            if (!useAutoModel && !TrySelectModel(providerId, modelId))
+            {
+                useAutoModel = true;
+                providerId = null;
+                modelId = null;
+            }
+            _currentMode = mode;
+            _isAutoModel = useAutoModel;
+            if (useAutoModel)
+            {
+                CmbModels.SelectedIndex = 0;
+                _selectedProviderId = null;
+                _selectedModelId = null;
+            }
+            ApplyModeToUi();
+        }
+        else
+        {
+            input = TxtEditor.Text;
+            mode = _currentMode;
+            useAutoModel = _isAutoModel;
+            providerId = useAutoModel ? null : _selectedProviderId;
+            modelId = useAutoModel ? null : _selectedModelId;
+            if (!GetUiState().CanProcess)
+            {
+                return;
+            }
+            if (_hasSuccessfulResult && !_isShowingOriginal && _isModifiedManually)
+            {
+                bool replaceEditedResult = new DarkDialog(LocalizationService.Get("TextProcessing_ConfirmRepeat"), isConfirm: true)
+                {
+                    Owner = this
+                }.ShowDialog() == true;
+                if (!replaceEditedResult)
+                {
+                    return;
+                }
+            }
+        }
+
+        AiChatRequest request = _service.BuildRequest(mode, input);
+        ModelItem? selected = null;
+        if (!useAutoModel)
+        {
+            selected = FindModel(providerId, modelId);
+            if (selected == null)
+            {
+                useAutoModel = true;
+                providerId = null;
+                modelId = null;
+                _isAutoModel = true;
+                CmbModels.SelectedIndex = 0;
+                _selectedProviderId = null;
+                _selectedModelId = null;
+                SaveModelSelection();
+            }
+        }
+        if (useAutoModel)
+        {
+            if (!_models.Any(model =>
+                    model.ModelId != null &&
+                    (!model.ContextLength.HasValue || request.RequiredContextTokens <= model.ContextLength.Value)))
+            {
+                SetStatus(LocalizationService.Get("TextProcessing_ErrorContextOverflow"));
+                return;
+            }
+        }
+        else
+        {
+            if (selected!.ContextLength.HasValue && request.RequiredContextTokens > selected.ContextLength.Value)
+            {
+                SetStatus(LocalizationService.Get("TextProcessing_ErrorContextOverflow"));
+                return;
+            }
+            request = CopyRequestWithModel(request, providerId, modelId);
+        }
+
+        string textShownBeforeRequest = TxtEditor.Text;
+        SetStatus(string.Empty);
+        _isProcessing = true;
+        _processingCts = new CancellationTokenSource();
+        RefreshUiState();
+        try
+        {
+            AiGatewayResponse response = await _gateway.GenerateAsync(request, _processingCts.Token);
+            string cleaned = _service.CleanResponse(response.Content);
+            if (string.IsNullOrWhiteSpace(cleaned))
+            {
+                SetStatus(LocalizationService.Get("TextProcessing_ErrorEmptyResponse"));
+                return;
+            }
+            _originalText = input;
+            _processedText = cleaned;
+            _hasSuccessfulResult = true;
+            _isShowingOriginal = false;
+            _isModifiedManually = false;
+            _lastOriginalText = input;
+            _lastMode = mode;
+            _lastWasAutoModel = useAutoModel;
+            _lastProviderId = providerId;
+            _lastModelId = modelId;
+            SetEditorText(cleaned);
             _isDirty = false;
         }
+        catch (OperationCanceledException) when (_processingCts?.IsCancellationRequested == true)
+        {
+            SetEditorText(textShownBeforeRequest);
+            SetStatus(LocalizationService.Get("TextProcessing_ErrorCancellation"));
+        }
+        catch (OperationCanceledException ex)
+        {
+            Logger.Log(ex);
+            SetEditorText(textShownBeforeRequest);
+            SetStatus(LocalizationService.Get("TextProcessing_ErrorTimeout"));
+        }
+        catch (NoAvailableConnectionException ex)
+        {
+            Logger.Log(ex);
+            SetEditorText(textShownBeforeRequest);
+            SetStatus(LocalizationService.Get("TextProcessing_ErrorNoModels"));
+        }
+        catch (AiProviderHttpException ex)
+        {
+            Logger.Log(ex);
+            SetEditorText(textShownBeforeRequest);
+            SetStatus(GetProviderError(ex));
+        }
+        catch (TimeoutException ex)
+        {
+            Logger.Log(ex);
+            SetEditorText(textShownBeforeRequest);
+            SetStatus(LocalizationService.Get("TextProcessing_ErrorTimeout"));
+        }
+        catch (HttpRequestException ex)
+        {
+            Logger.Log(ex);
+            SetEditorText(textShownBeforeRequest);
+            SetStatus(LocalizationService.Get("TextProcessing_ErrorNetwork"));
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            SetEditorText(textShownBeforeRequest);
+            SetStatus(LocalizationService.Get("TextProcessing_ErrorGeneric"));
+        }
+        finally
+        {
+            _isProcessing = false;
+            _processingCts?.Dispose();
+            _processingCts = null;
+            RefreshUiState();
+            FocusEditor();
+        }
     }
 
-    private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    private static AiChatRequest CopyRequestWithModel(AiChatRequest request, string? providerId, string? modelId) => new()
     {
-        if (e.PropertyName == nameof(TextProcessingViewModel.IsProcessing))
+        Messages = request.Messages,
+        RequiredCapabilities = request.RequiredCapabilities,
+        PreferredProviderId = providerId,
+        PreferredModelId = modelId,
+        RequiredContextTokens = request.RequiredContextTokens,
+        MaxOutputTokens = request.MaxOutputTokens,
+        Temperature = request.Temperature
+    };
+
+    private static string GetProviderError(AiProviderHttpException ex) => ex.StatusCode switch
+    {
+        System.Net.HttpStatusCode.Unauthorized => LocalizationService.Get("TextProcessing_ErrorUnauthorized"),
+        System.Net.HttpStatusCode.Forbidden => LocalizationService.Get("TextProcessing_ErrorForbidden"),
+        System.Net.HttpStatusCode.PaymentRequired => LocalizationService.Get("TextProcessing_ErrorQuota"),
+        System.Net.HttpStatusCode.TooManyRequests => LocalizationService.Get("TextProcessing_ErrorRateLimit"),
+        _ when (int)ex.StatusCode >= 500 => LocalizationService.Get("TextProcessing_ErrorUnavailable"),
+        _ => LocalizationService.Get("TextProcessing_ErrorGeneric")
+    };
+
+    private void CancelProcessing() => _processingCts?.Cancel();
+
+    private void Clear()
+    {
+        ResetResultHistory();
+        SetEditorText(string.Empty);
+        _isDirty = false;
+        SetStatus(string.Empty);
+        RefreshUiState();
+        FocusEditor();
+    }
+
+    private void ResetResultHistory()
+    {
+        _originalText = string.Empty;
+        _processedText = string.Empty;
+        _lastOriginalText = string.Empty;
+        _hasSuccessfulResult = false;
+        _isShowingOriginal = false;
+        _isModifiedManually = false;
+    }
+
+    private void SetEditorText(string text)
+    {
+        _isApplyingEditorText = true;
+        try
         {
-            BtnProcess.Content = _viewModel.MainButtonText;
-            TxtEditor.IsEnabled = _viewModel.IsEditorEnabled;
-            BtnModeProofread.IsEnabled = _viewModel.IsModeSwitcherEnabled;
-            BtnModeTypography.IsEnabled = _viewModel.IsModeSwitcherEnabled;
-            BtnModeCleanup.IsEnabled = _viewModel.IsModeSwitcherEnabled;
-            CmbModels.IsEnabled = _viewModel.IsModelSelectorEnabled;
-            BtnPaste.IsEnabled = _viewModel.IsPasteEnabled;
-            BtnClear.IsEnabled = _viewModel.IsClearEnabled;
-            BtnToggleVersion.Visibility = _viewModel.IsToggleVersionVisible
-                ? Visibility.Visible
-                : Visibility.Collapsed;
+            TxtEditor.Text = text ?? string.Empty;
+            TxtEditor.CaretIndex = TxtEditor.Text.Length;
         }
-        else if (e.PropertyName == nameof(TextProcessingViewModel.ToggleButtonText))
+        finally
         {
-            UpdateToggleVersionLabel();
+            _isApplyingEditorText = false;
         }
-        else if (e.PropertyName == nameof(TextProcessingViewModel.CharacterCountText) ||
-                 e.PropertyName == nameof(TextProcessingViewModel.WordCountText))
+    }
+
+    private TextProcessingUiState GetUiState() => TextProcessingUiState.Create(new TextProcessingUiStateInput(
+        TxtEditor.Text,
+        _isProcessing,
+        _isLoadingModels,
+        _hasEligibleModel,
+        _hasClipboardText,
+        _hasSuccessfulResult));
+
+    private void RefreshUiState()
+    {
+        if (!IsInitialized)
         {
-            TxtCounters.Text = $"{_viewModel.CharacterCountText} · {_viewModel.WordCountText}";
+            return;
         }
-        else if (e.PropertyName == nameof(TextProcessingViewModel.IsOverLimit))
+        TextProcessingUiState state = GetUiState();
+        TxtPlaceholder.Visibility = state.CharacterCount == 0 ? Visibility.Visible : Visibility.Collapsed;
+        TxtCounters.Text = $"{LocalizationService.Format("TextProcessing_Characters", state.CharacterCount)} · {LocalizationService.Format("TextProcessing_Words", state.WordCount)}";
+        TxtCounters.Foreground = state.IsOverLimit
+            ? (Brush)FindResource("TextProcessingWarningBrush")
+            : (Brush)FindResource("MutedText");
+        AutomationProperties.SetName(TxtCounters, TxtCounters.Text);
+        LimitBorder.Visibility = state.IsOverLimit ? Visibility.Visible : Visibility.Collapsed;
+        TxtEditor.IsEnabled = state.CanEdit;
+        ModeProofread.IsEnabled = state.CanSelectMode;
+        ModeTypography.IsEnabled = state.CanSelectMode;
+        ModeCleanup.IsEnabled = state.CanSelectMode;
+        CmbModels.IsEnabled = state.CanSelectModel;
+        BtnPaste.IsEnabled = state.CanPaste;
+        BtnCopy.IsEnabled = state.CanCopy;
+        BtnClear.IsEnabled = state.CanClear;
+        BtnRepeat.IsEnabled = state.CanRepeat;
+        BtnRepeat.Visibility = _hasSuccessfulResult ? Visibility.Visible : Visibility.Collapsed;
+        BtnToggleVersion.IsEnabled = state.CanSwitchVersion;
+        BtnToggleVersion.Visibility = _hasSuccessfulResult ? Visibility.Visible : Visibility.Collapsed;
+        ToggleVersionLabel.Text = LocalizationService.Get(_isShowingOriginal
+            ? "TextProcessing_ButtonAfterProcessing"
+            : "TextProcessing_ButtonBeforeProcessing");
+        AutomationProperties.SetName(BtnToggleVersion, ToggleVersionLabel.Text);
+        BtnProcess.IsEnabled = state.CanCancel || state.CanProcess;
+        ProcessButtonLabel.Text = _isProcessing
+            ? LocalizationService.Get("TextProcessing_ButtonCancel")
+            : LocalizationService.Get("TextProcessing_ButtonProcess");
+        AutomationProperties.SetName(BtnProcess, ProcessButtonLabel.Text);
+
+        if (_isLoadingModels)
         {
-            TxtCounters.Foreground = _viewModel.IsOverLimit
-                ? System.Windows.Media.Brushes.OrangeRed
-                : (System.Windows.Media.Brush)FindResource("MutedText");
+            TxtModelState.Text = LocalizationService.Get("TextProcessing_ModelLoading");
+            TxtModelState.Foreground = (Brush)FindResource("MutedText");
+            TxtModelState.ToolTip = TxtModelState.Text;
+            TxtModelState.Visibility = Visibility.Visible;
         }
-        else if (e.PropertyName == nameof(TextProcessingViewModel.InputText))
+        else if (!_hasEligibleModel)
         {
-            if (TxtEditor.Text != _viewModel.InputText)
+            TxtModelState.Text = LocalizationService.Get("TextProcessing_ErrorNoModels");
+            TxtModelState.Foreground = (Brush)FindResource("TextProcessingWarningBrush");
+            TxtModelState.ToolTip = TxtModelState.Text;
+            TxtModelState.Visibility = Visibility.Visible;
+        }
+        else
+        {
+            TxtModelState.Visibility = Visibility.Collapsed;
+            TxtModelState.ToolTip = null;
+        }
+    }
+
+    private void SetStatus(string message)
+    {
+        TxtStatusMessage.Text = message;
+        AutomationProperties.SetName(StatusBorder, message);
+        StatusBorder.Visibility = string.IsNullOrWhiteSpace(message) ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void ApplyModeToUi()
+    {
+        ModeProofread.IsSelected = _currentMode == TextProcessingMode.Proofread;
+        ModeTypography.IsSelected = _currentMode == TextProcessingMode.Typography;
+        ModeCleanup.IsSelected = _currentMode == TextProcessingMode.Cleanup;
+        TxtModeDescription.Text = _currentMode switch
+        {
+            TextProcessingMode.Proofread => LocalizationService.Get("TextProcessing_ModeProofreadDesc"),
+            TextProcessingMode.Typography => LocalizationService.Get("TextProcessing_ModeTypographyDesc"),
+            TextProcessingMode.Cleanup => LocalizationService.Get("TextProcessing_ModeCleanupDesc"),
+            _ => string.Empty
+        };
+    }
+
+    private void RefreshClipboardAvailability(bool showError)
+    {
+        try
+        {
+            _hasClipboardText = Clipboard.ContainsText();
+        }
+        catch (Exception ex)
+        {
+            _hasClipboardText = false;
+            Logger.Log(ex);
+            if (showError)
             {
-                TxtEditor.Text = _viewModel.InputText;
+                SetStatus(LocalizationService.Get("TextProcessing_ErrorClipboard"));
             }
         }
     }
 
-    private void OnShowNotification(object? sender, string message)
+    private void FocusEditor()
     {
-        new DarkDialog(message) { Owner = this }.ShowDialog();
+        Dispatcher.BeginInvoke(new Action(() =>
+        {
+            if (TxtEditor.IsEnabled)
+            {
+                TxtEditor.Focus();
+                Keyboard.Focus(TxtEditor);
+            }
+        }));
     }
 
-    private Task<bool> OnConfirmAction(string message)
+    private async Task LoadModelsAsync(CancellationToken cancellationToken)
     {
-        var result = new DarkDialog(message, isConfirm: true) { Owner = this }.ShowDialog();
-        return Task.FromResult(result == true);
+        _isLoadingModels = true;
+        _hasEligibleModel = false;
+        _models.Clear();
+        string automaticLabel = LocalizationService.Get("TextProcessing_ModelAuto");
+        _models.Add(new ModelItem(null, null, automaticLabel, null) { FullDisplay = automaticLabel });
+        CmbModels.SelectedIndex = 0;
+        RefreshUiState();
+        var discovered = new List<ModelItem>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        AiSettings? aiSettings = _settingsService.Settings.Ai;
+        if (aiSettings?.Connections != null)
+        {
+            foreach (AiConnectionSettings connection in aiSettings.Connections.Where(c => c.IsEnabled))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                try
+                {
+                    IReadOnlyList<AiModelDescriptor> models = await _gateway.GetModelsAsync(connection, cancellationToken);
+                    foreach (AiModelDescriptor model in models.Where(IsEligibleModel))
+                    {
+                        string identity = $"{model.ProviderId}\n{model.ModelId}";
+                        if (seen.Add(identity))
+                        {
+                            string connectionName = NormalizeModelText(connection.DisplayName);
+                            if (!HasVisibleModelText(connectionName))
+                            {
+                                connectionName = NormalizeModelText(model.ProviderId);
+                            }
+                            string displayName = NormalizeModelText(model.DisplayName);
+                            if (!HasVisibleModelText(displayName))
+                            {
+                                displayName = NormalizeModelText(model.ModelId);
+                            }
+                            if (!HasVisibleModelText(displayName))
+                            {
+                                continue;
+                            }
+                            discovered.Add(new ModelItem(model.ProviderId, model.ModelId,
+                                displayName, model.ContextLength)
+                            {
+                                FullDisplay = $"{connectionName} — {displayName}"
+                            });
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+            }
+        }
+        foreach (ModelItem model in discovered.OrderBy(m => m.Display, StringComparer.CurrentCultureIgnoreCase))
+        {
+            _models.Add(model);
+        }
+        _hasEligibleModel = discovered.Count > 0;
+        RestoreModelSelection();
+        _isLoadingModels = false;
+        RefreshUiState();
     }
 
-    private void UpdateToggleVersionLabel()
+    internal static bool IsEligibleModel(AiModelDescriptor model) =>
+        HasVisibleModelText(model.ModelId) &&
+        !model.IsDeprecated &&
+        (model.Capabilities & AiCapabilities.Text) == AiCapabilities.Text &&
+        (model.CostStatus is AiCostStatus.VerifiedFree or AiCostStatus.FreeTierAvailable) &&
+        IsSuitableForWriting(model);
+
+    private static bool IsSuitableForWriting(AiModelDescriptor model)
     {
-        if (_viewModel.IsShowingOriginal)
+        string searchable = $"{model.ModelId} {model.DisplayName}".ToLowerInvariant();
+        string[] excludedTerms =
+        [
+            "whisper", "speech", "audio", "transcrib", "tts",
+            "embedding", "rerank", "moderation", "prompt-guard", "prompt guard",
+            "safety gpt"
+        ];
+        return !excludedTerms.Any(searchable.Contains);
+    }
+
+    private static bool HasVisibleModelText(string? value) =>
+        !string.IsNullOrEmpty(value) && value.Any(character =>
+            !char.IsWhiteSpace(character) &&
+            !char.IsControl(character) &&
+            CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.Format);
+
+    private static string NormalizeModelText(string? value)
+    {
+        if (string.IsNullOrEmpty(value))
         {
-            ToggleVersionIcon.Text = "\uF56A";
-            ToggleVersionLabel.Text = LocalizationService.Get("TextProcessing_ButtonAfterProcessing");
+            return string.Empty;
         }
-        else
+        return new string(value.Where(character =>
+            !char.IsControl(character) &&
+            CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.Format).ToArray()).Trim();
+    }
+
+    private ModelItem? FindModel(string? providerId, string? modelId) =>
+        _models.FirstOrDefault(m =>
+            string.Equals(m.ProviderId, providerId, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(m.ModelId, modelId, StringComparison.OrdinalIgnoreCase));
+
+    private bool TrySelectModel(string? providerId, string? modelId)
+    {
+        ModelItem? model = FindModel(providerId, modelId);
+        if (model == null)
         {
-            ToggleVersionIcon.Text = "\uF629";
-            ToggleVersionLabel.Text = LocalizationService.Get("TextProcessing_ButtonBeforeProcessing");
+            return false;
         }
+        CmbModels.SelectedItem = model;
+        _selectedProviderId = model.ProviderId;
+        _selectedModelId = model.ModelId;
+        return true;
+    }
+
+    private void ResetModeToProofread()
+    {
+        if (_isProcessing)
+        {
+            return;
+        }
+        _currentMode = TextProcessingMode.Proofread;
+        ApplyModeToUi();
+        RefreshUiState();
+    }
+
+    private void RestoreModelSelection()
+    {
+        AppSettings settings = _settingsService.Settings;
+        _isAutoModel = settings.TextProcessingIsAutoModel;
+        bool replacedUnavailableSelection = false;
+        if (!_isAutoModel)
+        {
+            ModelItem? model = FindModel(settings.TextProcessingSelectedProviderId, settings.TextProcessingSelectedModelId);
+            if (model != null)
+            {
+                CmbModels.SelectedItem = model;
+                _selectedProviderId = model.ProviderId;
+                _selectedModelId = model.ModelId;
+                return;
+            }
+            _isAutoModel = true;
+            replacedUnavailableSelection = true;
+        }
+        CmbModels.SelectedIndex = 0;
+        _selectedProviderId = null;
+        _selectedModelId = null;
+        if (replacedUnavailableSelection)
+        {
+            SaveModelSelection();
+        }
+    }
+
+    private void SaveModelSelection()
+    {
+        _settingsService.UpdateSettings(settings =>
+        {
+            settings.TextProcessingIsAutoModel = _isAutoModel;
+            settings.TextProcessingSelectedProviderId = _isAutoModel ? null : _selectedProviderId;
+            settings.TextProcessingSelectedModelId = _isAutoModel ? null : _selectedModelId;
+        });
+    }
+
+    private void RestoreWindowState(AppSettings settings)
+    {
+        Forms.Screen screen = GetTargetScreen(settings.TextProcessingLeft, settings.TextProcessingTop);
+        System.Drawing.Rectangle work = screen.WorkingArea;
+        double maxWidth = Math.Max(640, work.Width * WorkAreaRatio);
+        double maxHeight = Math.Max(560, work.Height * WorkAreaRatio);
+        MinWidth = Math.Min(PreferredMinWidth, maxWidth);
+        MinHeight = Math.Min(PreferredMinHeight, maxHeight);
+        Width = Math.Clamp(settings.TextProcessingWidth ?? PreferredWidth, MinWidth, Math.Min(MaxWidth, maxWidth));
+        Height = Math.Clamp(settings.TextProcessingHeight ?? PreferredHeight, MinHeight, Math.Min(MaxHeight, maxHeight));
+        double desiredLeft = settings.TextProcessingLeft ?? work.Left + (work.Width - Width) / 2;
+        double desiredTop = settings.TextProcessingTop ?? work.Top + (work.Height - Height) / 2;
+        Left = Math.Clamp(desiredLeft, work.Left, Math.Max(work.Left, work.Right - Width));
+        Top = Math.Clamp(desiredTop, work.Top, Math.Max(work.Top, work.Bottom - Height));
+        WindowStartupLocation = WindowStartupLocation.Manual;
+        WindowState = string.Equals(settings.TextProcessingWindowState, "Maximized", StringComparison.Ordinal)
+            ? WindowState.Maximized
+            : WindowState.Normal;
+    }
+
+    private static Forms.Screen GetTargetScreen(double? left, double? top)
+    {
+        if (left.HasValue && top.HasValue && double.IsFinite(left.Value) && double.IsFinite(top.Value))
+        {
+            return Forms.Screen.FromPoint(new System.Drawing.Point((int)left.Value, (int)top.Value));
+        }
+        return Forms.Screen.PrimaryScreen ?? throw new InvalidOperationException("No Windows display is available.");
     }
 
     private void SaveWindowState()
     {
-        if (WindowState == WindowState.Minimized) return;
-
-        string state = WindowState == WindowState.Maximized ? "Maximized" : "Normal";
-        _viewModel.SaveWindowState(Left, Top, ActualWidth, ActualHeight, state);
-    }
-
-    private void ApplyModeToUI()
-    {
-        switch (_viewModel.CurrentMode)
+        if (_isLoadingState || WindowState == WindowState.Minimized)
         {
-            case TextProcessingMode.Proofread:
-                BtnModeProofread.IsChecked = true;
-                break;
-            case TextProcessingMode.Typography:
-                BtnModeTypography.IsChecked = true;
-                break;
-            case TextProcessingMode.Cleanup:
-                BtnModeCleanup.IsChecked = true;
-                break;
+            return;
         }
-        TxtModeDescription.Text = _viewModel.ModeDescription;
-        BtnProcess.Content = _viewModel.MainButtonText;
+        Rect bounds = WindowState == WindowState.Normal
+            ? new Rect(Left, Top, ActualWidth, ActualHeight)
+            : RestoreBounds;
+        if (bounds.IsEmpty || !double.IsFinite(bounds.Width) || !double.IsFinite(bounds.Height))
+        {
+            return;
+        }
+        string state = WindowState == WindowState.Maximized ? "Maximized" : "Normal";
+        _settingsService.UpdateSettings(settings =>
+        {
+            settings.TextProcessingLeft = bounds.Left;
+            settings.TextProcessingTop = bounds.Top;
+            settings.TextProcessingWidth = bounds.Width;
+            settings.TextProcessingHeight = bounds.Height;
+            settings.TextProcessingWindowState = state;
+        });
     }
+}
+
+public sealed record ModelItem(string? ProviderId, string? ModelId, string Display, int? ContextLength)
+{
+    public string FullDisplay { get; init; } = Display;
 }

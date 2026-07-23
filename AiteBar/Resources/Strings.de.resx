@@ -662,11 +662,11 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Text korrigieren</value></data>
   <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Typografie</value></data>
   <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Text bereinigen</value></data>
-  <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Korrigiert Rechtschreib-, Grammatik- und Zeichensetzungsfehler ohne Änderung der Formulierungen. Ersetzt keine Anführungszeichen, Gedankenstriche oder andere Zeichen durch typografische.</value></data>
-  <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Setzt korrekte Anführungszeichen, Gedankenstriche, Leerzeichen und andere typografische Zeichen gemäß der Textsprache.</value></data>
-  <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Entfernt technische Artefakte, überflüssige Zeilenumbrüche und dienstzeichen nach dem Kopieren aus PDFs, Dokumenten und Webseiten.</value></data>
-  <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Korrigieren</value></data>
-  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Verarbeiten</value></data>
+  <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Korrigiert Rechtschreib-, Grammatik- und Zeichensetzungsfehler.</value></data>
+  <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Setzt korrekte Anführungszeichen, Gedankenstriche, Leerzeichen und typografische Zeichen.</value></data>
+  <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Entfernt technische Artefakte, überflüssige Zeilenumbrüche und Steuerzeichen aus PDF und HTML.</value></data>
+  <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Text prüfen</value></data>
+  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Typografie anwenden</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Bereinigen</value></data>
   <data name="TextProcessing_ButtonPaste" xml:space="preserve"><value>Einfügen</value></data>
   <data name="TextProcessing_ButtonCopy" xml:space="preserve"><value>Kopieren</value></data>
@@ -677,10 +677,11 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>Nachher</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Löschen</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="TextProcessing_ButtonProcess" xml:space="preserve"><value>Verarbeiten</value></data>
   <data name="TextProcessing_Placeholder" xml:space="preserve"><value>Text eingeben oder aus der Zwischenablage einfügen</value></data>
-  <data name="TextProcessing_ModelLabel" xml:space="preserve"><value>Verarbeitungsmodell</value></data>
+  <data name="TextProcessing_ModelLabel" xml:space="preserve"><value>Modell:</value></data>
   <data name="TextProcessing_ModelAuto" xml:space="preserve"><value>Automatisch</value></data>
-  <data name="TextProcessing_DataWarning" xml:space="preserve"><value>Nach Start der Verarbeitung wird der Text an den ausgewählten KI-Dienst gesendet.</value></data>
+  <data name="TextProcessing_DataWarning" xml:space="preserve"><value>Text wird erst nach dem Start an den ausgewählten KI-Dienst gesendet.</value></data>
   <data name="TextProcessing_Characters" xml:space="preserve"><value>{0} Zeichen</value></data>
   <data name="TextProcessing_Words" xml:space="preserve"><value>{0} Wörter</value></data>
   <data name="TextProcessing_ErrorTooLong" xml:space="preserve"><value>Text ist zu lang. Maximale Größe ist 50.000 Zeichen.</value></data>
@@ -700,6 +701,8 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_ErrorNetwork" xml:space="preserve"><value>Netzwerkfehler. Überprüfen Sie Ihre Internetverbindung.</value></data>
   <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Verarbeitung wurde abgebrochen.</value></data>
   <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Einstellungen öffnen</value></data>
+  <data name="TextProcessing_ModelLoading" xml:space="preserve"><value>Verfügbare Modelle werden geladen…</value></data>
+  <data name="TextProcessing_ErrorClipboard" xml:space="preserve"><value>Auf die Zwischenablage konnte nicht zugegriffen werden. Versuchen Sie es erneut.</value></data>
 </root>
 
 

@@ -1239,11 +1239,11 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Проверка текста</value></data>
   <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Типографика</value></data>
   <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Очистка текста</value></data>
-  <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Исправляет орфографические, грамматические и пунктуационные ошибки без изменения формулировок. Не заменяет кавычки, тире и другие символы на типографские.</value></data>
-  <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Расставляет правильные кавычки, тире, пробелы и другие типографские знаки с учётом языка текста.</value></data>
-  <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Удаляет технический мусор, лишние переносы и служебные символы после копирования из PDF, документов и веб-страниц.</value></data>
-  <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Проверить</value></data>
-  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Обработать</value></data>
+  <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Исправляет орфографические, грамматические и пунктуационные ошибки.</value></data>
+  <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Расставляет правильные кавычки, тире, пробелы и другие типографские знаки.</value></data>
+  <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Удаляет технический мусор, лишние переносы и служебные символы PDF и HTML.</value></data>
+  <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Проверить текст</value></data>
+  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Применить типографику</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Очистить текст</value></data>
   <data name="TextProcessing_ButtonPaste" xml:space="preserve"><value>Вставить</value></data>
   <data name="TextProcessing_ButtonCopy" xml:space="preserve"><value>Копировать</value></data>
@@ -1254,10 +1254,11 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>После обработки</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Очистить</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Отменить</value></data>
+  <data name="TextProcessing_ButtonProcess" xml:space="preserve"><value>Обработать</value></data>
   <data name="TextProcessing_Placeholder" xml:space="preserve"><value>Введите текст или вставьте его из буфера обмена</value></data>
-  <data name="TextProcessing_ModelLabel" xml:space="preserve"><value>Модель обработки</value></data>
+  <data name="TextProcessing_ModelLabel" xml:space="preserve"><value>Модель:</value></data>
   <data name="TextProcessing_ModelAuto" xml:space="preserve"><value>Автоматически</value></data>
-  <data name="TextProcessing_DataWarning" xml:space="preserve"><value>После запуска обработки текст будет отправлен выбранному AI-сервису.</value></data>
+  <data name="TextProcessing_DataWarning" xml:space="preserve"><value>Текст отправляется выбранному AI-сервису только после запуска обработки.</value></data>
   <data name="TextProcessing_Characters" xml:space="preserve"><value>{0} символов</value></data>
   <data name="TextProcessing_Words" xml:space="preserve"><value>{0} слов</value></data>
   <data name="TextProcessing_ErrorTooLong" xml:space="preserve"><value>Текст слишком длинный. Максимальный размер — 50 000 символов.</value></data>
@@ -1277,6 +1278,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ErrorNetwork" xml:space="preserve"><value>Ошибка сети. Проверьте подключение к интернету.</value></data>
   <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Обработка отменена.</value></data>
   <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Открыть настройки</value></data>
+  <data name="TextProcessing_ModelLoading" xml:space="preserve"><value>Загрузка доступных моделей…</value></data>
+  <data name="TextProcessing_ErrorClipboard" xml:space="preserve"><value>Не удалось получить доступ к буферу обмена. Попробуйте ещё раз.</value></data>
 </root>
 
 

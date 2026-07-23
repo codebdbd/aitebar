@@ -296,6 +296,7 @@
     <Style TargetType="ComboBoxItem" BasedOn="{StaticResource BaseComboBoxItemStyle}"/>
 
     <Style x:Key="BaseComboBoxStyle" TargetType="ComboBox">
+        <Setter Property="local:ComboBoxPopupChrome.IsEnabled" Value="True"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
         <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
@@ -406,6 +407,17 @@
                             <Setter TargetName="Chrome" Property="CornerRadius" Value="3,3,0,0"/>
                             <Setter TargetName="Arrow" Property="Fill" Value="{StaticResource FormControlForegroundBrush}"/>
                         </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsDropDownOpen" Value="True"/>
+                                <Condition Property="local:ComboBoxPopupChrome.OpensAbove" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Outline" Property="CornerRadius" Value="0,0,4,4"/>
+                            <Setter TargetName="Chrome" Property="Margin" Value="1,0,1,1"/>
+                            <Setter TargetName="Chrome" Property="CornerRadius" Value="0,0,3,3"/>
+                            <Setter TargetName="DropDownBorder" Property="BorderThickness" Value="1,1,1,0"/>
+                            <Setter TargetName="DropDownBorder" Property="CornerRadius" Value="4,4,0,0"/>
+                        </MultiTrigger>
                         <Trigger Property="HasItems" Value="False">
                             <Setter TargetName="DropDownBorder" Property="MinHeight" Value="40"/>
                         </Trigger>

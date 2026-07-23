@@ -39,7 +39,7 @@ public sealed class AiGateway
         IReadOnlyList<AiConnectionSettings> candidates = BuildCandidates(settings, request);
         if (candidates.Count == 0)
         {
-            throw new InvalidOperationException("No enabled AI connections are configured.");
+            throw new NoAvailableConnectionException("No enabled AI connections are configured.");
         }
 
         Exception? lastError = null;
@@ -86,7 +86,7 @@ public sealed class AiGateway
             }
         }
 
-        throw new InvalidOperationException(
+        throw new NoAvailableConnectionException(
             "No configured AI connection is currently available.",
             lastError);
     }
@@ -202,7 +202,10 @@ public sealed class AiGateway
     {
         IEnumerable<AiModelDescriptor> eligible = models.Where(model =>
             !model.IsDeprecated &&
-            (model.Capabilities & request.RequiredCapabilities) == request.RequiredCapabilities);
+            (model.Capabilities & request.RequiredCapabilities) == request.RequiredCapabilities &&
+            (!request.RequiredContextTokens.HasValue ||
+             !model.ContextLength.HasValue ||
+             model.ContextLength.Value >= request.RequiredContextTokens.Value));
         if (settings.FreeTierOnly)
         {
             eligible = eligible.Where(model =>

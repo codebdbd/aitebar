@@ -17,9 +17,7 @@ public sealed class TextProcessingUtility : UtilityBase<TextProcessingWindow>
 
     protected override TextProcessingWindow CreateWindow(AppSettingsService settingsService, Window? owner)
     {
-        var gateway = new AiGateway(settingsService);
-        var viewModel = new TextProcessingViewModel(_service, gateway, settingsService);
-        return new TextProcessingWindow(viewModel, settingsService) { Owner = owner };
+        return new TextProcessingWindow(_service, settingsService) { Owner = owner };
     }
 
     protected override void ShowWindow(TextProcessingWindow window, AppSettingsService settingsService)

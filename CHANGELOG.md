@@ -9,6 +9,14 @@
 
 ## [Unreleased]
 
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Обработка текста**: Добавлена AI-утилита для проверки орфографии, типографики и очистки артефактов копирования с выбором подходящей бесплатной модели и повтором последней обработки.
+- **Text processing**: Added an AI utility for proofreading, typography, and copied-text cleanup with eligible free-model selection and repeat processing.
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Обработка текста — release UI**: Добавлены адаптивная компоновка, рабочая отмена, доступные состояния клавиатурного фокуса, сохранение текста сверх лимита без обрезания, восстановление окна и понятные состояния моделей, ошибок и буфера обмена.
+- **Text processing release UI**: Added responsive layout, working cancellation, accessible keyboard focus, non-destructive over-limit handling, window restoration, and clear model, error, and clipboard states.
+
 ## [1.11.1] - 2026-07-15
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed

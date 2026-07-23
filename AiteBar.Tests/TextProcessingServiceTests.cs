@@ -39,6 +39,7 @@ public sealed class TextProcessingServiceTests
         Assert.Equal("user", request.Messages[1].Role);
         Assert.Contains("Hello world", request.Messages[1].Content);
         Assert.True(request.MaxOutputTokens >= 1024);
+        Assert.True(request.RequiredContextTokens > request.MaxOutputTokens);
         Assert.Equal(0.3, request.Temperature);
     }
 
@@ -71,29 +72,6 @@ public sealed class TextProcessingServiceTests
         int shortTokens = TextProcessingService.EstimateTokens("Hi");
         int longTokens = TextProcessingService.EstimateTokens("This is a much longer sentence with many more words in it.");
         Assert.True(longTokens > shortTokens);
-    }
-
-    [Theory]
-    [InlineData("Привет мир", true)]
-    [InlineData("", true)]
-    public void FitsInContext_ShortTextFits(string text, bool expected)
-    {
-        bool result = _service.FitsInContext("system prompt", text, 100_000);
-        Assert.Equal(expected, result);
-    }
-
-    [Fact]
-    public void FitsInContext_NoContextLimit_AlwaysFits()
-    {
-        bool result = _service.FitsInContext("system", new string('x', 100_000), null);
-        Assert.True(result);
-    }
-
-    [Fact]
-    public void FitsInContext_TextExceedsLimit_ReturnsFalse()
-    {
-        bool result = _service.FitsInContext("system prompt", new string('x', 100_000), 1000);
-        Assert.False(result);
     }
 
     [Fact]
@@ -170,5 +148,128 @@ public sealed class TextProcessingServiceTests
     public void MaxInputLength_Is50000()
     {
         Assert.Equal(50_000, TextProcessingService.MaxInputLength);
+    }
+
+    [Fact]
+    public void BuildRequest_ProofreadMode_UsesCorrectPrompt()
+    {
+        var request = _service.BuildRequest(TextProcessingMode.Proofread, "text");
+        Assert.Contains("орфографи", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void BuildRequest_TypographyMode_UsesCorrectPrompt()
+    {
+        var request = _service.BuildRequest(TextProcessingMode.Typography, "text");
+        Assert.Contains("типографическ", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void BuildRequest_CleanupMode_UsesCorrectPrompt()
+    {
+        var request = _service.BuildRequest(TextProcessingMode.Cleanup, "text");
+        Assert.Contains("очистк", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void BuildRequest_WithMaxOutputTokens_RespectsMinClamp()
+    {
+        // MaxOutputTokens is clamped to [1024, 32768], so 500 becomes 1024
+        var request = _service.BuildRequest(TextProcessingMode.Proofread, "text", maxOutputTokens: 500);
+        Assert.Equal(1024, request.MaxOutputTokens);
+    }
+
+    [Fact]
+    public void BuildRequest_MaxOutputTokens_CannotExceed32768()
+    {
+        // For short text, outputBudget is small, so Clamp brings it to 1024 minimum
+        var request = _service.BuildRequest(TextProcessingMode.Proofread, "text", maxOutputTokens: 50000);
+        Assert.True(request.MaxOutputTokens <= 32768);
+        Assert.True(request.MaxOutputTokens >= 1024);
+    }
+
+    [Fact]
+    public void BuildRequest_LongText_IncreasesOutputBudget()
+    {
+        string shortText = "hi";
+        string longText = new string('x', 10000);
+        var shortReq = _service.BuildRequest(TextProcessingMode.Proofread, shortText);
+        var longReq = _service.BuildRequest(TextProcessingMode.Proofread, longText);
+        Assert.True(longReq.MaxOutputTokens >= shortReq.MaxOutputTokens);
+        Assert.True(longReq.RequiredContextTokens > shortReq.RequiredContextTokens);
+    }
+
+    [Fact]
+    public void CleanResponse_CodeFenceWithLanguageTag_StripsTag()
+    {
+        string input = "```python\ncode here\n```";
+        string result = _service.CleanResponse(input);
+        Assert.Equal("code here", result);
+    }
+
+    [Fact]
+    public void CleanResponse_SingleLineNoNewline_KeepsQuotes()
+    {
+        string input = "\"just one line\"";
+        string result = _service.CleanResponse(input);
+        Assert.Equal("\"just one line\"", result);
+    }
+
+    [Fact]
+    public void CleanResponse_GermanPrefixes_Stripped()
+    {
+        Assert.Equal("text", _service.CleanResponse("Korrigierter Text: text"));
+        Assert.Equal("text", _service.CleanResponse("Formatierter Text: text"));
+        Assert.Equal("text", _service.CleanResponse("Bereinigter Text: text"));
+        Assert.Equal("text", _service.CleanResponse("Ergebnis: text"));
+    }
+
+    [Fact]
+    public void CleanResponse_UkrainianPrefixes_Stripped()
+    {
+        Assert.Equal("text", _service.CleanResponse("Виправлений текст: text"));
+        Assert.Equal("text", _service.CleanResponse("Оформлений текст: text"));
+        Assert.Equal("text", _service.CleanResponse("Очищений текст: text"));
+    }
+
+    [Fact]
+    public void CleanResponse_OnlyWhitespace_ReturnsEmpty()
+    {
+        Assert.Equal(string.Empty, _service.CleanResponse("\n\n\n"));
+        Assert.Equal(string.Empty, _service.CleanResponse("\t\t"));
+    }
+
+    [Fact]
+    public void EstimateTokens_TextLengthAffectsTokenCount()
+    {
+        string shortText = "hi";
+        string longText = "This is a much longer sentence with many more words in it.";
+        int shortTokens = TextProcessingService.EstimateTokens(shortText);
+        int longTokens = TextProcessingService.EstimateTokens(longText);
+        Assert.True(longTokens > shortTokens);
+    }
+
+    [Fact]
+    public void GetSystemPrompt_ProofreadPrompt_ContainsProhibitions()
+    {
+        string prompt = _service.GetSystemPrompt(TextProcessingMode.Proofread);
+        Assert.Contains("перефразировать", prompt);
+        Assert.Contains("Верни только", prompt);
+    }
+
+    [Fact]
+    public void GetSystemPrompt_TypographyPrompt_ContainsProhibitions()
+    {
+        string prompt = _service.GetSystemPrompt(TextProcessingMode.Typography);
+        Assert.Contains("менять слова", prompt);
+        Assert.Contains("Верни только", prompt);
+    }
+
+    [Fact]
+    public void GetSystemPrompt_CleanupPrompt_ContainsProhibitions()
+    {
+        string prompt = _service.GetSystemPrompt(TextProcessingMode.Cleanup);
+        Assert.Contains("исправлять орфографию", prompt);
+        Assert.Contains("Верни только", prompt);
     }
 }

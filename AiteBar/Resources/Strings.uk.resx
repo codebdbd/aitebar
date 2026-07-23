@@ -656,11 +656,11 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Перевірка тексту</value></data>
   <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Типографіка</value></data>
   <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Очищення тексту</value></data>
-  <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Виправляє орфографічні, граматичні та пунктуаційні помилки без зміни формулювань. Не замінює лапки, тире та інші символи на типографські.</value></data>
-  <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Розставляє правильні лапки, тире, пробіли та інші типографські знаки з урахуванням мови тексту.</value></data>
-  <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Видаляє технічне сміття, зайві переноси та службові символи після копіювання з PDF, документів та веб-сторінок.</value></data>
-  <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Перевірити</value></data>
-  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Обробити</value></data>
+  <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Виправляє орфографічні, граматичні та пунктуаційні помилки.</value></data>
+  <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Розставляє правильні лапки, тире, пробіли та інші типографські знаки.</value></data>
+  <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Видаляє технічне сміття, зайві переноси та службові символи PDF і HTML.</value></data>
+  <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Перевірити текст</value></data>
+  <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Застосувати типографіку</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Очистити текст</value></data>
   <data name="TextProcessing_ButtonPaste" xml:space="preserve"><value>Вставити</value></data>
   <data name="TextProcessing_ButtonCopy" xml:space="preserve"><value>Копіювати</value></data>
@@ -671,10 +671,11 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>Після обробки</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Очистити</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="TextProcessing_ButtonProcess" xml:space="preserve"><value>Обробити</value></data>
   <data name="TextProcessing_Placeholder" xml:space="preserve"><value>Введіть текст або вставте його з буфера обміну</value></data>
-  <data name="TextProcessing_ModelLabel" xml:space="preserve"><value>Модель обробки</value></data>
+  <data name="TextProcessing_ModelLabel" xml:space="preserve"><value>Модель:</value></data>
   <data name="TextProcessing_ModelAuto" xml:space="preserve"><value>Автоматично</value></data>
-  <data name="TextProcessing_DataWarning" xml:space="preserve"><value>Після запуску обробки текст буде надіслано вибраному AI-сервісу.</value></data>
+  <data name="TextProcessing_DataWarning" xml:space="preserve"><value>Текст надсилається вибраному AI-сервісу лише після запуску обробки.</value></data>
   <data name="TextProcessing_Characters" xml:space="preserve"><value>{0} символів</value></data>
   <data name="TextProcessing_Words" xml:space="preserve"><value>{0} слів</value></data>
   <data name="TextProcessing_ErrorTooLong" xml:space="preserve"><value>Текст занадто довгий. Максимальний розмір — 50 000 символів.</value></data>
@@ -694,6 +695,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ErrorNetwork" xml:space="preserve"><value>Помилка мережі. Перевірте підключення до інтернету.</value></data>
   <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Обробку скасовано.</value></data>
   <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Відкрити налаштування</value></data>
+  <data name="TextProcessing_ModelLoading" xml:space="preserve"><value>Завантаження доступних моделей…</value></data>
+  <data name="TextProcessing_ErrorClipboard" xml:space="preserve"><value>Не вдалося отримати доступ до буфера обміну. Спробуйте ще раз.</value></data>
 </root>
 
 

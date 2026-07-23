@@ -1,9 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace AiteBar;
 
@@ -31,6 +27,10 @@ public sealed partial class TextProcessingService
             outputBudget = Math.Min(outputBudget, maxOutputTokens.Value);
         }
 
+        outputBudget = Math.Clamp(outputBudget, 1024, 32768);
+        int requiredContextTokens = estimated + outputBudget;
+        requiredContextTokens += (int)Math.Ceiling(requiredContextTokens * (ContextReservePercent / 100.0));
+
         return new AiChatRequest
         {
             Messages =
@@ -39,34 +39,10 @@ public sealed partial class TextProcessingService
                 new AiChatMessage("user", text)
             ],
             RequiredCapabilities = AiCapabilities.Text,
-            MaxOutputTokens = Math.Clamp(outputBudget, 1024, 32768),
+            RequiredContextTokens = requiredContextTokens,
+            MaxOutputTokens = outputBudget,
             Temperature = 0.3
         };
-    }
-
-    public async Task<AiGatewayResponse> ProcessAsync(
-        AiGateway gateway,
-        TextProcessingMode mode,
-        string text,
-        string? preferredProviderId,
-        string? preferredModelId,
-        CancellationToken cancellationToken)
-    {
-        AiChatRequest request = BuildRequest(mode, text);
-        if (preferredProviderId != null || preferredModelId != null)
-        {
-            request = new AiChatRequest
-            {
-                Messages = request.Messages,
-                RequiredCapabilities = request.RequiredCapabilities,
-                PreferredProviderId = preferredProviderId,
-                PreferredModelId = preferredModelId,
-                MaxOutputTokens = request.MaxOutputTokens,
-                Temperature = request.Temperature
-            };
-        }
-
-        return await gateway.GenerateAsync(request, cancellationToken).ConfigureAwait(false);
     }
 
     public string CleanResponse(string rawResponse)
@@ -83,18 +59,6 @@ public sealed partial class TextProcessingService
         cleaned = StripOuterQuotes(cleaned);
 
         return cleaned.Trim();
-    }
-
-    public bool FitsInContext(string systemPrompt, string text, int? contextLength)
-    {
-        if (!contextLength.HasValue)
-        {
-            return true;
-        }
-
-        int totalTokens = EstimateTokens(systemPrompt) + EstimateTokens(text);
-        int reserve = totalTokens * ContextReservePercent / 100;
-        return totalTokens + reserve <= contextLength.Value;
     }
 
     public static int EstimateTokens(string text)

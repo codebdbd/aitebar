@@ -67,6 +67,7 @@ public sealed class AiChatRequest
     public AiCapabilities RequiredCapabilities { get; init; } = AiCapabilities.Text;
     public string? PreferredProviderId { get; init; }
     public string? PreferredModelId { get; init; }
+    public int? RequiredContextTokens { get; init; }
     public int MaxOutputTokens { get; init; } = 1024;
     public double? Temperature { get; init; }
 }
@@ -112,4 +113,10 @@ internal sealed class AiProviderHttpException : Exception
 
     public HttpStatusCode StatusCode { get; }
     public TimeSpan? RetryAfter { get; }
+}
+
+internal sealed class NoAvailableConnectionException : Exception
+{
+    public NoAvailableConnectionException(string message, Exception? innerException = null)
+        : base(message, innerException) { }
 }

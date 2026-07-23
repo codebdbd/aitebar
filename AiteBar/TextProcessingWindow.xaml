@@ -4,18 +4,20 @@
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
         Title="{local:Loc ResourceKey=TextProcessing_Title}"
-        Width="1280" Height="840"
+        Width="1280" Height="780"
         MinWidth="1000" MinHeight="700"
         MaxWidth="1920" MaxHeight="1200"
         WindowStartupLocation="CenterScreen"
-        Background="#1A1A1C" Foreground="#DCDCDC"
-        WindowStyle="SingleBorderWindow" ResizeMode="CanResizeWithGrip"
+        Background="{DynamicResource WindowBackground}" Foreground="{DynamicResource PrimaryText}"
+        WindowStyle="SingleBorderWindow" ResizeMode="CanResize"
         ShowInTaskbar="False" Topmost="True"
+        UseLayoutRounding="True" SnapsToDevicePixels="True"
         Closing="Window_Closing"
         StateChanged="Window_StateChanged"
         SizeChanged="Window_SizeChanged"
         LocationChanged="Window_LocationChanged"
         PreviewKeyDown="Window_PreviewKeyDown"
+        Activated="Window_Activated"
         Loaded="Window_Loaded">
 
     <Window.Resources>
@@ -26,137 +28,74 @@
                 <ResourceDictionary Source="UtilityWindowResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
-            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+            <SolidColorBrush x:Key="TextProcessingCardBrush" Color="#252526"/>
+            <SolidColorBrush x:Key="TextProcessingCardHoverBrush" Color="#2D2D30"/>
+            <SolidColorBrush x:Key="TextProcessingWarningBrush" Color="#FFB400"/>
+            <SolidColorBrush x:Key="TextProcessingWarningBackgroundBrush" Color="#2A210F"/>
+            <SolidColorBrush x:Key="TextProcessingErrorBrush" Color="#E85A5A"/>
+            <SolidColorBrush x:Key="TextProcessingErrorBackgroundBrush" Color="#2C1919"/>
 
-            <!-- Side action button: 80x80, icon 48px + label -->
-            <Style x:Key="SideActionStyle" TargetType="Button">
+            <Style x:Key="TextProcessingTabItemStyle" TargetType="TabItem">
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                <Setter Property="Width" Value="80"/>
-                <Setter Property="Height" Value="80"/>
-                <Setter Property="Padding" Value="0"/>
-                <Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="Background" Value="#252526"/>
-                <Setter Property="BorderBrush" Value="#3A3A3C"/>
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Foreground" Value="#A0A0A8"/>
-                <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
+                <Setter Property="Foreground" Value="{DynamicResource MutedText}"/>
                 <Setter Property="Template">
                     <Setter.Value>
-                        <ControlTemplate TargetType="Button">
-                            <Border x:Name="Bd"
-                                    Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    CornerRadius="8"
-                                    SnapsToDevicePixels="True">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <ControlTemplate TargetType="TabItem">
+                            <Border x:Name="TabChrome"
+                                    Margin="0,0,16,0" Padding="12,9"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="0,0,0,3"
+                                    CornerRadius="0">
+                                <ContentPresenter ContentSource="Header"
+                                                  TextElement.Foreground="{TemplateBinding Foreground}"
+                                                  TextElement.FontSize="14"
+                                                  TextElement.FontWeight="SemiBold"/>
                             </Border>
                             <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Bd" Property="Background" Value="#303238"/>
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#4A4A4E"/>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="TabChrome" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
                                     <Setter Property="Foreground" Value="White"/>
                                 </Trigger>
-                                <Trigger Property="IsPressed" Value="True">
-                                    <Setter TargetName="Bd" Property="Background" Value="#232326"/>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Foreground" Value="White"/>
+                                    <Setter Property="Cursor" Value="Hand"/>
                                 </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="TabChrome" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="EditorTextBoxStyle" TargetType="TextBox">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="VerticalContentAlignment" Value="Top"/>
+                <Setter Property="CaretBrush" Value="{DynamicResource PrimaryText}"/>
+                <Setter Property="SelectionBrush" Value="{DynamicResource AccentColor}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TextBox">
+                            <Border x:Name="EditorFocusBorder" Background="{TemplateBinding Background}"
+                                    BorderBrush="Transparent" BorderThickness="1" CornerRadius="4">
+                                <ScrollViewer x:Name="PART_ContentHost" Margin="0"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
                                 <MultiTrigger>
                                     <MultiTrigger.Conditions>
                                         <Condition Property="IsKeyboardFocused" Value="True"/>
                                         <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
                                     </MultiTrigger.Conditions>
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                    <Setter TargetName="EditorFocusBorder" Property="BorderBrush" Value="#3ABEFF"/>
                                 </MultiTrigger>
                                 <Trigger Property="IsEnabled" Value="False">
-                                    <Setter TargetName="Bd" Property="Background" Value="#1C1C1E"/>
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="#2A2A2E"/>
-                                    <Setter Property="Foreground" Value="#555558"/>
-                                    <Setter Property="Opacity" Value="0.5"/>
+                                    <Setter Property="Opacity" Value="0.7"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
-            <!-- Segmented mode selector -->
-            <Style x:Key="ModeSegmentStyle" TargetType="RadioButton">
-                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                <Setter Property="Foreground" Value="#8E8E93"/>
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="FontSize" Value="16"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
-                <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                <Setter Property="VerticalAlignment" Value="Stretch"/>
-                <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                <Setter Property="Margin" Value="0"/>
-                <Setter Property="Padding" Value="0"/>
-                <Setter Property="SnapsToDevicePixels" Value="True"/>
-                <Setter Property="UseLayoutRounding" Value="True"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="RadioButton">
-                            <Border x:Name="Bd"
-                                    Background="{TemplateBinding Background}"
-                                    BorderThickness="0"
-                                    Padding="0">
-                                <ContentPresenter x:Name="Content"
-                                                  HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Foreground" Value="#C0C0C5"/>
-                                    <Setter Property="Background" Value="#2A2A2E"/>
-                                </Trigger>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter Property="Background" Value="{DynamicResource AccentColor}"/>
-                                    <Setter Property="Foreground" Value="White"/>
-                                </Trigger>
-                                <Trigger Property="IsEnabled" Value="False">
-                                    <Setter Property="Foreground" Value="#555558"/>
-                                    <Setter Property="Opacity" Value="0.6"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
-            <!-- Mode description info bar -->
-            <Style x:Key="ModeInfoBarStyle" TargetType="Border">
-                <Setter Property="Background" Value="#1C1C1E"/>
-                <Setter Property="BorderBrush" Value="#2A2A2E"/>
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="CornerRadius" Value="6"/>
-                <Setter Property="Padding" Value="20,16"/>
-            </Style>
-
-            <!-- Editor TextBox: dark theme, no fixed Height, fills grid row -->
-            <Style x:Key="EditorTextBoxStyle" TargetType="TextBox">
-                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="Foreground" Value="#E8EDF2"/>
-                <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="VerticalContentAlignment" Value="Top"/>
-                <Setter Property="SnapsToDevicePixels" Value="True"/>
-                <Setter Property="UseLayoutRounding" Value="True"/>
-                <Setter Property="CaretBrush" Value="#E8EDF2"/>
-                <Setter Property="SelectionBrush" Value="{DynamicResource AccentColor}"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="TextBox">
-                            <Border Background="{TemplateBinding Background}"
-                                    BorderBrush="{TemplateBinding BorderBrush}"
-                                    BorderThickness="{TemplateBinding BorderThickness}"
-                                    SnapsToDevicePixels="True">
-                                <ScrollViewer x:Name="PART_ContentHost"
-                                              Margin="{TemplateBinding Padding}"
-                                              VerticalAlignment="Top"
-                                              SnapsToDevicePixels="True"/>
-                            </Border>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
@@ -164,205 +103,226 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <DockPanel Margin="32,24">
-        <!-- Title section -->
-        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,20">
-            <TextBlock Text="{local:Loc ResourceKey=TextProcessing_Title}"
-                       FontSize="30" FontWeight="SemiBold" Foreground="#E8EDF2"
-                       HorizontalAlignment="Left"/>
-            <TextBlock Text="{local:Loc ResourceKey=TextProcessing_Description}"
-                       FontSize="15" Foreground="#8E8E93" Margin="0,6,0,0"
-                       HorizontalAlignment="Left"/>
-        </StackPanel>
+    <Grid Margin="32,24">
+        <DockPanel x:Name="ContentHost" Width="974"
+                   HorizontalAlignment="Center" VerticalAlignment="Stretch">
 
-        <!-- Mode switcher: segmented control -->
-        <Border DockPanel.Dock="Top" Style="{StaticResource SegmentedContainerStyle}"
-                Height="56" Margin="0,0,0,12">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1*"/>
-                    <ColumnDefinition Width="1*"/>
-                </Grid.ColumnDefinitions>
-
-                <RadioButton x:Name="BtnModeProofread" Grid.Column="0"
-                             Style="{StaticResource ModeSegmentStyle}"
-                             Content="{local:Loc ResourceKey=TextProcessing_ModeProofread}"
-                             IsChecked="True" Tag="Proofread"
-                             Click="ModeSegment_Click"/>
-
-                <RadioButton x:Name="BtnModeTypography" Grid.Column="1"
-                             Style="{StaticResource ModeSegmentStyle}"
-                             Content="{local:Loc ResourceKey=TextProcessing_ModeTypography}"
-                             Tag="Typography"
-                             Click="ModeSegment_Click"/>
-
-                <RadioButton x:Name="BtnModeCleanup" Grid.Column="2"
-                             Style="{StaticResource ModeSegmentStyle}"
-                             Content="{local:Loc ResourceKey=TextProcessing_ModeCleanup}"
-                             Tag="Cleanup"
-                             Click="ModeSegment_Click"/>
-            </Grid>
-        </Border>
-
-        <!-- Mode description -->
-        <Border DockPanel.Dock="Top" Style="{StaticResource ModeInfoBarStyle}"
-                Margin="0,0,0,16" MinHeight="64">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="&#xE946;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-                           FontSize="16" Foreground="#5A5A5E" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBlock x:Name="TxtModeDescription" TextWrapping="Wrap"
-                           FontSize="15" Foreground="#B0B0B5" VerticalAlignment="Center"/>
-            </StackPanel>
-        </Border>
-
-        <!-- Status message -->
-        <Border DockPanel.Dock="Top" Style="{StaticResource ModeInfoBarStyle}"
-                Margin="0,0,0,16" MinHeight="40" 
-                Visibility="{Binding HasStatusMessage, Converter={StaticResource BoolToVis}}">
-            <StackPanel Orientation="Horizontal">
-                <TextBlock Text="&#xEA39;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-                           FontSize="16" Foreground="#FFB400" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBlock x:Name="TxtStatusMessage" Text="{Binding StatusMessage}" TextWrapping="Wrap"
-                           FontSize="15" Foreground="#B0B0B5" VerticalAlignment="Center"/>
-            </StackPanel>
-        </Border>
-
-        <!-- Bottom panel: Model selector (left) + Process button (right, aligned with editor) -->
-        <Grid DockPanel.Dock="Bottom" Height="52" Margin="0,20,0,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Model selector: label + combobox -->
-            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ModelLabel}"
-                           VerticalAlignment="Center" FontSize="13"
-                           Foreground="#8E8E93" Margin="0,0,8,0"/>
-                <ComboBox x:Name="CmbModels"
-                          Width="220"
-                          ItemsSource="{Binding Models}"
-                          DisplayMemberPath="Display"
-                          SelectedIndex="0"
-                          SelectionChanged="CmbModels_SelectionChanged"
-                          ToolTip="{local:Loc ResourceKey=TextProcessing_DataWarning}"/>
+            <StackPanel DockPanel.Dock="Top" Margin="0,0,0,20">
+                <TextBlock Text="{local:Loc ResourceKey=TextProcessing_Title}"
+                           FontSize="30" FontWeight="SemiBold"
+                           Foreground="{DynamicResource PrimaryText}"/>
+                <TextBlock Text="{local:Loc ResourceKey=TextProcessing_Description}"
+                           Margin="0,4,0,0" FontSize="14"
+                           Foreground="{DynamicResource MutedText}"
+                           TextWrapping="Wrap"/>
             </StackPanel>
 
-            <!-- Process / Cancel button: aligned with editor right edge -->
-            <Button x:Name="BtnProcess" Grid.Column="2"
-                    Style="{StaticResource PrimaryCommandButtonStyle}"
-                    MinWidth="200" Height="44"
-                    Click="BtnProcess_Click"/>
-        </Grid>
-
-        <!-- Content area -->
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="738"/>
-                <ColumnDefinition Width="16"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Editor: Grid with TextBox (Row 0) + counter (Row 1) -->
-            <Border Grid.Column="0" BorderBrush="#3A3A3C" BorderThickness="1"
-                    CornerRadius="4" Background="#1C1C1E">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="36"/>
-                    </Grid.RowDefinitions>
-
-                    <!-- TextBox fills Row 0 -->
-                    <Grid Grid.Row="0">
-                        <TextBox x:Name="TxtEditor"
-                                 Style="{StaticResource EditorTextBoxStyle}"
-                                 AcceptsReturn="True" TextWrapping="Wrap"
-                                 VerticalScrollBarVisibility="Auto"
-                                 HorizontalScrollBarVisibility="Disabled"
-                                 FontSize="17"
-                                 Padding="24,20"
-                                 AcceptsTab="False"
-                                 MaxLength="50000"
-                                 TextChanged="TxtEditor_TextChanged"/>
-                        <TextBlock x:Name="TxtPlaceholder"
-                                   Text="{local:Loc ResourceKey=TextProcessing_Placeholder}"
-                                   FontSize="17" Foreground="#5A5A5E"
-                                   Padding="24,20" IsHitTestVisible="False"
-                                   Visibility="Visible"/>
-                    </Grid>
-
-                    <!-- Counter row at bottom -->
-                    <Border Grid.Row="1" Height="36"
-                            BorderBrush="#2A2A2E" BorderThickness="0,1,0,0"
-                            CornerRadius="0,0,4,4">
-                        <Grid Margin="24,0">
-                            <TextBlock x:Name="TxtCounters"
-                                       VerticalAlignment="Center"
-                                       FontSize="13" Foreground="#8E8E93"/>
-                        </Grid>
-                    </Border>
-                </Grid>
+            <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="0,0,0,1" Margin="0,0,0,16">
+                <TabControl x:Name="ModeTabs" Height="42"
+                            Style="{StaticResource UnderlineTabControlStyle}"
+                            SelectionChanged="ModeTabs_SelectionChanged">
+                    <TabItem x:Name="ModeProofread" Tag="Proofread" IsSelected="True"
+                             Header="{local:Loc ResourceKey=TextProcessing_ModeProofread}"
+                             Style="{StaticResource TextProcessingTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeProofread}"/>
+                    <TabItem x:Name="ModeTypography" Tag="Typography"
+                             Header="{local:Loc ResourceKey=TextProcessing_ModeTypography}"
+                             Style="{StaticResource TextProcessingTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeTypography}"/>
+                    <TabItem x:Name="ModeCleanup" Tag="Cleanup"
+                             Header="{local:Loc ResourceKey=TextProcessing_ModeCleanup}"
+                             Style="{StaticResource TextProcessingTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeCleanup}"/>
+                </TabControl>
             </Border>
 
-            <!-- Side panel: 80x80 icon buttons -->
-            <StackPanel Grid.Column="2" Margin="0">
-                <!-- Вставить -->
-                <Button x:Name="BtnPaste"
-                        Style="{StaticResource SideActionStyle}"
-                        Click="BtnPaste_Click" Margin="0,0,0,12">
-                    <StackPanel>
-                        <TextBlock Text="&#xF2D6;" FontSize="48"
-                                   FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonPaste}"
-                                   FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Button>
+            <Border DockPanel.Dock="Top" Height="52" Margin="0,0,0,16"
+                    Background="Transparent" BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1" CornerRadius="6" Padding="16,0">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="18"
+                               Foreground="{DynamicResource AccentColor}" Margin="0,0,12,0"
+                               VerticalAlignment="Center"/>
+                    <TextBlock x:Name="TxtModeDescription"
+                               FontSize="14" Foreground="{DynamicResource PrimaryText}"
+                               TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                               AutomationProperties.LiveSetting="Polite"/>
+                </StackPanel>
+            </Border>
 
-                <!-- Копировать -->
-                <Button x:Name="BtnCopy"
-                        Style="{StaticResource SideActionStyle}"
-                        Click="BtnCopy_Click" Margin="0,0,0,12"
-                        IsEnabled="False">
-                    <StackPanel>
-                        <TextBlock Text="&#xF32C;" FontSize="48"
-                                   FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonCopy}"
-                                   FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Button>
+            <Border x:Name="LimitBorder" DockPanel.Dock="Top"
+                    Background="{StaticResource TextProcessingWarningBackgroundBrush}"
+                    BorderBrush="{StaticResource TextProcessingWarningBrush}" BorderThickness="1"
+                    CornerRadius="6" Padding="14,10" Margin="0,0,0,12"
+                    Visibility="Collapsed">
+                <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ErrorTooLong}"
+                           FontSize="13" Foreground="{StaticResource TextProcessingWarningBrush}"
+                           TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive"/>
+            </Border>
 
-                <!-- До/После обработки -->
-                <Button x:Name="BtnToggleVersion"
-                        Style="{StaticResource SideActionStyle}"
-                        Click="BtnToggleVersion_Click" Margin="0,0,0,12"
-                        Visibility="Collapsed">
-                    <StackPanel>
-                        <TextBlock x:Name="ToggleVersionIcon" Text="&#xF629;" FontSize="48"
-                                   FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock x:Name="ToggleVersionLabel" Text="{local:Loc ResourceKey=TextProcessing_ButtonBeforeProcessing}"
-                                   FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0"/>
-                    </StackPanel>
-                </Button>
+            <Border x:Name="StatusBorder" DockPanel.Dock="Top"
+                    Background="{StaticResource TextProcessingErrorBackgroundBrush}"
+                    BorderBrush="{StaticResource TextProcessingErrorBrush}" BorderThickness="1"
+                    CornerRadius="6" Padding="14,10" Margin="0,0,0,12"
+                    Visibility="Collapsed" AutomationProperties.LiveSetting="Assertive">
+                <TextBlock x:Name="TxtStatusMessage" TextWrapping="Wrap"
+                           FontSize="13" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
+            </Border>
 
-                <!-- Очистить -->
-                <Button x:Name="BtnClear"
-                        Style="{StaticResource SideActionStyle}"
-                        Click="BtnClear_Click" Margin="0,0,0,12"
-                        IsEnabled="False">
-                    <StackPanel>
-                        <TextBlock Text="&#xF34D;" FontSize="48"
-                                   FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-                                   HorizontalAlignment="Center"/>
-                        <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonClear}"
-                                   FontSize="12" HorizontalAlignment="Center" Margin="0,2,0,0"/>
+            <Grid DockPanel.Dock="Bottom" Height="52" Margin="0,16,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="10"/>
+                    <ColumnDefinition Width="280"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="220"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0"
+                           Text="{local:Loc ResourceKey=TextProcessing_ModelLabel}"
+                           FontSize="13" Foreground="{DynamicResource MutedText}"
+                           VerticalAlignment="Center"/>
+                <ComboBox x:Name="CmbModels" Grid.Column="2"
+                          Height="36" VerticalAlignment="Center"
+                          SelectionChanged="CmbModels_SelectionChanged"
+                          DropDownOpened="CmbModels_DropDownOpened"
+                          AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModelLabel}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Display}"
+                                       TextTrimming="CharacterEllipsis"
+                                       ToolTip="{Binding FullDisplay}"/>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <Button x:Name="BtnProcess" Grid.Column="4"
+                        Style="{StaticResource PrimaryCommandButtonStyle}"
+                        Click="BtnProcess_Click">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                        <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="18" FontWeight="Normal"
+                                   Margin="0,0,10,0" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="ProcessButtonLabel" VerticalAlignment="Center"/>
                     </StackPanel>
                 </Button>
-            </StackPanel>
-        </Grid>
-    </DockPanel>
+            </Grid>
+
+            <Grid MinHeight="284">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="738"/>
+                    <ColumnDefinition Width="16"/>
+                    <ColumnDefinition Width="220"/>
+                </Grid.ColumnDefinitions>
+
+                <Border x:Name="EditorCard" Grid.Column="0"
+                        BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"
+                        CornerRadius="8" Background="{StaticResource TextProcessingCardBrush}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="36"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <TextBox x:Name="TxtEditor"
+                                     Style="{StaticResource EditorTextBoxStyle}"
+                                     AcceptsReturn="True" TextWrapping="Wrap"
+                                     VerticalScrollBarVisibility="Auto"
+                                     HorizontalScrollBarVisibility="Disabled"
+                                     FontSize="17" TextBlock.LineHeight="27"
+                                     Padding="12,10"
+                                     AcceptsTab="False"
+                                     TextChanged="TxtEditor_TextChanged"
+                                     AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_Title}"
+                                     AutomationProperties.HelpText="{local:Loc ResourceKey=TextProcessing_Placeholder}"/>
+                            <TextBlock x:Name="TxtPlaceholder"
+                                       Text="{local:Loc ResourceKey=TextProcessing_Placeholder}"
+                                       FontSize="17" Foreground="{DynamicResource MutedText}"
+                                       Margin="13,11,0,0" TextWrapping="Wrap" IsHitTestVisible="False"
+                                       Visibility="Visible"/>
+                        </Grid>
+                        <Border Grid.Row="1" BorderBrush="{DynamicResource BorderColor}"
+                                BorderThickness="0,1,0,0" Padding="12,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock x:Name="TxtCounters"
+                                           FontSize="13" Foreground="{DynamicResource MutedText}"
+                                           VerticalAlignment="Center"
+                                           AutomationProperties.LiveSetting="Polite"/>
+                                <TextBlock x:Name="TxtModelState" Grid.Column="1"
+                                           Margin="20,0,0,0"
+                                           FontSize="12" Foreground="{DynamicResource MutedText}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis" Visibility="Collapsed"
+                                           AutomationProperties.LiveSetting="Polite"/>
+                            </Grid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <StackPanel Grid.Column="2" VerticalAlignment="Top">
+                    <Button x:Name="BtnPaste"
+                            Style="{StaticResource CommandButtonStyle}"
+                            Click="BtnPaste_Click" Margin="0,0,0,8"
+                            AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ButtonPaste}"
+                            ToolTip="{local:Loc ResourceKey=TextProcessing_ButtonPaste}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="&#xE77F;" FontFamily="Segoe MDL2 Assets" FontSize="18" FontWeight="Normal" Margin="0,0,10,0"/>
+                            <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonPaste}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnCopy"
+                            Style="{StaticResource CommandButtonStyle}"
+                            Click="BtnCopy_Click" Margin="0,0,0,8"
+                            AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ButtonCopy}"
+                            ToolTip="{local:Loc ResourceKey=TextProcessing_ButtonCopy}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="18" FontWeight="Normal" Margin="0,0,10,0"/>
+                            <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonCopy}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnRepeat"
+                            Style="{StaticResource CommandButtonStyle}"
+                            Click="BtnRepeat_Click" Margin="0,0,0,8"
+                            Visibility="Collapsed"
+                            AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ButtonRepeat}"
+                            ToolTip="{local:Loc ResourceKey=TextProcessing_ButtonRepeat}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="18" FontWeight="Normal" Margin="0,0,10,0"/>
+                            <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonRepeat}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnToggleVersion"
+                            Style="{StaticResource CommandButtonStyle}"
+                            Click="BtnToggleVersion_Click" Margin="0,0,0,8"
+                            Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock x:Name="ToggleVersionIcon"
+                                       Text="&#xE8AB;" FontFamily="Segoe MDL2 Assets"
+                                       FontSize="18" FontWeight="Normal" Margin="0,0,10,0"/>
+                            <TextBlock x:Name="ToggleVersionLabel"
+                                       Text="{local:Loc ResourceKey=TextProcessing_ButtonBeforeProcessing}"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BtnClear"
+                            Style="{StaticResource CommandButtonStyle}"
+                            Click="BtnClear_Click"
+                            AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ButtonClear}"
+                            ToolTip="{local:Loc ResourceKey=TextProcessing_ButtonClear}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <TextBlock Text="&#xE74D;" FontFamily="Segoe MDL2 Assets" FontSize="18" FontWeight="Normal" Margin="0,0,10,0"/>
+                            <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonClear}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+        </DockPanel>
+    </Grid>
 </local:DarkWindow>
