@@ -1,4 +1,5 @@
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -31,11 +32,14 @@ public sealed class TextProcessingWindowLayoutTests
                 var root = Assert.IsAssignableFrom<FrameworkElement>(window.Content);
                 var editor = Assert.IsType<TextBox>(window.FindName("TxtEditor"));
                 var editorCard = Assert.IsAssignableFrom<FrameworkElement>(window.FindName("EditorCard"));
+                var counters = Assert.IsType<TextBlock>(window.FindName("TxtCounters"));
+                var modelState = Assert.IsType<TextBlock>(window.FindName("TxtModelState"));
                 var contentHost = Assert.IsAssignableFrom<FrameworkElement>(window.FindName("ContentHost"));
                 var viewport = Assert.IsType<ScrollViewer>(window.FindName("LayoutViewport"));
                 var process = Assert.IsType<Button>(window.FindName("BtnProcess"));
                 var refreshModels = Assert.IsType<Button>(window.FindName("BtnRefreshModels"));
                 var repeat = Assert.IsType<Button>(window.FindName("BtnRepeat"));
+                var showDiff = Assert.IsType<Button>(window.FindName("BtnShowDiff"));
                 var typographyMode = Assert.IsType<TabItem>(window.FindName("ModeTypography"));
                 var toggleLabel = Assert.IsType<TextBlock>(window.FindName("ToggleVersionLabel"));
                 var processLabel = Assert.IsType<TextBlock>(window.FindName("ProcessButtonLabel"));
@@ -45,9 +49,11 @@ public sealed class TextProcessingWindowLayoutTests
                     Assert.IsType<Button>(window.FindName("BtnCopy")),
                     repeat,
                     Assert.IsType<Button>(window.FindName("BtnToggleVersion")),
+                    showDiff,
                     Assert.IsType<Button>(window.FindName("BtnClear")),
                     process
                 ];
+                Button[] railButtons = commandButtons[..^1];
                 toggleLabel.Text = LocalizationService.Get("TextProcessing_ButtonShowResult");
                 processLabel.Text = LocalizationService.Get("TextProcessing_ButtonCancel");
 
@@ -57,11 +63,34 @@ public sealed class TextProcessingWindowLayoutTests
                 root.UpdateLayout();
                 Assert.True(
                     contentHost.ActualWidth + root.Margin.Left + root.Margin.Right <= minimumClientWidth);
+                Point railBottom = railButtons[^1].TranslatePoint(
+                    new Point(0, railButtons[^1].ActualHeight),
+                    editorCard);
+                Assert.True(
+                    railBottom.Y <= editorCard.ActualHeight,
+                    $"Command rail requires {railBottom.Y:F2}px, but editor area is {editorCard.ActualHeight:F2}px high.");
 
                 root.Measure(new Size(1400, 700));
                 root.Arrange(new Rect(0, 0, 1400, 700));
                 root.UpdateLayout();
                 double compactEditorHeight = editor.ActualHeight;
+
+                typeof(TextProcessingWindow)
+                    .GetField("_hasEligibleModel", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .SetValue(window, true);
+                typeof(TextProcessingWindow)
+                    .GetMethod("SetInfoStatus", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .Invoke(window, ["Использована: Writer"]);
+                root.Measure(new Size(1400, 700));
+                root.Arrange(new Rect(0, 0, 1400, 700));
+                root.UpdateLayout();
+                Assert.Equal(compactEditorHeight, editor.ActualHeight, precision: 1);
+                Assert.Equal(Visibility.Visible, modelState.Visibility);
+                Assert.Equal("Использована: Writer", modelState.Text);
+                Point countersBottom = counters.TranslatePoint(
+                    new Point(0, counters.ActualHeight),
+                    editorCard);
+                Assert.True(countersBottom.Y <= editorCard.ActualHeight);
 
                 root.Measure(new Size(1800, 1000));
                 root.Arrange(new Rect(0, 0, 1800, 1000));

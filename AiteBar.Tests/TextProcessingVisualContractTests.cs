@@ -13,10 +13,13 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("x:Name=\"BtnCopy\"", xaml);
         Assert.Contains("x:Name=\"BtnRepeat\"", xaml);
         Assert.Contains("x:Name=\"BtnToggleVersion\"", xaml);
+        Assert.Contains("x:Name=\"BtnShowDiff\"", xaml);
         Assert.Contains("x:Name=\"BtnClear\"", xaml);
         Assert.Contains("x:Name=\"BtnProcess\"", xaml);
         Assert.Contains("x:Name=\"TxtModelState\" Grid.Column=\"1\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModelStateBorder\"", xaml);
+        Assert.DoesNotContain("x:Name=\"InfoStatusBorder\"", xaml);
+        Assert.DoesNotContain("x:Name=\"TxtInfoMessage\"", xaml);
         Assert.Contains("TextProcessing_DataWarning", xaml);
     }
 
@@ -30,7 +33,8 @@ public sealed class TextProcessingVisualContractTests
         Assert.DoesNotContain("WindowState=\"Maximized\"", xaml);
         Assert.Contains("Width=\"1280\" Height=\"840\"", xaml);
         Assert.Contains("MinWidth=\"1000\" MinHeight=\"700\"", xaml);
-        Assert.Contains("<DockPanel x:Name=\"ContentHost\" Width=\"904\"", xaml);
+        Assert.Contains("<DockPanel x:Name=\"ContentHost\"", xaml);
+        Assert.DoesNotContain("x:Name=\"ContentHost\" Width=", xaml);
         Assert.Contains("HorizontalAlignment=\"Center\" VerticalAlignment=\"Stretch\"", xaml);
         Assert.Contains("x:Name=\"LayoutViewport\"", xaml);
         Assert.Contains("HorizontalScrollBarVisibility=\"Auto\"", xaml);
@@ -45,6 +49,10 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("AutomationProperties.HelpText=", xaml);
         Assert.Contains("AutomationProperties.LiveSetting=", xaml);
         Assert.Contains("PreviewKeyDown=\"Window_PreviewKeyDown\"", xaml);
+        Assert.Contains("x:Name=\"BtnShowDiff\"", xaml);
+        Assert.Equal(2, xaml.Split(
+            "ContextMenu=\"{StaticResource TextEditingContextMenu}\"",
+            StringSplitOptions.None).Length - 1);
         Assert.Contains("<Trigger Property=\"IsKeyboardFocused\" Value=\"True\">", xaml);
     }
 
@@ -67,10 +75,12 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("Width=\"36\" Height=\"36\" MinWidth=\"36\" MaxWidth=\"36\"", xaml);
         Assert.DoesNotContain("IconRailButtonStyle", xaml);
         Assert.DoesNotContain("Width=\"220\" Height=\"52\"", xaml);
-        Assert.Equal(6, xaml.Split(
+        Assert.Equal(7, xaml.Split(
             "Style=\"{StaticResource CommandButtonStyle}\"",
             StringSplitOptions.None).Length - 1);
         Assert.Contains("Style=\"{StaticResource PrimaryCommandButtonStyle}\"", xaml);
+        Assert.Contains("StreamingUiUpdateInterval = TimeSpan.FromMilliseconds(50)",
+            File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs")));
         Assert.Contains("<Grid MinHeight=\"284\">", xaml);
         Assert.DoesNotContain("FluentSystemIcons", xaml);
         Assert.DoesNotContain("Padding=\"24,20\"", xaml);
@@ -124,17 +134,46 @@ public sealed class TextProcessingVisualContractTests
     }
 
     [Fact]
+    public void ModelUsageAndProgress_UseEditorFooterWithoutChangingEditorHeight()
+    {
+        string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs"));
+
+        Assert.Contains("TxtModelState.Text = _inlineInfoStatus;", code);
+        Assert.Contains("TxtModelState.ToolTip = _inlineInfoStatus;", code);
+        Assert.Contains("SetInfoStatus(LocalizationService.Format(\"TextProcessing_ModelUsed\"", code);
+        Assert.Contains("SetInfoStatus(LocalizationService.Format(\"TextProcessing_Progress\"", code);
+        Assert.DoesNotContain("InfoStatusBorder", code);
+        Assert.DoesNotContain("TxtInfoMessage", code);
+    }
+
+    [Fact]
     public void SuccessfulResult_CanSwitchBetweenOriginalAndProcessedText()
     {
         string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs"));
 
         Assert.Contains("private void BtnToggleVersion_Click", code);
-        Assert.Contains("_isShowingOriginal = !_isShowingOriginal;", code);
+        Assert.Contains("_isShowingOriginal = _isShowingDiff || !_isShowingOriginal;", code);
         Assert.Contains("SetEditorText(_isShowingOriginal ? _originalText : _processedText);", code);
         Assert.Contains("TxtEditor.IsReadOnly = _isShowingOriginal;", code);
         Assert.Contains("BtnToggleVersion.IsEnabled = state.CanSwitchVersion", code);
+        Assert.Contains("private void BtnShowDiff_Click", code);
+        Assert.Contains("RenderDiff();", code);
         Assert.Contains("\"TextProcessing_ButtonShowOriginal\"", code);
         Assert.Contains("\"TextProcessing_ButtonShowResult\"", code);
+    }
+
+    [Fact]
+    public void Clear_RemovesOperationHistoryInsteadOfRecordingRecoverableText()
+    {
+        string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs"));
+        int start = code.IndexOf("private void Clear()", StringComparison.Ordinal);
+        int end = code.IndexOf("private void ResetResultHistory()", start, StringComparison.Ordinal);
+
+        Assert.True(start >= 0 && end > start);
+        string clearMethod = code[start..end];
+        Assert.Contains("SetEditorText(string.Empty);", clearMethod);
+        Assert.Contains("_operationHistory.Clear();", clearMethod);
+        Assert.DoesNotContain("recordUndo: true", clearMethod);
     }
 
     [Fact]

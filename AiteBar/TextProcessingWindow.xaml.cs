@@ -2,17 +2,21 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.Versioning;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Automation;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using Forms = System.Windows.Forms;
 
 namespace AiteBar;
@@ -28,12 +32,15 @@ public partial class TextProcessingWindow : DarkWindow
     private const double CommandGap = 16;
     private const double HorizontalWindowInsets = 80;
     private const double WorkAreaRatio = 0.9;
+    private static readonly TimeSpan StreamingUiUpdateInterval = TimeSpan.FromMilliseconds(50);
 
     private readonly TextProcessingService _service;
     private readonly AppSettingsService _settingsService;
     private readonly AiGateway _gateway;
     private readonly MainWindow? _mainWindow;
     private readonly ObservableCollection<ModelItem> _models = [];
+    private readonly TextProcessingUndoHistory _operationHistory = new(10);
+    private readonly DispatcherTimer _progressTimer;
     private CancellationTokenSource? _processingCts;
     private CancellationTokenSource? _loadModelsCts;
     private bool _isLoadingState = true;
@@ -45,23 +52,25 @@ public partial class TextProcessingWindow : DarkWindow
     private bool _hasEligibleModel;
     private bool _hasSuccessfulResult;
     private bool _isShowingOriginal;
+    private bool _isShowingDiff;
     private bool _isModifiedManually;
     private bool _hasCopiedResult;
     private string _lastUsedModelDisplay = string.Empty;
+    private string _inlineInfoStatus = string.Empty;
     private TextProcessingMode _currentMode = TextProcessingMode.Proofread;
     private string _originalText = string.Empty;
     private string _processedText = string.Empty;
     private bool _isAutoModel = true;
-    private string? _selectedConnectionId;
     private string? _selectedProviderId;
     private string? _selectedModelId;
     private string _lastOriginalText = string.Empty;
     private TextProcessingMode _lastMode;
     private bool _lastWasAutoModel = true;
-    private string? _lastConnectionId;
     private string? _lastProviderId;
     private string? _lastModelId;
     private double _requiredMinWidth = PreferredMinWidth;
+    private DateTimeOffset _processingStartedAt;
+    private bool _isProgressStatusVisible;
 
     public TextProcessingWindow(
         TextProcessingService service,
@@ -74,6 +83,8 @@ public partial class TextProcessingWindow : DarkWindow
         _gateway = new AiGateway(settingsService);
         _currentMode = ParseSavedMode(settingsService.Settings.TextProcessingLastMode);
         InitializeComponent();
+        _progressTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) =>
+            UpdateProcessingProgress(), Dispatcher);
         CmbModels.ItemsSource = _models;
         ApplyModeToUi();
         RefreshUiState();
@@ -198,6 +209,16 @@ public partial class TextProcessingWindow : DarkWindow
             e.Handled = true;
             CancelProcessing();
         }
+        else if (e.Key == Key.Z && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            e.Handled = true;
+            UndoEditor();
+        }
+        else if (e.Key == Key.Y && Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            e.Handled = true;
+            RedoEditor();
+        }
     }
 
     private void ModeTabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -245,7 +266,6 @@ public partial class TextProcessingWindow : DarkWindow
             return;
         }
         _isAutoModel = item.ModelId == null;
-        _selectedConnectionId = item.ConnectionId;
         _selectedProviderId = item.ProviderId;
         _selectedModelId = item.ModelId;
         SaveModelSelection();
@@ -283,7 +303,8 @@ public partial class TextProcessingWindow : DarkWindow
             return;
         }
 
-        _isShowingOriginal = !_isShowingOriginal;
+        _isShowingOriginal = _isShowingDiff || !_isShowingOriginal;
+        _isShowingDiff = false;
         SetEditorText(_isShowingOriginal ? _originalText : _processedText);
         RefreshUiState();
         FocusEditor();
@@ -322,7 +343,7 @@ public partial class TextProcessingWindow : DarkWindow
                 TxtEditor.SelectionLength,
                 clipboardText);
             ResetResultHistory();
-            SetEditorText(updatedText, caretIndex);
+            SetEditorText(updatedText, caretIndex, recordUndo: true);
             _isDirty = true;
             SetStatus(string.Empty);
             RefreshClipboardAvailability(showError: false);
@@ -412,6 +433,26 @@ public partial class TextProcessingWindow : DarkWindow
         }
     }
 
+    private void BtnShowDiff_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isProcessing || !_hasSuccessfulResult)
+        {
+            return;
+        }
+
+        _isShowingDiff = !_isShowingDiff;
+        _isShowingOriginal = false;
+        if (_isShowingDiff)
+        {
+            RenderDiff();
+        }
+        else
+        {
+            SetEditorText(_processedText);
+        }
+        RefreshUiState();
+    }
+
     private async Task ProcessAsync(bool repeatLast)
     {
         if (_isProcessing)
@@ -424,7 +465,6 @@ public partial class TextProcessingWindow : DarkWindow
         bool useAutoModel;
         string? providerId;
         string? modelId;
-        string? connectionId;
         if (repeatLast)
         {
             if (!_hasSuccessfulResult || string.IsNullOrWhiteSpace(_lastOriginalText))
@@ -434,10 +474,9 @@ public partial class TextProcessingWindow : DarkWindow
             input = _lastOriginalText;
             mode = _lastMode;
             useAutoModel = _lastWasAutoModel;
-            connectionId = _lastConnectionId;
             providerId = _lastProviderId;
             modelId = _lastModelId;
-            if (!useAutoModel && !TrySelectModel(connectionId, providerId, modelId))
+            if (!useAutoModel && !TrySelectModel(providerId, modelId))
             {
                 SetStatus(LocalizationService.Get("TextProcessing_ModelUnavailable"));
                 return;
@@ -447,7 +486,6 @@ public partial class TextProcessingWindow : DarkWindow
             if (useAutoModel)
             {
                 CmbModels.SelectedIndex = 0;
-                _selectedConnectionId = null;
                 _selectedProviderId = null;
                 _selectedModelId = null;
             }
@@ -458,7 +496,6 @@ public partial class TextProcessingWindow : DarkWindow
             input = TxtEditor.Text;
             mode = _currentMode;
             useAutoModel = _isAutoModel;
-            connectionId = useAutoModel ? null : _selectedConnectionId;
             providerId = useAutoModel ? null : _selectedProviderId;
             modelId = useAutoModel ? null : _selectedModelId;
             if (!GetUiState().CanProcess)
@@ -486,11 +523,12 @@ public partial class TextProcessingWindow : DarkWindow
             }
         }
 
-        AiChatRequest request = _service.BuildRequest(mode, input);
+        ProtectedText protectedInput = _service.ProtectTechnicalFragments(input);
+        AiChatRequest request = _service.BuildRequest(mode, protectedInput.Text);
         ModelItem? selected = null;
         if (!useAutoModel)
         {
-            selected = FindModel(connectionId, providerId, modelId);
+            selected = FindModel(providerId, modelId);
             if (selected == null)
             {
                 SetStatus(LocalizationService.Get("TextProcessing_ModelUnavailable"));
@@ -514,21 +552,46 @@ public partial class TextProcessingWindow : DarkWindow
                 SetStatus(LocalizationService.Get("TextProcessing_ErrorContextOverflow"));
                 return;
             }
-            request = CopyRequestWithModel(request, connectionId, providerId, modelId);
+            request = CopyRequestWithModel(request, providerId, modelId);
         }
 
         string textShownBeforeRequest = TxtEditor.Text;
         SetStatus(string.Empty);
         ClearInfoStatus();
+        _isShowingOriginal = false;
+        _isShowingDiff = false;
         _isProcessing = true;
         _isModifiedManually = false;
         _hasCopiedResult = false;
         _processingCts = new CancellationTokenSource();
+        StartProcessingProgress();
         RefreshUiState();
         try
         {
-            AiGatewayResponse response = await _gateway.GenerateAsync(request, _processingCts.Token);
-            string cleaned = _service.CleanResponse(response.Content);
+            AiGatewayStream response = await _gateway.GenerateStreamingAsync(request, _processingCts.Token);
+            var streamedResponse = new StringBuilder();
+            bool receivedContent = false;
+            long lastUiUpdate = 0;
+            await foreach (string chunk in response.Chunks)
+            {
+                streamedResponse.Append(chunk);
+                if (!receivedContent)
+                {
+                    receivedContent = true;
+                }
+                if (lastUiUpdate == 0 ||
+                    Stopwatch.GetElapsedTime(lastUiUpdate) >= StreamingUiUpdateInterval)
+                {
+                    string preview = BuildStreamingPreview(streamedResponse.ToString(), protectedInput);
+                    SetEditorText(preview);
+                    lastUiUpdate = Stopwatch.GetTimestamp();
+                }
+            }
+            string cleaned = _service.CleanResponse(
+                TextProcessingService.RestoreTechnicalFragments(
+                    streamedResponse.ToString(),
+                    protectedInput,
+                    requireAllMarkers: true));
             if (string.IsNullOrWhiteSpace(cleaned))
             {
                 SetStatus(LocalizationService.Get("TextProcessing_ErrorEmptyResponse"));
@@ -538,17 +601,22 @@ public partial class TextProcessingWindow : DarkWindow
             _processedText = cleaned;
             _hasSuccessfulResult = true;
             _isShowingOriginal = false;
+            _isShowingDiff = false;
             _isModifiedManually = false;
             _lastOriginalText = input;
             _lastMode = mode;
             _lastWasAutoModel = useAutoModel;
-            _lastConnectionId = connectionId;
             _lastProviderId = providerId;
             _lastModelId = modelId;
-            ModelItem? usedModel = FindModel(response.ConnectionId, response.ProviderId, response.ModelId);
+            ModelItem? usedModel = FindModel(response.ProviderId, response.ModelId);
             _lastUsedModelDisplay = usedModel?.Display ?? response.ModelId;
+            if (!string.Equals(textShownBeforeRequest, cleaned, StringComparison.Ordinal))
+            {
+                _operationHistory.Record(textShownBeforeRequest);
+            }
             SetEditorText(cleaned);
             _isDirty = false;
+            StopProcessingProgress();
             if (!string.IsNullOrEmpty(_lastUsedModelDisplay))
             {
                 SetInfoStatus(LocalizationService.Format("TextProcessing_ModelUsed", _lastUsedModelDisplay));
@@ -569,7 +637,13 @@ public partial class TextProcessingWindow : DarkWindow
         {
             Logger.Log(ex);
             SetEditorText(textShownBeforeRequest);
-            SetStatus(LocalizationService.Get("TextProcessing_ErrorNoModels"));
+            SetStatus(ex.InnerException switch
+            {
+                AiProviderHttpException providerError => GetProviderError(providerError),
+                HttpRequestException => LocalizationService.Get("TextProcessing_ErrorNetwork"),
+                TimeoutException => LocalizationService.Get("TextProcessing_ErrorTimeout"),
+                _ => LocalizationService.Get("TextProcessing_ErrorNoModels")
+            });
         }
         catch (AiProviderHttpException ex)
         {
@@ -597,6 +671,7 @@ public partial class TextProcessingWindow : DarkWindow
         }
         finally
         {
+            StopProcessingProgress();
             _isProcessing = false;
             _processingCts?.Dispose();
             _processingCts = null;
@@ -607,7 +682,6 @@ public partial class TextProcessingWindow : DarkWindow
 
     private static AiChatRequest CopyRequestWithModel(
         AiChatRequest request,
-        string? connectionId,
         string? providerId,
         string? modelId) => new()
     {
@@ -616,7 +690,6 @@ public partial class TextProcessingWindow : DarkWindow
         RequireFreeModel = request.RequireFreeModel,
         RequireWritingModel = request.RequireWritingModel,
         RequireExactModel = true,
-        PreferredConnectionId = connectionId,
         PreferredProviderId = providerId,
         PreferredModelId = modelId,
         RequiredContextTokens = request.RequiredContextTokens,
@@ -636,10 +709,39 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void CancelProcessing() => _processingCts?.Cancel();
 
+    private void StartProcessingProgress()
+    {
+        _processingStartedAt = DateTimeOffset.Now;
+        _isProgressStatusVisible = true;
+        UpdateProcessingProgress();
+        _progressTimer.Start();
+    }
+
+    private void UpdateProcessingProgress()
+    {
+        if (!_isProcessing || !_isProgressStatusVisible)
+        {
+            return;
+        }
+        int seconds = Math.Max(0, (int)(DateTimeOffset.Now - _processingStartedAt).TotalSeconds);
+        SetInfoStatus(LocalizationService.Format("TextProcessing_Progress", seconds));
+    }
+
+    private void StopProcessingProgress()
+    {
+        _progressTimer.Stop();
+        if (_isProgressStatusVisible)
+        {
+            _isProgressStatusVisible = false;
+            ClearInfoStatus();
+        }
+    }
+
     private void Clear()
     {
         ResetResultHistory();
         SetEditorText(string.Empty);
+        _operationHistory.Clear();
         _isDirty = false;
         SetStatus(string.Empty);
         RefreshUiState();
@@ -653,23 +755,100 @@ public partial class TextProcessingWindow : DarkWindow
         _lastOriginalText = string.Empty;
         _hasSuccessfulResult = false;
         _isShowingOriginal = false;
+        _isShowingDiff = false;
         _isModifiedManually = false;
         _hasCopiedResult = false;
         ClearInfoStatus();
     }
 
-    private void SetEditorText(string text, int? caretIndex = null)
+    private void SetEditorText(string text, int? caretIndex = null, bool recordUndo = false)
     {
+        text ??= string.Empty;
+        if (recordUndo && !string.Equals(TxtEditor.Text, text, StringComparison.Ordinal))
+        {
+            _operationHistory.Record(TxtEditor.Text);
+        }
+
         _isApplyingEditorText = true;
         try
         {
-            TxtEditor.Text = text ?? string.Empty;
+            bool restoreUndo = TxtEditor.IsUndoEnabled;
+            TxtEditor.IsUndoEnabled = false;
+            TxtEditor.Text = text;
+            TxtEditor.IsUndoEnabled = restoreUndo;
             TxtEditor.CaretIndex = Math.Clamp(caretIndex ?? TxtEditor.Text.Length, 0, TxtEditor.Text.Length);
         }
         finally
         {
             _isApplyingEditorText = false;
         }
+    }
+
+    private void UndoEditor()
+    {
+        if (_isProcessing || _isShowingOriginal)
+        {
+            return;
+        }
+        if (TxtEditor.CanUndo)
+        {
+            TxtEditor.Undo();
+            return;
+        }
+        if (_operationHistory.TryUndo(TxtEditor.Text, out string previous))
+        {
+            ResetResultHistory();
+            SetEditorText(previous);
+            _isDirty = true;
+            SetStatus(string.Empty);
+            RefreshUiState();
+            FocusEditor();
+        }
+    }
+
+    private void RedoEditor()
+    {
+        if (_isProcessing || _isShowingOriginal)
+        {
+            return;
+        }
+        if (TxtEditor.CanRedo)
+        {
+            TxtEditor.Redo();
+            return;
+        }
+        if (_operationHistory.TryRedo(TxtEditor.Text, out string next))
+        {
+            ResetResultHistory();
+            SetEditorText(next);
+            _isDirty = true;
+            SetStatus(string.Empty);
+            RefreshUiState();
+            FocusEditor();
+        }
+    }
+
+    internal static string BuildStreamingPreview(string rawText, ProtectedText protectedText)
+    {
+        string visibleText = rawText ?? string.Empty;
+        int partialMarkerLength = 0;
+        foreach (string marker in protectedText.Fragments.Keys)
+        {
+            int limit = Math.Min(visibleText.Length, marker.Length - 1);
+            for (int length = limit; length >= 2; length--)
+            {
+                if (marker.StartsWith(visibleText[^length..], StringComparison.Ordinal))
+                {
+                    partialMarkerLength = Math.Max(partialMarkerLength, length);
+                    break;
+                }
+            }
+        }
+        if (partialMarkerLength > 0)
+        {
+            visibleText = visibleText[..^partialMarkerLength];
+        }
+        return TextProcessingService.RestoreTechnicalFragments(visibleText, protectedText);
     }
 
     internal static (string Text, int CaretIndex) InsertAtSelection(
@@ -710,6 +889,8 @@ public partial class TextProcessingWindow : DarkWindow
         LimitBorder.Visibility = state.IsOverLimit ? Visibility.Visible : Visibility.Collapsed;
         TxtEditor.IsEnabled = state.CanEdit;
         TxtEditor.IsReadOnly = _isShowingOriginal;
+        TxtEditor.Visibility = _isShowingDiff ? Visibility.Collapsed : Visibility.Visible;
+        DiffViewer.Visibility = _isShowingDiff ? Visibility.Visible : Visibility.Collapsed;
         ModeProofread.IsEnabled = state.CanSelectMode;
         ModeTypography.IsEnabled = state.CanSelectMode;
         ModeCleanup.IsEnabled = state.CanSelectMode;
@@ -720,6 +901,7 @@ public partial class TextProcessingWindow : DarkWindow
         BtnClear.IsEnabled = state.CanClear;
         BtnRepeat.IsEnabled = state.CanRepeat;
         BtnToggleVersion.IsEnabled = state.CanSwitchVersion;
+        BtnShowDiff.IsEnabled = state.CanSwitchVersion;
         ToggleVersionLabel.Text = LocalizationService.Get(_isShowingOriginal
             ? "TextProcessing_ButtonShowResult"
             : "TextProcessing_ButtonShowOriginal");
@@ -746,6 +928,14 @@ public partial class TextProcessingWindow : DarkWindow
             TxtModelState.Visibility = Visibility.Visible;
             BtnOpenSettings.Visibility = Visibility.Visible;
         }
+        else if (!string.IsNullOrWhiteSpace(_inlineInfoStatus))
+        {
+            TxtModelState.Text = _inlineInfoStatus;
+            TxtModelState.Foreground = (Brush)FindResource("MutedText");
+            TxtModelState.ToolTip = _inlineInfoStatus;
+            TxtModelState.Visibility = Visibility.Visible;
+            BtnOpenSettings.Visibility = Visibility.Collapsed;
+        }
         else
         {
             TxtModelState.Visibility = Visibility.Collapsed;
@@ -756,7 +946,7 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void UpdateCommandButtonLayout()
     {
-        Button[] buttons = [BtnPaste, BtnCopy, BtnRepeat, BtnToggleVersion, BtnClear, BtnProcess];
+        Button[] buttons = [BtnPaste, BtnCopy, BtnRepeat, BtnToggleVersion, BtnShowDiff, BtnClear, BtnProcess];
         double commandWidth = buttons.Max(MeasureButtonWidth);
         commandWidth = Math.Max(commandWidth, MeasureButtonWidthForLabels(
             BtnToggleVersion,
@@ -827,18 +1017,48 @@ public partial class TextProcessingWindow : DarkWindow
         StatusBorder.Visibility = string.IsNullOrWhiteSpace(message) ? Visibility.Collapsed : Visibility.Visible;
         if (!string.IsNullOrWhiteSpace(message))
         {
-            InfoStatusBorder.Visibility = Visibility.Collapsed;
+            _inlineInfoStatus = string.Empty;
+            TxtModelState.Visibility = Visibility.Collapsed;
         }
     }
 
     private void SetInfoStatus(string message)
     {
-        TxtInfoMessage.Text = message;
-        AutomationProperties.SetName(InfoStatusBorder, message);
-        InfoStatusBorder.Visibility = string.IsNullOrWhiteSpace(message) ? Visibility.Collapsed : Visibility.Visible;
+        _inlineInfoStatus = message ?? string.Empty;
+        if (IsInitialized)
+        {
+            RefreshUiState();
+        }
     }
 
     private void ClearInfoStatus() => SetInfoStatus(string.Empty);
+
+    private void RenderDiff()
+    {
+        var paragraph = new Paragraph { Margin = new Thickness(0) };
+        foreach (TextDiffSegment segment in TextDiff.Create(_originalText, _processedText))
+        {
+            var run = new Run(segment.Text);
+            if (segment.Kind == TextDiffKind.Added)
+            {
+                run.Foreground = (Brush)FindResource("TextProcessingDiffAddedBrush");
+                run.TextDecorations = TextDecorations.Underline;
+            }
+            else if (segment.Kind == TextDiffKind.Removed)
+            {
+                run.Foreground = (Brush)FindResource("TextProcessingDiffRemovedBrush");
+                run.TextDecorations = TextDecorations.Strikethrough;
+            }
+            paragraph.Inlines.Add(run);
+        }
+        DiffViewer.Document = new FlowDocument(paragraph)
+        {
+            PagePadding = new Thickness(0),
+            FontFamily = TxtEditor.FontFamily,
+            FontSize = TxtEditor.FontSize,
+            Foreground = TxtEditor.Foreground
+        };
+    }
 
     private void ApplyModeToUi()
     {
@@ -897,12 +1117,11 @@ public partial class TextProcessingWindow : DarkWindow
         _hasEligibleModel = false;
         _models.Clear();
         string automaticLabel = LocalizationService.Get("TextProcessing_ModelAuto");
-        _models.Add(new ModelItem(null, null, null, automaticLabel, null) { FullDisplay = automaticLabel });
+        _models.Add(new ModelItem(null, null, automaticLabel, null) { FullDisplay = automaticLabel });
         CmbModels.SelectedIndex = 0;
         RefreshUiState();
-        var preferredModels = new List<ModelItem>();
-        var remainingModels = new List<ModelItem>();
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var availableModels = new List<AiModelDescriptor>();
+        var preferredIdentities = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         AiSettings? aiSettings = _settingsService.Settings.Ai;
         if (aiSettings?.Connections != null)
         {
@@ -912,66 +1131,15 @@ public partial class TextProcessingWindow : DarkWindow
                 try
                 {
                     IReadOnlyList<AiModelDescriptor> models = await _gateway.GetModelsAsync(connection, cancellationToken);
-                    var eligibleModels = models.Where(IsEligibleModel).ToList();
-
-                    // Add preferred model first if present and eligible
-                    if (!string.IsNullOrWhiteSpace(connection.PreferredModelId))
+                    foreach (AiModelDescriptor model in models.Where(IsEligibleModel))
                     {
-                        var preferredModel = eligibleModels.FirstOrDefault(m =>
-                            string.Equals(m.ModelId, connection.PreferredModelId, StringComparison.OrdinalIgnoreCase));
-                        if (preferredModel != null)
+                        availableModels.Add(model);
+                        if (string.Equals(
+                                model.ModelId,
+                                connection.PreferredModelId,
+                                StringComparison.OrdinalIgnoreCase))
                         {
-                            string identity = $"{connection.Id}\n{preferredModel.ModelId}";
-                            if (seen.Add(identity))
-                            {
-                                string connectionName = NormalizeModelText(connection.DisplayName);
-                                if (!HasVisibleModelText(connectionName))
-                                {
-                                    connectionName = NormalizeModelText(preferredModel.ProviderId);
-                                }
-                                string displayName = NormalizeModelText(preferredModel.DisplayName);
-                                if (!HasVisibleModelText(displayName))
-                                {
-                                    displayName = NormalizeModelText(preferredModel.ModelId);
-                                }
-                                if (HasVisibleModelText(displayName))
-                                {
-                                    preferredModels.Add(new ModelItem(connection.Id, preferredModel.ProviderId, preferredModel.ModelId,
-                                        displayName, preferredModel.ContextLength)
-                                    {
-                                        FullDisplay = $"{connectionName} — {displayName}"
-                                    });
-                                }
-                                eligibleModels.Remove(preferredModel);
-                            }
-                        }
-                    }
-
-                    // Add remaining eligible models
-                    foreach (AiModelDescriptor model in eligibleModels)
-                    {
-                        string identity = $"{connection.Id}\n{model.ModelId}";
-                        if (seen.Add(identity))
-                        {
-                            string connectionName = NormalizeModelText(connection.DisplayName);
-                            if (!HasVisibleModelText(connectionName))
-                            {
-                                connectionName = NormalizeModelText(model.ProviderId);
-                            }
-                            string displayName = NormalizeModelText(model.DisplayName);
-                            if (!HasVisibleModelText(displayName))
-                            {
-                                displayName = NormalizeModelText(model.ModelId);
-                            }
-                            if (!HasVisibleModelText(displayName))
-                            {
-                                continue;
-                            }
-                            remainingModels.Add(new ModelItem(connection.Id, model.ProviderId, model.ModelId,
-                                displayName, model.ContextLength)
-                            {
-                                FullDisplay = $"{connectionName} — {displayName}"
-                            });
+                            preferredIdentities.Add(CreateModelIdentity(model.ProviderId, model.ModelId));
                         }
                     }
                 }
@@ -985,16 +1153,12 @@ public partial class TextProcessingWindow : DarkWindow
                 }
             }
         }
-        // Keep auto model first, then preferred models in connection order, then sorted remaining models
-        foreach (ModelItem model in preferredModels)
+        IReadOnlyList<ModelItem> logicalModels = BuildLogicalModelItems(availableModels, preferredIdentities);
+        foreach (ModelItem model in logicalModels)
         {
             _models.Add(model);
         }
-        foreach (ModelItem model in remainingModels.OrderBy(m => m.FullDisplay, StringComparer.CurrentCultureIgnoreCase))
-        {
-            _models.Add(model);
-        }
-        _hasEligibleModel = preferredModels.Count + remainingModels.Count > 0;
+        _hasEligibleModel = logicalModels.Count > 0;
         RestoreModelSelection();
         _isLoadingModels = false;
         RefreshUiState();
@@ -1024,21 +1188,85 @@ public partial class TextProcessingWindow : DarkWindow
             CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.Format).ToArray()).Trim();
     }
 
-    private ModelItem? FindModel(string? connectionId, string? providerId, string? modelId) =>
+    internal static IReadOnlyList<ModelItem> BuildLogicalModelItems(
+        IEnumerable<AiModelDescriptor> models,
+        IReadOnlySet<string>? preferredIdentities = null)
+    {
+        ArgumentNullException.ThrowIfNull(models);
+        var grouped = new Dictionary<string, List<AiModelDescriptor>>(StringComparer.OrdinalIgnoreCase);
+        foreach (AiModelDescriptor model in models.Where(IsEligibleModel))
+        {
+            string identity = CreateModelIdentity(model.ProviderId, model.ModelId);
+            if (!grouped.TryGetValue(identity, out List<AiModelDescriptor>? routes))
+            {
+                routes = [];
+                grouped.Add(identity, routes);
+            }
+            routes.Add(model);
+        }
+
+        var items = grouped.Select(pair =>
+        {
+            AiModelDescriptor first = pair.Value[0];
+            string display = pair.Value
+                .Select(model => NormalizeModelText(model.DisplayName))
+                .FirstOrDefault(HasVisibleModelText) ?? NormalizeModelText(first.ModelId);
+            int? contextLength = pair.Value.Any(model => !model.ContextLength.HasValue)
+                ? null
+                : pair.Value.Max(model => model.ContextLength);
+            return new
+            {
+                Identity = pair.Key,
+                Item = new ModelItem(first.ProviderId, first.ModelId, display, contextLength)
+            };
+        }).ToList();
+
+        var duplicateDisplays = items
+            .GroupBy(entry => entry.Item.Display, StringComparer.CurrentCultureIgnoreCase)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .ToHashSet(StringComparer.CurrentCultureIgnoreCase);
+
+        return items
+            .Select(entry =>
+            {
+                string fullDisplay = duplicateDisplays.Contains(entry.Item.Display)
+                    ? $"{entry.Item.Display} — {GetProviderDisplayName(entry.Item.ProviderId)}"
+                    : entry.Item.Display;
+                return new
+                {
+                    entry.Identity,
+                    IsPreferred = preferredIdentities?.Contains(entry.Identity) == true,
+                    Item = entry.Item with { FullDisplay = fullDisplay }
+                };
+            })
+            .OrderByDescending(entry => entry.IsPreferred)
+            .ThenBy(entry => entry.Item.FullDisplay, StringComparer.CurrentCultureIgnoreCase)
+            .Select(entry => entry.Item)
+            .ToArray();
+    }
+
+    private static string CreateModelIdentity(string? providerId, string? modelId) =>
+        $"{providerId?.Trim()}\n{modelId?.Trim()}";
+
+    private static string GetProviderDisplayName(string? providerId) =>
+        providerId != null && AiProviderCatalog.TryGet(providerId, out AiProviderDefinition definition)
+            ? definition.DisplayName
+            : NormalizeModelText(providerId);
+
+    private ModelItem? FindModel(string? providerId, string? modelId) =>
         _models.FirstOrDefault(m =>
-            string.Equals(m.ConnectionId, connectionId, StringComparison.Ordinal) &&
             string.Equals(m.ProviderId, providerId, StringComparison.OrdinalIgnoreCase) &&
             string.Equals(m.ModelId, modelId, StringComparison.OrdinalIgnoreCase));
 
-    private bool TrySelectModel(string? connectionId, string? providerId, string? modelId)
+    private bool TrySelectModel(string? providerId, string? modelId)
     {
-        ModelItem? model = FindModel(connectionId, providerId, modelId);
+        ModelItem? model = FindModel(providerId, modelId);
         if (model == null)
         {
             return false;
         }
         CmbModels.SelectedItem = model;
-        _selectedConnectionId = model.ConnectionId;
         _selectedProviderId = model.ProviderId;
         _selectedModelId = model.ModelId;
         return true;
@@ -1058,29 +1286,18 @@ public partial class TextProcessingWindow : DarkWindow
     private void RestoreModelSelection()
     {
         AppSettings settings = _settingsService.Settings;
+        bool hadLegacyConnectionSelection =
+            !string.IsNullOrWhiteSpace(settings.TextProcessingSelectedConnectionId);
         _isAutoModel = settings.TextProcessingIsAutoModel;
         bool replacedUnavailableSelection = false;
         if (!_isAutoModel)
         {
             ModelItem? model = FindModel(
-                settings.TextProcessingSelectedConnectionId,
                 settings.TextProcessingSelectedProviderId,
                 settings.TextProcessingSelectedModelId);
-            if (model == null && string.IsNullOrWhiteSpace(settings.TextProcessingSelectedConnectionId))
-            {
-                ModelItem[] legacyMatches = _models.Where(candidate =>
-                    string.Equals(candidate.ProviderId, settings.TextProcessingSelectedProviderId, StringComparison.OrdinalIgnoreCase) &&
-                    string.Equals(candidate.ModelId, settings.TextProcessingSelectedModelId, StringComparison.OrdinalIgnoreCase))
-                    .ToArray();
-                if (legacyMatches.Length == 1)
-                {
-                    model = legacyMatches[0];
-                }
-            }
             if (model != null)
             {
                 CmbModels.SelectedItem = model;
-                _selectedConnectionId = model.ConnectionId;
                 _selectedProviderId = model.ProviderId;
                 _selectedModelId = model.ModelId;
                 SaveModelSelection();
@@ -1090,12 +1307,14 @@ public partial class TextProcessingWindow : DarkWindow
             replacedUnavailableSelection = true;
         }
         CmbModels.SelectedIndex = 0;
-        _selectedConnectionId = null;
         _selectedProviderId = null;
         _selectedModelId = null;
-        if (replacedUnavailableSelection)
+        if (replacedUnavailableSelection || hadLegacyConnectionSelection)
         {
             SaveModelSelection();
+        }
+        if (replacedUnavailableSelection)
+        {
             SetStatus(LocalizationService.Get("TextProcessing_ModelUnavailable"));
         }
     }
@@ -1105,7 +1324,7 @@ public partial class TextProcessingWindow : DarkWindow
         _settingsService.UpdateSettings(settings =>
         {
             settings.TextProcessingIsAutoModel = _isAutoModel;
-            settings.TextProcessingSelectedConnectionId = _isAutoModel ? null : _selectedConnectionId;
+            settings.TextProcessingSelectedConnectionId = null;
             settings.TextProcessingSelectedProviderId = _isAutoModel ? null : _selectedProviderId;
             settings.TextProcessingSelectedModelId = _isAutoModel ? null : _selectedModelId;
         });
@@ -1166,7 +1385,6 @@ public partial class TextProcessingWindow : DarkWindow
 }
 
 public sealed record ModelItem(
-    string? ConnectionId,
     string? ProviderId,
     string? ModelId,
     string Display,

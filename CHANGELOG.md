@@ -12,12 +12,20 @@
 ### 🇷🇺 Добавлено | 🇬🇧 Added
 - **Обработка текста**: Добавлена AI-утилита для проверки орфографии, типографики и очистки артефактов копирования с выбором подходящей бесплатной модели и повтором последней обработки.
 - **Text processing**: Added an AI utility for proofreading, typography, and copied-text cleanup with eligible free-model selection and repeat processing.
+- **Обработка текста — контроль результата**: Добавлены потоковый вывод ответа, просмотр точных изменений, Undo/Redo через `Ctrl+Z`/`Ctrl+Y` и видимый таймер выполнения.
+- **Text processing result control**: Added streamed responses, an exact changes view, `Ctrl+Z`/`Ctrl+Y` undo and redo, and a visible processing timer.
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
 - **Обработка текста — release UI**: Добавлены адаптивная компоновка, рабочая отмена, доступные состояния клавиатурного фокуса, сохранение текста сверх лимита без обрезания, восстановление окна и понятные состояния моделей, ошибок и буфера обмена.
 - **Text processing release UI**: Added responsive layout, working cancellation, accessible keyboard focus, non-destructive over-limit handling, window restoration, and clear model, error, and clipboard states.
-- **Обработка текста — надёжность**: Выбор ограничен бесплатными моделями, явная модель привязана к точному AI-подключению без скрытой подмены, ответ сохраняется без эвристического удаления содержимого, а вставка, повтор, обновление моделей, минимизация и восстановление режима приведены к стандартному поведению.
-- **Text processing reliability**: Selection is restricted to free models, an explicit model is bound to the exact AI connection without silent substitution, responses are preserved without heuristic content removal, and paste, repeat, model refresh, minimization, and mode restoration now follow standard behavior.
+- **Обработка текста — надёжность**: Выбор ограничен бесплатными моделями, одинаковая модель показывается один раз для всех API-ключей провайдера, а шлюз ротирует эти ключи без скрытой подмены выбранной модели. Ответ сохраняется без эвристического удаления содержимого; вставка, повтор, обновление моделей, минимизация и восстановление режима приведены к стандартному поведению.
+- **Text processing reliability**: Selection is restricted to free models, the same provider model appears once across all API keys, and the gateway rotates those keys without silently substituting the selected model. Responses are preserved without heuristic content removal; paste, repeat, model refresh, minimization, and mode restoration now follow standard behavior.
+- **Обработка текста — модели и технические фрагменты**: Из списка исключены генераторы изображений и видео (Nano Banana, Imagen, Veo и аналоги); URL, e-mail, пути, код, теги, версии и идентификаторы защищаются от изменения моделью. Оценка контекста учитывает кириллицу, но не выводится в интерфейсе.
+- **Text processing models and technical fragments**: Image/video generators (Nano Banana, Imagen, Veo, and equivalents) are excluded; URLs, email addresses, paths, code, tags, versions, and identifiers are protected from model edits. Internal context estimation accounts for Cyrillic without adding UI token counters.
+- **Обработка текста — надёжность streaming**: Состояние AI-подключения обновляется после завершения потока, зависший поток ограничен тайм-аутом бездействия, а обновления редактора сгруппированы для плавной работы с длинными ответами.
+- **Text processing streaming reliability**: AI connection health now updates after stream completion, stalled streams have an inactivity timeout, and editor refreshes are throttled for smooth long-response rendering.
+- **Обработка текста — строка состояния**: Сообщение об использованной модели и таймер перенесены в нижнюю строку редактора, поэтому они больше не изменяют высоту текстового поля и не обрезают счётчики.
+- **Text processing status line**: Model usage and progress now appear in the editor footer, so they no longer resize the editor or clip its counters.
 
 ## [1.11.1] - 2026-07-15
 

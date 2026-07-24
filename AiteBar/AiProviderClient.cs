@@ -4,11 +4,13 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using System.Runtime.CompilerServices;
 
 namespace AiteBar;
 
 internal sealed class AiProviderClient
 {
+    internal static readonly TimeSpan StreamInactivityTimeout = TimeSpan.FromSeconds(30);
     private static readonly HttpClient SharedHttpClient = CreateHttpClient();
     private readonly HttpClient _httpClient;
     private readonly IAiCredentialStore _credentialStore;
@@ -85,6 +87,242 @@ internal sealed class AiProviderClient
         return provider.Protocol == AiProviderProtocol.Gemini
             ? await GenerateGeminiAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false)
             : await GenerateOpenAiCompatibleAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false);
+    }
+
+    public async Task<AiProviderStream> GenerateStreamingAsync(
+        AiConnectionSettings connection,
+        AiModelDescriptor model,
+        AiChatRequest request,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        ArgumentNullException.ThrowIfNull(request);
+        if (request.Messages.Count == 0)
+        {
+            throw new ArgumentException("At least one AI chat message is required.", nameof(request));
+        }
+
+        (AiProviderDefinition provider, string apiKey) = ResolveConnection(connection);
+        return provider.Protocol == AiProviderProtocol.Gemini
+            ? await StartGeminiStreamAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false)
+            : await StartOpenAiStreamAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<AiProviderStream> StartOpenAiStreamAsync(
+        AiProviderDefinition provider,
+        string apiKey,
+        AiModelDescriptor model,
+        AiChatRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (provider.ChatCompletionsUri == null)
+        {
+            throw new InvalidOperationException($"Provider '{provider.Id}' does not define a chat endpoint.");
+        }
+
+        var payload = new Dictionary<string, object?>
+        {
+            ["model"] = model.ModelId,
+            ["messages"] = request.Messages.Select(message => new { role = message.Role, content = message.Content }).ToArray(),
+            ["max_tokens"] = Math.Clamp(request.MaxOutputTokens, 1, 32768),
+            ["stream"] = true
+        };
+        if (request.Temperature is double temperature)
+        {
+            payload["temperature"] = Math.Clamp(temperature, 0d, 2d);
+        }
+
+        var httpRequest = new HttpRequestMessage(HttpMethod.Post, provider.ChatCompletionsUri)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+        };
+        ApplyAuthentication(httpRequest, provider, apiKey);
+        HttpResponseMessage response;
+        try
+        {
+            response = await _httpClient.SendAsync(
+                httpRequest,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            httpRequest.Dispose();
+        }
+        await EnsureSuccessfulResponseAsync(response, cancellationToken).ConfigureAwait(false);
+        return new AiProviderStream(
+            provider.Id,
+            model.ModelId,
+            ReadOpenAiStreamAsync(response, cancellationToken));
+    }
+
+    private async Task<AiProviderStream> StartGeminiStreamAsync(
+        AiProviderDefinition provider,
+        string apiKey,
+        AiModelDescriptor model,
+        AiChatRequest request,
+        CancellationToken cancellationToken)
+    {
+        string modelId = Uri.EscapeDataString(model.ModelId);
+        var uri = new Uri($"https://generativelanguage.googleapis.com/v1beta/models/{modelId}:streamGenerateContent?alt=sse&key={Uri.EscapeDataString(apiKey)}");
+        var contents = request.Messages
+            .Where(message => !string.Equals(message.Role, "system", StringComparison.OrdinalIgnoreCase))
+            .Select(message => new
+            {
+                role = string.Equals(message.Role, "assistant", StringComparison.OrdinalIgnoreCase) ? "model" : "user",
+                parts = new[] { new { text = message.Content } }
+            })
+            .ToArray();
+        string systemText = string.Join("\n\n", request.Messages
+            .Where(message => string.Equals(message.Role, "system", StringComparison.OrdinalIgnoreCase))
+            .Select(message => message.Content));
+        var generationConfig = new Dictionary<string, object?>
+        {
+            ["maxOutputTokens"] = Math.Clamp(request.MaxOutputTokens, 1, 32768)
+        };
+        if (request.Temperature is double temperature)
+        {
+            generationConfig["temperature"] = Math.Clamp(temperature, 0d, 2d);
+        }
+        var payload = new Dictionary<string, object?>
+        {
+            ["contents"] = contents,
+            ["generationConfig"] = generationConfig
+        };
+        if (!string.IsNullOrWhiteSpace(systemText))
+        {
+            payload["systemInstruction"] = new { parts = new[] { new { text = systemText } } };
+        }
+
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, uri)
+        {
+            Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+        };
+        HttpResponseMessage response = await _httpClient.SendAsync(
+            httpRequest,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken).ConfigureAwait(false);
+        await EnsureSuccessfulResponseAsync(response, cancellationToken).ConfigureAwait(false);
+        return new AiProviderStream(
+            provider.Id,
+            model.ModelId,
+            ReadGeminiStreamAsync(response, cancellationToken));
+    }
+
+    private static async IAsyncEnumerable<string> ReadOpenAiStreamAsync(
+        HttpResponseMessage response,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        using (response)
+        await using (Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
+        using (var reader = new StreamReader(stream))
+        {
+            while (await ReadLineWithInactivityTimeoutAsync(
+                       reader,
+                       StreamInactivityTimeout,
+                       cancellationToken).ConfigureAwait(false) is string line)
+            {
+                string? content = ParseOpenAiStreamData(line);
+                if (!string.IsNullOrEmpty(content))
+                {
+                    yield return content;
+                }
+            }
+        }
+    }
+
+    private static async IAsyncEnumerable<string> ReadGeminiStreamAsync(
+        HttpResponseMessage response,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        using (response)
+        await using (Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
+        using (var reader = new StreamReader(stream))
+        {
+            while (await ReadLineWithInactivityTimeoutAsync(
+                       reader,
+                       StreamInactivityTimeout,
+                       cancellationToken).ConfigureAwait(false) is string line)
+            {
+                string? content = ParseGeminiStreamData(line);
+                if (!string.IsNullOrEmpty(content))
+                {
+                    yield return content;
+                }
+            }
+        }
+    }
+
+    internal static string? ParseOpenAiStreamData(string line)
+    {
+        if (!line.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+        string data = line[5..].TrimStart();
+        if (data.Length == 0 || string.Equals(data, "[DONE]", StringComparison.Ordinal))
+        {
+            return null;
+        }
+        using JsonDocument document = JsonDocument.Parse(data);
+        JsonElement root = document.RootElement;
+        return root.TryGetProperty("choices", out JsonElement choices) &&
+               choices.ValueKind == JsonValueKind.Array &&
+               choices.GetArrayLength() > 0 &&
+               choices[0].TryGetProperty("delta", out JsonElement delta) &&
+               delta.TryGetProperty("content", out JsonElement content)
+            ? ReadTextContent(content)
+            : null;
+    }
+
+    internal static string? ParseGeminiStreamData(string line)
+    {
+        if (!line.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+        string data = line[5..].TrimStart();
+        if (data.Length == 0)
+        {
+            return null;
+        }
+        using JsonDocument document = JsonDocument.Parse(data);
+        JsonElement root = document.RootElement;
+        if (!root.TryGetProperty("candidates", out JsonElement candidates) ||
+            candidates.ValueKind != JsonValueKind.Array ||
+            candidates.GetArrayLength() == 0 ||
+            !candidates[0].TryGetProperty("content", out JsonElement candidateContent) ||
+            !candidateContent.TryGetProperty("parts", out JsonElement parts) ||
+            parts.ValueKind != JsonValueKind.Array)
+        {
+            return null;
+        }
+        return string.Concat(parts.EnumerateArray()
+            .Where(part => part.TryGetProperty("text", out _))
+            .Select(part => part.GetProperty("text").GetString() ?? string.Empty));
+    }
+
+    internal static async Task<string?> ReadLineWithInactivityTimeoutAsync(
+        TextReader reader,
+        TimeSpan timeout,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(reader);
+        if (timeout <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(timeout));
+        }
+
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeoutCts.CancelAfter(timeout);
+        try
+        {
+            return await reader.ReadLineAsync(timeoutCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            throw new TimeoutException("AI provider stream stopped sending data.");
+        }
     }
 
     private async Task<AiProviderResponse> GenerateOpenAiCompatibleAsync(
@@ -326,6 +564,22 @@ internal sealed class AiProviderClient
         HttpResponseMessage response,
         CancellationToken cancellationToken)
     {
+        await EnsureSuccessfulResponseAsync(response, cancellationToken).ConfigureAwait(false);
+        Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidDataException("AI provider returned invalid JSON.", ex);
+        }
+    }
+
+    private static async Task EnsureSuccessfulResponseAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
         if (!response.IsSuccessStatusCode)
         {
             TimeSpan? retryAfter = response.Headers.RetryAfter?.Delta;
@@ -373,16 +627,8 @@ internal sealed class AiProviderClient
                 // If reading/parsing fails, just use the original message
             }
             
+            response.Dispose();
             throw new AiProviderHttpException(response.StatusCode, message, retryAfter);
-        }
-        Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-        try
-        {
-            return await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
-        }
-        catch (JsonException ex)
-        {
-            throw new InvalidDataException("AI provider returned invalid JSON.", ex);
         }
     }
 

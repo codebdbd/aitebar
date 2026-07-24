@@ -47,7 +47,7 @@ public sealed class AiProviderTests
     }
 
     [Fact]
-    public async Task Gateway_TriesNextConnectionAfterRateLimit()
+    public async Task Gateway_ExactModel_TriesNextConnectionAfterRateLimit()
     {
         var credentials = new MemoryCredentialStore();
         credentials.Write("AiteBar/AI/one", "key-one");
@@ -73,7 +73,10 @@ public sealed class AiProviderTests
 
         AiGatewayResponse response = await gateway.GenerateAsync(new AiChatRequest
         {
-            Messages = [new AiChatMessage("user", "hello")]
+            Messages = [new AiChatMessage("user", "hello")],
+            PreferredProviderId = "cerebras",
+            PreferredModelId = "cerebras-llama-3.3-70b",
+            RequireExactModel = true
         });
 
         Assert.Equal("ok", response.Content);
@@ -81,7 +84,46 @@ public sealed class AiProviderTests
         Assert.Contains("key-one", handler.SeenKeys);
         Assert.Contains("key-two", handler.SeenKeys);
         Assert.Equal(AiConnectionState.CoolingDown,
-            gateway.GetQuotaStatus(settingsService.Settings.Ai.Connections[0])?.State);
+            gateway.GetQuotaStatus(
+                settingsService.Settings.Ai.Connections[0],
+                "cerebras-llama-3.3-70b")?.State);
+    }
+
+    [Fact]
+    public async Task Gateway_AutomaticMode_ExhaustsSameModelRoutesBeforeChangingModel()
+    {
+        var credentials = new MemoryCredentialStore();
+        credentials.Write("AiteBar/AI/one", "key-one");
+        credentials.Write("AiteBar/AI/two", "key-two");
+        var handler = new ModelFirstRoutingHandler();
+        var client = new AiProviderClient(new HttpClient(handler), credentials);
+        var settingsService = new AppSettingsService
+        {
+            Settings = new AppSettings
+            {
+                Ai = new AiSettings
+                {
+                    FreeTierOnly = true,
+                    ProviderOrder = ["cerebras"],
+                    Connections =
+                    [
+                        Connection("one", "cerebras", "AiteBar/AI/one"),
+                        Connection("two", "cerebras", "AiteBar/AI/two")
+                    ]
+                }
+            }
+        };
+        settingsService.Settings.Ai.Connections[1].PreferredModelId = "model-b";
+        var gateway = new AiGateway(settingsService, client, TimeProvider.System);
+
+        AiGatewayResponse response = await gateway.GenerateAsync(new AiChatRequest
+        {
+            Messages = [new AiChatMessage("user", "hello")],
+            RequireFreeModel = true
+        });
+
+        Assert.Equal("model-a", response.ModelId);
+        Assert.Equal(["key-one:model-a", "key-two:model-a"], handler.GenerationAttempts);
     }
 
     [Fact]
@@ -131,20 +173,20 @@ public sealed class AiProviderTests
     }
 
     [Fact]
-    public void Gateway_ExactSelection_UsesOnlyRequestedConnectionAndNeverFallsBackToAnotherModel()
+    public void Gateway_ExactSelection_UsesAllRequestedProviderConnectionsAndNeverChangesModel()
     {
         var settingsService = new AppSettingsService();
         AiConnectionSettings first = Connection("first", "cerebras", "AiteBar/AI/first");
-        AiConnectionSettings selectedConnection = Connection("selected", "cerebras", "AiteBar/AI/selected");
+        AiConnectionSettings second = Connection("second", "cerebras", "AiteBar/AI/second");
+        AiConnectionSettings otherProvider = Connection("other-provider", "groq", "AiteBar/AI/other-provider");
         var settings = new AiSettings
         {
-            Connections = [first, selectedConnection]
+            Connections = [first, second, otherProvider]
         };
         var gateway = new AiGateway(settingsService);
         var request = new AiChatRequest
         {
-            PreferredConnectionId = selectedConnection.Id,
-            PreferredProviderId = selectedConnection.ProviderId,
+            PreferredProviderId = "cerebras",
             PreferredModelId = "wanted",
             RequireExactModel = true,
             RequireFreeModel = true
@@ -153,23 +195,26 @@ public sealed class AiProviderTests
         IReadOnlyList<AiConnectionSettings> candidates = gateway.BuildCandidates(settings, request);
         AiModelDescriptor? missing = AiGateway.SelectModel(
             settings,
-            selectedConnection,
+            second,
             [Model("other", AiCostStatus.VerifiedFree)],
             request);
         AiModelDescriptor wanted = Model("wanted", AiCostStatus.VerifiedFree);
         AiModelDescriptor? selected = AiGateway.SelectModel(
             settings,
-            selectedConnection,
+            second,
             [Model("other", AiCostStatus.VerifiedFree), wanted],
             request);
-        selectedConnection.PreferredModelId = "other";
+        second.PreferredModelId = "other";
         AiModelDescriptor? noExplicitModel = AiGateway.SelectModel(
             settings,
-            selectedConnection,
+            second,
             [Model("other", AiCostStatus.VerifiedFree)],
             new AiChatRequest { RequireExactModel = true });
 
-        Assert.Collection(candidates, connection => Assert.Equal("selected", connection.Id));
+        Assert.Collection(
+            candidates,
+            connection => Assert.Equal("first", connection.Id),
+            connection => Assert.Equal("second", connection.Id));
         Assert.Null(missing);
         Assert.Same(wanted, selected);
         Assert.Null(noExplicitModel);
@@ -308,6 +353,41 @@ public sealed class AiProviderTests
             }
             return Task.FromResult(Json(HttpStatusCode.OK,
                 "{\"choices\":[{\"message\":{\"content\":\"ok\"}}],\"usage\":{\"prompt_tokens\":1,\"completion_tokens\":1}}"));
+        }
+
+        private static HttpResponseMessage Json(HttpStatusCode statusCode, string json) => new(statusCode)
+        {
+            Content = new StringContent(json, Encoding.UTF8, "application/json")
+        };
+    }
+
+    private sealed class ModelFirstRoutingHandler : HttpMessageHandler
+    {
+        public List<string> GenerationAttempts { get; } = [];
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            string key = request.Headers.Authorization?.Parameter ?? string.Empty;
+            if (request.Method == HttpMethod.Get)
+            {
+                return Json(HttpStatusCode.OK,
+                    "{\"data\":[" +
+                    "{\"id\":\"model-a\",\"name\":\"Model A\"}," +
+                    "{\"id\":\"model-b\",\"name\":\"Model B\"}]}");
+            }
+
+            string payload = await request.Content!.ReadAsStringAsync(cancellationToken);
+            using JsonDocument document = JsonDocument.Parse(payload);
+            string modelId = document.RootElement.GetProperty("model").GetString() ?? string.Empty;
+            GenerationAttempts.Add($"{key}:{modelId}");
+            if (key == "key-one" && modelId == "model-a")
+            {
+                return Json(HttpStatusCode.TooManyRequests, "{\"error\":{\"message\":\"limited\"}}");
+            }
+            return Json(HttpStatusCode.OK,
+                $"{{\"model\":\"{modelId}\",\"choices\":[{{\"message\":{{\"content\":\"ok\"}}}}]}}");
         }
 
         private static HttpResponseMessage Json(HttpStatusCode statusCode, string json) => new(statusCode)

@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net;
+using System.Runtime.CompilerServices;
 
 namespace AiteBar;
 
@@ -34,42 +35,35 @@ public sealed class AiGateway
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(request);
-        AppSettings appSettings = _settingsService.Settings;
-        AiSettings settings = appSettings.Ai ?? new AiSettings();
+        AiSettings settings = _settingsService.Settings.Ai ?? new AiSettings();
         IReadOnlyList<AiConnectionSettings> candidates = BuildCandidates(settings, request);
         if (candidates.Count == 0)
         {
             throw new NoAvailableConnectionException("No enabled AI connections are configured.");
         }
 
-        Exception? lastError = null;
-        foreach (AiConnectionSettings connection in candidates)
+        (IReadOnlyList<AiRoute> routes, Exception? lastError) =
+            await BuildRoutesAsync(settings, request, candidates, cancellationToken).ConfigureAwait(false);
+        foreach (AiRoute route in routes)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (!IsConnectionAvailable(connection))
+            if (!IsRouteAvailable(route.Connection, route.Model.ModelId))
             {
                 continue;
             }
 
             try
             {
-                IReadOnlyList<AiModelDescriptor> models = await GetModelsCachedAsync(connection, cancellationToken).ConfigureAwait(false);
-                AiModelDescriptor? model = SelectModel(settings, connection, models, request);
-                if (model == null)
-                {
-                    continue;
-                }
-
                 AiProviderResponse response = await _providerClient.GenerateAsync(
-                    connection,
-                    model,
+                    route.Connection,
+                    route.Model,
                     request,
                     cancellationToken).ConfigureAwait(false);
-                MarkSuccessful(connection);
+                MarkSuccessful(route.Connection, route.Model.ModelId);
                 return new AiGatewayResponse(
                     response.Content,
                     response.ProviderId,
-                    connection.Id,
+                    route.Connection.Id,
                     response.ModelId,
                     response.PromptTokens,
                     response.CompletionTokens);
@@ -77,12 +71,12 @@ public sealed class AiGateway
             catch (AiProviderHttpException ex)
             {
                 lastError = ex;
-                ApplyFailure(connection, ex);
+                ApplyFailure(route.Connection, route.Model.ModelId, ex);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
                 lastError = ex;
-                ApplyTemporaryConnectionFailure(connection, ex.Message);
+                ApplyTemporaryConnectionFailure(route.Connection, ex.Message);
             }
         }
 
@@ -91,20 +85,130 @@ public sealed class AiGateway
             lastError);
     }
 
+    public async Task<AiGatewayStream> GenerateStreamingAsync(
+        AiChatRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        AiSettings settings = _settingsService.Settings.Ai ?? new AiSettings();
+        IReadOnlyList<AiConnectionSettings> candidates = BuildCandidates(settings, request);
+        if (candidates.Count == 0)
+        {
+            throw new NoAvailableConnectionException("No enabled AI connections are configured.");
+        }
+
+        (IReadOnlyList<AiRoute> routes, Exception? lastError) =
+            await BuildRoutesAsync(settings, request, candidates, cancellationToken).ConfigureAwait(false);
+        foreach (AiRoute route in routes)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!IsRouteAvailable(route.Connection, route.Model.ModelId))
+            {
+                continue;
+            }
+
+            try
+            {
+                AiProviderStream stream = await _providerClient.GenerateStreamingAsync(
+                    route.Connection,
+                    route.Model,
+                    request,
+                    cancellationToken).ConfigureAwait(false);
+                return new AiGatewayStream(
+                    stream.ProviderId,
+                    route.Connection.Id,
+                    stream.ModelId,
+                    ObserveStreamAsync(
+                        route.Connection,
+                        route.Model.ModelId,
+                        stream.Chunks,
+                        cancellationToken));
+            }
+            catch (AiProviderHttpException ex)
+            {
+                lastError = ex;
+                ApplyFailure(route.Connection, route.Model.ModelId, ex);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                lastError = ex;
+                ApplyTemporaryConnectionFailure(route.Connection, ex.Message);
+            }
+        }
+
+        throw new NoAvailableConnectionException(
+            "No configured AI connection is currently available.",
+            lastError);
+    }
+
+    private async IAsyncEnumerable<string> ObserveStreamAsync(
+        AiConnectionSettings connection,
+        string modelId,
+        IAsyncEnumerable<string> chunks,
+        [EnumeratorCancellation] CancellationToken cancellationToken)
+    {
+        await using IAsyncEnumerator<string> enumerator = chunks.GetAsyncEnumerator(cancellationToken);
+        while (true)
+        {
+            bool hasNext;
+            try
+            {
+                hasNext = await enumerator.MoveNextAsync().ConfigureAwait(false);
+            }
+            catch (AiProviderHttpException ex)
+            {
+                ApplyFailure(connection, modelId, ex);
+                throw;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                ApplyTemporaryConnectionFailure(connection, ex.Message);
+                throw;
+            }
+
+            if (!hasNext)
+            {
+                MarkSuccessful(connection, modelId);
+                yield break;
+            }
+            yield return enumerator.Current;
+        }
+    }
+
     internal AiConnectionRuntimeStatus? GetConnectionStatus(string connectionId) =>
         _connectionStatuses.TryGetValue(connectionId, out AiConnectionRuntimeStatus? status)
             ? status
             : null;
 
-    internal AiConnectionRuntimeStatus? GetQuotaStatus(AiConnectionSettings connection) =>
-        _quotaStatuses.TryGetValue(GetQuotaKey(connection), out AiConnectionRuntimeStatus? status)
-            ? status
-            : null;
+    internal AiConnectionRuntimeStatus? GetQuotaStatus(
+        AiConnectionSettings connection,
+        string? modelId = null)
+    {
+        if (!string.IsNullOrWhiteSpace(modelId))
+        {
+            return _quotaStatuses.TryGetValue(GetQuotaKey(connection, modelId), out AiConnectionRuntimeStatus? status)
+                ? status
+                : null;
+        }
+
+        string prefix = GetQuotaKeyPrefix(connection);
+        return _quotaStatuses
+            .Where(pair => pair.Key.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            .OrderByDescending(pair => pair.Value.UpdatedAt)
+            .Select(pair => pair.Value)
+            .FirstOrDefault();
+    }
 
     internal void ResetConnection(string connectionId)
     {
         _connectionStatuses.TryRemove(connectionId, out _);
         _modelCache.TryRemove(connectionId, out _);
+        string quotaMarker = $":{connectionId}:";
+        foreach (string key in _quotaStatuses.Keys.Where(key =>
+                     key.Contains(quotaMarker, StringComparison.Ordinal)))
+        {
+            _quotaStatuses.TryRemove(key, out _);
+        }
     }
 
     internal void InvalidateModelCache(string connectionId) =>
@@ -117,7 +221,9 @@ public sealed class AiGateway
         return await GetModelsCachedAsync(connection, cancellationToken).ConfigureAwait(false);
     }
 
-    internal IReadOnlyList<AiConnectionSettings> BuildCandidates(AiSettings settings, AiChatRequest request)
+    internal IReadOnlyList<AiConnectionSettings> BuildCandidates(
+        AiSettings settings,
+        AiChatRequest request)
     {
         IEnumerable<AiConnectionSettings> enabledConnections = (settings.Connections ?? [])
             .Where(connection => connection.IsEnabled && AiProviderCatalog.TryGet(connection.ProviderId, out _));
@@ -129,6 +235,13 @@ public sealed class AiGateway
                     request.PreferredConnectionId,
                     StringComparison.Ordinal))
                 .ToArray();
+        }
+        if (request.RequireExactModel && !string.IsNullOrWhiteSpace(request.PreferredProviderId))
+        {
+            enabledConnections = enabledConnections.Where(connection => string.Equals(
+                connection.ProviderId,
+                request.PreferredProviderId,
+                StringComparison.OrdinalIgnoreCase));
         }
 
         var providerOrder = new List<string>();
@@ -150,46 +263,110 @@ public sealed class AiGateway
             .ToArray();
     }
 
-    private bool IsConnectionAvailable(AiConnectionSettings connection)
+    private async Task<(IReadOnlyList<AiRoute> Routes, Exception? LastError)> BuildRoutesAsync(
+        AiSettings settings,
+        AiChatRequest request,
+        IReadOnlyList<AiConnectionSettings> connections,
+        CancellationToken cancellationToken)
     {
-        DateTimeOffset now = _timeProvider.GetUtcNow();
-        if (_connectionStatuses.TryGetValue(connection.Id, out AiConnectionRuntimeStatus? connectionStatus))
+        var routeGroups = new Dictionary<string, List<AiRoute>>(StringComparer.OrdinalIgnoreCase);
+        var groupOrder = new List<string>();
+        Exception? lastError = null;
+
+        foreach (AiConnectionSettings connection in connections)
         {
-            if (connectionStatus.State is AiConnectionState.InvalidCredential or AiConnectionState.PermissionDenied)
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!IsConnectionAvailable(connection))
             {
-                return false;
+                continue;
             }
-            if (connectionStatus.CooldownUntil > now)
+
+            try
             {
-                return false;
+                IReadOnlyList<AiModelDescriptor> models =
+                    await GetModelsCachedAsync(connection, cancellationToken).ConfigureAwait(false);
+                foreach (AiModelDescriptor model in GetEligibleModels(settings, connection, models, request))
+                {
+                    string identity = CreateModelIdentity(model.ProviderId, model.ModelId);
+                    if (!routeGroups.TryGetValue(identity, out List<AiRoute>? routes))
+                    {
+                        routes = [];
+                        routeGroups.Add(identity, routes);
+                        groupOrder.Add(identity);
+                    }
+                    if (!routes.Any(route => string.Equals(
+                            route.Connection.Id,
+                            connection.Id,
+                            StringComparison.Ordinal)))
+                    {
+                        routes.Add(new AiRoute(connection, model));
+                    }
+                }
+            }
+            catch (AiProviderHttpException ex)
+            {
+                lastError = ex;
+                ApplyFailure(connection, null, ex);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                lastError = ex;
+                ApplyTemporaryConnectionFailure(connection, ex.Message);
             }
         }
 
-        if (_quotaStatuses.TryGetValue(GetQuotaKey(connection), out AiConnectionRuntimeStatus? quotaStatus) &&
-            quotaStatus.CooldownUntil > now)
+        return (
+            groupOrder.SelectMany(identity => routeGroups[identity]).ToArray(),
+            lastError);
+    }
+
+    private bool IsConnectionAvailable(AiConnectionSettings connection)
+    {
+        DateTimeOffset now = _timeProvider.GetUtcNow();
+        if (!_connectionStatuses.TryGetValue(connection.Id, out AiConnectionRuntimeStatus? status))
+        {
+            return true;
+        }
+        if (status.State is AiConnectionState.InvalidCredential or AiConnectionState.PermissionDenied)
         {
             return false;
         }
-        return true;
+        return status.CooldownUntil <= now;
     }
+
+    private bool IsRouteAvailable(AiConnectionSettings connection, string modelId)
+    {
+        if (!IsConnectionAvailable(connection))
+        {
+            return false;
+        }
+
+        DateTimeOffset now = _timeProvider.GetUtcNow();
+        return !HasActiveQuotaStatus(connection, modelId, now) &&
+               !HasActiveQuotaStatus(connection, null, now);
+    }
+
+    private bool HasActiveQuotaStatus(
+        AiConnectionSettings connection,
+        string? modelId,
+        DateTimeOffset now) =>
+        _quotaStatuses.TryGetValue(GetQuotaKey(connection, modelId), out AiConnectionRuntimeStatus? status) &&
+        status.CooldownUntil > now;
 
     private async Task<IReadOnlyList<AiModelDescriptor>> GetModelsCachedAsync(
         AiConnectionSettings connection,
         CancellationToken cancellationToken)
     {
         DateTimeOffset now = _timeProvider.GetUtcNow();
-        // First check without lock for fast path
         if (_modelCache.TryGetValue(connection.Id, out CachedModels? cached) &&
             now - cached.RefreshedAt < ModelCacheLifetime)
         {
             return cached.Models;
         }
 
-        // Enter lock for cache update
         await _modelCacheSemaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            // Double-check after acquiring lock
             now = _timeProvider.GetUtcNow();
             if (_modelCache.TryGetValue(connection.Id, out cached) &&
                 now - cached.RefreshedAt < ModelCacheLifetime)
@@ -197,8 +374,8 @@ public sealed class AiGateway
                 return cached.Models;
             }
 
-            // Actually fetch the models
-            IReadOnlyList<AiModelDescriptor> models = await _providerClient.GetModelsAsync(connection, cancellationToken).ConfigureAwait(false);
+            IReadOnlyList<AiModelDescriptor> models =
+                await _providerClient.GetModelsAsync(connection, cancellationToken).ConfigureAwait(false);
             _modelCache[connection.Id] = new CachedModels(models, now);
             return models;
         }
@@ -209,6 +386,13 @@ public sealed class AiGateway
     }
 
     internal static AiModelDescriptor? SelectModel(
+        AiSettings settings,
+        AiConnectionSettings connection,
+        IReadOnlyList<AiModelDescriptor> models,
+        AiChatRequest request) =>
+        GetEligibleModels(settings, connection, models, request).FirstOrDefault();
+
+    private static IReadOnlyList<AiModelDescriptor> GetEligibleModels(
         AiSettings settings,
         AiConnectionSettings connection,
         IReadOnlyList<AiModelDescriptor> models,
@@ -237,24 +421,29 @@ public sealed class AiGateway
         if (request.RequireExactModel)
         {
             return string.IsNullOrWhiteSpace(requestedModel)
-                ? null
-                : candidates.FirstOrDefault(model =>
-                    string.Equals(model.ModelId, requestedModel, StringComparison.OrdinalIgnoreCase));
+                ? []
+                : candidates.Where(model => string.Equals(
+                    model.ModelId,
+                    requestedModel,
+                    StringComparison.OrdinalIgnoreCase)).ToArray();
         }
-        if (!string.IsNullOrWhiteSpace(requestedModel))
+        if (string.IsNullOrWhiteSpace(requestedModel))
         {
-            AiModelDescriptor? selected = candidates.FirstOrDefault(model =>
-                string.Equals(model.ModelId, requestedModel, StringComparison.OrdinalIgnoreCase));
-            if (selected != null)
-            {
-                return selected;
-            }
+            return candidates;
         }
 
-        return candidates.FirstOrDefault();
+        return candidates
+            .OrderByDescending(model => string.Equals(
+                model.ModelId,
+                requestedModel,
+                StringComparison.OrdinalIgnoreCase))
+            .ToArray();
     }
 
-    private void ApplyFailure(AiConnectionSettings connection, AiProviderHttpException exception)
+    private void ApplyFailure(
+        AiConnectionSettings connection,
+        string? modelId,
+        AiProviderHttpException exception)
     {
         DateTimeOffset now = _timeProvider.GetUtcNow();
         switch (exception.StatusCode)
@@ -268,14 +457,14 @@ public sealed class AiGateway
                     AiConnectionState.PermissionDenied, null, exception.Message, now);
                 break;
             case HttpStatusCode.TooManyRequests:
-                _quotaStatuses[GetQuotaKey(connection)] = new(
+                _quotaStatuses[GetQuotaKey(connection, modelId)] = new(
                     AiConnectionState.CoolingDown,
                     now + (exception.RetryAfter ?? TimeSpan.FromMinutes(1)),
                     exception.Message,
                     now);
                 break;
             case HttpStatusCode.PaymentRequired:
-                _quotaStatuses[GetQuotaKey(connection)] = new(
+                _quotaStatuses[GetQuotaKey(connection, modelId)] = new(
                     AiConnectionState.QuotaExhausted,
                     now + TimeSpan.FromHours(24),
                     exception.Message,
@@ -297,15 +486,23 @@ public sealed class AiGateway
             now);
     }
 
-    private void MarkSuccessful(AiConnectionSettings connection)
+    private void MarkSuccessful(AiConnectionSettings connection, string modelId)
     {
         DateTimeOffset now = _timeProvider.GetUtcNow();
         _connectionStatuses[connection.Id] = new(AiConnectionState.Available, null, null, now);
-        _quotaStatuses.TryRemove(GetQuotaKey(connection), out _);
+        _quotaStatuses.TryRemove(GetQuotaKey(connection, modelId), out _);
+        _quotaStatuses.TryRemove(GetQuotaKey(connection, null), out _);
     }
 
-    private static string GetQuotaKey(AiConnectionSettings connection) =>
-        $"{connection.ProviderId}:{connection.Id}";
+    private static string CreateModelIdentity(string providerId, string modelId) =>
+        $"{providerId.Trim()}\n{modelId.Trim()}";
 
+    private static string GetQuotaKeyPrefix(AiConnectionSettings connection) =>
+        $"{connection.ProviderId}:{connection.Id}:";
+
+    private static string GetQuotaKey(AiConnectionSettings connection, string? modelId) =>
+        $"{GetQuotaKeyPrefix(connection)}{(string.IsNullOrWhiteSpace(modelId) ? "*" : modelId.Trim())}";
+
+    private sealed record AiRoute(AiConnectionSettings Connection, AiModelDescriptor Model);
     private sealed record CachedModels(IReadOnlyList<AiModelDescriptor> Models, DateTimeOffset RefreshedAt);
 }

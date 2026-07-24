@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace AiteBar;
 
@@ -6,7 +8,9 @@ public sealed partial class TextProcessingService
 {
     public const int MaxInputLength = 50_000;
     public const int ContextReservePercent = 15;
-    public const double CharsPerToken = 4.0;
+    public const double LatinCharsPerToken = 4.0;
+    public const double CyrillicCharsPerToken = 2.8;
+    public const double MixedCharsPerToken = 3.5;
 
     public string GetSystemPrompt(TextProcessingMode mode) => mode switch
     {
@@ -18,7 +22,7 @@ public sealed partial class TextProcessingService
 
     public AiChatRequest BuildRequest(TextProcessingMode mode, string text, int? maxOutputTokens = null)
     {
-        string systemPrompt = GetSystemPrompt(mode);
+        string systemPrompt = GetSystemPrompt(mode) + ProtectedMarkerInstruction;
         int estimated = EstimateTokens(systemPrompt) + EstimateTokens(text);
         int outputBudget = Math.Max(estimated, text.Length / 2);
         if (maxOutputTokens.HasValue)
@@ -63,7 +67,77 @@ public sealed partial class TextProcessingService
             return 0;
         }
 
-        return (int)Math.Ceiling(text.Length / CharsPerToken);
+        int cyrillicLetters = 0;
+        int latinLetters = 0;
+        foreach (char character in text)
+        {
+            if (character is >= '\u0400' and <= '\u052F')
+            {
+                cyrillicLetters++;
+            }
+            else if (character is >= 'A' and <= 'Z' or >= 'a' and <= 'z')
+            {
+                latinLetters++;
+            }
+        }
+
+        double charsPerToken = (cyrillicLetters, latinLetters) switch
+        {
+            (> 0, 0) => CyrillicCharsPerToken,
+            (0, > 0) => LatinCharsPerToken,
+            (> 0, > 0) => MixedCharsPerToken,
+            _ => LatinCharsPerToken
+        };
+        return (int)Math.Ceiling(text.Length / charsPerToken);
+    }
+
+    public ProtectedText ProtectTechnicalFragments(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return new ProtectedText(
+                text ?? string.Empty,
+                new Dictionary<string, string>(StringComparer.Ordinal));
+        }
+
+        string markerPrefix;
+        do
+        {
+            markerPrefix = $"__AITEBAR_PROTECTED_{Guid.NewGuid():N}_";
+        }
+        while (text.Contains(markerPrefix, StringComparison.Ordinal));
+
+        var fragments = new Dictionary<string, string>(StringComparer.Ordinal);
+        string protectedValue = TechnicalFragmentRegex().Replace(text, match =>
+        {
+            string marker = $"{markerPrefix}{fragments.Count:D4}__";
+            fragments.Add(marker, match.Value);
+            return marker;
+        });
+        return new ProtectedText(protectedValue, fragments);
+    }
+
+    public static string RestoreTechnicalFragments(
+        string text,
+        ProtectedText protectedText,
+        bool requireAllMarkers = false)
+    {
+        string restored = text ?? string.Empty;
+        foreach ((string marker, string value) in protectedText.Fragments)
+        {
+            if (requireAllMarkers)
+            {
+                int firstIndex = restored.IndexOf(marker, StringComparison.Ordinal);
+                if (firstIndex < 0 ||
+                    restored.IndexOf(marker, firstIndex + marker.Length, StringComparison.Ordinal) >= 0)
+                {
+                    throw new InvalidDataException(
+                        "The AI response removed or duplicated a protected technical fragment marker.");
+                }
+            }
+            restored = restored.Replace(marker, value, StringComparison.Ordinal);
+        }
+        return restored;
     }
 
     internal static bool IsSuitableForWritingModel(AiModelDescriptor model)
@@ -73,10 +147,39 @@ public sealed partial class TextProcessingService
         [
             "whisper", "speech", "audio", "transcrib", "tts",
             "embedding", "rerank", "moderation", "prompt-guard", "prompt guard",
-            "safety gpt"
+            "safety gpt",
+            "nano banana", "imagen", "veo",
+            "image generation", "image-generation", "image_generation",
+            "image preview", "image-preview", "image_preview",
+            "generate-image", "generate_image", "generate image",
+            "video generation", "video-generation", "video_generation",
+            "generate-video", "generate_video", "generate video"
         ];
-        return !excludedTerms.Any(searchable.Contains);
+        if (excludedTerms.Any(searchable.Contains))
+        {
+            return false;
+        }
+
+        string modelId = model.ModelId.ToLowerInvariant();
+        return !modelId.EndsWith("-image", StringComparison.Ordinal) &&
+               !modelId.EndsWith("/image", StringComparison.Ordinal) &&
+               !modelId.EndsWith("-video", StringComparison.Ordinal) &&
+               !modelId.EndsWith("/video", StringComparison.Ordinal);
     }
+
+    [GeneratedRegex(
+        """
+        ```[\s\S]*?```|`[^`\r\n]+`|https?://[^\s<>"']+|www\.[^\s<>"']+|[\w.!#$%&'*+/=?^`{|}~-]+@[\w-]+(?:\.[\w-]+)+|(?:[A-Za-z]:\\|\\\\)[^\s<>:"|?*]+|(?<!\w)/(?:[^\s/]+/)*[^\s/]+|</?[A-Za-z][^>\r\n]*>|\$\{[^}\r\n]+\}|\{\{[^}\r\n]+\}\}|%[A-Za-z_][A-Za-z0-9_]*%|\b[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\b|\bv?\d+(?:\.\d+){1,3}(?:[-+][A-Za-z0-9.-]+)?\b
+        """,
+        RegexOptions.CultureInvariant)]
+    private static partial Regex TechnicalFragmentRegex();
+
+    private const string ProtectedMarkerInstruction =
+        """
+
+        Фрагменты вида __AITEBAR_PROTECTED_...__ являются служебными маркерами защищённого текста.
+        Копируй каждый такой маркер в ответ ровно один раз, без любых изменений, пробелов или перестановки символов.
+        """;
 
     private const string ProofreadPrompt =
         """
@@ -175,3 +278,7 @@ public sealed partial class TextProcessingService
         Верни только очищенный текст. Не добавляй пояснений, заголовков, списка удалённых элементов, Markdown-обёртки или фраз вроде "Готово" и "Очищенный текст".
         """;
 }
+
+public sealed record ProtectedText(
+    string Text,
+    IReadOnlyDictionary<string, string> Fragments);

@@ -1252,6 +1252,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ButtonShowResult" xml:space="preserve"><value>Показать результат</value></data>
   <data name="TextProcessing_ButtonBeforeProcessing" xml:space="preserve"><value>До обработки</value></data>
   <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>После обработки</value></data>
+  <data name="TextProcessing_ButtonShowDiff" xml:space="preserve"><value>Показать изменения</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Очистить</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Отменить</value></data>
   <data name="TextProcessing_ButtonProcess" xml:space="preserve"><value>Обработать</value></data>
@@ -1273,6 +1274,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_Copied" xml:space="preserve"><value>Скопировано</value></data>
   <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Открыть настройки ИИ</value></data>
   <data name="TextProcessing_ModelUsed" xml:space="preserve"><value>Использована: {0}</value></data>
+  <data name="TextProcessing_Progress" xml:space="preserve"><value>Обработка… {0} с</value></data>
   <data name="TextProcessing_RefreshModels" xml:space="preserve"><value>Обновить список моделей</value></data>
   <data name="TextProcessing_ErrorEmptyInput" xml:space="preserve"><value>Введите текст для обработки.</value></data>
   <data name="TextProcessing_ModelUnavailable" xml:space="preserve"><value>Ранее выбранная модель больше недоступна. Включён автоматический выбор.</value></data>

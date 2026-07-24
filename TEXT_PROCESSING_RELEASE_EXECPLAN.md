@@ -8,6 +8,11 @@ After this work, a Windows user can open AiteBar's Text Processing utility, ente
 
 ## Progress
 
+- [x] (2026-07-25) Replaced connection-qualified catalogue rows with one logical row per provider/model pair, migrated saved selection away from connection identity, and routed an exact model across every enabled key that exposes it.
+- [x] (2026-07-25) Added regression tests for catalogue deduplication, exact-model key failover, refusal to substitute another model, and model-first automatic routing.
+- [x] (2026-07-25) Ran whitespace validation, a sequential Release solution build, focused routing tests, and the complete 897-test project with clean results.
+- [x] (2026-07-24) Closed the final streaming release blockers: success is recorded only after complete enumeration, failures update connection health, reads have a reset-on-activity timeout, editor updates are throttled, both protocol families have complete fake-HTTP tests, and the minimum-height layout test includes the diff command.
+- [x] (2026-07-24) Completed the post-audit improvements: excluded image/video generators, protected technical fragments, improved internal context estimation, added bounded Undo/Redo, progress feedback, diff view, provider streaming, tests, and documentation.
 - [x] (2026-07-22 01:35Z) Reviewed `PLANS.md`, the current working tree, the product specification, and the initial UI implementation.
 - [x] (2026-07-22 02:05Z) Inventoried the service, gateway, settings, localization, reusable styles, historical ViewModel, and tests while preserving unrelated working-tree changes.
 - [x] (2026-07-22 02:32Z) Implemented adaptive, theme-consistent, accessible XAML with the complete release action set and visible data-transfer notice.
@@ -41,6 +46,10 @@ After this work, a Windows user can open AiteBar's Text Processing utility, ente
 
 ## Surprises & Discoveries
 
+- Observation: The visible catalogue treats an API connection as part of a model's identity, and exact selection later restricts routing to that same connection.
+  Evidence: `TextProcessingWindow.LoadModelsAsync` deduplicates with `connection.Id + model.ModelId`, while `CopyRequestWithModel` supplies `PreferredConnectionId` and `AiGateway.BuildCandidates` then returns only that connection.
+- Observation: Parallel solution builds can race while creating the isolated test output tree on this Windows workspace even after a complete test build succeeds there.
+  Evidence: The parallel build reported access denied under the isolated `AiteBar.Tests` tree; rerunning the same Release build with `-m:1 -nr:false` completed with zero warnings and zero errors.
 - Observation: The initial Release build could not complete because WPF's markup compiler was denied access to `AiteBar/obj/Release/net10.0-windows/win-x64/AiteBar_MarkupCompile.cache`.
   Evidence: `dotnet build .\AiteBar.sln -c Release --no-restore` reported `MC1000` and `UnauthorizedAccessException` for that cache file. Validation must use an isolated intermediate directory if the lock persists.
 - Observation: The current working tree already contains substantial Text Processing edits and deleted ViewModel files.
@@ -59,9 +68,40 @@ After this work, a Windows user can open AiteBar's Text Processing utility, ente
   Evidence: Suppressing `CmbModels_SelectionChanged` while `_isLoadingModels` is true preserves the stored connection/model until `RestoreModelSelection` deliberately applies it.
 - Observation: A startup smoke launch could not safely start the newly built executable because one AiteBar instance was already running.
   Evidence: The guarded smoke command returned `SKIPPED_EXISTING_INSTANCE:1` and intentionally did not stop or replace the user's process.
+- Observation: Source-aware tests cannot locate `AiteBar.sln` when their isolated output is placed under `%TEMP%`.
+  Evidence: The first full post-audit run passed 801 tests and failed 85 with only `Repository root with AiteBar.sln was not found`; the same assembly built under an isolated `artifacts/text-processing-final-tests-*` directory passed all 887 tests.
+- Observation: A successful HTTP response header is not sufficient evidence of a successful streaming request.
+  Evidence: The new failure-stream test yields one SSE delta and then throws an `IOException`; the gateway now records the connection as `Unavailable` instead of leaving it `Available`.
 
 ## Decision Log
 
+- Decision: Define a logical model as a case-insensitive provider/model pair and keep API connection identity out of the ComboBox and persisted Text Processing selection.
+  Rationale: API keys are interchangeable routes to a provider model, not user-facing model choices. Provider identity remains part of the key because equal display names from different providers do not prove compatible endpoints or model identifiers.
+  Date/Author: 2026-07-25 / Codex
+- Decision: For an explicit model, preserve exact provider/model selection while trying every enabled connection for that provider; never fall back to another model.
+  Rationale: This gives transparent key failover without violating the user's chosen model. Automatic mode may still choose another eligible model after routes fail because the user delegated model choice.
+  Date/Author: 2026-07-25 / Codex
+- Decision: Track rate-limit and quota cooldown by connection plus model when a model is known, while keeping authentication, permission, and network health connection-wide.
+  Rationale: One key/model route can be exhausted while another route remains usable. Authentication and endpoint failures invalidate the connection itself.
+  Date/Author: 2026-07-25 / Codex
+- Decision: Treat a streaming connection as successful only after its response stream completes, and apply connection failure state when stream enumeration fails.
+  Rationale: HTTP 200 headers prove only that a stream started. Marking success before consuming it hides mid-stream provider failures and leaves automatic routing with stale health information.
+  Date/Author: 2026-07-24 / Codex
+- Decision: Use a reset-on-read inactivity timeout and throttle full editor replacement to at most once every 50 milliseconds.
+  Rationale: A stream can stall after headers, while replacing the complete WPF text value for every small token chunk causes quadratic allocation and layout work. The timeout preserves cancellation semantics; throttling keeps visible progress without overwhelming the UI thread.
+  Date/Author: 2026-07-24 / Codex
+- Decision: Do not add a custom-prompt mode, persistent processing history, or token/cost counters to the interface.
+  Rationale: The user explicitly rejected these product changes. Token estimation remains internal only, where it protects requests from exceeding a model context window.
+  Date/Author: 2026-07-24 / Codex
+- Decision: Classify output-only image and video generators by centralized model identifier/display-name exclusions, while retaining multimodal models that can return text.
+  Rationale: Provider model catalogues do not expose a reliable common output-modality field. Rejecting every model with vision input would incorrectly hide useful writing models, so the filter must target known image/video generation families and naming markers.
+  Date/Author: 2026-07-24 / Codex
+- Decision: Implement streaming for both supported protocol families: OpenAI-compatible server-sent events and Gemini `streamGenerateContent`.
+  Rationale: A UI-only timer does not solve the original period of apparent inactivity. Starting and parsing the provider stream lets the editor show real generated content while preserving the existing cancellation token and exact-model routing.
+  Date/Author: 2026-07-24 / Codex
+- Decision: Protect technical fragments with unique local markers and reject a final response that removes or duplicates a marker.
+  Rationale: Prompt instructions alone cannot guarantee that URLs, paths, code, versions, or identifiers survive. Local substitution makes unchanged restoration deterministic, and rejecting damaged marker structure prevents silently returning corrupted technical data.
+  Date/Author: 2026-07-24 / Codex
 - Decision: Keep the current code-behind direction instead of restoring the deleted ViewModel merely to recover bindings.
   Rationale: The working tree deliberately removed the ViewModel and already moved behavior into `TextProcessingWindow.xaml.cs`. Release quality can be achieved with a small testable UI-state helper while respecting the user's current architectural direction.
   Date/Author: 2026-07-22 / Codex
@@ -103,6 +143,12 @@ The Text Processing utility now has a responsive release layout matching the sup
 The plan was reopened on 2026-07-24 after the release-readiness review found behavior that the earlier source-contract tests had incorrectly accepted. The hardening follow-up is now complete. Explicit selection carries connection identity and rejects model substitution; Automatic and explicit processing require free writing-capable models; response cleanup preserves legitimate content; Repeat requires a successful result and a ready model; refresh invalidates the model cache and reliably clears loading resources; Paste inserts at the selection only after clipboard read succeeds; stale informational state is cleared; the original comparison view is read-only; the editor remains exactly 738 pixels wide while growing vertically; narrow monitors receive a local horizontal viewport; the standalone taskbar window no longer has a WPF owner; and the chosen mode is restored.
 
 Automated evidence is clean: `git diff --check` reports no whitespace errors, the Release solution builds with zero warnings and zero errors, 116 focused tests pass, and the complete suite passes 864 of 864. The only remaining environment-dependent check is a live visual walkthrough and external AI request. The guarded startup smoke did not replace the user's already-running AiteBar instance.
+
+The post-audit improvement milestone is also complete. The utility streams OpenAI-compatible and Gemini responses into the editor; shows elapsed processing time; provides a separate, read-only red/green changes view without removing original/result switching; supports operation-level `Ctrl+Z`/`Ctrl+Y`; protects technical fragments with validated markers; estimates Cyrillic and mixed-language context internally; and excludes Nano Banana, Imagen, Veo, and equivalent image/video generators while retaining text-returning multimodal models. The final Release build has zero warnings and errors, and the complete suite passes 887 of 887. The application was deliberately not launched because the user had instructed that the running instance must not be disturbed.
+
+The final streaming hardening is complete. Provider health now reflects completion or failure of the response body rather than headers alone, stalled streams fail after 30 seconds without activity, and WPF receives at most one full-text replacement per 50 milliseconds. Fake HTTP integration tests exercise complete OpenAI-compatible and Gemini SSE requests, mid-stream failure, and inactivity timeout. The expanded WPF test proves the new diff command fits inside the rail at minimum client height. Release builds with zero warnings and errors, and all 893 tests pass.
+
+The logical-model routing follow-up is complete. The selector now contains one row per case-insensitive provider/model pair rather than one row per API connection. Persisted Text Processing selection contains provider and model only; the obsolete connection field is cleared during restoration or saving. Both synchronous and streaming gateway paths build model-first route groups, try every eligible key for the selected model, and keep rate-limit/quota cooldown scoped to the affected connection/model route. Exact selection never changes provider or model, while Automatic proceeds to another logical model only after the current model's routes fail. The sequential Release solution build has zero warnings and errors, 30 focused model/streaming tests pass, and the complete suite passes 897 of 897.
 
 ## Context and Orientation
 
@@ -202,11 +248,41 @@ Hardening follow-up validation evidence (2026-07-24):
     dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --no-restore
     Пройдено: 864, не пройдено: 0, пропущено: 0.
 
+Post-audit improvement validation evidence (2026-07-24):
+
+    git diff --check
+    Exit code: 0.
+
+    dotnet build .\AiteBar.sln -c Release -p:ReleaseVerificationRoot=<isolated path>
+    Сборка успешно завершена. Предупреждений: 0. Ошибок: 0.
+
+    dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release -p:ReleaseVerificationRoot=<repository artifacts path>
+    Пройдено: 887, не пройдено: 0, пропущено: 0.
+
+Final streaming hardening validation evidence (2026-07-24):
+
+    dotnet build .\AiteBar.sln -c Release -p:ReleaseVerificationRoot=<repository artifacts path>
+    Сборка успешно завершена. Предупреждений: 0. Ошибок: 0.
+
+    dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release -p:ReleaseVerificationRoot=<repository artifacts path>
+    Пройдено: 893, не пройдено: 0, пропущено: 0.
+
+Logical-model routing validation evidence (2026-07-25):
+
+    git diff --check
+    Exit code: 0.
+
+    dotnet build .\AiteBar.sln -c Release -p:ReleaseVerificationRoot=<repository artifacts path> -m:1 -nr:false
+    Сборка успешно завершена. Предупреждений: 0. Ошибок: 0.
+
+    dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release -p:ReleaseVerificationRoot=<repository artifacts path>
+    Пройдено: 897, не пройдено: 0, пропущено: 0.
+
 ## Interfaces and Dependencies
 
 No new external package is required. The implementation uses WPF controls, existing AiteBar localization and resource dictionaries, `TextProcessingService`, `AiGateway`, `AppSettingsService`, and `DarkDialog`. If a pure helper is introduced, place it under `AiteBar` with an internal immutable input record and deterministic methods that do not reference `Window`, `Dispatcher`, clipboard, or network types, so `AiteBar.Tests` can exercise it directly.
 
-The window continues to be created by `TextProcessingUtility.CreateWindow` and opened by `TextProcessingUtility.ShowWindow`. `TextProcessingService.BuildRequest(TextProcessingMode, string)` remains the prompt entry point. `AiGateway.GenerateAsync(AiChatRequest, CancellationToken)` remains the network entry point. The final window must never access or persist API keys.
+The window continues to be created by `TextProcessingUtility.CreateWindow` and opened by `TextProcessingUtility.ShowWindow`. `TextProcessingService.BuildRequest(TextProcessingMode, string)` remains the prompt entry point. Text Processing uses `AiGateway.GenerateStreamingAsync(AiChatRequest, CancellationToken)`, while `AiGateway.GenerateAsync` remains available to other callers. `TextDiff.Create` and `TextProcessingUndoHistory` are internal deterministic helpers. The final window never accesses or persists API keys.
 
 Plan revision note (2026-07-22): Created the initial self-contained release plan after reviewing the UI, current working tree, project handbook, and the first failed build. The plan records the existing uncommitted state and the WPF cache lock so a future contributor can continue safely.
 
@@ -225,3 +301,11 @@ Plan revision note (2026-07-22): The supplied visual reference superseded the in
 Plan revision note (2026-07-24): Reopened the completed plan after a release-readiness audit exposed untested contradictions in model routing, response preservation, Repeat state, cache refresh, clipboard atomicity, status lifetime, fixed-width geometry, minimize ownership, and mode persistence. The follow-up decisions supersede the earlier star-sized editor and whole-editor Paste decisions because the user's explicit interaction contract requires a 738-pixel editor and standard insertion behavior.
 
 Plan revision note (2026-07-24): Completed the hardening follow-up, added exact connection/model and free-writing-model request invariants, replaced destructive response heuristics, corrected editor and catalogue state transitions, restored the fixed centered geometry and standalone minimize behavior, synchronized documentation, and recorded the clean 864-test Release validation.
+
+Plan revision note (2026-07-24): Completed the requested post-audit improvements without adding custom prompts, persistent text history, or token/cost counters. Recorded streaming, diff, technical-marker validation, model filtering, Undo/Redo, progress feedback, updated documentation, and the clean 887-test Release validation.
+
+Plan revision note (2026-07-24): Closed the release audit's streaming and layout gaps with lifecycle-aware connection status, inactivity timeout, throttled WPF updates, complete fake-HTTP protocol tests, minimum-height command-rail coverage, and clean 893-test Release validation.
+
+Plan revision note (2026-07-25): Reopened the plan to remove API-key duplication from the model selector and move failover behind a logical provider/model selection. Recorded the existing connection-pinned behavior, the provider/model identity rule, exact-model routing semantics, and route-scoped quota tracking before implementation.
+
+Plan revision note (2026-07-25): Completed logical-model catalogue deduplication, model-first connection routing, connection/model-scoped quota cooldown, saved-selection migration, focused regression coverage, documentation updates, and clean 897-test Release validation. Recorded the need for a single MSBuild node in this workspace when validating isolated output trees.

@@ -732,6 +732,7 @@ Open the GitHub release page?</value></data>
   <data name="TextProcessing_ButtonShowResult" xml:space="preserve"><value>Show result</value></data>
   <data name="TextProcessing_ButtonBeforeProcessing" xml:space="preserve"><value>Before</value></data>
   <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>After</value></data>
+  <data name="TextProcessing_ButtonShowDiff" xml:space="preserve"><value>Show changes</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Clear</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="TextProcessing_ButtonProcess" xml:space="preserve"><value>Process</value></data>
@@ -753,6 +754,7 @@ Open the GitHub release page?</value></data>
   <data name="TextProcessing_Copied" xml:space="preserve"><value>Copied</value></data>
   <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Open AI settings</value></data>
   <data name="TextProcessing_ModelUsed" xml:space="preserve"><value>Used: {0}</value></data>
+  <data name="TextProcessing_Progress" xml:space="preserve"><value>Processing… {0} s</value></data>
   <data name="TextProcessing_RefreshModels" xml:space="preserve"><value>Refresh model list</value></data>
   <data name="TextProcessing_ErrorEmptyInput" xml:space="preserve"><value>Enter text to process.</value></data>
   <data name="TextProcessing_ModelUnavailable" xml:space="preserve"><value>Previously selected model is no longer available. Automatic selection is enabled.</value></data>

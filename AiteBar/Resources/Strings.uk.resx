@@ -669,6 +669,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ButtonShowResult" xml:space="preserve"><value>Показати результат</value></data>
   <data name="TextProcessing_ButtonBeforeProcessing" xml:space="preserve"><value>До обробки</value></data>
   <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>Після обробки</value></data>
+  <data name="TextProcessing_ButtonShowDiff" xml:space="preserve"><value>Показати зміни</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Очистити</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Скасувати</value></data>
   <data name="TextProcessing_ButtonProcess" xml:space="preserve"><value>Обробити</value></data>
@@ -690,6 +691,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_Copied" xml:space="preserve"><value>Скопійовано</value></data>
   <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Відкрити налаштування ШІ</value></data>
   <data name="TextProcessing_ModelUsed" xml:space="preserve"><value>Використана: {0}</value></data>
+  <data name="TextProcessing_Progress" xml:space="preserve"><value>Обробка… {0} с</value></data>
   <data name="TextProcessing_RefreshModels" xml:space="preserve"><value>Оновити список моделей</value></data>
   <data name="TextProcessing_ErrorEmptyInput" xml:space="preserve"><value>Введіть текст для обробки.</value></data>
   <data name="TextProcessing_ModelUnavailable" xml:space="preserve"><value>Раніше вибрана модель більше недоступна. Увімкнено автоматичний вибір.</value></data>

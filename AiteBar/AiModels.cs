@@ -91,6 +91,17 @@ public sealed record AiGatewayResponse(
     int? PromptTokens,
     int? CompletionTokens);
 
+public sealed record AiGatewayStream(
+    string ProviderId,
+    string ConnectionId,
+    string ModelId,
+    IAsyncEnumerable<string> Chunks);
+
+internal sealed record AiProviderStream(
+    string ProviderId,
+    string ModelId,
+    IAsyncEnumerable<string> Chunks);
+
 public sealed record AiConnectionCheckResult(
     bool IsSuccess,
     AiConnectionState State,
