@@ -45,7 +45,7 @@ internal readonly record struct TextProcessingUiState(
             isIdle && input.HasClipboardText,
             text.Length > 0,
             isIdle && text.Length > 0,
-            isIdle && input.HasSuccessfulResult,
+            isIdle && input.HasSuccessfulResult && text.Length > 0 && modelsReady,
             isIdle && input.HasSuccessfulResult,
             isIdle,
             isIdle && !input.IsLoadingModels && input.HasEligibleModel);

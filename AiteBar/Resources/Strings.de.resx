@@ -691,6 +691,13 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_ErrorGeneric" xml:space="preserve"><value>Verarbeitung fehlgeschlagen. Versuchen Sie es erneut.</value></data>
   <data name="TextProcessing_ConfirmRepeat" xml:space="preserve"><value>Die erneute Verarbeitung ersetzt das bearbeitete Ergebnis. Fortfahren?</value></data>
   <data name="TextProcessing_ConfirmClose" xml:space="preserve"><value>Fenster schließen? Der eingegebene Text wird nicht gespeichert.</value></data>
+  <data name="TextProcessing_ConfirmPaste" xml:space="preserve"><value>Aktuellen Text durch den Inhalt der Zwischenablage ersetzen?</value></data>
+  <data name="TextProcessing_ConfirmClear" xml:space="preserve"><value>Gesamten Text löschen? Dies kann nicht rückgängig gemacht werden.</value></data>
+  <data name="TextProcessing_Copied" xml:space="preserve"><value>Kopiert</value></data>
+  <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>KI-Einstellungen öffnen</value></data>
+  <data name="TextProcessing_ModelUsed" xml:space="preserve"><value>Verwendet: {0}</value></data>
+  <data name="TextProcessing_RefreshModels" xml:space="preserve"><value>Modelliste aktualisieren</value></data>
+  <data name="TextProcessing_ErrorEmptyInput" xml:space="preserve"><value>Geben Sie Text zur Verarbeitung ein.</value></data>
   <data name="TextProcessing_ModelUnavailable" xml:space="preserve"><value>Das zuvor ausgewählte Modell ist nicht mehr verfügbar. Automatische Auswahl ist aktiviert.</value></data>
   <data name="TextProcessing_ErrorUnauthorized" xml:space="preserve"><value>Authentifizierungsfehler. Überprüfen Sie Ihre KI-Verbindungseinstellungen.</value></data>
   <data name="TextProcessing_ErrorForbidden" xml:space="preserve"><value>Zugriff verweigert. Überprüfen Sie Ihre KI-Verbindungseinstellungen.</value></data>
@@ -700,7 +707,6 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_ErrorTimeout" xml:space="preserve"><value>Zeitüberschreitung. Versuchen Sie es erneut oder wählen Sie ein anderes Modell.</value></data>
   <data name="TextProcessing_ErrorNetwork" xml:space="preserve"><value>Netzwerkfehler. Überprüfen Sie Ihre Internetverbindung.</value></data>
   <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Verarbeitung wurde abgebrochen.</value></data>
-  <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Einstellungen öffnen</value></data>
   <data name="TextProcessing_ModelLoading" xml:space="preserve"><value>Verfügbare Modelle werden geladen…</value></data>
   <data name="TextProcessing_ErrorClipboard" xml:space="preserve"><value>Auf die Zwischenablage konnte nicht zugegriffen werden. Versuchen Sie es erneut.</value></data>
 </root>

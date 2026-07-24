@@ -17,7 +17,7 @@ public sealed class TextProcessingUtility : UtilityBase<TextProcessingWindow>
 
     protected override TextProcessingWindow CreateWindow(AppSettingsService settingsService, Window? owner)
     {
-        return new TextProcessingWindow(_service, settingsService) { Owner = owner };
+        return new TextProcessingWindow(_service, settingsService, owner as MainWindow);
     }
 
     protected override void ShowWindow(TextProcessingWindow window, AppSettingsService settingsService)

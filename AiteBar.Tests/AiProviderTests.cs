@@ -85,6 +85,118 @@ public sealed class AiProviderTests
     }
 
     [Fact]
+    public void Gateway_RequestRequiringFreeModel_ExcludesPaidModelsRegardlessOfGlobalSetting()
+    {
+        var settings = new AiSettings { FreeTierOnly = false };
+        AiConnectionSettings connection = Connection("one", "cerebras", "AiteBar/AI/one");
+        AiModelDescriptor paid = Model("paid", AiCostStatus.Paid);
+        AiModelDescriptor free = Model("free", AiCostStatus.VerifiedFree);
+        var request = new AiChatRequest { RequireFreeModel = true };
+
+        AiModelDescriptor? selected = AiGateway.SelectModel(
+            settings,
+            connection,
+            [paid, free],
+            request);
+        AiModelDescriptor? unavailable = AiGateway.SelectModel(
+            settings,
+            connection,
+            [paid],
+            request);
+
+        Assert.Same(free, selected);
+        Assert.Null(unavailable);
+    }
+
+    [Fact]
+    public void Gateway_RequestRequiringWritingModel_ExcludesNonWritingModels()
+    {
+        var settings = new AiSettings();
+        AiConnectionSettings connection = Connection("one", "cerebras", "AiteBar/AI/one");
+        AiModelDescriptor audio = Model("speech-to-text", AiCostStatus.VerifiedFree);
+        AiModelDescriptor writing = Model("writer", AiCostStatus.VerifiedFree);
+        var request = new AiChatRequest
+        {
+            RequireFreeModel = true,
+            RequireWritingModel = true
+        };
+
+        AiModelDescriptor? selected = AiGateway.SelectModel(
+            settings,
+            connection,
+            [audio, writing],
+            request);
+
+        Assert.Same(writing, selected);
+    }
+
+    [Fact]
+    public void Gateway_ExactSelection_UsesOnlyRequestedConnectionAndNeverFallsBackToAnotherModel()
+    {
+        var settingsService = new AppSettingsService();
+        AiConnectionSettings first = Connection("first", "cerebras", "AiteBar/AI/first");
+        AiConnectionSettings selectedConnection = Connection("selected", "cerebras", "AiteBar/AI/selected");
+        var settings = new AiSettings
+        {
+            Connections = [first, selectedConnection]
+        };
+        var gateway = new AiGateway(settingsService);
+        var request = new AiChatRequest
+        {
+            PreferredConnectionId = selectedConnection.Id,
+            PreferredProviderId = selectedConnection.ProviderId,
+            PreferredModelId = "wanted",
+            RequireExactModel = true,
+            RequireFreeModel = true
+        };
+
+        IReadOnlyList<AiConnectionSettings> candidates = gateway.BuildCandidates(settings, request);
+        AiModelDescriptor? missing = AiGateway.SelectModel(
+            settings,
+            selectedConnection,
+            [Model("other", AiCostStatus.VerifiedFree)],
+            request);
+        AiModelDescriptor wanted = Model("wanted", AiCostStatus.VerifiedFree);
+        AiModelDescriptor? selected = AiGateway.SelectModel(
+            settings,
+            selectedConnection,
+            [Model("other", AiCostStatus.VerifiedFree), wanted],
+            request);
+        selectedConnection.PreferredModelId = "other";
+        AiModelDescriptor? noExplicitModel = AiGateway.SelectModel(
+            settings,
+            selectedConnection,
+            [Model("other", AiCostStatus.VerifiedFree)],
+            new AiChatRequest { RequireExactModel = true });
+
+        Assert.Collection(candidates, connection => Assert.Equal("selected", connection.Id));
+        Assert.Null(missing);
+        Assert.Same(wanted, selected);
+        Assert.Null(noExplicitModel);
+    }
+
+    [Fact]
+    public async Task Gateway_InvalidatingModelCache_ForcesNextCatalogueRequest()
+    {
+        var credentials = new MemoryCredentialStore();
+        credentials.Write("AiteBar/AI/one", "key-one");
+        var handler = new RoutingHandler();
+        var client = new AiProviderClient(new HttpClient(handler), credentials);
+        var settingsService = new AppSettingsService();
+        AiConnectionSettings connection = Connection("one", "cerebras", "AiteBar/AI/one");
+        var gateway = new AiGateway(settingsService, client, TimeProvider.System);
+
+        await gateway.GetModelsAsync(connection);
+        await gateway.GetModelsAsync(connection);
+        Assert.Equal(1, handler.ModelRequestCount);
+
+        gateway.InvalidateModelCache(connection.Id);
+        await gateway.GetModelsAsync(connection);
+
+        Assert.Equal(2, handler.ModelRequestCount);
+    }
+
+    [Fact]
     public async Task SettingsService_DeepClonesAiMetadataWithoutAnyApiKeyProperty()
     {
         string root = Path.Combine(Path.GetTempPath(), $"aitebar-ai-{Guid.NewGuid():N}");
@@ -155,6 +267,14 @@ public sealed class AiProviderTests
         IsEnabled = true
     };
 
+    private static AiModelDescriptor Model(string id, AiCostStatus costStatus) => new(
+        "cerebras",
+        id,
+        id,
+        AiCapabilities.Text,
+        32_000,
+        costStatus);
+
     private sealed class MemoryCredentialStore : IAiCredentialStore
     {
         private readonly Dictionary<string, string> _secrets = new(StringComparer.Ordinal);
@@ -166,6 +286,7 @@ public sealed class AiProviderTests
     private sealed class RoutingHandler : HttpMessageHandler
     {
         public List<string> SeenKeys { get; } = [];
+        public int ModelRequestCount { get; private set; }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
@@ -175,6 +296,7 @@ public sealed class AiProviderTests
             SeenKeys.Add(key);
             if (request.Method == HttpMethod.Get)
             {
+                ModelRequestCount++;
                 return Task.FromResult(Json(HttpStatusCode.OK,
                     "{\"data\":[{\"id\":\"cerebras-llama-3.3-70b\",\"name\":\"Llama 3.3 70B\"}]}"));
             }

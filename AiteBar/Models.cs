@@ -181,6 +181,7 @@ public class AppSettings
     public double? TextProcessingHeight { get; set; }
     public string? TextProcessingWindowState { get; set; }
     public int TextProcessingLastMode { get; set; }
+    public string? TextProcessingSelectedConnectionId { get; set; }
     public string? TextProcessingSelectedModelId { get; set; }
     public string? TextProcessingSelectedProviderId { get; set; }
     public bool TextProcessingIsAutoModel { get; set; } = true;

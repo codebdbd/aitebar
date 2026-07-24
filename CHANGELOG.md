@@ -16,6 +16,8 @@
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
 - **Обработка текста — release UI**: Добавлены адаптивная компоновка, рабочая отмена, доступные состояния клавиатурного фокуса, сохранение текста сверх лимита без обрезания, восстановление окна и понятные состояния моделей, ошибок и буфера обмена.
 - **Text processing release UI**: Added responsive layout, working cancellation, accessible keyboard focus, non-destructive over-limit handling, window restoration, and clear model, error, and clipboard states.
+- **Обработка текста — надёжность**: Выбор ограничен бесплатными моделями, явная модель привязана к точному AI-подключению без скрытой подмены, ответ сохраняется без эвристического удаления содержимого, а вставка, повтор, обновление моделей, минимизация и восстановление режима приведены к стандартному поведению.
+- **Text processing reliability**: Selection is restricted to free models, an explicit model is bound to the exact AI connection without silent substitution, responses are preserved without heuristic content removal, and paste, repeat, model refresh, minimization, and mode restoration now follow standard behavior.
 
 ## [1.11.1] - 2026-07-15
 

@@ -38,6 +38,8 @@ public sealed class TextProcessingServiceTests
         Assert.Equal("system", request.Messages[0].Role);
         Assert.Equal("user", request.Messages[1].Role);
         Assert.Contains("Hello world", request.Messages[1].Content);
+        Assert.True(request.RequireFreeModel);
+        Assert.True(request.RequireWritingModel);
         Assert.True(request.MaxOutputTokens >= 1024);
         Assert.True(request.RequiredContextTokens > request.MaxOutputTokens);
         Assert.Equal(0.3, request.Temperature);
@@ -90,33 +92,33 @@ public sealed class TextProcessingServiceTests
     }
 
     [Fact]
-    public void CleanResponse_StripsCodeFence()
+    public void CleanResponse_PreservesCodeFence()
     {
         string input = "```\nCorrected text here\n```";
         string result = _service.CleanResponse(input);
-        Assert.Equal("Corrected text here", result);
+        Assert.Equal(input, result);
     }
 
     [Fact]
-    public void CleanResponse_StripsCodeFenceWithLanguageTag()
+    public void CleanResponse_PreservesCodeFenceWithoutLanguageTag()
     {
         string input = "```\nSome result\n```";
         string result = _service.CleanResponse(input);
-        Assert.Equal("Some result", result);
+        Assert.Equal(input, result);
     }
 
     [Theory]
-    [InlineData("Исправленный текст: Hello", "Hello")]
-    [InlineData("Оформленный текст: World", "World")]
-    [InlineData("Очищенный текст: Test", "Test")]
-    [InlineData("Result: output", "output")]
-    [InlineData("Corrected text: fix", "fix")]
-    [InlineData("Formatted text: fmt", "fmt")]
-    [InlineData("Cleaned text: clean", "clean")]
-    public void CleanResponse_StripsServicePrefixes(string input, string expected)
+    [InlineData("Исправленный текст: Hello")]
+    [InlineData("Оформленный текст: World")]
+    [InlineData("Очищенный текст: Test")]
+    [InlineData("Result: output")]
+    [InlineData("Corrected text: fix")]
+    [InlineData("Formatted text: fmt")]
+    [InlineData("Cleaned text: clean")]
+    public void CleanResponse_PreservesServiceLikePrefixes(string input)
     {
         string result = _service.CleanResponse(input);
-        Assert.Equal(expected, result);
+        Assert.Equal(input, result);
     }
 
     [Theory]
@@ -129,11 +131,11 @@ public sealed class TextProcessingServiceTests
     }
 
     [Fact]
-    public void CleanResponse_MultilineInQuotes_StripsQuotes()
+    public void CleanResponse_MultilineInQuotes_KeepsQuotes()
     {
         string input = "\"line1\nline2\"";
         string result = _service.CleanResponse(input);
-        Assert.Equal("line1\nline2", result);
+        Assert.Equal(input, result);
     }
 
     [Fact]
@@ -200,11 +202,11 @@ public sealed class TextProcessingServiceTests
     }
 
     [Fact]
-    public void CleanResponse_CodeFenceWithLanguageTag_StripsTag()
+    public void CleanResponse_CodeFenceWithLanguageTag_PreservesTag()
     {
         string input = "```python\ncode here\n```";
         string result = _service.CleanResponse(input);
-        Assert.Equal("code here", result);
+        Assert.Equal(input, result);
     }
 
     [Fact]
@@ -216,20 +218,20 @@ public sealed class TextProcessingServiceTests
     }
 
     [Fact]
-    public void CleanResponse_GermanPrefixes_Stripped()
+    public void CleanResponse_GermanPrefixes_Preserved()
     {
-        Assert.Equal("text", _service.CleanResponse("Korrigierter Text: text"));
-        Assert.Equal("text", _service.CleanResponse("Formatierter Text: text"));
-        Assert.Equal("text", _service.CleanResponse("Bereinigter Text: text"));
-        Assert.Equal("text", _service.CleanResponse("Ergebnis: text"));
+        Assert.Equal("Korrigierter Text: text", _service.CleanResponse("Korrigierter Text: text"));
+        Assert.Equal("Formatierter Text: text", _service.CleanResponse("Formatierter Text: text"));
+        Assert.Equal("Bereinigter Text: text", _service.CleanResponse("Bereinigter Text: text"));
+        Assert.Equal("Ergebnis: text", _service.CleanResponse("Ergebnis: text"));
     }
 
     [Fact]
-    public void CleanResponse_UkrainianPrefixes_Stripped()
+    public void CleanResponse_UkrainianPrefixes_Preserved()
     {
-        Assert.Equal("text", _service.CleanResponse("Виправлений текст: text"));
-        Assert.Equal("text", _service.CleanResponse("Оформлений текст: text"));
-        Assert.Equal("text", _service.CleanResponse("Очищений текст: text"));
+        Assert.Equal("Виправлений текст: text", _service.CleanResponse("Виправлений текст: text"));
+        Assert.Equal("Оформлений текст: text", _service.CleanResponse("Оформлений текст: text"));
+        Assert.Equal("Очищений текст: text", _service.CleanResponse("Очищений текст: text"));
     }
 
     [Fact]

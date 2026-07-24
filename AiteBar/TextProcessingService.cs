@@ -1,5 +1,4 @@
 using System;
-using System.Text.RegularExpressions;
 
 namespace AiteBar;
 
@@ -39,6 +38,8 @@ public sealed partial class TextProcessingService
                 new AiChatMessage("user", text)
             ],
             RequiredCapabilities = AiCapabilities.Text,
+            RequireFreeModel = true,
+            RequireWritingModel = true,
             RequiredContextTokens = requiredContextTokens,
             MaxOutputTokens = outputBudget,
             Temperature = 0.3
@@ -52,13 +53,7 @@ public sealed partial class TextProcessingService
             return string.Empty;
         }
 
-        string cleaned = rawResponse.Trim();
-
-        cleaned = StripCodeFence(cleaned);
-        cleaned = StripServiceLine(cleaned);
-        cleaned = StripOuterQuotes(cleaned);
-
-        return cleaned.Trim();
+        return rawResponse.Trim();
     }
 
     public static int EstimateTokens(string text)
@@ -71,78 +66,16 @@ public sealed partial class TextProcessingService
         return (int)Math.Ceiling(text.Length / CharsPerToken);
     }
 
-    private static string StripCodeFence(string text)
+    internal static bool IsSuitableForWritingModel(AiModelDescriptor model)
     {
-        if (text.StartsWith("```", StringComparison.Ordinal) && text.EndsWith("```", StringComparison.Ordinal) && text.Length > 6)
-        {
-            string inner = text[3..^3];
-            int firstNewline = inner.IndexOf('\n');
-            if (firstNewline >= 0 && firstNewline < 80)
-            {
-                return inner[(firstNewline + 1)..];
-            }
-
-            return inner;
-        }
-
-        return text;
-    }
-
-    private static string StripServiceLine(string text)
-    {
-        string[] prefixes =
+        string searchable = $"{model.ModelId} {model.DisplayName}".ToLowerInvariant();
+        string[] excludedTerms =
         [
-            "Исправленный текст:",
-            "Оформленный текст:",
-            "Очищенный текст:",
-            "Результат:",
-            "Corrected text:",
-            "Formatted text:",
-            "Cleaned text:",
-            "Result:",
-            "Korrigierter Text:",
-            "Formatierter Text:",
-            "Bereinigter Text:",
-            "Ergebnis:",
-            "Виправлений текст:",
-            "Оформлений текст:",
-            "Очищений текст:"
+            "whisper", "speech", "audio", "transcrib", "tts",
+            "embedding", "rerank", "moderation", "prompt-guard", "prompt guard",
+            "safety gpt"
         ];
-
-        foreach (string prefix in prefixes)
-        {
-            if (text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-            {
-                string remainder = text[prefix.Length..].TrimStart();
-                return remainder;
-            }
-        }
-
-        return text;
-    }
-
-    private static string StripOuterQuotes(string text)
-    {
-        if (text.Length < 2)
-        {
-            return text;
-        }
-
-        char first = text[0];
-        char last = text[^1];
-
-        if ((first == '"' && last == '"') ||
-            (first == '\'' && last == '\'') ||
-            (first == '«' && last == '»'))
-        {
-            string inner = text[1..^1];
-            if (inner.Contains('\n'))
-            {
-                return inner;
-            }
-        }
-
-        return text;
+        return !excludedTerms.Any(searchable.Contains);
     }
 
     private const string ProofreadPrompt =

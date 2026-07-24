@@ -107,6 +107,9 @@ public sealed class AiGateway
         _modelCache.TryRemove(connectionId, out _);
     }
 
+    internal void InvalidateModelCache(string connectionId) =>
+        _modelCache.TryRemove(connectionId, out _);
+
     public async Task<IReadOnlyList<AiModelDescriptor>> GetModelsAsync(
         AiConnectionSettings connection,
         CancellationToken cancellationToken = default)
@@ -114,8 +117,20 @@ public sealed class AiGateway
         return await GetModelsCachedAsync(connection, cancellationToken).ConfigureAwait(false);
     }
 
-    private IReadOnlyList<AiConnectionSettings> BuildCandidates(AiSettings settings, AiChatRequest request)
+    internal IReadOnlyList<AiConnectionSettings> BuildCandidates(AiSettings settings, AiChatRequest request)
     {
+        IEnumerable<AiConnectionSettings> enabledConnections = (settings.Connections ?? [])
+            .Where(connection => connection.IsEnabled && AiProviderCatalog.TryGet(connection.ProviderId, out _));
+        if (!string.IsNullOrWhiteSpace(request.PreferredConnectionId))
+        {
+            return enabledConnections
+                .Where(connection => string.Equals(
+                    connection.Id,
+                    request.PreferredConnectionId,
+                    StringComparison.Ordinal))
+                .ToArray();
+        }
+
         var providerOrder = new List<string>();
         if (!string.IsNullOrWhiteSpace(request.PreferredProviderId))
         {
@@ -129,8 +144,7 @@ public sealed class AiGateway
             .Select((providerId, index) => (providerId, index))
             .ToDictionary(item => item.providerId, item => item.index, StringComparer.OrdinalIgnoreCase);
 
-        return (settings.Connections ?? [])
-            .Where(connection => connection.IsEnabled && AiProviderCatalog.TryGet(connection.ProviderId, out _))
+        return enabledConnections
             .OrderBy(connection => providerRanks.GetValueOrDefault(connection.ProviderId, int.MaxValue))
             .ThenBy(connection => connection.DisplayName, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
@@ -194,7 +208,7 @@ public sealed class AiGateway
         }
     }
 
-    private static AiModelDescriptor? SelectModel(
+    internal static AiModelDescriptor? SelectModel(
         AiSettings settings,
         AiConnectionSettings connection,
         IReadOnlyList<AiModelDescriptor> models,
@@ -206,14 +220,27 @@ public sealed class AiGateway
             (!request.RequiredContextTokens.HasValue ||
              !model.ContextLength.HasValue ||
              model.ContextLength.Value >= request.RequiredContextTokens.Value));
-        if (settings.FreeTierOnly)
+        if (request.RequireWritingModel)
+        {
+            eligible = eligible.Where(TextProcessingService.IsSuitableForWritingModel);
+        }
+        if (settings.FreeTierOnly || request.RequireFreeModel)
         {
             eligible = eligible.Where(model =>
                 model.CostStatus is AiCostStatus.VerifiedFree or AiCostStatus.FreeTierAvailable);
         }
 
         AiModelDescriptor[] candidates = eligible.ToArray();
-        string? requestedModel = request.PreferredModelId ?? connection.PreferredModelId;
+        string? requestedModel = request.RequireExactModel
+            ? request.PreferredModelId
+            : request.PreferredModelId ?? connection.PreferredModelId;
+        if (request.RequireExactModel)
+        {
+            return string.IsNullOrWhiteSpace(requestedModel)
+                ? null
+                : candidates.FirstOrDefault(model =>
+                    string.Equals(model.ModelId, requestedModel, StringComparison.OrdinalIgnoreCase));
+        }
         if (!string.IsNullOrWhiteSpace(requestedModel))
         {
             AiModelDescriptor? selected = candidates.FirstOrDefault(model =>

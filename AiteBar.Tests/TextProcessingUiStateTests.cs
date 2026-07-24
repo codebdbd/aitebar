@@ -93,6 +93,21 @@ public sealed class TextProcessingUiStateTests
     }
 
     [Fact]
+    public void Repeat_RequiresSuccessfulResultAndReadyEligibleModel()
+    {
+        Assert.False(Create(text: "text", hasEligibleModel: true).CanRepeat);
+        Assert.False(Create(
+            text: "processed",
+            hasEligibleModel: false,
+            hasSuccessfulResult: true).CanRepeat);
+        Assert.False(Create(
+            text: "processed",
+            hasEligibleModel: true,
+            isLoadingModels: true,
+            hasSuccessfulResult: true).CanRepeat);
+    }
+
+    [Fact]
     public void Paste_DependsOnClipboardTextAndIdleState()
     {
         Assert.False(Create(hasClipboardText: false).CanPaste);

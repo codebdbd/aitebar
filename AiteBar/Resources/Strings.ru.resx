@@ -1268,6 +1268,13 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ErrorGeneric" xml:space="preserve"><value>Ошибка обработки. Попробуйте ещё раз.</value></data>
   <data name="TextProcessing_ConfirmRepeat" xml:space="preserve"><value>Повторная обработка заменит изменённый результат. Продолжить?</value></data>
   <data name="TextProcessing_ConfirmClose" xml:space="preserve"><value>Закрыть окно? Введённый текст не сохраняется.</value></data>
+  <data name="TextProcessing_ConfirmPaste" xml:space="preserve"><value>Заменить текущий текст содержимым буфера обмена?</value></data>
+  <data name="TextProcessing_ConfirmClear" xml:space="preserve"><value>Очистить весь текст? Это действие необратимо.</value></data>
+  <data name="TextProcessing_Copied" xml:space="preserve"><value>Скопировано</value></data>
+  <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Открыть настройки ИИ</value></data>
+  <data name="TextProcessing_ModelUsed" xml:space="preserve"><value>Использована: {0}</value></data>
+  <data name="TextProcessing_RefreshModels" xml:space="preserve"><value>Обновить список моделей</value></data>
+  <data name="TextProcessing_ErrorEmptyInput" xml:space="preserve"><value>Введите текст для обработки.</value></data>
   <data name="TextProcessing_ModelUnavailable" xml:space="preserve"><value>Ранее выбранная модель больше недоступна. Включён автоматический выбор.</value></data>
   <data name="TextProcessing_ErrorUnauthorized" xml:space="preserve"><value>Ошибка авторизации. Проверьте настройки подключения к ИИ.</value></data>
   <data name="TextProcessing_ErrorForbidden" xml:space="preserve"><value>Доступ запрещён. Проверьте настройки подключения к ИИ.</value></data>
@@ -1277,7 +1284,6 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ErrorTimeout" xml:space="preserve"><value>Время ожидания истекло. Попробуйте ещё раз или выберите другую модель.</value></data>
   <data name="TextProcessing_ErrorNetwork" xml:space="preserve"><value>Ошибка сети. Проверьте подключение к интернету.</value></data>
   <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Обработка отменена.</value></data>
-  <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Открыть настройки</value></data>
   <data name="TextProcessing_ModelLoading" xml:space="preserve"><value>Загрузка доступных моделей…</value></data>
   <data name="TextProcessing_ErrorClipboard" xml:space="preserve"><value>Не удалось получить доступ к буферу обмена. Попробуйте ещё раз.</value></data>
 </root>

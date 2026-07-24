@@ -17,7 +17,7 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("x:Name=\"BtnProcess\"", xaml);
         Assert.Contains("x:Name=\"TxtModelState\" Grid.Column=\"1\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModelStateBorder\"", xaml);
-        Assert.DoesNotContain("TextProcessing_DataWarning", xaml);
+        Assert.Contains("TextProcessing_DataWarning", xaml);
     }
 
     [Fact]
@@ -28,10 +28,12 @@ public sealed class TextProcessingVisualContractTests
         Assert.DoesNotContain("MaxLength=", xaml);
         Assert.Contains("<ColumnDefinition Width=\"738\"/>", xaml);
         Assert.DoesNotContain("WindowState=\"Maximized\"", xaml);
-        Assert.Contains("Width=\"1280\" Height=\"780\"", xaml);
+        Assert.Contains("Width=\"1280\" Height=\"840\"", xaml);
         Assert.Contains("MinWidth=\"1000\" MinHeight=\"700\"", xaml);
-        Assert.Contains("<DockPanel x:Name=\"ContentHost\" Width=\"974\"", xaml);
+        Assert.Contains("<DockPanel x:Name=\"ContentHost\" Width=\"904\"", xaml);
         Assert.Contains("HorizontalAlignment=\"Center\" VerticalAlignment=\"Stretch\"", xaml);
+        Assert.Contains("x:Name=\"LayoutViewport\"", xaml);
+        Assert.Contains("HorizontalScrollBarVisibility=\"Auto\"", xaml);
     }
 
     [Fact]
@@ -60,10 +62,12 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("<ColumnDefinition Width=\"10\"/>", xaml);
         Assert.Contains("FontFamily=\"Segoe MDL2 Assets\"", xaml);
         Assert.Contains("FontSize=\"18\" FontWeight=\"Normal\"", xaml);
-        Assert.Contains("<ColumnDefinition Width=\"220\"/>", xaml);
+        Assert.Contains("x:Name=\"FooterCommandColumn\" Width=\"150\"", xaml);
+        Assert.Contains("x:Name=\"RailCommandColumn\" Width=\"150\"", xaml);
+        Assert.Contains("Width=\"36\" Height=\"36\" MinWidth=\"36\" MaxWidth=\"36\"", xaml);
         Assert.DoesNotContain("IconRailButtonStyle", xaml);
         Assert.DoesNotContain("Width=\"220\" Height=\"52\"", xaml);
-        Assert.Equal(5, xaml.Split(
+        Assert.Equal(6, xaml.Split(
             "Style=\"{StaticResource CommandButtonStyle}\"",
             StringSplitOptions.None).Length - 1);
         Assert.Contains("Style=\"{StaticResource PrimaryCommandButtonStyle}\"", xaml);
@@ -83,13 +87,14 @@ public sealed class TextProcessingVisualContractTests
         Assert.DoesNotContain("ModeRadioButtonStyle", xaml);
         Assert.Contains("ResizeMode=\"CanResize\"", xaml);
         Assert.DoesNotContain("CanResizeWithGrip", xaml);
+        Assert.Contains("ShowInTaskbar=\"True\"", xaml);
         Assert.Contains("DropDownOpened=\"CmbModels_DropDownOpened\"", xaml);
         Assert.Contains("TextTrimming=\"CharacterEllipsis\"", xaml);
         Assert.DoesNotContain("DisplayMemberPath=", xaml);
     }
 
     [Fact]
-    public void RestoringUnavailableSavedModel_FallsBackWithoutErrorBanner()
+    public void RestoringUnavailableSavedModel_ShowsNotificationAndFallsBack()
     {
         string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs"));
         int start = code.IndexOf("private void RestoreModelSelection()", StringComparison.Ordinal);
@@ -97,16 +102,16 @@ public sealed class TextProcessingVisualContractTests
 
         Assert.True(start >= 0 && end > start);
         string restoreMethod = code[start..end];
-        Assert.DoesNotContain("SetStatus(", restoreMethod);
+        Assert.Contains("SetStatus(LocalizationService.Get(\"TextProcessing_ModelUnavailable\"))", restoreMethod);
         Assert.Contains("SaveModelSelection();", restoreMethod);
     }
 
     [Fact]
-    public void UnavailableModel_IsNeverRenderedAsRuntimeError()
+    public void UnavailableModel_ShowsNotificationWhenFallingBack()
     {
         string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs"));
 
-        Assert.DoesNotContain("SetStatus(LocalizationService.Get(\"TextProcessing_ModelUnavailable\"))", code);
+        Assert.Contains("SetStatus(LocalizationService.Get(\"TextProcessing_ModelUnavailable\"))", code);
     }
 
     [Fact]
@@ -126,9 +131,31 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("private void BtnToggleVersion_Click", code);
         Assert.Contains("_isShowingOriginal = !_isShowingOriginal;", code);
         Assert.Contains("SetEditorText(_isShowingOriginal ? _originalText : _processedText);", code);
-        Assert.Contains("BtnToggleVersion.Visibility = _hasSuccessfulResult", code);
-        Assert.Contains("\"TextProcessing_ButtonAfterProcessing\"", code);
-        Assert.Contains("\"TextProcessing_ButtonBeforeProcessing\"", code);
+        Assert.Contains("TxtEditor.IsReadOnly = _isShowingOriginal;", code);
+        Assert.Contains("BtnToggleVersion.IsEnabled = state.CanSwitchVersion", code);
+        Assert.Contains("\"TextProcessing_ButtonShowOriginal\"", code);
+        Assert.Contains("\"TextProcessing_ButtonShowResult\"", code);
+    }
+
+    [Fact]
+    public void Minimize_UsesNormalTaskbarBehaviorInsteadOfHidingWindow()
+    {
+        string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs"));
+        int start = code.IndexOf("private void Window_StateChanged", StringComparison.Ordinal);
+        int end = code.IndexOf("private void Window_SizeChanged", start, StringComparison.Ordinal);
+
+        Assert.True(start >= 0 && end > start);
+        string stateChangedMethod = code[start..end];
+        Assert.DoesNotContain("Hide();", stateChangedMethod);
+        Assert.DoesNotContain("WindowState = WindowState.Normal;", stateChangedMethod);
+        Assert.Contains("WindowState != WindowState.Minimized", stateChangedMethod);
+
+        string utilityCode = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "AiteBar",
+            "TextProcessingUtility.cs"));
+        Assert.DoesNotContain("{ Owner = owner }", utilityCode);
+        Assert.Contains("owner as MainWindow", utilityCode);
     }
 
     private static string ReadWindowXaml() => File.ReadAllText(Path.Combine(

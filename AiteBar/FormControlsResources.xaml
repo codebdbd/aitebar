@@ -378,7 +378,7 @@
                                     CornerRadius="0,0,4,4"
                                     SnapsToDevicePixels="True">
                                 <ScrollViewer Margin="3"
-                                              CanContentScroll="True"
+                                              CanContentScroll="False"
                                               SnapsToDevicePixels="True">
                                     <ItemsPresenter/>
                                 </ScrollViewer>

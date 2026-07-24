@@ -46,6 +46,24 @@ public sealed class ComboBoxPopupChromeTests
             setter.Attribute("Value")?.Value == "1,1,1,0");
     }
 
+    [Fact]
+    public void BaseStyle_UsesPixelScrollingWithoutTrailingPartialRowGap()
+    {
+        XDocument resources = XDocument.Load(Path.Combine(
+            FindRepoRoot(),
+            "AiteBar",
+            "FormControlsResources.xaml"));
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        XNamespace xaml = "http://schemas.microsoft.com/winfx/2006/xaml";
+
+        XElement style = Assert.Single(resources.Descendants(presentation + "Style"),
+            element => element.Attribute(xaml + "Key")?.Value == "BaseComboBoxStyle");
+        XElement popupScrollViewer = Assert.Single(style.Descendants(presentation + "ScrollViewer"),
+            element => element.Attribute("CanContentScroll") != null);
+
+        Assert.Equal("False", popupScrollViewer.Attribute("CanContentScroll")?.Value);
+    }
+
     private static string FindRepoRoot(
         [System.Runtime.CompilerServices.CallerFilePath] string sourceFile = "")
     {

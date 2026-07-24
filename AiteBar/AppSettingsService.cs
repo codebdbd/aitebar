@@ -261,6 +261,7 @@ namespace AiteBar
                 TextProcessingHeight = original.TextProcessingHeight,
                 TextProcessingWindowState = original.TextProcessingWindowState,
                 TextProcessingLastMode = original.TextProcessingLastMode,
+                TextProcessingSelectedConnectionId = original.TextProcessingSelectedConnectionId,
                 TextProcessingSelectedModelId = original.TextProcessingSelectedModelId,
                 TextProcessingSelectedProviderId = original.TextProcessingSelectedProviderId,
                 TextProcessingIsAutoModel = original.TextProcessingIsAutoModel

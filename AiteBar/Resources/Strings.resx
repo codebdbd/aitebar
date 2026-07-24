@@ -748,6 +748,13 @@ Open the GitHub release page?</value></data>
   <data name="TextProcessing_ErrorGeneric" xml:space="preserve"><value>Processing failed. Try again.</value></data>
   <data name="TextProcessing_ConfirmRepeat" xml:space="preserve"><value>Re-processing will replace the edited result. Continue?</value></data>
   <data name="TextProcessing_ConfirmClose" xml:space="preserve"><value>Close the window? The entered text will not be saved.</value></data>
+  <data name="TextProcessing_ConfirmPaste" xml:space="preserve"><value>Replace the current text with clipboard content?</value></data>
+  <data name="TextProcessing_ConfirmClear" xml:space="preserve"><value>Clear all text? This cannot be undone.</value></data>
+  <data name="TextProcessing_Copied" xml:space="preserve"><value>Copied</value></data>
+  <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Open AI settings</value></data>
+  <data name="TextProcessing_ModelUsed" xml:space="preserve"><value>Used: {0}</value></data>
+  <data name="TextProcessing_RefreshModels" xml:space="preserve"><value>Refresh model list</value></data>
+  <data name="TextProcessing_ErrorEmptyInput" xml:space="preserve"><value>Enter text to process.</value></data>
   <data name="TextProcessing_ModelUnavailable" xml:space="preserve"><value>Previously selected model is no longer available. Automatic selection is enabled.</value></data>
   <data name="TextProcessing_ErrorUnauthorized" xml:space="preserve"><value>Authentication error. Check your AI connection settings.</value></data>
   <data name="TextProcessing_ErrorForbidden" xml:space="preserve"><value>Access denied. Check your AI connection settings.</value></data>
@@ -757,7 +764,6 @@ Open the GitHub release page?</value></data>
   <data name="TextProcessing_ErrorTimeout" xml:space="preserve"><value>Request timed out. Try again or choose another model.</value></data>
   <data name="TextProcessing_ErrorNetwork" xml:space="preserve"><value>Network error. Check your internet connection.</value></data>
   <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Processing was cancelled.</value></data>
-  <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Open settings</value></data>
   <data name="TextProcessing_ModelLoading" xml:space="preserve"><value>Loading available models…</value></data>
   <data name="TextProcessing_ErrorClipboard" xml:space="preserve"><value>Could not access the clipboard. Try again.</value></data>
 </root>

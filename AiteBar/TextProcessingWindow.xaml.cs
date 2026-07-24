@@ -24,11 +24,15 @@ public partial class TextProcessingWindow : DarkWindow
     private const double PreferredHeight = 840;
     private const double PreferredMinWidth = 1000;
     private const double PreferredMinHeight = 700;
+    private const double EditorWidth = 738;
+    private const double CommandGap = 16;
+    private const double HorizontalWindowInsets = 80;
     private const double WorkAreaRatio = 0.9;
 
     private readonly TextProcessingService _service;
     private readonly AppSettingsService _settingsService;
     private readonly AiGateway _gateway;
+    private readonly MainWindow? _mainWindow;
     private readonly ObservableCollection<ModelItem> _models = [];
     private CancellationTokenSource? _processingCts;
     private CancellationTokenSource? _loadModelsCts;
@@ -42,32 +46,42 @@ public partial class TextProcessingWindow : DarkWindow
     private bool _hasSuccessfulResult;
     private bool _isShowingOriginal;
     private bool _isModifiedManually;
+    private bool _hasCopiedResult;
+    private string _lastUsedModelDisplay = string.Empty;
     private TextProcessingMode _currentMode = TextProcessingMode.Proofread;
     private string _originalText = string.Empty;
     private string _processedText = string.Empty;
     private bool _isAutoModel = true;
+    private string? _selectedConnectionId;
     private string? _selectedProviderId;
     private string? _selectedModelId;
     private string _lastOriginalText = string.Empty;
     private TextProcessingMode _lastMode;
     private bool _lastWasAutoModel = true;
+    private string? _lastConnectionId;
     private string? _lastProviderId;
     private string? _lastModelId;
+    private double _requiredMinWidth = PreferredMinWidth;
 
-    public TextProcessingWindow(TextProcessingService service, AppSettingsService settingsService)
+    public TextProcessingWindow(
+        TextProcessingService service,
+        AppSettingsService settingsService,
+        MainWindow? mainWindow = null)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
+        _mainWindow = mainWindow;
         _gateway = new AiGateway(settingsService);
+        _currentMode = ParseSavedMode(settingsService.Settings.TextProcessingLastMode);
         InitializeComponent();
         CmbModels.ItemsSource = _models;
         ApplyModeToUi();
         RefreshUiState();
+        UpdateCommandButtonLayout();
     }
 
     public void ShowNearPanel(AppSettingsService settingsService)
     {
-        ResetModeToProofread();
         RestoreWindowState(settingsService.Settings);
         Show();
         Activate();
@@ -76,7 +90,6 @@ public partial class TextProcessingWindow : DarkWindow
 
     internal void RestoreFromAiteBar()
     {
-        ResetModeToProofread();
         if (WindowState == WindowState.Minimized)
         {
             WindowState = WindowState.Normal;
@@ -92,7 +105,6 @@ public partial class TextProcessingWindow : DarkWindow
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
         _isLoadingState = true;
-        _currentMode = TextProcessingMode.Proofread;
         ApplyModeToUi();
         RefreshClipboardAvailability(showError: false);
         _loadModelsCts = new CancellationTokenSource();
@@ -128,7 +140,9 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
-        if (_isDirty && !string.IsNullOrWhiteSpace(TxtEditor.Text))
+        bool hasContent = !string.IsNullOrWhiteSpace(TxtEditor.Text);
+        bool needsWarning = hasContent && (_isDirty || (_hasSuccessfulResult && !_hasCopiedResult));
+        if (needsWarning)
         {
             bool close = new DarkDialog(LocalizationService.Get("TextProcessing_ConfirmClose"), isConfirm: true)
             {
@@ -143,19 +157,11 @@ public partial class TextProcessingWindow : DarkWindow
         SaveWindowState();
         _processingCts?.Cancel();
         _loadModelsCts?.Cancel();
-        _processingCts?.Dispose();
-        _loadModelsCts?.Dispose();
     }
 
     private void Window_StateChanged(object? sender, EventArgs e)
     {
-        if (WindowState == WindowState.Minimized)
-        {
-            Hide();
-            WindowState = WindowState.Normal;
-            return;
-        }
-        if (!_isLoadingState)
+        if (!_isLoadingState && WindowState != WindowState.Minimized)
         {
             SaveWindowState();
         }
@@ -207,6 +213,7 @@ public partial class TextProcessingWindow : DarkWindow
             "Cleanup" => TextProcessingMode.Cleanup,
             _ => _currentMode
         };
+        SaveModeSelection();
         ApplyModeToUi();
         RefreshUiState();
     }
@@ -219,28 +226,26 @@ public partial class TextProcessingWindow : DarkWindow
         }
         if (_hasSuccessfulResult)
         {
-            if (_isShowingOriginal)
-            {
-                _originalText = TxtEditor.Text;
-            }
-            else
+            if (!_isShowingOriginal)
             {
                 _processedText = TxtEditor.Text;
+                _isModifiedManually = true;
             }
-            _isModifiedManually = true;
         }
         _isDirty = true;
         SetStatus(string.Empty);
+        ClearInfoStatus();
         RefreshUiState();
     }
 
     private void CmbModels_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isLoadingState || CmbModels.SelectedItem is not ModelItem item)
+        if (_isLoadingState || _isLoadingModels || CmbModels.SelectedItem is not ModelItem item)
         {
             return;
         }
         _isAutoModel = item.ModelId == null;
+        _selectedConnectionId = item.ConnectionId;
         _selectedProviderId = item.ProviderId;
         _selectedModelId = item.ModelId;
         SaveModelSelection();
@@ -284,7 +289,21 @@ public partial class TextProcessingWindow : DarkWindow
         FocusEditor();
     }
 
-    private void BtnClear_Click(object sender, RoutedEventArgs e) => Clear();
+    private void BtnClear_Click(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrWhiteSpace(TxtEditor.Text))
+        {
+            bool confirmed = new DarkDialog(LocalizationService.Get("TextProcessing_ConfirmClear"), isConfirm: true)
+            {
+                Owner = this
+            }.ShowDialog() == true;
+            if (!confirmed)
+            {
+                return;
+            }
+        }
+        Clear();
+    }
 
     private void BtnPaste_Click(object sender, RoutedEventArgs e)
     {
@@ -296,8 +315,14 @@ public partial class TextProcessingWindow : DarkWindow
                 RefreshUiState();
                 return;
             }
+            string clipboardText = Clipboard.GetText();
+            (string updatedText, int caretIndex) = InsertAtSelection(
+                TxtEditor.Text,
+                TxtEditor.SelectionStart,
+                TxtEditor.SelectionLength,
+                clipboardText);
             ResetResultHistory();
-            SetEditorText(Clipboard.GetText());
+            SetEditorText(updatedText, caretIndex);
             _isDirty = true;
             SetStatus(string.Empty);
             RefreshClipboardAvailability(showError: false);
@@ -320,6 +345,11 @@ public partial class TextProcessingWindow : DarkWindow
             if (!string.IsNullOrWhiteSpace(TxtEditor.Text))
             {
                 Clipboard.SetText(TxtEditor.Text);
+                if (_hasSuccessfulResult)
+                {
+                    _hasCopiedResult = true;
+                }
+                SetStatus(LocalizationService.Get("TextProcessing_Copied"));
             }
             RefreshClipboardAvailability(showError: false);
             RefreshUiState();
@@ -328,6 +358,57 @@ public partial class TextProcessingWindow : DarkWindow
         {
             Logger.Log(ex);
             SetStatus(LocalizationService.Get("TextProcessing_ErrorClipboard"));
+        }
+    }
+
+    private void BtnOpenSettings_Click(object sender, RoutedEventArgs e)
+    {
+        if (_mainWindow != null)
+        {
+            _ = _mainWindow.ShowAppSettingsWindow(AppSettingsSection.AiProviders);
+        }
+        else
+        {
+            SetStatus(LocalizationService.Get("TextProcessing_ErrorNoModels"));
+        }
+    }
+
+    private async void BtnRefreshModels_Click(object sender, RoutedEventArgs e)
+    {
+        if (_isLoadingModels || _isProcessing)
+        {
+            return;
+        }
+        _loadModelsCts?.Cancel();
+        _loadModelsCts?.Dispose();
+        var refreshCts = new CancellationTokenSource();
+        _loadModelsCts = refreshCts;
+        try
+        {
+            foreach (AiConnectionSettings connection in
+                     (_settingsService.Settings.Ai?.Connections ?? []).Where(connection => connection.IsEnabled))
+            {
+                _gateway.InvalidateModelCache(connection.Id);
+            }
+            await LoadModelsAsync(refreshCts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            SetStatus(LocalizationService.Get("TextProcessing_ErrorNoModels"));
+        }
+        finally
+        {
+            if (ReferenceEquals(_loadModelsCts, refreshCts))
+            {
+                _isLoadingModels = false;
+                refreshCts.Dispose();
+                _loadModelsCts = null;
+                RefreshUiState();
+            }
         }
     }
 
@@ -343,6 +424,7 @@ public partial class TextProcessingWindow : DarkWindow
         bool useAutoModel;
         string? providerId;
         string? modelId;
+        string? connectionId;
         if (repeatLast)
         {
             if (!_hasSuccessfulResult || string.IsNullOrWhiteSpace(_lastOriginalText))
@@ -352,19 +434,20 @@ public partial class TextProcessingWindow : DarkWindow
             input = _lastOriginalText;
             mode = _lastMode;
             useAutoModel = _lastWasAutoModel;
+            connectionId = _lastConnectionId;
             providerId = _lastProviderId;
             modelId = _lastModelId;
-            if (!useAutoModel && !TrySelectModel(providerId, modelId))
+            if (!useAutoModel && !TrySelectModel(connectionId, providerId, modelId))
             {
-                useAutoModel = true;
-                providerId = null;
-                modelId = null;
+                SetStatus(LocalizationService.Get("TextProcessing_ModelUnavailable"));
+                return;
             }
             _currentMode = mode;
             _isAutoModel = useAutoModel;
             if (useAutoModel)
             {
                 CmbModels.SelectedIndex = 0;
+                _selectedConnectionId = null;
                 _selectedProviderId = null;
                 _selectedModelId = null;
             }
@@ -375,10 +458,19 @@ public partial class TextProcessingWindow : DarkWindow
             input = TxtEditor.Text;
             mode = _currentMode;
             useAutoModel = _isAutoModel;
+            connectionId = useAutoModel ? null : _selectedConnectionId;
             providerId = useAutoModel ? null : _selectedProviderId;
             modelId = useAutoModel ? null : _selectedModelId;
             if (!GetUiState().CanProcess)
             {
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    SetStatus(LocalizationService.Get("TextProcessing_ErrorEmptyInput"));
+                }
+                else if (!_hasEligibleModel)
+                {
+                    SetStatus(LocalizationService.Get("TextProcessing_ErrorNoModels"));
+                }
                 return;
             }
             if (_hasSuccessfulResult && !_isShowingOriginal && _isModifiedManually)
@@ -398,17 +490,11 @@ public partial class TextProcessingWindow : DarkWindow
         ModelItem? selected = null;
         if (!useAutoModel)
         {
-            selected = FindModel(providerId, modelId);
+            selected = FindModel(connectionId, providerId, modelId);
             if (selected == null)
             {
-                useAutoModel = true;
-                providerId = null;
-                modelId = null;
-                _isAutoModel = true;
-                CmbModels.SelectedIndex = 0;
-                _selectedProviderId = null;
-                _selectedModelId = null;
-                SaveModelSelection();
+                SetStatus(LocalizationService.Get("TextProcessing_ModelUnavailable"));
+                return;
             }
         }
         if (useAutoModel)
@@ -428,12 +514,15 @@ public partial class TextProcessingWindow : DarkWindow
                 SetStatus(LocalizationService.Get("TextProcessing_ErrorContextOverflow"));
                 return;
             }
-            request = CopyRequestWithModel(request, providerId, modelId);
+            request = CopyRequestWithModel(request, connectionId, providerId, modelId);
         }
 
         string textShownBeforeRequest = TxtEditor.Text;
         SetStatus(string.Empty);
+        ClearInfoStatus();
         _isProcessing = true;
+        _isModifiedManually = false;
+        _hasCopiedResult = false;
         _processingCts = new CancellationTokenSource();
         RefreshUiState();
         try
@@ -453,10 +542,17 @@ public partial class TextProcessingWindow : DarkWindow
             _lastOriginalText = input;
             _lastMode = mode;
             _lastWasAutoModel = useAutoModel;
+            _lastConnectionId = connectionId;
             _lastProviderId = providerId;
             _lastModelId = modelId;
+            ModelItem? usedModel = FindModel(response.ConnectionId, response.ProviderId, response.ModelId);
+            _lastUsedModelDisplay = usedModel?.Display ?? response.ModelId;
             SetEditorText(cleaned);
             _isDirty = false;
+            if (!string.IsNullOrEmpty(_lastUsedModelDisplay))
+            {
+                SetInfoStatus(LocalizationService.Format("TextProcessing_ModelUsed", _lastUsedModelDisplay));
+            }
         }
         catch (OperationCanceledException) when (_processingCts?.IsCancellationRequested == true)
         {
@@ -509,10 +605,18 @@ public partial class TextProcessingWindow : DarkWindow
         }
     }
 
-    private static AiChatRequest CopyRequestWithModel(AiChatRequest request, string? providerId, string? modelId) => new()
+    private static AiChatRequest CopyRequestWithModel(
+        AiChatRequest request,
+        string? connectionId,
+        string? providerId,
+        string? modelId) => new()
     {
         Messages = request.Messages,
         RequiredCapabilities = request.RequiredCapabilities,
+        RequireFreeModel = request.RequireFreeModel,
+        RequireWritingModel = request.RequireWritingModel,
+        RequireExactModel = true,
+        PreferredConnectionId = connectionId,
         PreferredProviderId = providerId,
         PreferredModelId = modelId,
         RequiredContextTokens = request.RequiredContextTokens,
@@ -550,20 +654,36 @@ public partial class TextProcessingWindow : DarkWindow
         _hasSuccessfulResult = false;
         _isShowingOriginal = false;
         _isModifiedManually = false;
+        _hasCopiedResult = false;
+        ClearInfoStatus();
     }
 
-    private void SetEditorText(string text)
+    private void SetEditorText(string text, int? caretIndex = null)
     {
         _isApplyingEditorText = true;
         try
         {
             TxtEditor.Text = text ?? string.Empty;
-            TxtEditor.CaretIndex = TxtEditor.Text.Length;
+            TxtEditor.CaretIndex = Math.Clamp(caretIndex ?? TxtEditor.Text.Length, 0, TxtEditor.Text.Length);
         }
         finally
         {
             _isApplyingEditorText = false;
         }
+    }
+
+    internal static (string Text, int CaretIndex) InsertAtSelection(
+        string source,
+        int selectionStart,
+        int selectionLength,
+        string insertion)
+    {
+        source ??= string.Empty;
+        insertion ??= string.Empty;
+        int start = Math.Clamp(selectionStart, 0, source.Length);
+        int length = Math.Clamp(selectionLength, 0, source.Length - start);
+        string result = source.Remove(start, length).Insert(start, insertion);
+        return (result, start + insertion.Length);
     }
 
     private TextProcessingUiState GetUiState() => TextProcessingUiState.Create(new TextProcessingUiStateInput(
@@ -589,20 +709,20 @@ public partial class TextProcessingWindow : DarkWindow
         AutomationProperties.SetName(TxtCounters, TxtCounters.Text);
         LimitBorder.Visibility = state.IsOverLimit ? Visibility.Visible : Visibility.Collapsed;
         TxtEditor.IsEnabled = state.CanEdit;
+        TxtEditor.IsReadOnly = _isShowingOriginal;
         ModeProofread.IsEnabled = state.CanSelectMode;
         ModeTypography.IsEnabled = state.CanSelectMode;
         ModeCleanup.IsEnabled = state.CanSelectMode;
         CmbModels.IsEnabled = state.CanSelectModel;
+        BtnRefreshModels.IsEnabled = !_isProcessing && !_isLoadingModels;
         BtnPaste.IsEnabled = state.CanPaste;
         BtnCopy.IsEnabled = state.CanCopy;
         BtnClear.IsEnabled = state.CanClear;
         BtnRepeat.IsEnabled = state.CanRepeat;
-        BtnRepeat.Visibility = _hasSuccessfulResult ? Visibility.Visible : Visibility.Collapsed;
         BtnToggleVersion.IsEnabled = state.CanSwitchVersion;
-        BtnToggleVersion.Visibility = _hasSuccessfulResult ? Visibility.Visible : Visibility.Collapsed;
         ToggleVersionLabel.Text = LocalizationService.Get(_isShowingOriginal
-            ? "TextProcessing_ButtonAfterProcessing"
-            : "TextProcessing_ButtonBeforeProcessing");
+            ? "TextProcessing_ButtonShowResult"
+            : "TextProcessing_ButtonShowOriginal");
         AutomationProperties.SetName(BtnToggleVersion, ToggleVersionLabel.Text);
         BtnProcess.IsEnabled = state.CanCancel || state.CanProcess;
         ProcessButtonLabel.Text = _isProcessing
@@ -616,6 +736,7 @@ public partial class TextProcessingWindow : DarkWindow
             TxtModelState.Foreground = (Brush)FindResource("MutedText");
             TxtModelState.ToolTip = TxtModelState.Text;
             TxtModelState.Visibility = Visibility.Visible;
+            BtnOpenSettings.Visibility = Visibility.Collapsed;
         }
         else if (!_hasEligibleModel)
         {
@@ -623,12 +744,80 @@ public partial class TextProcessingWindow : DarkWindow
             TxtModelState.Foreground = (Brush)FindResource("TextProcessingWarningBrush");
             TxtModelState.ToolTip = TxtModelState.Text;
             TxtModelState.Visibility = Visibility.Visible;
+            BtnOpenSettings.Visibility = Visibility.Visible;
         }
         else
         {
             TxtModelState.Visibility = Visibility.Collapsed;
             TxtModelState.ToolTip = null;
+            BtnOpenSettings.Visibility = Visibility.Collapsed;
         }
+    }
+
+    private void UpdateCommandButtonLayout()
+    {
+        Button[] buttons = [BtnPaste, BtnCopy, BtnRepeat, BtnToggleVersion, BtnClear, BtnProcess];
+        double commandWidth = buttons.Max(MeasureButtonWidth);
+        commandWidth = Math.Max(commandWidth, MeasureButtonWidthForLabels(
+            BtnToggleVersion,
+            ToggleVersionLabel,
+            LocalizationService.Get("TextProcessing_ButtonShowOriginal"),
+            LocalizationService.Get("TextProcessing_ButtonShowResult")));
+        commandWidth = Math.Max(commandWidth, MeasureButtonWidthForLabels(
+            BtnProcess,
+            ProcessButtonLabel,
+            LocalizationService.Get("TextProcessing_ButtonProcess"),
+            LocalizationService.Get("TextProcessing_ButtonCancel")));
+        commandWidth = Math.Ceiling(commandWidth);
+
+        foreach (Button button in buttons)
+        {
+            button.Width = commandWidth;
+        }
+        FooterCommandColumn.Width = new GridLength(commandWidth);
+        RailCommandColumn.Width = new GridLength(commandWidth);
+        ContentHost.Width = EditorWidth + CommandGap + commandWidth;
+        _requiredMinWidth = Math.Max(PreferredMinWidth, ContentHost.Width + HorizontalWindowInsets);
+        MinWidth = _requiredMinWidth;
+    }
+
+    private static double MeasureButtonWidthForLabels(
+        Button button,
+        TextBlock label,
+        params string[] labels)
+    {
+        string originalText = label.Text;
+        double width = 0;
+        foreach (string text in labels)
+        {
+            label.Text = text;
+            label.InvalidateMeasure();
+            label.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+            if (button.Content is FrameworkElement content)
+            {
+                content.InvalidateMeasure();
+            }
+            width = Math.Max(width, MeasureButtonWidth(button));
+        }
+        label.Text = originalText;
+        label.InvalidateMeasure();
+        return width;
+    }
+
+    private static double MeasureButtonWidth(Button button)
+    {
+        if (button.Content is not FrameworkElement content)
+        {
+            return button.MinWidth;
+        }
+        content.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+        return Math.Max(
+            button.MinWidth,
+            content.DesiredSize.Width +
+            button.Padding.Left +
+            button.Padding.Right +
+            button.BorderThickness.Left +
+            button.BorderThickness.Right);
     }
 
     private void SetStatus(string message)
@@ -636,7 +825,20 @@ public partial class TextProcessingWindow : DarkWindow
         TxtStatusMessage.Text = message;
         AutomationProperties.SetName(StatusBorder, message);
         StatusBorder.Visibility = string.IsNullOrWhiteSpace(message) ? Visibility.Collapsed : Visibility.Visible;
+        if (!string.IsNullOrWhiteSpace(message))
+        {
+            InfoStatusBorder.Visibility = Visibility.Collapsed;
+        }
     }
+
+    private void SetInfoStatus(string message)
+    {
+        TxtInfoMessage.Text = message;
+        AutomationProperties.SetName(InfoStatusBorder, message);
+        InfoStatusBorder.Visibility = string.IsNullOrWhiteSpace(message) ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void ClearInfoStatus() => SetInfoStatus(string.Empty);
 
     private void ApplyModeToUi()
     {
@@ -650,6 +852,14 @@ public partial class TextProcessingWindow : DarkWindow
             TextProcessingMode.Cleanup => LocalizationService.Get("TextProcessing_ModeCleanupDesc"),
             _ => string.Empty
         };
+    }
+
+    protected override void OnLocalizationChanged()
+    {
+        base.OnLocalizationChanged();
+        ApplyModeToUi();
+        RefreshUiState();
+        UpdateCommandButtonLayout();
     }
 
     private void RefreshClipboardAvailability(bool showError)
@@ -687,10 +897,11 @@ public partial class TextProcessingWindow : DarkWindow
         _hasEligibleModel = false;
         _models.Clear();
         string automaticLabel = LocalizationService.Get("TextProcessing_ModelAuto");
-        _models.Add(new ModelItem(null, null, automaticLabel, null) { FullDisplay = automaticLabel });
+        _models.Add(new ModelItem(null, null, null, automaticLabel, null) { FullDisplay = automaticLabel });
         CmbModels.SelectedIndex = 0;
         RefreshUiState();
-        var discovered = new List<ModelItem>();
+        var preferredModels = new List<ModelItem>();
+        var remainingModels = new List<ModelItem>();
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         AiSettings? aiSettings = _settingsService.Settings.Ai;
         if (aiSettings?.Connections != null)
@@ -701,9 +912,45 @@ public partial class TextProcessingWindow : DarkWindow
                 try
                 {
                     IReadOnlyList<AiModelDescriptor> models = await _gateway.GetModelsAsync(connection, cancellationToken);
-                    foreach (AiModelDescriptor model in models.Where(IsEligibleModel))
+                    var eligibleModels = models.Where(IsEligibleModel).ToList();
+
+                    // Add preferred model first if present and eligible
+                    if (!string.IsNullOrWhiteSpace(connection.PreferredModelId))
                     {
-                        string identity = $"{model.ProviderId}\n{model.ModelId}";
+                        var preferredModel = eligibleModels.FirstOrDefault(m =>
+                            string.Equals(m.ModelId, connection.PreferredModelId, StringComparison.OrdinalIgnoreCase));
+                        if (preferredModel != null)
+                        {
+                            string identity = $"{connection.Id}\n{preferredModel.ModelId}";
+                            if (seen.Add(identity))
+                            {
+                                string connectionName = NormalizeModelText(connection.DisplayName);
+                                if (!HasVisibleModelText(connectionName))
+                                {
+                                    connectionName = NormalizeModelText(preferredModel.ProviderId);
+                                }
+                                string displayName = NormalizeModelText(preferredModel.DisplayName);
+                                if (!HasVisibleModelText(displayName))
+                                {
+                                    displayName = NormalizeModelText(preferredModel.ModelId);
+                                }
+                                if (HasVisibleModelText(displayName))
+                                {
+                                    preferredModels.Add(new ModelItem(connection.Id, preferredModel.ProviderId, preferredModel.ModelId,
+                                        displayName, preferredModel.ContextLength)
+                                    {
+                                        FullDisplay = $"{connectionName} — {displayName}"
+                                    });
+                                }
+                                eligibleModels.Remove(preferredModel);
+                            }
+                        }
+                    }
+
+                    // Add remaining eligible models
+                    foreach (AiModelDescriptor model in eligibleModels)
+                    {
+                        string identity = $"{connection.Id}\n{model.ModelId}";
                         if (seen.Add(identity))
                         {
                             string connectionName = NormalizeModelText(connection.DisplayName);
@@ -720,7 +967,7 @@ public partial class TextProcessingWindow : DarkWindow
                             {
                                 continue;
                             }
-                            discovered.Add(new ModelItem(model.ProviderId, model.ModelId,
+                            remainingModels.Add(new ModelItem(connection.Id, model.ProviderId, model.ModelId,
                                 displayName, model.ContextLength)
                             {
                                 FullDisplay = $"{connectionName} — {displayName}"
@@ -738,11 +985,16 @@ public partial class TextProcessingWindow : DarkWindow
                 }
             }
         }
-        foreach (ModelItem model in discovered.OrderBy(m => m.Display, StringComparer.CurrentCultureIgnoreCase))
+        // Keep auto model first, then preferred models in connection order, then sorted remaining models
+        foreach (ModelItem model in preferredModels)
         {
             _models.Add(model);
         }
-        _hasEligibleModel = discovered.Count > 0;
+        foreach (ModelItem model in remainingModels.OrderBy(m => m.FullDisplay, StringComparer.CurrentCultureIgnoreCase))
+        {
+            _models.Add(model);
+        }
+        _hasEligibleModel = preferredModels.Count + remainingModels.Count > 0;
         RestoreModelSelection();
         _isLoadingModels = false;
         RefreshUiState();
@@ -753,19 +1005,7 @@ public partial class TextProcessingWindow : DarkWindow
         !model.IsDeprecated &&
         (model.Capabilities & AiCapabilities.Text) == AiCapabilities.Text &&
         (model.CostStatus is AiCostStatus.VerifiedFree or AiCostStatus.FreeTierAvailable) &&
-        IsSuitableForWriting(model);
-
-    private static bool IsSuitableForWriting(AiModelDescriptor model)
-    {
-        string searchable = $"{model.ModelId} {model.DisplayName}".ToLowerInvariant();
-        string[] excludedTerms =
-        [
-            "whisper", "speech", "audio", "transcrib", "tts",
-            "embedding", "rerank", "moderation", "prompt-guard", "prompt guard",
-            "safety gpt"
-        ];
-        return !excludedTerms.Any(searchable.Contains);
-    }
+        TextProcessingService.IsSuitableForWritingModel(model);
 
     private static bool HasVisibleModelText(string? value) =>
         !string.IsNullOrEmpty(value) && value.Any(character =>
@@ -784,33 +1024,35 @@ public partial class TextProcessingWindow : DarkWindow
             CharUnicodeInfo.GetUnicodeCategory(character) != UnicodeCategory.Format).ToArray()).Trim();
     }
 
-    private ModelItem? FindModel(string? providerId, string? modelId) =>
+    private ModelItem? FindModel(string? connectionId, string? providerId, string? modelId) =>
         _models.FirstOrDefault(m =>
+            string.Equals(m.ConnectionId, connectionId, StringComparison.Ordinal) &&
             string.Equals(m.ProviderId, providerId, StringComparison.OrdinalIgnoreCase) &&
             string.Equals(m.ModelId, modelId, StringComparison.OrdinalIgnoreCase));
 
-    private bool TrySelectModel(string? providerId, string? modelId)
+    private bool TrySelectModel(string? connectionId, string? providerId, string? modelId)
     {
-        ModelItem? model = FindModel(providerId, modelId);
+        ModelItem? model = FindModel(connectionId, providerId, modelId);
         if (model == null)
         {
             return false;
         }
         CmbModels.SelectedItem = model;
+        _selectedConnectionId = model.ConnectionId;
         _selectedProviderId = model.ProviderId;
         _selectedModelId = model.ModelId;
         return true;
     }
 
-    private void ResetModeToProofread()
+    private static TextProcessingMode ParseSavedMode(int value) =>
+        Enum.IsDefined(typeof(TextProcessingMode), value)
+            ? (TextProcessingMode)value
+            : TextProcessingMode.Proofread;
+
+    private void SaveModeSelection()
     {
-        if (_isProcessing)
-        {
-            return;
-        }
-        _currentMode = TextProcessingMode.Proofread;
-        ApplyModeToUi();
-        RefreshUiState();
+        _settingsService.UpdateSettings(settings =>
+            settings.TextProcessingLastMode = (int)_currentMode);
     }
 
     private void RestoreModelSelection()
@@ -820,23 +1062,41 @@ public partial class TextProcessingWindow : DarkWindow
         bool replacedUnavailableSelection = false;
         if (!_isAutoModel)
         {
-            ModelItem? model = FindModel(settings.TextProcessingSelectedProviderId, settings.TextProcessingSelectedModelId);
+            ModelItem? model = FindModel(
+                settings.TextProcessingSelectedConnectionId,
+                settings.TextProcessingSelectedProviderId,
+                settings.TextProcessingSelectedModelId);
+            if (model == null && string.IsNullOrWhiteSpace(settings.TextProcessingSelectedConnectionId))
+            {
+                ModelItem[] legacyMatches = _models.Where(candidate =>
+                    string.Equals(candidate.ProviderId, settings.TextProcessingSelectedProviderId, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(candidate.ModelId, settings.TextProcessingSelectedModelId, StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
+                if (legacyMatches.Length == 1)
+                {
+                    model = legacyMatches[0];
+                }
+            }
             if (model != null)
             {
                 CmbModels.SelectedItem = model;
+                _selectedConnectionId = model.ConnectionId;
                 _selectedProviderId = model.ProviderId;
                 _selectedModelId = model.ModelId;
+                SaveModelSelection();
                 return;
             }
             _isAutoModel = true;
             replacedUnavailableSelection = true;
         }
         CmbModels.SelectedIndex = 0;
+        _selectedConnectionId = null;
         _selectedProviderId = null;
         _selectedModelId = null;
         if (replacedUnavailableSelection)
         {
             SaveModelSelection();
+            SetStatus(LocalizationService.Get("TextProcessing_ModelUnavailable"));
         }
     }
 
@@ -845,6 +1105,7 @@ public partial class TextProcessingWindow : DarkWindow
         _settingsService.UpdateSettings(settings =>
         {
             settings.TextProcessingIsAutoModel = _isAutoModel;
+            settings.TextProcessingSelectedConnectionId = _isAutoModel ? null : _selectedConnectionId;
             settings.TextProcessingSelectedProviderId = _isAutoModel ? null : _selectedProviderId;
             settings.TextProcessingSelectedModelId = _isAutoModel ? null : _selectedModelId;
         });
@@ -856,7 +1117,7 @@ public partial class TextProcessingWindow : DarkWindow
         System.Drawing.Rectangle work = screen.WorkingArea;
         double maxWidth = Math.Max(640, work.Width * WorkAreaRatio);
         double maxHeight = Math.Max(560, work.Height * WorkAreaRatio);
-        MinWidth = Math.Min(PreferredMinWidth, maxWidth);
+        MinWidth = Math.Min(_requiredMinWidth, maxWidth);
         MinHeight = Math.Min(PreferredMinHeight, maxHeight);
         Width = Math.Clamp(settings.TextProcessingWidth ?? PreferredWidth, MinWidth, Math.Min(MaxWidth, maxWidth));
         Height = Math.Clamp(settings.TextProcessingHeight ?? PreferredHeight, MinHeight, Math.Min(MaxHeight, maxHeight));
@@ -904,7 +1165,12 @@ public partial class TextProcessingWindow : DarkWindow
     }
 }
 
-public sealed record ModelItem(string? ProviderId, string? ModelId, string Display, int? ContextLength)
+public sealed record ModelItem(
+    string? ConnectionId,
+    string? ProviderId,
+    string? ModelId,
+    string Display,
+    int? ContextLength)
 {
     public string FullDisplay { get; init; } = Display;
 }

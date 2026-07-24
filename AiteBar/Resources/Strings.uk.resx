@@ -685,6 +685,13 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ErrorGeneric" xml:space="preserve"><value>Помилка обробки. Спробуйте ще раз.</value></data>
   <data name="TextProcessing_ConfirmRepeat" xml:space="preserve"><value>Повторна обробка замінить змінений результат. Продовжити?</value></data>
   <data name="TextProcessing_ConfirmClose" xml:space="preserve"><value>Закрити вікно? Введений текст не зберігається.</value></data>
+  <data name="TextProcessing_ConfirmPaste" xml:space="preserve"><value>Замінити поточний текст вмістом буфера обміну?</value></data>
+  <data name="TextProcessing_ConfirmClear" xml:space="preserve"><value>Очистити весь текст? Цю дію неможливо скасувати.</value></data>
+  <data name="TextProcessing_Copied" xml:space="preserve"><value>Скопійовано</value></data>
+  <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Відкрити налаштування ШІ</value></data>
+  <data name="TextProcessing_ModelUsed" xml:space="preserve"><value>Використана: {0}</value></data>
+  <data name="TextProcessing_RefreshModels" xml:space="preserve"><value>Оновити список моделей</value></data>
+  <data name="TextProcessing_ErrorEmptyInput" xml:space="preserve"><value>Введіть текст для обробки.</value></data>
   <data name="TextProcessing_ModelUnavailable" xml:space="preserve"><value>Раніше вибрана модель більше недоступна. Увімкнено автоматичний вибір.</value></data>
   <data name="TextProcessing_ErrorUnauthorized" xml:space="preserve"><value>Помилка авторизації. Перевірте налаштування підключення до ШІ.</value></data>
   <data name="TextProcessing_ErrorForbidden" xml:space="preserve"><value>Доступ заборонено. Перевірте налаштування підключення до ШІ.</value></data>
@@ -694,7 +701,6 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ErrorTimeout" xml:space="preserve"><value>Час очікування вичерпано. Спробуйте ще раз або оберіть іншу модель.</value></data>
   <data name="TextProcessing_ErrorNetwork" xml:space="preserve"><value>Помилка мережі. Перевірте підключення до інтернету.</value></data>
   <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Обробку скасовано.</value></data>
-  <data name="TextProcessing_OpenSettings" xml:space="preserve"><value>Відкрити налаштування</value></data>
   <data name="TextProcessing_ModelLoading" xml:space="preserve"><value>Завантаження доступних моделей…</value></data>
   <data name="TextProcessing_ErrorClipboard" xml:space="preserve"><value>Не вдалося отримати доступ до буфера обміну. Спробуйте ще раз.</value></data>
 </root>

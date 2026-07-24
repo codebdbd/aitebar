@@ -32,6 +32,12 @@ After this work, a Windows user can open AiteBar's Text Processing utility, ente
 - [x] (2026-07-23) Removed the editor's blue focus border; its outline remains neutral in focused and unfocused states.
 - [x] (2026-07-23) Restored the blue editor focus cue only for keyboard navigation by using the application's shared `KeyboardFocusVisualService`; mouse focus keeps the neutral outline.
 - [x] (2026-07-23) Removed visually empty model rows by rejecting whitespace/control/Unicode-format-only identifiers and normalizing catalogue labels before populating the ComboBox.
+- [x] (2026-07-24) Audited the current implementation after the release-readiness review and reproduced the remaining state, model-routing, cache, clipboard, response-cleaning, layout, minimize, and persisted-mode defects in source.
+- [x] (2026-07-24) Made free-model eligibility an explicit `AiChatRequest` invariant and proved that paid models are rejected even if the global AI setting changes.
+- [x] (2026-07-24) Made explicit model selection target the exact configured connection and reject silent fallback to another model.
+- [x] (2026-07-24) Made response handling content-preserving, corrected Repeat state, implemented true model-cache refresh, and made clipboard/status transitions atomic.
+- [x] (2026-07-24) Restored the fixed 738-pixel editor width, vertically stretching centered layout, reachable narrow-screen viewport, normal taskbar minimization, and persisted mode.
+- [x] (2026-07-24) Added focused regression coverage and documentation, passed whitespace checks, built Release with zero warnings, and passed all 864 tests.
 
 ## Surprises & Discoveries
 
@@ -45,6 +51,14 @@ After this work, a Windows user can open AiteBar's Text Processing utility, ente
   Evidence: 846 of 847 tests pass; `MainWindowIconConverterOrientationTests.IconConverterButton_IsVisibleAndPlacedCorrectly_OnAllPanelEdges` expects tooltip offset `0` but receives `1000`. The same failure occurs with a filter that runs only that test. All 59 tests whose fully qualified names contain `TextProcessing` pass.
 - Observation: A constructed but unclosed `DarkWindow` in the WPF layout test retains a static `LocalizationService.CultureChanged` subscription after its dispatcher shuts down.
   Evidence: A full run initially produced cascading `TaskCanceledException` failures in localization tests. Closing `TextProcessingWindow` in the test's `finally` block removed all nine secondary failures.
+- Observation: A green full test suite did not cover several contradictory states in the reopened release audit.
+  Evidence: `TextProcessingUiState.Create` enables Repeat from non-empty text without requiring `HasSuccessfulResult`; the refresh command calls the 15-minute cached `GetModelsAsync`; and the visual-contract test explicitly changed its assertion from a 738-pixel editor to a star-sized editor.
+- Observation: The model selector displays a connection-qualified tooltip but loses the connection identity before submission.
+  Evidence: `ModelItem` stores only provider and model identifiers, while `AiGateway.SelectModel` falls back to the first eligible model when the requested model is absent from an earlier connection of the same provider.
+- Observation: Refreshing the catalogue selected the temporary Automatic row while `_isLoadingState` was already false, which could overwrite a saved explicit selection before restoration.
+  Evidence: Suppressing `CmbModels_SelectionChanged` while `_isLoadingModels` is true preserves the stored connection/model until `RestoreModelSelection` deliberately applies it.
+- Observation: A startup smoke launch could not safely start the newly built executable because one AiteBar instance was already running.
+  Evidence: The guarded smoke command returned `SKIPPED_EXISTING_INSTANCE:1` and intentionally did not stop or replace the user's process.
 
 ## Decision Log
 
@@ -69,12 +83,26 @@ After this work, a Windows user can open AiteBar's Text Processing utility, ente
 - Decision: Remove the persistent data-transfer disclosure from the window and keep the behavior documented in the user manual.
   Rationale: The user explicitly requested that the footer contain controls only. Runtime model-loading and unavailable-model messages now appear in the same top status region as errors, avoiding a second status area.
   Date/Author: 2026-07-22 / Codex
+- Decision: Supersede the earlier star-sized editor decision with a fixed 738-pixel editor surface centered together with a content-sized command rail.
+  Rationale: The explicit product requirement is that maximization must add vertical working space without stretching the editor or command controls horizontally. When the monitor is narrower than the fixed composition, a local horizontal viewport must preserve reachability instead of clipping controls.
+  Date/Author: 2026-07-24 / Codex
+- Decision: Treat the side Paste command as standard insertion at the current selection and read the clipboard before mutating result history.
+  Rationale: A command labelled Paste should follow the established text-editor convention, and clipboard failure must not destroy the Before/After history.
+  Date/Author: 2026-07-24 / Codex
+- Decision: Carry connection identity and a strict-model requirement through `AiChatRequest`.
+  Rationale: Provider plus model is not unique when multiple accounts or endpoints use the same provider. An explicit user choice must never silently execute through another connection or another model.
+  Date/Author: 2026-07-24 / Codex
+- Decision: Limit response cleanup to surrounding transport whitespace.
+  Rationale: Removing fences, localized prefixes, or outer quotes cannot be distinguished reliably from deleting legitimate user content. The prompt already requests a plain response, so preservation wins over heuristic wrapper removal.
+  Date/Author: 2026-07-24 / Codex
 
 ## Outcomes & Retrospective
 
 The Text Processing utility now has a responsive release layout matching the supplied visual reference, aligned editor/placeholder insets, a connected editor/counter surface, four icon-and-label rail commands, a full-width model/action footer, accessible focus and automation metadata, non-destructive size-limit handling, functioning cancellation and repeat, monitor-aware geometry restoration, provider-aware model persistence, writing-model and context-capacity filtering, localized clipboard/model states, and updated user documentation. The Release solution builds with zero warnings and zero errors, and all 59 focused tests pass.
 
-The only remaining validation gap is a live request against a user's external AI credentials and a visual walk-through at every physical Windows DPI setting; automated state, compiled XAML, and layout coverage are present, but CI cannot exercise private credentials or change the host's display scaling. The repository-wide test command remains red because of one independently reproducible MainWindow tooltip-offset test outside this feature; no Text Processing test fails.
+The plan was reopened on 2026-07-24 after the release-readiness review found behavior that the earlier source-contract tests had incorrectly accepted. The hardening follow-up is now complete. Explicit selection carries connection identity and rejects model substitution; Automatic and explicit processing require free writing-capable models; response cleanup preserves legitimate content; Repeat requires a successful result and a ready model; refresh invalidates the model cache and reliably clears loading resources; Paste inserts at the selection only after clipboard read succeeds; stale informational state is cleared; the original comparison view is read-only; the editor remains exactly 738 pixels wide while growing vertically; narrow monitors receive a local horizontal viewport; the standalone taskbar window no longer has a WPF owner; and the chosen mode is restored.
+
+Automated evidence is clean: `git diff --check` reports no whitespace errors, the Release solution builds with zero warnings and zero errors, 116 focused tests pass, and the complete suite passes 864 of 864. The only remaining environment-dependent check is a live visual walkthrough and external AI request. The guarded startup smoke did not replace the user's already-running AiteBar instance.
 
 ## Context and Orientation
 
@@ -82,7 +110,7 @@ The only remaining validation gap is a live request against a user's external AI
 
 The window must expose three modes, one editor, an eligible writing-model selector, side actions for paste, copy, repeat, and clear, plus the bottom process/cancel action. Model catalogue state appears in the editor counter bar, while processing errors use the message region above the editor. A logical selection means either Automatic or a model identifier; it does not store an API key or a specific secret. A successful run stores the original text, result, mode, and logical model choice only for the lifetime of the window so Repeat can replay that request. Text content is never persisted between launches.
 
-The current implementation has several release blockers: the process button does not disable for invalid input; its Cancel caption does not cancel; editor `MaxLength` silently truncates oversized text; Repeat is absent; Clear is in the wrong action group; window dimensions are saved but not restored; the window is always maximized and contains a fixed 738-pixel editor; focus visuals and automation names are missing; and the privacy notice exists only as a model tooltip.
+The current implementation has a second set of release blockers discovered after the original work. Explicit selection loses the configured connection identifier and can silently fall back to another model. Response cleanup can delete legitimate fences, prefixes, and quotes. Repeat can be enabled before any successful result. Manual model refresh reuses the gateway cache. Clipboard mutation is not atomic, informational status can become stale, the editor was changed from 738 pixels to star sizing, the owned-window/taskbar combination leaves minimize behavior ambiguous, and `TextProcessingLastMode` is persisted but ignored.
 
 ## Plan of Work
 
@@ -95,6 +123,12 @@ Third, revise `AiteBar/TextProcessingWindow.xaml.cs` so one `RefreshUiState` pat
 Fourth, make size restoration monitor-aware. Restore normal width and height, clamp normal bounds to the nearest working area, preserve maximized state, and do not force maximization on every launch or force Normal when reopening a hidden existing window. Extract geometry arithmetic if needed so it can be tested without creating a WPF window.
 
 Finally, update all four localization resources for new accessible names, visible notices, clipboard messages, loading/empty model states, and action labels. Run automated validation with isolated intermediate/output directories if the existing `obj` remains locked. Exercise the UI manually when launching a GUI is available, covering empty, valid, oversized, processing, cancellation, successful, comparison, repeat, error, and close-confirmation states.
+
+The 2026-07-24 hardening follow-up changes the model request contract in `AiteBar/AiModels.cs` and `AiteBar/AiGateway.cs` so an explicit selection carries the configured connection identifier and cannot degrade to another model. `AiteBar/TextProcessingWindow.xaml.cs` must retain that identity in catalogue items, saved settings, repeat state, and response display. A force-refresh path must invalidate only model cache entries, restore loading state in `finally`, and dispose the matching cancellation source.
+
+The follow-up also makes `TextProcessingService.CleanResponse` preserve all content except surrounding transport whitespace. `TextProcessingUiState` must require a successful result and ready eligible models before enabling Repeat. Paste must first read clipboard text, then replace the active selection, reset historical comparison state, position the caret after the insertion, and clear stale informational status. Clear, manual edits, new requests, and model changes must not leave an obsolete “model used” message visible.
+
+Finally, `AiteBar/TextProcessingWindow.xaml` must center a fixed-width composition whose editor card remains exactly 738 device-independent pixels wide while its height expands with the window. Command buttons keep one content-derived width. A local horizontal viewport is allowed only when the monitor cannot contain the fixed composition; controls must remain reachable. The utility window must not be owned by the hidden edge panel when it is intended to minimize normally to the taskbar. The `MainWindow` reference needed to open AI settings is passed separately without setting WPF ownership. The selected processing mode is restored and saved through `TextProcessingLastMode`.
 
 ## Concrete Steps
 
@@ -125,9 +159,9 @@ If `dotnet test` encounters the documented WPF temporary-file issue after a succ
 
 Automated acceptance requires a successful Release compile and all Text Processing service/state tests passing. The state tests must demonstrate that Process is disabled for empty, whitespace-only, oversized, busy, loading-model, and no-model states; that it is enabled for valid text with an eligible automatic or explicitly selected model; that Cancel is available only while processing; and that Repeat is available only after a successful result and disabled while processing.
 
-Manual acceptance starts the app and opens Text Processing. At first launch the window fits within 90% of the working monitor in Normal state, focuses the editor, and shows zero counters and an inactive process command. Resizing horizontally expands the editor while preserving the side action width; resizing vertically expands the editor without adding a whole-window scrollbar. Tab navigation shows a visible focus cue and reaches modes, editor, side actions, model selector, Clear, and Process in a logical order.
+Manual acceptance starts the app and opens Text Processing. At first launch the window fits within 90% of the working monitor in Normal state, focuses the editor, and shows zero counters and an inactive process command. Resizing horizontally keeps the editor at exactly 738 pixels and the content-sized command buttons unchanged while keeping the complete composition centered; resizing vertically expands the editor. If the working area is narrower than the composition, a local horizontal viewport keeps every action reachable instead of clipping it. Tab navigation shows a visible focus cue and reaches modes, editor, side actions, model selector, Clear, and Process in a logical order.
 
-Pasting more than 50,000 characters preserves the entire text, changes the counter to a warning state, displays a localized limit explanation, and disables Process while leaving editor, Copy, and Clear usable. With valid text and a model, Process starts once, disables editing controls, and changes the main command to Cancel. Clicking Cancel or pressing Escape cancels and restores the prior text. A successful response replaces the editor, enables Repeat and version comparison, and focuses the editor. Original/result switching shows the appropriate text without marking it as a manual edit. Repeat uses the stored original, mode, and logical model. Clearing resets text and runtime history but retains mode, model, and window geometry.
+Paste inserts clipboard text at the current selection and does not alter the editor or comparison history when clipboard reading fails. Pasting more than 50,000 characters preserves the entire text, changes the counter to a warning state, displays a localized limit explanation, and disables Process while leaving editor, Copy, and Clear usable. With valid text and a model, Process starts once, disables editing controls, and changes the main command to Cancel. Clicking Cancel or pressing Escape cancels and restores the prior text. A successful response replaces the editor without removing legitimate quotes, service-like prefixes, or Markdown fences, enables Repeat and version comparison, and focuses the editor. Original/result switching shows the appropriate text without marking it as a manual edit. Repeat is disabled before the first success and while models are unavailable, then reuses the stored original, mode, exact connection, and exact model. Clearing resets text and runtime history but retains mode, model, and window geometry.
 
 At 100%, 125%, 150%, and 200% Windows scaling, labels remain legible, localized German labels wrap instead of clipping, the model name ellipsizes or fits inside its selector, and all critical commands remain reachable. Light and dark theme resources remain coherent wherever the application supports them.
 
@@ -157,6 +191,17 @@ Final validation evidence:
     dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --no-build --no-restore
     Пройдено: 846, не пройдено: 1; единственный сбой — MainWindowIconConverterOrientationTests, воспроизводится отдельно.
 
+Hardening follow-up validation evidence (2026-07-24):
+
+    git diff --check
+    Exit code: 0.
+
+    dotnet build .\AiteBar.sln -c Release --no-restore
+    Сборка успешно завершена. Предупреждений: 0. Ошибок: 0.
+
+    dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --no-restore
+    Пройдено: 864, не пройдено: 0, пропущено: 0.
+
 ## Interfaces and Dependencies
 
 No new external package is required. The implementation uses WPF controls, existing AiteBar localization and resource dictionaries, `TextProcessingService`, `AiGateway`, `AppSettingsService`, and `DarkDialog`. If a pure helper is introduced, place it under `AiteBar` with an internal immutable input record and deterministic methods that do not reference `Window`, `Dispatcher`, clipboard, or network types, so `AiteBar.Tests` can exercise it directly.
@@ -176,3 +221,7 @@ Plan revision note (2026-07-22): Fixed the final editor-origin discrepancy. WPF 
 Plan revision note (2026-07-22): Removed the persistent AI-transfer footer text by user request and consolidated all transient model status messages in the top message area.
 
 Plan revision note (2026-07-22): The supplied visual reference superseded the interim compact icon-only interpretation. The final rail uses four 220-pixel icon-and-label buttons, while the primary action stays in the footer and changes caption with the active mode. Speech, embedding, reranking, moderation, prompt-guard, and safety-only catalogue entries are excluded from this writing utility.
+
+Plan revision note (2026-07-24): Reopened the completed plan after a release-readiness audit exposed untested contradictions in model routing, response preservation, Repeat state, cache refresh, clipboard atomicity, status lifetime, fixed-width geometry, minimize ownership, and mode persistence. The follow-up decisions supersede the earlier star-sized editor and whole-editor Paste decisions because the user's explicit interaction contract requires a 738-pixel editor and standard insertion behavior.
+
+Plan revision note (2026-07-24): Completed the hardening follow-up, added exact connection/model and free-writing-model request invariants, replaced destructive response heuristics, corrected editor and catalogue state transitions, restored the fixed centered geometry and standalone minimize behavior, synchronized documentation, and recorded the clean 864-test Release validation.

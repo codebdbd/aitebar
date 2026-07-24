@@ -980,6 +980,7 @@ public sealed class AppSettingsServiceTests
             TextProcessingHeight = 840.0,
             TextProcessingWindowState = "Maximized",
             TextProcessingLastMode = 1,
+            TextProcessingSelectedConnectionId = "connection-1",
             TextProcessingSelectedModelId = "model-1",
             TextProcessingSelectedProviderId = "provider-1",
             TextProcessingIsAutoModel = false,
@@ -1105,6 +1106,7 @@ public sealed class AppSettingsServiceTests
         Assert.Equal(840.0, clone.TextProcessingHeight);
         Assert.Equal("Maximized", clone.TextProcessingWindowState);
         Assert.Equal(1, clone.TextProcessingLastMode);
+        Assert.Equal("connection-1", clone.TextProcessingSelectedConnectionId);
         Assert.Equal("model-1", clone.TextProcessingSelectedModelId);
         Assert.Equal("provider-1", clone.TextProcessingSelectedProviderId);
         Assert.False(clone.TextProcessingIsAutoModel);

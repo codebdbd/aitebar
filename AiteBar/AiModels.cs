@@ -65,6 +65,10 @@ public sealed class AiChatRequest
 {
     public IReadOnlyList<AiChatMessage> Messages { get; init; } = [];
     public AiCapabilities RequiredCapabilities { get; init; } = AiCapabilities.Text;
+    public bool RequireFreeModel { get; init; }
+    public bool RequireWritingModel { get; init; }
+    public bool RequireExactModel { get; init; }
+    public string? PreferredConnectionId { get; init; }
     public string? PreferredProviderId { get; init; }
     public string? PreferredModelId { get; init; }
     public int? RequiredContextTokens { get; init; }
