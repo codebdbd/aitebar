@@ -26,6 +26,9 @@ The result is observable by using combinations such as bold plus italic or under
 - [x] (2026-07-28) Performed a final code review of the complete Quick Note boundary and fixed five additional persistence/round-trip/command-state issues.
 - [x] (2026-07-28) Expanded focused coverage to 99 passing tests and completed a zero-warning Release build plus 935/935 full-suite tests.
 - [x] (2026-07-28) Rebuilt the final installer after review and verified its SHA-256 manifest.
+- [x] (2026-07-28) Triaged the attached external review against the actual click/save paths and applied the confirmed security and lifecycle hardening.
+- [x] (2026-07-28) Bounded forced-save semaphore waiting, tightened `mailto:`/`tel:` validation, switched link regexes to the non-backtracking engine, hid absolute conflict paths, and removed duplicate hyperlink URL parsing.
+- [x] (2026-07-28) Re-ran focused/full validation and rebuilt the clean-branch installer for the hardening follow-up.
 
 ## Surprises & Discoveries
 
@@ -59,6 +62,12 @@ The result is observable by using combinations such as bold plus italic or under
 - Observation: Link insertion trimmed selected leading and trailing whitespace.
   Evidence: Link display text is now preserved exactly while URL normalization continues to trim the URL field.
 
+- Observation: The attached review correctly identified unbounded forced-save waiting and weak defense-in-depth validation for raw email/phone links, but its command-injection path for Markdown `file:`/`javascript:` links was not reachable.
+  Evidence: Explicit Markdown hyperlinks are classified as URL links and already pass through the HTTP/HTTPS-only click validator before `Process.Start`. The shared validator is now stricter for every link type and has regression cases for rejected `file:`, `javascript:`, shell metacharacters, and traversal-like phone payloads.
+
+- Observation: `ConfigureAwait(false)` is not appropriate in `QuickNoteWindow.SaveNowAsync`.
+  Evidence: The continuation updates WPF controls and reads the UI-owned `FlowDocument`; retaining the dispatcher context is intentional. Reliability is instead provided by a bounded ten-second forced wait that leaves the window open on timeout.
+
 ## Decision Log
 
 - Decision: Treat all eight confirmed audit findings plus direct non-atomic note writes as one reliability change.
@@ -81,11 +90,15 @@ The result is observable by using combinations such as bold plus italic or under
   Rationale: Avoiding a rare false negative is worth one sequential read before a pending save because Quick Note is a single local text file and data preservation is the priority.
   Date/Author: 2026-07-28 / Codex
 
+- Decision: Apply targeted hardening from the external review without undertaking the proposed God-object rewrite.
+  Rationale: The safety and lifecycle improvements are independently testable. Splitting the WPF window into several services would be a separate high-risk refactor and is not required to correct the reported behavior.
+  Date/Author: 2026-07-28 / Codex
+
 ## Outcomes & Retrospective
 
 Implementation is complete and the final review validation is green. Quick Note now retains nested formatting, avoids redundant close writes, writes atomically, detects file creation and same-metadata content edits after its baseline, creates and rediscovers unique conflict copies, safely handles settings failures and the clear dialog, preserves unselected rich hyperlink fragments, restores the correct monitor, and keeps every formatting command repeatable and reachable in the compact toolbar.
 
-Focused Quick Note tests pass 99/99. On the isolated branch created directly from `origin/master`, the Release solution build completes with zero warnings and zero errors, and the complete test suite passes 721/721. `installer/Build-Installer.ps1` rebuilt publish output and `artifacts/installer/AiteBar-Setup.exe`; code signing was skipped because no signing certificate was supplied. The clean-branch installer is 77,486,272 bytes and its SHA-256 is `3EC57E7E9C6E302E025DEA5C1932B2C1AB5F2F814BCC176ED55DA3513183A6CA`, matching `SHA256SUMS.txt`.
+Focused Quick Note tests pass 107/107. On the isolated branch created directly from `origin/master`, the Release solution build completes with zero warnings and zero errors, and the complete test suite passes 729/729. `installer/Build-Installer.ps1` rebuilt publish output and `artifacts/installer/AiteBar-Setup.exe`; code signing was skipped because no signing certificate was supplied. The hardening follow-up installer is 77,494,034 bytes and its SHA-256 is `41DA3303A3AA4517A1B7CB5CE4E5FFD901C454AF70C2167524A676A1E27EA451`, matching `SHA256SUMS.txt`.
 
 A separate launch smoke test was not performed because an installed AiteBar instance (PID 27144) was already running and the application uses a single-instance workflow. That user process was deliberately left untouched; compilation, publish, installer generation, focused WPF tests, and the full suite provide the final automated evidence.
 
@@ -209,3 +222,5 @@ Revision note (2026-07-28): Closed the plan after successful installer generatio
 Revision note (2026-07-28): Reopened for the requested final code review; recorded five additional findings, their fixes, and expanded passing test evidence.
 
 Revision note (2026-07-28): Closed the final review after rebuilding the installer and verifying its manifest; documented why the already-running installed instance was not disturbed for a second smoke launch.
+
+Revision note (2026-07-28): Reopened to triage the attached third-party review; recorded which findings were reachable, applied targeted hardening, and added security/lifecycle regression tests.

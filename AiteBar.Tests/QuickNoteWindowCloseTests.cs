@@ -13,6 +13,15 @@ namespace AiteBar.Tests;
 public sealed class QuickNoteWindowCloseTests
 {
     [Fact]
+    public void ForcedSaveWaitTimeout_IsBounded()
+    {
+        Assert.InRange(
+            QuickNoteWindow.ForcedSaveWaitTimeout,
+            TimeSpan.FromSeconds(1),
+            TimeSpan.FromSeconds(15));
+    }
+
+    [Fact]
     public async Task Close_WaitsForActiveSaveWithoutWritingUnchangedDocumentAgain()
     {
         await RunStaAsync(async () =>

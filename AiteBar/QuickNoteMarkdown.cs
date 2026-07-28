@@ -18,9 +18,14 @@ namespace AiteBar
     {
         private static readonly MediaFontFamily DefaultFont = new("Segoe UI");
         private static readonly MediaFontFamily CodeFont = new("Consolas");
-        private static readonly Regex UrlRegex = new(@"(?i)\b(?:https?://|www\.)[^\s<>()""']+", RegexOptions.Compiled);
-        private static readonly Regex EmailRegex = new(@"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", RegexOptions.Compiled);
-        private static readonly Regex PhoneRegex = new(@"(?i)\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b", RegexOptions.Compiled);
+        private const RegexOptions LinkRegexOptions =
+            RegexOptions.Compiled |
+            RegexOptions.IgnoreCase |
+            RegexOptions.CultureInvariant |
+            RegexOptions.NonBacktracking;
+        private static readonly Regex UrlRegex = new(@"\b(?:https?://|www\.)[^\s<>()""']+", LinkRegexOptions);
+        private static readonly Regex EmailRegex = new(@"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", LinkRegexOptions);
+        private static readonly Regex PhoneRegex = new(@"\b(?:\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b", LinkRegexOptions);
         private static readonly Regex BulletMarkerRegex = new(@"^(?<indent>\s*)[-*]\s+", RegexOptions.Compiled);
         private static readonly Regex NumberMarkerRegex = new(@"^(?<indent>\s*)\d+\.\s+", RegexOptions.Compiled);
         private static readonly Regex AnyListMarkerRegex = new(@"^(?<indent>\s*)(?:[-*]\s+|\d+\.\s+)", RegexOptions.Compiled);
@@ -72,6 +77,52 @@ namespace AiteBar
         public static string NormalizeUrlForOpen(string matchedUrl)
         {
             return NormalizeLinkForOpen(matchedUrl, LinkType.Url);
+        }
+
+        public static bool IsSafeLinkForOpen(string link, LinkType type)
+        {
+            if (string.IsNullOrWhiteSpace(link))
+            {
+                return false;
+            }
+
+            return type switch
+            {
+                LinkType.Url =>
+                    Uri.TryCreate(link, UriKind.Absolute, out Uri? uri) &&
+                    (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps),
+                LinkType.Email => IsSafeEmailLink(link),
+                LinkType.Phone => IsSafePhoneLink(link),
+                _ => false
+            };
+        }
+
+        private static bool IsSafeEmailLink(string link)
+        {
+            const string prefix = "mailto:";
+            if (!link.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            string address = link[prefix.Length..];
+            Match match = EmailRegex.Match(address);
+            return match.Success && match.Index == 0 && match.Length == address.Length;
+        }
+
+        private static bool IsSafePhoneLink(string link)
+        {
+            const string prefix = "tel:";
+            if (!link.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            string number = link[prefix.Length..];
+            return number.Count(char.IsDigit) >= 4 &&
+                   number.All(character =>
+                       char.IsDigit(character) ||
+                       character is '+' or '-' or '.' or '(' or ')' or ' ');
         }
 
         public static void LoadMarkdown(FlowDocument document, string markdown)
@@ -931,7 +982,7 @@ namespace AiteBar
             }
         }
 
-        private static string GetHyperlinkUrl(Hyperlink hyperlink)
+        internal static string GetHyperlinkUrl(Hyperlink hyperlink)
         {
             if (hyperlink.Tag is string tag && tag.StartsWith("link:", StringComparison.Ordinal))
             {

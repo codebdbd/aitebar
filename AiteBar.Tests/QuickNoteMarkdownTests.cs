@@ -452,6 +452,24 @@ public sealed class QuickNoteMarkdownTests
         Assert.Equal("literal **not bold**", visibleText);
     }
 
+    [Theory]
+    [InlineData("https://example.com", 0, true)]
+    [InlineData("file:///C:/Windows/System32/calc.exe", 0, false)]
+    [InlineData("javascript:alert(1)", 0, false)]
+    [InlineData("mailto:user@example.com", 1, true)]
+    [InlineData("mailto:user@example.com\"&calc.exe", 1, false)]
+    [InlineData("tel:+380 (67) 123-45-67", 2, true)]
+    [InlineData("tel:../../calc.exe|cmd", 2, false)]
+    public void IsSafeLinkForOpen_AllowsOnlyExpectedSchemePayloads(
+        string link,
+        int type,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            QuickNoteMarkdown.IsSafeLinkForOpen(link, (QuickNoteMarkdown.LinkType)type));
+    }
+
     [Fact]
     public void ToMarkdown_PreservesMultipleLines()
     {

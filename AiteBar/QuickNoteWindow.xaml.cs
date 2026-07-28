@@ -31,6 +31,7 @@ namespace AiteBar
         private const int WMSZ_BOTTOM = 6;
         private const int WMSZ_BOTTOMLEFT = 7;
         private const int WMSZ_BOTTOMRIGHT = 8;
+        internal static readonly TimeSpan ForcedSaveWaitTimeout = TimeSpan.FromSeconds(10);
         private readonly IQuickNotePersistence _noteService;
         private readonly AppSettingsService _settingsService;
         private readonly DispatcherTimer _saveTimer;
@@ -273,7 +274,11 @@ namespace AiteBar
 
             if (force)
             {
-                await _saveSemaphore.WaitAsync();
+                if (!await _saveSemaphore.WaitAsync(ForcedSaveWaitTimeout))
+                {
+                    SetStatus(QuickNoteStatusKind.SaveFailed);
+                    return false;
+                }
             }
             // If a timer save can't acquire the semaphore immediately, coalesce it with the current save.
             else if (!await _saveSemaphore.WaitAsync(0))
@@ -1876,7 +1881,7 @@ namespace AiteBar
             try
             {
                 string normalized = QuickNoteMarkdown.NormalizeLinkForOpen(link.Value.Link, link.Value.Type);
-                if (!IsValidLink(normalized, link.Value.Type))
+                if (!QuickNoteMarkdown.IsSafeLinkForOpen(normalized, link.Value.Type))
                 {
                     SetStatus(QuickNoteStatusKind.OpenFailed);
                     return false;
@@ -1893,22 +1898,6 @@ namespace AiteBar
             return true;
         }
 
-        private static bool IsValidLink(string link, QuickNoteMarkdown.LinkType type)
-        {
-            if (string.IsNullOrWhiteSpace(link))
-            {
-                return false;
-            }
-
-            return type switch
-            {
-                QuickNoteMarkdown.LinkType.Url => Uri.TryCreate(link, UriKind.Absolute, out var uri) && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps),
-                QuickNoteMarkdown.LinkType.Email => link.Contains('@') && link.Length > 3,
-                QuickNoteMarkdown.LinkType.Phone => link.Length > 3,
-                _ => false
-            };
-        }
-
         private (string Link, QuickNoteMarkdown.LinkType Type)? FindLinkAtMouse(System.Windows.Point position)
         {
             TextPointer? pointer = TxtNote.GetPositionFromPoint(position, true);
@@ -1919,7 +1908,7 @@ namespace AiteBar
 
             if (FindHyperlink(pointer) is { } hyperlink)
             {
-                string url = GetHyperlinkUrl(hyperlink);
+                string url = QuickNoteMarkdown.GetHyperlinkUrl(hyperlink);
                 if (!string.IsNullOrWhiteSpace(url))
                 {
                     return (url, QuickNoteMarkdown.LinkType.Url);
@@ -2021,16 +2010,6 @@ namespace AiteBar
             return null;
         }
 
-        private static string GetHyperlinkUrl(Hyperlink hyperlink)
-        {
-            if (hyperlink.Tag is string tag && tag.StartsWith("link:", StringComparison.Ordinal))
-            {
-                return tag["link:".Length..];
-            }
-
-            return hyperlink.NavigateUri?.ToString() ?? string.Empty;
-        }
-
         private string GetEditorText()
         {
             string text = new TextRange(TxtNote.Document.ContentStart, TxtNote.Document.ContentEnd).Text;
@@ -2064,7 +2043,7 @@ namespace AiteBar
             if (_cachedConflictCopyMenuItem is { } menuItem)
             {
                 menuItem.IsEnabled = hasConflict;
-                menuItem.ToolTip = hasConflict ? _noteService.LastConflictCopyPath : null;
+                menuItem.ToolTip = hasConflict ? System.IO.Path.GetFileName(_noteService.LastConflictCopyPath) : null;
             }
             else
             {
@@ -2072,7 +2051,7 @@ namespace AiteBar
                 if (_cachedConflictCopyMenuItem is { } cachedItem)
                 {
                     cachedItem.IsEnabled = hasConflict;
-                    cachedItem.ToolTip = hasConflict ? _noteService.LastConflictCopyPath : null;
+                    cachedItem.ToolTip = hasConflict ? System.IO.Path.GetFileName(_noteService.LastConflictCopyPath) : null;
                 }
             }
         }
