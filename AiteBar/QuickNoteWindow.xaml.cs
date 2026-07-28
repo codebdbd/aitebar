@@ -486,7 +486,7 @@ namespace AiteBar
 
         private void BtnStrikethrough_Click(object sender, RoutedEventArgs e) => ToggleTextDecoration(TextDecorationLocation.Strikethrough);
 
-        private void BtnCode_Click(object sender, RoutedEventArgs e) => ToggleFormatting(TextElement.FontFamilyProperty, new System.Windows.Media.FontFamily("Consolas"), new System.Windows.Media.FontFamily("Segoe UI"));
+        private void BtnCode_Click(object sender, RoutedEventArgs e) => ToggleFormatting(TextElement.FontFamilyProperty, QuickNoteFonts.Code, QuickNoteFonts.Default);
 
         private void BtnBullet_Click(object sender, RoutedEventArgs e) => ApplyListFormatting(numbered: false);
 
@@ -752,7 +752,7 @@ namespace AiteBar
             }
 
             var range = new TextRange(start, end);
-            range.ApplyPropertyValue(TextElement.FontFamilyProperty, new System.Windows.Media.FontFamily("Segoe UI"));
+            range.ApplyPropertyValue(TextElement.FontFamilyProperty, QuickNoteFonts.Default);
             range.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteMarkdown.GetHeadingFontSizeForLevel(headingLevel));
             range.ApplyPropertyValue(TextElement.FontWeightProperty, headingLevel == 0 ? FontWeights.Normal : FontWeights.SemiBold);
             range.ApplyPropertyValue(TextElement.FontStyleProperty, FontStyles.Normal);
@@ -916,7 +916,7 @@ namespace AiteBar
             var paragraph = new Paragraph
             {
                 Margin = new Thickness(0),
-                FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
+                FontFamily = QuickNoteFonts.Default,
                 FontSize = 14,
                 FontWeight = FontWeights.Normal,
                 FontStyle = FontStyles.Normal
@@ -932,7 +932,7 @@ namespace AiteBar
 
                 paragraph.Inlines.Add(new Run(lines[i])
                 {
-                    FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
+                    FontFamily = QuickNoteFonts.Default,
                     FontWeight = FontWeights.Normal,
                     FontStyle = FontStyles.Normal
                 });
@@ -1267,7 +1267,7 @@ namespace AiteBar
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontStyleProperty, FontStyles.Normal);
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteMarkdown.GetHeadingFontSizeForLevel(0));
             TxtNote.Selection.ApplyPropertyValue(Inline.TextDecorationsProperty, null);
-            TxtNote.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, new System.Windows.Media.FontFamily("Segoe UI"));
+            TxtNote.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, QuickNoteFonts.Default);
             TxtNote.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
         }
 
@@ -1457,7 +1457,7 @@ namespace AiteBar
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontStyleProperty, FontStyles.Normal);
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteMarkdown.GetHeadingFontSizeForLevel(0));
             TxtNote.Selection.ApplyPropertyValue(Inline.TextDecorationsProperty, null);
-            TxtNote.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, new System.Windows.Media.FontFamily("Segoe UI"));
+            TxtNote.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, QuickNoteFonts.Default);
             TxtNote.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
         }
 
@@ -1549,21 +1549,24 @@ namespace AiteBar
 
         private void ResizeGrip_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            if (sender is not FrameworkElement { Tag: string edge } || e.ButtonState != MouseButtonState.Pressed)
+            if (sender is not FrameworkElement { Tag: string edge } ||
+                e.ButtonState != MouseButtonState.Pressed ||
+                !QuickNoteResizeEdges.TryParse(edge, out QuickNoteResizeEdge resizeEdge))
             {
                 return;
             }
 
-            int direction = edge switch
+            int direction = resizeEdge switch
             {
-                "Left" => WMSZ_LEFT,
-                "Right" => WMSZ_RIGHT,
-                "Top" => WMSZ_TOP,
-                "TopLeft" => WMSZ_TOPLEFT,
-                "TopRight" => WMSZ_TOPRIGHT,
-                "Bottom" => WMSZ_BOTTOM,
-                "BottomLeft" => WMSZ_BOTTOMLEFT,
-                _ => WMSZ_BOTTOMRIGHT
+                QuickNoteResizeEdge.Left => WMSZ_LEFT,
+                QuickNoteResizeEdge.Right => WMSZ_RIGHT,
+                QuickNoteResizeEdge.Top => WMSZ_TOP,
+                QuickNoteResizeEdge.TopLeft => WMSZ_TOPLEFT,
+                QuickNoteResizeEdge.TopRight => WMSZ_TOPRIGHT,
+                QuickNoteResizeEdge.Bottom => WMSZ_BOTTOM,
+                QuickNoteResizeEdge.BottomLeft => WMSZ_BOTTOMLEFT,
+                QuickNoteResizeEdge.BottomRight => WMSZ_BOTTOMRIGHT,
+                _ => throw new ArgumentOutOfRangeException(nameof(resizeEdge))
             };
 
             var handle = new System.Windows.Interop.WindowInteropHelper(this).Handle;
@@ -1732,11 +1735,11 @@ namespace AiteBar
                 }
                 else if (inline is Span span)
                 {
-                    if (span.Tag?.ToString() == "code")
+                    if (Equals(span.Tag, QuickNoteTags.Code))
                     {
                         span.Background = codeBackground;
                         span.Foreground = codeText;
-                        span.FontFamily = new System.Windows.Media.FontFamily("Consolas");
+                        span.FontFamily = QuickNoteFonts.Code;
                     }
                     ApplyInlineStyles(span.Inlines, codeBackground, codeText, linkBrush);
                 }
@@ -1748,7 +1751,7 @@ namespace AiteBar
                 {
                     ApplyInlineStyles(italic.Inlines, codeBackground, codeText, linkBrush);
                 }
-                else if (inline is Run run && run.FontFamily?.Source == "Consolas")
+                else if (inline is Run run && run.FontFamily?.Source == QuickNoteFonts.CodeFamilyName)
                 {
                     run.Background = codeBackground;
                     run.Foreground = codeText;

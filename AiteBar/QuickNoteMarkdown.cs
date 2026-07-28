@@ -16,8 +16,6 @@ namespace AiteBar
 
     internal static class QuickNoteMarkdown
     {
-        private static readonly MediaFontFamily DefaultFont = new("Segoe UI");
-        private static readonly MediaFontFamily CodeFont = new("Consolas");
         private const RegexOptions LinkRegexOptions =
             RegexOptions.Compiled |
             RegexOptions.IgnoreCase |
@@ -30,7 +28,6 @@ namespace AiteBar
         private static readonly Regex NumberMarkerRegex = new(@"^(?<indent>\s*)\d+\.\s+", RegexOptions.Compiled);
         private static readonly Regex AnyListMarkerRegex = new(@"^(?<indent>\s*)(?:[-*]\s+|\d+\.\s+)", RegexOptions.Compiled);
         private static readonly Regex HeadingMarkerRegex = new(@"^(?<indent>\s*)(?<marker>#{1,6})\s+", RegexOptions.Compiled);
-        private const string HeadingTagPrefix = "heading:";
 
         public enum LinkType
         {
@@ -128,7 +125,7 @@ namespace AiteBar
         public static void LoadMarkdown(FlowDocument document, string markdown)
         {
             document.Blocks.Clear();
-            string[] lines = NormalizeLineEndings(markdown).Split('\n');
+            string[] lines = QuickNoteDocumentHelper.NormalizeLineEndings(markdown).Split('\n');
             int index = 0;
             var listStack = new Stack<(FlowList List, int IndentLevel)>();
 
@@ -249,7 +246,7 @@ namespace AiteBar
 
         public static QuickNoteTextEdit ToggleListMarkers(string text, int selectionStart, int selectionEnd, bool numbered)
         {
-            text = NormalizeLineEndings(text);
+            text = QuickNoteDocumentHelper.NormalizeLineEndings(text);
             QuickNoteTextOperation[] operations = GetListMarkerOperations(text, selectionStart, selectionEnd, numbered);
             string updatedText = ApplyOperations(text, operations);
             int caret = MapOffsetThroughOperations(Math.Max(selectionStart, selectionEnd), operations);
@@ -258,7 +255,7 @@ namespace AiteBar
 
         public static QuickNoteRangeEdit GetToggleListMarkerRangeEdit(string text, int selectionStart, int selectionEnd, bool numbered)
         {
-            text = NormalizeLineEndings(text);
+            text = QuickNoteDocumentHelper.NormalizeLineEndings(text);
             var (lineStart, lineEnd) = GetSelectedLineBounds(text, selectionStart, selectionEnd);
             string selectedText = text[lineStart..lineEnd];
             int relativeSelectionStart = Math.Clamp(selectionStart - lineStart, 0, selectedText.Length);
@@ -272,7 +269,7 @@ namespace AiteBar
 
         public static QuickNoteTextEdit ClearLineMarkers(string text, int selectionStart, int selectionEnd)
         {
-            text = NormalizeLineEndings(text);
+            text = QuickNoteDocumentHelper.NormalizeLineEndings(text);
             QuickNoteTextOperation[] operations = GetClearMarkerOperations(text, selectionStart, selectionEnd);
             string updatedText = ApplyOperations(text, operations);
             int caret = MapOffsetThroughOperations(Math.Max(selectionStart, selectionEnd), operations);
@@ -281,7 +278,7 @@ namespace AiteBar
 
         public static QuickNoteRangeEdit GetClearLineMarkerRangeEdit(string text, int selectionStart, int selectionEnd)
         {
-            text = NormalizeLineEndings(text);
+            text = QuickNoteDocumentHelper.NormalizeLineEndings(text);
             var (lineStart, lineEnd) = GetSelectedLineBounds(text, selectionStart, selectionEnd);
             string selectedText = text[lineStart..lineEnd];
             int relativeSelectionStart = Math.Clamp(selectionStart - lineStart, 0, selectedText.Length);
@@ -300,7 +297,7 @@ namespace AiteBar
                 throw new ArgumentOutOfRangeException(nameof(headingLevel), "Heading level must be 0 for body text or 1 through 6.");
             }
 
-            text = NormalizeLineEndings(text);
+            text = QuickNoteDocumentHelper.NormalizeLineEndings(text);
             var (lineStart, lineEnd) = GetSelectedLineBounds(text, selectionStart, selectionEnd);
             string selectedText = text[lineStart..lineEnd];
             QuickNoteTextOperation[] operations = GetHeadingOperations(selectedText, selectionStart - lineStart, selectionEnd - lineStart, headingLevel);
@@ -463,9 +460,9 @@ namespace AiteBar
                 if (TryReadDelimited(line, index, "`", out string codeText, out int codeEnd))
                 {
                     FlushPlain(inlines, plain);
-                    var codeSpan = new Span(CreateRun(UnescapeMarkdownText(codeText), CodeFont))
+                    var codeSpan = new Span(CreateRun(UnescapeMarkdownText(codeText), QuickNoteFonts.Code))
                     {
-                        Tag = "code"
+                        Tag = QuickNoteTags.Code
                     };
                     inlines.Add(codeSpan);
                     index = codeEnd;
@@ -641,7 +638,7 @@ namespace AiteBar
         {
             var paragraph = new Paragraph
             {
-                FontFamily = DefaultFont,
+                FontFamily = QuickNoteFonts.Default,
                 FontSize = 14,
                 FontWeight = FontWeights.Normal,
                 FontStyle = FontStyles.Normal,
@@ -680,7 +677,7 @@ namespace AiteBar
             {
                 MarkerStyle = numbered ? TextMarkerStyle.Decimal : TextMarkerStyle.Disc,
                 Margin = new Thickness(0),
-                Tag = string.IsNullOrEmpty(indent) ? null : "indent:" + indent
+                Tag = QuickNoteTags.Indent(indent)
             };
 
         private static ListItem CreateListItem(string markdownText)
@@ -696,7 +693,7 @@ namespace AiteBar
         private static Run CreateRun(string text, MediaFontFamily? fontFamily = null) =>
             new(text)
             {
-                FontFamily = fontFamily ?? DefaultFont,
+                FontFamily = fontFamily ?? QuickNoteFonts.Default,
                 FontWeight = FontWeights.Normal,
                 FontStyle = FontStyles.Normal,
                 TextDecorations = null
@@ -707,7 +704,7 @@ namespace AiteBar
             var hyperlink = new Hyperlink(CreateRun(text))
             {
                 NavigateUri = Uri.TryCreate(url, UriKind.Absolute, out var uri) ? uri : null,
-                Tag = "link:" + url,
+                Tag = QuickNoteTags.Link(url),
                 Foreground = Brushes.DodgerBlue,
                 TextDecorations = TextDecorations.Underline
             };
@@ -718,7 +715,7 @@ namespace AiteBar
         {
             return new Span
             {
-                Tag = HeadingTagPrefix + headingLevel.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                Tag = QuickNoteTags.Heading(headingLevel),
                 FontSize = GetHeadingFontSize(headingLevel),
                 FontWeight = FontWeights.SemiBold
             };
@@ -984,34 +981,19 @@ namespace AiteBar
 
         internal static string GetHyperlinkUrl(Hyperlink hyperlink)
         {
-            if (hyperlink.Tag is string tag && tag.StartsWith("link:", StringComparison.Ordinal))
-            {
-                return tag["link:".Length..];
-            }
-
-            return hyperlink.NavigateUri?.ToString() ?? string.Empty;
+            return QuickNoteTags.GetLink(hyperlink.Tag) ??
+                   hyperlink.NavigateUri?.ToString() ??
+                   string.Empty;
         }
 
         private static bool TryGetHeadingLevel(Span span, out int headingLevel)
         {
-            headingLevel = 0;
-            if (span.Tag is not string tag || !tag.StartsWith(HeadingTagPrefix, StringComparison.Ordinal))
-            {
-                return false;
-            }
-
-            return int.TryParse(tag[HeadingTagPrefix.Length..], out headingLevel) &&
-                   headingLevel is >= 1 and <= 6;
+            return QuickNoteTags.TryGetHeadingLevel(span.Tag, out headingLevel);
         }
 
         private static string GetListIndent(FlowList list, string? fallbackIndent = null)
         {
-            if (list.Tag is string tag && tag.StartsWith("indent:", StringComparison.Ordinal))
-            {
-                return tag["indent:".Length..];
-            }
-
-            return fallbackIndent ?? string.Empty;
+            return QuickNoteTags.GetIndent(list.Tag, fallbackIndent ?? string.Empty);
         }
 
         private static void AppendStyledText(StringBuilder builder, string text, bool bold, bool italic, bool code, bool underline, bool strikethrough)
@@ -1122,8 +1104,8 @@ namespace AiteBar
         }
 
         private static bool IsCodeInline(Inline inline) =>
-            inline.FontFamily?.Source.Equals("Consolas", StringComparison.OrdinalIgnoreCase) == true ||
-            (inline is Span span && span.Tag?.ToString() == "code");
+            inline.FontFamily?.Source.Equals(QuickNoteFonts.CodeFamilyName, StringComparison.OrdinalIgnoreCase) == true ||
+            (inline is Span span && Equals(span.Tag, QuickNoteTags.Code));
 
         private static bool HasTextDecoration(Inline inline, TextDecorationLocation location)
         {
@@ -1226,8 +1208,6 @@ namespace AiteBar
 
             return lines;
         }
-
-        private static string NormalizeLineEndings(string text) => text.Replace("\r\n", "\n").Replace('\r', '\n');
 
         private static string ApplyOperations(string text, IReadOnlyCollection<QuickNoteTextOperation> operations)
         {

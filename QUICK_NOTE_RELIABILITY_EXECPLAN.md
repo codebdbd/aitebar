@@ -29,6 +29,8 @@ The result is observable by using combinations such as bold plus italic or under
 - [x] (2026-07-28) Triaged the attached external review against the actual click/save paths and applied the confirmed security and lifecycle hardening.
 - [x] (2026-07-28) Bounded forced-save semaphore waiting, tightened `mailto:`/`tel:` validation, switched link regexes to the non-backtracking engine, hid absolute conflict paths, and removed duplicate hyperlink URL parsing.
 - [x] (2026-07-28) Re-ran focused/full validation and rebuilt the clean-branch installer for the hardening follow-up.
+- [x] (2026-07-28) Applied the safe cleanup from the second factual review: centralized tag/font contracts, reused one newline normalizer, and replaced resize string fallback with validated enum parsing.
+- [x] (2026-07-28) Re-ran clean-branch validation and installer generation for the contract cleanup.
 
 ## Surprises & Discoveries
 
@@ -68,6 +70,12 @@ The result is observable by using combinations such as bold plus italic or under
 - Observation: `ConfigureAwait(false)` is not appropriate in `QuickNoteWindow.SaveNowAsync`.
   Evidence: The continuation updates WPF controls and reads the UI-owned `FlowDocument`; retaining the dispatcher context is intentional. Reliability is instead provided by a bounded ten-second forced wait that leaves the window open on timeout.
 
+- Observation: The resize handler treated every unknown XAML `Tag` as `BottomRight`.
+  Evidence: The default switch arm returned `WMSZ_BOTTOMRIGHT`; the handler now accepts only the eight values in `QuickNoteResizeEdge` and ignores invalid tags. Tests cover all eight valid names plus empty, case-mismatched, unknown, and null values.
+
+- Observation: The second review's remaining God-object, synchronous-first-load, and persistence-adapter findings are architectural tradeoffs rather than demonstrated user defects.
+  Evidence: The adapter is the test seam used by WPF close/formatting tests, and loading before the first paint avoids presenting an empty note. Both changes would require separate UX/performance acceptance work.
+
 ## Decision Log
 
 - Decision: Treat all eight confirmed audit findings plus direct non-atomic note writes as one reliability change.
@@ -98,7 +106,7 @@ The result is observable by using combinations such as bold plus italic or under
 
 Implementation is complete and the final review validation is green. Quick Note now retains nested formatting, avoids redundant close writes, writes atomically, detects file creation and same-metadata content edits after its baseline, creates and rediscovers unique conflict copies, safely handles settings failures and the clear dialog, preserves unselected rich hyperlink fragments, restores the correct monitor, and keeps every formatting command repeatable and reachable in the compact toolbar.
 
-Focused Quick Note tests pass 107/107. On the isolated branch created directly from `origin/master`, the Release solution build completes with zero warnings and zero errors, and the complete test suite passes 729/729. `installer/Build-Installer.ps1` rebuilt publish output and `artifacts/installer/AiteBar-Setup.exe`; code signing was skipped because no signing certificate was supplied. The hardening follow-up installer is 77,494,034 bytes and its SHA-256 is `41DA3303A3AA4517A1B7CB5CE4E5FFD901C454AF70C2167524A676A1E27EA451`, matching `SHA256SUMS.txt`.
+Focused Quick Note tests pass 129/129. On the isolated branch created directly from `origin/master`, the Release solution build completes with zero warnings and zero errors, and the complete test suite passes 751/751. `installer/Build-Installer.ps1` rebuilt publish output and `artifacts/installer/AiteBar-Setup.exe`; code signing was skipped because no signing certificate was supplied. The contract-cleanup installer is 77,479,183 bytes and its SHA-256 is `B0BEA5C6D060714DC0749899729AE470E94F284B7315E90AACC7A8F304E07242`, matching `SHA256SUMS.txt`.
 
 A separate launch smoke test was not performed because an installed AiteBar instance (PID 27144) was already running and the application uses a single-instance workflow. That user process was deliberately left untouched; compilation, publish, installer generation, focused WPF tests, and the full suite provide the final automated evidence.
 
@@ -224,3 +232,5 @@ Revision note (2026-07-28): Reopened for the requested final code review; record
 Revision note (2026-07-28): Closed the final review after rebuilding the installer and verifying its manifest; documented why the already-running installed instance was not disturbed for a second smoke launch.
 
 Revision note (2026-07-28): Reopened to triage the attached third-party review; recorded which findings were reachable, applied targeted hardening, and added security/lifecycle regression tests.
+
+Revision note (2026-07-28): Applied the low-risk contract cleanup from the factual re-review and documented the architectural items intentionally left outside this corrective release.
