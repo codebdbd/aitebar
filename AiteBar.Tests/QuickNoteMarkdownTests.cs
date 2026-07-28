@@ -117,7 +117,20 @@ public sealed class QuickNoteMarkdownTests
         Assert.Equal(5, edit.StartOffset);
         Assert.Equal("- one\n- two".Length, edit.RemoveLength);
         Assert.Equal("one\ntwo", edit.InsertText);
-        Assert.True(edit.CaretOffset >= edit.StartOffset);
+        Assert.Equal(5, edit.CaretOffset);
+        Assert.Equal("one\ntwo".Length, edit.SelectionLength);
+    }
+
+    [Fact]
+    public void GetClearLineMarkerRangeEdit_PreservesPartialSelectionAfterRemovingMarkers()
+    {
+        QuickNoteRangeEdit edit = QuickNoteMarkdown.GetClearLineMarkerRangeEdit("head\n- one two\ntail", 7, 10);
+
+        Assert.Equal(5, edit.StartOffset);
+        Assert.Equal("- one two".Length, edit.RemoveLength);
+        Assert.Equal("one two", edit.InsertText);
+        Assert.Equal(5, edit.CaretOffset);
+        Assert.Equal(3, edit.SelectionLength);
     }
 
     [Fact]
@@ -168,6 +181,27 @@ public sealed class QuickNoteMarkdownTests
         });
 
         Assert.Equal("plain **bold** *italic* `code`", markdown);
+    }
+
+    [Theory]
+    [InlineData("***both***")]
+    [InlineData("<u>~~under-strike~~</u>")]
+    [InlineData("**bold `code`**")]
+    [InlineData("[**bold link**](https://example.com)")]
+    [InlineData("***bold italic `code`***")]
+    [InlineData("~~`code strike`~~")]
+    [InlineData("<u>~~`code strike underline`~~</u>")]
+    [InlineData("[~~`formatted code link`~~](https://example.com)")]
+    public void LoadMarkdown_PreservesNestedFormattingRoundTrip(string source)
+    {
+        string markdown = RunSta(() =>
+        {
+            var document = new FlowDocument();
+            QuickNoteMarkdown.LoadMarkdown(document, source);
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal(source, markdown);
     }
 
     [Fact]

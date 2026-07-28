@@ -285,6 +285,12 @@ namespace AiteBar
             SetStatus(QuickNoteStatusKind.Saving);
             try
             {
+                if (!_hasPendingChanges)
+                {
+                    UpdateStatusSaved();
+                    return true;
+                }
+
                 do
                 {
                     if (!_hasPendingChanges && !force)
@@ -403,7 +409,7 @@ namespace AiteBar
             {
                 s.QuickNotePinned = sender is System.Windows.Controls.Primitives.ToggleButton { IsChecked: true };
             });
-            await _settingsService.SaveAsync();
+            await SaveSettingsSafelyAsync();
             TxtNote.Focus();
         }
 
@@ -422,7 +428,18 @@ namespace AiteBar
         private void BtnClear_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new DarkDialog(LocalizationService.Get("QuickNote_ClearConfirm"), isConfirm: true) { Owner = this };
-            if (dialog.ShowDialog() == true)
+            bool? result;
+            _isModalDialogOpen = true;
+            try
+            {
+                result = dialog.ShowDialog();
+            }
+            finally
+            {
+                _isModalDialogOpen = false;
+            }
+
+            if (result == true)
             {
                 TxtNote.Document.Blocks.Clear();
                 TxtNote.Document.Blocks.Add(new Paragraph(new Run(string.Empty)));
@@ -503,7 +520,7 @@ namespace AiteBar
                 ApplyHeadingToSelectedLines(headingLevel, selection.Start, selection.End);
             }
 
-            ResetFormatCombo(comboBox, 0);
+            ResetFormatCombo(comboBox, -1);
             _preservedFormatSelection = null;
         }
 
@@ -939,19 +956,42 @@ namespace AiteBar
             }
         }
 
-        private void ClearSelectedFormatting()
+        internal void ClearSelectedFormatting()
         {
-            // Preserve original selection
-            var originalSelectionStart = TxtNote.Selection.Start;
-            var originalSelectionEnd = TxtNote.Selection.End;
-            
-            ClearSelectedTextMarkers();
-            RemoveSelectedListFormatting(new TextRange(originalSelectionStart, originalSelectionEnd));
-            
-            // Restore original selection before resetting formatting
-            TxtNote.Selection.Select(originalSelectionStart, originalSelectionEnd);
-            UnwrapHyperlinksInSelection();
-            ResetSelectionFormatting();
+            var (selectionStart, selectionEnd) = GetSelectionOffsets();
+
+            TxtNote.BeginChange();
+            try
+            {
+                var markerEdit = ClearSelectedTextMarkers(selectionStart, selectionEnd);
+                selectionStart = markerEdit.Start;
+                selectionEnd = markerEdit.End;
+                if (markerEdit.Changed)
+                {
+                    SelectEditorRange(selectionStart, selectionEnd);
+                }
+
+                string textBeforeListUnwrap = GetEditorText();
+                string selectedTextBeforeListUnwrap = QuickNoteDocumentHelper.RemoveVisualListMarkers(TxtNote.Selection.Text);
+                RemoveSelectedListFormatting(TxtNote.Selection);
+                string textAfterListUnwrap = GetEditorText();
+                (selectionStart, selectionEnd) = QuickNoteDocumentHelper.RemapSelection(
+                    textBeforeListUnwrap,
+                    textAfterListUnwrap,
+                    selectionStart,
+                    selectionEnd,
+                    selectedTextBeforeListUnwrap);
+                SelectEditorRange(selectionStart, selectionEnd);
+                UnwrapHyperlinksInSelection();
+                SelectEditorRange(selectionStart, selectionEnd);
+                ResetSelectionFormatting();
+            }
+            finally
+            {
+                TxtNote.EndChange();
+            }
+
+            SelectEditorRange(selectionStart, selectionEnd);
             MarkChangedAndScheduleSave();
             ScheduleFooterStatsUpdate();
             TxtNote.Focus();
@@ -961,50 +1001,53 @@ namespace AiteBar
         {
             TextPointer start = TxtNote.Selection.Start;
             TextPointer end = TxtNote.Selection.End;
-            
+            var hyperlinks = GetAllHyperlinks(TxtNote.Document.Blocks)
+                .Where(hyperlink => TextRangesIntersect(start, end, hyperlink.ContentStart, hyperlink.ContentEnd))
+                .Select(hyperlink =>
+                {
+                    string text = QuickNoteDocumentHelper.NormalizeLineEndings(
+                        new TextRange(hyperlink.ContentStart, hyperlink.ContentEnd).Text);
+                    int selectionStart = start.CompareTo(hyperlink.ContentStart) <= 0
+                        ? 0
+                        : QuickNoteDocumentHelper.NormalizeLineEndings(
+                            new TextRange(hyperlink.ContentStart, start).Text).Length;
+                    int selectionEnd = end.CompareTo(hyperlink.ContentEnd) >= 0
+                        ? text.Length
+                        : QuickNoteDocumentHelper.NormalizeLineEndings(
+                            new TextRange(hyperlink.ContentStart, end).Text).Length;
+                    return (
+                        Hyperlink: hyperlink,
+                        Text: text,
+                        Start: Math.Clamp(selectionStart, 0, text.Length),
+                        End: Math.Clamp(selectionEnd, 0, text.Length));
+                })
+                .ToList();
+
             TxtNote.BeginChange();
             try
             {
-                // Traverse backwards to avoid issues with modified collection
-                TextPointer? current = end;
-                while (current != null && current.CompareTo(start) > 0)
+                foreach (var item in hyperlinks.AsEnumerable().Reverse())
                 {
-                    if (current.Parent is Hyperlink hyperlink)
+                    Hyperlink hyperlink = item.Hyperlink;
+                    InlineCollection? parentInlines = GetInlineSiblings(hyperlink);
+                    if (parentInlines == null)
                     {
-                        // Check if hyperlink overlaps with selection
-                        if (hyperlink.ContentStart.CompareTo(end) < 0 && hyperlink.ContentEnd.CompareTo(start) > 0)
-                        {
-                            // Unwrap hyperlink: move children to parent, remove hyperlink
-                            InlineCollection? parentInlines = GetInlineSiblings(hyperlink);
-                            if (parentInlines != null)
-                            {
-                                // Get all children first
-                                var children = new List<Inline>();
-                                Inline? child = hyperlink.Inlines.FirstInline;
-                                while (child != null)
-                                {
-                                    children.Add(child);
-                                    child = child.NextInline;
-                                }
-                                
-                                // Insert children before hyperlink
-                                foreach (var childInline in children)
-                                {
-                                    hyperlink.Inlines.Remove(childInline);
-                                    parentInlines.InsertBefore(hyperlink, childInline);
-                                }
-                                
-                                // Remove hyperlink
-                                parentInlines.Remove(hyperlink);
-                            }
-                        }
-                        // Move past hyperlink
-                        current = hyperlink.ContentStart;
+                        continue;
                     }
-                    else
+
+                    if (item.Start > 0 || item.End < item.Text.Length)
                     {
-                        current = current.GetNextContextPosition(LogicalDirection.Backward);
+                        ReplaceHyperlinkWithFragments(parentInlines, hyperlink, item.Text, item.Start, item.End);
+                        continue;
                     }
+
+                    foreach (Inline child in hyperlink.Inlines.ToList())
+                    {
+                        hyperlink.Inlines.Remove(child);
+                        parentInlines.InsertBefore(hyperlink, child);
+                    }
+
+                    parentInlines.Remove(hyperlink);
                 }
             }
             finally
@@ -1013,17 +1056,204 @@ namespace AiteBar
             }
         }
 
-        private void ClearSelectedTextMarkers()
+        private static void ReplaceHyperlinkWithFragments(
+            InlineCollection parentInlines,
+            Hyperlink source,
+            string text,
+            int selectionStart,
+            int selectionEnd)
         {
-            var (selectionStart, selectionEnd) = GetSelectionOffsets();
+            if (selectionStart > 0)
+            {
+                parentInlines.InsertBefore(source, CreateHyperlinkFragment(
+                    source,
+                    CloneInlineRange(source.Inlines, 0, selectionStart)));
+            }
+
+            if (selectionEnd > selectionStart)
+            {
+                foreach (Inline inline in CloneInlineRange(source.Inlines, selectionStart, selectionEnd))
+                {
+                    parentInlines.InsertBefore(source, inline);
+                }
+            }
+
+            if (selectionEnd < text.Length)
+            {
+                parentInlines.InsertBefore(source, CreateHyperlinkFragment(
+                    source,
+                    CloneInlineRange(source.Inlines, selectionEnd, text.Length)));
+            }
+
+            parentInlines.Remove(source);
+        }
+
+        private static Hyperlink CreateHyperlinkFragment(Hyperlink source, IEnumerable<Inline> inlines)
+        {
+            var fragment = new Hyperlink
+            {
+                NavigateUri = source.NavigateUri,
+                Tag = source.Tag,
+                Foreground = source.Foreground,
+                TextDecorations = source.TextDecorations?.Clone()
+            };
+
+            foreach (Inline inline in inlines)
+            {
+                fragment.Inlines.Add(inline);
+            }
+
+            return fragment;
+        }
+
+        private static IReadOnlyList<Inline> CloneInlineRange(InlineCollection inlines, int start, int end)
+        {
+            var result = new List<Inline>();
+            int offset = 0;
+            foreach (Inline inline in inlines)
+            {
+                int length = GetInlineTextLength(inline);
+                int localStart = Math.Clamp(start - offset, 0, length);
+                int localEnd = Math.Clamp(end - offset, 0, length);
+                if (localEnd > localStart && CloneInlineRange(inline, localStart, localEnd) is { } clone)
+                {
+                    result.Add(clone);
+                }
+
+                offset += length;
+                if (offset >= end)
+                {
+                    break;
+                }
+            }
+
+            return result;
+        }
+
+        private static Inline? CloneInlineRange(Inline inline, int start, int end)
+        {
+            if (inline is Run run)
+            {
+                return CloneRunWithText(run, run.Text[start..end]);
+            }
+
+            if (inline is LineBreak)
+            {
+                return start == 0 && end > 0 ? new LineBreak() : null;
+            }
+
+            if (inline is Span span)
+            {
+                Span clone = CloneSpanShell(span);
+                foreach (Inline child in CloneInlineRange(span.Inlines, start, end))
+                {
+                    clone.Inlines.Add(child);
+                }
+
+                return clone.Inlines.Count > 0 ? clone : null;
+            }
+
+            return null;
+        }
+
+        private static Span CloneSpanShell(Span source)
+        {
+            Span clone = source switch
+            {
+                Bold => new Bold(),
+                Italic => new Italic(),
+                _ => new Span()
+            };
+            clone.Tag = source.Tag;
+            clone.FontFamily = source.FontFamily;
+            clone.FontSize = source.FontSize;
+            clone.FontStretch = source.FontStretch;
+            clone.FontStyle = source.FontStyle;
+            clone.FontWeight = source.FontWeight;
+            clone.Foreground = source.Foreground;
+            clone.Background = source.Background;
+            clone.TextDecorations = source.TextDecorations?.Clone();
+            return clone;
+        }
+
+        private static int GetInlineTextLength(Inline inline)
+        {
+            if (inline is Run run)
+            {
+                return QuickNoteDocumentHelper.NormalizeLineEndings(run.Text).Length;
+            }
+
+            if (inline is LineBreak)
+            {
+                return 1;
+            }
+
+            return inline is Span span
+                ? span.Inlines.Sum(GetInlineTextLength)
+                : 0;
+        }
+
+        private static IEnumerable<Hyperlink> GetAllHyperlinks(BlockCollection blocks)
+        {
+            foreach (Block block in blocks)
+            {
+                if (block is Paragraph paragraph)
+                {
+                    foreach (Hyperlink hyperlink in GetAllHyperlinks(paragraph.Inlines))
+                    {
+                        yield return hyperlink;
+                    }
+                }
+                else if (block is FlowList list)
+                {
+                    foreach (ListItem item in list.ListItems)
+                    {
+                        foreach (Hyperlink hyperlink in GetAllHyperlinks(item.Blocks))
+                        {
+                            yield return hyperlink;
+                        }
+                    }
+                }
+                else if (block is Section section)
+                {
+                    foreach (Hyperlink hyperlink in GetAllHyperlinks(section.Blocks))
+                    {
+                        yield return hyperlink;
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<Hyperlink> GetAllHyperlinks(InlineCollection inlines)
+        {
+            foreach (Inline inline in inlines)
+            {
+                if (inline is Hyperlink hyperlink)
+                {
+                    yield return hyperlink;
+                }
+                else if (inline is Span span)
+                {
+                    foreach (Hyperlink child in GetAllHyperlinks(span.Inlines))
+                    {
+                        yield return child;
+                    }
+                }
+            }
+        }
+
+        private (int Start, int End, bool Changed) ClearSelectedTextMarkers(int selectionStart, int selectionEnd)
+        {
             string text = GetEditorText();
             QuickNoteRangeEdit edit = QuickNoteMarkdown.GetClearLineMarkerRangeEdit(text, selectionStart, selectionEnd);
             if (!(edit.RemoveLength == edit.InsertText.Length &&
                   string.Equals(text.Substring(edit.StartOffset, edit.RemoveLength), edit.InsertText, StringComparison.Ordinal)))
             {
                 ApplyRangeEdit(edit);
-                // Don't set caret yet - we'll restore original selection later
+                return (edit.CaretOffset, edit.CaretOffset + edit.SelectionLength, true);
             }
+
+            return (selectionStart, selectionEnd, false);
         }
 
         private void ResetSelectionFormatting()
@@ -1242,7 +1472,7 @@ namespace AiteBar
         {
             EnsureDocumentLoadedForFirstPaint();
 
-            var work = GetWorkArea();
+            var work = GetWorkArea(settings);
             var bounds = QuickNoteLayoutHelper.ClampBoundsToWorkArea(
                 work,
                 settings.QuickNoteLeft,
@@ -1364,7 +1594,7 @@ namespace AiteBar
                     ApplyTheme(theme);
                     BuildThemePalette();
                     ThemePopup.IsOpen = false;
-                    await _settingsService.SaveAsync();
+                    await SaveSettingsSafelyAsync();
                 };
                 ThemePalette.Children.Add(button);
             }
@@ -1412,9 +1642,7 @@ namespace AiteBar
             Resources["QuickNoteHoverBrush"] = Brush(theme.IsDark ? "#303238" : "#14000000");
             Resources["QuickNoteHoverForegroundBrush"] = text;
             FormatSeparator1.Fill = muted;
-            FormatSeparator2.Fill = muted;
             FormatSeparator1.Opacity = theme.IsDark ? 0.35 : 0.45;
-            FormatSeparator2.Opacity = theme.IsDark ? 0.35 : 0.45;
 
             _cachedTextBlocks ??= FindVisualChildren<TextBlock>(this).ToList();
             foreach (var textBlock in _cachedTextBlocks)
@@ -1549,9 +1777,27 @@ namespace AiteBar
 
 
 
-        private System.Drawing.Rectangle GetWorkArea()
+        private System.Drawing.Rectangle GetWorkArea(AppSettings? settings = null)
         {
-            // Находим экран, где сейчас находится окно или используем основной
+            if (settings != null && HasSavedBounds(settings))
+            {
+                Forms.Screen? primary = Forms.Screen.PrimaryScreen;
+                var workAreas = Forms.Screen.AllScreens
+                    .OrderByDescending(screen => ReferenceEquals(screen, primary))
+                    .Select(screen => screen.WorkingArea)
+                    .ToList();
+                System.Drawing.Rectangle selected = QuickNoteLayoutHelper.SelectWorkArea(
+                    workAreas,
+                    settings.QuickNoteLeft,
+                    settings.QuickNoteTop,
+                    settings.QuickNoteWidth,
+                    settings.QuickNoteHeight);
+                if (!selected.IsEmpty)
+                {
+                    return selected;
+                }
+            }
+
             var currentScreen = Forms.Screen.FromHandle(new System.Windows.Interop.WindowInteropHelper(this).Handle);
             return currentScreen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? GetVirtualScreenFallback();
         }
@@ -1604,7 +1850,19 @@ namespace AiteBar
                 s.QuickNoteWidth = bounds.Width;
                 s.QuickNoteHeight = bounds.Height;
             });
-            await _settingsService.SaveAsync();
+            await SaveSettingsSafelyAsync();
+        }
+
+        private async Task SaveSettingsSafelyAsync()
+        {
+            try
+            {
+                await _settingsService.SaveAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
         }
 
         private bool TryOpenUrlAtMouse(MouseButtonEventArgs e)

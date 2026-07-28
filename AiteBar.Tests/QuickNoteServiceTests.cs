@@ -55,6 +55,15 @@ public sealed class QuickNoteServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task HasExternalChanges_WhenFileIsCreatedAfterMissingBaseline_ReturnsTrue()
+    {
+        await _service.ReadMarkdownAsync();
+        await File.WriteAllTextAsync(_service.NotePath, "external");
+
+        Assert.True(_service.HasExternalChanges());
+    }
+
+    [Fact]
     public async Task HasExternalChanges_AfterLoad_ReturnsFalse()
     {
         await File.WriteAllTextAsync(_service.NotePath, "initial");
@@ -76,6 +85,19 @@ public sealed class QuickNoteServiceTests : IDisposable
         await File.WriteAllTextAsync(_service.NotePath, "external");
 
         Assert.Equal("initial", content);
+        Assert.True(_service.HasExternalChanges());
+    }
+
+    [Fact]
+    public async Task HasExternalChanges_DetectsSameLengthContentWithRestoredTimestamp()
+    {
+        await File.WriteAllTextAsync(_service.NotePath, "first");
+        await _service.ReadMarkdownAsync();
+        DateTime baselineTimestamp = File.GetLastWriteTimeUtc(_service.NotePath);
+
+        await File.WriteAllTextAsync(_service.NotePath, "other");
+        File.SetLastWriteTimeUtc(_service.NotePath, baselineTimestamp);
+
         Assert.True(_service.HasExternalChanges());
     }
 
@@ -128,6 +150,54 @@ public sealed class QuickNoteServiceTests : IDisposable
         Assert.Equal("conflict text", await File.ReadAllTextAsync(conflictPath));
         Assert.Equal("original", await File.ReadAllTextAsync(_service.NotePath));
         Assert.Equal(conflictPath, _service.LastConflictCopyPath);
+    }
+
+    [Fact]
+    public async Task SaveConflictCopyAsync_CreatesUniqueFilesForImmediateConflicts()
+    {
+        string[] paths = await RunStaAsync(async () =>
+        {
+            var first = new FlowDocument(new Paragraph(new Run("first")));
+            var second = new FlowDocument(new Paragraph(new Run("second")));
+            return new[]
+            {
+                await _service.SaveConflictCopyAsync(first),
+                await _service.SaveConflictCopyAsync(second)
+            };
+        });
+
+        Assert.NotEqual(paths[0], paths[1]);
+        Assert.Equal("first", await File.ReadAllTextAsync(paths[0]));
+        Assert.Equal("second", await File.ReadAllTextAsync(paths[1]));
+    }
+
+    [Fact]
+    public async Task ReadMarkdownAsync_RestoresLatestConflictCopyAfterServiceRestart()
+    {
+        string older = Path.Combine(_tempDir, "QuickNote.conflict-older.md");
+        string latest = Path.Combine(_tempDir, "QuickNote.conflict-latest.md");
+        await File.WriteAllTextAsync(older, "older");
+        await File.WriteAllTextAsync(latest, "latest");
+        File.SetLastWriteTimeUtc(older, DateTime.UtcNow.AddMinutes(-1));
+        File.SetLastWriteTimeUtc(latest, DateTime.UtcNow);
+        var restarted = new QuickNoteService(_service.NotePath);
+
+        await restarted.ReadMarkdownAsync();
+
+        Assert.Equal(latest, restarted.LastConflictCopyPath);
+    }
+
+    [Fact]
+    public async Task SaveAsync_DoesNotLeaveTemporaryFiles()
+    {
+        await RunStaAsync(async () =>
+        {
+            var document = new FlowDocument(new Paragraph(new Run("atomic")));
+            await _service.SaveAsync(document);
+        });
+
+        Assert.Equal("atomic", await File.ReadAllTextAsync(_service.NotePath));
+        Assert.Empty(Directory.GetFiles(_tempDir, "*.tmp"));
     }
 
     [Fact]

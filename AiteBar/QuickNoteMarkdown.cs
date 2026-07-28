@@ -233,10 +233,13 @@ namespace AiteBar
             text = NormalizeLineEndings(text);
             var (lineStart, lineEnd) = GetSelectedLineBounds(text, selectionStart, selectionEnd);
             string selectedText = text[lineStart..lineEnd];
-            QuickNoteTextOperation[] operations = GetClearMarkerOperations(selectedText, selectionStart - lineStart, selectionEnd - lineStart);
+            int relativeSelectionStart = Math.Clamp(selectionStart - lineStart, 0, selectedText.Length);
+            int relativeSelectionEnd = Math.Clamp(selectionEnd - lineStart, 0, selectedText.Length);
+            QuickNoteTextOperation[] operations = GetClearMarkerOperations(selectedText, relativeSelectionStart, relativeSelectionEnd);
             string updatedText = ApplyOperations(selectedText, operations);
-            int caret = lineStart + MapOffsetThroughOperations(Math.Max(selectionStart, selectionEnd) - lineStart, operations);
-            return new QuickNoteRangeEdit(lineStart, lineEnd - lineStart, updatedText, caret, 0);
+            int mappedStart = lineStart + MapOffsetThroughOperations(relativeSelectionStart, operations);
+            int mappedEnd = lineStart + MapOffsetThroughOperations(relativeSelectionEnd, operations);
+            return new QuickNoteRangeEdit(lineStart, lineEnd - lineStart, updatedText, mappedStart, Math.Max(0, mappedEnd - mappedStart));
         }
 
         public static QuickNoteRangeEdit GetHeadingRangeEdit(string text, int selectionStart, int selectionEnd, int headingLevel)
@@ -334,7 +337,7 @@ namespace AiteBar
             return operations.ToArray();
         }
 
-        private static void AddMarkdownInlines(InlineCollection inlines, string line)
+        private static void AddMarkdownInlines(InlineCollection inlines, string line, bool allowLinks = true)
         {
             var plain = new StringBuilder();
             int index = 0;
@@ -347,10 +350,24 @@ namespace AiteBar
                     continue;
                 }
 
+                if (TryReadDelimited(line, index, "***", out string boldItalicText, out int boldItalicEnd))
+                {
+                    FlushPlain(inlines, plain);
+                    var bold = new Bold();
+                    var italic = new Italic();
+                    AddMarkdownInlines(italic.Inlines, boldItalicText, allowLinks);
+                    bold.Inlines.Add(italic);
+                    inlines.Add(bold);
+                    index = boldItalicEnd;
+                    continue;
+                }
+
                 if (TryReadDelimited(line, index, "**", out string boldText, out int boldEnd))
                 {
                     FlushPlain(inlines, plain);
-                    inlines.Add(new Bold(CreateRun(UnescapeMarkdownText(boldText))));
+                    var bold = new Bold();
+                    AddMarkdownInlines(bold.Inlines, boldText, allowLinks);
+                    inlines.Add(bold);
                     index = boldEnd;
                     continue;
                 }
@@ -358,10 +375,12 @@ namespace AiteBar
                 if (TryReadHtmlUnderline(line, index, out string underlineText, out int underlineEnd))
                 {
                     FlushPlain(inlines, plain);
-                    inlines.Add(new Span(CreateRun(UnescapeMarkdownText(underlineText)))
+                    var underline = new Span
                     {
                         TextDecorations = TextDecorations.Underline
-                    });
+                    };
+                    AddMarkdownInlines(underline.Inlines, underlineText, allowLinks);
+                    inlines.Add(underline);
                     index = underlineEnd;
                     continue;
                 }
@@ -369,18 +388,23 @@ namespace AiteBar
                 if (TryReadDelimited(line, index, "~~", out string strikeText, out int strikeEnd))
                 {
                     FlushPlain(inlines, plain);
-                    inlines.Add(new Span(CreateRun(UnescapeMarkdownText(strikeText)))
+                    var strike = new Span
                     {
                         TextDecorations = TextDecorations.Strikethrough
-                    });
+                    };
+                    AddMarkdownInlines(strike.Inlines, strikeText, allowLinks);
+                    inlines.Add(strike);
                     index = strikeEnd;
                     continue;
                 }
 
-                if (TryReadMarkdownLink(line, index, out string linkText, out string url, out int linkEnd))
+                if (allowLinks && TryReadMarkdownLink(line, index, out string linkText, out string url, out int linkEnd))
                 {
                     FlushPlain(inlines, plain);
-                    inlines.Add(CreateHyperlink(UnescapeMarkdownText(linkText), UnescapeMarkdownText(url)));
+                    Hyperlink hyperlink = CreateHyperlink(string.Empty, UnescapeMarkdownText(url));
+                    hyperlink.Inlines.Clear();
+                    AddMarkdownInlines(hyperlink.Inlines, linkText, allowLinks: false);
+                    inlines.Add(hyperlink);
                     index = linkEnd;
                     continue;
                 }
@@ -401,7 +425,9 @@ namespace AiteBar
                     TryReadDelimited(line, index, "*", out string italicText, out int italicEnd))
                 {
                     FlushPlain(inlines, plain);
-                    inlines.Add(new Italic(CreateRun(UnescapeMarkdownText(italicText))));
+                    var italic = new Italic();
+                    AddMarkdownInlines(italic.Inlines, italicText, allowLinks);
+                    inlines.Add(italic);
                     index = italicEnd;
                     continue;
                 }
@@ -845,8 +871,14 @@ namespace AiteBar
             bool isBold = bold || inline is Bold || IsLocalValue(inline, TextElement.FontWeightProperty, FontWeights.Bold);
             bool isItalic = italic || inline is Italic || IsLocalValue(inline, TextElement.FontStyleProperty, FontStyles.Italic);
             bool isCode = code || IsCodeInline(inline);
-            bool isUnderline = underline || HasTextDecoration(inline, TextDecorationLocation.Underline);
+            // Hyperlink applies underline as its default visual style; Markdown link syntax already preserves it.
+            bool isUnderline = underline || (inline is not Hyperlink && HasTextDecoration(inline, TextDecorationLocation.Underline));
             bool isStrikethrough = strikethrough || HasTextDecoration(inline, TextDecorationLocation.Strikethrough);
+            bool opensBold = isBold && !bold;
+            bool opensItalic = isItalic && !italic;
+            bool opensCode = isCode && !code;
+            bool opensUnderline = isUnderline && !underline;
+            bool opensStrikethrough = isStrikethrough && !strikethrough;
 
             if (inline is Hyperlink hyperlink)
             {
@@ -856,6 +888,7 @@ namespace AiteBar
                     AppendInlineMarkdown(linkBuilder, child, isBold, isItalic, isCode, false, isStrikethrough);
                 }
 
+                AppendStyleOpening(builder, opensBold, opensItalic, opensCode, opensUnderline, opensStrikethrough);
                 string linkUrl = GetHyperlinkUrl(hyperlink);
                 if (string.IsNullOrWhiteSpace(linkUrl))
                 {
@@ -870,12 +903,13 @@ namespace AiteBar
                     builder.Append(')');
                 }
 
+                AppendStyleClosing(builder, opensBold, opensItalic, opensCode, opensUnderline, opensStrikethrough);
                 return;
             }
 
             if (inline is Run run)
             {
-                AppendStyledText(builder, run.Text, isBold, isItalic, isCode, isUnderline, isStrikethrough);
+                AppendStyledText(builder, run.Text, opensBold, opensItalic, opensCode, opensUnderline, opensStrikethrough);
                 return;
             }
 
@@ -887,10 +921,13 @@ namespace AiteBar
 
             if (inline is Span span)
             {
+                AppendStyleOpening(builder, opensBold, opensItalic, opensCode, opensUnderline, opensStrikethrough);
                 foreach (Inline child in span.Inlines)
                 {
                     AppendInlineMarkdown(builder, child, isBold, isItalic, isCode, isUnderline, isStrikethrough);
                 }
+
+                AppendStyleClosing(builder, opensBold, opensItalic, opensCode, opensUnderline, opensStrikethrough);
             }
         }
 
@@ -934,6 +971,13 @@ namespace AiteBar
             }
 
             string escaped = EscapeMarkdownText(text);
+            AppendStyleOpening(builder, bold, italic, code, underline, strikethrough);
+            builder.Append(escaped);
+            AppendStyleClosing(builder, bold, italic, code, underline, strikethrough);
+        }
+
+        private static void AppendStyleOpening(StringBuilder builder, bool bold, bool italic, bool code, bool underline, bool strikethrough)
+        {
             if (underline)
             {
                 builder.Append("<u>");
@@ -949,18 +993,6 @@ namespace AiteBar
                 builder.Append('*');
             }
 
-            if (code)
-            {
-                builder.Append('`');
-            }
-
-            if (strikethrough)
-            {
-                builder.Append("~~");
-            }
-
-            builder.Append(escaped);
-
             if (strikethrough)
             {
                 builder.Append("~~");
@@ -969,6 +1001,19 @@ namespace AiteBar
             if (code)
             {
                 builder.Append('`');
+            }
+        }
+
+        private static void AppendStyleClosing(StringBuilder builder, bool bold, bool italic, bool code, bool underline, bool strikethrough)
+        {
+            if (code)
+            {
+                builder.Append('`');
+            }
+
+            if (strikethrough)
+            {
+                builder.Append("~~");
             }
 
             if (italic)

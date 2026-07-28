@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 
@@ -25,7 +26,11 @@ namespace AiteBar
     {
         private readonly string _notePath;
         private readonly IQuickNoteProcessStartDispatcher _processStartDispatcher;
+        private bool _baselineEstablished;
+        private bool _lastKnownExists;
         private DateTime _lastKnownWriteTimeUtc = DateTime.MinValue;
+        private long _lastKnownLength;
+        private string? _lastKnownContentHash;
 
         public QuickNoteService(string? notePath = null)
             : this(notePath, new QuickNoteProcessStartDispatcher())
@@ -45,13 +50,21 @@ namespace AiteBar
 
         public bool HasExternalChanges()
         {
-            if (!File.Exists(NotePath))
+            if (!_baselineEstablished)
             {
-                return _lastKnownWriteTimeUtc != DateTime.MinValue;
+                return false;
             }
 
-            DateTime currentWriteTimeUtc = File.GetLastWriteTimeUtc(NotePath);
-            return _lastKnownWriteTimeUtc != DateTime.MinValue && currentWriteTimeUtc != _lastKnownWriteTimeUtc;
+            var file = new FileInfo(NotePath);
+            if (file.Exists != _lastKnownExists)
+            {
+                return true;
+            }
+
+            return file.Exists &&
+                   (file.LastWriteTimeUtc != _lastKnownWriteTimeUtc ||
+                    file.Length != _lastKnownLength ||
+                    !string.Equals(ComputeContentHash(NotePath), _lastKnownContentHash, StringComparison.Ordinal));
         }
 
         public async Task LoadAsync(FlowDocument document)
@@ -71,12 +84,14 @@ namespace AiteBar
             EnsureNoteDirectory();
             if (!File.Exists(NotePath))
             {
-                _lastKnownWriteTimeUtc = DateTime.MinValue;
+                RecordBaseline();
+                RefreshLastConflictCopy();
                 return string.Empty;
             }
 
             string markdown = File.ReadAllText(NotePath);
-            _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(NotePath);
+            RecordBaseline();
+            RefreshLastConflictCopy();
             return markdown;
         }
 
@@ -85,12 +100,14 @@ namespace AiteBar
             EnsureNoteDirectory();
             if (!File.Exists(NotePath))
             {
-                _lastKnownWriteTimeUtc = DateTime.MinValue;
+                RecordBaseline();
+                RefreshLastConflictCopy();
                 return string.Empty;
             }
 
             string markdown = await File.ReadAllTextAsync(NotePath);
-            _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(NotePath);
+            RecordBaseline();
+            RefreshLastConflictCopy();
             return markdown;
         }
 
@@ -104,8 +121,8 @@ namespace AiteBar
         {
             EnsureNoteDirectory();
             string markdown = QuickNoteMarkdown.ToMarkdown(document);
-            await File.WriteAllTextAsync(NotePath, markdown);
-            _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(NotePath);
+            await WriteAtomicallyAsync(NotePath, markdown);
+            RecordBaseline();
         }
 
         public async Task<string> SaveConflictCopyAsync(FlowDocument document)
@@ -113,9 +130,9 @@ namespace AiteBar
             EnsureNoteDirectory();
             string conflictPath = Path.Combine(
                 Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder,
-                $"QuickNote.conflict-{DateTime.Now:yyyyMMdd-HHmmss}.md");
+                $"QuickNote.conflict-{DateTime.Now:yyyyMMdd-HHmmss-fff}-{Guid.NewGuid():N}.md");
             string markdown = QuickNoteMarkdown.ToMarkdown(document);
-            await File.WriteAllTextAsync(conflictPath, markdown);
+            await WriteNewFileAsync(conflictPath, markdown);
             LastConflictCopyPath = conflictPath;
             CleanupOldConflictCopies();
             return conflictPath;
@@ -161,6 +178,7 @@ namespace AiteBar
             if (!File.Exists(NotePath))
             {
                 File.WriteAllText(NotePath, string.Empty);
+                RecordBaseline();
             }
 
             _processStartDispatcher.Start(new ProcessStartInfo(NotePath) { UseShellExecute = true });
@@ -186,6 +204,62 @@ namespace AiteBar
             }
 
             Directory.CreateDirectory(directory);
+        }
+
+        private void RecordBaseline()
+        {
+            var file = new FileInfo(NotePath);
+            _baselineEstablished = true;
+            _lastKnownExists = file.Exists;
+            _lastKnownWriteTimeUtc = file.Exists ? file.LastWriteTimeUtc : DateTime.MinValue;
+            _lastKnownLength = file.Exists ? file.Length : 0;
+            _lastKnownContentHash = file.Exists ? ComputeContentHash(NotePath) : null;
+        }
+
+        private void RefreshLastConflictCopy()
+        {
+            try
+            {
+                string directory = Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder;
+                LastConflictCopyPath = Directory.GetFiles(directory, "QuickNote.conflict-*.md")
+                    .OrderByDescending(File.GetLastWriteTimeUtc)
+                    .FirstOrDefault();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+        }
+
+        private static string ComputeContentHash(string path)
+        {
+            using FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            return Convert.ToHexString(SHA256.HashData(stream));
+        }
+
+        private static async Task WriteAtomicallyAsync(string path, string content)
+        {
+            string directory = Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
+            string tempPath = Path.Combine(directory, $".{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
+            try
+            {
+                await File.WriteAllTextAsync(tempPath, content);
+                File.Move(tempPath, path, overwrite: true);
+            }
+            finally
+            {
+                if (File.Exists(tempPath))
+                {
+                    File.Delete(tempPath);
+                }
+            }
+        }
+
+        private static async Task WriteNewFileAsync(string path, string content)
+        {
+            await using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            await using var writer = new StreamWriter(stream);
+            await writer.WriteAsync(content);
         }
     }
 }

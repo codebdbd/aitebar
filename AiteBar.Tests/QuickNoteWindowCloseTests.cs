@@ -13,7 +13,7 @@ namespace AiteBar.Tests;
 public sealed class QuickNoteWindowCloseTests
 {
     [Fact]
-    public async Task Close_WaitsForActiveAndForcedSavesBeforeDisposingWindow()
+    public async Task Close_WaitsForActiveSaveWithoutWritingUnchangedDocumentAgain()
     {
         await RunStaAsync(async () =>
         {
@@ -45,15 +45,10 @@ public sealed class QuickNoteWindowCloseTests
 
                 persistence.CompleteSave(0);
                 await firstSave;
-                await persistence.WaitForSaveCountAsync(2);
-
-                Assert.True(window.IsVisible);
-                Assert.False(closed.Task.IsCompleted);
-
-                persistence.CompleteSave(1);
                 await closed.Task.WaitAsync(TimeSpan.FromSeconds(5));
 
                 Assert.False(window.IsVisible);
+                Assert.Equal(1, persistence.SaveCount);
             }
             finally
             {
@@ -156,6 +151,7 @@ public sealed class QuickNoteWindowCloseTests
         private readonly List<TaskCompletionSource> _saves = [];
         private readonly List<(int Count, TaskCompletionSource Completion)> _saveCountWaiters = [];
 
+        public int SaveCount => _saves.Count;
         public string? LastConflictCopyPath => null;
         public bool HasExternalChanges() => false;
         public void Load(FlowDocument document) => document.Blocks.Clear();

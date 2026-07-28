@@ -499,6 +499,9 @@
   <data name="QuickNote_Heading" xml:space="preserve">
     <value>Заголовок</value>
   </data>
+  <data name="QuickNote_MoreFormatting" xml:space="preserve">
+    <value>Дополнительное форматирование</value>
+  </data>
   <data name="QuickNote_BodyText" xml:space="preserve">
     <value>Обычный текст</value>
   </data>

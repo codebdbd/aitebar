@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 
 namespace AiteBar;
 
@@ -53,6 +55,57 @@ internal static class QuickNoteLayoutHelper
         safeTop = Math.Clamp(safeTop, workArea.Top, Math.Max(workArea.Top, maxTop));
 
         return (safeLeft, safeTop, safeWidth, safeHeight);
+    }
+
+    public static Rectangle SelectWorkArea(
+        IReadOnlyList<Rectangle> workAreas,
+        double? left,
+        double? top,
+        double? width,
+        double? height)
+    {
+        ArgumentNullException.ThrowIfNull(workAreas);
+        if (workAreas.Count == 0)
+        {
+            return Rectangle.Empty;
+        }
+
+        if (!IsUsableCoordinate(left) || !IsUsableCoordinate(top))
+        {
+            return workAreas[0];
+        }
+
+        double safeWidth = IsUsableSize(width) ? width!.Value : DefaultWidth;
+        double safeHeight = IsUsableSize(height) ? height!.Value : DefaultHeight;
+        var savedBounds = new Rectangle(
+            (int)Math.Round(left!.Value),
+            (int)Math.Round(top!.Value),
+            Math.Max(1, (int)Math.Round(safeWidth)),
+            Math.Max(1, (int)Math.Round(safeHeight)));
+
+        Rectangle intersecting = workAreas
+            .Select(area => (Area: area, Intersection: Rectangle.Intersect(area, savedBounds)))
+            .OrderByDescending(candidate => (long)candidate.Intersection.Width * candidate.Intersection.Height)
+            .First()
+            .Area;
+
+        if (workAreas.Any(area => Rectangle.Intersect(area, savedBounds) is { Width: > 0, Height: > 0 }))
+        {
+            return intersecting;
+        }
+
+        double centerX = left.Value + safeWidth / 2;
+        double centerY = top.Value + safeHeight / 2;
+        return workAreas
+            .OrderBy(area => DistanceSquaredToRectangle(centerX, centerY, area))
+            .First();
+    }
+
+    private static double DistanceSquaredToRectangle(double x, double y, Rectangle rectangle)
+    {
+        double dx = x < rectangle.Left ? rectangle.Left - x : x > rectangle.Right ? x - rectangle.Right : 0;
+        double dy = y < rectangle.Top ? rectangle.Top - y : y > rectangle.Bottom ? y - rectangle.Bottom : 0;
+        return dx * dx + dy * dy;
     }
 
     private static bool IsUsableSize(double? value) =>

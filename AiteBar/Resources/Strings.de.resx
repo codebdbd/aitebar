@@ -130,6 +130,7 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Nummerierte Liste</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Formatierung löschen</value></data>
   <data name="QuickNote_Heading" xml:space="preserve"><value>Überschrift</value></data>
+  <data name="QuickNote_MoreFormatting" xml:space="preserve"><value>Weitere Formatierung</value></data>
   <data name="QuickNote_BodyText" xml:space="preserve"><value>Fließtext</value></data>
   <data name="QuickNote_TitleHeading" xml:space="preserve"><value>Titel</value></data>
   <data name="QuickNote_SubtitleHeading" xml:space="preserve"><value>Untertitel</value></data>

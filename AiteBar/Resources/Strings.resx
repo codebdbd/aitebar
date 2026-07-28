@@ -219,6 +219,7 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Numbered list</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Clear formatting</value></data>
   <data name="QuickNote_Heading" xml:space="preserve"><value>Heading</value></data>
+  <data name="QuickNote_MoreFormatting" xml:space="preserve"><value>More formatting</value></data>
   <data name="QuickNote_BodyText" xml:space="preserve"><value>Body Text</value></data>
   <data name="QuickNote_TitleHeading" xml:space="preserve"><value>Title</value></data>
   <data name="QuickNote_SubtitleHeading" xml:space="preserve"><value>Subtitle</value></data>

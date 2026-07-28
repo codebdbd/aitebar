@@ -101,4 +101,52 @@ public sealed class QuickNoteLayoutHelperTests
         Assert.Equal(QuickNoteLayoutHelper.MinWidth, bounds.Width);
         Assert.Equal(QuickNoteLayoutHelper.MinHeight, bounds.Height);
     }
+
+    [Fact]
+    public void SelectWorkArea_UsesSecondaryMonitorContainingSavedBounds()
+    {
+        Rectangle primary = new(0, 0, 1920, 1080);
+        Rectangle secondary = new(1920, 0, 2560, 1440);
+
+        Rectangle selected = QuickNoteLayoutHelper.SelectWorkArea(
+            [primary, secondary],
+            left: 2300,
+            top: 200,
+            width: 580,
+            height: 430);
+
+        Assert.Equal(secondary, selected);
+    }
+
+    [Fact]
+    public void SelectWorkArea_SupportsNegativeMonitorCoordinates()
+    {
+        Rectangle primary = new(0, 0, 1920, 1080);
+        Rectangle leftMonitor = new(-1920, 0, 1920, 1080);
+
+        Rectangle selected = QuickNoteLayoutHelper.SelectWorkArea(
+            [primary, leftMonitor],
+            left: -1500,
+            top: 100,
+            width: 580,
+            height: 430);
+
+        Assert.Equal(leftMonitor, selected);
+    }
+
+    [Fact]
+    public void SelectWorkArea_UsesNearestMonitorWhenSavedMonitorWasRemoved()
+    {
+        Rectangle primary = new(0, 0, 1920, 1080);
+        Rectangle rightMonitor = new(1920, 0, 1920, 1080);
+
+        Rectangle selected = QuickNoteLayoutHelper.SelectWorkArea(
+            [primary, rightMonitor],
+            left: 5000,
+            top: 100,
+            width: 580,
+            height: 430);
+
+        Assert.Equal(rightMonitor, selected);
+    }
 }

@@ -90,6 +90,57 @@ public sealed class QuickNoteDocumentHelperTests
         });
     }
 
+    [Fact]
+    public void GetTextPointerAtOffset_ReturnsStartOfTextAfterParagraphMovesOutOfList()
+    {
+        RunSta(() =>
+        {
+            var paragraph = new Paragraph(new Run("note"));
+            var item = new ListItem(paragraph);
+            var list = new System.Windows.Documents.List(item);
+            var document = new FlowDocument(list);
+            item.Blocks.Remove(paragraph);
+            document.Blocks.InsertBefore(list, paragraph);
+            document.Blocks.Remove(list);
+
+            TextPointer start = QuickNoteDocumentHelper.GetTextPointerAtOffset(document, 0)!;
+
+            Assert.Equal("note", new TextRange(start, paragraph.ContentEnd).Text);
+        });
+    }
+
+    [Fact]
+    public void RemapSelection_PreservesSelectedTextWhenListStructureRemovesHiddenLineBreaks()
+    {
+        var selection = QuickNoteDocumentHelper.RemapSelection(
+            "\n\nformatted item\n\n",
+            "formatted item\n",
+            2,
+            16);
+
+        Assert.Equal((0, 14), selection);
+    }
+
+    [Fact]
+    public void RemapSelection_UsesNearestMatchingTextWhenContentRepeats()
+    {
+        var selection = QuickNoteDocumentHelper.RemapSelection(
+            "\n\nsame\nsame\n\n",
+            "same\nsame\n",
+            7,
+            11);
+
+        Assert.Equal((5, 9), selection);
+    }
+
+    [Theory]
+    [InlineData("•\tone", "one")]
+    [InlineData("1.\tone\n2.\ttwo", "one\ntwo")]
+    public void RemoveVisualListMarkers_RemovesWpfMarkersFromSelectedText(string text, string expected)
+    {
+        Assert.Equal(expected, QuickNoteDocumentHelper.RemoveVisualListMarkers(text));
+    }
+
     private static void RunSta(Action action)
     {
         Exception? exception = null;
