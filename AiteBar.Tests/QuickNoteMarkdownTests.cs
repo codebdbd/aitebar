@@ -117,7 +117,20 @@ public sealed class QuickNoteMarkdownTests
         Assert.Equal(5, edit.StartOffset);
         Assert.Equal("- one\n- two".Length, edit.RemoveLength);
         Assert.Equal("one\ntwo", edit.InsertText);
-        Assert.True(edit.CaretOffset >= edit.StartOffset);
+        Assert.Equal(5, edit.CaretOffset);
+        Assert.Equal("one\ntwo".Length, edit.SelectionLength);
+    }
+
+    [Fact]
+    public void GetClearLineMarkerRangeEdit_PreservesPartialSelectionAfterRemovingMarkers()
+    {
+        QuickNoteRangeEdit edit = QuickNoteMarkdown.GetClearLineMarkerRangeEdit("head\n- one two\ntail", 7, 10);
+
+        Assert.Equal(5, edit.StartOffset);
+        Assert.Equal("- one two".Length, edit.RemoveLength);
+        Assert.Equal("one two", edit.InsertText);
+        Assert.Equal(5, edit.CaretOffset);
+        Assert.Equal(3, edit.SelectionLength);
     }
 
     [Fact]
@@ -168,6 +181,27 @@ public sealed class QuickNoteMarkdownTests
         });
 
         Assert.Equal("plain **bold** *italic* `code`", markdown);
+    }
+
+    [Theory]
+    [InlineData("***both***")]
+    [InlineData("<u>~~under-strike~~</u>")]
+    [InlineData("**bold `code`**")]
+    [InlineData("[**bold link**](https://example.com)")]
+    [InlineData("***bold italic `code`***")]
+    [InlineData("~~`code strike`~~")]
+    [InlineData("<u>~~`code strike underline`~~</u>")]
+    [InlineData("[~~`formatted code link`~~](https://example.com)")]
+    public void LoadMarkdown_PreservesNestedFormattingRoundTrip(string source)
+    {
+        string markdown = RunSta(() =>
+        {
+            var document = new FlowDocument();
+            QuickNoteMarkdown.LoadMarkdown(document, source);
+            return QuickNoteMarkdown.ToMarkdown(document);
+        });
+
+        Assert.Equal(source, markdown);
     }
 
     [Fact]
@@ -416,6 +450,24 @@ public sealed class QuickNoteMarkdownTests
         });
 
         Assert.Equal("literal **not bold**", visibleText);
+    }
+
+    [Theory]
+    [InlineData("https://example.com", 0, true)]
+    [InlineData("file:///C:/Windows/System32/calc.exe", 0, false)]
+    [InlineData("javascript:alert(1)", 0, false)]
+    [InlineData("mailto:user@example.com", 1, true)]
+    [InlineData("mailto:user@example.com\"&calc.exe", 1, false)]
+    [InlineData("tel:+380 (67) 123-45-67", 2, true)]
+    [InlineData("tel:../../calc.exe|cmd", 2, false)]
+    public void IsSafeLinkForOpen_AllowsOnlyExpectedSchemePayloads(
+        string link,
+        int type,
+        bool expected)
+    {
+        Assert.Equal(
+            expected,
+            QuickNoteMarkdown.IsSafeLinkForOpen(link, (QuickNoteMarkdown.LinkType)type));
     }
 
     [Fact]

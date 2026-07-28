@@ -72,6 +72,8 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("FontSize=\"18\" FontWeight=\"Normal\"", xaml);
         Assert.Contains("x:Name=\"FooterCommandColumn\" Width=\"150\"", xaml);
         Assert.Contains("x:Name=\"RailCommandColumn\" Width=\"150\"", xaml);
+        Assert.Contains("<Button x:Name=\"BtnProcess\" Grid.Column=\"5\"", xaml);
+        Assert.DoesNotContain("Text=\"&#xE945;\"", xaml);
         Assert.Contains("Width=\"36\" Height=\"36\" MinWidth=\"36\" MaxWidth=\"36\"", xaml);
         Assert.DoesNotContain("IconRailButtonStyle", xaml);
         Assert.DoesNotContain("Width=\"220\" Height=\"52\"", xaml);

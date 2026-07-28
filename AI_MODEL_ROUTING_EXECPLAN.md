@@ -62,13 +62,13 @@
 Перед первым патчем агент обязан:
 
 1. Сохранить `git status --short`.
-2. Сохранить текущий diff каждого разрешённого файла, потому что рабочее дерево уже содержит пользовательские изменения.
+2. Создать временный каталог вне репозитория и скопировать туда каждый уже существующий разрешённый файл, потому что рабочее дерево содержит пользовательские изменения. Копии являются точным baseline этой задачи и не добавляются в Git.
 3. Вычислить SHA-256 всех защищённых исходных файлов, перечисленных в `Concrete Steps`.
 4. Зафиксировать точные разрешённые hunks: scoped-метод gateway, чистая политика, одна строка call site и тесты.
 
 После каждого патча агент обязан выполнить `git diff --name-only` и проверить, что не появился новый исходный файл вне allowlist. Если появился, работа немедленно останавливается. Агент не продолжает реализацию и не «исправляет заодно» обнаруженный посторонний код.
 
-В конце SHA-256 защищённых файлов повторно вычисляется и сравнивается с исходными значениями. Единственное исключение — `TextProcessingWindow.xaml.cs`, для которого вместо hash требуется точная проверка diff: одна замена имени вызываемого gateway-метода без форматирования соседнего кода.
+В конце SHA-256 защищённых файлов повторно вычисляется и сравнивается с исходными значениями. Разрешённые существующие файлы сравниваются со своими временными baseline-копиями через `git diff --no-index`. Для `TextProcessingWindow.xaml.cs` результирующий diff обязан содержать ровно одну замену имени вызываемого gateway-метода без форматирования соседнего кода.
 
 Запрещены sub-agent delegation, автоматическое форматирование всего проекта, обновление пакетов, сетевой поиск, изменение версии, commit, push, publish, installer и запуск приложения. Разрешены только локальная сборка и тесты. Генерируемые `bin`, `obj` и отдельный проверочный каталог внутри `artifacts` не считаются изменением исходного кода.
 
@@ -80,6 +80,7 @@
 - [x] (2026-07-25) Зафиксирован строгий scope lock: только порядок выбора уже доступных моделей и ключей.
 - [x] (2026-07-25) Зафиксированы существующие инварианты, которые нельзя менять.
 - [x] (2026-07-25) Определён детерминированный порядок моделей и маршрутов на основе уже существующих настроек.
+- [x] (2026-07-25) Устранены неоднозначности ревизии: выбран единый трёхполевой `AiRouteCandidate`, проверен фактический контракт automatic/exact запросов, добавлены жёсткие baseline-gates и построчная ревизия `BuildRoutesAsync`.
 - [ ] Перед реализацией добавить характеристические тесты текущего разрешённого поведения.
 - [ ] Реализовать чистую детерминированную политику упорядочивания маршрутов.
 - [ ] Подключить политику внутри `AiGateway.BuildRoutesAsync` без изменения остальных стадий.
@@ -179,6 +180,8 @@
 
 `AiConnectionSettings.PreferredModelId` продолжает влиять только на автоматический выбор. При `RequireExactModel=true` оно игнорируется в пользу `request.PreferredModelId`.
 
+В текущем Text Processing автоматический запрос создаётся через `TextProcessingService.BuildRequest` и не содержит `PreferredProviderId` или `PreferredModelId`. Эти два поля устанавливаются только `TextProcessingWindow.CopyRequestWithModel`, одновременно с `RequireExactModel=true`. Scoped entry point принимает это как строгий контракт: automatic означает `RequireExactModel=false`, `PreferredProviderId=null` и `PreferredModelId=null`; exact означает `RequireExactModel=true` и оба непустых идентификатора.
+
 Обычная и потоковая генерация используют один и тот же упорядоченный список маршрутов до начала выполнения запроса.
 
 Существующие общие методы `GenerateAsync` и `GenerateStreamingAsync` сохраняют прежний порядок маршрутов. Новый порядок применяется только через opt-in метод Text Processing. Это намеренное уточнение границы: инвариант общего gateway важнее унификации всех его entry points.
@@ -191,24 +194,33 @@
     AiChatRequest request
     IReadOnlyList<AiRouteCandidate> eligibleRoutes
 
-`eligibleRoutes` уже прошли существующую фильтрацию. Политика не имеет права добавлять, удалять или повторно классифицировать модель. Она только сортирует. Общие entry points gateway продолжают использовать существующий порядок и не вызывают эту политику.
+`eligibleRoutes` уже прошли существующую фильтрацию. Политика не имеет права добавлять, удалять, дедуплицировать или повторно классифицировать модель. Она только возвращает перестановку того же множества маршрутов. Общие entry points gateway продолжают использовать существующий порядок и не вызывают эту политику.
+
+Формальный инвариант политики:
+
+    output.Count == input.Count
+    multiset(output route identities) == multiset(input route identities)
+
+Идентичность маршрута для этой проверки:
+
+    Connection.Id + ProviderId + ModelId
+
+Если scoped-запрос нарушает контракт режима, scoped entry point должен завершиться fail-closed через `InvalidOperationException` до `BuildCandidates`, чтения каталогов и сетевых вызовов. Политика повторяет эту проверку защитно для прямых unit-тестов и дополнительно валидирует уже собранные exact-кандидаты. Нарушениями считаются: exact mode без одного из двух идентификаторов; automatic mode с непустым `PreferredProviderId` или `PreferredModelId`; exact-кандидат, не совпадающий с запрошенной provider/model. Нельзя удалять «неподходящие» маршруты или подставлять другую модель. Такое исключение означает дрейф контракта между Text Processing и gateway и должно быть покрыто отдельными unit-тестами.
 
 Маршрут-кандидат содержит ссылку на существующие объекты:
 
     internal sealed record AiRouteCandidate(
         AiConnectionSettings Connection,
         AiModelDescriptor Model,
-        int ConnectionOrder,
-        int ProviderOrder,
-        int PreferredModelOrder);
+        int ConnectionOrder);
 
-Точный набор полей можно упростить при реализации, но результат обязан соответствовать следующему контракту.
+Это единственное объявление и окончательный набор полей для плана. `ProviderRank` и `PreferredModelRank` вычисляются внутри `AiModelSelectionPolicy.OrderRoutes` из `AiSettings`, `AiChatRequest` и участвующих кандидатов; они не хранятся в `AiRouteCandidate`.
 
 ### Порядок провайдеров
 
-Сначала используется `request.PreferredProviderId`, если он задан и запрос не является строгим выбором другого провайдера. Затем используются значения `settings.ProviderOrder`. Затем добавляются отсутствующие значения `AiProviderCatalog.DefaultProviderOrder`. Повторения удаляются без учёта регистра.
+В automatic mode `request.PreferredProviderId` по контракту Text Processing отсутствует и не участвует в ранжировании. Сначала используются значения `settings.ProviderOrder`. Затем добавляются отсутствующие значения `AiProviderCatalog.DefaultProviderOrder`. Повторения удаляются без учёта регистра.
 
-Это сохраняет текущий смысл `BuildCandidates`.
+В exact mode провайдер уже однозначно задан `request.PreferredProviderId`; после существующей фильтрации политика видит только эту provider/model и сортирует ключи. Любое смешение полей automatic и exact считается нарушением scoped-контракта и завершается fail-closed.
 
 ### Порядок предпочитаемых моделей
 
@@ -234,12 +246,14 @@
 
 ### Порядок логических моделей в явном режиме
 
-При `RequireExactModel=true` допускается только совпадение:
+При `RequireExactModel=true` существующий `GetEligibleModels` до вызова политики обязан оставить только совпадение:
 
     connection.ProviderId == request.PreferredProviderId
     model.ModelId == request.PreferredModelId
 
-Сравнение выполняется без учёта регистра. Если `PreferredProviderId` или `PreferredModelId` отсутствует, список маршрутов пуст. Никакие preference подключения и fallback-модели не применяются.
+Сравнение выполняется без учёта регистра. Если `PreferredProviderId` или `PreferredModelId` отсутствует, scoped-контракт нарушен и до выполнения маршрута выбрасывается `InvalidOperationException`; молчаливый fallback запрещён. Никакие preference подключения и fallback-модели не применяются.
+
+Политика повторно не фильтрует exact mode. Она валидирует, что каждый полученный маршрут уже соответствует provider/model запроса, и затем сортирует только ключи. При нарушении входного контракта применяется fail-closed поведение, описанное выше.
 
 ### Порядок ключей внутри модели
 
@@ -268,7 +282,13 @@
 
 ### Milestone 1: Зафиксировать текущее поведение тестами
 
-До изменения `AiGateway` в `AiteBar.Tests/AiProviderTests.cs` добавить или уточнить тесты, которые доказывают разрешённые инварианты.
+До любого изменения production-кода сначала проверить точное наличие трёх заявленных характеристических тестов:
+
+    rg -n "Gateway_ExactModel_TriesNextConnectionAfterRateLimit|Gateway_ExactSelection_UsesAllRequestedProviderConnectionsAndNeverChangesModel|Gateway_AutomaticMode_ExhaustsSameModelRoutesBeforeChangingModel" .\AiteBar.Tests\AiProviderTests.cs
+
+На ревизии 2026-07-25 они найдены соответственно на строках 50, 176 и 93. Исполнитель обязан повторить проверку в своей фактической исходной версии. Если хотя бы один тест отсутствует, переименован или находится не в ожидаемом тестовом проекте, это записывается в `Surprises & Discoveries`, реализация останавливается до обновления плана; нельзя молча объявить отсутствующий тест «существующим» или заменить его новым.
+
+Затем, всё ещё до изменения production-кода, в `AiteBar.Tests/AiProviderTests.cs` добавить или уточнить остальные характеристические тесты, которые доказывают разрешённые инварианты.
 
 Нужны следующие тесты:
 
@@ -279,17 +299,14 @@
 5. Новый тест: модель с недостаточным контекстом не становится кандидатом.
 6. Новый тест: `PreferredConnectionId` по-прежнему ограничивает маршруты одним ключом.
 7. Новый тест: ошибка streaming после начала выдачи не запускает второй запрос.
+8. Новый тест: scoped automatic request с `PreferredProviderId` или `PreferredModelId` завершается `InvalidOperationException`.
+9. Новый тест: scoped exact request без любого из двух идентификаторов завершается `InvalidOperationException`.
 
 На этом milestone производственный код не меняется. Если какой-либо тест выявляет отличающееся текущее поведение, результат фиксируется в `Surprises & Discoveries`; тест нельзя подгонять под желаемый результат без отдельного решения.
 
 ### Milestone 2: Реализовать чистую сортировку
 
-Предпочтительный вариант — добавить `AiteBar/AiModelSelectionPolicy.cs` с внутренними типами:
-
-    internal sealed record AiRouteCandidate(
-        AiConnectionSettings Connection,
-        AiModelDescriptor Model,
-        int ConnectionOrder);
+Предпочтительный вариант — добавить `AiteBar/AiModelSelectionPolicy.cs`. Он содержит единственное объявление `AiRouteCandidate`, уже полностью зафиксированное в разделе `Deterministic Selection Contract`, и чистую политику:
 
     internal static class AiModelSelectionPolicy
     {
@@ -314,6 +331,8 @@
 
 В `AiteBar.Tests/AiProviderTests.cs` добавить чистые тесты политики:
 
+- выход содержит в точности тот же multiset идентичностей маршрутов, что и вход;
+- политика не теряет маршруты, не создаёт новые и не удаляет существующие дубли входа;
 - одинаковый набор маршрутов в разном входном порядке даёт одинаковый выход;
 - изменение `DisplayName` не меняет выход;
 - перестановка JSON-моделей не меняет выход;
@@ -322,6 +341,8 @@
 - непреференциальные модели получают стабильный порядок по `ModelId`;
 - ключи модели идут в порядке `settings.Connections`;
 - exact mode содержит только точную provider/model;
+- нарушение exact-контракта вызывает `InvalidOperationException`, а не скрытую фильтрацию или fallback;
+- automatic mode принимает только пустые `PreferredProviderId` и `PreferredModelId`; непустое значение вызывает `InvalidOperationException`;
 - разные провайдеры с одинаковым `ModelId` не объединяются.
 
 Milestone завершён, когда тесты чистой политики проходят и ни один существующий production path ещё не переключён.
@@ -342,9 +363,13 @@ Milestone завершён, когда тесты чистой политики 
     GenerateTextProcessingStreamingAsync
         -> DeterministicTextProcessing ordering
 
-Для режима Text Processing добавить отдельный private `BuildTextProcessingCandidates` либо эквивалентную чистую ветку. Она должна сохранить все фильтры существующего `BuildCandidates`, но использовать порядок `settings.Connections` внутри `ProviderOrder` и не сортировать по `DisplayName`. Общий `BuildCandidates` не менять, чтобы не затронуть другие callers.
+Оба streaming entry point используют существующий `BuildCandidates` без изменений. Создавать `BuildTextProcessingCandidates` запрещено: второй builder продублировал бы фильтры enabled/provider/exact и мог бы разойтись с общим путём.
 
-`BuildRoutesAsync` может получить внутренний параметр режима сортировки. В legacy-режиме он обязан вернуть маршруты точно в прежнем порядке. В Text Processing режиме после сбора уже отфильтрованных маршрутов он вызывает:
+Хотя `BuildCandidates` возвращает подключения в legacy-порядке с `DisplayName`, scoped-политика не доверяет входному порядку. Она восстанавливает `ConnectionOrder` через индекс `Connection.Id` в исходном `settings.Connections`, а `ProviderRank` — через существующий `ProviderOrder`. Поэтому Text Processing получает стабильный порядок без изменения или дублирования `BuildCandidates`.
+
+`BuildRoutesAsync` может получить внутренний параметр режима сортировки. До патча исполнитель обязан найти и перечислить в `Progress` каждый call site командой `rg -n "BuildRoutesAsync\\(" .\AiteBar\AiGateway.cs`; на ревизии 2026-07-25 их два, из `GenerateAsync` и `GenerateStreamingAsync`. После патча поиск повторяется, каждый найденный вызов должен быть объяснён, а все legacy entry points обязаны передавать legacy-режим явно.
+
+В legacy-режиме метод обязан вернуть не просто эквивалентный набор, а точно прежнюю последовательность маршрутов: одинаковые `Count` и порядок идентичностей `Connection.Id + ProviderId + ModelId`, включая повторы. Существующая сборка `routeGroups` и разворачивание групп в этой ветке сохраняются без перестановки, новой сортировки или смены LINQ-операций. В Text Processing режиме после сбора уже отфильтрованных маршрутов он вызывает:
 
     AiModelSelectionPolicy.OrderRoutes(settings, request, collectedRoutes)
 
@@ -357,7 +382,7 @@ Milestone завершён, когда тесты чистой политики 
 - существующий `lastError`;
 - существующий cache и semaphore.
 
-Старую зависимость Text Processing от первого появления модели удалить только в scoped-ветке. Legacy-ветка сохраняет её для обратной совместимости.
+Старую зависимость Text Processing от первого появления модели удалить только в scoped-ветке. Legacy-ветка сохраняет её для обратной совместимости. Набор кандидатов, фильтры и сетевые обращения обеих веток остаются одинаковыми; различается только финальная перестановка собранных маршрутов.
 
 В `TextProcessingWindow.xaml.cs` заменить только:
 
@@ -372,6 +397,8 @@ Milestone завершён, когда тесты чистой политики 
 `GenerateAsync`, публичный контракт `GenerateStreamingAsync`, `ObserveStreamAsync`, `ApplyFailure`, `MarkSuccessful`, `GetQuotaKey` и `AiProviderClient` семантически не менять.
 
 После интеграции повторить все тесты Milestone 1 и 2.
+
+Затем выполнить обязательную ручную ревизию `BuildRoutesAsync`: сравнить `AiGateway.cs` с сохранённой baseline-копией через `git diff --no-index`, просмотреть построчно каждый изменённый hunk метода и письменно отметить в `Progress`, почему каждая строка не меняет legacy-последовательность. При сомнении реализация останавливается; формулировки «семантически эквивалентно» недостаточно.
 
 ### Milestone 4: Проверить отсутствие побочных изменений
 
@@ -400,7 +427,7 @@ Milestone завершён, когда тесты чистой политики 
 - resource-файлы не изменены этой задачей;
 - пользовательская документация не изменена этой задачей.
 
-Добавить отдельный тест, доказывающий, что один и тот же искусственно переставленный каталог даёт прежний legacy-порядок через общий `GenerateStreamingAsync` и детерминированный порядок через `GenerateTextProcessingStreamingAsync`. Так граница безопасности проверяется исполняемым кодом, а не только комментариями.
+Добавить отдельный регрессионный тест с намеренно переставленным каталогом и несколькими подключениями. Для общих `GenerateAsync` и `GenerateStreamingAsync` он должен утверждать точную предрефакторинговую последовательность попыток по идентичностям `Connection.Id + ProviderId + ModelId`: то же количество, тот же порядок, те же повторы. Для `GenerateTextProcessingStreamingAsync` тот же fixture должен утверждать новый детерминированный порядок. Так граница безопасности проверяется исполняемым кодом, а не только сравнением множеств или комментариями.
 
 Запустить focused-тесты и полный набор. После этого провести только read-only проверку окна: кроме имени вызываемого метода код не должен требовать изменения привязок, размеров, состояния или подписей.
 
@@ -414,6 +441,12 @@ Milestone завершён, когда тесты чистой политики 
 
     git status --short
     git diff -- AiteBar/AiGateway.cs AiteBar/TextProcessingWindow.xaml.cs AiteBar.Tests/AiProviderTests.cs
+    $routingBaseline = Join-Path $env:TEMP ("aitebar-model-routing-baseline-" + [Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $routingBaseline
+    Copy-Item -LiteralPath .\AiteBar\AiGateway.cs -Destination (Join-Path $routingBaseline "AiGateway.cs")
+    Copy-Item -LiteralPath .\AiteBar\TextProcessingWindow.xaml.cs -Destination (Join-Path $routingBaseline "TextProcessingWindow.xaml.cs")
+    Copy-Item -LiteralPath .\AiteBar.Tests\AiProviderTests.cs -Destination (Join-Path $routingBaseline "AiProviderTests.cs")
+    Write-Output $routingBaseline
     Get-FileHash AiteBar/TextProcessingWindow.xaml
     Get-FileHash AiteBar/AiProviderClient.cs
     Get-FileHash AiteBar/AiModels.cs
@@ -421,6 +454,14 @@ Milestone завершён, когда тесты чистой политики 
     Get-FileHash AiteBar/Models.cs
     Get-FileHash AiteBar/AppSettingsService.cs
     git diff --check
+
+До первого изменения любого production-файла выполнить свежий полный baseline-прогон:
+
+    dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release
+
+Историческое значение 897 не является критерием текущего количества. В `Progress` записать фактические `Passed`, `Failed`, `Skipped` и общее число тестов именно этого прогона. Если есть хотя бы одно падение, реализация останавливается и результат заносится в `Surprises & Discoveries`. Если падений нет, но количество отличается от 897, записать новое число и использовать его как baseline этой реализации; изменение числа само по себе не разрешает продолжить без проверки причин.
+
+Напечатанный путь `$routingBaseline`, исходные SHA-256, найденные call sites `BuildRoutesAsync`, подтверждение наличия трёх обязательных тестов и результат полного baseline-прогона записать в `Progress` этого ExecPlan до первого изменения production-кода. Если выполнение продолжается в новой PowerShell-сессии, восстановить `$routingBaseline` из записанного абсолютного пути; не создавать новый baseline после начала правок.
 
 После характеристических тестов:
 
@@ -451,13 +492,17 @@ Milestone завершён, когда тесты чистой политики 
 
     git diff --check
     git diff --name-only
-    git diff -- AiteBar/TextProcessingWindow.xaml.cs
+    git diff --no-index -- (Join-Path $routingBaseline "AiGateway.cs") .\AiteBar\AiGateway.cs
+    git diff --no-index -- (Join-Path $routingBaseline "TextProcessingWindow.xaml.cs") .\AiteBar\TextProcessingWindow.xaml.cs
+    git diff --no-index -- (Join-Path $routingBaseline "AiProviderTests.cs") .\AiteBar.Tests\AiProviderTests.cs
     Get-FileHash AiteBar/TextProcessingWindow.xaml
     Get-FileHash AiteBar/AiProviderClient.cs
     Get-FileHash AiteBar/AiModels.cs
     Get-FileHash AiteBar/AiProviderCatalog.cs
     Get-FileHash AiteBar/Models.cs
     Get-FileHash AiteBar/AppSettingsService.cs
+
+`git diff --no-index` возвращает exit code `1`, когда ожидаемые различия существуют; это не является ошибкой проверки. Необходимо вручную подтвердить, что diff содержит только разрешённые hunks. Итоговые SHA-256 защищённых файлов должны в точности совпасть со значениями, записанными до начала.
 
 Не запускать приложение автоматически, если уже существует запущенный экземпляр AiteBar. Данная задача не требует изменения UI и может быть полностью проверена fake-HTTP и pure unit-тестами. Ручной запуск допускается только по отдельной команде пользователя.
 
@@ -482,6 +527,8 @@ Milestone завершён, когда тесты чистой политики 
 
 Это новое поведение включается только вызовом `GenerateTextProcessingStreamingAsync` из Text Processing. Общие `GenerateAsync` и `GenerateStreamingAsync` сохраняют прежний порядок и подтверждены отдельным сравнительным тестом.
 
+Новая политика возвращает точную перестановку входных маршрутов: количество и multiset `ConnectionId + ProviderId + ModelId` до и после совпадают. Политика не фильтрует кандидатов второй раз.
+
 Фильтрация моделей до сортировки побитово и логически не изменена. Те же модели считаются бесплатными, текстовыми, deprecated и подходящими по контексту, что и до задачи.
 
 Обработка `401`, `403`, `402`, `429`, `5xx`, network, timeout и cancellation не изменена.
@@ -492,7 +539,7 @@ Milestone завершён, когда тесты чистой политики 
 
 XAML, размеры окна, локализация, команды, кнопки, ComboBox, статусная строка, обработка текста, diff, Undo/Redo и защита технических фрагментов не изменены. В code-behind окна допустима ровно одна замена вызова общего gateway на scoped-метод.
 
-Release-сборка завершается с нулём ошибок и предупреждений. Все существующие и новые тесты проходят. На момент создания пересмотренного плана baseline полного набора составляет 897 пройденных тестов; итог не должен иметь ни одного падения.
+Release-сборка завершается с нулём ошибок и предупреждений. Все существующие и новые тесты проходят. Значение 897 — только исторический снимок на момент одной из ревизий плана. При старте реализации обязателен новый полный baseline-прогон; итог сравнивается с зафиксированным фактическим результатом этого прогона и не должен иметь ни одного падения.
 
 ## Idempotence and Recovery
 
@@ -506,7 +553,7 @@ Release-сборка завершается с нулём ошибок и пре
 
 ## Artifacts and Notes
 
-Baseline на момент пересмотра плана:
+Исторический baseline на момент пересмотра плана (не заменяет обязательный свежий прогон перед реализацией):
 
     Release-сборка: 0 предупреждений, 0 ошибок.
     Полный набор: 897 пройдено, 0 не пройдено.
@@ -552,3 +599,7 @@ Baseline на момент пересмотра плана:
 Plan revision note (2026-07-25): Первоначальный расширенный план признан слишком широким для разрешённой задачи. Пересмотренная версия вводит строгий allowlist файлов и меняет исключительно детерминированный порядок уже доступных моделей и ключей. Бесплатность, UI, настройки, каталоги, HTTP, streaming, ошибки, cache, runtime health и документация явно зафиксированы как неизменяемые.
 
 Plan revision note (2026-07-25): После проверки usages обнаружено, что `AiGateway` создаётся и экспортируется `MainWindow`. Для исключения косвенного влияния на другие функции новая политика переведена в opt-in метод `GenerateTextProcessingStreamingAsync`; публичные gateway entry points сохраняют legacy-порядок, а `TextProcessingWindow.xaml.cs` допускает ровно одну замену имени вызываемого метода.
+
+Plan revision note (2026-07-25): После экспертной проверки удалён дублирующий `BuildTextProcessingCandidates`; scoped-путь использует неизменённый общий `BuildCandidates` и восстанавливает стабильные ranks из настроек. Политика формально ограничена перестановкой того же multiset маршрутов, exact mode валидируется fail-closed, а изменения разрешённых грязных файлов сравниваются с точными baseline-копиями из временного каталога.
+
+Plan revision note (2026-07-25): После второй экспертной проверки оставлено одно окончательное трёхполевое объявление `AiRouteCandidate`; по фактическому коду закреплено, что automatic Text Processing не передаёт provider/model preference, а exact передаёт оба идентификатора. Добавлены stop-gates при отсутствии заявленных тестов или красном свежем baseline, полный пересчёт тестов вместо доверия историческим 897 и построчная ревизия `BuildRoutesAsync` с точным сохранением последовательности legacy-маршрутов.

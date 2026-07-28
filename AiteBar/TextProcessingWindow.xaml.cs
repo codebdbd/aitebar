@@ -587,11 +587,13 @@ public partial class TextProcessingWindow : DarkWindow
                     lastUiUpdate = Stopwatch.GetTimestamp();
                 }
             }
-            string cleaned = _service.CleanResponse(
-                TextProcessingService.RestoreTechnicalFragments(
-                    streamedResponse.ToString(),
-                    protectedInput,
-                    requireAllMarkers: true));
+            string cleanedProtected = _service.CleanResponse(
+                streamedResponse.ToString(),
+                protectedInput.Text);
+            string cleaned = TextProcessingService.RestoreTechnicalFragments(
+                cleanedProtected,
+                protectedInput,
+                requireAllMarkers: true);
             if (string.IsNullOrWhiteSpace(cleaned))
             {
                 SetStatus(LocalizationService.Get("TextProcessing_ErrorEmptyResponse"));
@@ -830,7 +832,8 @@ public partial class TextProcessingWindow : DarkWindow
 
     internal static string BuildStreamingPreview(string rawText, ProtectedText protectedText)
     {
-        string visibleText = rawText ?? string.Empty;
+        string visibleText = TextProcessingService.HideReasoningFromStreamingPreview(
+            rawText ?? string.Empty);
         int partialMarkerLength = 0;
         foreach (string marker in protectedText.Fragments.Keys)
         {

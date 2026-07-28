@@ -67,6 +67,7 @@
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Нумерований список</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Очистити форматування</value></data>
   <data name="QuickNote_Heading" xml:space="preserve"><value>Заголовок</value></data>
+  <data name="QuickNote_MoreFormatting" xml:space="preserve"><value>Більше форматування</value></data>
   <data name="QuickNote_BodyText" xml:space="preserve"><value>Звичайний текст</value></data>
   <data name="QuickNote_TitleHeading" xml:space="preserve"><value>Заголовок 1</value></data>
   <data name="QuickNote_SubtitleHeading" xml:space="preserve"><value>Заголовок 2</value></data>

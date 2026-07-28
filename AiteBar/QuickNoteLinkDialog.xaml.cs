@@ -5,7 +5,7 @@ namespace AiteBar
 {
     public partial class QuickNoteLinkDialog : DarkWindow
     {
-        public string LinkText => TxtLinkText.Text.Trim();
+        public string LinkText => PreserveLinkText(TxtLinkText.Text);
 
         public string Url => TxtUrl.Text.Trim();
 
@@ -57,5 +57,7 @@ namespace AiteBar
             return Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
                    (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }
+
+        internal static string PreserveLinkText(string? value) => value ?? string.Empty;
     }
 }

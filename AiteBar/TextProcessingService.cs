@@ -50,14 +50,131 @@ public sealed partial class TextProcessingService
         };
     }
 
-    public string CleanResponse(string rawResponse)
+    public string CleanResponse(string rawResponse, string? fallbackText = null)
     {
         if (string.IsNullOrWhiteSpace(rawResponse))
         {
             return string.Empty;
         }
 
-        return rawResponse.Trim();
+        string cleaned = ClosedReasoningBlockRegex().Replace(rawResponse, string.Empty);
+        cleaned = OrphanReasoningCloseTagRegex().Replace(cleaned, string.Empty);
+
+        Match unclosedReasoning = ReasoningOpenTagRegex().Match(cleaned);
+        if (unclosedReasoning.Success)
+        {
+            string visiblePrefix = cleaned[..unclosedReasoning.Index].Trim();
+            string reasoningTail = cleaned[(unclosedReasoning.Index + unclosedReasoning.Length)..];
+            string? recovered = RecoverExplicitFinalAnswer(reasoningTail, fallbackText);
+            if (!string.IsNullOrWhiteSpace(recovered))
+            {
+                return recovered.Trim();
+            }
+            if (!string.IsNullOrWhiteSpace(fallbackText))
+            {
+                return fallbackText.Trim();
+            }
+            return visiblePrefix;
+        }
+
+        return cleaned.Trim();
+    }
+
+    internal static string HideReasoningFromStreamingPreview(string rawResponse)
+    {
+        if (string.IsNullOrEmpty(rawResponse))
+        {
+            return string.Empty;
+        }
+
+        string cleaned = ClosedReasoningBlockRegex().Replace(rawResponse, string.Empty);
+        cleaned = OrphanReasoningCloseTagRegex().Replace(cleaned, string.Empty);
+        Match reasoningStart = ReasoningOpenTagRegex().Match(cleaned);
+        return reasoningStart.Success ? cleaned[..reasoningStart.Index] : cleaned;
+    }
+
+    private static string? RecoverExplicitFinalAnswer(string reasoningTail, string? fallbackText)
+    {
+        if (string.IsNullOrWhiteSpace(fallbackText))
+        {
+            return null;
+        }
+
+        const int maxRecoveryLength = 4096;
+        string normalizedFallback = fallbackText.Trim();
+        if (normalizedFallback.Length > maxRecoveryLength)
+        {
+            return null;
+        }
+
+        string? bestCandidate = null;
+        int bestDistance = int.MaxValue;
+        foreach (Match match in ExplicitFinalAnswerRegex().Matches(reasoningTail))
+        {
+            string candidate = NormalizeRecoveredCandidate(match.Groups["answer"].Value);
+            if (string.IsNullOrWhiteSpace(candidate) || candidate.Length > maxRecoveryLength)
+            {
+                continue;
+            }
+
+            int distance = CalculateEditDistance(normalizedFallback, candidate);
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                bestCandidate = candidate;
+            }
+        }
+
+        if (bestCandidate == null)
+        {
+            return null;
+        }
+
+        int longestLength = Math.Max(normalizedFallback.Length, bestCandidate.Length);
+        return longestLength > 0 && bestDistance <= Math.Max(3, longestLength / 2)
+            ? bestCandidate
+            : null;
+    }
+
+    private static string NormalizeRecoveredCandidate(string candidate)
+    {
+        string normalized = candidate.Trim();
+        if (normalized.EndsWith("✅", StringComparison.Ordinal))
+        {
+            normalized = normalized[..^1].TrimEnd();
+        }
+        if (normalized.Length >= 2 &&
+            ((normalized[0] == '"' && normalized[^1] == '"') ||
+             (normalized[0] == '\'' && normalized[^1] == '\'')))
+        {
+            normalized = normalized[1..^1];
+        }
+        return normalized.Trim();
+    }
+
+    private static int CalculateEditDistance(string source, string target)
+    {
+        int[] previous = new int[target.Length + 1];
+        int[] current = new int[target.Length + 1];
+        for (int column = 0; column <= target.Length; column++)
+        {
+            previous[column] = column;
+        }
+
+        for (int row = 1; row <= source.Length; row++)
+        {
+            current[0] = row;
+            for (int column = 1; column <= target.Length; column++)
+            {
+                int substitutionCost = source[row - 1] == target[column - 1] ? 0 : 1;
+                current[column] = Math.Min(
+                    Math.Min(current[column - 1] + 1, previous[column] + 1),
+                    previous[column - 1] + substitutionCost);
+            }
+            (previous, current) = (current, previous);
+        }
+
+        return previous[target.Length];
     }
 
     public static int EstimateTokens(string text)
@@ -173,6 +290,26 @@ public sealed partial class TextProcessingService
         """,
         RegexOptions.CultureInvariant)]
     private static partial Regex TechnicalFragmentRegex();
+
+    [GeneratedRegex(
+        @"<\s*(?<reasoningTag>think|thinking|analysis|reasoning)\b[^>]*>[\s\S]*?<\s*/\s*\k<reasoningTag>\s*>",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex ClosedReasoningBlockRegex();
+
+    [GeneratedRegex(
+        @"<\s*(?:think|thinking|analysis|reasoning)\b[^>]*>",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex ReasoningOpenTagRegex();
+
+    [GeneratedRegex(
+        @"<\s*/\s*(?:think|thinking|analysis|reasoning)\s*>",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex OrphanReasoningCloseTagRegex();
+
+    [GeneratedRegex(
+        @"(?im)^\s*(?:\[(?:final\s+)?output(?:\s+generation)?\]|(?:final\s+)?output(?:\s+generation)?|final\s+string|answer|result|ответ|результат)\s*(?:->|:)\s*(?<answer>[^\r\n]+?)\s*$",
+        RegexOptions.CultureInvariant)]
+    private static partial Regex ExplicitFinalAnswerRegex();
 
     private const string ProtectedMarkerInstruction =
         """

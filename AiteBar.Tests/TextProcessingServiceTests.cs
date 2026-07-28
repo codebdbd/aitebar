@@ -146,6 +146,49 @@ public sealed class TextProcessingServiceTests
         Assert.Equal("Cleaned text", result);
     }
 
+    [Theory]
+    [InlineData("<think>internal reasoning</think>\nИсправленный текст.", "Исправленный текст.")]
+    [InlineData("<thinking>internal reasoning</thinking>\nИсправленный текст.", "Исправленный текст.")]
+    [InlineData("<analysis>internal reasoning</analysis>\nИсправленный текст.", "Исправленный текст.")]
+    [InlineData("<reasoning>internal reasoning</reasoning>\nИсправленный текст.", "Исправленный текст.")]
+    public void CleanResponse_RemovesClosedReasoningBlocks(string input, string expected)
+    {
+        Assert.Equal(expected, _service.CleanResponse(input));
+    }
+
+    [Fact]
+    public void CleanResponse_UnclosedThinkBlock_RecoversExplicitFinalAnswer()
+    {
+        const string original = "Рыбак достает из реки толстую русалку";
+        const string response =
+            "Рыбак<think>\n" +
+            "1. Analyze the input.\n" +
+            "Final string: Рыбак достает из реки толстую русалку.\n" +
+            "Output: matches response.\n";
+
+        Assert.Equal(
+            "Рыбак достает из реки толстую русалку.",
+            _service.CleanResponse(response, original));
+    }
+
+    [Fact]
+    public void CleanResponse_UnclosedReasoningWithoutRecoverableAnswer_ReturnsOriginalText()
+    {
+        const string original = "Исходный текст";
+        Assert.Equal(
+            original,
+            _service.CleanResponse("Исх<think>служебное рассуждение", original));
+    }
+
+    [Fact]
+    public void HideReasoningFromStreamingPreview_HidesUnclosedReasoningTail()
+    {
+        Assert.Equal(
+            "Готовый текст",
+            TextProcessingService.HideReasoningFromStreamingPreview(
+                "Готовый текст<think>служебное рассуждение"));
+    }
+
     [Fact]
     public void MaxInputLength_Is50000()
     {

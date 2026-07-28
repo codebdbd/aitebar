@@ -218,14 +218,10 @@
                     <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="16"/>
                 </Button>
 
-                <Button x:Name="BtnProcess" Grid.Column="4"
+                <Button x:Name="BtnProcess" Grid.Column="5"
                         Style="{StaticResource PrimaryCommandButtonStyle}"
                         Click="BtnProcess_Click">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                        <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="18" FontWeight="Normal"
-                                   Margin="0,0,10,0" VerticalAlignment="Center"/>
-                        <TextBlock x:Name="ProcessButtonLabel" VerticalAlignment="Center"/>
-                    </StackPanel>
+                    <TextBlock x:Name="ProcessButtonLabel" VerticalAlignment="Center"/>
                 </Button>
             </Grid>
 

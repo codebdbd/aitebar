@@ -309,3 +309,16 @@ Plan revision note (2026-07-24): Closed the release audit's streaming and layout
 Plan revision note (2026-07-25): Reopened the plan to remove API-key duplication from the model selector and move failover behind a logical provider/model selection. Recorded the existing connection-pinned behavior, the provider/model identity rule, exact-model routing semantics, and route-scoped quota tracking before implementation.
 
 Plan revision note (2026-07-25): Completed logical-model catalogue deduplication, model-first connection routing, connection/model-scoped quota cooldown, saved-selection migration, focused regression coverage, documentation updates, and clean 897-test Release validation. Recorded the need for a single MSBuild node in this workspace when validating isolated output trees.
+
+Plan revision note (2026-07-26): Reopened the release hardening pass after a provider exposed chain-of-thought markup in streamed content. Added filtering for closed and truncated `<think>`, `<thinking>`, `<analysis>`, and `<reasoning>` blocks in both live preview and final output, deterministic recovery of an explicitly marked final answer with an original-text fallback, and regression coverage for the reported Russian example. The same focused UI correction aligns the single generic “Обработать” button with the right command column and removes only its glyph.
+
+Reasoning-leak and footer-alignment validation evidence (2026-07-26):
+
+    dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --filter "FullyQualifiedName~TextProcessingServiceTests|FullyQualifiedName~AiStreamingTests|FullyQualifiedName~TextProcessingWindowLayoutTests" -m:1 -nr:false
+    Пройдено: 56, не пройдено: 0, пропущено: 0.
+
+    dotnet build .\AiteBar.sln -c Release -m:1 -nr:false
+    Сборка успешно завершена. Предупреждений: 0. Ошибок: 0.
+
+    dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release -m:1 -nr:false --no-build
+    Пройдено: 904, не пройдено: 0, пропущено: 0.
