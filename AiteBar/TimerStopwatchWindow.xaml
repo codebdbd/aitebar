@@ -16,6 +16,7 @@
         <Style x:Key="CompactActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
             <Setter Property="Width" Value="32"/>
             <Setter Property="Height" Value="32"/>
+            <Setter Property="Padding" Value="0"/>
             <Setter Property="Foreground" Value="{StaticResource AccentColor}"/>
             <Style.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
@@ -246,7 +247,7 @@
                     <TextBlock x:Name="TxtCompactModeIcon" Text="&#xED88;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" Foreground="{StaticResource AccentColor}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <TextBlock x:Name="TxtCompactDisplay" Grid.Column="1" Text="00:00" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="23" FontWeight="Regular" Foreground="#FFFFFF" TextAlignment="Left" VerticalAlignment="Center" Margin="8,-2,0,0" LineHeight="28" LineStackingStrategy="BlockLineHeight" Typography.NumeralAlignment="Tabular" TextOptions.TextFormattingMode="Display"/>
                     <Button x:Name="BtnCompactStartPause" Grid.Column="2" Content="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="18" Style="{StaticResource CompactActionButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Start}" Click="BtnStartPause_Click"/>
-                    <Button Grid.Column="4" Content="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource CompactSecondaryButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Expand}" Click="BtnCompact_Click"/>
+                    <Button x:Name="BtnCompactExpand" Grid.Column="4" Content="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource CompactSecondaryButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Expand}" Click="BtnCompact_Click"/>
                     </Grid>
                 </Grid>
             </Border>

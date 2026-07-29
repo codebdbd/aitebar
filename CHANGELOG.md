@@ -52,6 +52,8 @@
 - **Application reliability**: Fixed Quick Note final-save handling, the telemetry startup/shutdown race, secondary-instance shutdown, Win32 callback lifetime, stale asynchronous previews, and built-in utility window restoration.
 - **Панель и настройки**: Стабилизированы размеры панели между краями и контекстами, сохранение настроек и позиционирование индикатора на нескольких мониторах и при изменении DPI.
 - **Panel and settings**: Stabilized panel sizing across edges and contexts, settings persistence, and multi-monitor/DPI-aware indicator positioning.
+- **Компактный таймер**: Восстановлено отображение глифов запуска/паузы и разворачивания после унификации стилей кнопок.
+- **Compact timer**: Restored the start/pause and expand glyphs after command-button style unification.
 
 ## [1.11.1] - 2026-07-15
 

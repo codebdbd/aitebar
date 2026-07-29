@@ -130,6 +130,71 @@ public sealed class CommandButtonStyleTests
         Assert.DoesNotContain("PrimaryCommandButtonStyle", localStyleKeys);
     }
 
+    [Fact]
+    public void TimerCompactButtons_ResetInheritedCommandPaddingSoGlyphsRemainVisible()
+    {
+        XDocument window = LoadXaml("TimerStopwatchWindow.xaml");
+        XElement compactStyle = FindStyle(window, "CompactActionButtonStyle");
+
+        Assert.Equal(
+            "{StaticResource SecondaryButtonStyle}",
+            compactStyle.Attribute("BasedOn")?.Value);
+        AssertSetter(compactStyle, "Width", "32");
+        AssertSetter(compactStyle, "Height", "32");
+        AssertSetter(compactStyle, "Padding", "0");
+
+        foreach (string buttonName in new[] { "BtnCompactStartPause", "BtnCompactExpand" })
+        {
+            XElement button = Assert.Single(
+                window.Descendants(PresentationNamespace + "Button"),
+                element => string.Equals(
+                    element.Attribute(XamlNamespace + "Name")?.Value,
+                    buttonName,
+                    StringComparison.Ordinal));
+            Assert.False(string.IsNullOrWhiteSpace(button.Attribute("Content")?.Value));
+            Assert.Equal("Segoe MDL2 Assets", button.Attribute("FontFamily")?.Value);
+        }
+    }
+
+    [Fact]
+    public async Task TimerCompactButtonTemplate_LeavesMeasuredSpaceForGlyph()
+    {
+        await RunStaAsync(() =>
+        {
+            var compactStyle = new Style(
+                typeof(Button),
+                Assert.IsType<Style>(
+                    Application.Current.FindResource("SecondaryButtonStyle")));
+            compactStyle.Setters.Add(new Setter(Control.WidthProperty, 32d));
+            compactStyle.Setters.Add(new Setter(Control.HeightProperty, 32d));
+            compactStyle.Setters.Add(new Setter(Control.PaddingProperty, new Thickness(0)));
+            compactStyle.Setters.Add(new Setter(
+                Control.ForegroundProperty,
+                new SolidColorBrush(Color.FromRgb(0x00, 0x7A, 0xCC))));
+            var button = new Button
+            {
+                Content = "\uE768",
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 18,
+                Style = compactStyle
+            };
+
+            button.Measure(new Size(32, 32));
+            button.Arrange(new Rect(0, 0, 32, 32));
+            button.ApplyTemplate();
+            button.UpdateLayout();
+
+            ContentPresenter presenter = Assert.IsType<ContentPresenter>(
+                FindVisualDescendant<ContentPresenter>(button));
+            Assert.True(presenter.ActualWidth > 0);
+            Assert.True(presenter.ActualHeight > 0);
+            Assert.Equal(new Thickness(0), button.Padding);
+            Assert.NotEqual(
+                Colors.Black,
+                Assert.IsType<SolidColorBrush>(button.Foreground).Color);
+        });
+    }
+
     private static XElement FindStyle(XDocument document, string key) =>
         Assert.Single(
             document.Descendants(PresentationNamespace + "Style"),
@@ -172,6 +237,27 @@ public sealed class CommandButtonStyleTests
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
         return completion.Task;
+    }
+
+    private static T? FindVisualDescendant<T>(DependencyObject root)
+        where T : DependencyObject
+    {
+        for (int index = 0; index < VisualTreeHelper.GetChildrenCount(root); index++)
+        {
+            DependencyObject child = VisualTreeHelper.GetChild(root, index);
+            if (child is T match)
+            {
+                return match;
+            }
+
+            T? nested = FindVisualDescendant<T>(child);
+            if (nested is not null)
+            {
+                return nested;
+            }
+        }
+
+        return null;
     }
 
     private static string FindRepoRoot()
