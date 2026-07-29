@@ -771,11 +771,14 @@ public partial class MainWindow : Window, ISettingsWindowContext
         AppSettings settings,
         IReadOnlyList<CustomElement> elements)
     {
+        int activeButtonCount = _unifiedButtonService
+            .BuildUnifiedList(settings.ActiveContextId, settings, elements)
+            .Count;
         PanelLayoutHelper.PanelLayoutMetrics activeMetrics = ComputePanelMetrics(
             isVertical,
             availableWidth,
             availableHeight,
-            _unifiedButtons.Count,
+            activeButtonCount,
             settings.PanelSizePercent);
         double maxPrimary = isVertical ? activeMetrics.PanelHeight : activeMetrics.PanelWidth;
 
@@ -1285,7 +1288,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         }
     }
 
-    private void UpdateOrientation(bool reposition = true, bool applySizeConstraints = true)
+    internal void UpdateOrientation(bool reposition = true, bool applySizeConstraints = true)
     {
         UpdateOrientation(AppSettings, reposition, applySizeConstraints);
     }
@@ -1299,12 +1302,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
         if (applySizeConstraints)
         {
             var (availableWidth, availableHeight) = CalculateAvailableSize(settings.MonitorIndex);
-            _lastMetrics = ComputePanelMetrics(
+            _lastMetrics = ComputeStablePrimaryPanelMetrics(
                 isVertical,
                 availableWidth,
                 availableHeight,
-                _unifiedButtons.Count,
-                settings.PanelSizePercent);
+                settings,
+                _settingsService.Elements);
         }
 
         if (isVertical) { this.MinWidth = 0; this.MinHeight = 150; }

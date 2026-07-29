@@ -178,6 +178,56 @@ public sealed class MainWindowIconConverterOrientationTests
         });
     }
 
+    [Fact]
+    public async Task OrientationRoundTrip_KeepsStablePrimarySizeFromLargestContext()
+    {
+        await RunStaAsync(() =>
+        {
+            EnsureApplicationResources();
+
+            var window = new MainWindow();
+            try
+            {
+                ConfigureSettingsForIconConverterOnly(window);
+                AppSettings settings = window.GetAppSettings();
+                settings.Edge = DockEdge.Top;
+                settings.PanelSizePercent = 50;
+                settings.Contexts[1].IsEnabled = true;
+                settings.ActiveContextId = settings.Contexts[0].Id;
+                settings.Elements = CreateContextElements(settings.Contexts[1].Id, 20);
+                window.GetSettingsService().Settings = settings;
+
+                window.RefreshPanel();
+                LayoutWindow(window);
+
+                var root = Assert.IsAssignableFrom<FrameworkElement>(window.FindName("RootBorder"));
+                double initialHorizontalWidth = root.MinWidth;
+
+                ApplyEdge(window, settings, DockEdge.Right);
+                double rightHeight = root.MinHeight;
+
+                ApplyEdge(window, settings, DockEdge.Left);
+                Assert.Equal(rightHeight, root.MinHeight);
+
+                ApplyEdge(window, settings, DockEdge.Bottom);
+                Assert.Equal(initialHorizontalWidth, root.MinWidth);
+
+                settings.ActiveContextId = settings.Contexts[1].Id;
+                window.GetSettingsService().Settings = settings;
+                window.RefreshPanel();
+                LayoutWindow(window);
+                Assert.Equal(initialHorizontalWidth, root.MinWidth);
+
+                ApplyEdge(window, settings, DockEdge.Top);
+                Assert.Equal(initialHorizontalWidth, root.MinWidth);
+            }
+            finally
+            {
+                window.Close();
+            }
+        });
+    }
+
     private static void ConfigureSettingsForIconConverterOnly(MainWindow window)
     {
         AppSettings settings = window.GetAppSettings();
@@ -218,6 +268,14 @@ public sealed class MainWindowIconConverterOrientationTests
         }
 
         return elements;
+    }
+
+    private static void ApplyEdge(MainWindow window, AppSettings settings, DockEdge edge)
+    {
+        settings.Edge = edge;
+        window.GetSettingsService().Settings = settings;
+        window.UpdateOrientation(reposition: false);
+        LayoutWindow(window);
     }
 
     private static void LayoutWindow(Window window)
