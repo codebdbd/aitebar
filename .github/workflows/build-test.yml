@@ -37,6 +37,43 @@ jobs:
       - name: Build Release
         run: dotnet build .\AiteBar.sln -c Release --no-restore
 
-      - name: Run tests
-        run: dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --no-build
+      - name: Run non-WPF tests
+        shell: pwsh
+        run: |
+          $wpfClasses = @(
+            "ClipboardManagerWindowBehaviorTests",
+            "CommandButtonStyleTests",
+            "FormControlHeightTests",
+            "MainWindowIconConverterOrientationTests",
+            "ZenEditorWindowBehaviorTests",
+            "QuickNoteWindowCloseTests",
+            "QuickNoteWindowFormattingTests",
+            "TextProcessingWindowLayoutTests"
+          )
+          $filter = ($wpfClasses | ForEach-Object { "FullyQualifiedName!~$_" }) -join "&"
+          dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --no-build --filter $filter
+          if ($LASTEXITCODE -ne 0) {
+            throw "Non-WPF tests failed with exit code $LASTEXITCODE."
+          }
+        timeout-minutes: 15
+
+      - name: Run WPF tests in isolated hosts
+        shell: pwsh
+        run: |
+          $wpfClasses = @(
+            "ClipboardManagerWindowBehaviorTests",
+            "CommandButtonStyleTests",
+            "FormControlHeightTests",
+            "MainWindowIconConverterOrientationTests",
+            "ZenEditorWindowBehaviorTests",
+            "QuickNoteWindowCloseTests",
+            "QuickNoteWindowFormattingTests",
+            "TextProcessingWindowLayoutTests"
+          )
+          foreach ($class in $wpfClasses) {
+            dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --no-build --filter "FullyQualifiedName~$class"
+            if ($LASTEXITCODE -ne 0) {
+              throw "WPF test class $class failed with exit code $LASTEXITCODE."
+            }
+          }
         timeout-minutes: 15
