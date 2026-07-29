@@ -230,7 +230,7 @@ public partial class MainWindow
 
         _focusPanelButtonsOnShow = focusButtons;
         SetPanelInputMode(PanelInputMode.Keyboard, clearFocus: false);
-        _hoverStartTime = null;
+        _activationDwellTracker.Reset();
         if (focusButtons)
         {
             FocusPanelForKeyboard();

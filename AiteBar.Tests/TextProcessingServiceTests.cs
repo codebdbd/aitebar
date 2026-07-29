@@ -42,7 +42,18 @@ public sealed class TextProcessingServiceTests
         Assert.True(request.RequireWritingModel);
         Assert.True(request.MaxOutputTokens >= 1024);
         Assert.True(request.RequiredContextTokens > request.MaxOutputTokens);
-        Assert.Equal(0.3, request.Temperature);
+        Assert.Equal(0.0, request.Temperature);
+    }
+
+    [Theory]
+    [InlineData(TextProcessingMode.Proofread, 0.0)]
+    [InlineData(TextProcessingMode.Typography, 0.25)]
+    [InlineData(TextProcessingMode.Cleanup, 0.1)]
+    public void BuildRequest_UsesModeSpecificTemperature(TextProcessingMode mode, double expected)
+    {
+        AiChatRequest request = _service.BuildRequest(mode, "Text");
+
+        Assert.Equal(expected, request.Temperature);
     }
 
     [Fact]
@@ -181,6 +192,17 @@ public sealed class TextProcessingServiceTests
     }
 
     [Fact]
+    public void CleanResponse_UnclosedReasoningRejectsDistantExplicitAnswer()
+    {
+        const string original = "Проверь исходный текст без замены смысла.";
+        const string response =
+            "<think>служебное рассуждение\n" +
+            "Final output: Совершенно другой ответ о посторонней теме.\n";
+
+        Assert.Equal(original, _service.CleanResponse(response, original));
+    }
+
+    [Fact]
     public void HideReasoningFromStreamingPreview_HidesUnclosedReasoningTail()
     {
         Assert.Equal(
@@ -299,6 +321,7 @@ public sealed class TextProcessingServiceTests
     {
         string prompt = _service.GetSystemPrompt(TextProcessingMode.Proofread);
         Assert.Contains("перефразировать", prompt);
+        Assert.Contains("UPPERCASE", prompt);
         Assert.Contains("Верни только", prompt);
     }
 
@@ -307,6 +330,8 @@ public sealed class TextProcessingServiceTests
     {
         string prompt = _service.GetSystemPrompt(TextProcessingMode.Typography);
         Assert.Contains("менять слова", prompt);
+        Assert.Contains("исправлять орфографию или грамматику", prompt);
+        Assert.Contains("Сохраняй структуру абзацев", prompt);
         Assert.Contains("Верни только", prompt);
     }
 
@@ -315,6 +340,7 @@ public sealed class TextProcessingServiceTests
     {
         string prompt = _service.GetSystemPrompt(TextProcessingMode.Cleanup);
         Assert.Contains("исправлять орфографию", prompt);
+        Assert.Contains("повторяется более двух раз", prompt);
         Assert.Contains("Верни только", prompt);
     }
 }

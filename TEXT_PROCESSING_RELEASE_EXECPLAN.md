@@ -8,6 +8,9 @@ After this work, a Windows user can open AiteBar's Text Processing utility, ente
 
 ## Progress
 
+- [x] (2026-07-29) Audited all 22 findings from the external Text Processing review against the current source and separated current defects from stale, speculative, or behavior-regressing recommendations.
+- [x] (2026-07-29) Hardened mode prompts, response recovery, technical-fragment protection, multilingual token estimation, and long streaming requests; added focused regression tests.
+- [x] (2026-07-29) Passed 113 focused tests, a zero-warning Release build, all 976 tests with hang diagnostics, whitespace validation, and rebuilt the installer with a matching SHA-256 manifest.
 - [x] (2026-07-25) Replaced connection-qualified catalogue rows with one logical row per provider/model pair, migrated saved selection away from connection identity, and routed an exact model across every enabled key that exposes it.
 - [x] (2026-07-25) Added regression tests for catalogue deduplication, exact-model key failover, refusal to substitute another model, and model-first automatic routing.
 - [x] (2026-07-25) Ran whitespace validation, a sequential Release solution build, focused routing tests, and the complete 897-test project with clean results.
@@ -46,6 +49,14 @@ After this work, a Windows user can open AiteBar's Text Processing utility, ente
 
 ## Surprises & Discoveries
 
+- Observation: The review's three critical prompt-truncation findings describe text that is not present in the current source.
+  Evidence: `AiteBar/TextProcessingService.cs` already contains complete prohibitions for shortening or expanding text, translating text, and deleting meaningful content in all three mode prompts.
+- Observation: Model capabilities cannot replace the writing-model name filter because the shared descriptor models input capabilities, not output modality.
+  Evidence: `AiCapabilities.Text` admits both text-writing models and some output generators whose provider catalogues still advertise text input; `AiGateway` already applies the capability requirement before `IsSuitableForWritingModel`.
+- Observation: Reducing Cleanup output capacity to one quarter of the input could truncate a valid unchanged result.
+  Evidence: Cleanup is explicitly instructed to preserve uncertain or meaningful content, so its worst-case valid output remains approximately the input length.
+- Observation: Two ordinary full-suite invocations left `testhost` active without an outcome, but the same assembly completed all tests under the repository's diagnostic fallback.
+  Evidence: The final `dotnet test` run with `--blame-hang --blame-hang-timeout 60s --blame-hang-dump-type none` passed 976 tests in 13.3 seconds and reported that no blame sequence was needed.
 - Observation: The visible catalogue treats an API connection as part of a model's identity, and exact selection later restricts routing to that same connection.
   Evidence: `TextProcessingWindow.LoadModelsAsync` deduplicates with `connection.Id + model.ModelId`, while `CopyRequestWithModel` supplies `PreferredConnectionId` and `AiGateway.BuildCandidates` then returns only that connection.
 - Observation: Parallel solution builds can race while creating the isolated test output tree on this Windows workspace even after a complete test build succeeds there.
@@ -75,6 +86,12 @@ After this work, a Windows user can open AiteBar's Text Processing utility, ente
 
 ## Decision Log
 
+- Decision: Apply only findings that improve deterministic safety without narrowing valid multilingual output: per-mode temperatures, a 10% recovery-distance ceiling, stronger protected-marker wording, CLI/data-URI protection, conservative CJK estimation, prompt boundary clarifications, and a longer streaming-compatible HTTP timeout.
+  Rationale: These changes address concrete corruption, context-sizing, or request-lifetime risks and can be proven with unit tests. Few-shot examples, Russian-only typography rules, raw JSON block protection, a reduced Cleanup output budget, and capability-only output filtering either add ambiguity, consume context, or regress valid behavior.
+  Date/Author: 2026-07-29 / Codex
+- Decision: Keep the existing Russian system instructions with explicit per-fragment language handling instead of duplicating every prompt in Russian and English.
+  Rationale: The utility already instructs the model to detect and preserve each input language. Duplicating long prompts increases context usage without a deterministic language detector or evidence that it fixes a current failure.
+  Date/Author: 2026-07-29 / Codex
 - Decision: Define a logical model as a case-insensitive provider/model pair and keep API connection identity out of the ComboBox and persisted Text Processing selection.
   Rationale: API keys are interchangeable routes to a provider model, not user-facing model choices. Provider identity remains part of the key because equal display names from different providers do not prove compatible endpoints or model identifiers.
   Date/Author: 2026-07-25 / Codex
@@ -137,6 +154,8 @@ After this work, a Windows user can open AiteBar's Text Processing utility, ente
   Date/Author: 2026-07-24 / Codex
 
 ## Outcomes & Retrospective
+
+The fact-checked review follow-up is complete. Text Processing now uses deterministic temperatures per mode, accepts an explicit final answer from a truncated reasoning block only within ten percent edit distance of the protected fallback, protects CLI switches and data URIs, estimates CJK and other writing systems conservatively, states stricter marker/case/paragraph/header boundaries, and permits five-minute provider requests while retaining the thirty-second stream-inactivity guard. The three reported critical truncations were stale, and recommendations that could truncate Cleanup output or hide valid text models were deliberately not applied. Automated evidence is 113 focused tests, 976 total tests, a zero-warning Release build, and installer SHA-256 `8299CAC11A4945D98932F6EBC7B887ECC04FAD874724B5426234D75399EA4D01`.
 
 The Text Processing utility now has a responsive release layout matching the supplied visual reference, aligned editor/placeholder insets, a connected editor/counter surface, four icon-and-label rail commands, a full-width model/action footer, accessible focus and automation metadata, non-destructive size-limit handling, functioning cancellation and repeat, monitor-aware geometry restoration, provider-aware model persistence, writing-model and context-capacity filtering, localized clipboard/model states, and updated user documentation. The Release solution builds with zero warnings and zero errors, and all 59 focused tests pass.
 
@@ -322,3 +341,7 @@ Reasoning-leak and footer-alignment validation evidence (2026-07-26):
 
     dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release -m:1 -nr:false --no-build
     Пройдено: 904, не пройдено: 0, пропущено: 0.
+
+Plan revision note (2026-07-29): Reopened the plan for a fact-checked external code review. The current source disproved the reported prompt truncations and already applies text capability filtering before output-generator name heuristics. The follow-up is limited to testable safety improvements: mode-specific determinism, conservative reasoning recovery, additional protected technical syntax, multilingual context estimation, prompt boundary clauses, and a request timeout that does not abort ordinary long generations after thirty seconds.
+
+Plan revision note (2026-07-29): Completed the fact-checked hardening pass. Added regression coverage for per-mode temperatures, rejection of distant recovered output, CLI/data-URI round trips, CJK and other-script estimates, prompt safeguards, and the five-minute provider timeout. Recorded two non-deterministic ordinary testhost stalls and the successful diagnostic run of all 976 tests, then rebuilt the unsigned installer and verified its generated SHA-256 manifest.

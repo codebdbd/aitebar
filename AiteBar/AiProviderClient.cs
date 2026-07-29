@@ -11,6 +11,7 @@ namespace AiteBar;
 internal sealed class AiProviderClient
 {
     internal static readonly TimeSpan StreamInactivityTimeout = TimeSpan.FromSeconds(30);
+    internal static readonly TimeSpan RequestTimeout = TimeSpan.FromMinutes(5);
     private static readonly HttpClient SharedHttpClient = CreateHttpClient();
     private readonly HttpClient _httpClient;
     private readonly IAiCredentialStore _credentialStore;
@@ -728,6 +729,6 @@ internal sealed class AiProviderClient
 
     private static HttpClient CreateHttpClient() => new()
     {
-        Timeout = TimeSpan.FromSeconds(30)
+        Timeout = RequestTimeout
     };
 }

@@ -51,3 +51,53 @@ internal static class ActivationZoneHelper
         return value > center - halfSpan && value < center + halfSpan;
     }
 }
+
+internal sealed class ActivationDwellTracker
+{
+    public const double DefaultMovementTolerancePixels = 6;
+
+    private DateTime? _startedAt;
+    private double _anchorX;
+    private double _anchorY;
+
+    public bool Update(
+        bool isInActivationZone,
+        double pointerX,
+        double pointerY,
+        DateTime now,
+        int delayMs,
+        double movementTolerancePixels = DefaultMovementTolerancePixels)
+    {
+        if (!isInActivationZone)
+        {
+            Reset();
+            return false;
+        }
+
+        double tolerance = Math.Max(0, movementTolerancePixels);
+        if (_startedAt == null ||
+            DistanceSquared(pointerX, pointerY, _anchorX, _anchorY) > tolerance * tolerance)
+        {
+            _startedAt = now;
+            _anchorX = pointerX;
+            _anchorY = pointerY;
+            return false;
+        }
+
+        return (now - _startedAt.Value).TotalMilliseconds >= Math.Max(0, delayMs);
+    }
+
+    public void Reset()
+    {
+        _startedAt = null;
+        _anchorX = 0;
+        _anchorY = 0;
+    }
+
+    private static double DistanceSquared(double x1, double y1, double x2, double y2)
+    {
+        double dx = x1 - x2;
+        double dy = y1 - y2;
+        return dx * dx + dy * dy;
+    }
+}

@@ -19,4 +19,16 @@ public sealed class TextProcessingTokenEstimationTests
     {
         Assert.Equal(3, TextProcessingService.EstimateTokens("abcабвгде"));
     }
+
+    [Fact]
+    public void EstimateTokens_UsesConservativeCjkCoefficient()
+    {
+        Assert.Equal(4, TextProcessingService.EstimateTokens("你好世界"));
+    }
+
+    [Fact]
+    public void EstimateTokens_UsesConservativeOtherScriptCoefficient()
+    {
+        Assert.Equal(3, TextProcessingService.EstimateTokens("مرحبا"));
+    }
 }

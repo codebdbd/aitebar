@@ -11,6 +11,8 @@ public sealed partial class TextProcessingService
     public const double LatinCharsPerToken = 4.0;
     public const double CyrillicCharsPerToken = 2.8;
     public const double MixedCharsPerToken = 3.5;
+    public const double OtherScriptCharsPerToken = 2.0;
+    public const double CjkCharsPerToken = 1.0;
 
     public string GetSystemPrompt(TextProcessingMode mode) => mode switch
     {
@@ -46,7 +48,13 @@ public sealed partial class TextProcessingService
             RequireWritingModel = true,
             RequiredContextTokens = requiredContextTokens,
             MaxOutputTokens = outputBudget,
-            Temperature = 0.3
+            Temperature = mode switch
+            {
+                TextProcessingMode.Proofread => 0.0,
+                TextProcessingMode.Typography => 0.25,
+                TextProcessingMode.Cleanup => 0.1,
+                _ => throw new ArgumentOutOfRangeException(nameof(mode))
+            }
         };
     }
 
@@ -131,7 +139,8 @@ public sealed partial class TextProcessingService
         }
 
         int longestLength = Math.Max(normalizedFallback.Length, bestCandidate.Length);
-        return longestLength > 0 && bestDistance <= Math.Max(3, longestLength / 2)
+        int maximumDistance = Math.Max(3, (int)Math.Ceiling(longestLength * 0.1));
+        return longestLength > 0 && bestDistance <= maximumDistance
             ? bestCandidate
             : null;
     }
@@ -186,9 +195,15 @@ public sealed partial class TextProcessingService
 
         int cyrillicLetters = 0;
         int latinLetters = 0;
+        int cjkCharacters = 0;
+        int otherScriptLetters = 0;
         foreach (char character in text)
         {
-            if (character is >= '\u0400' and <= '\u052F')
+            if (IsCjkCharacter(character))
+            {
+                cjkCharacters++;
+            }
+            else if (character is >= '\u0400' and <= '\u052F')
             {
                 cyrillicLetters++;
             }
@@ -196,17 +211,29 @@ public sealed partial class TextProcessingService
             {
                 latinLetters++;
             }
+            else if (char.IsLetter(character))
+            {
+                otherScriptLetters++;
+            }
         }
 
-        double charsPerToken = (cyrillicLetters, latinLetters) switch
-        {
-            (> 0, 0) => CyrillicCharsPerToken,
-            (0, > 0) => LatinCharsPerToken,
-            (> 0, > 0) => MixedCharsPerToken,
-            _ => LatinCharsPerToken
-        };
-        return (int)Math.Ceiling(text.Length / charsPerToken);
+        int remainingCharacters =
+            text.Length - cyrillicLetters - latinLetters - cjkCharacters - otherScriptLetters;
+        double estimatedTokens =
+            (latinLetters / LatinCharsPerToken) +
+            (cyrillicLetters / CyrillicCharsPerToken) +
+            (cjkCharacters / CjkCharsPerToken) +
+            (otherScriptLetters / OtherScriptCharsPerToken) +
+            (remainingCharacters / LatinCharsPerToken);
+        return (int)Math.Ceiling(estimatedTokens);
     }
+
+    private static bool IsCjkCharacter(char character) =>
+        character is >= '\u3400' and <= '\u4DBF' or
+            >= '\u4E00' and <= '\u9FFF' or
+            >= '\uF900' and <= '\uFAFF' or
+            >= '\u3040' and <= '\u30FF' or
+            >= '\uAC00' and <= '\uD7AF';
 
     public ProtectedText ProtectTechnicalFragments(string text)
     {
@@ -286,7 +313,7 @@ public sealed partial class TextProcessingService
 
     [GeneratedRegex(
         """
-        ```[\s\S]*?```|`[^`\r\n]+`|https?://[^\s<>"']+|www\.[^\s<>"']+|[\w.!#$%&'*+/=?^`{|}~-]+@[\w-]+(?:\.[\w-]+)+|(?:[A-Za-z]:\\|\\\\)[^\s<>:"|?*]+|(?<!\w)/(?:[^\s/]+/)*[^\s/]+|</?[A-Za-z][^>\r\n]*>|\$\{[^}\r\n]+\}|\{\{[^}\r\n]+\}\}|%[A-Za-z_][A-Za-z0-9_]*%|\b[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\b|\bv?\d+(?:\.\d+){1,3}(?:[-+][A-Za-z0-9.-]+)?\b
+        ```[\s\S]*?```|`[^`\r\n]+`|data:[^\s<>"']+|https?://[^\s<>"']+|www\.[^\s<>"']+|[\w.!#$%&'*+/=?^`{|}~-]+@[\w-]+(?:\.[\w-]+)+|(?:[A-Za-z]:\\|\\\\)[^\s<>:"|?*]+|(?<!\w)/(?:[^\s/]+/)*[^\s/]+|(?<![\w-])--?[A-Za-z0-9][A-Za-z0-9_-]*(?:[=:][^\s<>"']+)?|</?[A-Za-z][^>\r\n]*>|\$\{[^}\r\n]+\}|\{\{[^}\r\n]+\}\}|%[A-Za-z_][A-Za-z0-9_]*%|\b[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}\b|\bv?\d+(?:\.\d+){1,3}(?:[-+][A-Za-z0-9.-]+)?\b
         """,
         RegexOptions.CultureInvariant)]
     private static partial Regex TechnicalFragmentRegex();
@@ -316,6 +343,7 @@ public sealed partial class TextProcessingService
 
         Фрагменты вида __AITEBAR_PROTECTED_...__ являются служебными маркерами защищённого текста.
         Копируй каждый такой маркер в ответ ровно один раз, без любых изменений, пробелов или перестановки символов.
+        Не преобразовывай, не переводи и не переименовывай маркеры. Если хотя бы один маркер отсутствует или повторён, ответ некорректен.
         """;
 
     private const string ProofreadPrompt =
@@ -334,6 +362,8 @@ public sealed partial class TextProcessingService
         - создавать новые заголовки или списки;
         - переводить текст;
         - выполнять типографическую обработку.
+
+        Сохраняй намеренный регистр аббревиатур, сокращений, имён собственных и технических обозначений. Не превращай UPPERCASE в TitleCase, если это не очевидная ошибка.
 
         Сохраняй исходный тип символов:
         - обычные кавычки " не заменяй на типографские;
@@ -366,6 +396,7 @@ public sealed partial class TextProcessingService
 
         Строго запрещено:
         - менять слова и формулировки;
+        - исправлять орфографию или грамматику;
         - исправлять стиль;
         - перефразировать;
         - сокращать или дополнять текст;
@@ -373,6 +404,8 @@ public sealed partial class TextProcessingService
         - перестраивать абзацы;
         - переводить;
         - изменять смысл.
+
+        Сохраняй структуру абзацев и существующие границы пустых строк. Не сливай разные абзацы и не создавай новые.
 
         Не изменяй содержимое URL, адресов электронной почты, путей к файлам, имён файлов, команд, программного кода, HTML/XML-тегов, Markdown-разметки, переменных, шаблонов, номеров версий, артикулов и идентификаторов.
 
@@ -392,7 +425,7 @@ public sealed partial class TextProcessingService
         - удалять лишние пустые строки;
         - удалять невидимые и служебные символы;
         - удалять очевидные номера страниц;
-        - удалять повторяющиеся колонтитулы;
+        - удалять повторяющиеся колонтитулы, только если одна и та же служебная строка повторяется более двух раз на одинаковой позиции между блоками или рядом с номерами страниц;
         - удалять явные артефакты копирования;
         - восстанавливать реальные границы абзацев;
         - сохранять настоящие списки и структуру документа.

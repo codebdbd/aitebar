@@ -8,6 +8,13 @@ namespace AiteBar.Tests;
 public sealed class AiStreamingTests
 {
     [Fact]
+    public void RequestTimeout_AllowsLongStreamingGeneration()
+    {
+        Assert.Equal(TimeSpan.FromMinutes(5), AiProviderClient.RequestTimeout);
+        Assert.True(AiProviderClient.RequestTimeout > AiProviderClient.StreamInactivityTimeout);
+    }
+
+    [Fact]
     public void ParseOpenAiStreamData_ReturnsContentDelta()
     {
         string? content = AiProviderClient.ParseOpenAiStreamData(

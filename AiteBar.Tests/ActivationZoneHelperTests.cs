@@ -56,4 +56,40 @@ public sealed class ActivationZoneHelperTests
         Assert.False(ActivationZoneHelper.IsInActivationZone(
             DockEdge.Top, 0, 0, 1000, 800, 20, 300, 0));
     }
+
+    [Fact]
+    public void ActivationDwell_StationaryPointerActivatesAfterDelay()
+    {
+        var tracker = new ActivationDwellTracker();
+        DateTime start = DateTime.UtcNow;
+
+        Assert.False(tracker.Update(true, 500, 0, start, delayMs: 200));
+        Assert.False(tracker.Update(true, 502, 1, start.AddMilliseconds(199), delayMs: 200));
+        Assert.True(tracker.Update(true, 501, 0, start.AddMilliseconds(200), delayMs: 200));
+    }
+
+    [Fact]
+    public void ActivationDwell_MovementAlongBrowserTabsKeepsResettingDelay()
+    {
+        var tracker = new ActivationDwellTracker();
+        DateTime start = DateTime.UtcNow;
+
+        Assert.False(tracker.Update(true, 500, 0, start, delayMs: 150));
+        Assert.False(tracker.Update(true, 520, 0, start.AddMilliseconds(60), delayMs: 150));
+        Assert.False(tracker.Update(true, 540, 0, start.AddMilliseconds(120), delayMs: 150));
+        Assert.False(tracker.Update(true, 560, 0, start.AddMilliseconds(180), delayMs: 150));
+        Assert.False(tracker.Update(true, 580, 0, start.AddMilliseconds(240), delayMs: 150));
+    }
+
+    [Fact]
+    public void ActivationDwell_LeavingZoneClearsPreviousProgress()
+    {
+        var tracker = new ActivationDwellTracker();
+        DateTime start = DateTime.UtcNow;
+
+        Assert.False(tracker.Update(true, 500, 0, start, delayMs: 150));
+        Assert.False(tracker.Update(false, 500, 5, start.AddMilliseconds(100), delayMs: 150));
+        Assert.False(tracker.Update(true, 500, 0, start.AddMilliseconds(160), delayMs: 150));
+        Assert.True(tracker.Update(true, 500, 0, start.AddMilliseconds(310), delayMs: 150));
+    }
 }

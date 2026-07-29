@@ -6,7 +6,7 @@ namespace AiteBar;
 public partial class MainWindow : Window, ISettingsWindowContext
 {
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
-    private DateTime? _hoverStartTime;
+    private readonly ActivationDwellTracker _activationDwellTracker = new();
     private bool _shown = false, _isAnimating = false;
     private double _panelLeft, _panelTop, _panelRight, _panelBottom, _cachedDpi = 1.0;
     private static readonly BrushConverter _brushConverter = new();
@@ -1023,13 +1023,13 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private void BeginBlockingPanelInteraction()
     {
         _isBlockingPanelInteraction = true;
-        _hoverStartTime = null;
+        _activationDwellTracker.Reset();
     }
 
     private void EndBlockingPanelInteraction()
     {
         _isBlockingPanelInteraction = false;
-        _hoverStartTime = null;
+        _activationDwellTracker.Reset();
     }
 
     private void UpdatePanelBounds()
@@ -1230,15 +1230,19 @@ public partial class MainWindow : Window, ISettingsWindowContext
                     pt.X,
                     pt.Y);
 
-                if (inActivationZone && !_shown)
+                if (_shown)
                 {
-                    if (_hoverStartTime == null) _hoverStartTime = DateTime.Now;
-                    else if ((DateTime.Now - _hoverStartTime.Value).TotalMilliseconds >= delayMs)
-                    {
-                        ShowDock();
-                    }
+                    _activationDwellTracker.Reset();
                 }
-                else _hoverStartTime = null;
+                else if (_activationDwellTracker.Update(
+                    inActivationZone,
+                    pt.X,
+                    pt.Y,
+                    DateTime.UtcNow,
+                    delayMs))
+                {
+                    ShowDock();
+                }
             }
         };
 
@@ -1798,7 +1802,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
         _shown = true;
-        _hoverStartTime = null;
+        _activationDwellTracker.Reset();
         Toggle(false);
     }
 
@@ -1904,7 +1908,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         _shown = false;
         SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
-        _hoverStartTime = null;
+        _activationDwellTracker.Reset();
         Toggle(true, fromCurrentPosition: true);
         await Task.Delay(Constants.PanelHideAnimationMs);
     }

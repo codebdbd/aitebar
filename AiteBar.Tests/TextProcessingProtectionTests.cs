@@ -45,6 +45,21 @@ public sealed class TextProcessingProtectionTests
     }
 
     [Fact]
+    public void ProtectAndRestoreTechnicalFragments_RoundTripsCliFlagsAndDataUris()
+    {
+        const string source =
+            "Запусти apt-get --no-install-recommends --config=/tmp/app.conf и сохрани " +
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB.";
+
+        ProtectedText protectedText = _service.ProtectTechnicalFragments(source);
+
+        Assert.DoesNotContain("--no-install-recommends", protectedText.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain("--config=/tmp/app.conf", protectedText.Text, StringComparison.Ordinal);
+        Assert.DoesNotContain("data:image/png;base64", protectedText.Text, StringComparison.Ordinal);
+        Assert.Equal(source, TextProcessingService.RestoreTechnicalFragments(protectedText.Text, protectedText));
+    }
+
+    [Fact]
     public void RestoreTechnicalFragments_RejectsMissingMarkerInFinalResponse()
     {
         ProtectedText protectedText = _service.ProtectTechnicalFragments("Открой https://example.com");
