@@ -207,12 +207,20 @@ public sealed class TextProcessingVisualContractTests
         "AiteBar",
         "TextProcessingWindow.xaml"));
 
-    private static string FindRepoRoot(
-        [System.Runtime.CompilerServices.CallerFilePath] string sourceFile = "")
+    private static string FindRepoRoot()
     {
-        return Path.GetFullPath(Path.Combine(
-            Path.GetDirectoryName(sourceFile)
-                ?? throw new DirectoryNotFoundException("The test source directory was not found."),
-            ".."));
+        string? current = AppContext.BaseDirectory;
+        while (!string.IsNullOrEmpty(current))
+        {
+            if (File.Exists(Path.Combine(current, "AiteBar.sln")))
+            {
+                return current;
+            }
+
+            current = Directory.GetParent(current)?.FullName;
+        }
+
+        throw new DirectoryNotFoundException(
+            "Repository root with AiteBar.sln was not found.");
     }
 }
