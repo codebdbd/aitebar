@@ -162,6 +162,9 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("RenderDiff();", code);
         Assert.Contains("\"TextProcessing_ButtonShowOriginal\"", code);
         Assert.Contains("\"TextProcessing_ButtonShowResult\"", code);
+        Assert.Contains("\"TextProcessing_ButtonShowDiff\"", code);
+        Assert.Contains("\"TextProcessing_ButtonHideDiff\"", code);
+        Assert.Contains("AutomationProperties.SetName(BtnShowDiff, ShowDiffLabel.Text)", code);
     }
 
     [Fact]

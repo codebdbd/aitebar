@@ -23,9 +23,6 @@ public partial class TaskbarPositionIndicatorWindow : Window
     private bool _isPointerDown;
     private bool _isDragging;
 
-    private static FontFamily? _menuIconFont;
-    private static FontFamily MenuIconFont => _menuIconFont ??= FontHelper.Resolve(FontHelper.FluentKey);
-
     private static class MenuIcons
     {
         public const int Open = 62849; // ic_fluent_open_16_regular
@@ -47,10 +44,7 @@ public partial class TaskbarPositionIndicatorWindow : Window
     private void InitializeContextMenu()
     {
         LocalizationService.EnsureAppliedCulture();
-        ContextMenu = new ContextMenu
-        {
-            Style = (Style)FindResource("DarkContextMenu")
-        };
+        ContextMenu = AppContextMenuFactory.CreateMenu(this);
 
         var showPanelItem = CreateMenuItem(FluentGlyph(MenuIcons.Open), LocalizationService.Get("ShowPanel"),
             (s, e) => TogglePanelRequested?.Invoke(this, EventArgs.Empty));
@@ -69,30 +63,7 @@ public partial class TaskbarPositionIndicatorWindow : Window
     private static string FluentGlyph(int codePoint) => char.ConvertFromUtf32(codePoint);
 
     private MenuItem CreateMenuItem(string glyph, string text, RoutedEventHandler? onClick = null)
-    {
-        var icon = new System.Windows.Controls.TextBlock
-        {
-            Text = glyph,
-            FontFamily = MenuIconFont,
-            Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE3, 0xE3, 0xE3)),
-            Style = (Style)FindResource("ContextMenuIconTextStyle")
-        };
-
-        var item = new MenuItem
-        {
-            Header = text,
-            Style = (Style)FindResource("DarkMenuItem"),
-            Padding = new Thickness(0),
-            Icon = icon
-        };
-
-        if (onClick != null)
-        {
-            item.Click += onClick;
-        }
-
-        return item;
-    }
+        => AppContextMenuFactory.CreateItem(this, glyph, text, onClick);
 
     public void UpdateArrow(DockEdge edge)
     {

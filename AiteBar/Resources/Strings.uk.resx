@@ -671,6 +671,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ButtonBeforeProcessing" xml:space="preserve"><value>До обробки</value></data>
   <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>Після обробки</value></data>
   <data name="TextProcessing_ButtonShowDiff" xml:space="preserve"><value>Показати зміни</value></data>
+  <data name="TextProcessing_ButtonHideDiff" xml:space="preserve"><value>Сховати зміни</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Очистити</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Скасувати</value></data>
   <data name="TextProcessing_ButtonProcess" xml:space="preserve"><value>Обробити</value></data>
@@ -706,6 +707,37 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Обробку скасовано.</value></data>
   <data name="TextProcessing_ModelLoading" xml:space="preserve"><value>Завантаження доступних моделей…</value></data>
   <data name="TextProcessing_ErrorClipboard" xml:space="preserve"><value>Не вдалося отримати доступ до буфера обміну. Спробуйте ще раз.</value></data>
+  <data name="Tool_ZenEditor" xml:space="preserve"><value>Дзен-редактор</value></data>
+  <data name="Main_ZenEditorTooltip" xml:space="preserve"><value>Дзен-редактор</value></data>
+  <data name="QuickTool_ZenEditor_Title" xml:space="preserve"><value>Дзен-редактор</value></data>
+  <data name="QuickTool_ZenEditor_Description" xml:space="preserve"><value>Повноекранне письмо без відволікань з автоматичним локальним збереженням.</value></data>
+  <data name="ZenEditor_Title" xml:space="preserve"><value>Дзен-редактор</value></data>
+  <data name="ZenEditor_Untitled" xml:space="preserve"><value>Новий документ</value></data>
+  <data name="ZenEditor_EditorAutomationName" xml:space="preserve"><value>Документ Дзен-редактора</value></data>
+  <data name="ZenEditor_Minimize" xml:space="preserve"><value>Згорнути</value></data>
+  <data name="ZenEditor_Close" xml:space="preserve"><value>Закрити</value></data>
+  <data name="ZenEditor_NewDocument" xml:space="preserve"><value>Новий документ</value></data>
+  <data name="ZenEditor_OpenDocument" xml:space="preserve"><value>Відкрити документ…</value></data>
+  <data name="ZenEditor_ExportTxt" xml:space="preserve"><value>Зберегти в TXT…</value></data>
+  <data name="ZenEditor_Undo" xml:space="preserve"><value>Скасувати</value></data>
+  <data name="ZenEditor_Redo" xml:space="preserve"><value>Повторити</value></data>
+  <data name="ZenEditor_Cut" xml:space="preserve"><value>Вирізати</value></data>
+  <data name="ZenEditor_Copy" xml:space="preserve"><value>Копіювати</value></data>
+  <data name="ZenEditor_Paste" xml:space="preserve"><value>Вставити</value></data>
+  <data name="ZenEditor_SelectAll" xml:space="preserve"><value>Виділити все</value></data>
+  <data name="ZenEditor_Theme" xml:space="preserve"><value>Тема</value></data>
+  <data name="ZenEditor_ThemePaper" xml:space="preserve"><value>Папір</value></data>
+  <data name="ZenEditor_ThemeIvory" xml:space="preserve"><value>Слонова кістка</value></data>
+  <data name="ZenEditor_ThemeMist" xml:space="preserve"><value>Туман</value></data>
+  <data name="ZenEditor_ThemeGraphite" xml:space="preserve"><value>Графіт</value></data>
+  <data name="ZenEditor_ThemeNight" xml:space="preserve"><value>Ніч</value></data>
+  <data name="ZenEditor_Exit" xml:space="preserve"><value>Вихід</value></data>
+  <data name="ZenEditor_DeleteConfirm" xml:space="preserve"><value>Видалити документ «{0}»?</value></data>
+  <data name="ZenEditor_TxtFilter" xml:space="preserve"><value>Текстові файли (*.txt)|*.txt</value></data>
+  <data name="ZenEditor_SaveError" xml:space="preserve"><value>Не вдалося зберегти документ. Ваш текст залишається відкритим.&#xA;&#xA;{0}</value></data>
+  <data name="ZenEditor_Retry" xml:space="preserve"><value>Повторити</value></data>
+  <data name="ZenEditor_Dismiss" xml:space="preserve"><value>Закрити повідомлення</value></data>
+  <data name="ZenEditor_Recovered" xml:space="preserve"><value>Останній документ було пошкоджено. Дзен-редактор відновив найновішу коректну резервну копію.</value></data>
 </root>
 
 

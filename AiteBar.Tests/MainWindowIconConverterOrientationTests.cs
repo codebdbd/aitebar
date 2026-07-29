@@ -248,6 +248,7 @@ public sealed class MainWindowIconConverterOrientationTests
         settings.ShowPresetAppsFolder = false;
         settings.ShowPresetCopilot = false;
         settings.ShowPresetTextProcessing = false;
+        settings.ShowPresetZenEditor = false;
         settings.ShowPresetIconConverter = true;
         window.GetSettingsService().Settings = settings;
     }

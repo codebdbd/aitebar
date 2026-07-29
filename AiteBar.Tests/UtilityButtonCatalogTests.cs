@@ -23,7 +23,8 @@ public sealed class UtilityButtonCatalogTests
         "ShowDesktop",
         "AppsFolder",
         "Copilot",
-        "TextProcessing"
+        "TextProcessing",
+        "ZenEditor"
     ];
 
     [Fact]

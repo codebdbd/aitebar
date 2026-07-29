@@ -105,6 +105,11 @@ internal static class UtilityButtonCatalog
         settings => settings.ShowPresetTextProcessing,
         (settings, visible) => settings.ShowPresetTextProcessing = visible);
 
+    public static UtilityButtonDefinition ZenEditor { get; } = new(
+        "ZenEditor", "\uE367", "#5B8DB8", "Main_ZenEditorTooltip",
+        settings => settings.ShowPresetZenEditor,
+        (settings, visible) => settings.ShowPresetZenEditor = visible);
+
     public static IReadOnlyList<UtilityButtonDefinition> All { get; } =
     [
         Search,
@@ -123,7 +128,8 @@ internal static class UtilityButtonCatalog
         ShowDesktop,
         AppsFolder,
         Copilot,
-        TextProcessing
+        TextProcessing,
+        ZenEditor
     ];
 
     private static readonly IReadOnlyDictionary<string, UtilityButtonDefinition> ById =

@@ -17,7 +17,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - Быстрый запуск сайтов в выбранном браузере и профиле
 - Открытие программ, файлов и папок
 - Выполнение скриптов (.bat, .cmd, .ps1, .py)
-- Использование встроенных утилит (поиск, скриншот, запись видео, калькулятор, проводник, таймер, цветовой пикер, Quick Note, File Sorter, Icon Converter, QR Code Generator, Clipboard Manager, Show Desktop, Apps Folder, Copilot)
+- Использование встроенных утилит (поиск, скриншот, запись видео, калькулятор, проводник, таймер, цветовой пикер, Quick Note, Дзен-редактор, File Sorter, Icon Converter, QR Code Generator, Clipboard Manager, Show Desktop, Apps Folder, Copilot)
 - Переключение между контекстами кнопок
 - Импорт/экспорт панелей с кнопками
 

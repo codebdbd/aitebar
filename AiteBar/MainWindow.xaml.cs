@@ -10,9 +10,6 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private bool _shown = false, _isAnimating = false;
     private double _panelLeft, _panelTop, _panelRight, _panelBottom, _cachedDpi = 1.0;
     private static readonly BrushConverter _brushConverter = new();
-    private static FontFamily? _menuIconFont;
-    private static FontFamily MenuIconFont => _menuIconFont ??= FontHelper.Resolve(FontHelper.FluentKey);
-
     private static class MenuIcons
     {
         public const int Open = 62849; // ic_fluent_open_16_regular
@@ -45,6 +42,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private AppSettings AppSettings => _settingsService.Settings;
     private IReadOnlyList<CustomElement> Elements => _settingsService.Elements;
+
+    internal void SetUtilityFullscreenSuppressed(bool suppressed) =>
+        _positionIndicatorService.SetUtilityFullscreenSuppressed(suppressed);
 
     private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
 
@@ -178,7 +178,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private ContextMenu BuildSystemUtilityContextMenu(Action detachAction)
     {
-        ContextMenu menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
+        ContextMenu menu = AppContextMenuFactory.CreateMenu(this);
         menu.Opened += (s, e) => _isElementContextMenuOpen = true;
         menu.Closed += (s, e) => _isElementContextMenuOpen = false;
 
@@ -196,41 +196,13 @@ public partial class MainWindow : Window, ISettingsWindowContext
     }
 
     private MenuItem CreateMenuItem(string glyph, string text, RoutedEventHandler? onClick = null, bool isDanger = false, bool isActive = false)
-    {
-        Brush accentBrush = isDanger
-            ? new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#FF5252"))
-            : isActive
-                ? (Brush)FindResource("AccentColor")
-                : new SolidColorBrush((MediaColor)MediaColorConverter.ConvertFromString("#E3E3E3"));
-
-        System.Windows.Controls.TextBlock icon = new System.Windows.Controls.TextBlock
-        {
-            Text = glyph,
-            FontFamily = MenuIconFont,
-            Foreground = accentBrush,
-            Style = (Style)FindResource("ContextMenuIconTextStyle")
-        };
-
-        MenuItem item = new MenuItem
-        {
-            Header = text,
-            Style = (Style)FindResource("DarkMenuItem"),
-            Padding = new Thickness(0),
-            Icon = icon
-        };
-
-        if (isDanger)
-        {
-            item.Foreground = accentBrush;
-        }
-
-        if (onClick != null)
-        {
-            item.Click += onClick;
-        }
-
-        return item;
-    }
+        => AppContextMenuFactory.CreateItem(
+            this,
+            glyph,
+            text,
+            onClick,
+            isDanger,
+            isActive);
 
     public async Task<IReadOnlyList<string>> SaveAppSettings()
     {
@@ -387,7 +359,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private void BuildPanelContextMenu(string activeContextId)
     {
-        ContextMenu menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
+        ContextMenu menu = AppContextMenuFactory.CreateMenu(this);
         menu.Opened += (s, e) => _isElementContextMenuOpen = true;
         menu.Closed += (s, e) => _isElementContextMenuOpen = false;
 
@@ -423,7 +395,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private ContextMenu BuildElementContextMenu(CustomElement element)
     {
-        ContextMenu menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
+        ContextMenu menu = AppContextMenuFactory.CreateMenu(this);
         menu.Opened += (s, e) => _isElementContextMenuOpen = true;
         menu.Closed += (s, e) => _isElementContextMenuOpen = false;
 
@@ -1622,6 +1594,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                         break;
                     case "TextProcessing":
                         await _actionService.LaunchUtilityAsync("TextProcessing", HideDock);
+                        break;
+                    case "ZenEditor":
+                        await _actionService.LaunchUtilityAsync("ZenEditor", HideDock);
                         break;
                 }
             });

@@ -677,6 +677,7 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_ButtonBeforeProcessing" xml:space="preserve"><value>Vorher</value></data>
   <data name="TextProcessing_ButtonAfterProcessing" xml:space="preserve"><value>Nachher</value></data>
   <data name="TextProcessing_ButtonShowDiff" xml:space="preserve"><value>Änderungen anzeigen</value></data>
+  <data name="TextProcessing_ButtonHideDiff" xml:space="preserve"><value>Änderungen ausblenden</value></data>
   <data name="TextProcessing_ButtonClear" xml:space="preserve"><value>Löschen</value></data>
   <data name="TextProcessing_ButtonCancel" xml:space="preserve"><value>Abbrechen</value></data>
   <data name="TextProcessing_ButtonProcess" xml:space="preserve"><value>Verarbeiten</value></data>
@@ -712,6 +713,37 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_ErrorCancellation" xml:space="preserve"><value>Verarbeitung wurde abgebrochen.</value></data>
   <data name="TextProcessing_ModelLoading" xml:space="preserve"><value>Verfügbare Modelle werden geladen…</value></data>
   <data name="TextProcessing_ErrorClipboard" xml:space="preserve"><value>Auf die Zwischenablage konnte nicht zugegriffen werden. Versuchen Sie es erneut.</value></data>
+  <data name="Tool_ZenEditor" xml:space="preserve"><value>Zen-Editor</value></data>
+  <data name="Main_ZenEditorTooltip" xml:space="preserve"><value>Zen-Editor</value></data>
+  <data name="QuickTool_ZenEditor_Title" xml:space="preserve"><value>Zen-Editor</value></data>
+  <data name="QuickTool_ZenEditor_Description" xml:space="preserve"><value>Ablenkungsfreies Schreiben im Vollbild mit automatischer lokaler Speicherung.</value></data>
+  <data name="ZenEditor_Title" xml:space="preserve"><value>Zen-Editor</value></data>
+  <data name="ZenEditor_Untitled" xml:space="preserve"><value>Neues Dokument</value></data>
+  <data name="ZenEditor_EditorAutomationName" xml:space="preserve"><value>Zen-Editor-Dokument</value></data>
+  <data name="ZenEditor_Minimize" xml:space="preserve"><value>Minimieren</value></data>
+  <data name="ZenEditor_Close" xml:space="preserve"><value>Schließen</value></data>
+  <data name="ZenEditor_NewDocument" xml:space="preserve"><value>Neues Dokument</value></data>
+  <data name="ZenEditor_OpenDocument" xml:space="preserve"><value>Dokument öffnen…</value></data>
+  <data name="ZenEditor_ExportTxt" xml:space="preserve"><value>Als TXT speichern…</value></data>
+  <data name="ZenEditor_Undo" xml:space="preserve"><value>Rückgängig</value></data>
+  <data name="ZenEditor_Redo" xml:space="preserve"><value>Wiederholen</value></data>
+  <data name="ZenEditor_Cut" xml:space="preserve"><value>Ausschneiden</value></data>
+  <data name="ZenEditor_Copy" xml:space="preserve"><value>Kopieren</value></data>
+  <data name="ZenEditor_Paste" xml:space="preserve"><value>Einfügen</value></data>
+  <data name="ZenEditor_SelectAll" xml:space="preserve"><value>Alles auswählen</value></data>
+  <data name="ZenEditor_Theme" xml:space="preserve"><value>Design</value></data>
+  <data name="ZenEditor_ThemePaper" xml:space="preserve"><value>Papier</value></data>
+  <data name="ZenEditor_ThemeIvory" xml:space="preserve"><value>Elfenbein</value></data>
+  <data name="ZenEditor_ThemeMist" xml:space="preserve"><value>Nebel</value></data>
+  <data name="ZenEditor_ThemeGraphite" xml:space="preserve"><value>Graphit</value></data>
+  <data name="ZenEditor_ThemeNight" xml:space="preserve"><value>Nacht</value></data>
+  <data name="ZenEditor_Exit" xml:space="preserve"><value>Beenden</value></data>
+  <data name="ZenEditor_DeleteConfirm" xml:space="preserve"><value>Dokument „{0}“ löschen?</value></data>
+  <data name="ZenEditor_TxtFilter" xml:space="preserve"><value>Textdateien (*.txt)|*.txt</value></data>
+  <data name="ZenEditor_SaveError" xml:space="preserve"><value>Das Dokument konnte nicht gespeichert werden. Ihr Text bleibt geöffnet.&#xA;&#xA;{0}</value></data>
+  <data name="ZenEditor_Retry" xml:space="preserve"><value>Wiederholen</value></data>
+  <data name="ZenEditor_Dismiss" xml:space="preserve"><value>Meldung schließen</value></data>
+  <data name="ZenEditor_Recovered" xml:space="preserve"><value>Das letzte Dokument war beschädigt. Der Zen-Editor hat die neueste gültige Sicherung wiederhergestellt.</value></data>
 </root>
 
 

@@ -144,6 +144,7 @@ public class AppSettings
         public bool ShowPresetAppsFolder { get; set; } = true;
         public bool ShowPresetCopilot { get; set; } = true;
         public bool ShowPresetTextProcessing { get; set; } = true;
+        public bool ShowPresetZenEditor { get; set; } = true;
     public bool ClipboardManagerPersistHistory { get; set; } = true;
     public string QuickNoteThemeId { get; set; } = "dark";
     public bool QuickNotePinned { get; set; } = false;

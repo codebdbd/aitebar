@@ -909,6 +909,11 @@ public partial class TextProcessingWindow : DarkWindow
             ? "TextProcessing_ButtonShowResult"
             : "TextProcessing_ButtonShowOriginal");
         AutomationProperties.SetName(BtnToggleVersion, ToggleVersionLabel.Text);
+        ShowDiffLabel.Text = LocalizationService.Get(_isShowingDiff
+            ? "TextProcessing_ButtonHideDiff"
+            : "TextProcessing_ButtonShowDiff");
+        BtnShowDiff.ToolTip = ShowDiffLabel.Text;
+        AutomationProperties.SetName(BtnShowDiff, ShowDiffLabel.Text);
         BtnProcess.IsEnabled = state.CanCancel || state.CanProcess;
         ProcessButtonLabel.Text = _isProcessing
             ? LocalizationService.Get("TextProcessing_ButtonCancel")
@@ -961,6 +966,11 @@ public partial class TextProcessingWindow : DarkWindow
             ProcessButtonLabel,
             LocalizationService.Get("TextProcessing_ButtonProcess"),
             LocalizationService.Get("TextProcessing_ButtonCancel")));
+        commandWidth = Math.Max(commandWidth, MeasureButtonWidthForLabels(
+            BtnShowDiff,
+            ShowDiffLabel,
+            LocalizationService.Get("TextProcessing_ButtonShowDiff"),
+            LocalizationService.Get("TextProcessing_ButtonHideDiff")));
         commandWidth = Math.Ceiling(commandWidth);
 
         foreach (Button button in buttons)

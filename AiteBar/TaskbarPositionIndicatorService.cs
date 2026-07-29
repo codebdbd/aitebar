@@ -24,7 +24,10 @@ internal class TaskbarPositionIndicatorService : IDisposable
     private DispatcherTimer? _visibilityTimer;
     private DispatcherTimer? _zOrderTimer;
     private bool _isSuppressedByFullscreen;
+    private bool _isSuppressedByUtilityFullscreen;
     private bool _isDragging;
+    private bool IsSuppressedByFullscreen =>
+        _isSuppressedByFullscreen || _isSuppressedByUtilityFullscreen;
 
     public void Initialize(AppSettingsService appSettingsService, MainWindow mainWindow)
     {
@@ -331,6 +334,12 @@ internal class TaskbarPositionIndicatorService : IDisposable
         if (_disposed) return;
 
         Debug.WriteLine("TaskbarPositionIndicatorService.Refresh");
+        if (IsSuppressedByFullscreen)
+        {
+            HideIndicator();
+            return;
+        }
+
         if (_appSettingsService?.Settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true) == true)
         {
             ShowIndicator();
@@ -339,6 +348,24 @@ internal class TaskbarPositionIndicatorService : IDisposable
         else
         {
             HideIndicator();
+        }
+    }
+
+    internal void SetUtilityFullscreenSuppressed(bool suppressed)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _isSuppressedByUtilityFullscreen = suppressed;
+        if (suppressed)
+        {
+            HideIndicator();
+        }
+        else
+        {
+            VisibilityTimer_Tick(null, EventArgs.Empty);
         }
     }
 
@@ -351,7 +378,7 @@ internal class TaskbarPositionIndicatorService : IDisposable
 
         _window.Dispatcher.InvokeAsync(() =>
         {
-            if (_disposed || _isSuppressedByFullscreen)
+            if (_disposed || IsSuppressedByFullscreen)
             {
                 return;
             }
@@ -398,7 +425,7 @@ internal class TaskbarPositionIndicatorService : IDisposable
 
             await _window.Dispatcher.InvokeAsync(() =>
             {
-                if (!_disposed && !_isSuppressedByFullscreen)
+                if (!_disposed && !IsSuppressedByFullscreen)
                 {
                     BringIndicatorToTop();
                 }
@@ -429,6 +456,12 @@ internal class TaskbarPositionIndicatorService : IDisposable
         if (_disposed) return;
 
         Debug.WriteLine("TaskbarPositionIndicatorService.VisibilityTimer_Tick");
+        if (_isSuppressedByUtilityFullscreen)
+        {
+            HideIndicator();
+            return;
+        }
+
         if (_appSettingsService?.Settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true) == true)
         {
             if (IsFullscreenAppRunning())
@@ -451,7 +484,7 @@ internal class TaskbarPositionIndicatorService : IDisposable
 
     private void ZOrderTimer_Tick(object? sender, EventArgs e)
     {
-        if (_disposed || _isSuppressedByFullscreen)
+        if (_disposed || IsSuppressedByFullscreen)
         {
             return;
         }

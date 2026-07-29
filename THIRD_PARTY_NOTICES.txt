@@ -34,6 +34,16 @@ Application license: MIT License (see LICENSE file)
    License: MIT
    Notes: Used for optional crash reporting when a Sentry DSN is configured.
 
+6. Zen Editor typefaces
+   Literata: https://github.com/googlefonts/literata
+   Source Serif 4: https://github.com/adobe-fonts/source-serif
+   Noto Sans: https://github.com/notofonts/latin-greek-cyrillic
+   IBM Plex Sans: https://github.com/IBM/plex
+   Inter: https://github.com/rsms/inter
+   License: SIL Open Font License 1.1
+   Notes: Unmodified font files are bundled as private Zen Editor resources.
+   Complete license texts are distributed in Resources/ZenEditor/Licenses.
+
 This notice file is provided for informational purposes.
 Please review the upstream projects for the full and current license texts and any
 additional notice requirements that may apply to your distribution model.

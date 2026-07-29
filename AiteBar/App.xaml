@@ -259,7 +259,7 @@
 
         <Style TargetType="ScrollBar" BasedOn="{StaticResource DarkScrollBarStyle}"/>
 
-        <Style TargetType="Separator">
+        <Style x:Key="DarkMenuSeparator" TargetType="Separator">
             <Setter Property="Margin" Value="0"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Height" Value="0"/>
@@ -275,6 +275,7 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <Style TargetType="Separator" BasedOn="{StaticResource DarkMenuSeparator}"/>
 
         <ContextMenu x:Key="TextEditingContextMenu" x:Shared="False" Style="{StaticResource DarkContextMenu}">
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_Cut}" Command="ApplicationCommands.Cut" InputGestureText="Ctrl+X">

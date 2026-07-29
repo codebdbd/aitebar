@@ -9,11 +9,31 @@
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-07-30
+
 ### 🇷🇺 Добавлено | 🇬🇧 Added
+- **AI-подключения**: В настройках добавлено безопасное управление несколькими подключениями Cerebras, Google Gemini, Groq и Mistral AI с хранением ключей через Windows Credential Manager, проверкой соединения и выбором предпочтительной модели.
+- **AI connections**: Settings now provide secure management of multiple Cerebras, Google Gemini, Groq, and Mistral AI connections with Windows Credential Manager storage, connection checks, and preferred-model selection.
+- **Дзен-редактор**: Добавлена полноэкранная утилита для сосредоточенного письма с пятью локальными темами и встроенными шрифтами, несколькими внутренними документами, автосохранением, восстановлением, Undo/Redo и экспортом в TXT.
+- **Zen Editor**: Added a full-screen focused-writing utility with five offline themes and bundled fonts, multiple internal documents, auto-save, recovery, Undo/Redo, and TXT export.
 - **Обработка текста**: Добавлена AI-утилита для проверки орфографии, типографики и очистки артефактов копирования с выбором подходящей бесплатной модели и повтором последней обработки.
 - **Text processing**: Added an AI utility for proofreading, typography, and copied-text cleanup with eligible free-model selection and repeat processing.
 - **Обработка текста — контроль результата**: Добавлены потоковый вывод ответа, просмотр точных изменений, Undo/Redo через `Ctrl+Z`/`Ctrl+Y` и видимый таймер выполнения.
 - **Text processing result control**: Added streamed responses, an exact changes view, `Ctrl+Z`/`Ctrl+Y` undo and redo, and a visible processing timer.
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Дзен-редактор — типографика и производительность**: Добавлен фиксированный межабзацный интервал без изменения plain-text содержимого; обычный ввод, позиционирование курсора, автосохранение и список документов оптимизированы для больших текстов.
+- **Zen Editor typography and performance**: Added fixed visual paragraph spacing without changing plain-text content; ordinary typing, caret positioning, auto-save, and document listing are optimized for large texts.
+- **Дзен-редактор — экспорт TXT**: При экспорте между соседними абзацами добавляется одна пустая строка без удвоения уже существующего межабзацного интервала.
+- **Zen Editor TXT export**: TXT export adds one blank line between adjacent paragraphs without duplicating an existing paragraph gap.
+- **Дзен-редактор — форматирование**: Жирность, курсив и подчёркивание, применённые встроенными командами редактора, сохраняются во внутренних документах и восстанавливаются при следующем открытии; TXT остаётся обычным текстом.
+- **Zen Editor formatting**: Bold, italic, and underline applied through the editor's built-in commands now persist in internal documents and are restored on reopen; TXT remains plain text.
+- **Контекстные меню**: Программно создаваемые меню панели, tray, индикатора и Дзен-редактора используют единую фабрику геометрии, глифов и вертикального выравнивания.
+- **Context menus**: Programmatically created panel, tray, indicator, and Zen Editor menus now share one factory for geometry, glyphs, and vertical alignment.
+- **Интерфейс и архитектура**: Унифицированы командные кнопки и элементы форм, централизован каталог встроенных утилит, снижены аллокации при обновлении панели и улучшена изоляция асинхронных UI-операций.
+- **UI and architecture**: Command buttons and form controls are unified, built-in utility metadata is centralized, panel refresh allocations are reduced, and asynchronous UI operations are better isolated.
+- **Дзен-редактор — темы с клавиатуры**: `Shift+↑` и `Shift+↓` циклически переключают пять тем назад и вперёд.
+- **Zen Editor keyboard themes**: `Shift+↑` and `Shift+↓` cycle backward and forward through all five themes.
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
 - **Обработка текста — release UI**: Добавлены адаптивная компоновка, рабочая отмена, доступные состояния клавиатурного фокуса, сохранение текста сверх лимита без обрезания, восстановление окна и понятные состояния моделей, ошибок и буфера обмена.
@@ -26,6 +46,12 @@
 - **Text processing streaming reliability**: AI connection health now updates after stream completion, stalled streams have an inactivity timeout, and editor refreshes are throttled for smooth long-response rendering.
 - **Обработка текста — строка состояния**: Сообщение об использованной модели и таймер перенесены в нижнюю строку редактора, поэтому они больше не изменяют высоту текстового поля и не обрезают счётчики.
 - **Text processing status line**: Model usage and progress now appear in the editor footer, so they no longer resize the editor or clip its counters.
+- **Обработка текста — просмотр изменений**: Кнопка просмотра теперь отражает состояние и меняет надпись с «Показать изменения» на «Скрыть изменения».
+- **Text processing changes view**: The comparison button now reflects its state and changes from “Show changes” to “Hide changes”.
+- **Надёжность приложения**: Исправлены финальное сохранение Quick Note, гонка запуска/остановки телеметрии, завершение второго экземпляра, удержание Win32 callback, устаревшее асинхронное превью и восстановление окон встроенных утилит.
+- **Application reliability**: Fixed Quick Note final-save handling, the telemetry startup/shutdown race, secondary-instance shutdown, Win32 callback lifetime, stale asynchronous previews, and built-in utility window restoration.
+- **Панель и настройки**: Стабилизированы размеры панели между краями и контекстами, сохранение настроек и позиционирование индикатора на нескольких мониторах и при изменении DPI.
+- **Panel and settings**: Stabilized panel sizing across edges and contexts, settings persistence, and multi-monitor/DPI-aware indicator positioning.
 
 ## [1.11.1] - 2026-07-15
 

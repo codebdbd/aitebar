@@ -42,6 +42,7 @@ public sealed class TextProcessingWindowLayoutTests
                 var showDiff = Assert.IsType<Button>(window.FindName("BtnShowDiff"));
                 var typographyMode = Assert.IsType<TabItem>(window.FindName("ModeTypography"));
                 var toggleLabel = Assert.IsType<TextBlock>(window.FindName("ToggleVersionLabel"));
+                var showDiffLabel = Assert.IsType<TextBlock>(window.FindName("ShowDiffLabel"));
                 var processLabel = Assert.IsType<TextBlock>(window.FindName("ProcessButtonLabel"));
                 Button[] commandButtons =
                 [
@@ -56,6 +57,29 @@ public sealed class TextProcessingWindowLayoutTests
                 Button[] railButtons = commandButtons[..^1];
                 toggleLabel.Text = LocalizationService.Get("TextProcessing_ButtonShowResult");
                 processLabel.Text = LocalizationService.Get("TextProcessing_ButtonCancel");
+
+                typeof(TextProcessingWindow)
+                    .GetField("_isShowingDiff", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .SetValue(window, true);
+                typeof(TextProcessingWindow)
+                    .GetMethod("RefreshUiState", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .Invoke(window, null);
+                Assert.Equal(
+                    LocalizationService.Get("TextProcessing_ButtonHideDiff"),
+                    showDiffLabel.Text);
+                Assert.Equal(showDiffLabel.Text, showDiff.ToolTip);
+                Assert.Equal(
+                    showDiffLabel.Text,
+                    System.Windows.Automation.AutomationProperties.GetName(showDiff));
+                typeof(TextProcessingWindow)
+                    .GetField("_isShowingDiff", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .SetValue(window, false);
+                typeof(TextProcessingWindow)
+                    .GetMethod("RefreshUiState", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .Invoke(window, null);
+                Assert.Equal(
+                    LocalizationService.Get("TextProcessing_ButtonShowDiff"),
+                    showDiffLabel.Text);
 
                 double minimumClientWidth = window.MinWidth - 16;
                 root.Measure(new Size(minimumClientWidth, 700));

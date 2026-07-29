@@ -47,7 +47,7 @@ public partial class MainWindow
     private void ShowTrayContextMenu()
     {
         LocalizationService.EnsureAppliedCulture();
-        var menu = new ContextMenu { Style = (Style)FindResource("DarkContextMenu") };
+        ContextMenu menu = AppContextMenuFactory.CreateMenu(this);
 
         menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Open), LocalizationService.Get("Menu_Open"), (s, e) => ShowDock()));
         menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Settings), LocalizationService.Get("Menu_ProgramSettings"), async (s, e) => await ShowAppSettingsWindow(AppSettingsSection.General)));

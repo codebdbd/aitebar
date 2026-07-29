@@ -14,9 +14,9 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <Version>1.11.1</Version>
-    <AssemblyVersion>1.11.1.0</AssemblyVersion>
-    <FileVersion>1.11.1.0</FileVersion>
+    <Version>1.12.0</Version>
+    <AssemblyVersion>1.12.0.0</AssemblyVersion>
+    <FileVersion>1.12.0.0</FileVersion>
     <DefaultItemExcludes>$(DefaultItemExcludes);obj\**;bin\**</DefaultItemExcludes>
   </PropertyGroup>
 
@@ -38,10 +38,15 @@
     <Resource Include="Resources\MaterialIcons.codepoints" />
     <Resource Include="Resources\FluentSystemIcons-Regular.ttf" />
     <Resource Include="Resources\FluentSystemIcons.json" />
+    <Resource Include="Resources\ZenEditor\Fonts\*.ttf" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="..\THIRD_PARTY_NOTICES.txt" Link="THIRD_PARTY_NOTICES.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Resources\ZenEditor\Licenses\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>

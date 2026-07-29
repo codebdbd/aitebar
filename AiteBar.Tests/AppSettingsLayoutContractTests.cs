@@ -334,7 +334,7 @@ public sealed class AppSettingsLayoutContractTests
             row.Descendants(PresentationNamespace + "TextBlock").Count(text =>
                 text.Attribute("Text")?.Value == "{local:Loc ResourceKey=HotkeyCapture_RowHint}") > 0);
 
-        Assert.Equal(17, quickToolsList.Elements(PresentationNamespace + "Grid").Count());
+        Assert.Equal(UtilityButtonCatalog.All.Count, quickToolsList.Elements(PresentationNamespace + "Grid").Count());
         Assert.Contains("private void SortQuickToolRows()", code);
         Assert.Contains("StringComparer.Create(LocalizationService.ResolvedCulture, ignoreCase: true)", code);
         Assert.Contains("SortQuickToolRows();", code);

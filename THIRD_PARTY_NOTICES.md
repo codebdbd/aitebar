@@ -29,6 +29,18 @@ MIT License (see [LICENSE](LICENSE) file)
 - **License**: SIL Open Font License 1.1
 - **Usage**: The application uses the bundled Font Awesome Brands OTF font.
 
+### Zen Editor typefaces
+
+The Zen Editor bundles unmodified Regular or variable font files as private WPF
+resources. They are not installed globally. The complete upstream license texts
+are distributed under `Resources/ZenEditor/Licenses`.
+
+- **Literata** — https://github.com/googlefonts/literata — SIL Open Font License 1.1
+- **Source Serif 4** — https://github.com/adobe-fonts/source-serif — SIL Open Font License 1.1
+- **Noto Sans** — https://github.com/notofonts/latin-greek-cyrillic — SIL Open Font License 1.1
+- **IBM Plex Sans** — https://github.com/IBM/plex — SIL Open Font License 1.1
+- **Inter** — https://github.com/rsms/inter — SIL Open Font License 1.1
+
 ### .NET 10 / WPF
 
 - **Copyright**: Microsoft and contributors

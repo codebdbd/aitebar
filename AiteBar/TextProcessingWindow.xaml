@@ -368,7 +368,8 @@
                             ToolTip="{local:Loc ResourceKey=TextProcessing_ButtonShowDiff}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="18" FontWeight="Normal" Margin="0,0,10,0"/>
-                            <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonShowDiff}"/>
+                            <TextBlock x:Name="ShowDiffLabel"
+                                       Text="{local:Loc ResourceKey=TextProcessing_ButtonShowDiff}"/>
                         </StackPanel>
                     </Button>
 
