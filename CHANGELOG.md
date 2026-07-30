@@ -14,6 +14,10 @@
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
 - **Компактный таймер — действия кнопок**: Запуск/пауза и разворачивание используют отдельные обработчики и встроенные Fluent-глифы; добавлен поведенческий WPF-тест обеих команд.
 - **Compact timer button actions**: Start/pause and expand now use dedicated handlers and bundled Fluent glyphs, with a behavioral WPF test covering both commands.
+- **Дзен-редактор — клавиатура и окна**: `Shift+↑/↓` снова выполняет стандартное выделение строк, темы циклически переключаются через `Ctrl+Alt+↑/↓`, а неактивный полноэкранный редактор больше не перекрывает приложения после `Alt+Tab`.
+- **Zen Editor keyboard and windows**: `Shift+Up/Down` once again performs standard line selection, themes cycle through `Ctrl+Alt+Up/Down`, and an inactive full-screen editor no longer covers applications after Alt+Tab.
+- **Дзен-редактор — поиск и восстановление**: Добавлены временный поиск `Ctrl+F`, видимые команды форматирования, восстановление недавно удалённых документов и безопасная обработка ошибок асинхронных команд.
+- **Zen Editor search and recovery**: Added temporary `Ctrl+F` search, discoverable formatting commands, recently deleted document restoration, and guarded asynchronous command failures.
 
 ## [1.12.0] - 2026-07-30
 

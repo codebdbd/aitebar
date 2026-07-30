@@ -19,7 +19,7 @@ Formatting remains hidden during ordinary writing but becomes discoverable in th
 - [x] (2026-07-30 09:24Z) Added the temporary Ctrl+F search strip, forward/backward navigation, clipboard-copy suppression for matches, and formatting context-menu commands.
 - [x] (2026-07-30 09:24Z) Added recently-deleted listing, restoration, restore-mode picker behavior, and immediate reopening of the restored document.
 - [x] (2026-07-30 09:24Z) Added accessible save-error focus and all new strings in English, Russian, Ukrainian, and German.
-- [ ] Update `docs/USER_MANUAL.md`, `docs/functions.md`, `CHANGELOG.md`, and focused tests.
+- [x] (2026-07-30 09:31Z) Updated user manual, function map, changelog, four-language localization, and focused tests; all 68 Zen Editor tests pass.
 - [ ] Build Release, run the non-WPF suite and every isolated WPF class, and record exact evidence.
 - [ ] Rebuild the 1.12.1 installer and record its version, size, signature state, and SHA-256.
 
@@ -182,3 +182,5 @@ Plan revision note: 2026-07-30, created after a product and technical review ide
 Plan revision note: 2026-07-30, completed the first implementation milestone with pure shortcut, search, and async-command guard components and 14 passing focused tests.
 
 Plan revision note: 2026-07-30, completed the window and storage milestone. Search, formatting, active-only topmost behavior, guarded async commands, localized accessible error UI, and deleted-document restore are integrated; all 68 focused Zen Editor tests pass.
+
+Plan revision note: 2026-07-30, synchronized user-facing documentation and release notes with the implemented keyboard, search, formatting, recovery, Alt+Tab, and Escape behavior.
