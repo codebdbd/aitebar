@@ -14,7 +14,7 @@ Formatting remains hidden during ordinary writing but becomes discoverable in th
 
 - [x] (2026-07-30 08:55Z) Read `PLANS.md`, the completed `ZEN_EDITOR_EXECPLAN.md`, current Zen Editor source, tests, localization, and user documentation.
 - [x] (2026-07-30 08:55Z) Recorded the usability and reliability design decisions in this new self-contained plan.
-- [ ] Implement testable shortcut, search, and guarded-command helpers.
+- [x] (2026-07-30 09:05Z) Implemented and tested shortcut resolution, allocation-bounded literal search with forward/backward wrap, and the guarded async-command helper; 14 focused tests pass.
 - [ ] Correct full-screen z-order so active Zen Editor covers the taskbar but deactivated Zen Editor does not cover Alt+Tab targets.
 - [ ] Add the temporary Ctrl+F search strip and formatting context-menu commands.
 - [ ] Add recently-deleted listing, restoration, and picker behavior.
@@ -175,3 +175,5 @@ It returns `-1` when no match exists and wraps once in either direction.
 No new NuGet dependency is needed. Use existing .NET, WPF, store, localization, menu factory, and test infrastructure.
 
 Plan revision note: 2026-07-30, created after a product and technical review identified keyboard-selection conflict, permanent topmost behavior, unguarded async UI operations, absent long-document search, hidden formatting commands, ambiguous internal-document wording, inaccessible soft-delete recovery, and save-error accessibility gaps.
+
+Plan revision note: 2026-07-30, completed the first implementation milestone with pure shortcut, search, and async-command guard components and 14 passing focused tests.
