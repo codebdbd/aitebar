@@ -63,7 +63,7 @@ public sealed class ZenEditorWindowBehaviorTests
                 var window = new ZenEditorWindow(new ZenEditorStore(root));
                 window.Editor.SetValue(TextBlock.LineHeightProperty, 30d);
                 ContextMenu menu = Assert.IsType<ContextMenu>(window.Editor.ContextMenu);
-                Assert.Equal(14, menu.Items.Count);
+                Assert.Equal(17, menu.Items.Count);
                 Assert.Same(window.FindResource("DarkContextMenu"), menu.Style);
                 Assert.Equal(
                     30d,
@@ -84,7 +84,7 @@ public sealed class ZenEditorWindowBehaviorTests
                 });
 
                 MenuItem[] commands = menu.Items.OfType<MenuItem>().ToArray();
-                Assert.Equal(10, commands.Length);
+                Assert.Equal(13, commands.Length);
                 Assert.All(commands, command =>
                 {
                     Assert.False(string.IsNullOrWhiteSpace(command.Header?.ToString()));
@@ -110,7 +110,7 @@ public sealed class ZenEditorWindowBehaviorTests
                     "Ctrl+A",
                     FontHelper.Resolve(FontHelper.MaterialKey).Source);
 
-                MenuItem themes = commands.Single(command => command.Items.Count > 0);
+                MenuItem themes = commands.Single(command => command.Items.Count == 5);
                 Assert.Equal(5, themes.Items.Count);
                 Assert.All(themes.Items.OfType<MenuItem>(), theme =>
                 {
@@ -119,12 +119,57 @@ public sealed class ZenEditorWindowBehaviorTests
                     Assert.IsType<TextBlock>(theme.Icon);
                 });
 
+                MenuItem formatting = commands.Single(command => command.Items.Count == 3);
+                MenuItem[] formattingCommands = formatting.Items
+                    .OfType<MenuItem>()
+                    .ToArray();
+                Assert.Equal(3, formattingCommands.Length);
+                Assert.Equal(
+                    ["Ctrl+B", "Ctrl+I", "Ctrl+U"],
+                    formattingCommands.Select(command => command.InputGestureText));
+                Assert.All(formattingCommands, command =>
+                {
+                    Assert.True(command.IsCheckable);
+                    Assert.Same(window.FindResource("DarkMenuItem"), command.Style);
+                    Assert.IsType<TextBlock>(command.Icon);
+                });
+
+                FrameworkElement searchOverlay = Assert.IsAssignableFrom<FrameworkElement>(
+                    window.FindName("SearchOverlay"));
+                Assert.Equal(Visibility.Collapsed, searchOverlay.Visibility);
+
                 window.Close();
             }
             finally
             {
                 Directory.Delete(root, recursive: true);
             }
+        });
+    }
+
+    [Fact]
+    public async Task DeletedDocumentPicker_UsesRestoreModeTitleAndSelection()
+    {
+        await RunStaAsync(() =>
+        {
+            ZenEditorTheme theme = ZenEditorThemeCatalog.Get(null);
+            var summary = new ZenEditorDocumentSummary(
+                Guid.NewGuid(),
+                "Удалённый документ",
+                DateTime.UtcNow,
+                IsCurrent: false);
+            var picker = new ZenEditorDocumentPicker(
+                [summary],
+                theme,
+                restoreMode: true);
+
+            Assert.Equal(
+                LocalizationService.Get("ZenEditor_RecentlyDeleted"),
+                picker.Title);
+            ListBox list = Assert.IsType<ListBox>(picker.FindName("DocumentList"));
+            Assert.Single(list.Items);
+
+            picker.Close();
         });
     }
 

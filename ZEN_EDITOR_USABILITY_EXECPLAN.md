@@ -15,10 +15,10 @@ Formatting remains hidden during ordinary writing but becomes discoverable in th
 - [x] (2026-07-30 08:55Z) Read `PLANS.md`, the completed `ZEN_EDITOR_EXECPLAN.md`, current Zen Editor source, tests, localization, and user documentation.
 - [x] (2026-07-30 08:55Z) Recorded the usability and reliability design decisions in this new self-contained plan.
 - [x] (2026-07-30 09:05Z) Implemented and tested shortcut resolution, allocation-bounded literal search with forward/backward wrap, and the guarded async-command helper; 14 focused tests pass.
-- [ ] Correct full-screen z-order so active Zen Editor covers the taskbar but deactivated Zen Editor does not cover Alt+Tab targets.
-- [ ] Add the temporary Ctrl+F search strip and formatting context-menu commands.
-- [ ] Add recently-deleted listing, restoration, and picker behavior.
-- [ ] Add accessible save-error focus and localization in English, Russian, Ukrainian, and German.
+- [x] (2026-07-30 09:24Z) Corrected full-screen z-order so activation promotes and deactivation demotes the editor without moving or resizing it.
+- [x] (2026-07-30 09:24Z) Added the temporary Ctrl+F search strip, forward/backward navigation, clipboard-copy suppression for matches, and formatting context-menu commands.
+- [x] (2026-07-30 09:24Z) Added recently-deleted listing, restoration, restore-mode picker behavior, and immediate reopening of the restored document.
+- [x] (2026-07-30 09:24Z) Added accessible save-error focus and all new strings in English, Russian, Ukrainian, and German.
 - [ ] Update `docs/USER_MANUAL.md`, `docs/functions.md`, `CHANGELOG.md`, and focused tests.
 - [ ] Build Release, run the non-WPF suite and every isolated WPF class, and record exact evidence.
 - [ ] Rebuild the 1.12.1 installer and record its version, size, signature state, and SHA-256.
@@ -36,6 +36,9 @@ Formatting remains hidden during ordinary writing but becomes discoverable in th
 
 - Observation: Soft deletion and pre-delete snapshots already preserve enough data for user-facing restoration.
   Evidence: `ZenEditorStore.DeleteAsync` sets `IsDeleted`, retains the document JSON, and snapshots before saving the deleted state; only listing and restore operations are missing.
+
+- Observation: WPF `TextPointer` does not expose a direct `BringIntoView` method.
+  Evidence: the initial build failed on that call; focusing the editor after selecting a match scrolls the RichTextBox selection into view, after which focus returns to the search box.
 
 ## Decision Log
 
@@ -177,3 +180,5 @@ No new NuGet dependency is needed. Use existing .NET, WPF, store, localization, 
 Plan revision note: 2026-07-30, created after a product and technical review identified keyboard-selection conflict, permanent topmost behavior, unguarded async UI operations, absent long-document search, hidden formatting commands, ambiguous internal-document wording, inaccessible soft-delete recovery, and save-error accessibility gaps.
 
 Plan revision note: 2026-07-30, completed the first implementation milestone with pure shortcut, search, and async-command guard components and 14 passing focused tests.
+
+Plan revision note: 2026-07-30, completed the window and storage milestone. Search, formatting, active-only topmost behavior, guarded async commands, localized accessible error UI, and deleted-document restore are integrated; all 68 focused Zen Editor tests pass.

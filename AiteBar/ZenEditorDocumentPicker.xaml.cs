@@ -14,13 +14,23 @@ public partial class ZenEditorDocumentPicker : DarkWindow
 {
     private readonly List<PickerItem> _items;
     private readonly DispatcherTimer _prefixTimer;
+    private readonly bool _restoreMode;
     private string _prefix = string.Empty;
 
     public ZenEditorDocumentPicker(
         IReadOnlyList<ZenEditorDocumentSummary> documents,
-        ZenEditorTheme theme)
+        ZenEditorTheme theme,
+        bool restoreMode = false)
     {
         InitializeComponent();
+        _restoreMode = restoreMode;
+        string titleKey = restoreMode
+            ? "ZenEditor_RecentlyDeleted"
+            : "ZenEditor_OpenDocument";
+        string title = LocalizationService.Get(titleKey);
+        Title = title;
+        PickerTitle.Text = title;
+        System.Windows.Automation.AutomationProperties.SetName(DocumentList, title);
         _items = documents.Select(summary => new PickerItem(
             summary.Id,
             summary.ModifiedUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss"),
@@ -39,6 +49,7 @@ public partial class ZenEditorDocumentPicker : DarkWindow
 
     public Guid? SelectedDocumentId { get; private set; }
     public bool DeleteRequested { get; private set; }
+    public bool RestoreRequested { get; private set; }
 
     private void ApplyTheme(ZenEditorTheme theme)
     {
@@ -62,11 +73,11 @@ public partial class ZenEditorDocumentPicker : DarkWindow
                 e.Handled = true;
                 break;
             case Key.Enter:
-                OpenSelected();
+                AcceptSelected();
                 e.Handled = true;
                 break;
             case Key.Delete:
-                if (DocumentList.SelectedItem is PickerItem selected)
+                if (!_restoreMode && DocumentList.SelectedItem is PickerItem selected)
                 {
                     SelectedDocumentId = selected.Id;
                     DeleteRequested = true;
@@ -108,9 +119,9 @@ public partial class ZenEditorDocumentPicker : DarkWindow
         e.Handled = true;
     }
 
-    private void DocumentList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => OpenSelected();
+    private void DocumentList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => AcceptSelected();
 
-    private void OpenSelected()
+    private void AcceptSelected()
     {
         if (DocumentList.SelectedItem is not PickerItem selected)
         {
@@ -118,6 +129,7 @@ public partial class ZenEditorDocumentPicker : DarkWindow
         }
 
         SelectedDocumentId = selected.Id;
+        RestoreRequested = _restoreMode;
         DialogResult = true;
     }
 

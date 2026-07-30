@@ -92,6 +92,17 @@ public sealed class ZenEditorStore
     public async Task<IReadOnlyList<ZenEditorDocumentSummary>> ListAsync(
         string untitled,
         CancellationToken cancellationToken = default)
+        => await ListCoreAsync(untitled, deleted: false, cancellationToken).ConfigureAwait(false);
+
+    public async Task<IReadOnlyList<ZenEditorDocumentSummary>> ListDeletedAsync(
+        string untitled,
+        CancellationToken cancellationToken = default)
+        => await ListCoreAsync(untitled, deleted: true, cancellationToken).ConfigureAwait(false);
+
+    private async Task<IReadOnlyList<ZenEditorDocumentSummary>> ListCoreAsync(
+        string untitled,
+        bool deleted,
+        CancellationToken cancellationToken)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -100,7 +111,7 @@ public sealed class ZenEditorStore
             _index ??= await ReadIndexCoreAsync(cancellationToken).ConfigureAwait(false) ?? new ZenEditorStoreIndex();
             await EnsureDocumentSummariesCoreAsync(cancellationToken).ConfigureAwait(false);
             return _index.Documents
-                .Where(metadata => !metadata.IsDeleted)
+                .Where(metadata => metadata.IsDeleted == deleted)
                 .Select(metadata => new ZenEditorDocumentSummary(
                     metadata.Id,
                     string.IsNullOrEmpty(metadata.Title) ? untitled : metadata.Title,
@@ -210,6 +221,45 @@ public sealed class ZenEditorStore
             await SaveDocumentCoreAsync(document, createSnapshot: false, cancellationToken).ConfigureAwait(false);
             _index ??= await ReadIndexCoreAsync(cancellationToken).ConfigureAwait(false) ?? new ZenEditorStoreIndex();
             await WriteJsonAtomicAsync(_indexPath, _index, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
+    public async Task<ZenEditorDocument> RestoreAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            EnsureDirectories();
+            (ZenEditorDocument? document, _) =
+                await LoadWithRecoveryCoreAsync(id, cancellationToken).ConfigureAwait(false);
+            if (document is null)
+            {
+                throw new FileNotFoundException(
+                    "Deleted Zen Editor document was not found.",
+                    GetDocumentPath(id));
+            }
+
+            if (document.IsDeleted)
+            {
+                document.IsDeleted = false;
+                document.ModifiedUtc = DateTime.UtcNow;
+                await SaveDocumentCoreAsync(
+                    document,
+                    createSnapshot: true,
+                    cancellationToken).ConfigureAwait(false);
+            }
+
+            _index ??= await ReadIndexCoreAsync(cancellationToken).ConfigureAwait(false)
+                ?? new ZenEditorStoreIndex();
+            _index.ActiveDocumentId = document.Id;
+            await WriteJsonAtomicAsync(_indexPath, _index, cancellationToken).ConfigureAwait(false);
+            return document.Clone();
         }
         finally
         {

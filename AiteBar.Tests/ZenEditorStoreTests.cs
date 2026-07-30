@@ -169,6 +169,36 @@ public sealed class ZenEditorStoreTests : IDisposable
     }
 
     [Fact]
+    public async Task RestoreAsync_ReturnsDeletedDocumentToActiveListWithFormatting()
+    {
+        var store = new ZenEditorStore(_root);
+        ZenEditorLoadResult initial = await store.InitializeAsync();
+        initial.Document.Text = "Восстановить документ";
+        initial.Document.Styles =
+        [
+            new ZenEditorTextStyle(0, 13, Bold: true, Italic: false, Underline: true)
+        ];
+        await store.SaveAsync(initial.Document, createSnapshot: false);
+        await store.DeleteAsync(initial.Document.Id);
+
+        ZenEditorDocumentSummary deleted = Assert.Single(
+            await store.ListDeletedAsync("New document"));
+        Assert.Equal(initial.Document.Id, deleted.Id);
+        Assert.Empty(await store.ListAsync("New document"));
+
+        ZenEditorDocument restored = await store.RestoreAsync(initial.Document.Id);
+
+        Assert.False(restored.IsDeleted);
+        Assert.Equal(initial.Document.Text, restored.Text);
+        Assert.Equal(initial.Document.Styles, restored.Styles);
+        Assert.Empty(await store.ListDeletedAsync("New document"));
+        ZenEditorDocumentSummary active = Assert.Single(
+            await store.ListAsync("New document"));
+        Assert.True(active.IsCurrent);
+        Assert.Equal(restored.Id, active.Id);
+    }
+
+    [Fact]
     public async Task ListAsync_UsesPersistedMetadataWithoutReadingDocumentBodies()
     {
         var store = new ZenEditorStore(_root);

@@ -1302,7 +1302,9 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ZenEditor_Minimize" xml:space="preserve"><value>Свернуть</value></data>
   <data name="ZenEditor_Close" xml:space="preserve"><value>Закрыть</value></data>
   <data name="ZenEditor_NewDocument" xml:space="preserve"><value>Новый документ</value></data>
-  <data name="ZenEditor_OpenDocument" xml:space="preserve"><value>Открыть документ…</value></data>
+  <data name="ZenEditor_OpenDocument" xml:space="preserve"><value>Документы…</value></data>
+  <data name="ZenEditor_RecentlyDeleted" xml:space="preserve"><value>Недавно удалённые…</value></data>
+  <data name="ZenEditor_NoDeletedDocuments" xml:space="preserve"><value>Недавно удалённых документов нет.</value></data>
   <data name="ZenEditor_ExportTxt" xml:space="preserve"><value>Сохранить в TXT…</value></data>
   <data name="ZenEditor_Undo" xml:space="preserve"><value>Отменить</value></data>
   <data name="ZenEditor_Redo" xml:space="preserve"><value>Повторить</value></data>
@@ -1310,6 +1312,14 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ZenEditor_Copy" xml:space="preserve"><value>Копировать</value></data>
   <data name="ZenEditor_Paste" xml:space="preserve"><value>Вставить</value></data>
   <data name="ZenEditor_SelectAll" xml:space="preserve"><value>Выделить всё</value></data>
+  <data name="ZenEditor_Search" xml:space="preserve"><value>Найти</value></data>
+  <data name="ZenEditor_FindPrevious" xml:space="preserve"><value>Предыдущее совпадение</value></data>
+  <data name="ZenEditor_FindNext" xml:space="preserve"><value>Следующее совпадение</value></data>
+  <data name="ZenEditor_NoSearchResults" xml:space="preserve"><value>Нет совпадений</value></data>
+  <data name="ZenEditor_Formatting" xml:space="preserve"><value>Форматирование</value></data>
+  <data name="ZenEditor_Bold" xml:space="preserve"><value>Жирный</value></data>
+  <data name="ZenEditor_Italic" xml:space="preserve"><value>Курсив</value></data>
+  <data name="ZenEditor_Underline" xml:space="preserve"><value>Подчёркнутый</value></data>
   <data name="ZenEditor_Theme" xml:space="preserve"><value>Тема</value></data>
   <data name="ZenEditor_ThemePaper" xml:space="preserve"><value>Бумага</value></data>
   <data name="ZenEditor_ThemeIvory" xml:space="preserve"><value>Слоновая кость</value></data>
@@ -1320,6 +1330,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ZenEditor_DeleteConfirm" xml:space="preserve"><value>Удалить документ «{0}»?</value></data>
   <data name="ZenEditor_TxtFilter" xml:space="preserve"><value>Текстовые файлы (*.txt)|*.txt</value></data>
   <data name="ZenEditor_SaveError" xml:space="preserve"><value>Не удалось сохранить документ. Ваш текст остаётся открытым.&#xA;&#xA;{0}</value></data>
+  <data name="ZenEditor_SaveErrorTitle" xml:space="preserve"><value>Ошибка сохранения документа</value></data>
   <data name="ZenEditor_Retry" xml:space="preserve"><value>Повторить</value></data>
   <data name="ZenEditor_Dismiss" xml:space="preserve"><value>Закрыть сообщение</value></data>
   <data name="ZenEditor_Recovered" xml:space="preserve"><value>Последний документ был повреждён. Дзен-редактор восстановил новейшую корректную резервную копию.</value></data>

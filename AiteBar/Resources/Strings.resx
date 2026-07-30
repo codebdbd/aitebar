@@ -780,7 +780,9 @@ Open the GitHub release page?</value></data>
   <data name="ZenEditor_Minimize" xml:space="preserve"><value>Minimize</value></data>
   <data name="ZenEditor_Close" xml:space="preserve"><value>Close</value></data>
   <data name="ZenEditor_NewDocument" xml:space="preserve"><value>New document</value></data>
-  <data name="ZenEditor_OpenDocument" xml:space="preserve"><value>Open document…</value></data>
+  <data name="ZenEditor_OpenDocument" xml:space="preserve"><value>Documents…</value></data>
+  <data name="ZenEditor_RecentlyDeleted" xml:space="preserve"><value>Recently deleted…</value></data>
+  <data name="ZenEditor_NoDeletedDocuments" xml:space="preserve"><value>There are no recently deleted documents.</value></data>
   <data name="ZenEditor_ExportTxt" xml:space="preserve"><value>Save as TXT…</value></data>
   <data name="ZenEditor_Undo" xml:space="preserve"><value>Undo</value></data>
   <data name="ZenEditor_Redo" xml:space="preserve"><value>Redo</value></data>
@@ -788,6 +790,14 @@ Open the GitHub release page?</value></data>
   <data name="ZenEditor_Copy" xml:space="preserve"><value>Copy</value></data>
   <data name="ZenEditor_Paste" xml:space="preserve"><value>Paste</value></data>
   <data name="ZenEditor_SelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="ZenEditor_Search" xml:space="preserve"><value>Find</value></data>
+  <data name="ZenEditor_FindPrevious" xml:space="preserve"><value>Previous match</value></data>
+  <data name="ZenEditor_FindNext" xml:space="preserve"><value>Next match</value></data>
+  <data name="ZenEditor_NoSearchResults" xml:space="preserve"><value>No matches</value></data>
+  <data name="ZenEditor_Formatting" xml:space="preserve"><value>Formatting</value></data>
+  <data name="ZenEditor_Bold" xml:space="preserve"><value>Bold</value></data>
+  <data name="ZenEditor_Italic" xml:space="preserve"><value>Italic</value></data>
+  <data name="ZenEditor_Underline" xml:space="preserve"><value>Underline</value></data>
   <data name="ZenEditor_Theme" xml:space="preserve"><value>Theme</value></data>
   <data name="ZenEditor_ThemePaper" xml:space="preserve"><value>Paper</value></data>
   <data name="ZenEditor_ThemeIvory" xml:space="preserve"><value>Ivory</value></data>
@@ -798,6 +808,7 @@ Open the GitHub release page?</value></data>
   <data name="ZenEditor_DeleteConfirm" xml:space="preserve"><value>Delete document “{0}”?</value></data>
   <data name="ZenEditor_TxtFilter" xml:space="preserve"><value>Text files (*.txt)|*.txt</value></data>
   <data name="ZenEditor_SaveError" xml:space="preserve"><value>The document could not be saved. Your text remains open.&#xA;&#xA;{0}</value></data>
+  <data name="ZenEditor_SaveErrorTitle" xml:space="preserve"><value>Document save error</value></data>
   <data name="ZenEditor_Retry" xml:space="preserve"><value>Retry</value></data>
   <data name="ZenEditor_Dismiss" xml:space="preserve"><value>Dismiss</value></data>
   <data name="ZenEditor_Recovered" xml:space="preserve"><value>The last document was damaged. Zen Editor restored the newest valid backup.</value></data>

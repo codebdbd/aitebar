@@ -17,7 +17,8 @@
                 <RowDefinition Height="*"/>
             </Grid.RowDefinitions>
 
-            <TextBlock Text="{local:Loc ResourceKey=ZenEditor_OpenDocument}"
+            <TextBlock x:Name="PickerTitle"
+                       Text="{local:Loc ResourceKey=ZenEditor_OpenDocument}"
                        FontSize="17" Margin="4,0,4,14"/>
 
             <ListBox x:Name="DocumentList"
@@ -26,6 +27,7 @@
                      Background="Transparent"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      VirtualizingStackPanel.IsVirtualizing="True"
+                     AutomationProperties.Name="{local:Loc ResourceKey=ZenEditor_OpenDocument}"
                      MouseDoubleClick="DocumentList_MouseDoubleClick">
                 <ListBox.ItemTemplate>
                     <DataTemplate>

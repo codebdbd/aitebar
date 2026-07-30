@@ -5,7 +5,7 @@
         Title="{local:Loc ResourceKey=ZenEditor_Title}"
         WindowStyle="None" ResizeMode="NoResize"
         WindowStartupLocation="Manual"
-        ShowInTaskbar="True" Topmost="True"
+        ShowInTaskbar="True" Topmost="False"
         Background="#F4F0E7"
         Loaded="Window_Loaded"
         Closing="Window_Closing"
@@ -70,6 +70,69 @@
                      AutomationProperties.Name="{local:Loc ResourceKey=ZenEditor_EditorAutomationName}"/>
         </Grid>
 
+        <Border x:Name="SearchOverlay"
+                Panel.ZIndex="15"
+                Visibility="Collapsed"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="24"
+                Padding="10,6"
+                CornerRadius="6"
+                Background="{DynamicResource PanelBackground}"
+                BorderBrush="{DynamicResource BorderColor}"
+                BorderThickness="1"
+                KeyboardNavigation.TabNavigation="Cycle">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="260"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Text="{local:Loc ResourceKey=ZenEditor_Search}"
+                           Margin="4,0,10,0"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource PrimaryText}"/>
+                <TextBox x:Name="SearchTextBox"
+                         Grid.Column="1"
+                         Margin="0"
+                         VerticalContentAlignment="Center"
+                         TextChanged="SearchTextBox_TextChanged"
+                         PreviewKeyDown="SearchTextBox_PreviewKeyDown"
+                         AutomationProperties.Name="{local:Loc ResourceKey=ZenEditor_Search}"/>
+                <TextBlock x:Name="SearchStatusText"
+                           Grid.Column="2"
+                           Margin="10,0,6,0"
+                           VerticalAlignment="Center"
+                           TextAlignment="Center"
+                           Foreground="{DynamicResource MutedText}"
+                           AutomationProperties.LiveSetting="Polite"/>
+                <Button Grid.Column="3"
+                        Content="&#xE70E;"
+                        FontFamily="Segoe MDL2 Assets"
+                        Style="{StaticResource IconButtonStyle}"
+                        ToolTip="{local:Loc ResourceKey=ZenEditor_FindPrevious}"
+                        AutomationProperties.Name="{local:Loc ResourceKey=ZenEditor_FindPrevious}"
+                        Click="FindPrevious_Click"/>
+                <Button Grid.Column="4"
+                        Content="&#xE70D;"
+                        FontFamily="Segoe MDL2 Assets"
+                        Style="{StaticResource IconButtonStyle}"
+                        ToolTip="{local:Loc ResourceKey=ZenEditor_FindNext}"
+                        AutomationProperties.Name="{local:Loc ResourceKey=ZenEditor_FindNext}"
+                        Click="FindNext_Click"/>
+                <Button Grid.Column="5"
+                        Content="&#xF369;"
+                        Style="{StaticResource IconButtonStyle}"
+                        ToolTip="{local:Loc ResourceKey=Common_Close}"
+                        AutomationProperties.Name="{local:Loc ResourceKey=Common_Close}"
+                        Click="CloseSearch_Click"/>
+            </Grid>
+        </Border>
+
         <Border x:Name="SaveErrorOverlay"
                 Panel.ZIndex="20"
                 Visibility="Collapsed"
@@ -78,11 +141,14 @@
                 MaxWidth="560"
                 Padding="24"
                 CornerRadius="6"
-                BorderThickness="1">
+                BorderThickness="1"
+                AutomationProperties.LiveSetting="Assertive"
+                AutomationProperties.Name="{local:Loc ResourceKey=ZenEditor_SaveErrorTitle}">
             <StackPanel>
                 <TextBlock x:Name="SaveErrorText" TextWrapping="Wrap" Margin="0,0,0,18"/>
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Button Content="{local:Loc ResourceKey=ZenEditor_Retry}" Padding="16,8"
+                    <Button x:Name="RetrySaveButton"
+                            Content="{local:Loc ResourceKey=ZenEditor_Retry}" Padding="16,8"
                             Margin="0,0,8,0" Click="RetrySave_Click"/>
                     <Button Content="{local:Loc ResourceKey=ZenEditor_ExportTxt}" Padding="16,8"
                             Margin="0,0,8,0" Click="ExportCopy_Click"/>

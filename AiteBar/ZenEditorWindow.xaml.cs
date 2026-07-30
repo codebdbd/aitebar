@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -26,7 +27,11 @@ public partial class ZenEditorWindow : DarkWindow
     private static readonly TimeSpan SelectionCopyDelay = TimeSpan.FromMilliseconds(150);
     private static readonly TimeSpan SnapshotInterval = TimeSpan.FromMinutes(5);
     private static readonly IntPtr HwndTopmost = new(-1);
+    private static readonly IntPtr HwndNotTopmost = new(-2);
     private const uint SwpShowWindow = 0x0040;
+    private const uint SwpNoSize = 0x0001;
+    private const uint SwpNoMove = 0x0002;
+    private const uint SwpNoActivate = 0x0010;
     private static FontFamily MaterialMenuIconFont => FontHelper.Resolve(FontHelper.MaterialKey);
     private static readonly FontFamily SegoeMenuIconFont = new("Segoe UI");
 
@@ -43,6 +48,12 @@ public partial class ZenEditorWindow : DarkWindow
         public const int SelectAll = 0xE162; // same Material glyph as TextEditingContextMenu
         public const int Theme = 0xF2F5; // same Fluent glyph as Quick Note
         public const int ThemeChoice = 58300; // ic_fluent_color_16_regular
+        public const int Search = 63119; // ic_fluent_search_20_regular
+        public const int Formatting = 63449; // ic_fluent_text_edit_style_20_regular
+        public const int Bold = 63396; // ic_fluent_text_bold_20_regular
+        public const int Italic = 63476; // ic_fluent_text_italic_20_regular
+        public const int Underline = 63498; // ic_fluent_text_underline_20_regular
+        public const int RecentlyDeleted = 62590; // ic_fluent_history_20_regular
     }
 
     private readonly ZenEditorStore _store;
@@ -62,6 +73,8 @@ public partial class ZenEditorWindow : DarkWindow
     private bool _allowClose;
     private bool _closeInProgress;
     private bool _sessionEndingSubscribed;
+    private bool _suppressSelectionCopy;
+    private bool _suppressSearchChange;
     private int _editVersion;
     private string _previousText = string.Empty;
     private IReadOnlyList<ZenEditorTextStyle> _previousStyles = [];
@@ -188,6 +201,7 @@ public partial class ZenEditorWindow : DarkWindow
 
     private void Window_Activated(object sender, EventArgs e)
     {
+        SetFullscreenTopmost(isTopmost: true);
         if (_isLoaded)
         {
             Editor.Focus();
@@ -196,6 +210,7 @@ public partial class ZenEditorWindow : DarkWindow
 
     private async void Window_Deactivated(object sender, EventArgs e)
     {
+        SetFullscreenTopmost(isTopmost: false);
         if (_isLoaded)
         {
             await SaveNowAsync(force: true);
@@ -218,35 +233,63 @@ public partial class ZenEditorWindow : DarkWindow
         bool shift = modifiers.HasFlag(ModifierKeys.Shift);
         bool alt = modifiers.HasFlag(ModifierKeys.Alt);
 
-        if (control && alt && e.Key is >= Key.D1 and <= Key.D5)
+        if (e.Key == Key.Escape && SearchOverlay.Visibility == Visibility.Visible)
         {
-            int index = e.Key - Key.D1;
-            await ChangeThemeAsync(ZenEditorThemeCatalog.All[index]);
+            HideSearch();
             e.Handled = true;
             return;
         }
 
-        if (shift && !control && !alt && e.Key is Key.Up or Key.Down)
+        ZenEditorShortcutAction shortcut =
+            ZenEditorShortcutResolver.Resolve(e.Key, modifiers);
+        int themeIndex = ZenEditorShortcutResolver.GetThemeIndex(shortcut);
+        if (themeIndex >= 0)
         {
-            int direction = e.Key == Key.Up ? -1 : 1;
-            await ChangeThemeAsync(ZenEditorThemeCatalog.GetAdjacent(_theme.Id, direction));
+            await ExecuteGuardedAsync(
+                () => ChangeThemeAsync(ZenEditorThemeCatalog.All[themeIndex]));
             e.Handled = true;
             return;
+        }
+
+        switch (shortcut)
+        {
+            case ZenEditorShortcutAction.PreviousTheme:
+                await ExecuteGuardedAsync(() => ChangeThemeAsync(
+                    ZenEditorThemeCatalog.GetAdjacent(_theme.Id, -1)));
+                e.Handled = true;
+                return;
+            case ZenEditorShortcutAction.NextTheme:
+                await ExecuteGuardedAsync(() => ChangeThemeAsync(
+                    ZenEditorThemeCatalog.GetAdjacent(_theme.Id, 1)));
+                e.Handled = true;
+                return;
+            case ZenEditorShortcutAction.OpenSearch:
+                ShowSearch();
+                e.Handled = true;
+                return;
+            case ZenEditorShortcutAction.FindNext:
+                FindSearchMatch(forward: true);
+                e.Handled = true;
+                return;
+            case ZenEditorShortcutAction.FindPrevious:
+                FindSearchMatch(forward: false);
+                e.Handled = true;
+                return;
         }
 
         if (control && e.Key == Key.N)
         {
-            await CreateNewDocumentAsync();
+            await ExecuteGuardedAsync(CreateNewDocumentAsync);
             e.Handled = true;
         }
         else if (control && e.Key == Key.O)
         {
-            await OpenDocumentPickerAsync();
+            await ExecuteGuardedAsync(OpenDocumentPickerAsync);
             e.Handled = true;
         }
         else if (control && shift && e.Key == Key.S)
         {
-            await ExportCopyAsync();
+            await ExecuteGuardedAsync(ExportCopyAsync);
             e.Handled = true;
         }
         else if (control && e.Key == Key.S)
@@ -369,8 +412,9 @@ public partial class ZenEditorWindow : DarkWindow
 
     private void Editor_SelectionChanged(object sender, RoutedEventArgs e)
     {
-        if (_suppressChanges || !_isLoaded)
+        if (_suppressChanges || _suppressSelectionCopy || !_isLoaded)
         {
+            _selectionTimer.Stop();
             return;
         }
 
@@ -394,6 +438,33 @@ public partial class ZenEditorWindow : DarkWindow
         RefreshContextMenu();
     }
 
+    private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (!_suppressSearchChange &&
+            SearchOverlay.Visibility == Visibility.Visible)
+        {
+            FindSearchMatch(forward: true, restart: true);
+        }
+    }
+
+    private void SearchTextBox_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            FindSearchMatch(
+                forward: !Keyboard.Modifiers.HasFlag(ModifierKeys.Shift));
+            e.Handled = true;
+        }
+    }
+
+    private void FindPrevious_Click(object sender, RoutedEventArgs e) =>
+        FindSearchMatch(forward: false);
+
+    private void FindNext_Click(object sender, RoutedEventArgs e) =>
+        FindSearchMatch(forward: true);
+
+    private void CloseSearch_Click(object sender, RoutedEventArgs e) => HideSearch();
+
     private async void RetrySave_Click(object sender, RoutedEventArgs e)
     {
         if (await SaveNowAsync(force: true))
@@ -403,7 +474,8 @@ public partial class ZenEditorWindow : DarkWindow
         }
     }
 
-    private async void ExportCopy_Click(object sender, RoutedEventArgs e) => await ExportCopyAsync();
+    private async void ExportCopy_Click(object sender, RoutedEventArgs e) =>
+        await ExecuteGuardedAsync(ExportCopyAsync);
 
     private void DismissError_Click(object sender, RoutedEventArgs e)
     {
@@ -539,6 +611,48 @@ public partial class ZenEditorWindow : DarkWindow
             Editor.Focus();
             return;
         }
+    }
+
+    private async Task OpenRecentlyDeletedAsync()
+    {
+        if (_document is null || !await SaveNowAsync(force: true))
+        {
+            return;
+        }
+
+        IReadOnlyList<ZenEditorDocumentSummary> deleted =
+            await _store.ListDeletedAsync(
+                LocalizationService.Get("ZenEditor_Untitled"));
+        if (deleted.Count == 0)
+        {
+            new DarkDialog(LocalizationService.Get("ZenEditor_NoDeletedDocuments"))
+            {
+                Owner = this
+            }.ShowDialog();
+            Editor.Focus();
+            return;
+        }
+
+        var picker = new ZenEditorDocumentPicker(
+            deleted,
+            _theme,
+            restoreMode: true)
+        {
+            Owner = this
+        };
+        bool accepted = picker.ShowDialog() == true;
+        if (!accepted ||
+            !picker.RestoreRequested ||
+            picker.SelectedDocumentId is not Guid selectedId)
+        {
+            Editor.Focus();
+            return;
+        }
+
+        ZenEditorDocument restored = await _store.RestoreAsync(selectedId);
+        _index.ActiveDocumentId = restored.Id;
+        await _store.SaveIndexAsync(_index);
+        LoadDocumentIntoEditor(restored);
     }
 
     private async Task ExportCopyAsync()
@@ -699,12 +813,21 @@ public partial class ZenEditorWindow : DarkWindow
             "ZenEditor_OpenDocument",
             async () => await OpenDocumentPickerAsync(),
             inputGesture: "Ctrl+O"));
+        menu.Items.Add(CreateMenuItem(
+            MenuIcons.RecentlyDeleted,
+            "ZenEditor_RecentlyDeleted",
+            async () => await OpenRecentlyDeletedAsync()));
         menu.Items.Add(CreateMenuSeparator());
         menu.Items.Add(CreateMenuItem(
             MenuIcons.Export,
             "ZenEditor_ExportTxt",
             async () => await ExportCopyAsync(),
             inputGesture: "Ctrl+Shift+S"));
+        menu.Items.Add(CreateMenuItem(
+            MenuIcons.Search,
+            "ZenEditor_Search",
+            ShowSearch,
+            inputGesture: "Ctrl+F"));
         menu.Items.Add(CreateMenuSeparator());
         ZenEditorUndoHistory history = _document is null
             ? new ZenEditorUndoHistory()
@@ -753,6 +876,29 @@ public partial class ZenEditorWindow : DarkWindow
             iconFont: MaterialMenuIconFont));
         menu.Items.Add(CreateMenuSeparator());
 
+        MenuItem formatting = CreateSubmenuItem(
+            MenuIcons.Formatting,
+            "ZenEditor_Formatting");
+        formatting.Items.Add(CreateFormattingMenuItem(
+            MenuIcons.Bold,
+            "ZenEditor_Bold",
+            EditingCommands.ToggleBold,
+            "Ctrl+B",
+            IsBoldActive()));
+        formatting.Items.Add(CreateFormattingMenuItem(
+            MenuIcons.Italic,
+            "ZenEditor_Italic",
+            EditingCommands.ToggleItalic,
+            "Ctrl+I",
+            IsItalicActive()));
+        formatting.Items.Add(CreateFormattingMenuItem(
+            MenuIcons.Underline,
+            "ZenEditor_Underline",
+            EditingCommands.ToggleUnderline,
+            "Ctrl+U",
+            IsUnderlineActive()));
+        menu.Items.Add(formatting);
+
         MenuItem themes = CreateSubmenuItem(MenuIcons.Theme, "ZenEditor_Theme");
         foreach (ZenEditorTheme theme in ZenEditorThemeCatalog.All)
         {
@@ -798,7 +944,7 @@ public partial class ZenEditorWindow : DarkWindow
         FontFamily? iconFont = null)
     {
         MenuItem item = CreateMenuItemShell(glyph, key, enabled, inputGesture, isActive, iconFont);
-        item.Click += async (_, _) => await action();
+        item.Click += async (_, _) => await ExecuteGuardedAsync(action);
         return item;
     }
 
@@ -810,6 +956,44 @@ public partial class ZenEditorWindow : DarkWindow
             inputGesture: null,
             isActive: false,
             iconFont: null);
+
+    private MenuItem CreateFormattingMenuItem(
+        int glyph,
+        string key,
+        RoutedUICommand command,
+        string inputGesture,
+        bool isActive)
+    {
+        MenuItem item = CreateMenuItem(
+            glyph,
+            key,
+            () =>
+            {
+                command.Execute(null, Editor);
+                Editor.Focus();
+            },
+            inputGesture: inputGesture,
+            isActive: isActive);
+        item.IsCheckable = true;
+        item.IsChecked = isActive;
+        return item;
+    }
+
+    private bool IsBoldActive() =>
+        Editor.Selection.GetPropertyValue(TextElement.FontWeightProperty)
+            is FontWeight weight
+        && weight >= FontWeights.Bold;
+
+    private bool IsItalicActive() =>
+        Editor.Selection.GetPropertyValue(TextElement.FontStyleProperty)
+            is System.Windows.FontStyle style
+        && (style == FontStyles.Italic || style == FontStyles.Oblique);
+
+    private bool IsUnderlineActive() =>
+        Editor.Selection.GetPropertyValue(Inline.TextDecorationsProperty)
+            is TextDecorationCollection decorations
+        && decorations.Any(decoration =>
+            decoration.Location == TextDecorationLocation.Underline);
 
     private Separator CreateMenuSeparator() =>
         AppContextMenuFactory.CreateSeparator(this);
@@ -865,6 +1049,84 @@ public partial class ZenEditorWindow : DarkWindow
         {
             Logger.Log(ex);
         }
+    }
+
+    private void ShowSearch()
+    {
+        string selected = Editor.SelectionLength is > 0 and <= 256
+            ? Editor.SelectedText
+            : string.Empty;
+        SearchOverlay.Visibility = Visibility.Visible;
+        SearchStatusText.Text = string.Empty;
+        if (!string.IsNullOrEmpty(selected))
+        {
+            _suppressSearchChange = true;
+            SearchTextBox.Text = selected;
+            _suppressSearchChange = false;
+            FindSearchMatch(forward: true, restart: true);
+        }
+
+        SearchTextBox.Focus();
+        SearchTextBox.SelectAll();
+    }
+
+    private void HideSearch()
+    {
+        SearchOverlay.Visibility = Visibility.Collapsed;
+        SearchStatusText.Text = string.Empty;
+        Editor.Focus();
+    }
+
+    private void FindSearchMatch(bool forward, bool restart = false)
+    {
+        if (SearchOverlay.Visibility != Visibility.Visible)
+        {
+            ShowSearch();
+            if (string.IsNullOrEmpty(SearchTextBox.Text))
+            {
+                return;
+            }
+        }
+
+        string query = SearchTextBox.Text;
+        if (string.IsNullOrEmpty(query))
+        {
+            SearchStatusText.Text = string.Empty;
+            return;
+        }
+
+        int startIndex = restart
+            ? (forward ? 0 : Editor.Text.Length)
+            : forward
+                ? Editor.SelectionStart + Math.Max(1, Editor.SelectionLength)
+                : Editor.SelectionStart - 1;
+        int match = ZenEditorSearchHelper.Find(
+            Editor.Text,
+            query,
+            startIndex,
+            forward);
+        if (match < 0)
+        {
+            SearchStatusText.Text =
+                LocalizationService.Get("ZenEditor_NoSearchResults");
+            SearchTextBox.Focus();
+            return;
+        }
+
+        SearchStatusText.Text = string.Empty;
+        _selectionTimer.Stop();
+        _suppressSelectionCopy = true;
+        try
+        {
+            Editor.Select(match, query.Length);
+            Editor.Focus();
+        }
+        finally
+        {
+            _suppressSelectionCopy = false;
+        }
+
+        SearchTextBox.Focus();
     }
 
     private ZenEditorUndoHistory GetUndoHistory(Guid documentId)
@@ -1020,7 +1282,7 @@ public partial class ZenEditorWindow : DarkWindow
         System.Drawing.Rectangle bounds = screen.Bounds;
         SetWindowPos(
             handle,
-            HwndTopmost,
+            IsActive ? HwndTopmost : HwndNotTopmost,
             bounds.Left,
             bounds.Top,
             bounds.Width,
@@ -1028,10 +1290,42 @@ public partial class ZenEditorWindow : DarkWindow
             SwpShowWindow);
     }
 
+    private void SetFullscreenTopmost(bool isTopmost)
+    {
+        IntPtr handle = new WindowInteropHelper(this).Handle;
+        if (handle == IntPtr.Zero)
+        {
+            return;
+        }
+
+        SetWindowPos(
+            handle,
+            isTopmost ? HwndTopmost : HwndNotTopmost,
+            0,
+            0,
+            0,
+            0,
+            SwpNoMove | SwpNoSize | SwpNoActivate);
+    }
+
     private void ShowSaveError(Exception exception)
     {
         SaveErrorText.Text = LocalizationService.Format("ZenEditor_SaveError", exception.Message);
         SaveErrorOverlay.Visibility = Visibility.Visible;
+        Dispatcher.BeginInvoke(
+            () => RetrySaveButton.Focus(),
+            DispatcherPriority.Input);
+    }
+
+    private async Task ExecuteGuardedAsync(Func<Task> action)
+    {
+        await ZenEditorAsyncCommandGuard.ExecuteAsync(
+            action,
+            exception =>
+            {
+                Logger.Log(exception);
+                ShowSaveError(exception);
+            });
     }
 
     private void Application_SessionEnding(object sender, SessionEndingCancelEventArgs e)

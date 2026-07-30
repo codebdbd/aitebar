@@ -80,8 +80,10 @@ public sealed class ZenEditorIntegrationTests
         Assert.Contains("ZenEditor_Theme", windowCode);
         Assert.DoesNotContain("CreateMenuItem(\"ZenEditor_Exit\"", windowCode);
         Assert.Contains("else if (e.Key == Key.Escape)", windowCode);
-        Assert.Contains("e.Key is Key.Up or Key.Down", windowCode);
-        Assert.Contains("ZenEditorThemeCatalog.GetAdjacent(_theme.Id, direction)", windowCode);
+        Assert.DoesNotContain("shift && !control && !alt && e.Key is Key.Up or Key.Down", windowCode);
+        Assert.Contains("ZenEditorShortcutResolver.Resolve(e.Key, modifiers)", windowCode);
+        Assert.Contains("ZenEditorThemeCatalog.GetAdjacent(_theme.Id, -1)", windowCode);
+        Assert.Contains("ZenEditorThemeCatalog.GetAdjacent(_theme.Id, 1)", windowCode);
         Assert.Contains("AppContextMenuFactory.CreateMenu(this)", windowCode);
         Assert.Contains("AppContextMenuFactory.CreateItem(", windowCode);
         Assert.Contains("AppContextMenuFactory.CreateSeparator(this)", windowCode);
@@ -115,6 +117,30 @@ public sealed class ZenEditorIntegrationTests
         Assert.DoesNotContain("ShowHeader", windowCode);
         Assert.DoesNotContain("HideHeader", windowCode);
         Assert.DoesNotContain("Minimize_Click", windowCode);
+    }
+
+    [Fact]
+    public void Window_UsesActiveOnlyTopmostAndAccessibleTemporarySurfaces()
+    {
+        string xaml = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "AiteBar",
+            "ZenEditorWindow.xaml"));
+        string windowCode = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "AiteBar",
+            "ZenEditorWindow.xaml.cs"));
+
+        Assert.Contains("Topmost=\"False\"", xaml);
+        Assert.Contains("x:Name=\"SearchOverlay\"", xaml);
+        Assert.Contains("Visibility=\"Collapsed\"", xaml);
+        Assert.Contains("AutomationProperties.LiveSetting=\"Assertive\"", xaml);
+        Assert.Contains("x:Name=\"RetrySaveButton\"", xaml);
+        Assert.Contains("HwndNotTopmost", windowCode);
+        Assert.Contains("SetFullscreenTopmost(isTopmost: true)", windowCode);
+        Assert.Contains("SetFullscreenTopmost(isTopmost: false)", windowCode);
+        Assert.Contains("RetrySaveButton.Focus()", windowCode);
+        Assert.Contains("_suppressSelectionCopy = true", windowCode);
     }
 
     [Fact]
