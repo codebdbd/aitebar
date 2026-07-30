@@ -201,6 +201,12 @@ public partial class TimerStopwatchWindow : DarkWindow
         ToggleRunning();
     }
 
+    private void BtnCompactStartPause_Click(object sender, RoutedEventArgs e)
+    {
+        ToggleRunning();
+        e.Handled = true;
+    }
+
     private void BtnReset_Click(object sender, RoutedEventArgs e)
     {
         ResetCurrentMode();
@@ -314,7 +320,25 @@ public partial class TimerStopwatchWindow : DarkWindow
 
     private void BtnCompact_Click(object sender, RoutedEventArgs e)
     {
-        if (_isCompactMode)
+        SetCompactMode(!_isCompactMode);
+        e.Handled = true;
+    }
+
+    private void BtnCompactExpand_Click(object sender, RoutedEventArgs e)
+    {
+        SetCompactMode(false);
+        Activate();
+        e.Handled = true;
+    }
+
+    private void SetCompactMode(bool isCompactMode)
+    {
+        if (_isCompactMode == isCompactMode)
+        {
+            return;
+        }
+
+        if (!isCompactMode)
         {
             _isCompactMode = false;
             Topmost = _topmostBeforeCompact;
@@ -548,7 +572,9 @@ public partial class TimerStopwatchWindow : DarkWindow
         TxtStartPauseLabel.Text = LocalizationService.Get(_isRunning
             ? "TimerStopwatch_Pause"
             : "TimerStopwatch_Start");
-        BtnCompactStartPause.Content = _isRunning ? "\uE769" : "\uE768";
+        BtnCompactStartPause.Content = _isRunning
+            ? TimerStopwatchLayoutHelper.CompactPauseGlyph
+            : TimerStopwatchLayoutHelper.CompactPlayGlyph;
         BtnCompactStartPause.ToolTip = LocalizationService.Get(_isRunning
             ? "TimerStopwatch_Pause"
             : "TimerStopwatch_Start");

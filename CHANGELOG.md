@@ -9,6 +9,12 @@
 
 ## [Unreleased]
 
+## [1.12.1] - 2026-07-30
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Компактный таймер — действия кнопок**: Запуск/пауза и разворачивание используют отдельные обработчики и встроенные Fluent-глифы; добавлен поведенческий WPF-тест обеих команд.
+- **Compact timer button actions**: Start/pause and expand now use dedicated handlers and bundled Fluent glyphs, with a behavioral WPF test covering both commands.
+
 ## [1.12.0] - 2026-07-30
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

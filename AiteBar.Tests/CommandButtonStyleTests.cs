@@ -152,7 +152,9 @@ public sealed class CommandButtonStyleTests
                     buttonName,
                     StringComparison.Ordinal));
             Assert.False(string.IsNullOrWhiteSpace(button.Attribute("Content")?.Value));
-            Assert.Equal("Segoe MDL2 Assets", button.Attribute("FontFamily")?.Value);
+            Assert.Equal(
+                "pack://application:,,,/Resources/#FluentSystemIcons-Regular",
+                button.Attribute("FontFamily")?.Value);
         }
     }
 

@@ -48,6 +48,7 @@ jobs:
             "ZenEditorWindowBehaviorTests",
             "QuickNoteWindowCloseTests",
             "QuickNoteWindowFormattingTests",
+            "TimerStopwatchWindowBehaviorTests",
             "TextProcessingWindowLayoutTests"
           )
           $filter = ($wpfClasses | ForEach-Object { "FullyQualifiedName!~$_" }) -join "&"
@@ -68,6 +69,7 @@ jobs:
             "ZenEditorWindowBehaviorTests",
             "QuickNoteWindowCloseTests",
             "QuickNoteWindowFormattingTests",
+            "TimerStopwatchWindowBehaviorTests",
             "TextProcessingWindowLayoutTests"
           )
           foreach ($class in $wpfClasses) {

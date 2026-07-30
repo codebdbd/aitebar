@@ -14,6 +14,9 @@ internal static class TimerStopwatchLayoutHelper
     public const int MaxProgressSegmentCount = 7200;
     public const double ProgressFallbackWidth = 356;
     public const string CompactToggleGlyph = "\uE923";
+    public const string CompactPlayGlyph = "\uF606";
+    public const string CompactPauseGlyph = "\uF5A2";
+    public const string CompactExpandGlyph = "\uE685";
     public const string TimerModeGlyph = "\uED88";
     public const string StopwatchModeGlyph = "\uF2DD";
 
