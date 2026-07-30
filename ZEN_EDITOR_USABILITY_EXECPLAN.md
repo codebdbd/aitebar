@@ -20,8 +20,8 @@ Formatting remains hidden during ordinary writing but becomes discoverable in th
 - [x] (2026-07-30 09:24Z) Added recently-deleted listing, restoration, restore-mode picker behavior, and immediate reopening of the restored document.
 - [x] (2026-07-30 09:24Z) Added accessible save-error focus and all new strings in English, Russian, Ukrainian, and German.
 - [x] (2026-07-30 09:31Z) Updated user manual, function map, changelog, four-language localization, and focused tests; all 68 Zen Editor tests pass.
-- [ ] Build Release, run the non-WPF suite and every isolated WPF class, and record exact evidence.
-- [ ] Rebuild the 1.12.1 installer and record its version, size, signature state, and SHA-256.
+- [x] (2026-07-30 09:52Z) Built Release with zero warnings and errors; 980 non-WPF tests and 68 isolated WPF tests passed, for 1048/1048 total.
+- [x] (2026-07-30 09:55Z) Rebuilt and verified the 1.12.1 installer: 79,445,661 bytes, unsigned, SHA-256 `197245A272462F582644F6D35DC67566AC45A90A896FAC120C063D6107B324F6`, matching `SHA256SUMS.txt`.
 
 ## Surprises & Discoveries
 
@@ -68,7 +68,13 @@ Formatting remains hidden during ordinary writing but becomes discoverable in th
 
 ## Outcomes & Retrospective
 
-Implementation is in progress. This section will record completed behavior, exact test evidence, remaining limitations, and installer details after validation.
+Zen Editor now preserves standard Shift+arrow selection and cycles themes with Ctrl+Alt+Up or Ctrl+Alt+Down. It has a temporary literal Ctrl+F search strip with wrapping forward/backward navigation, discoverable Bold/Italic/Underline context-menu commands, a clearer Documents command, and recently-deleted document restoration. Async storage commands share one tested exception boundary, save failures move keyboard focus to an assertive recovery surface, and the full-screen window is topmost only while active so Alt+Tab targets can appear normally.
+
+Release validation completed with a Release build at zero warnings and zero errors. The non-WPF suite passed 980/980 and the nine isolated WPF classes passed 68/68, for 1048/1048 tests in total. The focused Zen Editor suite passed 68/68 before the full gate.
+
+`artifacts\installer\AiteBar-Setup.exe` was rebuilt at ProductVersion and FileVersion 1.12.1. It is 79,445,661 bytes and its SHA-256 is `197245A272462F582644F6D35DC67566AC45A90A896FAC120C063D6107B324F6`, exactly matching `artifacts\installer\SHA256SUMS.txt`. Authenticode status is `NotSigned`, which is expected because no signing certificate was supplied.
+
+Automated build, behavior, storage, source-contract, localization, and window-construction checks are complete. A live interactive pass across Alt+Tab, clipboard preservation during search, and physical multi-monitor full-screen behavior was not performed in this run because it would require taking control of the user’s current desktop session; those scenarios remain explicitly documented in `Validation and Acceptance`.
 
 ## Context and Orientation
 
@@ -184,3 +190,5 @@ Plan revision note: 2026-07-30, completed the first implementation milestone wit
 Plan revision note: 2026-07-30, completed the window and storage milestone. Search, formatting, active-only topmost behavior, guarded async commands, localized accessible error UI, and deleted-document restore are integrated; all 68 focused Zen Editor tests pass.
 
 Plan revision note: 2026-07-30, synchronized user-facing documentation and release notes with the implemented keyboard, search, formatting, recovery, Alt+Tab, and Escape behavior.
+
+Plan revision note: 2026-07-30, completed release validation with 1048/1048 passing tests and recorded the verified 1.12.1 installer size, checksum, and unsigned status.
