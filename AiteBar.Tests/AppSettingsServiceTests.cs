@@ -1018,6 +1018,8 @@ public sealed class AppSettingsServiceTests
             QRCodeGeneratorHotkey = new HotkeyBinding { Ctrl = false, Alt = false, Shift = false, Win = true, Key = "H" },
             IconConverterHotkey = new HotkeyBinding { Ctrl = true, Alt = false, Shift = true, Win = false, Key = "I" },
             ClipboardManagerHotkey = new HotkeyBinding { Ctrl = true, Alt = true, Shift = false, Win = false, Key = "V" },
+            TextProcessingHotkey = new HotkeyBinding { Ctrl = true, Alt = false, Shift = false, Win = true, Key = "T" },
+            ZenEditorHotkey = new HotkeyBinding { Ctrl = false, Alt = true, Shift = true, Win = false, Key = "Z" },
 
             Contexts =
             [
@@ -1145,6 +1147,8 @@ public sealed class AppSettingsServiceTests
         AssertCloneHotkeyBinding(original.QRCodeGeneratorHotkey, clone.QRCodeGeneratorHotkey);
         AssertCloneHotkeyBinding(original.IconConverterHotkey, clone.IconConverterHotkey);
         AssertCloneHotkeyBinding(original.ClipboardManagerHotkey, clone.ClipboardManagerHotkey);
+        AssertCloneHotkeyBinding(original.TextProcessingHotkey, clone.TextProcessingHotkey);
+        AssertCloneHotkeyBinding(original.ZenEditorHotkey, clone.ZenEditorHotkey);
 
         // Contexts deep copy
         Assert.Equal(2, clone.Contexts.Count);

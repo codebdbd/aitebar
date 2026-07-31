@@ -18,7 +18,9 @@ public enum HotkeyCommand
     ColorPicker,
     TimerStopwatch,
     QRCodeGenerator,
-    ClipboardManager
+    ClipboardManager,
+    TextProcessing,
+    ZenEditor
 }
 
 public sealed record HotkeyDefinition(HotkeyCommand? Command, int Id, string DisplayName, HotkeyBinding Binding);
@@ -60,6 +62,8 @@ public sealed class HotkeyService
     internal const int QRCodeGeneratorId = 9008;
     internal const int IconConverterId = 9009;
     internal const int ClipboardManagerId = 9010;
+    internal const int TextProcessingId = 9011;
+    internal const int ZenEditorId = 9012;
 
     internal const uint ModAlt = 0x0001;
     internal const uint ModControl = 0x0002;
@@ -78,7 +82,9 @@ public sealed class HotkeyService
         new HotkeyDescriptor(HotkeyCommand.ColorPicker, ColorPickerId, "Tool_ColorPicker"),
         new HotkeyDescriptor(HotkeyCommand.TimerStopwatch, TimerStopwatchId, "Tool_TimerStopwatch"),
         new HotkeyDescriptor(HotkeyCommand.QRCodeGenerator, QRCodeGeneratorId, "Tool_QRCodeGenerator"),
-        new HotkeyDescriptor(HotkeyCommand.ClipboardManager, ClipboardManagerId, "Tool_ClipboardManager")
+        new HotkeyDescriptor(HotkeyCommand.ClipboardManager, ClipboardManagerId, "Tool_ClipboardManager"),
+        new HotkeyDescriptor(HotkeyCommand.TextProcessing, TextProcessingId, "Tool_TextProcessing"),
+        new HotkeyDescriptor(HotkeyCommand.ZenEditor, ZenEditorId, "Tool_ZenEditor")
     ];
 
     private static readonly IReadOnlyDictionary<int, HotkeyCommand> CommandsById =
@@ -120,7 +126,9 @@ public sealed class HotkeyService
             [HotkeyCommand.ColorPicker] = settings.ColorPickerHotkey,
             [HotkeyCommand.TimerStopwatch] = settings.TimerStopwatchHotkey,
             [HotkeyCommand.QRCodeGenerator] = settings.QRCodeGeneratorHotkey,
-            [HotkeyCommand.ClipboardManager] = settings.ClipboardManagerHotkey
+            [HotkeyCommand.ClipboardManager] = settings.ClipboardManagerHotkey,
+            [HotkeyCommand.TextProcessing] = settings.TextProcessingHotkey,
+            [HotkeyCommand.ZenEditor] = settings.ZenEditorHotkey
         };
 
         return Descriptors

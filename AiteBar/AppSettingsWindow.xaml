@@ -954,7 +954,13 @@
                             <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_QRCodeGenerator}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyQRCodeGenerator" Grid.Column="1"/></Grid>
                             <Border Style="{StaticResource ModernDividerStyle}"/>
 
-                            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_ClipboardManager}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyClipboardManager" Grid.Column="1"/></Grid>
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_ClipboardManager}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyClipboardManager" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
+
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_TextProcessing}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyTextProcessing" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
+
+                            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_ZenEditor}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyZenEditor" Grid.Column="1"/></Grid>
 
                                 </StackPanel>
                             </Border>

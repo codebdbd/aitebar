@@ -147,6 +147,8 @@ public sealed class HotkeyServiceTests
         Assert.True(service.TryGetCommand(HotkeyService.TimerStopwatchId, out var timerStopwatch));
         Assert.True(service.TryGetCommand(HotkeyService.QRCodeGeneratorId, out var qrCodeGenerator));
         Assert.True(service.TryGetCommand(HotkeyService.ClipboardManagerId, out var clipboardManager));
+        Assert.True(service.TryGetCommand(HotkeyService.TextProcessingId, out var textProcessing));
+        Assert.True(service.TryGetCommand(HotkeyService.ZenEditorId, out var zenEditor));
         Assert.False(service.TryGetCommand(123, out _));
         Assert.Equal(HotkeyCommand.ShowPanel, showPanel);
         Assert.Equal(HotkeyCommand.FileSorter, fileSorter);
@@ -154,6 +156,8 @@ public sealed class HotkeyServiceTests
         Assert.Equal(HotkeyCommand.TimerStopwatch, timerStopwatch);
         Assert.Equal(HotkeyCommand.QRCodeGenerator, qrCodeGenerator);
         Assert.Equal(HotkeyCommand.ClipboardManager, clipboardManager);
+        Assert.Equal(HotkeyCommand.TextProcessing, textProcessing);
+        Assert.Equal(HotkeyCommand.ZenEditor, zenEditor);
     }
 
     [Fact]
@@ -165,7 +169,9 @@ public sealed class HotkeyServiceTests
             GlobalHotkeyCtrl = true,
             GlobalHotkeyAlt = false,
             GlobalHotkeyKey = "Space",
-            QuickNoteHotkey = new HotkeyBinding { Alt = true, Key = "Q" }
+            QuickNoteHotkey = new HotkeyBinding { Alt = true, Key = "Q" },
+            TextProcessingHotkey = new HotkeyBinding { Ctrl = true, Key = "T" },
+            ZenEditorHotkey = new HotkeyBinding { Alt = true, Key = "Z" }
         };
 
         var definitions = service.CreateDefinitions(settings, key => $"name:{key}");
@@ -182,13 +188,17 @@ public sealed class HotkeyServiceTests
                 HotkeyCommand.ColorPicker,
                 HotkeyCommand.TimerStopwatch,
                 HotkeyCommand.QRCodeGenerator,
-                HotkeyCommand.ClipboardManager
+                HotkeyCommand.ClipboardManager,
+                HotkeyCommand.TextProcessing,
+                HotkeyCommand.ZenEditor
             ],
             definitions.Select(definition => definition.Command));
         Assert.Equal("name:AppSettingsWindow_ShowPanel", definitions[0].DisplayName);
         Assert.Equal("Space", definitions[0].Binding.Key);
         Assert.True(definitions[0].Binding.Ctrl);
         Assert.Equal("Q", definitions.First(definition => definition.Command == HotkeyCommand.QuickNote).Binding.Key);
+        Assert.Equal("T", definitions.First(definition => definition.Command == HotkeyCommand.TextProcessing).Binding.Key);
+        Assert.Equal("Z", definitions.First(definition => definition.Command == HotkeyCommand.ZenEditor).Binding.Key);
     }
 
     [Fact]

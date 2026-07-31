@@ -674,7 +674,9 @@ public partial class AppSettingsWindow : DarkWindow
             (HotkeyColorPicker, "Tool_ColorPicker"),
             (HotkeyTimerStopwatch, "Tool_TimerStopwatch"),
             (HotkeyQRCodeGenerator, "Tool_QRCodeGenerator"),
-            (HotkeyClipboardManager, "Tool_ClipboardManager")
+            (HotkeyClipboardManager, "Tool_ClipboardManager"),
+            (HotkeyTextProcessing, "Tool_TextProcessing"),
+            (HotkeyZenEditor, "Tool_ZenEditor")
         ];
         foreach ((HotkeyCaptureBox captureBox, string resourceKey) in hotkeyFields)
         {
@@ -698,6 +700,8 @@ public partial class AppSettingsWindow : DarkWindow
         yield return HotkeyTimerStopwatch;
         yield return HotkeyQRCodeGenerator;
         yield return HotkeyClipboardManager;
+        yield return HotkeyTextProcessing;
+        yield return HotkeyZenEditor;
     }
 
     private List<ContextRowDraft> CaptureContextRowDrafts()
@@ -805,7 +809,9 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding colorPickerBinding,
         HotkeyBinding timerStopwatchBinding,
         HotkeyBinding qrCodeGeneratorBinding,
-        HotkeyBinding clipboardManagerBinding)
+        HotkeyBinding clipboardManagerBinding,
+        HotkeyBinding textProcessingBinding,
+        HotkeyBinding zenEditorBinding)
     {
         var registrations = new (string Name, HotkeyBinding Binding)[]
         {
@@ -819,7 +825,9 @@ public partial class AppSettingsWindow : DarkWindow
             (LocalizationService.Get("Tool_ColorPicker"), colorPickerBinding),
             (LocalizationService.Get("Tool_TimerStopwatch"), timerStopwatchBinding),
             (LocalizationService.Get("Tool_QRCodeGenerator"), qrCodeGeneratorBinding),
-            (LocalizationService.Get("Tool_ClipboardManager"), clipboardManagerBinding)
+            (LocalizationService.Get("Tool_ClipboardManager"), clipboardManagerBinding),
+            (LocalizationService.Get("Tool_TextProcessing"), textProcessingBinding),
+            (LocalizationService.Get("Tool_ZenEditor"), zenEditorBinding)
         };
 
         var missingModifiers = registrations
@@ -904,6 +912,8 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyTimerStopwatch.SetBinding(_settings.TimerStopwatchHotkey);
         HotkeyQRCodeGenerator.SetBinding(_settings.QRCodeGeneratorHotkey);
         HotkeyClipboardManager.SetBinding(_settings.ClipboardManagerHotkey);
+        HotkeyTextProcessing.SetBinding(_settings.TextProcessingHotkey);
+        HotkeyZenEditor.SetBinding(_settings.ZenEditorHotkey);
 
         SelectSegmentByTag(_settings.Edge.ToString(), SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
         ChkSecondaryMonitor.IsChecked = _settings.MonitorIndex > 0;
@@ -1132,8 +1142,10 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding timerStopwatchBinding = HotkeyTimerStopwatch.GetBinding();
         HotkeyBinding qrCodeGeneratorBinding = HotkeyQRCodeGenerator.GetBinding();
         HotkeyBinding clipboardManagerBinding = HotkeyClipboardManager.GetBinding();
+        HotkeyBinding textProcessingBinding = HotkeyTextProcessing.GetBinding();
+        HotkeyBinding zenEditorBinding = HotkeyZenEditor.GetBinding();
 
-        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding))
+        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding, textProcessingBinding, zenEditorBinding))
         {
             return;
         }
@@ -1156,6 +1168,8 @@ public partial class AppSettingsWindow : DarkWindow
             settings.TimerStopwatchHotkey = timerStopwatchBinding;
             settings.QRCodeGeneratorHotkey = qrCodeGeneratorBinding;
             settings.ClipboardManagerHotkey = clipboardManagerBinding;
+            settings.TextProcessingHotkey = textProcessingBinding;
+            settings.ZenEditorHotkey = zenEditorBinding;
 
             foreach (var (checkBox, definition) in GetUtilityVisibilityBindings())
             {

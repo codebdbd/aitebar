@@ -71,6 +71,8 @@ AiteBar запускается как один экземпляр. Если по
 | `AddButtonHotkey` | не назначено | Добавить кнопку |
 | `IconConverterHotkey` | не назначено | Запустить Icon Converter |
 | `ClipboardManagerHotkey` | не назначено | Запустить Clipboard Manager |
+| `TextProcessingHotkey` | не назначено | Запустить Обработку текста |
+| `ZenEditorHotkey` | не назначено | Запустить Дзен-редактор |
 | `ShowPresetSearch` | `true` | Показывать поиск |
 | `ShowPresetScreenshot` | `true` | Показывать скриншот |
 | `ShowPresetVideo` | `true` | Показывать запись видео |
@@ -169,6 +171,8 @@ AiteBar запускается как один экземпляр. Если по
 - запустить Timer/Stopwatch;
 - запустить QR Code Generator.
 - запустить Clipboard Manager.
+- запустить Обработку текста.
+- запустить Дзен-редактор.
 
 **Дефолтные комбинации на чистом профиле** (до первой ручной правки настроек):
 
@@ -185,6 +189,8 @@ AiteBar запускается как один экземпляр. Если по
 | Запустить Timer/Stopwatch | `TimerStopwatchHotkey` | не назначено |
 | Запустить QR Code Generator | `QRCodeGeneratorHotkey` | не назначено |
 | Запустить Clipboard Manager | `ClipboardManagerHotkey` | не назначено |
+| Запустить Обработку текста | `TextProcessingHotkey` | не назначено |
+| Запустить Дзен-редактор | `ZenEditorHotkey` | не назначено |
 
 Все Hotkey-поля используют структуру `HotkeyBinding { Ctrl, Alt, Shift, Win, Key }`. Если пользователь не сохранял настройки, поле остаётся пустым `new();`, и hotkey не регистрируется в Windows.
 

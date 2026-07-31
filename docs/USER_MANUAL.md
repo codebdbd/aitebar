@@ -482,7 +482,7 @@ Quick Note - это быстрая заметка с автосохранени�
 - переключиться на следующую панель;
 - переключиться на предыдущую панель;
 - добавить кнопку.
-- запустить File Sorter, Icon Converter, Quick Note, Color Picker, Timer/Stopwatch, QR Code Generator или Clipboard Manager.
+- запустить File Sorter, Icon Converter, Quick Note, Color Picker, Timer/Stopwatch, QR Code Generator, Clipboard Manager, Обработку текста или Дзен-редактор.
 
 Не назначайте сочетания, которые уже активно использует Windows или ваши основные программы.
 

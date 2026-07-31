@@ -105,10 +105,18 @@ public sealed class AppSettingsWindowIntegrationTests
         Assert.Contains("settings.IconConverterHotkey = iconConverterBinding;", settingsCode);
         Assert.Contains("HotkeyClipboardManager.SetBinding(_settings.ClipboardManagerHotkey);", settingsCode);
         Assert.Contains("settings.ClipboardManagerHotkey = clipboardManagerBinding;", settingsCode);
+        Assert.Contains("HotkeyTextProcessing.SetBinding(_settings.TextProcessingHotkey);", settingsCode);
+        Assert.Contains("settings.TextProcessingHotkey = textProcessingBinding;", settingsCode);
+        Assert.Contains("HotkeyZenEditor.SetBinding(_settings.ZenEditorHotkey);", settingsCode);
+        Assert.Contains("settings.ZenEditorHotkey = zenEditorBinding;", settingsCode);
         Assert.Contains("case HotkeyCommand.IconConverter:", mainWindowCode);
         Assert.Contains("LaunchUtilityAsync(\"IconConverter\"", mainWindowCode);
         Assert.Contains("case HotkeyCommand.ClipboardManager:", mainWindowCode);
         Assert.Contains("LaunchUtilityAsync(\"ClipboardManager\"", mainWindowCode);
+        Assert.Contains("case HotkeyCommand.TextProcessing:", mainWindowCode);
+        Assert.Contains("LaunchUtilityAsync(\"TextProcessing\"", mainWindowCode);
+        Assert.Contains("case HotkeyCommand.ZenEditor:", mainWindowCode);
+        Assert.Contains("LaunchUtilityAsync(\"ZenEditor\"", mainWindowCode);
     }
 
     private static string FindRepoRoot()

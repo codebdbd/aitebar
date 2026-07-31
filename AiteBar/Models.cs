@@ -174,6 +174,8 @@ public class AppSettings
     public HotkeyBinding TimerStopwatchHotkey { get; set; } = new();
     public HotkeyBinding QRCodeGeneratorHotkey { get; set; } = new();
     public HotkeyBinding ClipboardManagerHotkey { get; set; } = new();
+    public HotkeyBinding TextProcessingHotkey { get; set; } = new();
+    public HotkeyBinding ZenEditorHotkey { get; set; } = new();
     public FileSortUndoState? LastFileSortOperation { get; set; }
 
     public double? TextProcessingLeft { get; set; }

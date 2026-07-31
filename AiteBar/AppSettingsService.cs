@@ -220,6 +220,22 @@ namespace AiteBar
                     Win = original.ClipboardManagerHotkey.Win,
                     Key = original.ClipboardManagerHotkey.Key
                 },
+                TextProcessingHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.TextProcessingHotkey.Ctrl,
+                    Alt = original.TextProcessingHotkey.Alt,
+                    Shift = original.TextProcessingHotkey.Shift,
+                    Win = original.TextProcessingHotkey.Win,
+                    Key = original.TextProcessingHotkey.Key
+                },
+                ZenEditorHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.ZenEditorHotkey.Ctrl,
+                    Alt = original.ZenEditorHotkey.Alt,
+                    Shift = original.ZenEditorHotkey.Shift,
+                    Win = original.ZenEditorHotkey.Win,
+                    Key = original.ZenEditorHotkey.Key
+                },
                 Contexts = original.Contexts?.Select(ctx => new PanelContext
                 {
                     Id = ctx.Id,

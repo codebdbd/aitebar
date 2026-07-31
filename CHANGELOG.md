@@ -11,6 +11,10 @@
 
 ## [1.12.2] - 2026-07-31
 
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Глобальные hotkey новых утилит**: В настройках горячих клавиш добавлены отдельные назначаемые комбинации для «Обработки текста» и «Дзен-редактора» с общей проверкой конфликтов и запуском через Win32 `RegisterHotKey`.
+- **Global hotkeys for new utilities**: Hotkey settings now include assignable shortcuts for Text Processing and Zen Editor, with shared conflict validation and launch through Win32 `RegisterHotKey`.
+
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
 - **Дзен-редактор — плавный набор текста**: Убран полный обход форматирования и повторный расчёт позиции каретки после каждого символа; заголовок документа больше не копирует всё содержимое ради первой строки. Инкрементальное обновление сохраняет жирность, курсив и подчёркивание при вводе.
 - **Zen Editor typing performance**: Removed the full formatting scan and repeated caret-position traversal on every keystroke; document-title calculation no longer copies the whole body to read its first line. Incremental updates preserve bold, italic, and underline while typing.

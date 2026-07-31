@@ -73,7 +73,7 @@ public sealed class AppSettingsLayoutContractTests
             element.Attribute(XamlNamespace + "Name")?.Value is "TxtPanelSizeValue" or "TxtActivationZoneValue" or "TxtActivationDelayValue");
         Assert.DoesNotContain(window.Descendants(PresentationNamespace + "Style"), element =>
             element.Attribute(XamlNamespace + "Key")?.Value is "ModernValueChipStyle" or "ModernValueChipTextStyle");
-        Assert.Equal(11, window.Descendants().Count(element => element.Name.LocalName == "HotkeyCaptureBox"));
+        Assert.Equal(13, window.Descendants().Count(element => element.Name.LocalName == "HotkeyCaptureBox"));
         Assert.DoesNotContain(window.Descendants(), element =>
             (element.Attribute(XamlNamespace + "Name")?.Value ?? string.Empty).EndsWith("Key", StringComparison.Ordinal));
 

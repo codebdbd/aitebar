@@ -158,6 +158,8 @@ AiteBar - desktop-утилита для Windows: скрываемая edge-па�
   - Назначить hotkey Timer/Stopwatch
   - Назначить hotkey QR Code Generator
   - Назначить hotkey Clipboard Manager
+  - Назначить hotkey Обработки текста
+  - Назначить hotkey Дзен-редактора
   - Включить/отключить встроенные быстрые инструменты
   - Изменить порядок кнопок встроенных утилит
   - Сохранить или отменить настройки
@@ -2331,6 +2333,8 @@ Tray-меню.
 | `TimerStopwatchHotkey` | Hotkey Timer/Stopwatch | HotkeyBinding | пустой binding |
 | `QRCodeGeneratorHotkey` | Hotkey QR Code Generator | HotkeyBinding | пустой binding |
 | `ClipboardManagerHotkey` | Hotkey Clipboard Manager | HotkeyBinding | пустой binding |
+| `TextProcessingHotkey` | Hotkey Обработки текста | HotkeyBinding | пустой binding |
+| `ZenEditorHotkey` | Hotkey Дзен-редактора | HotkeyBinding | пустой binding |
 | `ShowPresetSearch` | Показывать поиск | true/false | `true` |
 | `ShowPresetScreenshot` | Показывать скриншот | true/false | `true` |
 | `ShowPresetVideo` | Показывать запись видео | true/false | `true` |

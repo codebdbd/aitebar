@@ -945,6 +945,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
             case HotkeyCommand.ClipboardManager:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("ClipboardManager", HideDock));
                 break;
+            case HotkeyCommand.TextProcessing:
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("TextProcessing", HideDock));
+                break;
+            case HotkeyCommand.ZenEditor:
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("ZenEditor", HideDock));
+                break;
         }
     }
 
