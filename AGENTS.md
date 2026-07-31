@@ -169,10 +169,19 @@ artifacts\installer
 При расхождении между этим файлом и проектными файлами считать источниками правды сами проектные файлы:
 - [README.md](README.md) — возможности, установка и release quality summary.
 - [CHANGELOG.md](CHANGELOG.md) — история изменений и release notes.
+- [PLANS.md](PLANS.md) — шаблон и правила ExecPlan (использовать при крупных фичах и рефакторингах).
+- [ZEN_EDITOR_EXECPLAN.md](docs/execplans/ZEN_EDITOR_EXECPLAN.md) — живой пример ExecPlan по Дзен-редактору.
 - [docs/technical-reference.md](docs/technical-reference.md) — стек, команды, CI/CD и техническая справка.
 - [docs/architecture.md](docs/architecture.md) — архитектура приложения и workflow.
 - [docs/functions.md](docs/functions.md) — карта функций.
 - [docs/USER_MANUAL.md](docs/USER_MANUAL.md) — пользовательское поведение.
+- [docs/AI_PROVIDERS.md](docs/AI_PROVIDERS.md) — подключение и параметры AI-провайдеров.
+- [docs/UTILITIES.md](docs/UTILITIES.md) — как устроены утилиты и процесс добавления новой.
+- [docs/creating-ai-utilities.md](docs/creating-ai-utilities.md) — гайдлайн AI-based утилит.
+- [docs/button-map.md](docs/button-map.md) — карта расположения preset-кнопок.
+- [docs/DESIGN.md](docs/DESIGN.md) — гайдлайн UI-дизайна, цвета, типографика и стили.
+- [docs/MARKETING_DESCRIPTION.md](docs/MARKETING_DESCRIPTION.md) — маркетинговые описания и лендинг-тексты.
+- [docs/README.md](docs/README.md) — навигация по документации docs/.
 - [docs/SENTRY_SETUP.md](docs/SENTRY_SETUP.md) — включение Sentry и приоритет конфигурации.
 - [SECURITY.md](SECURITY.md) — политика безопасности и поддерживаемые версии.
 - [PRIVACY.md](PRIVACY.md) — политика конфиденциальности и обработка данных.

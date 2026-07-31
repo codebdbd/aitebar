@@ -100,9 +100,19 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `IconConverterWindow` — окно утилиты конвертации иконок
 - `QRCodeGeneratorWindow` — окно генератора QR-кодов
 - `ClipboardManagerWindow` — окно менеджера буфера обмена
+- `TextProcessingWindow` — окно AI-обработки текста (дифф оригинала/результата, Undo/Redo, отмена потока)
+- `ZenEditorWindow` — полноэкранный Дзен-редактор с темами, множеством документов, поиском по документам и экспортом TXT
 - `IconPickerWindow` — выбор иконки
+- `AiConnectionDialog` — диалог создания/редактирования одного AI-подключения с проверкой связи по API
+- `ColorPickerDialog` — диалог выбора цвета для кнопок (палитра, HEX-поле, привязка к теме)
+- `QuickNoteLinkDialog` — модальный диалог вставки/редактирования гиперссылки в Quick Note (поля URL, отображаемый текст, подтверждение/отмена)
+- `ZenEditorDocumentPicker` — отдельное окно-пикер документов Дзен-редактора: список внутренних документов, создание, переименование, удаление в корзину и восстановление недавно удалённых
+- `ZenParagraphEditor` — кастомный WPF-контрол редактирования одного параграфа в Дзен-редакторе с вводом/удалением и визуальной симметрией
 - `DarkDialog` — диалоговое окно с подтверждением
-- `TextPromptDialog` — диалоговое окно для ввода текста
+- `TextPromptDialog` — модальное диалоговое окно однострочного или многострочного ввода текста (используется при переименовании документа, создании папки и т. д.)
+- `HotkeyCaptureBox` — кастомный элемент для захвата комбинации hotkey в UI настроек (интегрируется с `HotkeyCaptureHelper` и валидацией)
+- `ComboBoxPopupChrome` — кастомный WPF-хром для выпадающих списков ComboBox, обеспечивающий единый внешний вид pop-up в тёмной теме
+- `DarkWindow` — базовый класс окна в тёмной теме с скрытым системным chrome,CornerRadius, симметричными отступами; на нём строятся QuickNote, ZenEditor, TextProcessing и другие окна утилит
 - `RotationProfileSelectionWindow` — выбор профилей для ротации
 - `OverflowWrapPanel` — кастомная WPF панель для многострочного (multi-band) расположения кнопок
 
@@ -110,10 +120,18 @@ AiteBar — это скрываемая edge-панель быстрого до�
 Сервисы, реализующие бизнес-логику:
 - `ActionService` — выполнение пользовательских действий и системных утилит
 - `AppSettingsService` — загрузка, сохранение и нормализация настроек
-- `TaskbarPositionIndicatorService` — управление индикатором положения панели
+- `TaskbarPositionIndicatorService` — управление индикатором положения панели (показ, drag-and-drop, координаты)
 - `PanelPackageService` — импорт и экспорт панелей (ZIP-архивирование)
 - `QuickNoteService` — управление быстрыми заметками
+- `TextProcessingService` — AI-обработка текста (потоковые ответы SSE, защита технических фрагментов, отмена, Undo/Redo, дифф)
+- `ZenEditorStore` — локальное хранилище документов Дзен-редактора с автосохранением, восстановлением и корзиной недавно удалённых
+- `AiGateway` — общий шлюз HTTP-запросов ко всем настроенным AI-провайдерам; роутинг по моделям, ротация ключей одного провайдера без подмены модели
+- `AiCredentialStore` — хранение и считывание API-ключей в Windows Credential Manager (префикс `AiteBar/AI/<connection-id>`)
+- `AiProviderCatalog` — каталог поддерживаемых AI-провайдеров (OpenRouter, Cerebras, Gemini, Groq, GitHub Models, Mistral) и контрактов их API
+- `AiSettingsNormalizer` — нормализация и валидация настроек AI-подключений (имя, BaseUrl, ModelMode, DefaultModel, UseAutoModel и т. д.). Реализован как `internal static class AiSettingsNormalizer` внутри файла `AiProviderCatalog.cs`, не в отдельном файле.
 - `UpdateCheckService` — проверка обновлений приложения
+- `UpdateCheckUi` — UI-состояния, модальные подтверждения и сообщения для сценария проверки обновлений; координирует вызов `UpdateCheckService`, показ прогресса, выбор «скачать сейчас / позже» и валидацию URL release page
+- `AppContextMenuFactory` — единая фабрика геометрии, глифов, отступов и вертикального выравнивания для всех программно создаваемых меню (панель, tray, индикатор, Дзен-редактор, Обработка текста); гарантирует симметричность ContextMenu и одинаковый pixel-perfect вид
 - `NativeIntegrationService` — низкоуровневая интеграция с Windows (mouse hooks)
 - `LocalizationService` — локализация интерфейса (ru, en, de, uk)
 - `UnifiedButtonService` — построение списка унифицированных кнопок (пользовательские + системные)
@@ -124,6 +142,12 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `HotkeyService` — регистрация и управление глобальными горячими клавишами
 - `TelemetryService` — телеметрия (Sentry)
 - `Logger` — логирование ошибок и событий
+- `UiDispatcher` — централизованная обёртка над `Application.Current.Dispatcher`; все фоновые сервисы (`TextProcessingService`, `ZenEditorStore`, `HotkeyService`, `UpdateCheckService`) переключаются на UI-поток строго через `UiDispatcher`, чтобы не вызывать Dispatcher напрямую и не допускать race на коллекциях
+- `KeyboardFocusVisualService` — единое управление логическим фокусом и фокус-обводкой в окнах утилит: гарантирует, что Enter/Esc/стрелки фокусируются на ожидаемых элементах, и фокус-рамка всегда пиксель-перфект
+- `IndicatorPositionHelper` / `PanelPositionHelper` / `TaskbarGeometryHelper` / `EasingHelper` (расчётная часть) — см. Helpers Layer
+- `HotkeyCaptureHelper` / `HotkeyKeyCatalog` / `HotkeyValidationHelper` — единый стек захвата, каталога и валидации hotkey в UI настроек
+- `AppSettingsDiscreteChoiceHelper` / `AppSettingsSelectionHelper` / `AppSettingsSectionNavigationHelper` — UI-хелперы формы общих настроек
+- `SettingsWindowValidationHelper` — валидация формы редактирования одной кнопки: пустой URL/путь, запрещённые символы, длины полей, проверка существования файла/папки, сообщения об ошибках на локализованном языке
 
 ### Helpers Layer
 Статические классы-помощники для различных задач:
@@ -136,9 +160,12 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `FontHelper`, `IconHelper` — работа с иконками и шрифтами
 - `ProfileRotationHelper` — ротация профилей браузера
 - `ActionTargetHelper` — валидация целей действий
+- `QuickNoteContracts` — контракты (интерфейсы, типы) и POCO-модели Quick Note, разделяемые между окном, сервисом и persistence-слоем
+- `QuickNotePersistence` — чтение/запись файла быстрой заметки на диск с round-trip сохранением Markdown, обработкой conflict-copy и резервными копиями
 - `QuickNoteMarkdown` — парсинг и генерация Markdown для быстрых заметок
 - `PanelPackageMapper` — маппинг между CustomElement и PanelPackageElement
 - `ActivationZoneHelper` — проверка, находится ли курсор в зоне активации панели
+- `UtilityWindowLayoutHelper` — общий расчёт геометрии окон утилит (QuickNote, TimerStopwatch, TextProcessing, QRCodeGenerator, ClipboardManager и т. д.): clamp в рабочую область монитора, чтение/запись `Left/Top/Width/Height` из настроек, fallback-значения при первом открытии
 - `QuickNoteLayoutHelper` — расчет геометрии окна Quick Note
 - `QuickNoteDocumentHelper` — работа с документом Quick Note
 - `QuickNoteTheme` — темы для Quick Note
@@ -150,7 +177,56 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `Constants` — константы приложения
 - `HotkeyValidationHelper` — валидация горячих клавиш
 - `HotkeyKeyCatalog` — каталог доступных клавиш для горячих клавиш
+- `HotkeyCaptureHelper` — обработчик захвата комбинации клавиш в UI (используется `HotkeyCaptureBox`-контролом)
 - `PanelPackageManifest` — модель манифеста пакета панелей
+- `UtilityButtonCatalog` — централизованный каталог всех 18 встроенных кнопок утилит: Id, локализация, глифы, видимость по `ShowPreset*`, порядок по умолчанию. Единый источник правды для MainWindow, AppSettingsWindow и импорта/экспорта.
+- `ZenEditorAsyncCommandGuard` — общая граница обработки ошибок асинхронных команд Дзен-редактора; перехватывает исключение и передаёт его UI восстановления
+- `ZenEditorShortcutResolver` — чистый резолвер сочетаний поиска и тем Дзен-редактора: `Ctrl+F`, `F3`, `Shift+F3`, `Ctrl+Alt+↑/↓` и `Ctrl+Alt+1..5`
+- `ZenEditorUndoHistory` — ограниченная история Undo/Redo текстовых изменений и диапазонов форматирования; поддерживает группировку последовательного ввода и `Ctrl+Z`/`Ctrl+Y`
+- `ZenEditorSearchHelper` — буквальный регистронезависимый поиск внутри текущего документа с переходом вперёд/назад и циклическим продолжением
+- `ZenEditorTextHelper` — текстовые утилиты Дзен-редактора: заголовок документа, нормализация TXT-экспорта, расчёт одного изменения и инкрементальное обновление диапазонов форматирования
+- `ZenEditorThemeCatalog` — каталог тем Дзен-редактора (тёмные/светлые, шрифт, межстрочное расстояние, отступы параграфов); применяется через ресурсы окна
+- `ZenEditorModels` — модели Дзен-редактора: `ZenEditorDocument`, `ZenEditorTextStyle`, индекс хранилища, метаданные, summaries, результат загрузки и описание темы
+- `AiProviderClient` — типизированный HTTP-клиент одного настроенного AI-подключения: оборачивает `HttpClient`, добавляет заголовки авторизации, SSE-парсинг, retry и передачу трассировки в `AiGateway`
+- `AiModels` — POCO-модели и enum AI-подсистемы (AiProviderId, AiConnection, AiModelInfo, AiModelPricing, AiRequestOptions, AiChatMessage и т. д.); используются `AiProviderCatalog`, `AiGateway`, `TextProcessingService`, `AiConnectionDialog`
+- `QRCodeShortcutHelper` — горячие клавиши и input bindings окна генератора QR-кодов: Ctrl+C скопировать PNG, Ctrl+S сохранить, Ctrl+E экспорт SVG, очистка поля по Escape
+- `ClipboardTextTransforms` — преобразования текста в Clipboard Manager: копирование «как одна строка», обрезка пробелов, нормализация переносов строк, URL-encode для промптов и команд; используются как контекстные действия над клипом
+- `UnifiedButton` — DTO/контракт между `UnifiedButtonService` и UI-панелью; одна унифицированная кнопка представляет либо пользовательский `CustomElement`, либо одну из 18 встроенных утилит `UtilityButtonDefinition` из каталога.
+- `ActionExecutionResult` — enum-результат выполнения `ActionService.ExecuteAsync` (Success / FailedWithWarning / FailedCancelled / Failed) с сообщением об ошибке; используется UI feedback и тестами.
+- `QRCodeModels` — POCO и enum для QR Code Generator (уровень коррекции ошибок, режим экспорта PNG/SVG, размеры QrCodeData); коррелирует по назначению с `IconConverterModels` и `ZenEditorModels`.
+
+### MainWindow: структура partial-классов
+
+`MainWindow` в `MainWindow.xaml.cs` является partial-классом. В соответствии с практикой из [AGENTS.md](../AGENTS.md) («часть обработчиков вынесена в partial-файлы»), базовый файл содержит ядро UI (конструктор, ресурсы, привязки данных и общие поля), а крупные обработчики сгруппированы по теме в отдельных `MainWindow.*.cs`:
+
+| Файл | Ответственность |
+|---|---|
+| `MainWindow.xaml.cs` | Базовый файл: конструктор, `Loaded/Closing`, свойства панели (анимации, геометрия), построение кнопок из `UnifiedButtonService`, показ/скрытие, привязка контекстов |
+| `MainWindow.TrayMenuHandler.cs` | Построение и обработка tray-меню (выход, окно настроек, проверка обновлений, контексты, включение/отключение ShowPreset*). |
+| `MainWindow.KeyboardNavigationHandler.cs` | Глобальные hotkey навигации по панели (вправо/влево/вверх/вниз, Enter/Space/Escape), колесо мыши для переключения контекстов, взаимодействие с `ContextWheelSwitchCooldownMs` |
+| `MainWindow.PanelDragHandler.cs` | Drag-and-drop самой панели (drag handle): перетаскивание на другой край/монитор, рассчёт ближайшего края через `PanelPositionHelper`, сохранение `Edge` и `MonitorIndex` |
+| `MainWindow.DragAndDropHandler.cs` | Drag-and-drop **внутри панели** — перестановка пользовательских кнопок и встроенных утилит: начало drag, ховер над ячейкой, drop, commit порядка, анимации `AnimationFadeMs`/`AnimationSlideMs` |
+| `MainWindow.DropHandler.cs` | Drop извне (файлы, URL, текст из проводника/браузера) на панель; создание новых кнопок из drop-полезной нагрузки и confirmation через `DarkDialog` |
+| `MainWindow.ImportExportHandler.cs` | Пункты меню «Экспортировать панель»/«Импортировать панель»: вызов `PanelPackageService`, выбор `.aitebarpanel` ZIP-файла, подтверждение перезаписи, импорт/экспорт иконок |
+
+Все partial-файлы находятся в одном namespace `AiteBar` и дополняют один класс `MainWindow`; общие поля (например, `_overlay`, `_panelState`, `_dragAndDrop`, координаты) живут в базовом `MainWindow.xaml.cs`.
+
+### Subsystem DTO / POCO Models
+
+Для крупных подсистем контракты и data-only типы вынесены в отдельные файлы-модели. Они не содержат бизнес-логики и сериализуются в JSON (настройки, манифест `.aitebarpanel`, окна ViewModel, ответы AI API):
+
+| Файл-модель | Назначение |
+|---|---|
+| [Models.cs](../AiteBar/Models.cs) | Корневые типы настроек и UI: `PanelContext`, `HotkeyBinding`, enums `DockEdge`, `BrowserType`, `ActionType`, `CustomElement` (пользовательская кнопка), `AppSettings`, `SentrySettings`, `AiSettings`, `FileSortUndoState`, `AiModelPricing`. |
+| [AiModels.cs](../AiteBar/AiModels.cs) | AI-контракты: `AiProviderId` (enum из 6 провайдеров), `AiConnection`, `AiModelInfo`, `AiRequestOptions`, `AiChatMessage`, ответы роутинга. Используются `AiProviderCatalog`, `AiGateway`, `TextProcessingService`, `AiConnectionDialog`. |
+| [ZenEditorModels.cs](../AiteBar/ZenEditorModels.cs) | Документ, диапазоны форматирования, индекс хранилища, метаданные, summaries, результат загрузки и описание темы Дзен-редактора. |
+| [IconConverterModels.cs](../AiteBar/IconConverterModels.cs) | Icon Converter DTO (входные форматы, выходные размеры, профиль ICO). |
+| [QRCodeModels.cs](../AiteBar/QRCodeModels.cs) | QR Code Generator DTO (ErrorCorrectionLevel, режим экспорта PNG/SVG, размеры). |
+| [UnifiedButton.cs](../AiteBar/UnifiedButton.cs) | Унифицированный DTO одной кнопки для UI-панели; представляет либо `CustomElement`, либо `UtilityButtonDefinition`. |
+| [ActionExecutionResult.cs](../AiteBar/ActionExecutionResult.cs) | Result-тип возврата `ActionService.ExecuteAsync`: Success/FailedWithWarning/FailedCancelled/Failed + сообщение; используется UI feedback и unit-тесты. |
+| [PanelPackageManifest.cs](../AiteBar/PanelPackageManifest.cs) | JSON-схема файла `manifest.json` внутри `.aitebarpanel` ZIP (AppVersion, ExportedAt, Elements, Images). |
+| [QuickNoteContracts.cs](../AiteBar/QuickNoteContracts.cs) | Интерфейсы и shared POCO для QuickNote (используются окном, `QuickNoteService` и `QuickNotePersistence`). |
+| [TextProcessingUiState.cs](../AiteBar/TextProcessingUiState.cs) + [TextProcessingMode.cs](../AiteBar/TextProcessingMode.cs) | Состояния UI и enum preset-режимов Обработки текста (Proofread / Typography / Clean / Translate / Summarize…). |
 
 ### Native Integration Layer
 Низкоуровневая интеграция с Windows API через `NativeMethods.cs`, содержащий P/Invoke объявления для Win32 функций:
@@ -389,7 +465,7 @@ UI Layer использует Services Layer для выполнения биз�
 **Основные компоненты:**
 - IUtility — интерфейс для всех утилит
 - UtilityRegistry — статический класс для регистрации и получения утилит
-- Классы утилит: QuickNoteUtility, TimerStopwatchUtility, ColorPickerUtility, FileSorterUtility, IconConverterUtility
+- Классы утилит: QuickNoteUtility, TimerStopwatchUtility, ColorPickerUtility, FileSorterUtility, IconConverterUtility, QRCodeGeneratorUtility, ClipboardManagerUtility, TextProcessingUtility, ZenEditorUtility
 
 **Основные функции:**
 - UtilityRegistry.Register() — регистрация утилиты
@@ -745,8 +821,18 @@ UI Layer использует Services Layer для выполнения биз�
 - Калькулятор (calc.exe)
 - Проводник (explorer.exe)
 - Загрузки (shell:Downloads)
-- Цветовой пикер (ScreenColorPickerWindow)
-- Быстрая заметка (QuickNoteWindow)
+- Таймер и секундомер (TimerStopwatchWindow)
+- File Sorter (FileSorterWindow)
+- Icon Converter (IconConverterWindow)
+- Пипетка цвета и цветовой выбор (ScreenColorPickerWindow + ColorPickerDialog)
+- Quick Note (QuickNoteWindow)
+- QR Code Generator (QRCodeGeneratorWindow)
+- Clipboard Manager (ClipboardManagerWindow)
+- Show Desktop (Win32 `#(Win+D)` via SendInput)
+- Apps Folder (`shell:AppsFolder`)
+- Copilot (`microsoft-edge://?ux=copilot&tcp=1&source=taskbar`)
+- Обработка текста — AI Text Processing (TextProcessingWindow)
+- Дзен-редактор (ZenEditorWindow)
 
 **Пошаговый сценарий выполнения (скриншот):**
 1. Пользователь нажимает кнопку скриншота

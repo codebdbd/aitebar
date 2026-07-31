@@ -14,9 +14,9 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <Version>1.12.1</Version>
-    <AssemblyVersion>1.12.1.0</AssemblyVersion>
-    <FileVersion>1.12.1.0</FileVersion>
+    <Version>1.12.2</Version>
+    <AssemblyVersion>1.12.2.0</AssemblyVersion>
+    <FileVersion>1.12.2.0</FileVersion>
     <DefaultItemExcludes>$(DefaultItemExcludes);obj\**;bin\**</DefaultItemExcludes>
   </PropertyGroup>
 

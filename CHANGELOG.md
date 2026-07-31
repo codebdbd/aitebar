@@ -9,6 +9,16 @@
 
 ## [Unreleased]
 
+## [1.12.2] - 2026-07-31
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Дзен-редактор — плавный набор текста**: Убран полный обход форматирования и повторный расчёт позиции каретки после каждого символа; заголовок документа больше не копирует всё содержимое ради первой строки. Инкрементальное обновление сохраняет жирность, курсив и подчёркивание при вводе.
+- **Zen Editor typing performance**: Removed the full formatting scan and repeated caret-position traversal on every keystroke; document-title calculation no longer copies the whole body to read its first line. Incremental updates preserve bold, italic, and underline while typing.
+
+### 🇷🇺 Документация | 🇬🇧 Documentation
+- Актуализированы архитектурная справка, карта функций, руководство пользователя, сведения о конфиденциальности и поддерживаемых версиях.
+- Updated the architecture reference, function map, user manual, privacy notes, and supported-version information.
+
 ## [1.12.1] - 2026-07-30
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed

@@ -87,6 +87,8 @@ AiteBar запускается как один экземпляр. Если по
 | `ShowPresetShowDesktop` | `true` | Показывать Show Desktop |
 | `ShowPresetAppsFolder` | `true` | Показывать Apps Folder |
 | `ShowPresetCopilot` | `true` | Показывать Copilot |
+| `ShowPresetTextProcessing` | `true` | Показывать Обработку текста (AI) |
+| `ShowPresetZenEditor` | `true` | Показывать Дзен-редактор |
 | `ClipboardManagerPersistHistory` | `true` | Сохранять историю Clipboard Manager между сессиями |
 | `QRCodeGeneratorHotkey` | не назначено | Запустить QR Code Generator |
 | `TimerSoundEnabled` | `true` | Звук окончания таймера |
@@ -98,10 +100,59 @@ AiteBar запускается как один экземпляр. Если по
 | `QuickNoteTop` | — | Координата Y окна Quick Note |
 | `QuickNoteWidth` | — | Ширина окна Quick Note |
 | `QuickNoteHeight` | — | Высота окна Quick Note |
-| `Contexts` | 8 панелей | Список панелей-контекстов |
+| `CheckForUpdatesEnabled` | `true` | Проверять наличие обновлений при ручном вызове проверки |
+| `ShowTaskbarPositionIndicator` | `true` | Показывать указатель положения панели на краю экрана |
+| `TaskbarIndicatorPositionX` | — | Относительная координата X указателя положения панели (0..1) |
+| `TaskbarIndicatorPositionY` | — | Относительная координата Y указателя положения панели (0..1) |
+| `TextProcessingLeft` | — | Координата X окна Обработки текста |
+| `TextProcessingTop` | — | Координата Y окна Обработки текста |
+| `TextProcessingWidth` | — | Ширина окна Обработки текста |
+| `TextProcessingHeight` | — | Высота окна Обработки текста |
+| `TextProcessingWindowState` | — | Состояние окна Обработки текста (Normal/Maximized/Minimized) |
+| `TextProcessingLastMode` | `0` | Последний выбранный предустановленный режим Обработки текста |
+| `TextProcessingSelectedConnectionId` | — | Идентификатор последнего выбранного AI-подключения |
+| `TextProcessingSelectedModelId` | — | Идентификатор последней выбранной AI-модели |
+| `TextProcessingSelectedProviderId` | — | Идентификатор последнего выбранного AI-провайдера |
+| `TextProcessingIsAutoModel` | `true` | Автовыбор модели в Обработке текста по стоимости и контексту |
+| `Ai` | объект | Настройки AI-подключений (список подключений, метаданные роутинга). См. раздел ниже. |
+| `Sentry` | объект | Настройки телеметрии Sentry (Dsn, IsEnabled, Environment, TracesSampleRate, SendDefaultPii). Отключено по умолчанию. |
+| `LastFileSortOperation` | — | Undo-состояние последней сессии File Sorter для отката нажатием на панели результата |
+| `Contexts` | 8 панелей | Список панелей-контекстов. Каждый PanelContext дополнительно содержит `IsNameCustomized`, `IconGlyph`, `Color` (AC9 — hex или RGB строка). |
 | `ActiveContextId` | `context-1` | Активная панель |
 | `Elements` | пустой список | Пользовательские кнопки |
 | `UtilityButtonOrder` | пустой список | Порядок кнопок встроенных утилит |
+
+**Nullable-геометрия окон.** Для полей `QuickNoteLeft/Top/Width/Height`, `TextProcessingLeft/Top/Width/Height`, `TaskbarIndicatorPositionX/Y` значение `—` означает `null` в JSON настроек. Пока пользователь ни разу не перемещал и не изменял размер окна, параметр не записан. При первом открытии:
+
+- Окна утилит (Quick Note, Timer/Stopwatch, QR Code Generator, Clipboard Manager, Обработка текста и др.): размер и положение вычисляются через [UtilityWindowLayoutHelper.cs](../AiteBar/UtilityWindowLayoutHelper.cs): fallback к стандартному размеру (например, 680×520 для Quick Note), затем автоматически clamp-ится в рабочую область монитора.
+- `TaskbarIndicatorPositionX/Y`: берётся середина текущего края (0,5 относительной координаты по оси панели).
+- `TextProcessingWindowState`: Default = `Normal`.
+
+После первого перемещения/resize окна или ручного перетаскивания индикатора параметр сохраняется в `settings.json` и в дальнейшем используется как точка старта.
+
+## Настройки AI и хранилище учётных данных
+
+Утилита **Обработка текста** использует внешние AI-провайдеры через HTTPS API. Конфигурация разделена на две части по соображениям безопасности:
+
+| Часть | Где хранится | Назначение |
+|---|---|---|
+| Метаданные подключений (Id, ProviderId, DisplayName, ModelPreferences, IsSystem, Enabled и т. д.) | `%AppData%\Codebdbd\Aite Bar\settings.json`, секция `Ai` | Структура, порядок, включение подключений, предпочтения по моделям |
+| Секреты (API-ключи, Secrets) | **Windows Credential Manager**, целевой префикс `AiteBar/AI/<connection-id>` | Секретные строки, никогда не записываются в `settings.json` |
+
+Поддерживаемые провайдеры (каталог в `AiProviderCatalog`):
+
+- **OpenRouter** (openrouter.ai) — агрегатор множества моделей; ключ OpenRouter
+- **Cerebras** (cerebras.ai) — быстрые open-source модели; ключ Cerebras
+- **Google Gemini** (generativelanguage.googleapis.com) — Gemini семейство; ключ Google AI Studio
+- **Groq** (groq.com) — очень быстрые open-source модели; ключ Groq
+- **GitHub Models** (models.inference.ai.azure.com) — платные GitHub-токены GITHUB_TOKEN с областью `inference`
+- **Mistral AI** (api.mistral.ai) — семейство Mistral; ключ Mistral
+
+Сценарии выбора провайдеров/моделей (подробно см. [AI_PROVIDERS.md](AI_PROVIDERS.md)):
+
+- Режим `auto` для подключения: выбирает самую дешёвую из подходящих по контексту моделей провайдера
+- Список моделей подключения дедуплицируется по имени: если одинаковая модель встречается на нескольких провайдерах, она показывается один раз, а запросы роутятся по первому активному подключению с этой моделью
+- У одного провайдера может быть несколько активных ключей — запросы циклически ротируются по ним без подмены выбранной модели
 
 ## Горячие клавиши
 
@@ -118,6 +169,24 @@ AiteBar запускается как один экземпляр. Если по
 - запустить Timer/Stopwatch;
 - запустить QR Code Generator.
 - запустить Clipboard Manager.
+
+**Дефолтные комбинации на чистом профиле** (до первой ручной правки настроек):
+
+| Hotkey | Поле настроек | Дефолт |
+|---|---|---:|
+| Показать или скрыть панель | `GlobalHotkeyCtrl / Alt / Shift / Win + Key` | `Alt + D4` |
+| Следующая панель | `NextContextHotkey` | не назначено |
+| Предыдущая панель | `PreviousContextHotkey` | не назначено |
+| Добавить кнопку | `AddButtonHotkey` | не назначено |
+| Запустить File Sorter | `FileSorterHotkey` | не назначено |
+| Запустить Icon Converter | `IconConverterHotkey` | не назначено |
+| Запустить Quick Note | `QuickNoteHotkey` | не назначено |
+| Запустить Color Picker | `ColorPickerHotkey` | не назначено |
+| Запустить Timer/Stopwatch | `TimerStopwatchHotkey` | не назначено |
+| Запустить QR Code Generator | `QRCodeGeneratorHotkey` | не назначено |
+| Запустить Clipboard Manager | `ClipboardManagerHotkey` | не назначено |
+
+Все Hotkey-поля используют структуру `HotkeyBinding { Ctrl, Alt, Shift, Win, Key }`. Если пользователь не сохранял настройки, поле остаётся пустым `new();`, и hotkey не регистрируется в Windows.
 
 Внутри окна настроек нельзя сохранить две одинаковые назначенные комбинации. Если Windows не даёт зарегистрировать hotkey, настройки сохраняются, но приложение показывает предупреждение, а комбинация не работает до изменения.
 
@@ -150,6 +219,13 @@ AiteBar запускается как один экземпляр. Если по
 | `PanelShowAnimationMs` | `175` | Показ панели |
 | `PanelHideAnimationMs` | `140` | Скрытие панели |
 | `QuickNoteSlideMs` | `200` | Анимация окна Quick Note |
+| `PanelScreenPadding` | `20` | px-отступ панели от края экрана по осям X/Y при layout-расчётах (обеспечивает pixel-perfect границу без прижатия в пиксель к краю) |
+| `DragHandleSpan` | `18` | Толщина drag handle в px, по которой пользователь цепляет панель мышью для перетаскивания на другой край |
+| `WheelDeltaPerContextSwitch` | `120` | Значение `MouseWheelEventArgs.Delta`, после которого происходит одно переключение контекста колесом мыши над панелью |
+| `ContextWheelSwitchCooldownMs` | `220` | Задержка в миллисекундах между переключениями контекстов колесом, чтобы избежать «дребезга» на высоких значениях delta |
+| `ButtonOuterSize` | `44` | Базовая размерность ячейки (outer box) для квадратных кнопок панели — clickable area в px |
+| `SeparatorSize` | `9` | Ширина/высота разделителя между кнопками (в зависимости от ориентации `Edge`) |
+| `PanelChrome` | `8` | Толщина внешней рамки (chrome) панели — влияет на внутренний padding и позиционирование индикатора относительно `PanelPositionHelper` |
 
 ## Типы пользовательских действий
 

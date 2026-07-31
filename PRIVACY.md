@@ -56,11 +56,12 @@ AiteBar makes network connections only in these scenarios:
 The Clipboard Manager stores a history of text and images copied to your clipboard:
 
 - History is stored locally in `clipboard_history.json`
-- History is **not** persisted between sessions by default (configurable in settings)
+- History is persisted between sessions by default (can be disabled in settings to avoid storing clipboard data on disk)
 - When persistence is enabled, history survives application restarts
 - History is stored as plain text and is not encrypted
 - You can clear history at any time from the Clipboard Manager window
 - No clipboard data is transmitted to external servers
+- None of the local data files are protected with at-rest encryption. Both `clipboard_history.json` and QuickNote.md rely on the Windows profile access control for the `%AppData%\Codebdbd\Aite Bar` folder. If the machine or profile is shared with other local administrators, store sensitive notes or disable clipboard persistence and move the profile under BitLocker/VeraCrypt protection.
 
 ## Quick Note
 
@@ -70,6 +71,7 @@ Quick Note stores your notes as a local Markdown file:
 - Notes are stored as plain text without encryption
 - Notes are not synced to any cloud service
 - You can open the note file in any text editor
+- Notes rely on Windows profile ACLs for protection; see the at-rest encryption note under Clipboard Manager above.
 
 ## Logs
 
