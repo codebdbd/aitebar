@@ -4,6 +4,12 @@ using System.Runtime.CompilerServices;
 
 namespace AiteBar;
 
+internal enum RouteOrderingMode
+{
+    Legacy = 0,
+    DeterministicTextProcessing = 1
+}
+
 public sealed class AiGateway
 {
     private static readonly TimeSpan ModelCacheLifetime = TimeSpan.FromMinutes(15);
@@ -43,7 +49,7 @@ public sealed class AiGateway
         }
 
         (IReadOnlyList<AiRoute> routes, Exception? lastError) =
-            await BuildRoutesAsync(settings, request, candidates, cancellationToken).ConfigureAwait(false);
+            await BuildRoutesAsync(settings, request, candidates, RouteOrderingMode.Legacy, cancellationToken).ConfigureAwait(false);
         foreach (AiRoute route in routes)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -85,9 +91,20 @@ public sealed class AiGateway
             lastError);
     }
 
-    public async Task<AiGatewayStream> GenerateStreamingAsync(
+    public Task<AiGatewayStream> GenerateStreamingAsync(
         AiChatRequest request,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default) =>
+        GenerateStreamingCoreAsync(request, RouteOrderingMode.Legacy, cancellationToken);
+
+    internal Task<AiGatewayStream> GenerateTextProcessingStreamingAsync(
+        AiChatRequest request,
+        CancellationToken cancellationToken = default) =>
+        GenerateStreamingCoreAsync(request, RouteOrderingMode.DeterministicTextProcessing, cancellationToken);
+
+    private async Task<AiGatewayStream> GenerateStreamingCoreAsync(
+        AiChatRequest request,
+        RouteOrderingMode mode,
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(request);
         AiSettings settings = _settingsService.Settings.Ai ?? new AiSettings();
@@ -98,7 +115,7 @@ public sealed class AiGateway
         }
 
         (IReadOnlyList<AiRoute> routes, Exception? lastError) =
-            await BuildRoutesAsync(settings, request, candidates, cancellationToken).ConfigureAwait(false);
+            await BuildRoutesAsync(settings, request, candidates, mode, cancellationToken).ConfigureAwait(false);
         foreach (AiRoute route in routes)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -267,6 +284,7 @@ public sealed class AiGateway
         AiSettings settings,
         AiChatRequest request,
         IReadOnlyList<AiConnectionSettings> connections,
+        RouteOrderingMode mode,
         CancellationToken cancellationToken)
     {
         var routeGroups = new Dictionary<string, List<AiRoute>>(StringComparer.OrdinalIgnoreCase);
@@ -315,9 +333,73 @@ public sealed class AiGateway
             }
         }
 
-        return (
-            groupOrder.SelectMany(identity => routeGroups[identity]).ToArray(),
-            lastError);
+        if (mode == RouteOrderingMode.Legacy)
+        {
+            return (
+                groupOrder.SelectMany(identity => routeGroups[identity]).ToArray(),
+                lastError);
+        }
+
+        var connectionOrder = new Dictionary<string, int>(StringComparer.Ordinal);
+        int index = 0;
+        foreach (AiConnectionSettings connection in settings.Connections ?? [])
+        {
+            if (!connectionOrder.ContainsKey(connection.Id))
+            {
+                connectionOrder[connection.Id] = index++;
+            }
+        }
+
+        var allRoutes = new List<AiRoute>(routeGroups.Count);
+        foreach (List<AiRoute> groupRoutes in routeGroups.Values)
+        {
+            allRoutes.AddRange(groupRoutes);
+        }
+
+        var routeIndex = new Dictionary<string, Dictionary<string, Dictionary<string, AiRoute>>>(StringComparer.Ordinal);
+        foreach (AiRoute route in allRoutes)
+        {
+            if (!routeIndex.TryGetValue(route.Connection.Id, out var byConn))
+            {
+                byConn = new Dictionary<string, Dictionary<string, AiRoute>>(StringComparer.OrdinalIgnoreCase);
+                routeIndex[route.Connection.Id] = byConn;
+            }
+            if (!byConn.TryGetValue(route.Model.ProviderId, out var byProvider))
+            {
+                byProvider = new Dictionary<string, AiRoute>(StringComparer.OrdinalIgnoreCase);
+                byConn[route.Model.ProviderId] = byProvider;
+            }
+            byProvider[route.Model.ModelId] = route;
+        }
+
+        var candidates = new AiRouteCandidate[allRoutes.Count];
+        for (int i = 0; i < allRoutes.Count; i++)
+        {
+            AiRoute route = allRoutes[i];
+            int order = connectionOrder.TryGetValue(route.Connection.Id, out int stored)
+                ? stored
+                : int.MaxValue;
+            candidates[i] = new AiRouteCandidate(route.Connection, route.Model, order);
+        }
+
+        IReadOnlyList<AiRouteCandidate> orderedCandidates =
+            AiModelSelectionPolicy.OrderRoutes(settings, request, candidates);
+
+        AiRoute[] result = new AiRoute[orderedCandidates.Count];
+        for (int i = 0; i < orderedCandidates.Count; i++)
+        {
+            AiRouteCandidate candidate = orderedCandidates[i];
+            if (!routeIndex.TryGetValue(candidate.Connection.Id, out var byConn)
+                || !byConn.TryGetValue(candidate.Model.ProviderId, out var byProvider)
+                || !byProvider.TryGetValue(candidate.Model.ModelId, out AiRoute? match))
+            {
+                throw new InvalidOperationException(
+                    "Ordered route candidate could not be matched back to the original AiRoute list.");
+            }
+            result[i] = match;
+        }
+
+        return (result, lastError);
     }
 
     private bool IsConnectionAvailable(AiConnectionSettings connection)

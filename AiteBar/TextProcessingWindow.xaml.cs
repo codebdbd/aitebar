@@ -568,7 +568,7 @@ public partial class TextProcessingWindow : DarkWindow
         RefreshUiState();
         try
         {
-            AiGatewayStream response = await _gateway.GenerateStreamingAsync(request, _processingCts.Token);
+            AiGatewayStream response = await _gateway.GenerateTextProcessingStreamingAsync(request, _processingCts.Token);
             var streamedResponse = new StringBuilder();
             bool receivedContent = false;
             long lastUiUpdate = 0;

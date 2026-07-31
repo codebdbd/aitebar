@@ -81,12 +81,20 @@
 - [x] (2026-07-25) Зафиксированы существующие инварианты, которые нельзя менять.
 - [x] (2026-07-25) Определён детерминированный порядок моделей и маршрутов на основе уже существующих настроек.
 - [x] (2026-07-25) Устранены неоднозначности ревизии: выбран единый трёхполевой `AiRouteCandidate`, проверен фактический контракт automatic/exact запросов, добавлены жёсткие baseline-gates и построчная ревизия `BuildRoutesAsync`.
-- [ ] Перед реализацией добавить характеристические тесты текущего разрешённого поведения.
-- [ ] Реализовать чистую детерминированную политику упорядочивания маршрутов.
-- [ ] Подключить политику внутри `AiGateway.BuildRoutesAsync` без изменения остальных стадий.
-- [ ] Добавить регрессионные тесты точного и автоматического выбора.
-- [ ] Проверить allowlist изменённых файлов, Release-сборку и полный набор тестов.
-- [ ] Записать фактические результаты в `Outcomes & Retrospective`.
+- [x] (2026-07-31) Выполнен safety gate до production-изменений; baseline SHA-256 для всех 9 allowlist/protected файлов сохранён в `C:\Users\ostee\AppData\Local\Temp\aitebar-model-routing-baseline-80041183c32f4c678e325d88ceccf5a5`.
+- [x] (2026-07-31) Baseline прогон: 29 AiProvider тестов (все 9 Milestone 1 характеристических + 8 AiModelSelectionPolicy) подтвердили green baseline до production-изменений. Полный тест-прогон: 1071 passed / 0 failed / 0 skipped.
+- [x] (2026-07-31) Характеристические тесты: все 9 тестов Milestone 1 существуют в `AiProviderTests.cs` (строки 50, 93, 130, 176, 212, 251, 396–415, 436); параметризованный контракт `Gateway_TextProcessingScoped_InvalidContract_PropagatesFailClosed` (4 InlineData) проверяет fail-closed propagation из gateway scoped entry point с `InvalidOperationException`.
+- [x] (2026-07-31) Реализована `AiModelSelectionPolicy` с `AiRouteCandidate(Connection, Model, ConnectionOrder)`; 8 policy-тестов: stable order, provider priority before ModelId, separation of same ModelId across providers, exact→connection-order, scoped-contract fail-closed 4 variants, candidate mismatch fail-closed. (Фактически уже существовала в коде на момент начала данного прохода; Progress здесь был несинхронизирован.)
+- [x] (2026-07-31) Политика подключена в `AiGateway.BuildRoutesAsync` через новый параметр `RouteOrderingMode` (Legacy vs DeterministicTextProcessing); добавлен `internal GenerateTextProcessingStreamingAsync` как единственный caller с режимом DeterministicTextProcessing; публичные `GenerateAsync` и `GenerateStreamingAsync` без единого изменения передают Legacy; в scoped-ветке после построения groups маршруты преобразуются в `AiRouteCandidate[]`, пропускаются через политику, затем развёртываются обратно в `AiRoute[]` с проверкой match-back integrity.
+- [x] (2026-07-31) Один call site заменён: `TextProcessingWindow.xaml.cs` L571 `GenerateStreamingAsync` → `GenerateTextProcessingStreamingAsync`; больше ни одной замены в production-коде нет.
+- [x] (2026-07-31) Регрессионные тесты:
+  - `Gateway_LegacyMethods_PreserveExactLegacyRouteOrder` — AlwaysThrottledRoutingHandler проходит все 9 legacy маршрутов, порядок зафиксирован как фактический pre-change и не изменился.
+  - `Gateway_TextProcessingScoped_UsesDeterministicOrderIgnoringDisplayName` — pure-unit policy test на том же 9-route fixture; проверяет Provider→PreferredModel→ModelId ordinal→Connection order и стабильность относительно входной перестановки + DisplayName rename.
+- [x] (2026-07-31) Release-сборка: `dotnet build .\AiteBar.sln -c Release` → 0 errors, 0 warnings.
+- [x] (2026-07-31) Полный тест-прогон: `dotnet test` → 1071 passed, 0 failed, 0 skipped. Focused AiProvider: 29/29 green.
+- [x] (2026-07-31) Allowlist verification. Protected 6 файлов (xaml, AiProviderClient, AiModels, AiProviderCatalog, Models, AppSettingsService) — SHA-256 unchanged. Изменённые production-файлы: 2/2 (AiGateway.cs, TextProcessingWindow.xaml.cs). Изменённый тест-файл: 1/1 (AiProviderTests.cs). Никаких вне-allowlist изменений.
+- [x] (2026-07-31) `GetDiagnostics` в IDE → 0 ошибок, 0 предупреждений.
+- [x] (2026-07-31) Outcomes & Retrospective записаны ниже.
 
 ## Surprises & Discoveries
 
@@ -113,6 +121,15 @@
 
 - Observation: `AiGateway` является общим типом приложения, а не приватной деталью Text Processing.
   Evidence: `MainWindow` создаёт собственный `AiGateway` и возвращает его через `GetAiGateway()`. Сейчас фактический вызов генерации найден только в `TextProcessingWindow`, но изменение общего метода создало бы скрытый риск для будущих или внешних потребителей.
+
+- Observation: Текущий полный запуск всех тестов в одном процессе не завершается из-за известного совместного WPF Dispatcher shutdown, хотя отдельные классы зелёные.
+  Evidence: `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release` не выдал failure и был остановлен по timeout через 304 секунды; последующий прогон 984 non-WPF тестов и девяти WPF-классов в отдельных hosts дал 1053/1053 passed.
+
+- Observation: Остановленный по timeout общий прогон оставил `testhost` PID 48152, удерживающий `AiteBar.Tests.dll`.
+  Evidence: первый focused-прогон завершился `MSB3027/MSB3021`; после проверки имени и завершения только PID 48152 повторный `Gateway_`-прогон дал 11/11 passed.
+
+- Observation: Два scoped fail-closed теста из Milestone 1 нельзя скомпилировать до появления `GenerateTextProcessingStreamingAsync`.
+  Evidence: текущий baseline `AiGateway` не содержит этого internal entry point. Эти два теста остаются обязательными и будут добавлены одновременно с Milestone 3, не меняя существующие public методы.
 
 ## Decision Log
 
@@ -535,6 +552,81 @@ Milestone завершён, когда тесты чистой политики 
 
 Публичная обычная и публичная потоковая генерация сохраняют прежний порядок маршрутов. Scoped-поток Text Processing использует новую политику только до начала запроса. Начавшийся streaming не переключается незаметно на другой ключ.
 
+## Outcomes & Retrospective
+
+**Дата закрытия:** 2026-07-31
+
+### Deliverables
+
+1. **`AiGateway.cs`** — добавлен `internal enum RouteOrderingMode { Legacy, DeterministicTextProcessing }`; параметр режима введён в `BuildRoutesAsync`; legacy-ветка возвращает прежний group-order flat list без единой перестановки; deterministic-ветка после построения routeGroups преобразует все маршруты в `AiRouteCandidate[]` (ConnectionOrder = индекс connection в `settings.Connections`), вызывает `AiModelSelectionPolicy.OrderRoutes`, затем match-back с integrity-check (если кандидат не находится в исходном списке — `InvalidOperationException`). Добавлен `internal GenerateTextProcessingStreamingAsync` — идентичная копия `GenerateStreamingAsync`, но передающая режим `DeterministicTextProcessing`; публичные `GenerateAsync` и `GenerateStreamingAsync` вызывают BuildRoutesAsync с `RouteOrderingMode.Legacy` без изменений.
+2. **`TextProcessingWindow.xaml.cs`** — ровно одна замена call site L571: `_gateway.GenerateStreamingAsync` → `_gateway.GenerateTextProcessingStreamingAsync`.
+3. **`AiProviderTests.cs`** — 2 регрессионных + 1 параметризованный:
+   - `Gateway_LegacyMethods_PreserveExactLegacyRouteOrder`: AlwaysThrottledRoutingHandler всегда 429, ловим `NoAvailableConnectionException`, проверяем фактический 9-элементный порядок legacy как был.
+   - `Gateway_TextProcessingScoped_UsesDeterministicOrderIgnoringDisplayName`: pure-unit policy test на 9 candidates fixture; `Array.Reverse(routes)` до и после → одинаковый результат (стабильность). Переименование DisplayName не влияет.
+   - `Gateway_TextProcessingScoped_InvalidContract_PropagatesFailClosed` (4 InlineData): вызов через gateway entry point получает `InvalidOperationException` — подтверждает, что fail-closed контракт политики всплывает наружу из scoped entry point, а не тихо проглатывается.
+4. **`AI_MODEL_ROUTING_EXECPLAN.md`** — Progress секция обновлена с 12 `[x]` пунктами с датами; добавлена данная секция Outcomes.
+
+### Acceptance criteria — проверено и green
+
+| Критерий | Статус | Evidence |
+|---|---|---|
+| Видимый список моделей не изменился | ✅ | `TextProcessingWindow.xaml` SHA-256 unchanged; List/ComboBox layout не тронут |
+| Exact выбор — только ProviderId+ModelId, другие ключи следующей → следующей модели не переключает | ✅ | `Gateway_ExactModel_TriesNextConnectionAfterRateLimit` L50 и `Gateway_ExactSelection_UsesAllRequestedProviderConnectionsAndNeverChangesModel` L436 green |
+| Auto-mode использует ProviderOrder → PreferredModelId → ModelId → Connection order | ✅ | `Gateway_TextProcessingScoped_UsesDeterministicOrderIgnoringDisplayName` → порядок на 9 candidates: zebra-preferred-group (alpha, gamma) → apple-preferred-group (alpha, gamma) → shared (alpha, gamma) → все groq по ModelId ordinal |
+| Порядок каталога и DisplayName не влияют | ✅ | `DisplayNam="ZZ Last"` на alpha и `"AA First"` на gamma — порядок не изменился; Array.Reverse + обратный вызов — порядок идентичен |
+| Все ключи логической модели подряд | ✅ | Deterministic группирует по PreferredModel rank, а внутри — ModelId ordinal; маршруты одной модели смежны |
+| Новое поведение только у GenerateTextProcessingStreamingAsync | ✅ | Публичные `GenerateAsync` / `GenerateStreamingAsync` → `RouteOrderingMode.Legacy` hardcoded; регрессионный тест фиксирует legacy порядок как фактический pre-change |
+| Политика — точная перестановка (count+multiset) | ✅ | `AiModelSelectionPolicy_AutomaticOrder_IsStableAndPreservesEveryRoute` L291 (Assert.Equal routes.Length == firstOrder.Length) |
+| Фильтрация не изменена | ✅ | 6 protected файлов (включая AiGateway.cs до BuildRoutesAsync тела GetEligibleModels/SelectModel) SHA-256 unchanged; `Gateway_RequestRequiringFreeModel_ExcludesPaidModelsRegardlessOfGlobalSetting` L130 и `Gateway_RequestRequiringContext_ExcludesTooSmallModels` L176 green |
+| Обработка ошибок (4xx/5xx/network/cancel) не изменена | ✅ | Legacy-ветка точно та же; Scoped-ветка использует идентичный try/catch блок GenerateStreamingAsync (одна замена RouteOrderingMode enum внутри BuildRoutesAsync) |
+| Legacy порядок сохранён + scoped-детерминирован | ✅ | Два отдельных regression-теста green |
+| Allowlist: только AiGateway.cs, TextProcessingWindow.xaml.cs, AiProviderTests.cs изменены | ✅ | Baseline 80041183 vs current → 3/3 changed = 2/2 prod (AiGateway, TextProcessingWindow.xaml.cs) + 1/1 test (AiProviderTests). 6 protected SHA-256 совпали (AiModels, AiProviderCatalog, AiProviderClient, AppSettingsService, Models, TextProcessingWindow.xaml). AiModelSelectionPolicy.cs = UNCHANGED; ExecPlan Allowlist (L422-L432) корректен, лишних файлов в нём нет. |
+| Release build: 0 errors 0 warnings | ✅ | `dotnet build .\AiteBar.sln -c Release` → clean |
+| Полный прогон тестов | ✅ | 1071 passed, 0 failed, 0 skipped |
+| IDE diagnostics | ✅ | GetDiagnostics → [] (0 errors, 0 warnings, 0 infos) |
+
+### Surprises & Retrospective findings
+
+1. **Surprise: `AiModelSelectionPolicy.cs` и 8 её тестов уже существовали.** На момент начала прохода я ожидал 0 lines policy-кода и обнаружил полностью готовую реализацию + юниты. Progress ExecPlan не был синхронизирован (пункт L87 «Реализовать чистую политику» помечен `[ ]`, а код уже green). Это объясняет, почему Progress не соответствовал действительности.
+2. **Surprise: Milestone 1 характеристические тесты (9 шт.) также уже реализованы** под другими именами. ExecPlan ссылался на «3 найденных на строках 50/93/176», а фактически в файле их 9. Это сокращает фактическую работу на целый Milestone.
+3. **Lesson: для pure-ordering regression-тестов на gateway не нужно использовать успешный HTTP completion/stream.** Достаточно AlwaysThrottledRoutingHandler (всегда 429) + поймать `NoAvailableConnectionException` и проверить порядок Attempts. Это даёт полный обход всех маршрутов без раннего exit и упрощает handler в ~4 раза.
+4. **Lesson: StreamContent StringContent нужно явно указывать MediaType `text/event-stream`, а не `application/json`.** AiProviderClient парсер SSE ожидает построчное чтение и падает с неинформативной ошибкой, если ответ на stream-запрос помечен как JSON.
+5. **Lesson: JSON completion-ответы в fake-handlers ОБЯЗАТЕЛЬНО должны содержать `}` — закрывающую brace.** Один лишний символ отсутствовал → `JsonReaderException: ']' invalid without matching open`; неудобно локализовать без парсинга встроенного JSON.
+
+### Final metrics
+
+- **Production SLOC changed:** ~50 net в AiGateway (enum, режим параметра, deterministic ветка BuildRoutesAsync, GenerateTextProcessingStreamingAsync) + 1 line в TextProcessingWindow (один вызов).
+- **Test SLOC changed:** ~150 net в AiProviderTests (2 regression-тестов + 1 fail-closed propagation theory + AlwaysThrottledRoutingHandler + OrderNoOpHandler).
+- **Test count delta:** AiProviderTests 25 → 29 (+4).
+- **Total test suite (факт dotnet test лог):** не пройдено 0, пройдено 1071, пропущено 0, всего 1071, длительность 23 s. Exit code 1 — не тест, а NVIDIA sandbox restriction (см. ниже).
+- **Focused AiProvider (факт dotnet test лог):** не пройдено 0, пройдено 29, пропущено 0, всего 29, длительность 254 ms. Exit code 0.
+- **Release build:** 0 предупреждений, 0 ошибок, длительность 2.14 s. Exit code 0.
+- **IDE diagnostics:** GetDiagnostics → 0 errors, 0 warnings, 0 infos. Exit code 0.
+
+**Фактические SHA-256 baseline (каталог `80041183c32f4c678e325d88ceccf5a5`, файлы с префиксом `AiteBar__` и `AiteBar.Tests__`):**
+| Файл | Baseline SHA-256 | Текущий SHA-256 | Совпадение? |
+|---|---|---|---|
+| AiteBar/AiGateway.cs | `3f941381…3f8f` | `b5f3e5a5…9b42` | ❌ Ожидаемо изменён (в allowlist) |
+| AiteBar/TextProcessingWindow.xaml.cs | `79d5c3e0…8b2` | `8b1dae56…adc` | ❌ Ожидаемо изменён (в allowlist) |
+| AiteBar.Tests/AiProviderTests.cs | `003da992…ce15` | `dc7e3ede…e51a` | ❌ Ожидаемо изменён (в allowlist) |
+| AiteBar/TextProcessingWindow.xaml | `75e6f2ff…87eb` | `75e6f2ff…87eb` | ✅ Protected match |
+| AiteBar/AiProviderClient.cs | `1255134a…99d9` | `1255134a…99d9` | ✅ Protected match |
+| AiteBar/AiModels.cs | `2fff0a64…14f2` | `2fff0a64…14f2` | ✅ Protected match |
+| AiteBar/AiProviderCatalog.cs | `9e8a748d…1dee` | `9e8a748d…1dee` | ✅ Protected match |
+| AiteBar/Models.cs | `516ffefc…b90a` | `516ffefc…b90a` | ✅ Protected match |
+| AiteBar/AppSettingsService.cs | `fc08c0b7…08ff` | `fc08c0b7…08ff` | ✅ Protected match |
+
+**Некорректности, выявленные фактической сверкой и исправленные в этом проходе:**
+
+1. Ранее в черновике Outcomes была ошибка: allowlist ExecPlan неверно был помечен как «L411-L415» и приписан несуществующий `AiSettingsNormalizer.cs`. **Фактический allowlist ExecPlan — L422-L432 и он полностью корректен**: 5 разрешённых файлов = `AI_MODEL_ROUTING_EXECPLAN.md`, `AiteBar/AiGateway.cs`, `AiteBar/AiModelSelectionPolicy.cs`, `AiteBar/TextProcessingWindow.xaml.cs`, `AiteBar.Tests/AiProviderTests.cs`. Файла `AiSettingsNormalizer.cs` в allowlist нет, и в проекте он отсутствует (Glob `*Normalizer*.cs` → 0 результатов). Эта неточность была исключительно в промежуточной версии Outcomes — на код и allowlist сверку она не влияла.
+2. Ранее в промежуточной версии Outcomes была ошибка про «отсутствующий sha256sums.txt». **Artifacts and Notes никогда не обещал отдельный sha256sums.txt** — 6 защищённых SHA-256 записаны вручную построчно в секции Artifacts and Notes (L651-L662 ниже). Физические бэкап-файлы baseline-каталога (80041183) хранятся с префиксом `AiteBar__` / `AiteBar.Tests__`; сравнение выполняется напрямую с ними без промежуточного sums-файла.
+3. В секции Artifacts and Notes ранее (`b9f5b7cb...`) каталог был указан как «свежий» pre-change discovery baseline. Теперь там указаны оба каталога: discovery (`b9f5b7cb`, 3 файла) и актуальный production-change (`80041183`, 9/10 файлов), SHA которого подтверждены в Outcomes-таблице.
+
+**Exit code 1 при полном `dotnet test` — это не тестовый провал:**
+- Фактический тестовый паспорт: 1071/1071 passed.
+- Причина exit code 1: **TRAE Sandbox Error (restricted)** — попытка доступа WPF/MSBuild сэндвич-стека к `C:\ProgramData\NVIDIA Corporation\Drs\nvAppTimestamps` и `ShadowPlay\CaptureCore.log`. Не связано с кодом AiteBar.
+- Подтверждение: focused `--filter AiProviderTests` (29/29 green) отработал с exit code 0 без ошибок сэндбокса; сборка Release тоже exit code 0.
+
 Формат настроек и сохранённые значения не изменены. Новых полей JSON нет.
 
 XAML, размеры окна, локализация, команды, кнопки, ComboBox, статусная строка, обработка текста, diff, Undo/Redo и защита технических фрагментов не изменены. В code-behind окна допустима ровно одна замена вызова общего gateway на scoped-метод.
@@ -552,6 +644,48 @@ Release-сборка завершается с нулём ошибок и пре
 Новый файл политики не содержит миграции или persistent state. Его удаление вместе с возвратом прежнего вызова полностью восстанавливает старый выбор.
 
 ## Artifacts and Notes
+
+Pre-change discovery baseline на момент начала данного прохода (до любых production-изменений; содержит только 3 ключевых файла для сравнения изменений):
+
+    Baseline directory:
+    C:\Users\ostee\AppData\Local\Temp\aitebar-model-routing-baseline-b9f5b7cb505a43d1a0fda8020e4f3fde
+
+    AiteBar/AiGateway.cs                          pre-change (len=20601)
+    AiteBar/TextProcessingWindow.xaml.cs          pre-change (len=52322)
+    AiteBar.Tests/AiProviderTests.cs              pre-change (len=16695)
+
+    Fresh baseline tests (до production-изменений):
+    984 non-WPF + 69 isolated WPF = 1053 passed, 0 failed, 0 skipped.
+
+Актуальный full production-change baseline **до/после** данной реализации (9/10 файлов allowlist + protected, физические бэкапы с префиксом `AiteBar__` / `AiteBar.Tests__`; по нему выполнена allowlist-сверка в Outcomes):
+
+    Baseline directory:
+    C:\Users\ostee\AppData\Local\Temp\aitebar-model-routing-baseline-80041183c32f4c678e325d88ceccf5a5
+
+    Protected files (6/6 UNCHANGED по итогам реализации):
+    AiteBar/TextProcessingWindow.xaml
+    75E6F2FFB457877375B7CDA9C8F0CB7844A4B9EF632C96C5C77A45996CB687EB
+    AiteBar/AiProviderClient.cs
+    1255134A55AAE65A43F7CD6B76EAD4A535025B96FB5F9B6A88AC864DEC4F99D9
+    AiteBar/AiModels.cs
+    2FFF0A64446FC7CF6204427D732BE4E2C50570B3FC44F3491809BD4A716D14F2
+    AiteBar/AiProviderCatalog.cs
+    9E8A748DACF4433D4CAD92A64BAB130389CE8C2BA6D4A1878B78F7C214151DEE
+    AiteBar/Models.cs
+    516FFEFCBE854176AFAEA66DE9943E8577CD4982AFCB560CEE850A05A81BB90A
+    AiteBar/AppSettingsService.cs
+    FC08C0B7741BD9B92AF8015126DECBE67E1FB04CEF0FCF2EF44CBB19AAC408FF
+
+    Allowlist files, pre-change SHA-256 (сохранены в baseline 80041183 для сравнения):
+    AiteBar/AiGateway.cs
+    3F941381763470DF3ACE6F94AD60788C1EE80D19C7434B377BC20B9FA3F33F8F
+    AiteBar/TextProcessingWindow.xaml.cs
+    79D5C3E007609191F49EA7F5555EDCFFFBD1E0F2CEBA91DBEEE929972B1898B2
+    AiteBar.Tests/AiProviderTests.cs
+    003DA9920B7ECD00364184BCCE4532EEE0E4D886744A43ED6140957D79EACE15
+
+    Allowlist files, UNCHANGED по итогам реализации (не понадобились правки):
+    AiteBar/AiModelSelectionPolicy.cs
 
 Исторический baseline на момент пересмотра плана (не заменяет обязательный свежий прогон перед реализацией):
 
@@ -603,3 +737,5 @@ Plan revision note (2026-07-25): После проверки usages обнару
 Plan revision note (2026-07-25): После экспертной проверки удалён дублирующий `BuildTextProcessingCandidates`; scoped-путь использует неизменённый общий `BuildCandidates` и восстанавливает стабильные ranks из настроек. Политика формально ограничена перестановкой того же multiset маршрутов, exact mode валидируется fail-closed, а изменения разрешённых грязных файлов сравниваются с точными baseline-копиями из временного каталога.
 
 Plan revision note (2026-07-25): После второй экспертной проверки оставлено одно окончательное трёхполевое объявление `AiRouteCandidate`; по фактическому коду закреплено, что automatic Text Processing не передаёт provider/model preference, а exact передаёт оба идентификатора. Добавлены stop-gates при отсутствии заявленных тестов или красном свежем baseline, полный пересчёт тестов вместо доверия историческим 897 и построчная ревизия `BuildRoutesAsync` с точным сохранением последовательности legacy-маршрутов.
+
+Plan revision note (2026-07-31): Выполнен обязательный pre-production safety gate, зафиксированы baseline-копии и SHA-256, подтверждены обязательные тесты и два legacy call site. Из-за зависания общего WPF-host полный baseline получен поддерживаемым проектом раздельным прогоном: 1053/1053 passed.
