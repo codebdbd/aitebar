@@ -43,6 +43,16 @@ public sealed class ZenEditorTextHelperTests
     }
 
     [Fact]
+    public void GetDisplayTitle_IgnoresLargeDocumentBody()
+    {
+        string result = ZenEditorTextHelper.GetDisplayTitle(
+            "  Название\t документа  \n" + new string('я', 2_000_000),
+            "Новый документ");
+
+        Assert.Equal("Название документа", result);
+    }
+
+    [Fact]
     public void CreateExportFileName_ReplacesInvalidCharacters()
     {
         string result = ZenEditorTextHelper.CreateExportFileName("Проект: план/черновик", "Новый документ");
@@ -77,5 +87,41 @@ public sealed class ZenEditorTextHelperTests
     public void ClampSelection_KeepsPositionsWithinDocument()
     {
         Assert.Equal((5, 4, 1), ZenEditorTextHelper.ClampSelection(5, 20, 4, 20));
+    }
+
+    [Fact]
+    public void ApplyTextChangeToStyles_InsertsCapturedFormattingWithoutScanningDocument()
+    {
+        IReadOnlyList<ZenEditorTextStyle> result = ZenEditorTextHelper.ApplyTextChangeToStyles(
+            [new ZenEditorTextStyle(0, 4, true, false, false)],
+            new ZenEditorTextChange(2, 1, 0),
+            new ZenEditorTextStyle(2, 1, true, false, false),
+            5);
+
+        Assert.Equal([new ZenEditorTextStyle(0, 5, true, false, false)], result);
+    }
+
+    [Fact]
+    public void ApplyTextChangeToStyles_LeavesPlainInsertionOutsideFormattedRange()
+    {
+        IReadOnlyList<ZenEditorTextStyle> result = ZenEditorTextHelper.ApplyTextChangeToStyles(
+            [new ZenEditorTextStyle(0, 2, true, false, false)],
+            new ZenEditorTextChange(2, 1, 0),
+            insertedStyle: null,
+            currentTextLength: 5);
+
+        Assert.Equal([new ZenEditorTextStyle(0, 2, true, false, false)], result);
+    }
+
+    [Fact]
+    public void ApplyTextChangeToStyles_DeletesAndMergesRemainingFormatting()
+    {
+        IReadOnlyList<ZenEditorTextStyle> result = ZenEditorTextHelper.ApplyTextChangeToStyles(
+            [new ZenEditorTextStyle(0, 6, false, true, false)],
+            new ZenEditorTextChange(2, 0, 2),
+            insertedStyle: null,
+            currentTextLength: 4);
+
+        Assert.Equal([new ZenEditorTextStyle(0, 4, false, true, false)], result);
     }
 }

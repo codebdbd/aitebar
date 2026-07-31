@@ -251,6 +251,36 @@ public sealed class ZenEditorWindowBehaviorTests
     }
 
     [Fact]
+    public async Task ParagraphEditor_ReportsInsertedFormattingForIncrementalStyleUpdate()
+    {
+        await RunStaAsync(() =>
+        {
+            var editor = new ZenParagraphEditor { Text = "Жирный текст" };
+            editor.Select(0, 6);
+            editor.Selection.ApplyPropertyValue(
+                TextElement.FontWeightProperty,
+                System.Windows.FontWeights.Bold);
+            IReadOnlyList<ZenEditorTextStyle> previousStyles = editor.CaptureTextStyles();
+            editor.CaretIndex = 3;
+
+            editor.CaretPosition.InsertTextInRun("X");
+
+            Assert.True(editor.CanTransformLastTextStyles);
+            Assert.Equal(
+                new ZenEditorTextStyle(3, 1, true, false, false),
+                editor.LastInsertedTextStyle);
+            ZenEditorTextChange change = Assert.Single(editor.LastPlainTextChanges);
+            IReadOnlyList<ZenEditorTextStyle> incremental =
+                ZenEditorTextHelper.ApplyTextChangeToStyles(
+                    previousStyles,
+                    change,
+                    editor.LastInsertedTextStyle,
+                    editor.Text.Length);
+            Assert.Equal(editor.CaptureTextStyles(), incremental);
+        });
+    }
+
+    [Fact]
     public async Task ParagraphEditor_CapturesStylesWithOneInlineVisitPerNode()
     {
         await RunStaAsync(() =>

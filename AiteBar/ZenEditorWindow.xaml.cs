@@ -355,11 +355,18 @@ public partial class ZenEditorWindow : DarkWindow
         string previousText = _previousText;
         string currentText = Editor.Text;
         IReadOnlyList<ZenEditorTextStyle> previousStyles = _previousStyles;
-        IReadOnlyList<ZenEditorTextStyle> currentStyles = Editor.CaptureTextStyles();
         IReadOnlyList<ZenEditorTextChange> changes = Editor.LastPlainTextChanges;
         ZenEditorTextChange change = changes.Count == 1
             ? changes[0]
             : ZenEditorTextHelper.CalculateSingleChange(previousText, currentText);
+        IReadOnlyList<ZenEditorTextStyle> currentStyles =
+            changes.Count == 1 && Editor.CanTransformLastTextStyles
+                ? ZenEditorTextHelper.ApplyTextChangeToStyles(
+                    previousStyles,
+                    change,
+                    Editor.LastInsertedTextStyle,
+                    currentText.Length)
+                : Editor.CaptureTextStyles();
         ZenEditorUndoHistory history = GetUndoHistory(_document.Id);
         history.Record(
             previousText,
@@ -1226,7 +1233,7 @@ public partial class ZenEditorWindow : DarkWindow
             return;
         }
 
-        Rect caret = Editor.GetRectFromCharacterIndex(Editor.CaretIndex);
+        Rect caret = Editor.GetCaretRect();
         if (caret.IsEmpty || Editor.ViewportHeight <= 0)
         {
             return;

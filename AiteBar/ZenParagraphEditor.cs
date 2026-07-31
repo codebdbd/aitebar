@@ -12,6 +12,8 @@ internal sealed class ZenParagraphEditor : System.Windows.Controls.RichTextBox
     private string _plainText = string.Empty;
     private IReadOnlyList<ZenEditorTextChange> _lastPlainTextChanges = [];
     private bool _isSettingPlainText;
+    private bool _canTransformLastTextStyles;
+    private ZenEditorTextStyle? _lastInsertedTextStyle;
     private int _fullDocumentReadCount;
     private int _lastStyleCaptureInlineCount;
 
@@ -36,6 +38,8 @@ internal sealed class ZenParagraphEditor : System.Windows.Controls.RichTextBox
 
     internal int FullDocumentReadCount => _fullDocumentReadCount;
     internal int LastStyleCaptureInlineCount => _lastStyleCaptureInlineCount;
+    internal bool CanTransformLastTextStyles => _canTransformLastTextStyles;
+    internal ZenEditorTextStyle? LastInsertedTextStyle => _lastInsertedTextStyle;
 
     public int CaretIndex
     {
@@ -91,6 +95,9 @@ internal sealed class ZenParagraphEditor : System.Windows.Controls.RichTextBox
 
     public Rect GetRectFromCharacterIndex(int index) =>
         GetTextPointer(index).GetCharacterRect(LogicalDirection.Forward);
+
+    public Rect GetCaretRect() =>
+        CaretPosition.GetCharacterRect(LogicalDirection.Forward);
 
     internal IReadOnlyList<ZenEditorTextStyle> CaptureTextStyles()
     {
@@ -160,6 +167,8 @@ internal sealed class ZenParagraphEditor : System.Windows.Controls.RichTextBox
 
     protected override void OnTextChanged(TextChangedEventArgs e)
     {
+        _canTransformLastTextStyles = false;
+        _lastInsertedTextStyle = null;
         if (!_isSettingPlainText)
         {
             string previous = _plainText;
@@ -313,6 +322,8 @@ internal sealed class ZenParagraphEditor : System.Windows.Controls.RichTextBox
             string added = GetPlainText(start, end);
             current = previous.Insert(plainOffset, added);
             plainChange = new ZenEditorTextChange(plainOffset, added.Length, 0);
+            _canTransformLastTextStyles = added == "\n"
+                || TryGetUniformTextStyle(start, end, plainOffset, added.Length, out _lastInsertedTextStyle);
             return true;
         }
 
@@ -322,10 +333,48 @@ internal sealed class ZenParagraphEditor : System.Windows.Controls.RichTextBox
         {
             current = previous.Remove(plainOffset, 1);
             plainChange = new ZenEditorTextChange(plainOffset, 0, 1);
+            _canTransformLastTextStyles = true;
             return true;
         }
 
         return false;
+    }
+
+    private static bool TryGetUniformTextStyle(
+        TextPointer start,
+        TextPointer end,
+        int plainOffset,
+        int plainLength,
+        out ZenEditorTextStyle? style)
+    {
+        style = null;
+        if (plainLength <= 0)
+        {
+            return true;
+        }
+
+        var range = new TextRange(start, end);
+        object weightValue = range.GetPropertyValue(TextElement.FontWeightProperty);
+        object styleValue = range.GetPropertyValue(TextElement.FontStyleProperty);
+        object decorationsValue = range.GetPropertyValue(Inline.TextDecorationsProperty);
+        if (weightValue == DependencyProperty.UnsetValue
+            || styleValue == DependencyProperty.UnsetValue
+            || decorationsValue == DependencyProperty.UnsetValue)
+        {
+            return false;
+        }
+
+        bool bold = weightValue is FontWeight weight && weight >= FontWeights.Bold;
+        bool italic = styleValue is System.Windows.FontStyle fontStyle
+            && (fontStyle == FontStyles.Italic || fontStyle == FontStyles.Oblique);
+        bool underline = decorationsValue is TextDecorationCollection decorations
+            && decorations.Any(decoration => decoration.Location == TextDecorationLocation.Underline);
+        if (bold || italic || underline)
+        {
+            style = new ZenEditorTextStyle(plainOffset, plainLength, bold, italic, underline);
+        }
+
+        return true;
     }
 
     private int GetPlainTextIndex(TextPointer position)
