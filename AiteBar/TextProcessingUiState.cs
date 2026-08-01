@@ -47,7 +47,7 @@ internal readonly record struct TextProcessingUiState(
             isIdle && text.Length > 0,
             isIdle && input.HasSuccessfulResult && text.Length > 0 && modelsReady,
             isIdle && input.HasSuccessfulResult,
-            isIdle,
+            isIdle && !input.IsLoadingModels,
             isIdle && !input.IsLoadingModels && input.HasEligibleModel);
     }
 }

@@ -203,21 +203,32 @@ public partial class TextProcessingWindow : DarkWindow
             {
                 await ProcessAsync(repeatLast: false);
             }
+            return;
         }
-        else if (e.Key == Key.Escape && _isProcessing)
+        if (e.Key == Key.Escape)
         {
             e.Handled = true;
-            CancelProcessing();
+            if (_isProcessing)
+            {
+                CancelProcessing();
+            }
+            else
+            {
+                Close();
+            }
+            return;
         }
-        else if (e.Key == Key.Z && Keyboard.Modifiers == ModifierKeys.Control)
+        if (e.Key == Key.Z && Keyboard.Modifiers == ModifierKeys.Control)
         {
             e.Handled = true;
             UndoEditor();
+            return;
         }
-        else if (e.Key == Key.Y && Keyboard.Modifiers == ModifierKeys.Control)
+        if (e.Key == Key.Y && Keyboard.Modifiers == ModifierKeys.Control)
         {
             e.Handled = true;
             RedoEditor();
+            return;
         }
     }
 
@@ -1395,13 +1406,4 @@ public partial class TextProcessingWindow : DarkWindow
             settings.TextProcessingWindowState = state;
         });
     }
-}
-
-public sealed record ModelItem(
-    string? ProviderId,
-    string? ModelId,
-    string Display,
-    int? ContextLength)
-{
-    public string FullDisplay { get; init; } = Display;
 }
