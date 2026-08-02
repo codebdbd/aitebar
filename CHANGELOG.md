@@ -9,6 +9,18 @@
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-08-02
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Утилита Prompt Builder**: Новое окно конструирования промптов с шаблонами ролей, переменными, предпросмотром, историей и интеграцией с AiGateway; отдельные юнит- и интеграционные тесты и ExecPlan.
+- **Prompt Builder utility**: New prompt-construction window with role templates, variables, preview, history, and AiGateway integration; dedicated unit/integration tests and ExecPlan.
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Обработка текста — расширенные режимы**: Дополнены режимы работы сервиса, синхронизирована разметка окна и code-behind; расширены контрактные тесты сервиса, визуального слоя и layout.
+- **Text Processing extended modes**: Additional service modes, synchronized window markup and code-behind; expanded service, visual, and layout contract tests.
+- **Документация и локализация**: Обновлены `functions.md`, `USER_MANUAL.md`, `README.md`, строковые ресурсы Strings.ru/uk/de.resx для Prompt Builder и изменений TextProcessing.
+- **Docs and localization**: Updated `functions.md`, `USER_MANUAL.md`, `README.md`, and Strings.ru/uk/de.resx resources for Prompt Builder and TextProcessing changes.
+
 ## [1.13.0] - 2026-08-02
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added
