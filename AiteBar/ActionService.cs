@@ -373,43 +373,52 @@ public class ActionService
     public async Task StartScreenshotAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
-        using var _ = _runtime.StartProcess(new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true });
+        using var process = _runtime.StartProcess(
+            new ProcessStartInfo("ms-screenclip:") { UseShellExecute = true }) ??
+            throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
     }
 
     public async Task StartRecordVideoAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
-        using var _ = _runtime.StartProcess(new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true });
+        using var process = _runtime.StartProcess(
+            new ProcessStartInfo("ms-screenclip:?type=recording") { UseShellExecute = true }) ??
+            throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
     }
 
     public async Task StartCalculatorAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
-        using var _ = _runtime.StartProcess("calc.exe");
+        using var process = _runtime.StartProcess("calc.exe") ??
+            throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
     }
 
     public async Task StartExplorerAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
-        using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("explorer.exe"));
+        using var process = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("explorer.exe")) ??
+            throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
     }
 
     public async Task StartDownloadsAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
-        using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:Downloads"));
+        using var process = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:Downloads")) ??
+            throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
     }
 
     public async Task StartShowDesktopAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
-        using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:::{3080F90D-D7AD-11D9-BD98-0000947B0257}"));
+        using var process = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:::{3080F90D-D7AD-11D9-BD98-0000947B0257}")) ??
+            throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
     }
 
     public async Task StartAppsFolderAsync(Func<Task>? onBeforeExecute = null)
     {
         if (onBeforeExecute != null) await onBeforeExecute().ConfigureAwait(false);
-        using var _ = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:AppsFolder"));
+        using var process = _runtime.StartProcess(BuildShellLaunchProcessStartInfo("shell:AppsFolder")) ??
+            throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
     }
 
     public async Task StartCopilotAsync(Func<Task>? onBeforeExecute = null)

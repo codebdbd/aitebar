@@ -50,6 +50,8 @@ public partial class TextProcessingWindow : DarkWindow
     private bool _isProcessing;
     private bool _hasClipboardText;
     private bool _hasEligibleModel;
+    private bool _hasAutomaticModel;
+    private bool _hasSelectableModel;
     private bool _hasSuccessfulResult;
     private bool _isShowingOriginal;
     private bool _isShowingDiff;
@@ -81,7 +83,7 @@ public partial class TextProcessingWindow : DarkWindow
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _mainWindow = mainWindow;
         _gateway = new AiGateway(settingsService);
-        _currentMode = ParseSavedMode(settingsService.Settings.TextProcessingLastMode);
+        _currentMode = TextProcessingMode.Proofread;
         InitializeComponent();
         _progressTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) =>
             UpdateProcessingProgress(), Dispatcher);
@@ -243,9 +245,9 @@ public partial class TextProcessingWindow : DarkWindow
             "Proofread" => TextProcessingMode.Proofread,
             "Typography" => TextProcessingMode.Typography,
             "Cleanup" => TextProcessingMode.Cleanup,
+            "LiteraryEdit" => TextProcessingMode.LiteraryEdit,
             _ => _currentMode
         };
-        SaveModeSelection();
         ApplyModeToUi();
         RefreshUiState();
     }
@@ -279,6 +281,7 @@ public partial class TextProcessingWindow : DarkWindow
         _isAutoModel = item.ModelId == null;
         _selectedProviderId = item.ProviderId;
         _selectedModelId = item.ModelId;
+        UpdateSelectedModelAvailability();
         SaveModelSelection();
         SetStatus(string.Empty);
         RefreshUiState();
@@ -550,6 +553,7 @@ public partial class TextProcessingWindow : DarkWindow
         {
             if (!_models.Any(model =>
                     model.ModelId != null &&
+                    model.Tier == TextProcessingModelTier.CertifiedAutomatic &&
                     (!model.ContextLength.HasValue || request.RequiredContextTokens <= model.ContextLength.Value)))
             {
                 SetStatus(LocalizationService.Get("TextProcessing_ErrorContextOverflow"));
@@ -610,6 +614,16 @@ public partial class TextProcessingWindow : DarkWindow
                 SetStatus(LocalizationService.Get("TextProcessing_ErrorEmptyResponse"));
                 return;
             }
+            if (TextProcessingService.ViolatesContentPreservation(
+                    input,
+                    cleaned,
+                    protectedInput.Fragments.Values,
+                    TextProcessingService.GetMinimumWordOverlap(mode)))
+            {
+                SetEditorText(textShownBeforeRequest);
+                SetStatus(LocalizationService.Get("TextProcessing_ErrorContentChanged"));
+                return;
+            }
             _originalText = input;
             _processedText = cleaned;
             _hasSuccessfulResult = true;
@@ -650,13 +664,7 @@ public partial class TextProcessingWindow : DarkWindow
         {
             Logger.Log(ex);
             SetEditorText(textShownBeforeRequest);
-            SetStatus(ex.InnerException switch
-            {
-                AiProviderHttpException providerError => GetProviderError(providerError),
-                HttpRequestException => LocalizationService.Get("TextProcessing_ErrorNetwork"),
-                TimeoutException => LocalizationService.Get("TextProcessing_ErrorTimeout"),
-                _ => LocalizationService.Get("TextProcessing_ErrorNoModels")
-            });
+            SetStatus(GetAvailabilityError(ex));
         }
         catch (AiProviderHttpException ex)
         {
@@ -718,6 +726,25 @@ public partial class TextProcessingWindow : DarkWindow
         System.Net.HttpStatusCode.TooManyRequests => LocalizationService.Get("TextProcessing_ErrorRateLimit"),
         _ when (int)ex.StatusCode >= 500 => LocalizationService.Get("TextProcessing_ErrorUnavailable"),
         _ => LocalizationService.Get("TextProcessing_ErrorGeneric")
+    };
+
+    internal static string GetAvailabilityError(NoAvailableConnectionException ex) => ex.Reason switch
+    {
+        AiAvailabilityFailureReason.NoConnectionsConfigured => LocalizationService.Get("TextProcessing_ErrorNoModels"),
+        AiAvailabilityFailureReason.RateLimited => LocalizationService.Get("TextProcessing_ErrorRateLimit"),
+        AiAvailabilityFailureReason.QuotaExhausted => LocalizationService.Get("TextProcessing_ErrorQuota"),
+        AiAvailabilityFailureReason.Unauthorized => LocalizationService.Get("TextProcessing_ErrorUnauthorized"),
+        AiAvailabilityFailureReason.Forbidden => LocalizationService.Get("TextProcessing_ErrorForbidden"),
+        AiAvailabilityFailureReason.Network => LocalizationService.Get("TextProcessing_ErrorNetwork"),
+        AiAvailabilityFailureReason.Timeout => LocalizationService.Get("TextProcessing_ErrorTimeout"),
+        AiAvailabilityFailureReason.TemporarilyUnavailable => LocalizationService.Get("TextProcessing_ErrorUnavailable"),
+        _ => ex.InnerException switch
+        {
+            AiProviderHttpException providerError => GetProviderError(providerError),
+            HttpRequestException => LocalizationService.Get("TextProcessing_ErrorNetwork"),
+            TimeoutException => LocalizationService.Get("TextProcessing_ErrorTimeout"),
+            _ => LocalizationService.Get("TextProcessing_ErrorUnavailable")
+        }
     };
 
     private void CancelProcessing() => _processingCts?.Cancel();
@@ -908,7 +935,8 @@ public partial class TextProcessingWindow : DarkWindow
         ModeProofread.IsEnabled = state.CanSelectMode;
         ModeTypography.IsEnabled = state.CanSelectMode;
         ModeCleanup.IsEnabled = state.CanSelectMode;
-        CmbModels.IsEnabled = state.CanSelectModel;
+        ModeLiteraryEdit.IsEnabled = state.CanSelectMode;
+        CmbModels.IsEnabled = !_isProcessing && !_isLoadingModels && _hasSelectableModel;
         BtnRefreshModels.IsEnabled = !_isProcessing && !_isLoadingModels;
         BtnPaste.IsEnabled = state.CanPaste;
         BtnCopy.IsEnabled = state.CanCopy;
@@ -1089,11 +1117,13 @@ public partial class TextProcessingWindow : DarkWindow
         ModeProofread.IsSelected = _currentMode == TextProcessingMode.Proofread;
         ModeTypography.IsSelected = _currentMode == TextProcessingMode.Typography;
         ModeCleanup.IsSelected = _currentMode == TextProcessingMode.Cleanup;
+        ModeLiteraryEdit.IsSelected = _currentMode == TextProcessingMode.LiteraryEdit;
         TxtModeDescription.Text = _currentMode switch
         {
             TextProcessingMode.Proofread => LocalizationService.Get("TextProcessing_ModeProofreadDesc"),
             TextProcessingMode.Typography => LocalizationService.Get("TextProcessing_ModeTypographyDesc"),
             TextProcessingMode.Cleanup => LocalizationService.Get("TextProcessing_ModeCleanupDesc"),
+            TextProcessingMode.LiteraryEdit => LocalizationService.Get("TextProcessing_ModeLiteraryEditDesc"),
             _ => string.Empty
         };
     }
@@ -1139,6 +1169,8 @@ public partial class TextProcessingWindow : DarkWindow
     {
         _isLoadingModels = true;
         _hasEligibleModel = false;
+        _hasAutomaticModel = false;
+        _hasSelectableModel = false;
         _models.Clear();
         string automaticLabel = LocalizationService.Get("TextProcessing_ModelAuto");
         _models.Add(new ModelItem(null, null, automaticLabel, null) { FullDisplay = automaticLabel });
@@ -1182,8 +1214,11 @@ public partial class TextProcessingWindow : DarkWindow
         {
             _models.Add(model);
         }
-        _hasEligibleModel = logicalModels.Count > 0;
+        _hasAutomaticModel = logicalModels.Any(model =>
+            model.Tier == TextProcessingModelTier.CertifiedAutomatic);
+        _hasSelectableModel = logicalModels.Count > 0;
         RestoreModelSelection();
+        UpdateSelectedModelAvailability();
         _isLoadingModels = false;
         RefreshUiState();
     }
@@ -1193,7 +1228,7 @@ public partial class TextProcessingWindow : DarkWindow
         !model.IsDeprecated &&
         (model.Capabilities & AiCapabilities.Text) == AiCapabilities.Text &&
         (model.CostStatus is AiCostStatus.VerifiedFree or AiCostStatus.FreeTierAvailable) &&
-        TextProcessingService.IsSuitableForWritingModel(model);
+        TextProcessingModelPolicy.Classify(model) != TextProcessingModelTier.Unsupported;
 
     private static bool HasVisibleModelText(string? value) =>
         !string.IsNullOrEmpty(value) && value.Any(character =>
@@ -1241,7 +1276,12 @@ public partial class TextProcessingWindow : DarkWindow
             return new
             {
                 Identity = pair.Key,
-                Item = new ModelItem(first.ProviderId, first.ModelId, display, contextLength)
+                Item = new ModelItem(
+                    first.ProviderId,
+                    first.ModelId,
+                    display,
+                    contextLength,
+                    TextProcessingModelPolicy.Classify(first))
             };
         }).ToList();
 
@@ -1293,18 +1333,17 @@ public partial class TextProcessingWindow : DarkWindow
         CmbModels.SelectedItem = model;
         _selectedProviderId = model.ProviderId;
         _selectedModelId = model.ModelId;
+        UpdateSelectedModelAvailability();
         return true;
     }
 
-    private static TextProcessingMode ParseSavedMode(int value) =>
-        Enum.IsDefined(typeof(TextProcessingMode), value)
-            ? (TextProcessingMode)value
-            : TextProcessingMode.Proofread;
-
-    private void SaveModeSelection()
+    private void UpdateSelectedModelAvailability()
     {
-        _settingsService.UpdateSettings(settings =>
-            settings.TextProcessingLastMode = (int)_currentMode);
+        _hasEligibleModel = _isAutoModel
+            ? _hasAutomaticModel
+            : CmbModels.SelectedItem is ModelItem selected &&
+              selected.ModelId != null &&
+              selected.Tier != TextProcessingModelTier.Unsupported;
     }
 
     private void RestoreModelSelection()

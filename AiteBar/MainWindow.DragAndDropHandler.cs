@@ -274,7 +274,11 @@ public partial class MainWindow
             }
         }
         
-        return bestTargetIndex;
+        UnifiedButtonType draggedType = _currentUnifiedButtons[_draggedOriginalIndex].Type;
+        return Enumerable.Range(0, _currentUnifiedButtons.Count)
+            .Where(index => _currentUnifiedButtons[index].Type == draggedType)
+            .OrderBy(index => Math.Abs(index - bestTargetIndex))
+            .FirstOrDefault(_draggedOriginalIndex);
     }
 
     private void UpdateUnifiedReorderPositions(Point currentPos)

@@ -86,6 +86,7 @@ public sealed class CommandButtonStyleTests
     [Theory]
     [InlineData("TimerStopwatchWindow.xaml", "name", "BtnStartPause", "PrimaryCommandButtonStyle")]
     [InlineData("TimerStopwatchWindow.xaml", "name", "BtnReset", "CommandButtonStyle")]
+    [InlineData("FileSorterWindow.xaml", "name", "BtnAddFolder", "CommandButtonStyle")]
     [InlineData("FileSorterWindow.xaml", "name", "BtnSort", "PrimaryCommandButtonStyle")]
     [InlineData("IconConverterWindow.xaml", "click", "BtnChoose_Click", "CommandButtonStyle")]
     [InlineData("IconConverterWindow.xaml", "name", "BtnSave", "PrimaryCommandButtonStyle")]
@@ -156,6 +157,35 @@ public sealed class CommandButtonStyleTests
                 "pack://application:,,,/Resources/#FluentSystemIcons-Regular",
                 button.Attribute("FontFamily")?.Value);
         }
+    }
+
+    [Fact]
+    public void MainPanelButtons_HaveVisibleKeyboardFocusGeometry()
+    {
+        XDocument window = LoadXaml("MainWindow.xaml");
+        XElement[] focusChromeBorders = window
+            .Descendants(PresentationNamespace + "Border")
+            .Where(element => string.Equals(
+                element.Attribute(XamlNamespace + "Name")?.Value,
+                "FocusChrome",
+                StringComparison.Ordinal))
+            .ToArray();
+
+        Assert.Equal(2, focusChromeBorders.Length);
+        Assert.All(focusChromeBorders, border =>
+        {
+            Assert.Equal("1", border.Attribute("BorderThickness")?.Value);
+            Assert.Equal("Transparent", border.Attribute("BorderBrush")?.Value);
+        });
+
+        Assert.Equal(2, window.Descendants(PresentationNamespace + "MultiTrigger").Count(trigger =>
+            trigger.Descendants(PresentationNamespace + "Condition").Any(condition =>
+                condition.Attribute("Property")?.Value == "local:KeyboardFocusVisualService.ShowKeyboardFocusCue" &&
+                condition.Attribute("Value")?.Value == "True") &&
+            trigger.Descendants(PresentationNamespace + "Setter").Any(setter =>
+                setter.Attribute("TargetName")?.Value == "FocusChrome" &&
+                setter.Attribute("Property")?.Value == "BorderBrush" &&
+                setter.Attribute("Value")?.Value == "#3ABEFF")));
     }
 
     [Fact]

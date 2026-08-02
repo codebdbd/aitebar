@@ -142,6 +142,10 @@
                              Header="{local:Loc ResourceKey=TextProcessing_ModeCleanup}"
                              Style="{StaticResource TextProcessingTabItemStyle}"
                              AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeCleanup}"/>
+                    <TabItem x:Name="ModeLiteraryEdit" Tag="LiteraryEdit"
+                             Header="{local:Loc ResourceKey=TextProcessing_ModeLiteraryEdit}"
+                             Style="{StaticResource TextProcessingTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeLiteraryEdit}"/>
                 </TabControl>
             </Border>
 
@@ -167,15 +171,6 @@
                 <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ErrorTooLong}"
                            FontSize="13" Foreground="{StaticResource TextProcessingWarningBrush}"
                            TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive"/>
-            </Border>
-
-            <Border x:Name="StatusBorder" DockPanel.Dock="Top"
-                    Background="{StaticResource TextProcessingErrorBackgroundBrush}"
-                    BorderBrush="{StaticResource TextProcessingErrorBrush}" BorderThickness="1"
-                    CornerRadius="6" Padding="14,10" Margin="0,0,0,12"
-                    Visibility="Collapsed" AutomationProperties.LiveSetting="Assertive">
-                <TextBlock x:Name="TxtStatusMessage" TextWrapping="Wrap"
-                           FontSize="13" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
             </Border>
 
             <Grid DockPanel.Dock="Bottom" Height="52" Margin="0,16,0,0">
@@ -384,6 +379,17 @@
                         </StackPanel>
                     </Button>
                 </StackPanel>
+
+                <Border x:Name="StatusBorder"
+                        Grid.Column="0" Grid.ColumnSpan="3"
+                        Panel.ZIndex="10" VerticalAlignment="Top"
+                        Background="{StaticResource TextProcessingErrorBackgroundBrush}"
+                        BorderBrush="{StaticResource TextProcessingErrorBrush}" BorderThickness="1"
+                        CornerRadius="6" Padding="14,10" Margin="0,0,0,0"
+                        Visibility="Collapsed" AutomationProperties.LiveSetting="Assertive">
+                    <TextBlock x:Name="TxtStatusMessage" TextWrapping="Wrap"
+                               FontSize="13" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
+                </Border>
             </Grid>
 
                 </DockPanel>

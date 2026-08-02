@@ -90,6 +90,7 @@ jobs:
           $wpfClasses = @(
             "ClipboardManagerWindowBehaviorTests",
             "CommandButtonStyleTests",
+            "FileSorterWindowBehaviorTests",
             "FormControlHeightTests",
             "MainWindowIconConverterOrientationTests",
             "ZenEditorWindowBehaviorTests",
@@ -111,6 +112,7 @@ jobs:
           $wpfClasses = @(
             "ClipboardManagerWindowBehaviorTests",
             "CommandButtonStyleTests",
+            "FileSorterWindowBehaviorTests",
             "FormControlHeightTests",
             "MainWindowIconConverterOrientationTests",
             "ZenEditorWindowBehaviorTests",

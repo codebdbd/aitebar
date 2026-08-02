@@ -146,7 +146,9 @@ public sealed class FileSorterService
             ["astro"] = "FileSorter_CategoryWeb"
         };
 
-    public async Task<FileSortResult> SortFilesAsync(string rootPath)
+    public async Task<FileSortResult> SortFilesAsync(
+        string rootPath,
+        IProgress<FileSortProgress>? progress = null)
     {
         if (string.IsNullOrWhiteSpace(rootPath))
         {
@@ -161,9 +163,12 @@ public sealed class FileSorterService
         }
 
         int skippedCount = 0;
+        int processedCount = 0;
         var entries = new List<FileSortOperationEntry>();
+        List<string> filePaths = Directory.EnumerateFiles(rootFullPath).ToList();
+        progress?.Report(new FileSortProgress(rootPath, processedCount, filePaths.Count));
 
-        foreach (string filePath in Directory.EnumerateFiles(rootFullPath).ToList())
+        foreach (string filePath in filePaths)
         {
             FileInfo? fileInfo;
             try
@@ -174,6 +179,8 @@ public sealed class FileSorterService
             {
                 Logger.Log(new IOException($"File sorter could not access '{filePath}'.", ex));
                 skippedCount++;
+                processedCount++;
+                progress?.Report(new FileSortProgress(rootPath, processedCount, filePaths.Count));
                 continue;
             }
 
@@ -182,6 +189,8 @@ public sealed class FileSorterService
                 IsFileTooLarge(fileInfo, _maxMovableFileBytes))
             {
                 skippedCount++;
+                processedCount++;
+                progress?.Report(new FileSortProgress(rootPath, processedCount, filePaths.Count));
                 continue;
             }
 
@@ -214,6 +223,9 @@ public sealed class FileSorterService
                 Logger.Log(new IOException($"File sorter skipped '{filePath}' while sorting '{rootPath}'.", ex));
                 skippedCount++;
             }
+
+            processedCount++;
+            progress?.Report(new FileSortProgress(rootPath, processedCount, filePaths.Count));
         }
 
         return new FileSortResult
@@ -309,6 +321,109 @@ public sealed class FileSorterService
                     CompletedAtUtc = undoState.CompletedAtUtc,
                     Entries = remainingEntries
                 }
+        };
+    }
+
+    public async Task<MultiFileSortResult> SortMultipleFoldersAsync(
+        IEnumerable<string> rootPaths,
+        IProgress<MultiFileSortProgress>? progress = null)
+    {
+        ArgumentNullException.ThrowIfNull(rootPaths);
+
+        var rootPathList = rootPaths.ToList();
+        if (rootPathList.Count == 0)
+        {
+            return new MultiFileSortResult();
+        }
+
+        int total = rootPathList.Count;
+        var perFolderResults = new List<FileSortResult>(total);
+        var undoStates = new List<FileSortUndoState>(total);
+
+        for (int i = 0; i < total; i++)
+        {
+            string rootPath = rootPathList[i];
+            IProgress<FileSortProgress>? folderProgress = progress == null
+                ? null
+                : new CallbackProgress<FileSortProgress>(folder => progress.Report(
+                    new MultiFileSortProgress(
+                        folder.RootPath,
+                        i,
+                        total,
+                        folder.ProcessedFiles,
+                        folder.TotalFiles)));
+
+            FileSortResult result;
+            try
+            {
+                result = await SortFilesAsync(rootPath, folderProgress);
+            }
+            catch (Exception ex)
+            {
+                throw new MultiFileSortException(
+                    rootPath,
+                    CreateMultiFileSortResult(perFolderResults, undoStates),
+                    ex);
+            }
+
+            perFolderResults.Add(result);
+            if (result.UndoState != null)
+            {
+                undoStates.Add(result.UndoState);
+            }
+        }
+
+        return CreateMultiFileSortResult(perFolderResults, undoStates);
+    }
+
+    private static MultiFileSortResult CreateMultiFileSortResult(
+        List<FileSortResult> perFolderResults,
+        List<FileSortUndoState> undoStates) =>
+        new()
+        {
+            PerFolder = [.. perFolderResults],
+            CombinedUndoState = undoStates.Count == 0
+                ? null
+                : new MultiFileSortUndoState { PerFolder = [.. undoStates] }
+        };
+
+    private sealed class CallbackProgress<T>(Action<T> callback) : IProgress<T>
+    {
+        public void Report(T value) => callback(value);
+    }
+
+    public async Task<MultiFileSortUndoResult> UndoMultipleAsync(MultiFileSortUndoState multiUndoState)
+    {
+        ArgumentNullException.ThrowIfNull(multiUndoState);
+
+        if (multiUndoState.PerFolder == null || multiUndoState.PerFolder.Count == 0)
+        {
+            return new MultiFileSortUndoResult();
+        }
+
+        int totalRestored = 0;
+        int totalSkipped = 0;
+        var remainingFolders = new List<FileSortUndoState>();
+
+        // Reverse: undo in opposite order of sorting to reduce conflicts
+        foreach (FileSortUndoState folderState in Enumerable.Reverse(multiUndoState.PerFolder))
+        {
+            FileSortUndoResult folderResult = await UndoLastSortAsync(folderState);
+            totalRestored += folderResult.RestoredCount;
+            totalSkipped += folderResult.SkippedCount;
+            if (folderResult.RemainingUndoState != null)
+            {
+                remainingFolders.Insert(0, folderResult.RemainingUndoState);
+            }
+        }
+
+        return new MultiFileSortUndoResult
+        {
+            TotalRestored = totalRestored,
+            TotalSkipped = totalSkipped,
+            RemainingUndoState = remainingFolders.Count == 0
+                ? null
+                : new MultiFileSortUndoState { PerFolder = remainingFolders }
         };
     }
 

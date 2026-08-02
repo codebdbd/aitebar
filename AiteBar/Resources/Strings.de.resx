@@ -35,6 +35,7 @@
   <data name="AppSettingsWindow_NextPanel" xml:space="preserve"><value>Nächste Leiste</value></data>
   <data name="AppSettingsWindow_PreviousPanel" xml:space="preserve"><value>Vorherige Leiste</value></data>
   <data name="AppSettingsWindow_AddButton" xml:space="preserve"><value>Schaltfläche hinzufügen</value></data>
+  <data name="AppSettingsWindow_ShowPanelOnMouseHover" xml:space="preserve"><value>Leiste bei Mauszeigerkontakt anzeigen</value></data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicator" xml:space="preserve"><value>Position der Leiste anzeigen</value></data>
   <data name="ShowPanel" xml:space="preserve"><value>Leiste anzeigen</value></data>
   <data name="HideIndicator" xml:space="preserve"><value>Anzeige ausblenden</value></data>
@@ -49,6 +50,7 @@
   <data name="Monitor_Format" xml:space="preserve"><value>Monitor {0}{1}</value></data>
   <data name="Monitor_PrimarySuffix" xml:space="preserve"><value> (Primär)</value></data>
   <data name="Main_AddButtonTooltip" xml:space="preserve"><value>Schaltfläche hinzufügen</value></data>
+  <data name="Main_ContextIndicatorTooltipFormat" xml:space="preserve"><value>Kontext {0}: {1}</value></data>
   <data name="Main_SearchTooltip" xml:space="preserve"><value>Google-Suche (Zwischenablage)</value></data>
   <data name="Main_ScreenshotTooltip" xml:space="preserve"><value>Screenshot</value></data>
   <data name="Main_RecordTooltip" xml:space="preserve"><value>Videoaufnahme</value></data>
@@ -367,6 +369,26 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="FileSorter_CategoryWeb" xml:space="preserve"><value>Web</value></data>
   <data name="FileSorter_CategoryOther" xml:space="preserve"><value>Sonstiges</value></data>
   <data name="FileSorter_RootPathRequired" xml:space="preserve"><value>Ein Ordnerpfad ist erforderlich.</value></data>
+  <data name="FileSorter_SortMultipleFormat" xml:space="preserve"><value>Sortieren ({0})</value></data>
+  <data name="FileSorter_AddFolder" xml:space="preserve"><value>+ Ordner hinzufügen…</value></data>
+  <data name="FileSorter_LoadingCurrentFolderFormat" xml:space="preserve"><value>Sortiere {0}/{1}: {2}</value></data>
+  <data name="FileSorter_CompletedMultiFormat" xml:space="preserve"><value>{0} Dateien in {1} Ordnern sortiert</value></data>
+  <data name="FileSorter_UndoCompletedMultiFormat" xml:space="preserve"><value>{0} Dateien wiederhergestellt.</value></data>
+  <data name="FileSorter_UndoPartialMultiFormat" xml:space="preserve"><value>{0} Dateien wiederhergestellt, {1} übersprungen.</value></data>
+  <data name="FileSorter_NoFoldersSelected" xml:space="preserve"><value>Wählen Sie mindestens einen zu sortierenden Ordner aus.</value></data>
+  <data name="FileSorter_FolderAlreadyAdded" xml:space="preserve"><value>Dieser Ordner wurde bereits hinzugefügt.</value></data>
+  <data name="FileSorter_RemoveFolderContextMenu" xml:space="preserve"><value>Ordner entfernen</value></data>
+  <data name="FileSorter_SelectedCountFormat" xml:space="preserve"><value>Ausgewählt: {0}</value></data>
+  <data name="FileSorter_StatusReady" xml:space="preserve"><value>Bereit zum Sortieren</value></data>
+  <data name="FileSorter_StatusSortingFormat" xml:space="preserve"><value>Ordner {0} von {1} wird verarbeitet</value></data>
+  <data name="FileSorter_RowProgressFormat" xml:space="preserve"><value>{0}/{1} Dateien</value></data>
+  <data name="FileSorter_RowSortedFormat" xml:space="preserve"><value>✓ {0} Dateien</value></data>
+  <data name="FileSorter_RowError" xml:space="preserve"><value>Fehler</value></data>
+  <data name="FileSorter_StatusError" xml:space="preserve"><value>Der Vorgang ist fehlgeschlagen.</value></data>
+  <data name="FileSorter_UndoFolderTooltip" xml:space="preserve"><value>Letzte Sortierung rückgängig machen</value></data>
+  <data name="FileSorter_OpenFolderTooltip" xml:space="preserve"><value>Ordner öffnen</value></data>
+  <data name="FileSorter_RowUndoing" xml:space="preserve"><value>Rückgängig…</value></data>
+  <data name="FileSorter_StatusUndoing" xml:space="preserve"><value>Dateien werden wiederhergestellt…</value></data>
   <data name="IconPicker_InvalidFluentMetadata" xml:space="preserve"><value>Fluent-Symbolmetadaten konnten nicht gelesen werden.</value></data>
   <data name="PanelPackage_ExportPathRequired" xml:space="preserve"><value>Ein Pfad für den Panel-Export ist erforderlich.</value></data>
   <data name="PanelPackage_ActivePanelNotFound" xml:space="preserve"><value>Aktives Panel wurde nicht gefunden.</value></data>
@@ -588,6 +610,7 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="AppSettingsWindow_EdgeHint" xml:space="preserve"><value>Wählen Sie den Bildschirmrand, an dem die Leiste erscheint.</value></data>
   <data name="AppSettingsWindow_PanelSizeHint" xml:space="preserve"><value>Länge der Leiste am gewählten Rand: 50 % ist der halbe Bildschirm, 100 % der gesamte Rand.</value></data>
   <data name="AppSettingsWindow_DelayHint" xml:space="preserve"><value>Verweildauer des Zeigers am Rand: 100 ms öffnet schnell, 500 ms verhindert versehentliches Öffnen.</value></data>
+  <data name="AppSettingsWindow_ShowPanelOnMouseHoverHint" xml:space="preserve"><value>Öffnet die Leiste, wenn der Mauszeiger in der Aktivierungszone am Bildschirmrand verweilt.</value></data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicatorHint" xml:space="preserve"><value>Zeigt die aktuelle Position der Leiste im Windows-Taskleistenbereich.</value></data>
   <data name="AppSettingsWindow_SecondaryMonitorHint" xml:space="preserve"><value>Platziert die Leiste auf dem zweiten Bildschirm, falls verfügbar.</value></data>
   <data name="AppSettingsWindow_CheckForUpdatesHint" xml:space="preserve"><value>Automatisch nach einer neueren AiteBar-Version suchen.</value></data>
@@ -663,9 +686,11 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Text korrigieren</value></data>
   <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Typografie</value></data>
   <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Text bereinigen</value></data>
+  <data name="TextProcessing_ModeLiteraryEdit" xml:space="preserve"><value>Literarisches Lektorat</value></data>
   <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Korrigiert Rechtschreib-, Grammatik- und Zeichensetzungsfehler.</value></data>
   <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Setzt korrekte Anführungszeichen, Gedankenstriche, Leerzeichen und typografische Zeichen.</value></data>
   <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Entfernt technische Artefakte, überflüssige Zeilenumbrüche und Steuerzeichen aus PDF und HTML.</value></data>
+  <data name="TextProcessing_ModeLiteraryEditDesc" xml:space="preserve"><value>Verbessert Klarheit, Rhythmus und Stil und bewahrt dabei Bedeutung, Fakten und Autorenstimme.</value></data>
   <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Text prüfen</value></data>
   <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Typografie anwenden</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Bereinigen</value></data>
@@ -689,8 +714,9 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_Words" xml:space="preserve"><value>{0} Wörter</value></data>
   <data name="TextProcessing_ErrorTooLong" xml:space="preserve"><value>Text ist zu lang. Maximale Größe ist 50.000 Zeichen.</value></data>
   <data name="TextProcessing_ErrorContextOverflow" xml:space="preserve"><value>Text passt nicht in den Kontext des ausgewählten Modells. Wählen Sie ein anderes Modell oder kürzen Sie den Text.</value></data>
-  <data name="TextProcessing_ErrorNoModels" xml:space="preserve"><value>Keine KI-Verbindungen hinzugefügt. Fügen Sie eine Verbindung in den Programmeinstellungen hinzu.</value></data>
+  <data name="TextProcessing_ErrorNoModels" xml:space="preserve"><value>Kein geeignetes Modell verfügbar. Wählen Sie ein verfügbares Modell manuell aus oder fügen Sie in den Einstellungen ein geprüftes Modell hinzu.</value></data>
   <data name="TextProcessing_ErrorEmptyResponse" xml:space="preserve"><value>Die KI hat eine leere Antwort zurückgegeben. Versuchen Sie es erneut.</value></data>
+  <data name="TextProcessing_ErrorContentChanged" xml:space="preserve"><value>Die KI hat Sprache oder Inhalt geändert. Das Ergebnis wurde verworfen und der vorherige Text beibehalten.</value></data>
   <data name="TextProcessing_ErrorGeneric" xml:space="preserve"><value>Verarbeitung fehlgeschlagen. Versuchen Sie es erneut.</value></data>
   <data name="TextProcessing_ConfirmRepeat" xml:space="preserve"><value>Die erneute Verarbeitung ersetzt das bearbeitete Ergebnis. Fortfahren?</value></data>
   <data name="TextProcessing_ConfirmClose" xml:space="preserve"><value>Fenster schließen? Der eingegebene Text wird nicht gespeichert.</value></data>
@@ -755,6 +781,9 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="ZenEditor_Retry" xml:space="preserve"><value>Wiederholen</value></data>
   <data name="ZenEditor_Dismiss" xml:space="preserve"><value>Meldung schließen</value></data>
   <data name="ZenEditor_Recovered" xml:space="preserve"><value>Das letzte Dokument war beschädigt. Der Zen-Editor hat die neueste gültige Sicherung wiederhergestellt.</value></data>
+  <data name="Main_MoreButtonsFormat" xml:space="preserve"><value>Mehr ({0})</value></data>
+  <data name="Main_DragHandleTooltip" xml:space="preserve"><value>Leiste an einen anderen Bildschirmrand ziehen</value></data>
+  <data name="Action_TargetNotFound" xml:space="preserve"><value>Die Datei oder der Ordner ist nicht mehr vorhanden: {0}</value></data>
 </root>
 
 

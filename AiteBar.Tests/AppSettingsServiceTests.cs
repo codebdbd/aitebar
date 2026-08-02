@@ -174,6 +174,29 @@ public sealed class AppSettingsServiceTests
     }
 
     [Fact]
+    public async Task LoadAsync_LegacySettingsWithoutMouseHoverOption_PreservesHoverActivation()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string settingsPath = Path.Combine(root, "settings.json");
+        string configPath = Path.Combine(root, "custom_buttons.json");
+
+        try
+        {
+            await File.WriteAllTextAsync(settingsPath, "{}");
+            var service = new AppSettingsService(configPath, settingsPath);
+
+            await service.LoadAsync();
+
+            Assert.True(service.Settings.ShowPanelOnMouseHover);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
     public void GetBackupFilePath_ReturnsCorrectPath()
     {
         string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
@@ -1004,6 +1027,7 @@ public sealed class AppSettingsServiceTests
             UiCulture = "de",
             ActiveContextId = "context-3",
             CheckForUpdatesEnabled = false,
+            ShowPanelOnMouseHover = false,
             ShowTaskbarPositionIndicator = false,
             TaskbarIndicatorPositionX = 0.75,
             TaskbarIndicatorPositionY = 0.25,
@@ -1132,6 +1156,7 @@ public sealed class AppSettingsServiceTests
         Assert.Equal("de", clone.UiCulture);
         Assert.Equal("context-3", clone.ActiveContextId);
         Assert.False(clone.CheckForUpdatesEnabled);
+        Assert.False(clone.ShowPanelOnMouseHover);
         Assert.False(clone.ShowTaskbarPositionIndicator);
         Assert.Equal(0.75, clone.TaskbarIndicatorPositionX);
         Assert.Equal(0.25, clone.TaskbarIndicatorPositionY);

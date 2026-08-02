@@ -9,6 +9,30 @@
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-08-02
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Литературная редакция текста**: В «Обработку текста» добавлен отдельный режим бережной литературной правки с собственным профессиональным промптом, настройками модели и контролем сохранения языка и содержания.
+- **Literary text editing**: Text Processing now includes a dedicated conservative literary-editing mode with its own professional prompt, model settings, and language/content preservation checks.
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Управление появлением панели**: В общие настройки перед указателем положения добавлен переключатель показа панели при наведении мыши; hotkey, tray и указатель продолжают открывать панель независимо от него.
+- **Panel hover activation control**: General settings now include a mouse-hover activation switch immediately before the position-indicator option; hotkey, tray, and indicator opening remain available independently.
+- **Сортировка файлов — единый экран**: Рабочий стол, Загрузки и пользовательские папки собраны в одном списке с переключателем, прогрессом, результатом, откатом и открытием папки в каждой строке; основные кнопки используют единый стиль и размер.
+- **File Sorter single-screen workflow**: Desktop, Downloads, and custom folders now share one list with per-row selection, progress, result, undo, and open-folder actions; the primary buttons use the same size and style.
+- **Обработка текста — профессиональные инструкции**: Независимые промпты проверки, типографики, очистки и литературной правки приведены к краткому английскому формату; список моделей отфильтрован по пригодности для текстовой обработки.
+- **Text Processing professional instructions**: Independent proofreading, typography, cleanup, and literary-editing prompts now use concise professional English instructions, and the model list is filtered for text-processing suitability.
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Главная панель — подсказки и клавиатура**: Номер активного контекста снова показывает подсказку с именем, а перемещение Tab и стрелками снова отображает синюю обводку сфокусированной кнопки.
+- **Main panel hints and keyboard focus**: The active context number again shows a tooltip with its name, and Tab/arrow navigation again draws a blue outline around the focused button.
+- **Обработка текста — предсказуемый результат**: Повтор всегда использует исходный текст и выбранный режим; добавлены защита от смены языка, пустого потокового ответа и технических фрагментов, а первой вкладкой снова открывается проверка текста.
+- **Text Processing predictable output**: Retry always uses the original text and selected mode; safeguards now reject language changes, empty streaming responses, and modified technical fragments, while Proofreading is again the startup tab.
+- **Системные утилиты — ошибки запуска**: Снимок экрана, запись, калькулятор, проводник, загрузки, показ рабочего стола и папка приложений больше не скрывают отказ Windows запустить действие; Copilot гарантированно освобождает Win-клавишу при сбое.
+- **System utility launch failures**: Screenshot, recording, Calculator, Explorer, Downloads, Show Desktop, and Apps Folder no longer hide Windows launch failures; Copilot reliably releases the Win key after an injection error.
+- **Надёжность и локализация утилит**: Color Picker использует локализованное аварийное сообщение, Timer/Stopwatch безопасно обрабатывает ошибку сохранения при закрытии, а новые WPF-тесты File Sorter изолированы в release pipeline.
+- **Utility reliability and localization**: Color Picker now uses a localized failure dialog, Timer/Stopwatch safely contains close-time save failures, and the new File Sorter WPF tests run in isolated release hosts.
+
 ## [1.12.2] - 2026-07-31
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

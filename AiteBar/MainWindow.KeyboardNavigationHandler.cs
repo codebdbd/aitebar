@@ -71,8 +71,6 @@ public partial class MainWindow
         var currentFocus = Keyboard.FocusedElement as Button;
         int currentIndex = currentFocus != null ? focusableButtons.IndexOf(currentFocus) : -1;
 
-        bool isVertical = AppSettings.Edge == DockEdge.Left || AppSettings.Edge == DockEdge.Right;
-
         switch (e.Key)
         {
             case Key.Tab:
@@ -94,33 +92,31 @@ public partial class MainWindow
                 break;
             case Key.Left:
             case Key.Up:
+                MovePanelFocusSpatially(
+                    focusableButtons,
+                    currentIndex,
+                    e.Key == Key.Left ? PanelNavigationDirection.Left : PanelNavigationDirection.Up);
                 e.Handled = true;
-                if (isVertical && e.Key == Key.Left)
-                    break;
-                if (!isVertical && e.Key == Key.Up)
-                    break;
-
-                if (currentIndex > 0)
-                    FocusPanelButton(focusableButtons[currentIndex - 1]);
-                else
-                    FocusPanelButton(focusableButtons[focusableButtons.Count - 1]);
                 break;
             case Key.Right:
             case Key.Down:
+                MovePanelFocusSpatially(
+                    focusableButtons,
+                    currentIndex,
+                    e.Key == Key.Right ? PanelNavigationDirection.Right : PanelNavigationDirection.Down);
                 e.Handled = true;
-                if (isVertical && e.Key == Key.Right)
-                    break;
-                if (!isVertical && e.Key == Key.Down)
-                    break;
-
-                if (currentIndex < focusableButtons.Count - 1)
-                    FocusPanelButton(focusableButtons[currentIndex + 1]);
-                else
-                    FocusPanelButton(focusableButtons[0]);
                 break;
             case Key.Enter:
                 e.Handled = true;
                 currentFocus?.RaiseEvent(new RoutedEventArgs(Button.ClickEvent, currentFocus));
+                break;
+            case Key.Home:
+                e.Handled = true;
+                FocusPanelButton(focusableButtons[0]);
+                break;
+            case Key.End:
+                e.Handled = true;
+                FocusPanelButton(focusableButtons[^1]);
                 break;
             case Key.Escape:
                 e.Handled = true;
@@ -170,14 +166,38 @@ public partial class MainWindow
 
     private Button GetFirstFocusablePanelButton()
     {
-        return BtnAdd;
+        return _unifiedButtons.FirstOrDefault()
+            ?? _overflowButton
+            ?? BtnAdd;
+    }
+
+    private void MovePanelFocusSpatially(
+        IReadOnlyList<Button> buttons,
+        int currentIndex,
+        PanelNavigationDirection direction)
+    {
+        var bounds = new List<Rect>(buttons.Count);
+        foreach (Button button in buttons)
+        {
+            Point origin = button.TranslatePoint(new Point(0, 0), MainPanel);
+            bounds.Add(new Rect(origin, new System.Windows.Size(button.ActualWidth, button.ActualHeight)));
+        }
+
+        int nextIndex = PanelFocusNavigationHelper.FindNextIndex(bounds, currentIndex, direction);
+        if (nextIndex >= 0)
+        {
+            FocusPanelButton(buttons[nextIndex]);
+        }
     }
 
     private List<Button> GetAllFocusableButtons()
     {
         var buttons = new List<Button>();
+        buttons.Add(ContextIndicator);
         buttons.Add(BtnAdd);
         buttons.AddRange(_unifiedButtons);
+        if (_overflowButton is not null)
+            buttons.Add(_overflowButton);
         if (BtnAppSettings.Visibility == Visibility.Visible)
             buttons.Add(BtnAppSettings);
         return buttons;

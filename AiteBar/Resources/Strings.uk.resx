@@ -13,6 +13,7 @@
   <data name="AppSettingsWindow_NextPanel" xml:space="preserve"><value>Наступна панель</value></data>
   <data name="AppSettingsWindow_PreviousPanel" xml:space="preserve"><value>Попередня панель</value></data>
   <data name="AppSettingsWindow_AddButton" xml:space="preserve"><value>Додати кнопку</value></data>
+  <data name="AppSettingsWindow_ShowPanelOnMouseHover" xml:space="preserve"><value>Показувати панель при наведенні миші</value></data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicator" xml:space="preserve"><value>Показувати покажчик позиції панелі</value></data>
   <data name="ShowPanel" xml:space="preserve"><value>Показати панель</value></data>
   <data name="HideIndicator" xml:space="preserve"><value>Сховати покажчик</value></data>
@@ -227,6 +228,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
 
 Призначте інші комбінації.</value></data>
   <data name="Main_AddButtonTooltip" xml:space="preserve"><value>Додати кнопку</value></data>
+  <data name="Main_ContextIndicatorTooltipFormat" xml:space="preserve"><value>Контекст {0}: {1}</value></data>
   <data name="Main_SearchTooltip" xml:space="preserve"><value>Пошук Google (буфер обміну)</value></data>
   <data name="Main_ScreenshotTooltip" xml:space="preserve"><value>Знімок екрана</value></data>
   <data name="Main_RecordTooltip" xml:space="preserve"><value>Запис відео</value></data>
@@ -362,6 +364,26 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="FileSorter_CategoryWeb" xml:space="preserve"><value>Веб</value></data>
   <data name="FileSorter_CategoryOther" xml:space="preserve"><value>Інше</value></data>
   <data name="FileSorter_RootPathRequired" xml:space="preserve"><value>Потрібно вказати шлях до папки.</value></data>
+  <data name="FileSorter_SortMultipleFormat" xml:space="preserve"><value>Сортувати ({0})</value></data>
+  <data name="FileSorter_AddFolder" xml:space="preserve"><value>+ Додати теку…</value></data>
+  <data name="FileSorter_LoadingCurrentFolderFormat" xml:space="preserve"><value>Сортування {0}/{1}: {2}</value></data>
+  <data name="FileSorter_CompletedMultiFormat" xml:space="preserve"><value>Відсортовано {0} файлів у {1} теках</value></data>
+  <data name="FileSorter_UndoCompletedMultiFormat" xml:space="preserve"><value>Відновлено {0} файлів.</value></data>
+  <data name="FileSorter_UndoPartialMultiFormat" xml:space="preserve"><value>Відновлено {0} файлів, пропущено {1}.</value></data>
+  <data name="FileSorter_NoFoldersSelected" xml:space="preserve"><value>Виберіть хоча б одну теку для сортування.</value></data>
+  <data name="FileSorter_FolderAlreadyAdded" xml:space="preserve"><value>Ця тека вже додана.</value></data>
+  <data name="FileSorter_RemoveFolderContextMenu" xml:space="preserve"><value>Видалити теку</value></data>
+  <data name="FileSorter_SelectedCountFormat" xml:space="preserve"><value>Вибрано: {0}</value></data>
+  <data name="FileSorter_StatusReady" xml:space="preserve"><value>Готово до сортування</value></data>
+  <data name="FileSorter_StatusSortingFormat" xml:space="preserve"><value>Обробка теки {0} з {1}</value></data>
+  <data name="FileSorter_RowProgressFormat" xml:space="preserve"><value>{0}/{1} файлів</value></data>
+  <data name="FileSorter_RowSortedFormat" xml:space="preserve"><value>✓ {0} файлів</value></data>
+  <data name="FileSorter_RowError" xml:space="preserve"><value>Помилка</value></data>
+  <data name="FileSorter_StatusError" xml:space="preserve"><value>Операція завершилася з помилкою.</value></data>
+  <data name="FileSorter_UndoFolderTooltip" xml:space="preserve"><value>Скасувати останнє сортування</value></data>
+  <data name="FileSorter_OpenFolderTooltip" xml:space="preserve"><value>Відкрити теку</value></data>
+  <data name="FileSorter_RowUndoing" xml:space="preserve"><value>Скасування…</value></data>
+  <data name="FileSorter_StatusUndoing" xml:space="preserve"><value>Відновлення файлів…</value></data>
   <data name="IconPicker_InvalidFluentMetadata" xml:space="preserve"><value>Не вдалося прочитати метадані піктограм Fluent.</value></data>
   <data name="PanelPackage_ExportPathRequired" xml:space="preserve"><value>Потрібно вказати шлях для експорту панелі.</value></data>
   <data name="PanelPackage_ActivePanelNotFound" xml:space="preserve"><value>Активну панель не знайдено.</value></data>
@@ -582,6 +604,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AppSettingsWindow_EdgeHint" xml:space="preserve"><value>Виберіть край екрана, біля якого з'являється панель.</value></data>
   <data name="AppSettingsWindow_PanelSizeHint" xml:space="preserve"><value>Довжина панелі вздовж вибраного краю: 50% — половина екрана, 100% — увесь край.</value></data>
   <data name="AppSettingsWindow_DelayHint" xml:space="preserve"><value>Скільки утримувати вказівник біля краю: 100 мс — швидкий показ, 500 мс — менше випадкових відкриттів.</value></data>
+  <data name="AppSettingsWindow_ShowPanelOnMouseHoverHint" xml:space="preserve"><value>Відкривати панель, коли вказівник затримується в зоні активації біля краю екрана.</value></data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicatorHint" xml:space="preserve"><value>Показувати поточне положення панелі в області панелі завдань Windows.</value></data>
   <data name="AppSettingsWindow_SecondaryMonitorHint" xml:space="preserve"><value>Розміщувати панель на другому моніторі, якщо він доступний.</value></data>
   <data name="AppSettingsWindow_CheckForUpdatesHint" xml:space="preserve"><value>Автоматично перевіряти наявність нової версії AiteBar.</value></data>
@@ -657,9 +680,11 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Перевірка тексту</value></data>
   <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Типографіка</value></data>
   <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Очищення тексту</value></data>
+  <data name="TextProcessing_ModeLiteraryEdit" xml:space="preserve"><value>Літературне редагування</value></data>
   <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Виправляє орфографічні, граматичні та пунктуаційні помилки.</value></data>
   <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Розставляє правильні лапки, тире, пробіли та інші типографські знаки.</value></data>
   <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Видаляє технічне сміття, зайві переноси та службові символи PDF і HTML.</value></data>
+  <data name="TextProcessing_ModeLiteraryEditDesc" xml:space="preserve"><value>Покращує ясність, ритм і стиль тексту, зберігаючи зміст, факти й авторський голос.</value></data>
   <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Перевірити текст</value></data>
   <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Застосувати типографіку</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Очистити текст</value></data>
@@ -683,8 +708,9 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_Words" xml:space="preserve"><value>{0} слів</value></data>
   <data name="TextProcessing_ErrorTooLong" xml:space="preserve"><value>Текст занадто довгий. Максимальний розмір — 50 000 символів.</value></data>
   <data name="TextProcessing_ErrorContextOverflow" xml:space="preserve"><value>Текст не поміщається в контекст вибраної моделі. Оберіть іншу модель або скоротіть текст.</value></data>
-  <data name="TextProcessing_ErrorNoModels" xml:space="preserve"><value>Не додано жодного з'єднання з ШІ. Додайте з'єднання в налаштуваннях програми.</value></data>
+  <data name="TextProcessing_ErrorNoModels" xml:space="preserve"><value>Немає придатної моделі. Виберіть доступну модель вручну або додайте перевірену модель у налаштуваннях.</value></data>
   <data name="TextProcessing_ErrorEmptyResponse" xml:space="preserve"><value>ШІ повернув порожню відповідь. Спробуйте ще раз.</value></data>
+  <data name="TextProcessing_ErrorContentChanged" xml:space="preserve"><value>ШІ змінив мову або зміст тексту. Результат відхилено, попередній текст збережено.</value></data>
   <data name="TextProcessing_ErrorGeneric" xml:space="preserve"><value>Помилка обробки. Спробуйте ще раз.</value></data>
   <data name="TextProcessing_ConfirmRepeat" xml:space="preserve"><value>Повторна обробка замінить змінений результат. Продовжити?</value></data>
   <data name="TextProcessing_ConfirmClose" xml:space="preserve"><value>Закрити вікно? Введений текст не зберігається.</value></data>
@@ -749,6 +775,9 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ZenEditor_Retry" xml:space="preserve"><value>Повторити</value></data>
   <data name="ZenEditor_Dismiss" xml:space="preserve"><value>Закрити повідомлення</value></data>
   <data name="ZenEditor_Recovered" xml:space="preserve"><value>Останній документ було пошкоджено. Дзен-редактор відновив найновішу коректну резервну копію.</value></data>
+  <data name="Main_MoreButtonsFormat" xml:space="preserve"><value>Ще ({0})</value></data>
+  <data name="Main_DragHandleTooltip" xml:space="preserve"><value>Перетягнути панель до іншого краю екрана</value></data>
+  <data name="Action_TargetNotFound" xml:space="preserve"><value>Файл або папка більше не існує: {0}</value></data>
 </root>
 
 

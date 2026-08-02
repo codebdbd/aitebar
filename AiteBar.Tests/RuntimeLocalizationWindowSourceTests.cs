@@ -60,9 +60,11 @@ public sealed class RuntimeLocalizationWindowSourceTests
         string screenPickerCode = ReadCode("AiteBar", "ScreenColorPickerWindow.cs");
 
         Assert.Contains("private void RefreshLocalizedUi()", fileSorterCode);
-        Assert.Contains("LoadLocationOptions();", fileSorterCode);
+        Assert.Contains("PopulateFolderList();", fileSorterCode);
+        Assert.Contains("CaptureVisualStates();", fileSorterCode);
+        Assert.Contains("PopulateFolderList(selectedPaths, visualStates);", fileSorterCode);
         Assert.Contains("protected override void OnLocalizationChanged()", fileSorterCode);
-        Assert.Contains("ApplyUndoStatus();", fileSorterCode);
+        Assert.Contains("ApplyOverallStatus();", fileSorterCode);
 
         Assert.Contains("protected override void OnLocalizationChanged()", timerCode);
         Assert.Contains("UpdateDisplay();", timerCode);
@@ -114,6 +116,38 @@ public sealed class RuntimeLocalizationWindowSourceTests
             string code = File.ReadAllText(Path.Combine(repoRoot, relativePath));
             Assert.Contains("OnLocalizationChanged", code);
         }
+    }
+
+    [Fact]
+    public void ColorPickerUtility_UsesLocalizedOwnedFailureDialog()
+    {
+        string code = ReadCode("AiteBar", "ColorPickerUtility.cs");
+
+        Assert.Contains("LocalizationService.Format(\"Utility_Unavailable\", Id)", code);
+        Assert.Contains("Owner = owner", code);
+        Assert.DoesNotContain("временно недоступна", code, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void TimerStopwatchWindow_ContainsSettingsSaveFailureOnClose()
+    {
+        string code = ReadCode("AiteBar", "TimerStopwatchWindow.xaml.cs");
+
+        Assert.Contains("await _settingsService.SaveAsync();", code);
+        Assert.Contains("TelemetryService.CaptureException(ex, \"timer_settings_save_failed\")", code);
+    }
+
+    [Fact]
+    public void MainPanel_ContextTooltipAndMouseHoverGateAreLocalizedAndScoped()
+    {
+        string code = ReadCode("AiteBar", "MainWindow.xaml.cs");
+
+        Assert.Contains("\"Main_ContextIndicatorTooltipFormat\"", code);
+        Assert.Contains("ContextIndicator.ToolTip = LocalizationService.Format", code);
+        Assert.Contains("if (!settings.ShowPanelOnMouseHover)", code);
+        Assert.Contains("UpdateHoverActivationTimer(settings);", code);
+        Assert.Contains("ShowDock(activateWindow: false);", code);
+        Assert.Contains("_activationDwellTracker.Reset();", code);
     }
 
     private static string ReadCode(params string[] parts)

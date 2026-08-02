@@ -36,7 +36,10 @@ public class ColorPickerUtility : IUtility
             {
                 await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    new DarkDialog($"Утилита {Id} временно недоступна").ShowDialog();
+                    new DarkDialog(LocalizationService.Format("Utility_Unavailable", Id))
+                    {
+                        Owner = owner
+                    }.ShowDialog();
                 });
             }
         }

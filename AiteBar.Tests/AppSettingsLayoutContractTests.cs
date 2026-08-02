@@ -16,7 +16,7 @@ public sealed class AppSettingsLayoutContractTests
         "SliderActivationZone", "LblActivationZone10", "LblActivationZone30", "LblActivationZone50", "LblActivationZone100",
         "SliderActivationDelay", "LblActivationDelay100", "LblActivationDelay200", "LblActivationDelay300", "LblActivationDelay500",
         "TxtAboutVersion", "SettingsFooter", "BtnKeepOnTop", "AiConnectionsList", "TxtAiConnectionsEmpty",
-        "ChkShowTaskbarPositionIndicator", "ChkSecondaryMonitor", "ChkCheckForUpdatesEnabled",
+        "ChkShowPanelOnMouseHover", "ChkShowTaskbarPositionIndicator", "ChkSecondaryMonitor", "ChkCheckForUpdatesEnabled",
         "PanelContextsList",
         "HotkeyShowPanel", "HotkeyNextContext", "HotkeyPreviousContext", "HotkeyAddButton",
         "HotkeyFileSorter", "HotkeyIconConverter", "HotkeyQuickNote", "HotkeyColorPicker", "HotkeyTimerStopwatch", "HotkeyQRCodeGenerator", "HotkeyClipboardManager",
@@ -59,6 +59,23 @@ public sealed class AppSettingsLayoutContractTests
         AssertHandlerCount(window, "BtnKeepOnTop_Click", 1);
         AssertHandlerCount(window, "BtnCancel_Click", 1);
         AssertHandlerCount(window, "BtnSave_Click", 1);
+    }
+
+    [Fact]
+    public void MouseHoverSwitch_AppearsImmediatelyBeforePanelIndicatorSwitch()
+    {
+        XDocument window = LoadWindow();
+        XElement hoverSwitch = FindNamedElement(window, "ChkShowPanelOnMouseHover");
+        XElement indicatorSwitch = FindNamedElement(window, "ChkShowTaskbarPositionIndicator");
+        XElement settingsCard = Assert.IsType<XElement>(hoverSwitch.Parent?.Parent?.Parent);
+        XElement[] namedSwitches = settingsCard
+            .Descendants(PresentationNamespace + "CheckBox")
+            .Where(element => element.Attribute(XamlNamespace + "Name") != null)
+            .ToArray();
+
+        int hoverIndex = Array.IndexOf(namedSwitches, hoverSwitch);
+        int indicatorIndex = Array.IndexOf(namedSwitches, indicatorSwitch);
+        Assert.Equal(hoverIndex + 1, indicatorIndex);
     }
 
     [Fact]

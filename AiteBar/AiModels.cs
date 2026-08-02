@@ -102,6 +102,14 @@ internal sealed record AiProviderStream(
     string ModelId,
     IAsyncEnumerable<string> Chunks);
 
+internal sealed class EmptyAiResponseException : Exception
+{
+    public EmptyAiResponseException(string providerId, string modelId)
+        : base($"AI route '{providerId}/{modelId}' returned no text content.")
+    {
+    }
+}
+
 public sealed record AiConnectionCheckResult(
     bool IsSuccess,
     AiConnectionState State,
@@ -130,8 +138,29 @@ internal sealed class AiProviderHttpException : Exception
     public TimeSpan? RetryAfter { get; }
 }
 
+internal enum AiAvailabilityFailureReason
+{
+    Unknown = 0,
+    NoConnectionsConfigured,
+    RateLimited,
+    QuotaExhausted,
+    Unauthorized,
+    Forbidden,
+    Network,
+    Timeout,
+    TemporarilyUnavailable
+}
+
 internal sealed class NoAvailableConnectionException : Exception
 {
-    public NoAvailableConnectionException(string message, Exception? innerException = null)
-        : base(message, innerException) { }
+    public NoAvailableConnectionException(
+        string message,
+        Exception? innerException = null,
+        AiAvailabilityFailureReason reason = AiAvailabilityFailureReason.Unknown)
+        : base(message, innerException)
+    {
+        Reason = reason;
+    }
+
+    public AiAvailabilityFailureReason Reason { get; }
 }

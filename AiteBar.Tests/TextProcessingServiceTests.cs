@@ -7,9 +7,75 @@ public sealed class TextProcessingServiceTests
     private readonly TextProcessingService _service = new();
 
     [Theory]
+    [InlineData("Силиконовые соски болтались возле пупа Анастасии и теребонькали.", "Silicon nipples chattered near Anastasiya's belly button.", true)]
+    [InlineData("Silicon nipples chattered near Anastasiya's belly button.", "Силиконовые соски болтались возле пупа Анастасии.", true)]
+    [InlineData("Он сказал что вернется но не уточнил когда.", "Он сказал, что вернётся, но не уточнил, когда.", false)]
+    [InlineData("Ми перевірили документ але помилку не знайшли.", "Ми перевірили документ, але помилку не знайшли.", false)]
+    [InlineData("Он сказал \"я вернусь\" - и ушел...", "Он сказал «я вернусь» — и ушел…", false)]
+    public void ViolatesContentPreservation_DetectsTranslationButAllowsModeEdits(
+        string input,
+        string output,
+        bool expected)
+    {
+        Assert.Equal(expected, TextProcessingService.ViolatesContentPreservation(input, output));
+    }
+
+    [Fact]
+    public void ViolatesContentPreservation_IgnoresSharedProtectedTechnicalFragments()
+    {
+        const string url = "https://example.com/very/long/technical/path/that/must/remain/unchanged";
+        string input = $"Проверь этот текст возле адреса {url}.";
+        string translated = $"Check this text near the address {url}.";
+
+        Assert.True(TextProcessingService.ViolatesContentPreservation(input, translated, [url]));
+    }
+
+    [Fact]
+    public void LiteraryEditing_AllowsControlledRewriteButStillRejectsTranslation()
+    {
+        const string input = "Старый дом стоял возле тихой реки.";
+        const string edited = "Дом возвышался у спокойной водной глади.";
+        const string translated = "The old house stood beside a quiet river.";
+        double literaryOverlap = TextProcessingService.GetMinimumWordOverlap(
+            TextProcessingMode.LiteraryEdit);
+
+        Assert.True(TextProcessingService.ViolatesContentPreservation(input, edited));
+        Assert.False(TextProcessingService.ViolatesContentPreservation(
+            input,
+            edited,
+            minimumWordOverlap: literaryOverlap));
+        Assert.True(TextProcessingService.ViolatesContentPreservation(
+            input,
+            translated,
+            minimumWordOverlap: literaryOverlap));
+    }
+
+    [Fact]
+    public void TextProcessingMode_AppendsLiteraryEditWithoutRenumberingExistingModes()
+    {
+        Assert.Equal(0, (int)TextProcessingMode.Proofread);
+        Assert.Equal(1, (int)TextProcessingMode.Typography);
+        Assert.Equal(2, (int)TextProcessingMode.Cleanup);
+        Assert.Equal(3, (int)TextProcessingMode.LiteraryEdit);
+    }
+
+    [Fact]
+    public void BuildRequest_ProofreadUsesOneSentenceWithoutAppendedContracts()
+    {
+        AiChatRequest request = _service.BuildRequest(TextProcessingMode.Proofread, "Текст");
+        string systemPrompt = request.Messages[0].Content;
+
+        Assert.Equal(_service.GetSystemPrompt(TextProcessingMode.Proofread), systemPrompt);
+        Assert.Equal(
+            "Correct only spelling, grammar, and punctuation errors and return only the corrected text without changing its language, meaning, wording, structure, or technical content.",
+            systemPrompt);
+    }
+
+    [Theory]
     [InlineData(TextProcessingMode.Proofread)]
     [InlineData(TextProcessingMode.Typography)]
     [InlineData(TextProcessingMode.Cleanup)]
+    [InlineData(TextProcessingMode.LiteraryEdit)]
     public void GetSystemPrompt_ReturnsNonEmptyPrompt(TextProcessingMode mode)
     {
         string prompt = _service.GetSystemPrompt(mode);
@@ -19,13 +85,11 @@ public sealed class TextProcessingServiceTests
     [Fact]
     public void GetSystemPrompt_ReturnsDifferentPromptsForDifferentModes()
     {
-        string proofread = _service.GetSystemPrompt(TextProcessingMode.Proofread);
-        string typography = _service.GetSystemPrompt(TextProcessingMode.Typography);
-        string cleanup = _service.GetSystemPrompt(TextProcessingMode.Cleanup);
+        string[] prompts = Enum.GetValues<TextProcessingMode>()
+            .Select(_service.GetSystemPrompt)
+            .ToArray();
 
-        Assert.NotEqual(proofread, typography);
-        Assert.NotEqual(proofread, cleanup);
-        Assert.NotEqual(typography, cleanup);
+        Assert.Equal(prompts.Length, prompts.Distinct(StringComparer.Ordinal).Count());
     }
 
     [Fact]
@@ -49,6 +113,7 @@ public sealed class TextProcessingServiceTests
     [InlineData(TextProcessingMode.Proofread, 0.0)]
     [InlineData(TextProcessingMode.Typography, 0.25)]
     [InlineData(TextProcessingMode.Cleanup, 0.1)]
+    [InlineData(TextProcessingMode.LiteraryEdit, 0.4)]
     public void BuildRequest_UsesModeSpecificTemperature(TextProcessingMode mode, double expected)
     {
         AiChatRequest request = _service.BuildRequest(mode, "Text");
@@ -221,21 +286,32 @@ public sealed class TextProcessingServiceTests
     public void BuildRequest_ProofreadMode_UsesCorrectPrompt()
     {
         var request = _service.BuildRequest(TextProcessingMode.Proofread, "text");
-        Assert.Contains("орфографи", request.Messages[0].Content);
+        Assert.StartsWith("Correct only spelling, grammar, and punctuation", request.Messages[0].Content);
     }
 
     [Fact]
     public void BuildRequest_TypographyMode_UsesCorrectPrompt()
     {
         var request = _service.BuildRequest(TextProcessingMode.Typography, "text");
-        Assert.Contains("типографическ", request.Messages[0].Content);
+        Assert.StartsWith("Apply typography only", request.Messages[0].Content);
     }
 
     [Fact]
     public void BuildRequest_CleanupMode_UsesCorrectPrompt()
     {
         var request = _service.BuildRequest(TextProcessingMode.Cleanup, "text");
-        Assert.Contains("очистк", request.Messages[0].Content);
+        Assert.StartsWith("Remove only clear copy/paste", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void BuildRequest_LiteraryEditMode_UsesCorrectPromptAndSharedContracts()
+    {
+        var request = _service.BuildRequest(TextProcessingMode.LiteraryEdit, "text");
+        string prompt = request.Messages[0].Content;
+
+        Assert.StartsWith("Edit the text for clarity, fluency, rhythm, and literary quality", prompt);
+        Assert.Contains("LANGUAGE AND CONTENT", prompt);
+        Assert.Contains("PROTECTED TOKENS", prompt);
     }
 
     [Fact]
@@ -317,30 +393,54 @@ public sealed class TextProcessingServiceTests
     }
 
     [Fact]
-    public void GetSystemPrompt_ProofreadPrompt_ContainsProhibitions()
+    public void GetSystemPrompt_ProofreadPrompt_IsOneDirectSentence()
     {
         string prompt = _service.GetSystemPrompt(TextProcessingMode.Proofread);
-        Assert.Contains("перефразировать", prompt);
-        Assert.Contains("UPPERCASE", prompt);
-        Assert.Contains("Верни только", prompt);
+        Assert.DoesNotContain('\n', prompt);
+        Assert.Contains("Correct only", prompt);
+        Assert.Contains("return only the corrected text", prompt);
     }
 
     [Fact]
-    public void GetSystemPrompt_TypographyPrompt_ContainsProhibitions()
+    public void GetSystemPrompt_TypographyPrompt_HasProfessionalScopeAndOutputContract()
     {
         string prompt = _service.GetSystemPrompt(TextProcessingMode.Typography);
-        Assert.Contains("менять слова", prompt);
-        Assert.Contains("исправлять орфографию или грамматику", prompt);
-        Assert.Contains("Сохраняй структуру абзацев", prompt);
-        Assert.Contains("Верни только", prompt);
+        Assert.Contains("Apply typography only", prompt);
+        Assert.Contains("Do not correct spelling or grammar", prompt);
+        Assert.Contains("change paragraph boundaries", prompt);
+        Assert.Contains("Return only the typographically formatted text", prompt);
     }
 
     [Fact]
-    public void GetSystemPrompt_CleanupPrompt_ContainsProhibitions()
+    public void GetSystemPrompt_CleanupPrompt_HasProfessionalScopeAndOutputContract()
     {
         string prompt = _service.GetSystemPrompt(TextProcessingMode.Cleanup);
-        Assert.Contains("исправлять орфографию", prompt);
-        Assert.Contains("повторяется более двух раз", prompt);
-        Assert.Contains("Верни только", prompt);
+        Assert.Contains("Remove only clear copy/paste", prompt);
+        Assert.Contains("more than twice", prompt);
+        Assert.Contains("If a fragment is not clearly an artifact", prompt);
+        Assert.Contains("Return only the cleaned text", prompt);
+    }
+
+    [Fact]
+    public void GetSystemPrompt_LiteraryEditPrompt_AllowsStyleWorkWithoutInventingContent()
+    {
+        string prompt = _service.GetSystemPrompt(TextProcessingMode.LiteraryEdit);
+
+        Assert.Contains("clarity, fluency, rhythm, and literary quality", prompt);
+        Assert.Contains("rewrite awkward sentences", prompt);
+        Assert.Contains("do not invent information", prompt);
+        Assert.Contains("Return only the edited text", prompt);
+    }
+
+    [Theory]
+    [InlineData(TextProcessingMode.Proofread)]
+    [InlineData(TextProcessingMode.Typography)]
+    [InlineData(TextProcessingMode.Cleanup)]
+    [InlineData(TextProcessingMode.LiteraryEdit)]
+    public void BuildRequest_SystemInstructionsContainNoCyrillic(TextProcessingMode mode)
+    {
+        string prompt = _service.BuildRequest(mode, "Пользовательский текст").Messages[0].Content;
+
+        Assert.DoesNotContain(prompt, character => character is >= '\u0400' and <= '\u052F');
     }
 }

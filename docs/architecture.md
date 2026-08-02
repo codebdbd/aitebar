@@ -226,7 +226,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 | [ActionExecutionResult.cs](../AiteBar/ActionExecutionResult.cs) | Result-тип возврата `ActionService.ExecuteAsync`: Success/FailedWithWarning/FailedCancelled/Failed + сообщение; используется UI feedback и unit-тесты. |
 | [PanelPackageManifest.cs](../AiteBar/PanelPackageManifest.cs) | JSON-схема файла `manifest.json` внутри `.aitebarpanel` ZIP (AppVersion, ExportedAt, Elements, Images). |
 | [QuickNoteContracts.cs](../AiteBar/QuickNoteContracts.cs) | Интерфейсы и shared POCO для QuickNote (используются окном, `QuickNoteService` и `QuickNotePersistence`). |
-| [TextProcessingUiState.cs](../AiteBar/TextProcessingUiState.cs) + [TextProcessingMode.cs](../AiteBar/TextProcessingMode.cs) | Состояния UI и enum preset-режимов Обработки текста (Proofread / Typography / Clean / Translate / Summarize…). |
+| [TextProcessingUiState.cs](../AiteBar/TextProcessingUiState.cs) + [TextProcessingMode.cs](../AiteBar/TextProcessingMode.cs) | Состояния UI и четыре preset-режима Обработки текста: Proofread, Typography, Cleanup и LiteraryEdit. |
 
 ### Native Integration Layer
 Низкоуровневая интеграция с Windows API через `NativeMethods.cs`, содержащий P/Invoke объявления для Win32 функций:

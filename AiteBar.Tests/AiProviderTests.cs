@@ -531,12 +531,14 @@ public sealed class AiProviderTests
         settingsService.Settings.Ai.Connections[2].PreferredModelId = "apple";
         var gateway = new AiGateway(settingsService, client, TimeProvider.System);
 
-        await Assert.ThrowsAsync<NoAvailableConnectionException>(() =>
+        NoAvailableConnectionException exception = await Assert.ThrowsAsync<NoAvailableConnectionException>(() =>
             gateway.GenerateAsync(new AiChatRequest
             {
                 Messages = [new AiChatMessage("user", "hello")],
                 RequireFreeModel = true
             }));
+
+        Assert.Equal(AiAvailabilityFailureReason.RateLimited, exception.Reason);
 
         Assert.Equal(
             [

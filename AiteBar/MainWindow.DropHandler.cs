@@ -238,7 +238,11 @@ public partial class MainWindow
                 await SaveElement(newElement);
             }
         }
-        catch (Exception ex) { Logger.Log(ex); }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            new DarkDialog(LocalizationService.Format("Action_Failed", ex.Message)) { Owner = this }.ShowDialog();
+        }
     }
 
     private async Task UpdateDownloadedFaviconAsync(string elementId, string actionValue, string webIcon)
