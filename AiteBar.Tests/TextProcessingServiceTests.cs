@@ -51,12 +51,13 @@ public sealed class TextProcessingServiceTests
     }
 
     [Fact]
-    public void TextProcessingMode_AppendsLiteraryEditWithoutRenumberingExistingModes()
+    public void TextProcessingMode_AppendsStyleModesWithoutRenumberingExistingModes()
     {
         Assert.Equal(0, (int)TextProcessingMode.Proofread);
         Assert.Equal(1, (int)TextProcessingMode.Typography);
         Assert.Equal(2, (int)TextProcessingMode.Cleanup);
         Assert.Equal(3, (int)TextProcessingMode.LiteraryEdit);
+        Assert.Equal(4, (int)TextProcessingMode.NaturalStyle);
     }
 
     [Fact]
@@ -76,6 +77,7 @@ public sealed class TextProcessingServiceTests
     [InlineData(TextProcessingMode.Typography)]
     [InlineData(TextProcessingMode.Cleanup)]
     [InlineData(TextProcessingMode.LiteraryEdit)]
+    [InlineData(TextProcessingMode.NaturalStyle)]
     public void GetSystemPrompt_ReturnsNonEmptyPrompt(TextProcessingMode mode)
     {
         string prompt = _service.GetSystemPrompt(mode);
@@ -114,6 +116,7 @@ public sealed class TextProcessingServiceTests
     [InlineData(TextProcessingMode.Typography, 0.25)]
     [InlineData(TextProcessingMode.Cleanup, 0.1)]
     [InlineData(TextProcessingMode.LiteraryEdit, 0.4)]
+    [InlineData(TextProcessingMode.NaturalStyle, 0.4)]
     public void BuildRequest_UsesModeSpecificTemperature(TextProcessingMode mode, double expected)
     {
         AiChatRequest request = _service.BuildRequest(mode, "Text");
@@ -432,11 +435,28 @@ public sealed class TextProcessingServiceTests
         Assert.Contains("Return only the edited text", prompt);
     }
 
+    [Fact]
+    public void GetSystemPrompt_NaturalStylePrompt_RemovesPatternsWithoutChangingMeaning()
+    {
+        string prompt = _service.GetSystemPrompt(TextProcessingMode.NaturalStyle);
+
+        Assert.Contains("natural, lively, and human", prompt);
+        Assert.Contains("restrained typography", prompt);
+        Assert.Contains("Vary sentence length and rhythm", prompt);
+        Assert.Contains("formulaic phrases", prompt);
+        Assert.Contains("unnaturally uniform paragraph structure", prompt);
+        Assert.Contains("preserving its original language, meaning, facts", prompt);
+        Assert.Contains("Do not add new ideas", prompt);
+        Assert.Contains("Return only the revised text", prompt);
+        Assert.Equal(0.15, TextProcessingService.GetMinimumWordOverlap(TextProcessingMode.NaturalStyle));
+    }
+
     [Theory]
     [InlineData(TextProcessingMode.Proofread)]
     [InlineData(TextProcessingMode.Typography)]
     [InlineData(TextProcessingMode.Cleanup)]
     [InlineData(TextProcessingMode.LiteraryEdit)]
+    [InlineData(TextProcessingMode.NaturalStyle)]
     public void BuildRequest_SystemInstructionsContainNoCyrillic(TextProcessingMode mode)
     {
         string prompt = _service.BuildRequest(mode, "Пользовательский текст").Messages[0].Content;

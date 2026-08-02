@@ -252,6 +252,7 @@ public partial class TextProcessingWindow : DarkWindow
             "Typography" => TextProcessingMode.Typography,
             "Cleanup" => TextProcessingMode.Cleanup,
             "LiteraryEdit" => TextProcessingMode.LiteraryEdit,
+            "NaturalStyle" => TextProcessingMode.NaturalStyle,
             _ => _currentMode
         };
         ApplyModeToUi();
@@ -943,6 +944,7 @@ public partial class TextProcessingWindow : DarkWindow
         ModeTypography.IsEnabled = state.CanSelectMode;
         ModeCleanup.IsEnabled = state.CanSelectMode;
         ModeLiteraryEdit.IsEnabled = state.CanSelectMode;
+        ModeNaturalStyle.IsEnabled = state.CanSelectMode;
         CmbModels.IsEnabled = !_isProcessing && !_isLoadingModels && _hasSelectableModel;
         BtnRefreshModels.IsEnabled = !_isProcessing && !_isLoadingModels;
         BtnPaste.IsEnabled = state.CanPaste;
@@ -1137,12 +1139,14 @@ public partial class TextProcessingWindow : DarkWindow
         ModeTypography.IsSelected = _currentMode == TextProcessingMode.Typography;
         ModeCleanup.IsSelected = _currentMode == TextProcessingMode.Cleanup;
         ModeLiteraryEdit.IsSelected = _currentMode == TextProcessingMode.LiteraryEdit;
+        ModeNaturalStyle.IsSelected = _currentMode == TextProcessingMode.NaturalStyle;
         TxtModeDescription.Text = _currentMode switch
         {
             TextProcessingMode.Proofread => LocalizationService.Get("TextProcessing_ModeProofreadDesc"),
             TextProcessingMode.Typography => LocalizationService.Get("TextProcessing_ModeTypographyDesc"),
             TextProcessingMode.Cleanup => LocalizationService.Get("TextProcessing_ModeCleanupDesc"),
             TextProcessingMode.LiteraryEdit => LocalizationService.Get("TextProcessing_ModeLiteraryEditDesc"),
+            TextProcessingMode.NaturalStyle => LocalizationService.Get("TextProcessing_ModeNaturalStyleDesc"),
             _ => string.Empty
         };
     }

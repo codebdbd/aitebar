@@ -43,6 +43,7 @@ public sealed class TextProcessingWindowLayoutTests
                 var modeTabs = Assert.IsType<TabControl>(window.FindName("ModeTabs"));
                 var proofreadMode = Assert.IsType<TabItem>(window.FindName("ModeProofread"));
                 var literaryEditMode = Assert.IsType<TabItem>(window.FindName("ModeLiteraryEdit"));
+                var naturalStyleMode = Assert.IsType<TabItem>(window.FindName("ModeNaturalStyle"));
                 var toggleLabel = Assert.IsType<TextBlock>(window.FindName("ToggleVersionLabel"));
                 var showDiffLabel = Assert.IsType<TextBlock>(window.FindName("ShowDiffLabel"));
                 var processLabel = Assert.IsType<TextBlock>(window.FindName("ProcessButtonLabel"));
@@ -159,10 +160,14 @@ public sealed class TextProcessingWindowLayoutTests
                 Assert.False(repeat.IsEnabled);
                 Assert.True(proofreadMode.IsSelected);
                 Assert.False(literaryEditMode.IsSelected);
-                Assert.Equal(4, modeTabs.Items.Count);
+                Assert.False(naturalStyleMode.IsSelected);
+                Assert.Equal(5, modeTabs.Items.Count);
                 Assert.Equal(
                     LocalizationService.Get("TextProcessing_ModeLiteraryEdit"),
                     literaryEditMode.Header);
+                Assert.Equal(
+                    LocalizationService.Get("TextProcessing_ModeNaturalStyle"),
+                    naturalStyleMode.Header);
                 Assert.Equal(36, refreshModels.ActualWidth, precision: 1);
                 Assert.Equal(36, refreshModels.ActualHeight, precision: 1);
 

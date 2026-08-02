@@ -21,6 +21,7 @@ public sealed partial class TextProcessingService
         TextProcessingMode.Typography => TypographyPrompt,
         TextProcessingMode.Cleanup => CleanupPrompt,
         TextProcessingMode.LiteraryEdit => LiteraryEditPrompt,
+        TextProcessingMode.NaturalStyle => NaturalStylePrompt,
         _ => throw new ArgumentOutOfRangeException(nameof(mode))
     };
 
@@ -58,6 +59,7 @@ public sealed partial class TextProcessingService
                 TextProcessingMode.Typography => 0.25,
                 TextProcessingMode.Cleanup => 0.1,
                 TextProcessingMode.LiteraryEdit => 0.4,
+                TextProcessingMode.NaturalStyle => 0.4,
                 _ => throw new ArgumentOutOfRangeException(nameof(mode))
             }
         };
@@ -140,7 +142,7 @@ public sealed partial class TextProcessingService
 
     internal static double GetMinimumWordOverlap(TextProcessingMode mode) => mode switch
     {
-        TextProcessingMode.LiteraryEdit => 0.15,
+        TextProcessingMode.LiteraryEdit or TextProcessingMode.NaturalStyle => 0.15,
         TextProcessingMode.Proofread or TextProcessingMode.Typography or TextProcessingMode.Cleanup => 0.35,
         _ => throw new ArgumentOutOfRangeException(nameof(mode))
     };
@@ -502,6 +504,15 @@ public sealed partial class TextProcessingService
         You may rewrite awkward sentences, improve word choice, and remove unintentional repetition, but do not invent information, add new ideas, omit meaningful content, or change the author's position.
         Preserve URLs, email addresses, file paths, file names, commands, code, tags, variables, version numbers, product codes, identifiers, and all other technical content.
         Return only the edited text with no explanation, heading, commentary, change list, or wrapper.
+        """;
+
+    private const string NaturalStylePrompt =
+        """
+        Rewrite the text so it sounds natural, lively, and human while preserving its original language, meaning, facts, names, authorial position, intended tone, and logical flow.
+        Use restrained typography appropriate to the language. Vary sentence length and rhythm where useful, remove formulaic phrases, canned transitions, excessive parallel constructions, repetitive openings, and an unnaturally uniform paragraph structure.
+        Do not add new ideas, claims, examples, emotional coloring, slang, or factual details; do not omit meaningful content or make the text less accurate.
+        Preserve URLs, email addresses, file paths, file names, commands, code, tags, variables, version numbers, product codes, identifiers, and all other technical content.
+        Return only the revised text with no explanation, heading, commentary, change list, or wrapper.
         """;
 
     private enum TextScript

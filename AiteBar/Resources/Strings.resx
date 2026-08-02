@@ -737,9 +737,9 @@ Open the GitHub release page?</value></data>
   <data name="Tool_TextProcessing" xml:space="preserve"><value>Text processing</value></data>
   <data name="Main_TextProcessingTooltip" xml:space="preserve"><value>Text processing</value></data>
   <data name="QuickTool_TextProcessing_Title" xml:space="preserve"><value>Text processing</value></data>
-  <data name="QuickTool_TextProcessing_Description" xml:space="preserve"><value>Checks, typographic formatting, and text cleanup without changing meaning.</value></data>
+  <data name="QuickTool_TextProcessing_Description" xml:space="preserve"><value>Proofreading, formatting, cleanup, and editing while preserving meaning.</value></data>
   <data name="TextProcessing_Title" xml:space="preserve"><value>Text processing</value></data>
-  <data name="TextProcessing_Description" xml:space="preserve"><value>Checks, typographic formatting, and text cleanup without changing meaning.</value></data>
+  <data name="TextProcessing_Description" xml:space="preserve"><value>Proofreading, formatting, cleanup, and editing while preserving meaning.</value></data>
   <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Proofread text</value></data>
   <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Typography</value></data>
   <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Clean up text</value></data>
@@ -748,6 +748,8 @@ Open the GitHub release page?</value></data>
   <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Applies proper quotes, dashes, spaces, and other typographic marks.</value></data>
   <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Removes technical artifacts, extra line breaks, and service characters from PDF and HTML.</value></data>
   <data name="TextProcessing_ModeLiteraryEditDesc" xml:space="preserve"><value>Improves clarity, rhythm, and style while preserving meaning, facts, and the author's voice.</value></data>
+  <data name="TextProcessing_ModeNaturalStyle" xml:space="preserve"><value>Natural style</value></data>
+  <data name="TextProcessing_ModeNaturalStyleDesc" xml:space="preserve"><value>Makes text more natural by simplifying typography, varying rhythm, and removing formulaic phrasing.</value></data>
   <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Proofread text</value></data>
   <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Apply typography</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Clean up</value></data>

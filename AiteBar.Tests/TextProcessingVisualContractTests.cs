@@ -16,6 +16,7 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("x:Name=\"BtnShowDiff\"", xaml);
         Assert.Contains("x:Name=\"BtnClear\"", xaml);
         Assert.Contains("x:Name=\"BtnProcess\"", xaml);
+        Assert.Contains("x:Name=\"ModeNaturalStyle\" Tag=\"NaturalStyle\"", xaml);
         Assert.Contains("x:Name=\"TxtModelState\" Grid.Column=\"1\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModelStateBorder\"", xaml);
         Assert.DoesNotContain("x:Name=\"InfoStatusBorder\"", xaml);

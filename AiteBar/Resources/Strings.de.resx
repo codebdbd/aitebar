@@ -680,9 +680,9 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="Tool_TextProcessing" xml:space="preserve"><value>Textverarbeitung</value></data>
   <data name="Main_TextProcessingTooltip" xml:space="preserve"><value>Textverarbeitung</value></data>
   <data name="QuickTool_TextProcessing_Title" xml:space="preserve"><value>Textverarbeitung</value></data>
-  <data name="QuickTool_TextProcessing_Description" xml:space="preserve"><value>Überprüfung, typografische Formatierung und Textbereinigung ohne Sinnesänderung.</value></data>
+  <data name="QuickTool_TextProcessing_Description" xml:space="preserve"><value>Prüfung, Formatierung, Bereinigung und Redaktion unter Wahrung des Sinns.</value></data>
   <data name="TextProcessing_Title" xml:space="preserve"><value>Textverarbeitung</value></data>
-  <data name="TextProcessing_Description" xml:space="preserve"><value>Überprüfung, typografische Formatierung und Textbereinigung ohne Sinnesänderung.</value></data>
+  <data name="TextProcessing_Description" xml:space="preserve"><value>Prüfung, Formatierung, Bereinigung und Redaktion unter Wahrung des Sinns.</value></data>
   <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Text korrigieren</value></data>
   <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Typografie</value></data>
   <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Text bereinigen</value></data>
@@ -691,6 +691,8 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Setzt korrekte Anführungszeichen, Gedankenstriche, Leerzeichen und typografische Zeichen.</value></data>
   <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Entfernt technische Artefakte, überflüssige Zeilenumbrüche und Steuerzeichen aus PDF und HTML.</value></data>
   <data name="TextProcessing_ModeLiteraryEditDesc" xml:space="preserve"><value>Verbessert Klarheit, Rhythmus und Stil und bewahrt dabei Bedeutung, Fakten und Autorenstimme.</value></data>
+  <data name="TextProcessing_ModeNaturalStyle" xml:space="preserve"><value>Natürlicher Stil</value></data>
+  <data name="TextProcessing_ModeNaturalStyleDesc" xml:space="preserve"><value>Macht Texte natürlicher, vereinfacht die Typografie, variiert den Rhythmus und entfernt Floskeln.</value></data>
   <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Text prüfen</value></data>
   <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Typografie anwenden</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Bereinigen</value></data>

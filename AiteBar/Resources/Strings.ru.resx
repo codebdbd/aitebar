@@ -1263,9 +1263,9 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="Tool_TextProcessing" xml:space="preserve"><value>Обработка текста</value></data>
   <data name="Main_TextProcessingTooltip" xml:space="preserve"><value>Обработка текста</value></data>
   <data name="QuickTool_TextProcessing_Title" xml:space="preserve"><value>Обработка текста</value></data>
-  <data name="QuickTool_TextProcessing_Description" xml:space="preserve"><value>Проверка, типографическая обработка и очистка текста без изменения его смысла.</value></data>
+  <data name="QuickTool_TextProcessing_Description" xml:space="preserve"><value>Проверка, оформление, очистка и редакция текста с сохранением его смысла.</value></data>
   <data name="TextProcessing_Title" xml:space="preserve"><value>Обработка текста</value></data>
-  <data name="TextProcessing_Description" xml:space="preserve"><value>Проверка, типографическая обработка и очистка текста без изменения его смысла.</value></data>
+  <data name="TextProcessing_Description" xml:space="preserve"><value>Проверка, оформление, очистка и редакция текста с сохранением его смысла.</value></data>
   <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Проверка текста</value></data>
   <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Типографика</value></data>
   <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Очистка текста</value></data>
@@ -1274,6 +1274,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Расставляет правильные кавычки, тире, пробелы и другие типографские знаки.</value></data>
   <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Удаляет технический мусор, лишние переносы и служебные символы PDF и HTML.</value></data>
   <data name="TextProcessing_ModeLiteraryEditDesc" xml:space="preserve"><value>Улучшает ясность, ритм и стиль текста, сохраняя смысл, факты и авторский голос.</value></data>
+  <data name="TextProcessing_ModeNaturalStyle" xml:space="preserve"><value>Естественный стиль</value></data>
+  <data name="TextProcessing_ModeNaturalStyleDesc" xml:space="preserve"><value>Делает текст живее: упрощает типографику, меняет ритм и убирает шаблонные конструкции.</value></data>
   <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Проверить текст</value></data>
   <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Применить типографику</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Очистить текст</value></data>

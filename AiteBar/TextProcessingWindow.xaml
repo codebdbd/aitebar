@@ -146,6 +146,10 @@
                              Header="{local:Loc ResourceKey=TextProcessing_ModeLiteraryEdit}"
                              Style="{StaticResource TextProcessingTabItemStyle}"
                              AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeLiteraryEdit}"/>
+                    <TabItem x:Name="ModeNaturalStyle" Tag="NaturalStyle"
+                             Header="{local:Loc ResourceKey=TextProcessing_ModeNaturalStyle}"
+                             Style="{StaticResource TextProcessingTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeNaturalStyle}"/>
                 </TabControl>
             </Border>
 
