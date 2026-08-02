@@ -148,6 +148,7 @@ public sealed class HotkeyServiceTests
         Assert.True(service.TryGetCommand(HotkeyService.QRCodeGeneratorId, out var qrCodeGenerator));
         Assert.True(service.TryGetCommand(HotkeyService.ClipboardManagerId, out var clipboardManager));
         Assert.True(service.TryGetCommand(HotkeyService.TextProcessingId, out var textProcessing));
+        Assert.True(service.TryGetCommand(HotkeyService.PromptBuilderId, out var promptBuilder));
         Assert.True(service.TryGetCommand(HotkeyService.ZenEditorId, out var zenEditor));
         Assert.False(service.TryGetCommand(123, out _));
         Assert.Equal(HotkeyCommand.ShowPanel, showPanel);
@@ -157,6 +158,7 @@ public sealed class HotkeyServiceTests
         Assert.Equal(HotkeyCommand.QRCodeGenerator, qrCodeGenerator);
         Assert.Equal(HotkeyCommand.ClipboardManager, clipboardManager);
         Assert.Equal(HotkeyCommand.TextProcessing, textProcessing);
+        Assert.Equal(HotkeyCommand.PromptBuilder, promptBuilder);
         Assert.Equal(HotkeyCommand.ZenEditor, zenEditor);
     }
 
@@ -171,6 +173,7 @@ public sealed class HotkeyServiceTests
             GlobalHotkeyKey = "Space",
             QuickNoteHotkey = new HotkeyBinding { Alt = true, Key = "Q" },
             TextProcessingHotkey = new HotkeyBinding { Ctrl = true, Key = "T" },
+            PromptBuilderHotkey = new HotkeyBinding { Ctrl = true, Key = "P" },
             ZenEditorHotkey = new HotkeyBinding { Alt = true, Key = "Z" }
         };
 
@@ -190,6 +193,7 @@ public sealed class HotkeyServiceTests
                 HotkeyCommand.QRCodeGenerator,
                 HotkeyCommand.ClipboardManager,
                 HotkeyCommand.TextProcessing,
+                HotkeyCommand.PromptBuilder,
                 HotkeyCommand.ZenEditor
             ],
             definitions.Select(definition => definition.Command));
@@ -198,6 +202,7 @@ public sealed class HotkeyServiceTests
         Assert.True(definitions[0].Binding.Ctrl);
         Assert.Equal("Q", definitions.First(definition => definition.Command == HotkeyCommand.QuickNote).Binding.Key);
         Assert.Equal("T", definitions.First(definition => definition.Command == HotkeyCommand.TextProcessing).Binding.Key);
+        Assert.Equal("P", definitions.First(definition => definition.Command == HotkeyCommand.PromptBuilder).Binding.Key);
         Assert.Equal("Z", definitions.First(definition => definition.Command == HotkeyCommand.ZenEditor).Binding.Key);
     }
 

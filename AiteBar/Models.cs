@@ -187,6 +187,7 @@ public class AppSettings
         public bool ShowPresetAppsFolder { get; set; } = true;
         public bool ShowPresetCopilot { get; set; } = true;
         public bool ShowPresetTextProcessing { get; set; } = true;
+        public bool ShowPresetPromptBuilder { get; set; } = false;
         public bool ShowPresetZenEditor { get; set; } = true;
     public bool ClipboardManagerPersistHistory { get; set; } = true;
     public string QuickNoteThemeId { get; set; } = "dark";
@@ -218,6 +219,7 @@ public class AppSettings
     public HotkeyBinding QRCodeGeneratorHotkey { get; set; } = new();
     public HotkeyBinding ClipboardManagerHotkey { get; set; } = new();
     public HotkeyBinding TextProcessingHotkey { get; set; } = new();
+    public HotkeyBinding PromptBuilderHotkey { get; set; } = new();
     public HotkeyBinding ZenEditorHotkey { get; set; } = new();
     public FileSortUndoState? LastFileSortOperation { get; set; }
     public MultiFileSortUndoState? LastMultiFileSortOperation { get; set; }
@@ -233,6 +235,17 @@ public class AppSettings
     public string? TextProcessingSelectedModelId { get; set; }
     public string? TextProcessingSelectedProviderId { get; set; }
     public bool TextProcessingIsAutoModel { get; set; } = true;
+
+    public double? PromptBuilderLeft { get; set; }
+    public double? PromptBuilderTop { get; set; }
+    public double? PromptBuilderWidth { get; set; }
+    public double? PromptBuilderHeight { get; set; }
+    public string? PromptBuilderWindowState { get; set; }
+    public bool PromptBuilderWindowPlacementInitialized { get; set; }
+    public string? PromptBuilderSelectedConnectionId { get; set; }
+    public string? PromptBuilderSelectedModelId { get; set; }
+    public string? PromptBuilderSelectedProviderId { get; set; }
+    public bool PromptBuilderIsAutoModel { get; set; } = true;
 
     public List<CustomElement> Elements { get; set; } = new();
     public List<string> UtilityButtonOrder { get; set; } = new();

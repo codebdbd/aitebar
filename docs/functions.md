@@ -1625,7 +1625,7 @@ HEX-цвет формата `#RRGGBB` копируется в clipboard.
 1. Настроить хотя бы одно включённое AI-подключение.
 2. Ввести текст либо вставить содержимое буфера в позицию курсора; выделенный фрагмент при вставке заменяется.
 3. Выбрать один из четырёх режимов и автоматический выбор либо конкретную доступную бесплатную текстовую модель. Каждая модель показана один раз независимо от количества API-ключей провайдера. Платные модели, модели с неизвестной стоимостью и генераторы изображений/видео утилита не использует.
-4. Запустить обработку кнопкой или сочетанием `Ctrl+Enter`.
+4. Запустить обработку кнопкой или `Shift+Enter` в редакторе. Обычный `Enter` вставляет перенос строки; `Ctrl+Enter` также поддерживается.
 5. Наблюдать появление результата по мере генерации и время выполнения; при необходимости отменить запрос кнопкой `Отменить` или `Esc`.
 6. После успеха переключаться между исходником, результатом и подсвеченным списком изменений. Удалённое показывается красным зачёркнутым, добавленное — зелёным подчёркнутым; открытая команда `Показать изменения` меняется на `Скрыть изменения`.
 7. Использовать `Ctrl+Z` и `Ctrl+Y` для отмены и повтора редактирования и операций утилиты.
@@ -1638,6 +1638,20 @@ HEX-цвет формата `#RRGGBB` копируется в clipboard.
 ### Подтверждение в коде
 
 `AiteBar/TextProcessingUtility.cs`, `AiteBar/TextProcessingWindow.xaml`, `AiteBar/TextProcessingWindow.xaml.cs`, `AiteBar/TextProcessingService.cs`, `AiteBar/AiGateway.cs`.
+
+## Конструктор промптов
+
+### Назначение
+
+Создаёт один профессиональный готовый промпт по краткому описанию задачи. Поддерживает пять независимых рубрик: программирование, изображения, тексты, видео и аудио, анализ и идеи. Результат не содержит приветствия, объяснений или уточняющих вопросов.
+
+### Где находится и как использовать
+
+Включите `Конструктор промптов` среди быстрых инструментов, выберите рубрику, опишите задачу и нажмите `Создать промпт`. Утилита использует выбранную бесплатную текстовую модель, показывает потоковый результат и поддерживает повтор, исходную задачу, готовый промпт, сравнение и копирование. Одна команда всегда создаёт один итоговый промпт; обязательные неизвестные данные обозначаются заполнителями в квадратных скобках.
+
+### Подтверждение в коде
+
+`AiteBar/PromptBuilderUtility.cs`, `AiteBar/PromptBuilderWindow.xaml`, `AiteBar/PromptBuilderWindow.xaml.cs`, `AiteBar/PromptBuilderService.cs`, `AiteBar/AiGateway.cs`.
 
 ## Дзен-редактор
 
@@ -2335,6 +2349,7 @@ Tray-меню.
 | `QRCodeGeneratorHotkey` | Hotkey QR Code Generator | HotkeyBinding | пустой binding |
 | `ClipboardManagerHotkey` | Hotkey Clipboard Manager | HotkeyBinding | пустой binding |
 | `TextProcessingHotkey` | Hotkey Обработки текста | HotkeyBinding | пустой binding |
+| `PromptBuilderHotkey` | Hotkey Конструктора промптов | HotkeyBinding | пустой binding |
 | `ZenEditorHotkey` | Hotkey Дзен-редактора | HotkeyBinding | пустой binding |
 | `ShowPresetSearch` | Показывать поиск | true/false | `true` |
 | `ShowPresetScreenshot` | Показывать скриншот | true/false | `true` |
@@ -2346,6 +2361,7 @@ Tray-меню.
 | `ShowPresetColorPicker` | Показывать пипетку | true/false | `false` |
 | `ShowPresetQuickNote` | Показывать Quick Note | true/false | `false` |
 | `ShowPresetZenEditor` | Показывать Дзен-редактор | true/false | `true` |
+| `ShowPresetPromptBuilder` | Показывать Конструктор промптов | true/false | `false` |
 | `ShowPresetQRCodeGenerator` | Показывать QR Code Generator | true/false | `false` |
 | `ShowPresetClipboardManager` | Показывать Clipboard Manager | true/false | `false` |
 | `ClipboardManagerPersistHistory` | Сохранять историю Clipboard Manager между сессиями | true/false | `true` |

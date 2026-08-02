@@ -996,6 +996,7 @@ public sealed class AppSettingsServiceTests
             ShowPresetAppsFolder = false,
             ShowPresetCopilot = false,
             ShowPresetTextProcessing = false,
+            ShowPresetPromptBuilder = true,
 
             TextProcessingLeft = 100.0,
             TextProcessingTop = 200.0,
@@ -1007,6 +1008,17 @@ public sealed class AppSettingsServiceTests
             TextProcessingSelectedModelId = "model-1",
             TextProcessingSelectedProviderId = "provider-1",
             TextProcessingIsAutoModel = false,
+
+            PromptBuilderLeft = 110.0,
+            PromptBuilderTop = 210.0,
+            PromptBuilderWidth = 1200.0,
+            PromptBuilderHeight = 800.0,
+            PromptBuilderWindowState = "Normal",
+            PromptBuilderWindowPlacementInitialized = true,
+            PromptBuilderSelectedConnectionId = "prompt-connection",
+            PromptBuilderSelectedModelId = "prompt-model",
+            PromptBuilderSelectedProviderId = "prompt-provider",
+            PromptBuilderIsAutoModel = false,
 
             ClipboardManagerPersistHistory = false,
             QuickNoteThemeId = "light",
@@ -1043,6 +1055,7 @@ public sealed class AppSettingsServiceTests
             IconConverterHotkey = new HotkeyBinding { Ctrl = true, Alt = false, Shift = true, Win = false, Key = "I" },
             ClipboardManagerHotkey = new HotkeyBinding { Ctrl = true, Alt = true, Shift = false, Win = false, Key = "V" },
             TextProcessingHotkey = new HotkeyBinding { Ctrl = true, Alt = false, Shift = false, Win = true, Key = "T" },
+            PromptBuilderHotkey = new HotkeyBinding { Ctrl = true, Alt = true, Shift = false, Win = false, Key = "P" },
             ZenEditorHotkey = new HotkeyBinding { Ctrl = false, Alt = true, Shift = true, Win = false, Key = "Z" },
 
             Contexts =
@@ -1125,6 +1138,7 @@ public sealed class AppSettingsServiceTests
         Assert.False(clone.ShowPresetAppsFolder);
         Assert.False(clone.ShowPresetCopilot);
         Assert.False(clone.ShowPresetTextProcessing);
+        Assert.True(clone.ShowPresetPromptBuilder);
 
         Assert.Equal(100.0, clone.TextProcessingLeft);
         Assert.Equal(200.0, clone.TextProcessingTop);
@@ -1136,6 +1150,17 @@ public sealed class AppSettingsServiceTests
         Assert.Equal("model-1", clone.TextProcessingSelectedModelId);
         Assert.Equal("provider-1", clone.TextProcessingSelectedProviderId);
         Assert.False(clone.TextProcessingIsAutoModel);
+
+        Assert.Equal(110.0, clone.PromptBuilderLeft);
+        Assert.Equal(210.0, clone.PromptBuilderTop);
+        Assert.Equal(1200.0, clone.PromptBuilderWidth);
+        Assert.Equal(800.0, clone.PromptBuilderHeight);
+        Assert.Equal("Normal", clone.PromptBuilderWindowState);
+        Assert.True(clone.PromptBuilderWindowPlacementInitialized);
+        Assert.Equal("prompt-connection", clone.PromptBuilderSelectedConnectionId);
+        Assert.Equal("prompt-model", clone.PromptBuilderSelectedModelId);
+        Assert.Equal("prompt-provider", clone.PromptBuilderSelectedProviderId);
+        Assert.False(clone.PromptBuilderIsAutoModel);
 
         Assert.False(clone.ClipboardManagerPersistHistory);
         Assert.Equal("light", clone.QuickNoteThemeId);
@@ -1173,6 +1198,7 @@ public sealed class AppSettingsServiceTests
         AssertCloneHotkeyBinding(original.IconConverterHotkey, clone.IconConverterHotkey);
         AssertCloneHotkeyBinding(original.ClipboardManagerHotkey, clone.ClipboardManagerHotkey);
         AssertCloneHotkeyBinding(original.TextProcessingHotkey, clone.TextProcessingHotkey);
+        AssertCloneHotkeyBinding(original.PromptBuilderHotkey, clone.PromptBuilderHotkey);
         AssertCloneHotkeyBinding(original.ZenEditorHotkey, clone.ZenEditorHotkey);
 
         // Contexts deep copy

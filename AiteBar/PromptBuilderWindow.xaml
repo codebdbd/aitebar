@@ -1,9 +1,9 @@
-<local:DarkWindow x:Class="AiteBar.TextProcessingWindow"
+<local:DarkWindow x:Class="AiteBar.PromptBuilderWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
-        Title="{local:Loc ResourceKey=TextProcessing_Title}"
+        Title="{local:Loc ResourceKey=PromptBuilder_Title}"
         Width="1280" Height="840"
         MinWidth="1000" MinHeight="700"
         WindowStartupLocation="CenterScreen"
@@ -27,16 +27,16 @@
                 <ResourceDictionary Source="UtilityWindowResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
-            <SolidColorBrush x:Key="TextProcessingCardBrush" Color="#252526"/>
-            <SolidColorBrush x:Key="TextProcessingCardHoverBrush" Color="#2D2D30"/>
-            <SolidColorBrush x:Key="TextProcessingWarningBrush" Color="#FFB400"/>
-            <SolidColorBrush x:Key="TextProcessingWarningBackgroundBrush" Color="#2A210F"/>
-            <SolidColorBrush x:Key="TextProcessingErrorBrush" Color="#E85A5A"/>
-            <SolidColorBrush x:Key="TextProcessingErrorBackgroundBrush" Color="#2C1919"/>
-            <SolidColorBrush x:Key="TextProcessingDiffAddedBrush" Color="#67C587"/>
-            <SolidColorBrush x:Key="TextProcessingDiffRemovedBrush" Color="#E47777"/>
+            <SolidColorBrush x:Key="PromptBuilderCardBrush" Color="#252526"/>
+            <SolidColorBrush x:Key="PromptBuilderCardHoverBrush" Color="#2D2D30"/>
+            <SolidColorBrush x:Key="PromptBuilderWarningBrush" Color="#FFB400"/>
+            <SolidColorBrush x:Key="PromptBuilderWarningBackgroundBrush" Color="#2A210F"/>
+            <SolidColorBrush x:Key="PromptBuilderErrorBrush" Color="#E85A5A"/>
+            <SolidColorBrush x:Key="PromptBuilderErrorBackgroundBrush" Color="#2C1919"/>
+            <SolidColorBrush x:Key="PromptBuilderDiffAddedBrush" Color="#67C587"/>
+            <SolidColorBrush x:Key="PromptBuilderDiffRemovedBrush" Color="#E47777"/>
 
-            <Style x:Key="TextProcessingTabItemStyle" TargetType="TabItem">
+            <Style x:Key="PromptBuilderTabItemStyle" TargetType="TabItem">
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Foreground" Value="{DynamicResource MutedText}"/>
                 <Setter Property="Template">
@@ -116,10 +116,10 @@
                            HorizontalAlignment="Center" VerticalAlignment="Stretch">
 
             <StackPanel DockPanel.Dock="Top" Margin="0,0,0,20">
-                <TextBlock Text="{local:Loc ResourceKey=TextProcessing_Title}"
+                <TextBlock Text="{local:Loc ResourceKey=PromptBuilder_Title}"
                            FontSize="30" FontWeight="SemiBold"
                            Foreground="{DynamicResource PrimaryText}"/>
-                <TextBlock Text="{local:Loc ResourceKey=TextProcessing_Description}"
+                <TextBlock Text="{local:Loc ResourceKey=PromptBuilder_Description}"
                            Margin="0,4,0,0" FontSize="14"
                            Foreground="{DynamicResource MutedText}"
                            TextWrapping="Wrap"/>
@@ -130,22 +130,26 @@
                 <TabControl x:Name="ModeTabs" Height="42"
                             Style="{StaticResource UnderlineTabControlStyle}"
                             SelectionChanged="ModeTabs_SelectionChanged">
-                    <TabItem x:Name="ModeProofread" Tag="Proofread" IsSelected="True"
-                             Header="{local:Loc ResourceKey=TextProcessing_ModeProofread}"
-                             Style="{StaticResource TextProcessingTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeProofread}"/>
-                    <TabItem x:Name="ModeTypography" Tag="Typography"
-                             Header="{local:Loc ResourceKey=TextProcessing_ModeTypography}"
-                             Style="{StaticResource TextProcessingTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeTypography}"/>
-                    <TabItem x:Name="ModeCleanup" Tag="Cleanup"
-                             Header="{local:Loc ResourceKey=TextProcessing_ModeCleanup}"
-                             Style="{StaticResource TextProcessingTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeCleanup}"/>
-                    <TabItem x:Name="ModeLiteraryEdit" Tag="LiteraryEdit"
-                             Header="{local:Loc ResourceKey=TextProcessing_ModeLiteraryEdit}"
-                             Style="{StaticResource TextProcessingTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeLiteraryEdit}"/>
+                    <TabItem x:Name="ModeProgramming" Tag="Programming" IsSelected="True"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeProgramming}"
+                             Style="{StaticResource PromptBuilderTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeProgramming}"/>
+                    <TabItem x:Name="ModeImages" Tag="Images"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeImages}"
+                             Style="{StaticResource PromptBuilderTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeImages}"/>
+                    <TabItem x:Name="ModeTexts" Tag="Texts"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeTexts}"
+                             Style="{StaticResource PromptBuilderTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeTexts}"/>
+                    <TabItem x:Name="ModeVideoAudio" Tag="VideoAudio"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeVideoAudio}"
+                             Style="{StaticResource PromptBuilderTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeVideoAudio}"/>
+                    <TabItem x:Name="ModeAnalysisIdeas" Tag="AnalysisIdeas"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeAnalysisIdeas}"
+                             Style="{StaticResource PromptBuilderTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeAnalysisIdeas}"/>
                 </TabControl>
             </Border>
 
@@ -163,8 +167,8 @@
                                    AutomationProperties.LiveSetting="Polite"/>
                     </StackPanel>
                     <Border x:Name="StatusBorder"
-                            Background="{StaticResource TextProcessingErrorBackgroundBrush}"
-                            BorderBrush="{StaticResource TextProcessingErrorBrush}" BorderThickness="1"
+                            Background="{StaticResource PromptBuilderErrorBackgroundBrush}"
+                            BorderBrush="{StaticResource PromptBuilderErrorBrush}" BorderThickness="1"
                             CornerRadius="6" Padding="14,8"
                             Visibility="Collapsed" AutomationProperties.LiveSetting="Assertive">
                         <TextBlock x:Name="TxtStatusMessage" TextWrapping="Wrap"
@@ -174,12 +178,12 @@
             </Border>
 
             <Border x:Name="LimitBorder" DockPanel.Dock="Top"
-                    Background="{StaticResource TextProcessingWarningBackgroundBrush}"
-                    BorderBrush="{StaticResource TextProcessingWarningBrush}" BorderThickness="1"
+                    Background="{StaticResource PromptBuilderWarningBackgroundBrush}"
+                    BorderBrush="{StaticResource PromptBuilderWarningBrush}" BorderThickness="1"
                     CornerRadius="6" Padding="14,10" Margin="0,0,0,12"
                     Visibility="Collapsed">
                 <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ErrorTooLong}"
-                           FontSize="13" Foreground="{StaticResource TextProcessingWarningBrush}"
+                           FontSize="13" Foreground="{StaticResource PromptBuilderWarningBrush}"
                            TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive"/>
             </Border>
 
@@ -231,7 +235,7 @@
             </Grid>
 
             <TextBlock DockPanel.Dock="Bottom"
-                       Text="{local:Loc ResourceKey=TextProcessing_DataWarning}"
+                       Text="{local:Loc ResourceKey=PromptBuilder_DataWarning}"
                        FontSize="12" Foreground="{DynamicResource MutedText}"
                        TextWrapping="Wrap" Margin="0,4,0,0"
                        AutomationProperties.LiveSetting="Polite"/>
@@ -245,7 +249,7 @@
 
                 <Border x:Name="EditorCard" Grid.Column="0"
                         BorderBrush="{DynamicResource BorderColor}" BorderThickness="1"
-                        CornerRadius="8" Background="{StaticResource TextProcessingCardBrush}">
+                        CornerRadius="8" Background="{StaticResource PromptBuilderCardBrush}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*"/>
@@ -264,8 +268,8 @@
                                      UndoLimit="100"
                                      ContextMenu="{StaticResource TextEditingContextMenu}"
                                      TextChanged="TxtEditor_TextChanged"
-                                     AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_Title}"
-                                     AutomationProperties.HelpText="{local:Loc ResourceKey=TextProcessing_Placeholder}"/>
+                                     AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_Title}"
+                                     AutomationProperties.HelpText="{local:Loc ResourceKey=PromptBuilder_Placeholder}"/>
                             <RichTextBox x:Name="DiffViewer"
                                          Visibility="Collapsed"
                                          IsReadOnly="True"
@@ -279,7 +283,7 @@
                                          ContextMenu="{StaticResource TextEditingContextMenu}"
                                          AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ButtonShowDiff}"/>
                             <TextBlock x:Name="TxtPlaceholder"
-                                       Text="{local:Loc ResourceKey=TextProcessing_Placeholder}"
+                                       Text="{local:Loc ResourceKey=PromptBuilder_Placeholder}"
                                        FontSize="17" Foreground="{DynamicResource MutedText}"
                                        Margin="13,11,0,0" TextWrapping="Wrap" IsHitTestVisible="False"
                                        Visibility="Visible"/>
@@ -361,7 +365,7 @@
                                        Text="&#xE8AB;" FontFamily="Segoe MDL2 Assets"
                                        FontSize="18" FontWeight="Normal" Margin="0,0,10,0"/>
                             <TextBlock x:Name="ToggleVersionLabel"
-                                       Text="{local:Loc ResourceKey=TextProcessing_ButtonBeforeProcessing}"/>
+                                       Text="{local:Loc ResourceKey=PromptBuilder_ButtonBeforeProcessing}"/>
                         </StackPanel>
                     </Button>
 

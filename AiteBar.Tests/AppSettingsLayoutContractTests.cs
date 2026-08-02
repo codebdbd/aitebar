@@ -24,13 +24,13 @@ public sealed class AppSettingsLayoutContractTests
         "ChkShowPresetExplorer", "ChkShowPresetDownloads", "ChkShowPresetFileSorter", "ChkShowPresetIconConverter",
         "ChkShowPresetTimerStopwatch", "ChkShowPresetColorPicker", "ChkShowPresetQuickNote", "ChkShowPresetQRCodeGenerator",
         "ChkShowPresetClipboardManager", "ChkShowPresetShowDesktop", "ChkShowPresetAppsFolder", "ChkShowPresetCopilot",
-        "ChkShowPresetTextProcessing",
+        "ChkShowPresetTextProcessing", "ChkShowPresetPromptBuilder", "HotkeyPromptBuilder",
         "ChkClipboardManagerPersistHistory", "QuickToolsList",
         "QuickToolRowQuickNote", "QuickToolRowQRCodeGenerator", "QuickToolRowDownloads", "QuickToolRowVideo",
         "QuickToolRowCopilot", "QuickToolRowCalculator", "QuickToolRowIconConverter", "QuickToolRowClipboardManager",
         "QuickToolRowColorPicker", "QuickToolRowSearch", "QuickToolRowShowDesktop", "QuickToolRowAppsFolder",
         "QuickToolRowExplorer", "QuickToolRowScreenshot", "QuickToolRowFileSorter", "QuickToolRowTimerStopwatch",
-        "QuickToolRowTextProcessing"
+        "QuickToolRowTextProcessing", "QuickToolRowPromptBuilder"
     ];
 
     [Fact]
@@ -90,7 +90,7 @@ public sealed class AppSettingsLayoutContractTests
             element.Attribute(XamlNamespace + "Name")?.Value is "TxtPanelSizeValue" or "TxtActivationZoneValue" or "TxtActivationDelayValue");
         Assert.DoesNotContain(window.Descendants(PresentationNamespace + "Style"), element =>
             element.Attribute(XamlNamespace + "Key")?.Value is "ModernValueChipStyle" or "ModernValueChipTextStyle");
-        Assert.Equal(13, window.Descendants().Count(element => element.Name.LocalName == "HotkeyCaptureBox"));
+        Assert.Equal(14, window.Descendants().Count(element => element.Name.LocalName == "HotkeyCaptureBox"));
         Assert.DoesNotContain(window.Descendants(), element =>
             (element.Attribute(XamlNamespace + "Name")?.Value ?? string.Empty).EndsWith("Key", StringComparison.Ordinal));
 

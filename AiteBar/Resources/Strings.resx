@@ -841,6 +841,30 @@ Open the GitHub release page?</value></data>
   <data name="Main_MoreButtonsFormat" xml:space="preserve"><value>More ({0})</value></data>
   <data name="Main_DragHandleTooltip" xml:space="preserve"><value>Drag to another screen edge</value></data>
   <data name="Action_TargetNotFound" xml:space="preserve"><value>The file or folder no longer exists: {0}</value></data>
+  <data name="Tool_PromptBuilder" xml:space="preserve"><value>Prompt Builder</value></data>
+  <data name="Main_PromptBuilderTooltip" xml:space="preserve"><value>Prompt Builder</value></data>
+  <data name="QuickTool_PromptBuilder_Title" xml:space="preserve"><value>Prompt Builder</value></data>
+  <data name="QuickTool_PromptBuilder_Description" xml:space="preserve"><value>Creates a professional ready-to-use AI prompt from a brief task description.</value></data>
+  <data name="PromptBuilder_Title" xml:space="preserve"><value>Prompt Builder</value></data>
+  <data name="PromptBuilder_Description" xml:space="preserve"><value>Creates professional prompts for working with AI.</value></data>
+  <data name="PromptBuilder_ModeProgramming" xml:space="preserve"><value>Programming</value></data>
+  <data name="PromptBuilder_ModeProgrammingDesc" xml:space="preserve"><value>Adds requirements for features, stack, architecture, testing, and output format.</value></data>
+  <data name="PromptBuilder_ModeImages" xml:space="preserve"><value>Images</value></data>
+  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Defines composition, style, lighting, palette, framing, and constraints.</value></data>
+  <data name="PromptBuilder_ModeTexts" xml:space="preserve"><value>Texts</value></data>
+  <data name="PromptBuilder_ModeTextsDesc" xml:space="preserve"><value>Sets the audience, goal, tone, structure, length, format, and accuracy requirements.</value></data>
+  <data name="PromptBuilder_ModeVideoAudio" xml:space="preserve"><value>Video and audio</value></data>
+  <data name="PromptBuilder_ModeVideoAudioDesc" xml:space="preserve"><value>Defines the script, duration, pacing, scenes, sound, motion, and delivery format.</value></data>
+  <data name="PromptBuilder_ModeAnalysisIdeas" xml:space="preserve"><value>Analysis and ideas</value></data>
+  <data name="PromptBuilder_ModeAnalysisIdeasDesc" xml:space="preserve"><value>Defines the objective, criteria, method, evidence, risks, and actionable output.</value></data>
+  <data name="PromptBuilder_Placeholder" xml:space="preserve"><value>Briefly describe what the AI should do</value></data>
+  <data name="PromptBuilder_ButtonProcess" xml:space="preserve"><value>Create prompt</value></data>
+  <data name="PromptBuilder_ButtonBeforeProcessing" xml:space="preserve"><value>Create a prompt to see the result.</value></data>
+  <data name="PromptBuilder_ButtonShowOriginal" xml:space="preserve"><value>Show brief</value></data>
+  <data name="PromptBuilder_ButtonShowResult" xml:space="preserve"><value>Show prompt</value></data>
+  <data name="PromptBuilder_DataWarning" xml:space="preserve"><value>The task description is sent to the selected AI service only after prompt creation starts.</value></data>
+  <data name="PromptBuilder_ErrorEmptyInput" xml:space="preserve"><value>Describe the task first.</value></data>
+  <data name="PromptBuilder_ErrorEmptyResponse" xml:space="preserve"><value>The AI returned an empty prompt. Try again.</value></data>
 </root>
 
 

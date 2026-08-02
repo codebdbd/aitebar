@@ -967,6 +967,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
             case HotkeyCommand.TextProcessing:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("TextProcessing", HideDock));
                 break;
+            case HotkeyCommand.PromptBuilder:
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("PromptBuilder", HideDock));
+                break;
             case HotkeyCommand.ZenEditor:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("ZenEditor", HideDock));
                 break;
@@ -1686,6 +1689,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                         break;
                     case "TextProcessing":
                         await _actionService.LaunchUtilityAsync("TextProcessing", HideDock);
+                        break;
+                    case "PromptBuilder":
+                        await _actionService.LaunchUtilityAsync("PromptBuilder", HideDock);
                         break;
                     case "ZenEditor":
                         await _actionService.LaunchUtilityAsync("ZenEditor", HideDock);

@@ -784,6 +784,30 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="Main_MoreButtonsFormat" xml:space="preserve"><value>Mehr ({0})</value></data>
   <data name="Main_DragHandleTooltip" xml:space="preserve"><value>Leiste an einen anderen Bildschirmrand ziehen</value></data>
   <data name="Action_TargetNotFound" xml:space="preserve"><value>Die Datei oder der Ordner ist nicht mehr vorhanden: {0}</value></data>
+  <data name="Tool_PromptBuilder" xml:space="preserve"><value>Prompt-Generator</value></data>
+  <data name="Main_PromptBuilderTooltip" xml:space="preserve"><value>Prompt-Generator</value></data>
+  <data name="QuickTool_PromptBuilder_Title" xml:space="preserve"><value>Prompt-Generator</value></data>
+  <data name="QuickTool_PromptBuilder_Description" xml:space="preserve"><value>Erstellt aus einer kurzen Aufgabenbeschreibung einen professionellen, sofort nutzbaren KI-Prompt.</value></data>
+  <data name="PromptBuilder_Title" xml:space="preserve"><value>Prompt-Generator</value></data>
+  <data name="PromptBuilder_Description" xml:space="preserve"><value>Erstellt professionelle Prompts für die Arbeit mit KI.</value></data>
+  <data name="PromptBuilder_ModeProgramming" xml:space="preserve"><value>Programmierung</value></data>
+  <data name="PromptBuilder_ModeProgrammingDesc" xml:space="preserve"><value>Ergänzt Anforderungen an Funktionen, Stack, Architektur, Tests und Ausgabeformat.</value></data>
+  <data name="PromptBuilder_ModeImages" xml:space="preserve"><value>Bilder</value></data>
+  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Definiert Komposition, Stil, Licht, Farbpalette, Bildformat und Einschränkungen.</value></data>
+  <data name="PromptBuilder_ModeTexts" xml:space="preserve"><value>Texte</value></data>
+  <data name="PromptBuilder_ModeTextsDesc" xml:space="preserve"><value>Legt Zielgruppe, Ziel, Ton, Struktur, Umfang, Format und Genauigkeit fest.</value></data>
+  <data name="PromptBuilder_ModeVideoAudio" xml:space="preserve"><value>Video und Audio</value></data>
+  <data name="PromptBuilder_ModeVideoAudioDesc" xml:space="preserve"><value>Definiert Ablauf, Dauer, Tempo, Szenen, Ton, Bewegung und technisches Format.</value></data>
+  <data name="PromptBuilder_ModeAnalysisIdeas" xml:space="preserve"><value>Analyse und Ideen</value></data>
+  <data name="PromptBuilder_ModeAnalysisIdeasDesc" xml:space="preserve"><value>Definiert Ziel, Kriterien, Methode, Quellen, Risiken und umsetzbare Ergebnisse.</value></data>
+  <data name="PromptBuilder_Placeholder" xml:space="preserve"><value>Beschreiben Sie kurz, was die KI tun soll</value></data>
+  <data name="PromptBuilder_ButtonProcess" xml:space="preserve"><value>Prompt erstellen</value></data>
+  <data name="PromptBuilder_ButtonBeforeProcessing" xml:space="preserve"><value>Erstellen Sie einen Prompt, um das Ergebnis zu sehen.</value></data>
+  <data name="PromptBuilder_ButtonShowOriginal" xml:space="preserve"><value>Aufgabe anzeigen</value></data>
+  <data name="PromptBuilder_ButtonShowResult" xml:space="preserve"><value>Prompt anzeigen</value></data>
+  <data name="PromptBuilder_DataWarning" xml:space="preserve"><value>Die Aufgabenbeschreibung wird erst nach dem Start an den gewählten KI-Dienst gesendet.</value></data>
+  <data name="PromptBuilder_ErrorEmptyInput" xml:space="preserve"><value>Beschreiben Sie zuerst die Aufgabe.</value></data>
+  <data name="PromptBuilder_ErrorEmptyResponse" xml:space="preserve"><value>Die KI hat einen leeren Prompt zurückgegeben. Versuchen Sie es erneut.</value></data>
 </root>
 
 

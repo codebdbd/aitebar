@@ -1367,6 +1367,30 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="Main_MoreButtonsFormat" xml:space="preserve"><value>Ещё ({0})</value></data>
   <data name="Main_DragHandleTooltip" xml:space="preserve"><value>Перетащить панель к другому краю экрана</value></data>
   <data name="Action_TargetNotFound" xml:space="preserve"><value>Файл или папка больше не существует: {0}</value></data>
+  <data name="Tool_PromptBuilder" xml:space="preserve"><value>Конструктор промптов</value></data>
+  <data name="Main_PromptBuilderTooltip" xml:space="preserve"><value>Конструктор промптов</value></data>
+  <data name="QuickTool_PromptBuilder_Title" xml:space="preserve"><value>Конструктор промптов</value></data>
+  <data name="QuickTool_PromptBuilder_Description" xml:space="preserve"><value>Создаёт профессиональный готовый промпт по краткому описанию задачи.</value></data>
+  <data name="PromptBuilder_Title" xml:space="preserve"><value>Конструктор промптов</value></data>
+  <data name="PromptBuilder_Description" xml:space="preserve"><value>Создание профессиональных промптов для работы с нейросетями.</value></data>
+  <data name="PromptBuilder_ModeProgramming" xml:space="preserve"><value>Программирование</value></data>
+  <data name="PromptBuilder_ModeProgrammingDesc" xml:space="preserve"><value>Добавит требования к функциям, стеку, архитектуре, тестам и формату результата.</value></data>
+  <data name="PromptBuilder_ModeImages" xml:space="preserve"><value>Изображения</value></data>
+  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Уточнит композицию, стиль, свет, палитру, формат кадра и ограничения.</value></data>
+  <data name="PromptBuilder_ModeTexts" xml:space="preserve"><value>Тексты</value></data>
+  <data name="PromptBuilder_ModeTextsDesc" xml:space="preserve"><value>Задаст аудиторию, цель, тон, структуру, объём, формат и требования к точности.</value></data>
+  <data name="PromptBuilder_ModeVideoAudio" xml:space="preserve"><value>Видео и аудио</value></data>
+  <data name="PromptBuilder_ModeVideoAudioDesc" xml:space="preserve"><value>Опишет сценарий, длительность, темп, сцены, звук, движение и технический формат.</value></data>
+  <data name="PromptBuilder_ModeAnalysisIdeas" xml:space="preserve"><value>Анализ и идеи</value></data>
+  <data name="PromptBuilder_ModeAnalysisIdeasDesc" xml:space="preserve"><value>Определит цель, критерии, метод, источники, риски и формат практических выводов.</value></data>
+  <data name="PromptBuilder_Placeholder" xml:space="preserve"><value>Кратко опишите, что должна сделать нейросеть</value></data>
+  <data name="PromptBuilder_ButtonProcess" xml:space="preserve"><value>Создать промпт</value></data>
+  <data name="PromptBuilder_ButtonBeforeProcessing" xml:space="preserve"><value>Создайте промпт, чтобы увидеть результат.</value></data>
+  <data name="PromptBuilder_ButtonShowOriginal" xml:space="preserve"><value>Показать задачу</value></data>
+  <data name="PromptBuilder_ButtonShowResult" xml:space="preserve"><value>Показать промпт</value></data>
+  <data name="PromptBuilder_DataWarning" xml:space="preserve"><value>Описание задачи отправляется выбранному AI-сервису только после запуска создания промпта.</value></data>
+  <data name="PromptBuilder_ErrorEmptyInput" xml:space="preserve"><value>Сначала опишите задачу.</value></data>
+  <data name="PromptBuilder_ErrorEmptyResponse" xml:space="preserve"><value>Нейросеть вернула пустой промпт. Попробуйте ещё раз.</value></data>
 </root>
 
 

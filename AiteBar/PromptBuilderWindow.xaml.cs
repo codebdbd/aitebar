@@ -22,7 +22,7 @@ using Forms = System.Windows.Forms;
 namespace AiteBar;
 
 [SupportedOSPlatform("windows6.1")]
-public partial class TextProcessingWindow : DarkWindow
+public partial class PromptBuilderWindow : DarkWindow
 {
     private const double PreferredWidth = 1280;
     private const double PreferredHeight = 840;
@@ -34,7 +34,7 @@ public partial class TextProcessingWindow : DarkWindow
     private const double WorkAreaRatio = 0.9;
     private static readonly TimeSpan StreamingUiUpdateInterval = TimeSpan.FromMilliseconds(50);
 
-    private readonly TextProcessingService _service;
+    private readonly PromptBuilderService _service;
     private readonly AppSettingsService _settingsService;
     private readonly AiGateway _gateway;
     private readonly MainWindow? _mainWindow;
@@ -59,14 +59,14 @@ public partial class TextProcessingWindow : DarkWindow
     private bool _hasCopiedResult;
     private string _lastUsedModelDisplay = string.Empty;
     private string _inlineInfoStatus = string.Empty;
-    private TextProcessingMode _currentMode = TextProcessingMode.Proofread;
+    private PromptBuilderCategory _currentMode = PromptBuilderCategory.Programming;
     private string _originalText = string.Empty;
     private string _processedText = string.Empty;
     private bool _isAutoModel = true;
     private string? _selectedProviderId;
     private string? _selectedModelId;
     private string _lastOriginalText = string.Empty;
-    private TextProcessingMode _lastMode;
+    private PromptBuilderCategory _lastMode;
     private bool _lastWasAutoModel = true;
     private string? _lastProviderId;
     private string? _lastModelId;
@@ -75,8 +75,8 @@ public partial class TextProcessingWindow : DarkWindow
     private bool _isProgressStatusVisible;
     private int _infoStatusVersion;
 
-    public TextProcessingWindow(
-        TextProcessingService service,
+    public PromptBuilderWindow(
+        PromptBuilderService service,
         AppSettingsService settingsService,
         MainWindow? mainWindow = null)
     {
@@ -84,7 +84,7 @@ public partial class TextProcessingWindow : DarkWindow
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _mainWindow = mainWindow;
         _gateway = new AiGateway(settingsService);
-        _currentMode = TextProcessingMode.Proofread;
+        _currentMode = PromptBuilderCategory.Programming;
         InitializeComponent();
         _progressTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) =>
             UpdateProcessingProgress(), Dispatcher);
@@ -246,14 +246,23 @@ public partial class TextProcessingWindow : DarkWindow
         {
             return;
         }
-        _currentMode = tag switch
+        PromptBuilderCategory selectedMode = tag switch
         {
-            "Proofread" => TextProcessingMode.Proofread,
-            "Typography" => TextProcessingMode.Typography,
-            "Cleanup" => TextProcessingMode.Cleanup,
-            "LiteraryEdit" => TextProcessingMode.LiteraryEdit,
+            "Programming" => PromptBuilderCategory.Programming,
+            "Images" => PromptBuilderCategory.Images,
+            "Texts" => PromptBuilderCategory.Texts,
+            "VideoAudio" => PromptBuilderCategory.VideoAudio,
+            "AnalysisIdeas" => PromptBuilderCategory.AnalysisIdeas,
             _ => _currentMode
         };
+
+        if (selectedMode == _currentMode)
+        {
+            return;
+        }
+
+        _currentMode = selectedMode;
+        Clear();
         ApplyModeToUi();
         RefreshUiState();
     }
@@ -482,7 +491,7 @@ public partial class TextProcessingWindow : DarkWindow
         }
 
         string input;
-        TextProcessingMode mode;
+        PromptBuilderCategory mode;
         bool useAutoModel;
         string? providerId;
         string? modelId;
@@ -523,7 +532,7 @@ public partial class TextProcessingWindow : DarkWindow
             {
                 if (string.IsNullOrWhiteSpace(input))
                 {
-                    SetStatus(LocalizationService.Get("TextProcessing_ErrorEmptyInput"));
+                    SetStatus(LocalizationService.Get("PromptBuilder_ErrorEmptyInput"));
                 }
                 else if (!_hasEligibleModel)
                 {
@@ -544,8 +553,7 @@ public partial class TextProcessingWindow : DarkWindow
             }
         }
 
-        ProtectedText protectedInput = _service.ProtectTechnicalFragments(input);
-        AiChatRequest request = _service.BuildRequest(mode, protectedInput.Text);
+        AiChatRequest request = _service.BuildRequest(mode, input);
         ModelItem? selected = null;
         if (!useAutoModel)
         {
@@ -590,7 +598,7 @@ public partial class TextProcessingWindow : DarkWindow
         RefreshUiState();
         try
         {
-            AiGatewayStream response = await _gateway.GenerateTextProcessingStreamingAsync(request, _processingCts.Token);
+            AiGatewayStream response = await _gateway.GeneratePromptBuilderStreamingAsync(request, _processingCts.Token);
             var streamedResponse = new StringBuilder();
             bool receivedContent = false;
             long lastUiUpdate = 0;
@@ -604,31 +612,15 @@ public partial class TextProcessingWindow : DarkWindow
                 if (lastUiUpdate == 0 ||
                     Stopwatch.GetElapsedTime(lastUiUpdate) >= StreamingUiUpdateInterval)
                 {
-                    string preview = BuildStreamingPreview(streamedResponse.ToString(), protectedInput);
+                    string preview = BuildStreamingPreview(streamedResponse.ToString());
                     SetEditorText(preview);
                     lastUiUpdate = Stopwatch.GetTimestamp();
                 }
             }
-            string cleanedProtected = _service.CleanResponse(
-                streamedResponse.ToString(),
-                protectedInput.Text);
-            string cleaned = TextProcessingService.RestoreTechnicalFragments(
-                cleanedProtected,
-                protectedInput,
-                requireAllMarkers: true);
+            string cleaned = _service.CleanResponse(streamedResponse.ToString());
             if (string.IsNullOrWhiteSpace(cleaned))
             {
-                SetStatus(LocalizationService.Get("TextProcessing_ErrorEmptyResponse"));
-                return;
-            }
-            if (TextProcessingService.ViolatesContentPreservation(
-                    input,
-                    cleaned,
-                    protectedInput.Fragments.Values,
-                    TextProcessingService.GetMinimumWordOverlap(mode)))
-            {
-                SetEditorText(textShownBeforeRequest);
-                SetStatus(LocalizationService.Get("TextProcessing_ErrorContentChanged"));
+                SetStatus(LocalizationService.Get("PromptBuilder_ErrorEmptyResponse"));
                 return;
             }
             _originalText = input;
@@ -875,29 +867,8 @@ public partial class TextProcessingWindow : DarkWindow
         }
     }
 
-    internal static string BuildStreamingPreview(string rawText, ProtectedText protectedText)
-    {
-        string visibleText = TextProcessingService.HideReasoningFromStreamingPreview(
-            rawText ?? string.Empty);
-        int partialMarkerLength = 0;
-        foreach (string marker in protectedText.Fragments.Keys)
-        {
-            int limit = Math.Min(visibleText.Length, marker.Length - 1);
-            for (int length = limit; length >= 2; length--)
-            {
-                if (marker.StartsWith(visibleText[^length..], StringComparison.Ordinal))
-                {
-                    partialMarkerLength = Math.Max(partialMarkerLength, length);
-                    break;
-                }
-            }
-        }
-        if (partialMarkerLength > 0)
-        {
-            visibleText = visibleText[..^partialMarkerLength];
-        }
-        return TextProcessingService.RestoreTechnicalFragments(visibleText, protectedText);
-    }
+    internal static string BuildStreamingPreview(string rawText) =>
+        PromptBuilderService.HideReasoningFromStreamingPreview(rawText ?? string.Empty);
 
     internal static (string Text, int CaretIndex) InsertAtSelection(
         string source,
@@ -931,7 +902,7 @@ public partial class TextProcessingWindow : DarkWindow
         TxtPlaceholder.Visibility = state.CharacterCount == 0 ? Visibility.Visible : Visibility.Collapsed;
         TxtCounters.Text = $"{LocalizationService.Format("TextProcessing_Characters", state.CharacterCount)} · {LocalizationService.Format("TextProcessing_Words", state.WordCount)}";
         TxtCounters.Foreground = state.IsOverLimit
-            ? (Brush)FindResource("TextProcessingWarningBrush")
+            ? (Brush)FindResource("PromptBuilderWarningBrush")
             : (Brush)FindResource("MutedText");
         AutomationProperties.SetName(TxtCounters, TxtCounters.Text);
         LimitBorder.Visibility = state.IsOverLimit ? Visibility.Visible : Visibility.Collapsed;
@@ -939,10 +910,11 @@ public partial class TextProcessingWindow : DarkWindow
         TxtEditor.IsReadOnly = _isShowingOriginal;
         TxtEditor.Visibility = _isShowingDiff ? Visibility.Collapsed : Visibility.Visible;
         DiffViewer.Visibility = _isShowingDiff ? Visibility.Visible : Visibility.Collapsed;
-        ModeProofread.IsEnabled = state.CanSelectMode;
-        ModeTypography.IsEnabled = state.CanSelectMode;
-        ModeCleanup.IsEnabled = state.CanSelectMode;
-        ModeLiteraryEdit.IsEnabled = state.CanSelectMode;
+        ModeProgramming.IsEnabled = state.CanSelectMode;
+        ModeImages.IsEnabled = state.CanSelectMode;
+        ModeTexts.IsEnabled = state.CanSelectMode;
+        ModeVideoAudio.IsEnabled = state.CanSelectMode;
+        ModeAnalysisIdeas.IsEnabled = state.CanSelectMode;
         CmbModels.IsEnabled = !_isProcessing && !_isLoadingModels && _hasSelectableModel;
         BtnRefreshModels.IsEnabled = !_isProcessing && !_isLoadingModels;
         BtnPaste.IsEnabled = state.CanPaste;
@@ -952,8 +924,8 @@ public partial class TextProcessingWindow : DarkWindow
         BtnToggleVersion.IsEnabled = state.CanSwitchVersion;
         BtnShowDiff.IsEnabled = state.CanSwitchVersion;
         ToggleVersionLabel.Text = LocalizationService.Get(_isShowingOriginal
-            ? "TextProcessing_ButtonShowResult"
-            : "TextProcessing_ButtonShowOriginal");
+            ? "PromptBuilder_ButtonShowResult"
+            : "PromptBuilder_ButtonShowOriginal");
         AutomationProperties.SetName(BtnToggleVersion, ToggleVersionLabel.Text);
         ShowDiffLabel.Text = LocalizationService.Get(_isShowingDiff
             ? "TextProcessing_ButtonHideDiff"
@@ -963,7 +935,7 @@ public partial class TextProcessingWindow : DarkWindow
         BtnProcess.IsEnabled = state.CanCancel || state.CanProcess;
         ProcessButtonLabel.Text = _isProcessing
             ? LocalizationService.Get("TextProcessing_ButtonCancel")
-            : LocalizationService.Get("TextProcessing_ButtonProcess");
+            : LocalizationService.Get("PromptBuilder_ButtonProcess");
         AutomationProperties.SetName(BtnProcess, ProcessButtonLabel.Text);
 
         if (_isLoadingModels)
@@ -977,7 +949,7 @@ public partial class TextProcessingWindow : DarkWindow
         else if (!_hasEligibleModel)
         {
             TxtModelState.Text = LocalizationService.Get("TextProcessing_ErrorNoModels");
-            TxtModelState.Foreground = (Brush)FindResource("TextProcessingWarningBrush");
+            TxtModelState.Foreground = (Brush)FindResource("PromptBuilderWarningBrush");
             TxtModelState.ToolTip = TxtModelState.Text;
             TxtModelState.Visibility = Visibility.Visible;
             BtnOpenSettings.Visibility = Visibility.Visible;
@@ -1005,12 +977,12 @@ public partial class TextProcessingWindow : DarkWindow
         commandWidth = Math.Max(commandWidth, MeasureButtonWidthForLabels(
             BtnToggleVersion,
             ToggleVersionLabel,
-            LocalizationService.Get("TextProcessing_ButtonShowOriginal"),
-            LocalizationService.Get("TextProcessing_ButtonShowResult")));
+            LocalizationService.Get("PromptBuilder_ButtonShowOriginal"),
+            LocalizationService.Get("PromptBuilder_ButtonShowResult")));
         commandWidth = Math.Max(commandWidth, MeasureButtonWidthForLabels(
             BtnProcess,
             ProcessButtonLabel,
-            LocalizationService.Get("TextProcessing_ButtonProcess"),
+            LocalizationService.Get("PromptBuilder_ButtonProcess"),
             LocalizationService.Get("TextProcessing_ButtonCancel")));
         commandWidth = Math.Max(commandWidth, MeasureButtonWidthForLabels(
             BtnShowDiff,
@@ -1112,12 +1084,12 @@ public partial class TextProcessingWindow : DarkWindow
             var run = new Run(segment.Text);
             if (segment.Kind == TextDiffKind.Added)
             {
-                run.Foreground = (Brush)FindResource("TextProcessingDiffAddedBrush");
+                run.Foreground = (Brush)FindResource("PromptBuilderDiffAddedBrush");
                 run.TextDecorations = TextDecorations.Underline;
             }
             else if (segment.Kind == TextDiffKind.Removed)
             {
-                run.Foreground = (Brush)FindResource("TextProcessingDiffRemovedBrush");
+                run.Foreground = (Brush)FindResource("PromptBuilderDiffRemovedBrush");
                 run.TextDecorations = TextDecorations.Strikethrough;
             }
             paragraph.Inlines.Add(run);
@@ -1133,16 +1105,18 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void ApplyModeToUi()
     {
-        ModeProofread.IsSelected = _currentMode == TextProcessingMode.Proofread;
-        ModeTypography.IsSelected = _currentMode == TextProcessingMode.Typography;
-        ModeCleanup.IsSelected = _currentMode == TextProcessingMode.Cleanup;
-        ModeLiteraryEdit.IsSelected = _currentMode == TextProcessingMode.LiteraryEdit;
+        ModeProgramming.IsSelected = _currentMode == PromptBuilderCategory.Programming;
+        ModeImages.IsSelected = _currentMode == PromptBuilderCategory.Images;
+        ModeTexts.IsSelected = _currentMode == PromptBuilderCategory.Texts;
+        ModeVideoAudio.IsSelected = _currentMode == PromptBuilderCategory.VideoAudio;
+        ModeAnalysisIdeas.IsSelected = _currentMode == PromptBuilderCategory.AnalysisIdeas;
         TxtModeDescription.Text = _currentMode switch
         {
-            TextProcessingMode.Proofread => LocalizationService.Get("TextProcessing_ModeProofreadDesc"),
-            TextProcessingMode.Typography => LocalizationService.Get("TextProcessing_ModeTypographyDesc"),
-            TextProcessingMode.Cleanup => LocalizationService.Get("TextProcessing_ModeCleanupDesc"),
-            TextProcessingMode.LiteraryEdit => LocalizationService.Get("TextProcessing_ModeLiteraryEditDesc"),
+            PromptBuilderCategory.Programming => LocalizationService.Get("PromptBuilder_ModeProgrammingDesc"),
+            PromptBuilderCategory.Images => LocalizationService.Get("PromptBuilder_ModeImagesDesc"),
+            PromptBuilderCategory.Texts => LocalizationService.Get("PromptBuilder_ModeTextsDesc"),
+            PromptBuilderCategory.VideoAudio => LocalizationService.Get("PromptBuilder_ModeVideoAudioDesc"),
+            PromptBuilderCategory.AnalysisIdeas => LocalizationService.Get("PromptBuilder_ModeAnalysisIdeasDesc"),
             _ => string.Empty
         };
     }
@@ -1369,14 +1343,14 @@ public partial class TextProcessingWindow : DarkWindow
     {
         AppSettings settings = _settingsService.Settings;
         bool hadLegacyConnectionSelection =
-            !string.IsNullOrWhiteSpace(settings.TextProcessingSelectedConnectionId);
-        _isAutoModel = settings.TextProcessingIsAutoModel;
+            !string.IsNullOrWhiteSpace(settings.PromptBuilderSelectedConnectionId);
+        _isAutoModel = settings.PromptBuilderIsAutoModel;
         bool replacedUnavailableSelection = false;
         if (!_isAutoModel)
         {
             ModelItem? model = FindModel(
-                settings.TextProcessingSelectedProviderId,
-                settings.TextProcessingSelectedModelId);
+                settings.PromptBuilderSelectedProviderId,
+                settings.PromptBuilderSelectedModelId);
             if (model != null)
             {
                 CmbModels.SelectedItem = model;
@@ -1405,29 +1379,36 @@ public partial class TextProcessingWindow : DarkWindow
     {
         _settingsService.UpdateSettings(settings =>
         {
-            settings.TextProcessingIsAutoModel = _isAutoModel;
-            settings.TextProcessingSelectedConnectionId = null;
-            settings.TextProcessingSelectedProviderId = _isAutoModel ? null : _selectedProviderId;
-            settings.TextProcessingSelectedModelId = _isAutoModel ? null : _selectedModelId;
+            settings.PromptBuilderIsAutoModel = _isAutoModel;
+            settings.PromptBuilderSelectedConnectionId = null;
+            settings.PromptBuilderSelectedProviderId = _isAutoModel ? null : _selectedProviderId;
+            settings.PromptBuilderSelectedModelId = _isAutoModel ? null : _selectedModelId;
         });
     }
 
     private void RestoreWindowState(AppSettings settings)
     {
-        Forms.Screen screen = GetTargetScreen(settings.TextProcessingLeft, settings.TextProcessingTop);
+        bool useOwnPlacement = settings.PromptBuilderWindowPlacementInitialized;
+        double? savedLeft = useOwnPlacement ? settings.PromptBuilderLeft : settings.TextProcessingLeft;
+        double? savedTop = useOwnPlacement ? settings.PromptBuilderTop : settings.TextProcessingTop;
+        double? savedWidth = useOwnPlacement ? settings.PromptBuilderWidth : settings.TextProcessingWidth;
+        double? savedHeight = useOwnPlacement ? settings.PromptBuilderHeight : settings.TextProcessingHeight;
+        string? savedWindowState = useOwnPlacement ? settings.PromptBuilderWindowState : settings.TextProcessingWindowState;
+
+        Forms.Screen screen = GetTargetScreen(savedLeft, savedTop);
         System.Drawing.Rectangle work = screen.WorkingArea;
         double maxWidth = Math.Max(640, work.Width * WorkAreaRatio);
         double maxHeight = Math.Max(560, work.Height * WorkAreaRatio);
         MinWidth = Math.Min(_requiredMinWidth, maxWidth);
         MinHeight = Math.Min(PreferredMinHeight, maxHeight);
-        Width = Math.Clamp(settings.TextProcessingWidth ?? PreferredWidth, MinWidth, Math.Min(MaxWidth, maxWidth));
-        Height = Math.Clamp(settings.TextProcessingHeight ?? PreferredHeight, MinHeight, Math.Min(MaxHeight, maxHeight));
-        double desiredLeft = settings.TextProcessingLeft ?? work.Left + (work.Width - Width) / 2;
-        double desiredTop = settings.TextProcessingTop ?? work.Top + (work.Height - Height) / 2;
+        Width = Math.Clamp(savedWidth ?? PreferredWidth, MinWidth, Math.Min(MaxWidth, maxWidth));
+        Height = Math.Clamp(savedHeight ?? PreferredHeight, MinHeight, Math.Min(MaxHeight, maxHeight));
+        double desiredLeft = savedLeft ?? work.Left + (work.Width - Width) / 2;
+        double desiredTop = savedTop ?? work.Top + (work.Height - Height) / 2;
         Left = Math.Clamp(desiredLeft, work.Left, Math.Max(work.Left, work.Right - Width));
         Top = Math.Clamp(desiredTop, work.Top, Math.Max(work.Top, work.Bottom - Height));
         WindowStartupLocation = WindowStartupLocation.Manual;
-        WindowState = string.Equals(settings.TextProcessingWindowState, "Maximized", StringComparison.Ordinal)
+        WindowState = string.Equals(savedWindowState, "Maximized", StringComparison.Ordinal)
             ? WindowState.Maximized
             : WindowState.Normal;
     }
@@ -1457,11 +1438,12 @@ public partial class TextProcessingWindow : DarkWindow
         string state = WindowState == WindowState.Maximized ? "Maximized" : "Normal";
         _settingsService.UpdateSettings(settings =>
         {
-            settings.TextProcessingLeft = bounds.Left;
-            settings.TextProcessingTop = bounds.Top;
-            settings.TextProcessingWidth = bounds.Width;
-            settings.TextProcessingHeight = bounds.Height;
-            settings.TextProcessingWindowState = state;
+            settings.PromptBuilderLeft = bounds.Left;
+            settings.PromptBuilderTop = bounds.Top;
+            settings.PromptBuilderWidth = bounds.Width;
+            settings.PromptBuilderHeight = bounds.Height;
+            settings.PromptBuilderWindowState = state;
+            settings.PromptBuilderWindowPlacementInitialized = true;
         });
     }
 }

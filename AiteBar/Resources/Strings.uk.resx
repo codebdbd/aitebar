@@ -778,6 +778,30 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="Main_MoreButtonsFormat" xml:space="preserve"><value>Ще ({0})</value></data>
   <data name="Main_DragHandleTooltip" xml:space="preserve"><value>Перетягнути панель до іншого краю екрана</value></data>
   <data name="Action_TargetNotFound" xml:space="preserve"><value>Файл або папка більше не існує: {0}</value></data>
+  <data name="Tool_PromptBuilder" xml:space="preserve"><value>Конструктор промптів</value></data>
+  <data name="Main_PromptBuilderTooltip" xml:space="preserve"><value>Конструктор промптів</value></data>
+  <data name="QuickTool_PromptBuilder_Title" xml:space="preserve"><value>Конструктор промптів</value></data>
+  <data name="QuickTool_PromptBuilder_Description" xml:space="preserve"><value>Створює професійний готовий промпт за коротким описом завдання.</value></data>
+  <data name="PromptBuilder_Title" xml:space="preserve"><value>Конструктор промптів</value></data>
+  <data name="PromptBuilder_Description" xml:space="preserve"><value>Створення професійних промптів для роботи з нейромережами.</value></data>
+  <data name="PromptBuilder_ModeProgramming" xml:space="preserve"><value>Програмування</value></data>
+  <data name="PromptBuilder_ModeProgrammingDesc" xml:space="preserve"><value>Додасть вимоги до функцій, стеку, архітектури, тестів і формату результату.</value></data>
+  <data name="PromptBuilder_ModeImages" xml:space="preserve"><value>Зображення</value></data>
+  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Уточнить композицію, стиль, світло, палітру, формат кадру й обмеження.</value></data>
+  <data name="PromptBuilder_ModeTexts" xml:space="preserve"><value>Тексти</value></data>
+  <data name="PromptBuilder_ModeTextsDesc" xml:space="preserve"><value>Задасть аудиторію, мету, тон, структуру, обсяг, формат і вимоги до точності.</value></data>
+  <data name="PromptBuilder_ModeVideoAudio" xml:space="preserve"><value>Відео й аудіо</value></data>
+  <data name="PromptBuilder_ModeVideoAudioDesc" xml:space="preserve"><value>Опише сценарій, тривалість, темп, сцени, звук, рух і технічний формат.</value></data>
+  <data name="PromptBuilder_ModeAnalysisIdeas" xml:space="preserve"><value>Аналіз та ідеї</value></data>
+  <data name="PromptBuilder_ModeAnalysisIdeasDesc" xml:space="preserve"><value>Визначить мету, критерії, метод, джерела, ризики та формат практичних висновків.</value></data>
+  <data name="PromptBuilder_Placeholder" xml:space="preserve"><value>Коротко опишіть, що має зробити нейромережа</value></data>
+  <data name="PromptBuilder_ButtonProcess" xml:space="preserve"><value>Створити промпт</value></data>
+  <data name="PromptBuilder_ButtonBeforeProcessing" xml:space="preserve"><value>Створіть промпт, щоб побачити результат.</value></data>
+  <data name="PromptBuilder_ButtonShowOriginal" xml:space="preserve"><value>Показати завдання</value></data>
+  <data name="PromptBuilder_ButtonShowResult" xml:space="preserve"><value>Показати промпт</value></data>
+  <data name="PromptBuilder_DataWarning" xml:space="preserve"><value>Опис завдання надсилається вибраному AI-сервісу лише після запуску створення промпта.</value></data>
+  <data name="PromptBuilder_ErrorEmptyInput" xml:space="preserve"><value>Спочатку опишіть завдання.</value></data>
+  <data name="PromptBuilder_ErrorEmptyResponse" xml:space="preserve"><value>Нейромережа повернула порожній промпт. Спробуйте ще раз.</value></data>
 </root>
 
 

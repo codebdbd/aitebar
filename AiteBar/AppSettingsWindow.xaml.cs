@@ -222,6 +222,7 @@ public partial class AppSettingsWindow : DarkWindow
         (ChkShowPresetAppsFolder, UtilityButtonCatalog.AppsFolder),
         (ChkShowPresetCopilot, UtilityButtonCatalog.Copilot),
         (ChkShowPresetTextProcessing, UtilityButtonCatalog.TextProcessing),
+        (ChkShowPresetPromptBuilder, UtilityButtonCatalog.PromptBuilder),
         (ChkShowPresetZenEditor, UtilityButtonCatalog.ZenEditor)
     ];
 
@@ -305,6 +306,7 @@ public partial class AppSettingsWindow : DarkWindow
         (QuickToolRowFileSorter, "QuickTool_FileSorter_Title"),
         (QuickToolRowTimerStopwatch, "QuickTool_TimerStopwatch_Title"),
         (QuickToolRowTextProcessing, "QuickTool_TextProcessing_Title"),
+        (QuickToolRowPromptBuilder, "QuickTool_PromptBuilder_Title"),
         (QuickToolRowZenEditor, "QuickTool_ZenEditor_Title")
     ];
 
@@ -655,6 +657,7 @@ public partial class AppSettingsWindow : DarkWindow
             (ChkShowPresetAppsFolder, "Tool_AppsFolder"),
             (ChkShowPresetCopilot, "Tool_Copilot"),
             (ChkShowPresetTextProcessing, "Tool_TextProcessing"),
+            (ChkShowPresetPromptBuilder, "Tool_PromptBuilder"),
             (ChkShowPresetZenEditor, "Tool_ZenEditor"),
             (ChkClipboardManagerPersistHistory, "ClipboardManager_PersistHistorySetting")
         ];
@@ -677,6 +680,7 @@ public partial class AppSettingsWindow : DarkWindow
             (HotkeyQRCodeGenerator, "Tool_QRCodeGenerator"),
             (HotkeyClipboardManager, "Tool_ClipboardManager"),
             (HotkeyTextProcessing, "Tool_TextProcessing"),
+            (HotkeyPromptBuilder, "Tool_PromptBuilder"),
             (HotkeyZenEditor, "Tool_ZenEditor")
         ];
         foreach ((HotkeyCaptureBox captureBox, string resourceKey) in hotkeyFields)
@@ -702,6 +706,7 @@ public partial class AppSettingsWindow : DarkWindow
         yield return HotkeyQRCodeGenerator;
         yield return HotkeyClipboardManager;
         yield return HotkeyTextProcessing;
+        yield return HotkeyPromptBuilder;
         yield return HotkeyZenEditor;
     }
 
@@ -812,6 +817,7 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding qrCodeGeneratorBinding,
         HotkeyBinding clipboardManagerBinding,
         HotkeyBinding textProcessingBinding,
+        HotkeyBinding promptBuilderBinding,
         HotkeyBinding zenEditorBinding)
     {
         var registrations = new (string Name, HotkeyBinding Binding)[]
@@ -828,6 +834,7 @@ public partial class AppSettingsWindow : DarkWindow
             (LocalizationService.Get("Tool_QRCodeGenerator"), qrCodeGeneratorBinding),
             (LocalizationService.Get("Tool_ClipboardManager"), clipboardManagerBinding),
             (LocalizationService.Get("Tool_TextProcessing"), textProcessingBinding),
+            (LocalizationService.Get("Tool_PromptBuilder"), promptBuilderBinding),
             (LocalizationService.Get("Tool_ZenEditor"), zenEditorBinding)
         };
 
@@ -915,6 +922,7 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyQRCodeGenerator.SetBinding(_settings.QRCodeGeneratorHotkey);
         HotkeyClipboardManager.SetBinding(_settings.ClipboardManagerHotkey);
         HotkeyTextProcessing.SetBinding(_settings.TextProcessingHotkey);
+        HotkeyPromptBuilder.SetBinding(_settings.PromptBuilderHotkey);
         HotkeyZenEditor.SetBinding(_settings.ZenEditorHotkey);
 
         SelectSegmentByTag(_settings.Edge.ToString(), SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
@@ -1145,9 +1153,10 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding qrCodeGeneratorBinding = HotkeyQRCodeGenerator.GetBinding();
         HotkeyBinding clipboardManagerBinding = HotkeyClipboardManager.GetBinding();
         HotkeyBinding textProcessingBinding = HotkeyTextProcessing.GetBinding();
+        HotkeyBinding promptBuilderBinding = HotkeyPromptBuilder.GetBinding();
         HotkeyBinding zenEditorBinding = HotkeyZenEditor.GetBinding();
 
-        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding, textProcessingBinding, zenEditorBinding))
+        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding, textProcessingBinding, promptBuilderBinding, zenEditorBinding))
         {
             return;
         }
@@ -1171,6 +1180,7 @@ public partial class AppSettingsWindow : DarkWindow
             settings.QRCodeGeneratorHotkey = qrCodeGeneratorBinding;
             settings.ClipboardManagerHotkey = clipboardManagerBinding;
             settings.TextProcessingHotkey = textProcessingBinding;
+            settings.PromptBuilderHotkey = promptBuilderBinding;
             settings.ZenEditorHotkey = zenEditorBinding;
 
             foreach (var (checkBox, definition) in GetUtilityVisibilityBindings())

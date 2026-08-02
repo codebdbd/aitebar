@@ -20,6 +20,7 @@ public enum HotkeyCommand
     QRCodeGenerator,
     ClipboardManager,
     TextProcessing,
+    PromptBuilder,
     ZenEditor
 }
 
@@ -64,6 +65,7 @@ public sealed class HotkeyService
     internal const int ClipboardManagerId = 9010;
     internal const int TextProcessingId = 9011;
     internal const int ZenEditorId = 9012;
+    internal const int PromptBuilderId = 9013;
 
     internal const uint ModAlt = 0x0001;
     internal const uint ModControl = 0x0002;
@@ -84,6 +86,7 @@ public sealed class HotkeyService
         new HotkeyDescriptor(HotkeyCommand.QRCodeGenerator, QRCodeGeneratorId, "Tool_QRCodeGenerator"),
         new HotkeyDescriptor(HotkeyCommand.ClipboardManager, ClipboardManagerId, "Tool_ClipboardManager"),
         new HotkeyDescriptor(HotkeyCommand.TextProcessing, TextProcessingId, "Tool_TextProcessing"),
+        new HotkeyDescriptor(HotkeyCommand.PromptBuilder, PromptBuilderId, "Tool_PromptBuilder"),
         new HotkeyDescriptor(HotkeyCommand.ZenEditor, ZenEditorId, "Tool_ZenEditor")
     ];
 
@@ -128,6 +131,7 @@ public sealed class HotkeyService
             [HotkeyCommand.QRCodeGenerator] = settings.QRCodeGeneratorHotkey,
             [HotkeyCommand.ClipboardManager] = settings.ClipboardManagerHotkey,
             [HotkeyCommand.TextProcessing] = settings.TextProcessingHotkey,
+            [HotkeyCommand.PromptBuilder] = settings.PromptBuilderHotkey,
             [HotkeyCommand.ZenEditor] = settings.ZenEditorHotkey
         };
 

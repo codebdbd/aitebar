@@ -104,6 +104,7 @@ namespace AiteBar
                 ShowPresetAppsFolder = original.ShowPresetAppsFolder,
                 ShowPresetCopilot = original.ShowPresetCopilot,
                 ShowPresetTextProcessing = original.ShowPresetTextProcessing,
+                ShowPresetPromptBuilder = original.ShowPresetPromptBuilder,
                 ShowPresetZenEditor = original.ShowPresetZenEditor,
                 ClipboardManagerPersistHistory = original.ClipboardManagerPersistHistory,
                 QuickNoteThemeId = original.QuickNoteThemeId,
@@ -229,6 +230,14 @@ namespace AiteBar
                     Win = original.TextProcessingHotkey.Win,
                     Key = original.TextProcessingHotkey.Key
                 },
+                PromptBuilderHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.PromptBuilderHotkey.Ctrl,
+                    Alt = original.PromptBuilderHotkey.Alt,
+                    Shift = original.PromptBuilderHotkey.Shift,
+                    Win = original.PromptBuilderHotkey.Win,
+                    Key = original.PromptBuilderHotkey.Key
+                },
                 ZenEditorHotkey = new HotkeyBinding
                 {
                     Ctrl = original.ZenEditorHotkey.Ctrl,
@@ -283,6 +292,16 @@ namespace AiteBar
                 TextProcessingSelectedModelId = original.TextProcessingSelectedModelId,
                 TextProcessingSelectedProviderId = original.TextProcessingSelectedProviderId,
                 TextProcessingIsAutoModel = original.TextProcessingIsAutoModel,
+                PromptBuilderLeft = original.PromptBuilderLeft,
+                PromptBuilderTop = original.PromptBuilderTop,
+                PromptBuilderWidth = original.PromptBuilderWidth,
+                PromptBuilderHeight = original.PromptBuilderHeight,
+                PromptBuilderWindowState = original.PromptBuilderWindowState,
+                PromptBuilderWindowPlacementInitialized = original.PromptBuilderWindowPlacementInitialized,
+                PromptBuilderSelectedConnectionId = original.PromptBuilderSelectedConnectionId,
+                PromptBuilderSelectedModelId = original.PromptBuilderSelectedModelId,
+                PromptBuilderSelectedProviderId = original.PromptBuilderSelectedProviderId,
+                PromptBuilderIsAutoModel = original.PromptBuilderIsAutoModel,
                 SavedFileSortFolders = [.. (original.SavedFileSortFolders ?? [])]
             };
 

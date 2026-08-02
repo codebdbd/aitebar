@@ -22,9 +22,9 @@ public sealed class TextProcessingVisualContractTests
         Assert.DoesNotContain("x:Name=\"TxtInfoMessage\"", xaml);
         Assert.Contains("TextProcessing_DataWarning", xaml);
         Assert.Contains("x:Name=\"StatusBorder\"", xaml);
-        Assert.Contains("Grid.Column=\"0\" Grid.ColumnSpan=\"3\"", xaml);
-        Assert.Contains("Panel.ZIndex=\"10\" VerticalAlignment=\"Top\"", xaml);
-        Assert.DoesNotContain("x:Name=\"StatusBorder\" DockPanel.Dock=\"Top\"", xaml);
+        Assert.Contains("x:Name=\"ModeStatusHost\" DockPanel.Dock=\"Top\" Height=\"52\"", xaml);
+        Assert.DoesNotContain("Panel.ZIndex=\"10\"", xaml);
+        Assert.DoesNotContain("Grid.ColumnSpan=\"3\"", xaml);
     }
 
     [Fact]
@@ -59,6 +59,11 @@ public sealed class TextProcessingVisualContractTests
             "ContextMenu=\"{StaticResource TextEditingContextMenu}\"",
             StringSplitOptions.None).Length - 1);
         Assert.Contains("<Trigger Property=\"IsKeyboardFocused\" Value=\"True\">", xaml);
+
+        string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs"));
+        Assert.Contains("modifiers == ModifierKeys.Shift", code);
+        Assert.Contains("TxtEditor.IsKeyboardFocusWithin", code);
+        Assert.Contains("modifiers == ModifierKeys.Control", code);
     }
 
     [Fact]
@@ -227,6 +232,19 @@ public sealed class TextProcessingVisualContractTests
 
         throw new DirectoryNotFoundException(
             "Repository root with AiteBar.sln was not found.");
+    }
+
+    [Fact]
+    public void CopyConfirmation_UsesTransientInlineStatusInsteadOfErrorOverlay()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "AiteBar",
+            "TextProcessingWindow.xaml.cs"));
+
+        Assert.Contains("ShowTransientInfoStatus(LocalizationService.Get(\"TextProcessing_Copied\"))", code);
+        Assert.DoesNotContain("SetStatus(LocalizationService.Get(\"TextProcessing_Copied\"))", code);
+        Assert.Contains("Task.Delay(TimeSpan.FromSeconds(2))", code);
     }
 
     [Fact]

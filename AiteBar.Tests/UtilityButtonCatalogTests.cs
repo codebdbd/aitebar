@@ -24,6 +24,7 @@ public sealed class UtilityButtonCatalogTests
         "AppsFolder",
         "Copilot",
         "TextProcessing",
+        "PromptBuilder",
         "ZenEditor"
     ];
 

@@ -105,6 +105,11 @@ public sealed class AiGateway
         CancellationToken cancellationToken = default) =>
         GenerateStreamingCoreAsync(request, RouteOrderingMode.DeterministicTextProcessing, cancellationToken);
 
+    internal Task<AiGatewayStream> GeneratePromptBuilderStreamingAsync(
+        AiChatRequest request,
+        CancellationToken cancellationToken = default) =>
+        GenerateStreamingCoreAsync(request, RouteOrderingMode.DeterministicTextProcessing, cancellationToken);
+
     private async Task<AiGatewayStream> GenerateStreamingCoreAsync(
         AiChatRequest request,
         RouteOrderingMode mode,
