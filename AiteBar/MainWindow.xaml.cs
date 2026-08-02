@@ -8,6 +8,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
     private readonly ActivationDwellTracker _activationDwellTracker = new();
     private bool _shown = false, _isAnimating = false;
+    private bool _activateWindowOnShow = true;
     private double _panelLeft, _panelTop, _panelRight, _panelBottom, _cachedDpi = 1.0;
     private static readonly BrushConverter _brushConverter = new();
     private static class MenuIcons
@@ -59,6 +60,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private PanelInputMode _panelInputMode = PanelInputMode.Pointer;
     private readonly List<Button> _unifiedButtons = [];
     private List<UnifiedButton> _currentUnifiedButtons = [];
+    private Button? _overflowButton;
     private int _pendingContextAnimationDirection;
     private readonly UnifiedButtonService _unifiedButtonService;
     private bool _startupInfrastructureInitialized;
@@ -135,9 +137,11 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private void ApplySettingsChanged()
     {
-        ClipboardHistoryService.Instance.ConfigurePersistence(AppSettings.ClipboardManagerPersistHistory);
+        AppSettings settings = AppSettings;
+        ClipboardHistoryService.Instance.ConfigurePersistence(settings.ClipboardManagerPersistHistory);
         UnregisterGlobalHotkey();
         RegisterGlobalHotkey();
+        UpdateHoverActivationTimer(settings);
     }
 
     public AppSettings GetAppSettings() => _settingsService.Settings;
@@ -173,6 +177,10 @@ public partial class MainWindow : Window, ISettingsWindowContext
     {
         BtnAdd.ToolTip = LocalizationService.Get("Main_AddButtonTooltip");
         BtnAppSettings.ToolTip = LocalizationService.Get("Menu_ProgramSettings");
+        string dragHandleLabel = LocalizationService.Get("Main_DragHandleTooltip");
+        DragHandle.ToolTip = dragHandleLabel;
+        System.Windows.Automation.AutomationProperties.SetName(DragHandle, dragHandleLabel);
+        System.Windows.Automation.AutomationProperties.SetHelpText(DragHandle, dragHandleLabel);
         BuildPanelContextMenu();
     }
 
@@ -223,7 +231,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             // Show error dialog on UI thread
             await Dispatcher.InvokeAsync(() =>
             {
-                new DarkDialog(LocalizationService.Format("Settings_SaveFailed", ex.Message)).ShowDialog();
+                new DarkDialog(LocalizationService.Format("Settings_SaveFailed", ex.Message)) { Owner = this }.ShowDialog();
             });
         }
     }
@@ -327,6 +335,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             catch (Exception ex)
             {
                 Logger.Log(ex);
+                new DarkDialog(LocalizationService.Format("Action_Failed", ex.Message)) { Owner = this }.ShowDialog();
             }
         }
 
@@ -551,6 +560,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             catch (Exception ex)
             {
                 Logger.Log(ex);
+                new DarkDialog(LocalizationService.Format("Action_Failed", ex.Message)) { Owner = this }.ShowDialog();
             }
         });
         return true;
@@ -601,7 +611,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         return actionType is ActionType.Program or ActionType.File or ActionType.Folder or ActionType.ScriptFile;
     }
 
-    private static async Task OpenElementLocationAsync(CustomElement element)
+    private async Task OpenElementLocationAsync(CustomElement element)
     {
         try
         {
@@ -625,6 +635,10 @@ public partial class MainWindow : Window, ISettingsWindowContext
                         psi.ArgumentList.Add(target);
                         Process.Start(psi);
                     }
+                    else
+                    {
+                        new DarkDialog(LocalizationService.Format("Action_TargetNotFound", target)) { Owner = this }.ShowDialog();
+                    }
                     break;
 
                 case ActionType.Program:
@@ -636,13 +650,18 @@ public partial class MainWindow : Window, ISettingsWindowContext
                         psi.ArgumentList.Add("/select," + target);
                         Process.Start(psi);
                     }
+                    else
+                    {
+                        new DarkDialog(LocalizationService.Format("Action_TargetNotFound", target)) { Owner = this }.ShowDialog();
+                    }
                     break;
             }
         }
         catch (Exception ex)
         {
             Logger.Log(ex);
-            await Task.Yield();
+            new DarkDialog(LocalizationService.Format("Action_Failed", ex.Message)) { Owner = this }.ShowDialog();
+            await Task.CompletedTask;
         }
     }
 
@@ -1183,13 +1202,27 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         _timer.Tick += (s, ev) =>
         {
-            if (_isAnimating || _isPanelDragging) return;
+            if (_shown || _isAnimating || _isPanelDragging)
+            {
+                _activationDwellTracker.Reset();
+                UpdateHoverActivationTimer();
+                return;
+            }
+
+            AppSettings settings = AppSettings;
+            if (!settings.ShowPanelOnMouseHover)
+            {
+                _activationDwellTracker.Reset();
+                UpdateHoverActivationTimer(settings);
+                return;
+            }
+
             NativeMethods.Win32Point pt = new();
             if (NativeMethods.GetCursorPos(ref pt))
             {
                 var screens = Screen.AllScreens;
-                var screen = (AppSettings.MonitorIndex >= 0 && AppSettings.MonitorIndex < screens.Length)
-                    ? screens[AppSettings.MonitorIndex]
+                var screen = (settings.MonitorIndex >= 0 && settings.MonitorIndex < screens.Length)
+                    ? screens[settings.MonitorIndex]
                     : Screen.PrimaryScreen;
 
                 if (screen == null) return;
@@ -1200,40 +1233,53 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 double screenWidth = bounds.Width;
                 double screenHeight = bounds.Height;
 
-                int delayMs = AppSettings.ActivationDelayMs;
                 bool inActivationZone = ActivationZoneHelper.IsInActivationZone(
-                    AppSettings.Edge,
+                    settings.Edge,
                     screenLeft,
                     screenTop,
                     screenWidth,
                     screenHeight,
-                    AppSettings.ActivationZoneSizePercent,
+                    settings.ActivationZoneSizePercent,
                     pt.X,
                     pt.Y);
 
-                if (_shown)
-                {
-                    _activationDwellTracker.Reset();
-                }
-                else if (!AppSettings.ShowPanelOnMouseHover)
-                {
-                    _activationDwellTracker.Reset();
-                }
-                else if (_activationDwellTracker.Update(
+                if (_activationDwellTracker.Update(
                     inActivationZone,
                     pt.X,
                     pt.Y,
                     DateTime.UtcNow,
-                    delayMs))
+                    settings.ActivationDelayMs))
                 {
-                    ShowDock();
+                    ShowDock(activateWindow: false);
                 }
             }
         };
 
-        _timer.Start();
         _nativeService.InstallMouseHook();
         _startupInfrastructureInitialized = true;
+        UpdateHoverActivationTimer();
+    }
+
+    private void UpdateHoverActivationTimer(AppSettings? settings = null)
+    {
+        settings ??= AppSettings;
+        bool shouldRun = _startupInfrastructureInitialized
+            && !_shown
+            && !_isAnimating
+            && settings.ShowPanelOnMouseHover;
+
+        if (shouldRun)
+        {
+            if (!_timer.IsEnabled)
+            {
+                _timer.Start();
+            }
+        }
+        else
+        {
+            _timer.Stop();
+            _activationDwellTracker.Reset();
+        }
     }
 
     private async Task CompleteDeferredStartupAsync()
@@ -1393,15 +1439,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         UnifiedButtonsPanel.Children.Clear();
         _unifiedButtons.Clear();
+        _overflowButton = null;
 
-        _currentUnifiedButtons = _unifiedButtonService.BuildUnifiedList(activeContextId, settings, elements);
-
-        foreach (var item in _currentUnifiedButtons)
-        {
-            var btn = CreateUnifiedButton(item, panelVersion);
-            UnifiedButtonsPanel.Children.Add(btn);
-            _unifiedButtons.Add(btn);
-        }
+        List<UnifiedButton> allUnifiedButtons = _unifiedButtonService.BuildUnifiedList(activeContextId, settings, elements);
 
         bool isVertical = settings.Edge == DockEdge.Left || settings.Edge == DockEdge.Right;
         var (availableWidth, availableHeight) = CalculateAvailableSize(settings.MonitorIndex);
@@ -1412,6 +1452,29 @@ public partial class MainWindow : Window, ISettingsWindowContext
             availableHeight,
             settings,
             elements);
+
+        PanelOverflowHelper.OverflowPlan overflowPlan = PanelOverflowHelper.Calculate(
+            _lastMetrics,
+            allUnifiedButtons.Count);
+        _currentUnifiedButtons = allUnifiedButtons
+            .Take(overflowPlan.VisibleItemCount)
+            .ToList();
+
+        foreach (var item in _currentUnifiedButtons)
+        {
+            var btn = CreateUnifiedButton(item, panelVersion);
+            UnifiedButtonsPanel.Children.Add(btn);
+            _unifiedButtons.Add(btn);
+        }
+
+        if (overflowPlan.HasOverflow)
+        {
+            IReadOnlyList<UnifiedButton> hiddenButtons = allUnifiedButtons
+                .Skip(overflowPlan.VisibleItemCount)
+                .ToList();
+            _overflowButton = CreateOverflowButton(hiddenButtons);
+            UnifiedButtonsPanel.Children.Add(_overflowButton);
+        }
 
         bool hasUnifiedButtons = UnifiedButtonsPanel.Children.Count > 0;
 
@@ -1446,8 +1509,23 @@ public partial class MainWindow : Window, ISettingsWindowContext
                     "Main_ContextIndicatorTooltipFormat",
                     activeIndex + 1,
                     activeContext.Name);
+                string contextLabel = ContextIndicator.ToolTip?.ToString() ?? activeContext.Name;
+                System.Windows.Automation.AutomationProperties.SetName(ContextIndicator, contextLabel);
+                System.Windows.Automation.AutomationProperties.SetHelpText(ContextIndicator, contextLabel);
             }
         }
+    }
+
+    private void ContextIndicator_Click(object sender, RoutedEventArgs e)
+    {
+        ContextMenu? menu = RootBorder.ContextMenu;
+        if (menu is null)
+        {
+            return;
+        }
+
+        menu.PlacementTarget = ContextIndicator;
+        menu.IsOpen = true;
     }
 
     private void ApplyUnifiedButtonIcon(Button button, UnifiedButton item, int panelVersion)
@@ -1630,6 +1708,35 @@ public partial class MainWindow : Window, ISettingsWindowContext
         }
     }
 
+    private Button CreateOverflowButton(IReadOnlyList<UnifiedButton> hiddenButtons)
+    {
+        string label = LocalizationService.Format("Main_MoreButtonsFormat", hiddenButtons.Count);
+        return CreatePanelButton("\uE712", label, (sender, e) =>
+        {
+            if (sender is not Button button)
+            {
+                return;
+            }
+
+            ContextMenu menu = AppContextMenuFactory.CreateMenu(this);
+            menu.Opened += (s, args) => _isElementContextMenuOpen = true;
+            menu.Closed += (s, args) => _isElementContextMenuOpen = false;
+            foreach (UnifiedButton item in hiddenButtons)
+            {
+                menu.Items.Add(AppContextMenuFactory.CreateItem(
+                    this,
+                    item.Icon,
+                    item.Name,
+                    async (s, args) => await ExecuteUnifiedButtonActionAsync(item),
+                    iconFont: FontHelper.Resolve(item.IconFont)));
+            }
+
+            button.ContextMenu = menu;
+            menu.PlacementTarget = button;
+            menu.IsOpen = true;
+        });
+    }
+
     private void ApplyPanelToolTipPlacement()
     {
         ApplyPanelToolTipPlacement(AppSettings.Edge);
@@ -1675,6 +1782,11 @@ public partial class MainWindow : Window, ISettingsWindowContext
         foreach (var button in _unifiedButtons)
         {
             yield return button;
+        }
+
+        if (_overflowButton is not null)
+        {
+            yield return _overflowButton;
         }
 
         yield return BtnAppSettings;
@@ -1789,7 +1901,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     public IReadOnlyList<CustomElement> GetElementsSnapshot() => _settingsService.Elements.Select(_settingsService.CloneElement).ToList();
 
-    private void ShowDock(bool fromKeyboard = false)
+    private void ShowDock(bool fromKeyboard = false, bool activateWindow = true)
     {
         if (_shown || _isAnimating)
         {
@@ -1797,6 +1909,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         }
 
         SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
+        _activateWindowOnShow = activateWindow;
         _shown = true;
         _activationDwellTracker.Reset();
         Toggle(false);
@@ -1859,14 +1972,15 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 this.Left = finalX;
                 this.Top = finalY;
                 _isAnimating = false;
-                _timer.Start();
                 UpdatePanelBounds();
                 if (!hide)
                 {
-                    // Активируем окно при любом открытии, чтобы обрабатывать клавиши
-                    var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-                    ForceForegroundWindow(hwnd);
-                    Activate();
+                    if (_activateWindowOnShow)
+                    {
+                        var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                        ForceForegroundWindow(hwnd);
+                        Activate();
+                    }
 
                     if (IsPanelKeyboardMode)
                     {
@@ -1880,6 +1994,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
                         }
                     }
                 }
+
+                UpdateHoverActivationTimer();
             }
         }
 
@@ -1918,7 +2034,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         Left = currentLeft;
         Top = currentTop;
         _isAnimating = false;
-        _timer.Start();
+        UpdateHoverActivationTimer();
     }
 
     private async Task RunPresetActionAsync(Func<Task> action)

@@ -838,6 +838,9 @@ Open the GitHub release page?</value></data>
   <data name="ZenEditor_Retry" xml:space="preserve"><value>Retry</value></data>
   <data name="ZenEditor_Dismiss" xml:space="preserve"><value>Dismiss</value></data>
   <data name="ZenEditor_Recovered" xml:space="preserve"><value>The last document was damaged. Zen Editor restored the newest valid backup.</value></data>
+  <data name="Main_MoreButtonsFormat" xml:space="preserve"><value>More ({0})</value></data>
+  <data name="Main_DragHandleTooltip" xml:space="preserve"><value>Drag to another screen edge</value></data>
+  <data name="Action_TargetNotFound" xml:space="preserve"><value>The file or folder no longer exists: {0}</value></data>
 </root>
 
 

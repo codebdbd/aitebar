@@ -781,6 +781,9 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="ZenEditor_Retry" xml:space="preserve"><value>Wiederholen</value></data>
   <data name="ZenEditor_Dismiss" xml:space="preserve"><value>Meldung schließen</value></data>
   <data name="ZenEditor_Recovered" xml:space="preserve"><value>Das letzte Dokument war beschädigt. Der Zen-Editor hat die neueste gültige Sicherung wiederhergestellt.</value></data>
+  <data name="Main_MoreButtonsFormat" xml:space="preserve"><value>Mehr ({0})</value></data>
+  <data name="Main_DragHandleTooltip" xml:space="preserve"><value>Leiste an einen anderen Bildschirmrand ziehen</value></data>
+  <data name="Action_TargetNotFound" xml:space="preserve"><value>Die Datei oder der Ordner ist nicht mehr vorhanden: {0}</value></data>
 </root>
 
 

@@ -1364,6 +1364,9 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ZenEditor_Retry" xml:space="preserve"><value>Повторить</value></data>
   <data name="ZenEditor_Dismiss" xml:space="preserve"><value>Закрыть сообщение</value></data>
   <data name="ZenEditor_Recovered" xml:space="preserve"><value>Последний документ был повреждён. Дзен-редактор восстановил новейшую корректную резервную копию.</value></data>
+  <data name="Main_MoreButtonsFormat" xml:space="preserve"><value>Ещё ({0})</value></data>
+  <data name="Main_DragHandleTooltip" xml:space="preserve"><value>Перетащить панель к другому краю экрана</value></data>
+  <data name="Action_TargetNotFound" xml:space="preserve"><value>Файл или папка больше не существует: {0}</value></data>
 </root>
 
 

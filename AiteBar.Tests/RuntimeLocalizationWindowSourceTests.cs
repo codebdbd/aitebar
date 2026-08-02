@@ -144,7 +144,9 @@ public sealed class RuntimeLocalizationWindowSourceTests
 
         Assert.Contains("\"Main_ContextIndicatorTooltipFormat\"", code);
         Assert.Contains("ContextIndicator.ToolTip = LocalizationService.Format", code);
-        Assert.Contains("else if (!AppSettings.ShowPanelOnMouseHover)", code);
+        Assert.Contains("if (!settings.ShowPanelOnMouseHover)", code);
+        Assert.Contains("UpdateHoverActivationTimer(settings);", code);
+        Assert.Contains("ShowDock(activateWindow: false);", code);
         Assert.Contains("_activationDwellTracker.Reset();", code);
     }
 
