@@ -37,6 +37,7 @@ public sealed class TextProcessingVisualContractTests
         Assert.DoesNotContain("WindowState=\"Maximized\"", xaml);
         Assert.Contains("Width=\"1280\" Height=\"840\"", xaml);
         Assert.Contains("MinWidth=\"1000\" MinHeight=\"700\"", xaml);
+        Assert.Contains("<Grid Margin=\"32,16,32,24\">", xaml);
         Assert.Contains("<DockPanel x:Name=\"ContentHost\"", xaml);
         Assert.DoesNotContain("x:Name=\"ContentHost\" Width=", xaml);
         Assert.Contains("HorizontalAlignment=\"Center\" VerticalAlignment=\"Stretch\"", xaml);

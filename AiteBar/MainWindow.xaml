@@ -139,7 +139,7 @@
                             <Border Width="24" Height="24" Background="#2A9CFF" CornerRadius="12" 
                                     HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="ContextIndicatorCircle">
                                 <TextBlock x:Name="ContextIndicatorText" Text="1" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0"/>
                             </Border>
                         </Button>
                         <Button x:Name="BtnAdd" Content="&#xF10A;" Click="BtnAdd_Click" Style="{StaticResource CircleAccentButtonStyle}"/>

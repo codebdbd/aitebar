@@ -189,6 +189,22 @@ public sealed class CommandButtonStyleTests
     }
 
     [Fact]
+    public void ContextIndicator_NumberUsesOpticalVerticalCentering()
+    {
+        XDocument window = LoadXaml("MainWindow.xaml");
+        XElement text = Assert.Single(
+            window.Descendants(PresentationNamespace + "TextBlock"),
+            element => string.Equals(
+                element.Attribute(XamlNamespace + "Name")?.Value,
+                "ContextIndicatorText",
+                StringComparison.Ordinal));
+
+        Assert.Equal("Center", text.Attribute("HorizontalAlignment")?.Value);
+        Assert.Equal("Center", text.Attribute("VerticalAlignment")?.Value);
+        Assert.Equal("0,-3,0,0", text.Attribute("Margin")?.Value);
+    }
+
+    [Fact]
     public async Task TimerCompactButtonTemplate_LeavesMeasuredSpaceForGlyph()
     {
         await RunStaAsync(() =>
