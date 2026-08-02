@@ -231,6 +231,9 @@
   <data name="AppSettingsWindow_AddButton" xml:space="preserve">
     <value>Добавить кнопку</value>
   </data>
+  <data name="AppSettingsWindow_ShowPanelOnMouseHover" xml:space="preserve">
+    <value>Показывать панель при наведении мыши</value>
+  </data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicator" xml:space="preserve">
     <value>Показывать указатель положения панели</value>
   </data>
@@ -320,6 +323,9 @@
   </data>
   <data name="Main_AddButtonTooltip" xml:space="preserve">
     <value>Добавить кнопку</value>
+  </data>
+  <data name="Main_ContextIndicatorTooltipFormat" xml:space="preserve">
+    <value>Контекст {0}: {1}</value>
   </data>
   <data name="Main_SearchTooltip" xml:space="preserve">
     <value>Поиск в Google (буфер)</value>
@@ -948,6 +954,26 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="FileSorter_CategoryWeb" xml:space="preserve"><value>Веб</value></data>
   <data name="FileSorter_CategoryOther" xml:space="preserve"><value>Прочее</value></data>
   <data name="FileSorter_RootPathRequired" xml:space="preserve"><value>Необходимо указать путь к папке.</value></data>
+  <data name="FileSorter_SortMultipleFormat" xml:space="preserve"><value>Сортировать ({0})</value></data>
+  <data name="FileSorter_AddFolder" xml:space="preserve"><value>+ Добавить папку…</value></data>
+  <data name="FileSorter_LoadingCurrentFolderFormat" xml:space="preserve"><value>Сортировка {0}/{1}: {2}</value></data>
+  <data name="FileSorter_CompletedMultiFormat" xml:space="preserve"><value>Отсортировано {0} файлов в {1} папках</value></data>
+  <data name="FileSorter_UndoCompletedMultiFormat" xml:space="preserve"><value>Восстановлено {0} файлов.</value></data>
+  <data name="FileSorter_UndoPartialMultiFormat" xml:space="preserve"><value>Восстановлено {0} файлов, пропущено {1}.</value></data>
+  <data name="FileSorter_NoFoldersSelected" xml:space="preserve"><value>Выберите хотя бы одну папку для сортировки.</value></data>
+  <data name="FileSorter_FolderAlreadyAdded" xml:space="preserve"><value>Эта папка уже добавлена.</value></data>
+  <data name="FileSorter_RemoveFolderContextMenu" xml:space="preserve"><value>Удалить папку</value></data>
+  <data name="FileSorter_SelectedCountFormat" xml:space="preserve"><value>Выбрано: {0}</value></data>
+  <data name="FileSorter_StatusReady" xml:space="preserve"><value>Готово к сортировке</value></data>
+  <data name="FileSorter_StatusSortingFormat" xml:space="preserve"><value>Обработка папки {0} из {1}</value></data>
+  <data name="FileSorter_RowProgressFormat" xml:space="preserve"><value>{0}/{1} файлов</value></data>
+  <data name="FileSorter_RowSortedFormat" xml:space="preserve"><value>✓ {0} файлов</value></data>
+  <data name="FileSorter_RowError" xml:space="preserve"><value>Ошибка</value></data>
+  <data name="FileSorter_StatusError" xml:space="preserve"><value>Операция завершилась с ошибкой.</value></data>
+  <data name="FileSorter_UndoFolderTooltip" xml:space="preserve"><value>Откатить последнюю сортировку</value></data>
+  <data name="FileSorter_OpenFolderTooltip" xml:space="preserve"><value>Открыть папку</value></data>
+  <data name="FileSorter_RowUndoing" xml:space="preserve"><value>Откат…</value></data>
+  <data name="FileSorter_StatusUndoing" xml:space="preserve"><value>Восстановление файлов…</value></data>
   <data name="IconPicker_InvalidFluentMetadata" xml:space="preserve"><value>Не удалось прочитать метаданные значков Fluent.</value></data>
   <data name="PanelPackage_ExportPathRequired" xml:space="preserve"><value>Необходимо указать путь для экспорта панели.</value></data>
   <data name="PanelPackage_ActivePanelNotFound" xml:space="preserve"><value>Активная панель не найдена.</value></data>
@@ -1167,6 +1193,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AppSettingsWindow_EdgeHint" xml:space="preserve"><value>Выберите край экрана, у которого появляется панель.</value></data>
   <data name="AppSettingsWindow_PanelSizeHint" xml:space="preserve"><value>Длина панели вдоль выбранного края: 50% — половина экрана, 100% — весь край.</value></data>
   <data name="AppSettingsWindow_DelayHint" xml:space="preserve"><value>Сколько удерживать курсор у края: 100 мс — быстрый показ, 500 мс — меньше случайных открытий.</value></data>
+  <data name="AppSettingsWindow_ShowPanelOnMouseHoverHint" xml:space="preserve"><value>Открывать панель, когда указатель задерживается в зоне активации у края экрана.</value></data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicatorHint" xml:space="preserve"><value>Показывать текущее положение панели в области панели задач Windows.</value></data>
   <data name="AppSettingsWindow_SecondaryMonitorHint" xml:space="preserve"><value>Размещать панель на втором мониторе, если он доступен.</value></data>
   <data name="AppSettingsWindow_CheckForUpdatesHint" xml:space="preserve"><value>Автоматически проверять наличие новой версии AiteBar.</value></data>
@@ -1242,9 +1269,11 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_ModeProofread" xml:space="preserve"><value>Проверка текста</value></data>
   <data name="TextProcessing_ModeTypography" xml:space="preserve"><value>Типографика</value></data>
   <data name="TextProcessing_ModeCleanup" xml:space="preserve"><value>Очистка текста</value></data>
+  <data name="TextProcessing_ModeLiteraryEdit" xml:space="preserve"><value>Литературная редакция</value></data>
   <data name="TextProcessing_ModeProofreadDesc" xml:space="preserve"><value>Исправляет орфографические, грамматические и пунктуационные ошибки.</value></data>
   <data name="TextProcessing_ModeTypographyDesc" xml:space="preserve"><value>Расставляет правильные кавычки, тире, пробелы и другие типографские знаки.</value></data>
   <data name="TextProcessing_ModeCleanupDesc" xml:space="preserve"><value>Удаляет технический мусор, лишние переносы и служебные символы PDF и HTML.</value></data>
+  <data name="TextProcessing_ModeLiteraryEditDesc" xml:space="preserve"><value>Улучшает ясность, ритм и стиль текста, сохраняя смысл, факты и авторский голос.</value></data>
   <data name="TextProcessing_ButtonProofread" xml:space="preserve"><value>Проверить текст</value></data>
   <data name="TextProcessing_ButtonFormat" xml:space="preserve"><value>Применить типографику</value></data>
   <data name="TextProcessing_ButtonCleanup" xml:space="preserve"><value>Очистить текст</value></data>
@@ -1268,8 +1297,9 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="TextProcessing_Words" xml:space="preserve"><value>{0} слов</value></data>
   <data name="TextProcessing_ErrorTooLong" xml:space="preserve"><value>Текст слишком длинный. Максимальный размер — 50 000 символов.</value></data>
   <data name="TextProcessing_ErrorContextOverflow" xml:space="preserve"><value>Текст не помещается в контекст выбранной модели. Выберите другую модель или сократите текст.</value></data>
-  <data name="TextProcessing_ErrorNoModels" xml:space="preserve"><value>Не добавлена ни одна нейросеть. Добавьте подключение в настройках программы.</value></data>
+  <data name="TextProcessing_ErrorNoModels" xml:space="preserve"><value>Нет подходящей модели. Выберите доступную модель вручную или добавьте проверенную модель в настройках.</value></data>
   <data name="TextProcessing_ErrorEmptyResponse" xml:space="preserve"><value>ИИ вернул пустой ответ. Попробуйте ещё раз.</value></data>
+  <data name="TextProcessing_ErrorContentChanged" xml:space="preserve"><value>ИИ изменил язык или содержание текста. Результат отклонён, предыдущий текст сохранён.</value></data>
   <data name="TextProcessing_ErrorGeneric" xml:space="preserve"><value>Ошибка обработки. Попробуйте ещё раз.</value></data>
   <data name="TextProcessing_ConfirmRepeat" xml:space="preserve"><value>Повторная обработка заменит изменённый результат. Продолжить?</value></data>
   <data name="TextProcessing_ConfirmClose" xml:space="preserve"><value>Закрыть окно? Введённый текст не сохраняется.</value></data>

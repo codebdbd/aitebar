@@ -27,7 +27,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
-                            <Border x:Name="FocusChrome" Background="Transparent" CornerRadius="4"/>
+                            <Border x:Name="FocusChrome" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4"/>
                             <Border x:Name="FillChrome" Background="{TemplateBinding Background}" Margin="1" CornerRadius="3">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
@@ -75,7 +75,7 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
-                            <Border x:Name="FocusChrome" Background="Transparent" CornerRadius="4"/>
+                            <Border x:Name="FocusChrome" Background="Transparent" BorderBrush="Transparent" BorderThickness="1" CornerRadius="4"/>
                             <Border Width="24" Height="24" Background="#2A9CFF" CornerRadius="12"
                                     HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="CircleBorder">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-1,0,0"/>
@@ -134,7 +134,8 @@
 
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
-                        <Border x:Name="ContextIndicator" Width="40" Height="40" Margin="2,2">
+                        <Border x:Name="ContextIndicator" Width="40" Height="40" Margin="2,2"
+                                ToolTipService.InitialShowDelay="0">
                             <Border Width="24" Height="24" Background="#2A9CFF" CornerRadius="12" 
                                     HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="ContextIndicatorCircle">
                                 <TextBlock x:Name="ContextIndicatorText" Text="1" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF"

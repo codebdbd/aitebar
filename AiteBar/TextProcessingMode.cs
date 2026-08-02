@@ -2,7 +2,8 @@ namespace AiteBar;
 
 public enum TextProcessingMode
 {
-    Proofread,
-    Typography,
-    Cleanup
+    Proofread = 0,
+    Typography = 1,
+    Cleanup = 2,
+    LiteraryEdit = 3
 }

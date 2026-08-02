@@ -40,7 +40,9 @@ public sealed class TextProcessingWindowLayoutTests
                 var refreshModels = Assert.IsType<Button>(window.FindName("BtnRefreshModels"));
                 var repeat = Assert.IsType<Button>(window.FindName("BtnRepeat"));
                 var showDiff = Assert.IsType<Button>(window.FindName("BtnShowDiff"));
-                var typographyMode = Assert.IsType<TabItem>(window.FindName("ModeTypography"));
+                var modeTabs = Assert.IsType<TabControl>(window.FindName("ModeTabs"));
+                var proofreadMode = Assert.IsType<TabItem>(window.FindName("ModeProofread"));
+                var literaryEditMode = Assert.IsType<TabItem>(window.FindName("ModeLiteraryEdit"));
                 var toggleLabel = Assert.IsType<TextBlock>(window.FindName("ToggleVersionLabel"));
                 var showDiffLabel = Assert.IsType<TextBlock>(window.FindName("ShowDiffLabel"));
                 var processLabel = Assert.IsType<TextBlock>(window.FindName("ProcessButtonLabel"));
@@ -100,6 +102,17 @@ public sealed class TextProcessingWindowLayoutTests
                 double compactEditorHeight = editor.ActualHeight;
 
                 typeof(TextProcessingWindow)
+                    .GetMethod("SetStatus", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .Invoke(window, ["Ошибка подключения"]);
+                root.Measure(new Size(1400, 700));
+                root.Arrange(new Rect(0, 0, 1400, 700));
+                root.UpdateLayout();
+                Assert.Equal(compactEditorHeight, editor.ActualHeight, precision: 1);
+                typeof(TextProcessingWindow)
+                    .GetMethod("SetStatus", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .Invoke(window, [string.Empty]);
+
+                typeof(TextProcessingWindow)
                     .GetField("_hasEligibleModel", BindingFlags.Instance | BindingFlags.NonPublic)!
                     .SetValue(window, true);
                 typeof(TextProcessingWindow)
@@ -144,7 +157,12 @@ public sealed class TextProcessingWindowLayoutTests
                 });
                 Assert.False(process.IsEnabled);
                 Assert.False(repeat.IsEnabled);
-                Assert.True(typographyMode.IsSelected);
+                Assert.True(proofreadMode.IsSelected);
+                Assert.False(literaryEditMode.IsSelected);
+                Assert.Equal(4, modeTabs.Items.Count);
+                Assert.Equal(
+                    LocalizationService.Get("TextProcessing_ModeLiteraryEdit"),
+                    literaryEditMode.Header);
                 Assert.Equal(36, refreshModels.ActualWidth, precision: 1);
                 Assert.Equal(36, refreshModels.ActualHeight, precision: 1);
 

@@ -13,6 +13,9 @@ public sealed class TextProcessingModelEligibilityTests
     [InlineData("veo-3.0-generate-preview", "Veo 3")]
     [InlineData("provider/generate-image", "Image Generation")]
     [InlineData("provider/generate-video", "Video Generation")]
+    [InlineData("ALLaM-2-7b", "ALLaM 2 7B")]
+    [InlineData("jais-30b-chat", "Jais 30B Chat")]
+    [InlineData("lyria-3-clip", "Lyria 3 Clip")]
     [InlineData("\u200B", "\u200B")]
     [InlineData("   ", "   ")]
     public void IsEligibleModel_RejectsModelsNotIntendedForWriting(string modelId, string displayName)
@@ -56,6 +59,40 @@ public sealed class TextProcessingModelEligibilityTests
         Assert.True(TextProcessingWindow.IsEligibleModel(model));
     }
 
+    [Theory]
+    [InlineData("gemini", "gemini-2.5-flash", TextProcessingModelTier.CertifiedAutomatic)]
+    [InlineData("groq", "llama-3.3-70b-versatile", TextProcessingModelTier.CertifiedAutomatic)]
+    [InlineData("cerebras", "qwen-3-32b", TextProcessingModelTier.CertifiedAutomatic)]
+    [InlineData("mistral", "mistral-small-latest", TextProcessingModelTier.CertifiedAutomatic)]
+    [InlineData("groq", "new-general-chat-model", TextProcessingModelTier.ManualOnly)]
+    [InlineData("groq", "ALLaM-2-7b", TextProcessingModelTier.Unsupported)]
+    [InlineData("groq", "whisper-large-v3", TextProcessingModelTier.Unsupported)]
+    public void ModelPolicy_ClassifiesTextProcessingModels(
+        string providerId,
+        string modelId,
+        TextProcessingModelTier expected)
+    {
+        AiModelDescriptor model = Model(providerId, modelId, modelId, 32_000);
+
+        Assert.Equal(expected, TextProcessingModelPolicy.Classify(model));
+    }
+
+    [Fact]
+    public void GatewayPolicy_AutomaticUsesOnlyCertifiedModels_WhileManualAllowsUnknownModels()
+    {
+        AiModelDescriptor certified = Model("groq", "llama-3.3-70b-versatile", "Llama", 32_000);
+        AiModelDescriptor unknown = Model("groq", "new-general-chat-model", "New Chat", 32_000);
+        AiModelDescriptor narrowLanguage = Model("groq", "ALLaM-2-7b", "ALLaM", 32_000);
+
+        IReadOnlyList<AiModelDescriptor> automatic =
+            AiGateway.ApplyTextProcessingModelPolicy([narrowLanguage, unknown, certified], false);
+        IReadOnlyList<AiModelDescriptor> manual =
+            AiGateway.ApplyTextProcessingModelPolicy([narrowLanguage, unknown, certified], true);
+
+        Assert.Equal([certified], automatic);
+        Assert.Equal([unknown, certified], manual);
+    }
+
     [Fact]
     public void BuildLogicalModelItems_CollapsesRepeatedConnectionsForSameProviderModel()
     {
@@ -73,6 +110,7 @@ public sealed class TextProcessingModelEligibilityTests
         Assert.Equal("llama-3.3-70b", groq.ModelId);
         Assert.Equal(128_000, groq.ContextLength);
         Assert.Contains("Groq", groq.FullDisplay, StringComparison.Ordinal);
+        Assert.Equal(TextProcessingModelTier.CertifiedAutomatic, groq.Tier);
         Assert.DoesNotContain(items, item => item.FullDisplay.Contains("ключ", StringComparison.OrdinalIgnoreCase));
     }
 

@@ -1215,6 +1215,10 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 {
                     _activationDwellTracker.Reset();
                 }
+                else if (!AppSettings.ShowPanelOnMouseHover)
+                {
+                    _activationDwellTracker.Reset();
+                }
                 else if (_activationDwellTracker.Update(
                     inActivationZone,
                     pt.X,
@@ -1438,6 +1442,10 @@ public partial class MainWindow : Window, ISettingsWindowContext
             if (activeContext != null)
             {
                 ContextIndicatorCircle.Background = GetCachedBrush(activeContext.Color);
+                ContextIndicator.ToolTip = LocalizationService.Format(
+                    "Main_ContextIndicatorTooltipFormat",
+                    activeIndex + 1,
+                    activeContext.Name);
             }
         }
     }
@@ -1654,6 +1662,10 @@ public partial class MainWindow : Window, ISettingsWindowContext
             ToolTipService.SetHorizontalOffset(button, horizontalOffset);
             ToolTipService.SetVerticalOffset(button, verticalOffset);
         }
+
+        ToolTipService.SetPlacement(ContextIndicator, placement);
+        ToolTipService.SetHorizontalOffset(ContextIndicator, horizontalOffset);
+        ToolTipService.SetVerticalOffset(ContextIndicator, verticalOffset);
     }
 
     private IEnumerable<Button> EnumeratePanelButtons()

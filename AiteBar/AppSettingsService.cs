@@ -123,6 +123,7 @@ namespace AiteBar
                 UiCulture = original.UiCulture,
                 ActiveContextId = original.ActiveContextId,
                 CheckForUpdatesEnabled = original.CheckForUpdatesEnabled,
+                ShowPanelOnMouseHover = original.ShowPanelOnMouseHover,
                 ShowTaskbarPositionIndicator = original.ShowTaskbarPositionIndicator,
                 TaskbarIndicatorPositionX = original.TaskbarIndicatorPositionX,
                 TaskbarIndicatorPositionY = original.TaskbarIndicatorPositionY,
@@ -281,7 +282,8 @@ namespace AiteBar
                 TextProcessingSelectedConnectionId = original.TextProcessingSelectedConnectionId,
                 TextProcessingSelectedModelId = original.TextProcessingSelectedModelId,
                 TextProcessingSelectedProviderId = original.TextProcessingSelectedProviderId,
-                TextProcessingIsAutoModel = original.TextProcessingIsAutoModel
+                TextProcessingIsAutoModel = original.TextProcessingIsAutoModel,
+                SavedFileSortFolders = [.. (original.SavedFileSortFolders ?? [])]
             };
 
             if (original.LastFileSortOperation != null)
@@ -294,6 +296,23 @@ namespace AiteBar
                     {
                         SourcePath = e.SourcePath,
                         DestinationPath = e.DestinationPath
+                    }).ToList() ?? []
+                };
+            }
+
+            if (original.LastMultiFileSortOperation != null)
+            {
+                clone.LastMultiFileSortOperation = new MultiFileSortUndoState
+                {
+                    PerFolder = original.LastMultiFileSortOperation.PerFolder?.Select(folder => new FileSortUndoState
+                    {
+                        RootPath = folder.RootPath,
+                        CompletedAtUtc = folder.CompletedAtUtc,
+                        Entries = folder.Entries?.Select(e => new FileSortOperationEntry
+                        {
+                            SourcePath = e.SourcePath,
+                            DestinationPath = e.DestinationPath
+                        }).ToList() ?? []
                     }).ToList() ?? []
                 };
             }

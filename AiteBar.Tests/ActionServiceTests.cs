@@ -574,6 +574,69 @@ public sealed class ActionServiceTests
         Assert.True(runtime.StartedProcessInfos[0].UseShellExecute);
     }
 
+    [Theory]
+    [InlineData("Search")]
+    [InlineData("Screenshot")]
+    [InlineData("Record")]
+    [InlineData("Calculator")]
+    [InlineData("Explorer")]
+    [InlineData("Downloads")]
+    [InlineData("ShowDesktop")]
+    [InlineData("AppsFolder")]
+    public async Task SystemUtilityLaunch_WhenRuntimeReturnsNull_ThrowsLocalizedFailure(string utility)
+    {
+        var runtime = new FakeActionServiceRuntime();
+        runtime.ProcessesToReturn.Enqueue(null);
+        var service = new ActionService(new AppSettingsService(), runtime);
+
+        Task launch = utility switch
+        {
+            "Search" => service.StartSearchAsync("release review"),
+            "Screenshot" => service.StartScreenshotAsync(),
+            "Record" => service.StartRecordVideoAsync(),
+            "Calculator" => service.StartCalculatorAsync(),
+            "Explorer" => service.StartExplorerAsync(),
+            "Downloads" => service.StartDownloadsAsync(),
+            "ShowDesktop" => service.StartShowDesktopAsync(),
+            "AppsFolder" => service.StartAppsFolderAsync(),
+            _ => throw new ArgumentOutOfRangeException(nameof(utility))
+        };
+
+        InvalidOperationException exception = await Assert.ThrowsAsync<InvalidOperationException>(() => launch);
+        Assert.False(string.IsNullOrWhiteSpace(exception.Message));
+    }
+
+    [Fact]
+    public async Task StartCopilotAsync_SendsWinCAndReleasesKeys()
+    {
+        var runtime = new FakeActionServiceRuntime();
+        var service = new ActionService(new AppSettingsService(), runtime);
+
+        await service.StartCopilotAsync();
+
+        Assert.Equal(4, runtime.SendInputCalls.Count);
+        Assert.Equal(NativeMethods.VK_LWIN, runtime.SendInputCalls[0][0].U.ki.wVk);
+        Assert.Equal(0x43, runtime.SendInputCalls[1][0].U.ki.wVk);
+        Assert.Equal(NativeMethods.KEYEVENTF_KEYUP, runtime.SendInputCalls[2][0].U.ki.dwFlags);
+        Assert.Equal(NativeMethods.VK_LWIN, runtime.SendInputCalls[3][0].U.ki.wVk);
+        Assert.Equal(NativeMethods.KEYEVENTF_KEYUP, runtime.SendInputCalls[3][0].U.ki.dwFlags);
+    }
+
+    [Fact]
+    public async Task StartCopilotAsync_WhenCKeyInjectionFails_ReleasesWinKey()
+    {
+        var runtime = new FakeActionServiceRuntime();
+        runtime.SendInputResults.Enqueue(1);
+        runtime.SendInputResults.Enqueue(0);
+        var service = new ActionService(new AppSettingsService(), runtime);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => service.StartCopilotAsync());
+
+        Assert.Equal(3, runtime.SendInputCalls.Count);
+        Assert.Equal(NativeMethods.VK_LWIN, runtime.SendInputCalls[2][0].U.ki.wVk);
+        Assert.Equal(NativeMethods.KEYEVENTF_KEYUP, runtime.SendInputCalls[2][0].U.ki.dwFlags);
+    }
+
 
 
     [Fact]

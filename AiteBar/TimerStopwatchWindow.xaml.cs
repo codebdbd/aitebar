@@ -50,8 +50,16 @@ public partial class TimerStopwatchWindow : DarkWindow
 
         if (_settingsService != null)
         {
-            SaveSettings(_settingsService);
-            await _settingsService.SaveAsync();
+            try
+            {
+                SaveSettings(_settingsService);
+                await _settingsService.SaveAsync();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                TelemetryService.CaptureException(ex, "timer_settings_save_failed");
+            }
         }
     }
 

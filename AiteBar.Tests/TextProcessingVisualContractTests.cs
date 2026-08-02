@@ -21,6 +21,10 @@ public sealed class TextProcessingVisualContractTests
         Assert.DoesNotContain("x:Name=\"InfoStatusBorder\"", xaml);
         Assert.DoesNotContain("x:Name=\"TxtInfoMessage\"", xaml);
         Assert.Contains("TextProcessing_DataWarning", xaml);
+        Assert.Contains("x:Name=\"StatusBorder\"", xaml);
+        Assert.Contains("Grid.Column=\"0\" Grid.ColumnSpan=\"3\"", xaml);
+        Assert.Contains("Panel.ZIndex=\"10\" VerticalAlignment=\"Top\"", xaml);
+        Assert.DoesNotContain("x:Name=\"StatusBorder\" DockPanel.Dock=\"Top\"", xaml);
     }
 
     [Fact]
@@ -222,5 +226,43 @@ public sealed class TextProcessingVisualContractTests
 
         throw new DirectoryNotFoundException(
             "Repository root with AiteBar.sln was not found.");
+    }
+
+    [Fact]
+    public void Window_AlwaysStartsInProofreadModeAndDoesNotPersistTabSelection()
+    {
+        string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs"));
+
+        Assert.Contains("_currentMode = TextProcessingMode.Proofread;", code);
+        Assert.DoesNotContain("ParseSavedMode", code);
+        Assert.DoesNotContain("SaveModeSelection", code);
+    }
+
+    [Theory]
+    [InlineData(1, "TextProcessing_ErrorNoModels")]
+    [InlineData(2, "TextProcessing_ErrorRateLimit")]
+    [InlineData(8, "TextProcessing_ErrorUnavailable")]
+    public void AvailabilityError_DoesNotReportConfiguredButCoolingDownConnectionsAsMissing(
+        int reasonValue,
+        string expectedResourceKey)
+    {
+        var reason = (AiAvailabilityFailureReason)reasonValue;
+        var exception = new NoAvailableConnectionException("unavailable", reason: reason);
+
+        Assert.Equal(
+            LocalizationService.Get(expectedResourceKey),
+            TextProcessingWindow.GetAvailabilityError(exception));
+    }
+
+    [Fact]
+    public void CompletedResponse_IsRejectedBeforeStateCommitWhenLanguageOrContentChanges()
+    {
+        string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs"));
+        int validation = code.IndexOf("TextProcessingService.ViolatesContentPreservation", StringComparison.Ordinal);
+        int stateCommit = code.IndexOf("_originalText = input;", StringComparison.Ordinal);
+
+        Assert.True(validation >= 0 && stateCommit > validation);
+        Assert.Contains("TextProcessing_ErrorContentChanged", code);
+        Assert.Contains("SetEditorText(textShownBeforeRequest);", code[validation..stateCommit]);
     }
 }

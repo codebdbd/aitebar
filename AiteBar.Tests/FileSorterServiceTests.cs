@@ -409,6 +409,214 @@ public sealed class FileSorterServiceTests
         }
     }
 
+    [Fact]
+    public async Task SortMultipleFoldersAsync_SortsBothFolders()
+    {
+        string root1 = CreateTempRoot();
+        string root2 = CreateTempRoot();
+        try
+        {
+            File.WriteAllText(Path.Combine(root1, "photo.jpg"), "1");
+            File.WriteAllText(Path.Combine(root1, "doc.pdf"), "1");
+            File.WriteAllText(Path.Combine(root2, "track.mp3"), "1");
+            File.WriteAllText(Path.Combine(root2, "archive.zip"), "1");
+
+            var service = new FileSorterService();
+            MultiFileSortResult result = await service.SortMultipleFoldersAsync([root1, root2]);
+
+            Assert.Equal(2, result.PerFolder.Count);
+            Assert.Equal(4, result.TotalSorted);
+            Assert.Equal(2, result.PerFolder[0].SortedCount);
+            Assert.Equal(2, result.PerFolder[1].SortedCount);
+
+            Assert.Empty(Directory.GetFiles(root1));
+            Assert.Empty(Directory.GetFiles(root2));
+            Assert.Equal(2, Directory.GetDirectories(root1).Length);
+            Assert.Equal(2, Directory.GetDirectories(root2).Length);
+            Assert.Equal(2, Directory.GetFiles(root1, "*", SearchOption.AllDirectories).Length);
+            Assert.Equal(2, Directory.GetFiles(root2, "*", SearchOption.AllDirectories).Length);
+        }
+        finally
+        {
+            Directory.Delete(root1, true);
+            Directory.Delete(root2, true);
+        }
+    }
+
+    [Fact]
+    public async Task SortMultipleFoldersAsync_CombinedUndoStateHasPerFolder()
+    {
+        string root1 = CreateTempRoot();
+        string root2 = CreateTempRoot();
+        try
+        {
+            File.WriteAllText(Path.Combine(root1, "photo.jpg"), "1");
+            File.WriteAllText(Path.Combine(root2, "track.mp3"), "1");
+
+            var service = new FileSorterService();
+            MultiFileSortResult result = await service.SortMultipleFoldersAsync([root1, root2]);
+
+            Assert.NotNull(result.CombinedUndoState);
+            Assert.Equal(2, result.CombinedUndoState.PerFolder.Count);
+            Assert.Equal(root1, result.CombinedUndoState.PerFolder[0].RootPath);
+            Assert.Equal(root2, result.CombinedUndoState.PerFolder[1].RootPath);
+        }
+        finally
+        {
+            Directory.Delete(root1, true);
+            Directory.Delete(root2, true);
+        }
+    }
+
+    [Fact]
+    public async Task UndoMultipleAsync_RestoresFilesInBothFolders()
+    {
+        string root1 = CreateTempRoot();
+        string root2 = CreateTempRoot();
+        try
+        {
+            string f1 = Path.Combine(root1, "photo.jpg");
+            string f2 = Path.Combine(root2, "track.mp3");
+            File.WriteAllText(f1, "1");
+            File.WriteAllText(f2, "1");
+            MakeOld(f1);
+            MakeOld(f2);
+
+            var service = new FileSorterService();
+            MultiFileSortResult sortResult = await service.SortMultipleFoldersAsync([root1, root2]);
+
+            MultiFileSortUndoResult undoResult = await service.UndoMultipleAsync(sortResult.CombinedUndoState!);
+
+            Assert.Equal(2, undoResult.TotalRestored);
+            Assert.Equal(0, undoResult.TotalSkipped);
+            Assert.Null(undoResult.RemainingUndoState);
+            Assert.True(File.Exists(f1));
+            Assert.True(File.Exists(f2));
+        }
+        finally
+        {
+            Directory.Delete(root1, true);
+            Directory.Delete(root2, true);
+        }
+    }
+
+    [Fact]
+    public async Task SortMultipleFoldersAsync_ProgressReportsEachFolder()
+    {
+        string root1 = CreateTempRoot();
+        string root2 = CreateTempRoot();
+        try
+        {
+            File.WriteAllText(Path.Combine(root1, "photo.jpg"), "1");
+            File.WriteAllText(Path.Combine(root2, "track.mp3"), "1");
+
+            var reports = new List<MultiFileSortProgress>();
+            var progress = new SynchronousProgress<MultiFileSortProgress>(reports.Add);
+
+            var service = new FileSorterService();
+            await service.SortMultipleFoldersAsync([root1, root2], progress);
+
+            Assert.Contains(reports, report => report.RootPath == root1 && report.FolderIndex == 0 && report.FolderCount == 2);
+            Assert.Contains(reports, report => report.RootPath == root2 && report.FolderIndex == 1 && report.FolderCount == 2);
+            Assert.Equal(1, reports.Last(report => report.RootPath == root1).ProcessedFiles);
+            Assert.Equal(1, reports.Last(report => report.RootPath == root2).ProcessedFiles);
+        }
+        finally
+        {
+            Directory.Delete(root1, true);
+            Directory.Delete(root2, true);
+        }
+    }
+
+    [Fact]
+    public async Task SortMultipleFoldersAsync_EmptyInput_ReturnsEmptyResult()
+    {
+        var service = new FileSorterService();
+        MultiFileSortResult result = await service.SortMultipleFoldersAsync([]);
+
+        Assert.Empty(result.PerFolder);
+        Assert.Equal(0, result.TotalSorted);
+        Assert.Null(result.CombinedUndoState);
+    }
+
+    [Fact]
+    public async Task SortMultipleFoldersAsync_LaterFolderFails_ExposesUndoForCompletedFolders()
+    {
+        string root = CreateTempRoot();
+        string missingRoot = Path.Combine(root, "missing");
+        string sourcePath = Path.Combine(root, "photo.jpg");
+        try
+        {
+            File.WriteAllText(sourcePath, "1");
+
+            var service = new FileSorterService();
+            MultiFileSortException exception = await Assert.ThrowsAsync<MultiFileSortException>(
+                () => service.SortMultipleFoldersAsync([root, missingRoot]));
+
+            Assert.Equal(missingRoot, exception.FailedRootPath);
+            Assert.Single(exception.PartialResult.PerFolder);
+            Assert.NotNull(exception.PartialResult.CombinedUndoState);
+            Assert.False(File.Exists(sourcePath));
+
+            MultiFileSortUndoResult undoResult = await service.UndoMultipleAsync(
+                exception.PartialResult.CombinedUndoState);
+
+            Assert.Equal(1, undoResult.TotalRestored);
+            Assert.True(File.Exists(sourcePath));
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public async Task SortFilesAsync_ProgressReportsProcessedAndTotalFiles()
+    {
+        string root = CreateTempRoot();
+        try
+        {
+            File.WriteAllText(Path.Combine(root, "photo.jpg"), "1");
+            File.WriteAllText(Path.Combine(root, "document.pdf"), "1");
+            File.WriteAllText(Path.Combine(root, "archive.zip"), "1");
+            var reports = new List<FileSortProgress>();
+
+            var service = new FileSorterService();
+            await service.SortFilesAsync(root, new SynchronousProgress<FileSortProgress>(reports.Add));
+
+            Assert.Equal(4, reports.Count);
+            Assert.Equal(0, reports[0].ProcessedFiles);
+            Assert.All(reports, report => Assert.Equal(3, report.TotalFiles));
+            Assert.Equal([0, 1, 2, 3], reports.Select(report => report.ProcessedFiles));
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Fact]
+    public async Task SortFilesAsync_EmptyFolder_ReportsCompletedZeroProgress()
+    {
+        string root = CreateTempRoot();
+        try
+        {
+            var reports = new List<FileSortProgress>();
+
+            var service = new FileSorterService();
+            await service.SortFilesAsync(root, new SynchronousProgress<FileSortProgress>(reports.Add));
+
+            FileSortProgress report = Assert.Single(reports);
+            Assert.Equal(root, report.RootPath);
+            Assert.Equal(0, report.ProcessedFiles);
+            Assert.Equal(0, report.TotalFiles);
+        }
+        finally
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
     private static string CreateTempRoot()
     {
         string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", nameof(FileSorterServiceTests), Guid.NewGuid().ToString("N"));
@@ -421,5 +629,10 @@ public sealed class FileSorterServiceTests
         DateTime oldTime = DateTime.UtcNow.AddMinutes(-5);
         File.SetCreationTimeUtc(path, oldTime);
         File.SetLastWriteTimeUtc(path, oldTime);
+    }
+
+    private sealed class SynchronousProgress<T>(Action<T> callback) : IProgress<T>
+    {
+        public void Report(T value) => callback(value);
     }
 }

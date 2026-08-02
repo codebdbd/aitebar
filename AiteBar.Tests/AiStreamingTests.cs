@@ -148,6 +148,70 @@ public sealed class AiStreamingTests
     }
 
     [Fact]
+    public async Task TextProcessingGateway_SkipsEmptyStreamAndUsesNextConnection()
+    {
+        var credentials = new MemoryCredentialStore();
+        credentials.Write("AiteBar/AI/first", "key-first");
+        credentials.Write("AiteBar/AI/second", "key-second");
+        var generationAttempts = new List<string>();
+        var handler = new DelegateHandler(request =>
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                return Task.FromResult(Json(
+                    "{\"data\":[{\"id\":\"llama-3.3-70b-versatile\",\"name\":\"Llama 3.3 70B\"}]}"));
+            }
+
+            string key = request.Headers.Authorization?.Parameter ?? string.Empty;
+            generationAttempts.Add(key);
+            return Task.FromResult(key == "key-first"
+                ? Sse("data: [DONE]\n\n")
+                : Sse("data: {\"choices\":[{\"delta\":{\"content\":\"исправлено\"}}]}\n\ndata: [DONE]\n\n"));
+        });
+        var settings = new AppSettingsService
+        {
+            Settings = new AppSettings
+            {
+                Ai = new AiSettings
+                {
+                    FreeTierOnly = true,
+                    ProviderOrder = ["groq"],
+                    Connections =
+                    [
+                        new AiConnectionSettings
+                        {
+                            Id = "first",
+                            ProviderId = "groq",
+                            DisplayName = "First",
+                            CredentialTarget = "AiteBar/AI/first"
+                        },
+                        new AiConnectionSettings
+                        {
+                            Id = "second",
+                            ProviderId = "groq",
+                            DisplayName = "Second",
+                            CredentialTarget = "AiteBar/AI/second"
+                        }
+                    ]
+                }
+            }
+        };
+        var gateway = new AiGateway(
+            settings,
+            new AiProviderClient(new HttpClient(handler), credentials),
+            TimeProvider.System);
+
+        AiGatewayStream stream = await gateway.GenerateTextProcessingStreamingAsync(Request());
+
+        Assert.Equal("second", stream.ConnectionId);
+        Assert.Equal("исправлено", await CollectAsync(stream.Chunks));
+        Assert.Equal(["key-first", "key-second"], generationAttempts);
+        Assert.Equal(
+            AiConnectionState.Unavailable,
+            gateway.GetQuotaStatus(settings.Settings.Ai.Connections[0], "llama-3.3-70b-versatile")?.State);
+    }
+
+    [Fact]
     public async Task StreamRead_ThrowsTimeoutAfterConfiguredInactivity()
     {
         await Assert.ThrowsAsync<TimeoutException>(() =>

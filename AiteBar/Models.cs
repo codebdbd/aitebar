@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AiteBar;
@@ -81,11 +82,53 @@ public sealed class FileSortResult
     public FileSortUndoState? UndoState { get; set; }
 }
 
+public sealed record FileSortProgress(string RootPath, int ProcessedFiles, int TotalFiles);
+
+public sealed record MultiFileSortProgress(
+    string RootPath,
+    int FolderIndex,
+    int FolderCount,
+    int ProcessedFiles,
+    int TotalFiles);
+
 public sealed class FileSortUndoResult
 {
     public int RestoredCount { get; set; }
     public int SkippedCount { get; set; }
     public FileSortUndoState? RemainingUndoState { get; set; }
+}
+
+public sealed class MultiFileSortUndoState
+{
+    public List<FileSortUndoState> PerFolder { get; set; } = [];
+}
+
+public sealed class MultiFileSortResult
+{
+    public List<FileSortResult> PerFolder { get; set; } = [];
+    public int TotalSorted => PerFolder.Sum(x => x.SortedCount);
+    public int TotalSkipped => PerFolder.Sum(x => x.SkippedCount);
+    public MultiFileSortUndoState? CombinedUndoState { get; set; }
+}
+
+public sealed class MultiFileSortUndoResult
+{
+    public int TotalRestored { get; set; }
+    public int TotalSkipped { get; set; }
+    public MultiFileSortUndoState? RemainingUndoState { get; set; }
+}
+
+public sealed class MultiFileSortException : Exception
+{
+    public string FailedRootPath { get; }
+    public MultiFileSortResult PartialResult { get; }
+
+    public MultiFileSortException(string failedRootPath, MultiFileSortResult partialResult, Exception innerException)
+        : base(innerException.Message, innerException)
+    {
+        FailedRootPath = failedRootPath;
+        PartialResult = partialResult;
+    }
 }
 
 public class CustomElement
@@ -177,6 +220,8 @@ public class AppSettings
     public HotkeyBinding TextProcessingHotkey { get; set; } = new();
     public HotkeyBinding ZenEditorHotkey { get; set; } = new();
     public FileSortUndoState? LastFileSortOperation { get; set; }
+    public MultiFileSortUndoState? LastMultiFileSortOperation { get; set; }
+    public List<string> SavedFileSortFolders { get; set; } = [];
 
     public double? TextProcessingLeft { get; set; }
     public double? TextProcessingTop { get; set; }
@@ -192,6 +237,7 @@ public class AppSettings
     public List<CustomElement> Elements { get; set; } = new();
     public List<string> UtilityButtonOrder { get; set; } = new();
     public bool CheckForUpdatesEnabled { get; set; } = true;
+    public bool ShowPanelOnMouseHover { get; set; } = true;
     public bool? ShowTaskbarPositionIndicator { get; set; } = true;
     public double? TaskbarIndicatorPositionX { get; set; }
     public double? TaskbarIndicatorPositionY { get; set; }

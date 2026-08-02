@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 
@@ -19,12 +20,15 @@ public sealed partial class TextProcessingService
         TextProcessingMode.Proofread => ProofreadPrompt,
         TextProcessingMode.Typography => TypographyPrompt,
         TextProcessingMode.Cleanup => CleanupPrompt,
+        TextProcessingMode.LiteraryEdit => LiteraryEditPrompt,
         _ => throw new ArgumentOutOfRangeException(nameof(mode))
     };
 
     public AiChatRequest BuildRequest(TextProcessingMode mode, string text, int? maxOutputTokens = null)
     {
-        string systemPrompt = GetSystemPrompt(mode) + ProtectedMarkerInstruction;
+        string systemPrompt = mode == TextProcessingMode.Proofread
+            ? ProofreadPrompt
+            : GetSystemPrompt(mode) + LanguagePreservationInstruction + ProtectedMarkerInstruction;
         int estimated = EstimateTokens(systemPrompt) + EstimateTokens(text);
         int outputBudget = Math.Max(estimated, text.Length / 2);
         if (maxOutputTokens.HasValue)
@@ -53,6 +57,7 @@ public sealed partial class TextProcessingService
                 TextProcessingMode.Proofread => 0.0,
                 TextProcessingMode.Typography => 0.25,
                 TextProcessingMode.Cleanup => 0.1,
+                TextProcessingMode.LiteraryEdit => 0.4,
                 _ => throw new ArgumentOutOfRangeException(nameof(mode))
             }
         };
@@ -86,6 +91,120 @@ public sealed partial class TextProcessingService
         }
 
         return cleaned.Trim();
+    }
+
+    internal static bool ViolatesContentPreservation(
+        string input,
+        string output,
+        IEnumerable<string>? protectedFragments = null,
+        double minimumWordOverlap = 0.35)
+    {
+        string comparableInput = input ?? string.Empty;
+        string comparableOutput = output ?? string.Empty;
+        if (protectedFragments != null)
+        {
+            foreach (string fragment in protectedFragments.Where(value => !string.IsNullOrEmpty(value)))
+            {
+                comparableInput = comparableInput.Replace(fragment, string.Empty, StringComparison.Ordinal);
+                comparableOutput = comparableOutput.Replace(fragment, string.Empty, StringComparison.Ordinal);
+            }
+        }
+
+        comparableInput = comparableInput.Trim();
+        comparableOutput = comparableOutput.Trim();
+        if (comparableInput.Length == 0 || comparableOutput.Length == 0)
+        {
+            return false;
+        }
+
+        TextScript inputScript = GetDominantScript(comparableInput);
+        TextScript outputScript = GetDominantScript(comparableOutput);
+        if (inputScript != TextScript.None &&
+            outputScript != TextScript.None &&
+            inputScript != outputScript)
+        {
+            return true;
+        }
+
+        HashSet<string> inputWords = GetContentWords(comparableInput);
+        HashSet<string> outputWords = GetContentWords(comparableOutput);
+        if (inputWords.Count < 4 || outputWords.Count < 4)
+        {
+            return false;
+        }
+
+        int sharedWords = inputWords.Count(outputWords.Contains);
+        double overlap = (2.0 * sharedWords) / (inputWords.Count + outputWords.Count);
+        return overlap < Math.Clamp(minimumWordOverlap, 0.0, 1.0);
+    }
+
+    internal static double GetMinimumWordOverlap(TextProcessingMode mode) => mode switch
+    {
+        TextProcessingMode.LiteraryEdit => 0.15,
+        TextProcessingMode.Proofread or TextProcessingMode.Typography or TextProcessingMode.Cleanup => 0.35,
+        _ => throw new ArgumentOutOfRangeException(nameof(mode))
+    };
+
+    private static HashSet<string> GetContentWords(string text)
+    {
+        var words = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var word = new System.Text.StringBuilder();
+        foreach (char character in text)
+        {
+            if (char.IsLetterOrDigit(character))
+            {
+                word.Append(char.ToLowerInvariant(character));
+                continue;
+            }
+            if (word.Length > 0)
+            {
+                words.Add(word.ToString());
+                word.Clear();
+            }
+        }
+        if (word.Length > 0)
+        {
+            words.Add(word.ToString());
+        }
+        return words;
+    }
+
+    private static TextScript GetDominantScript(string text)
+    {
+        int latin = 0;
+        int cyrillic = 0;
+        int cjk = 0;
+        int other = 0;
+        foreach (char character in text)
+        {
+            if (character is >= '\u0400' and <= '\u052F')
+            {
+                cyrillic++;
+            }
+            else if (character is >= 'A' and <= 'Z' or >= 'a' and <= 'z' or >= '\u00C0' and <= '\u024F')
+            {
+                latin++;
+            }
+            else if (IsCjkCharacter(character))
+            {
+                cjk++;
+            }
+            else if (char.IsLetter(character))
+            {
+                other++;
+            }
+        }
+
+        int total = latin + cyrillic + cjk + other;
+        int maximum = Math.Max(Math.Max(latin, cyrillic), Math.Max(cjk, other));
+        if (total < 6 || maximum < 6 || maximum < total * 0.7)
+        {
+            return TextScript.None;
+        }
+        if (maximum == latin) return TextScript.Latin;
+        if (maximum == cyrillic) return TextScript.Cyrillic;
+        if (maximum == cjk) return TextScript.Cjk;
+        return TextScript.Other;
     }
 
     internal static string HideReasoningFromStreamingPreview(string rawResponse)
@@ -341,112 +460,58 @@ public sealed partial class TextProcessingService
     private const string ProtectedMarkerInstruction =
         """
 
-        Фрагменты вида __AITEBAR_PROTECTED_...__ являются служебными маркерами защищённого текста.
-        Копируй каждый такой маркер в ответ ровно один раз, без любых изменений, пробелов или перестановки символов.
-        Не преобразовывай, не переводи и не переименовывай маркеры. Если хотя бы один маркер отсутствует или повторён, ответ некорректен.
+        PROTECTED TOKENS:
+        Tokens matching __AITEBAR_PROTECTED_...__ represent protected technical content.
+        Copy every protected token exactly once, unchanged and in its original position; do not translate, edit, split, reorder, omit, or duplicate it.
+        """;
+
+    private const string LanguagePreservationInstruction =
+        """
+
+        LANGUAGE AND CONTENT:
+        Preserve the language of every input segment and never translate any part of the text.
+        Preserve meaning, names, facts, and content order; if the requested transformation would require rewriting, keep the affected fragment unchanged.
         """;
 
     private const string ProofreadPrompt =
-        """
-        Ты выполняешь только проверку орфографии, грамматики и пунктуации.
-
-        Исправь орфографические и грамматические ошибки, согласование, окончания, очевидные опечатки, регистр и пунктуацию.
-
-        Строго запрещено:
-        - перефразировать текст;
-        - заменять слова синонимами;
-        - улучшать стиль;
-        - сокращать или дополнять текст;
-        - менять порядок предложений;
-        - менять структуру абзацев;
-        - создавать новые заголовки или списки;
-        - переводить текст;
-        - выполнять типографическую обработку.
-
-        Сохраняй намеренный регистр аббревиатур, сокращений, имён собственных и технических обозначений. Не превращай UPPERCASE в TitleCase, если это не очевидная ошибка.
-
-        Сохраняй исходный тип символов:
-        - обычные кавычки " не заменяй на типографские;
-        - обычный апостроф ' не заменяй;
-        - дефис или минус - не заменяй на короткое или длинное тире;
-        - три точки ... не заменяй знаком многоточия;
-        - обычные пробелы не заменяй неразрывными.
-
-        Не изменяй URL, адреса электронной почты, пути к файлам, имена файлов, команды, программный код, теги, переменные, номера версий, артикулы и идентификаторы, кроме очевидной пунктуации вокруг них.
-
-        Если текст содержит несколько языков, проверяй каждый фрагмент на его языке и ничего не переводи.
-
-        Верни только исправленный текст. Не добавляй пояснений, заголовков, списка исправлений, Markdown-обёртки или фраз вроде "Готово" и "Исправленный текст".
-        """;
+        "Correct only spelling, grammar, and punctuation errors and return only the corrected text without changing its language, meaning, wording, structure, or technical content.";
 
     private const string TypographyPrompt =
         """
-        Ты выполняешь только типографическое оформление текста.
-
-        Определи язык каждого содержательного фрагмента и примени принятые для него типографские правила:
-        - правильные внешние и вложенные кавычки;
-        - дефис, короткое и длинное тире по назначению;
-        - знак многоточия;
-        - корректные пробелы возле знаков препинания;
-        - неразрывные пробелы;
-        - оформление диапазонов;
-        - оформление инициалов и сокращений;
-        - оформление процентов, валют, градусов и единиц измерения;
-        - удаление повторяющихся и лишних пробелов.
-
-        Строго запрещено:
-        - менять слова и формулировки;
-        - исправлять орфографию или грамматику;
-        - исправлять стиль;
-        - перефразировать;
-        - сокращать или дополнять текст;
-        - менять порядок предложений;
-        - перестраивать абзацы;
-        - переводить;
-        - изменять смысл.
-
-        Сохраняй структуру абзацев и существующие границы пустых строк. Не сливай разные абзацы и не создавай новые.
-
-        Не изменяй содержимое URL, адресов электронной почты, путей к файлам, имён файлов, команд, программного кода, HTML/XML-тегов, Markdown-разметки, переменных, шаблонов, номеров версий, артикулов и идентификаторов.
-
-        Если текст смешанный, применяй правила к каждому языковому фрагменту отдельно. Не типографируй технические фрагменты.
-
-        Верни только оформленный текст. Не добавляй пояснений, заголовков, списка изменений, Markdown-обёртки или фраз вроде "Готово" и "Оформленный текст".
+        Apply typography only, using the conventions of each language present in the text.
+        Normalize quotation marks, hyphens and dashes, ellipses, punctuation spacing, non-breaking spaces, ranges, initials, abbreviations, percentages, currencies, degrees, units, and repeated spaces.
+        Do not correct spelling or grammar, rewrite wording, improve style, add or remove content, reorder sentences, change paragraph boundaries, translate, or alter meaning.
+        Preserve URLs, email addresses, file paths, file names, commands, code, HTML/XML tags, Markdown syntax, variables, templates, version numbers, product codes, identifiers, and all other technical content.
+        Return only the typographically formatted text with no explanation, heading, change list, or wrapper.
         """;
 
     private const string CleanupPrompt =
         """
-        Ты выполняешь только очистку текста от технических артефактов копирования.
-
-        Разрешено:
-        - объединять строки, случайно разорванные внутри предложения;
-        - восстанавливать слова, разорванные переносом строки;
-        - удалять повторяющиеся пробелы;
-        - удалять лишние пустые строки;
-        - удалять невидимые и служебные символы;
-        - удалять очевидные номера страниц;
-        - удалять повторяющиеся колонтитулы, только если одна и та же служебная строка повторяется более двух раз на одинаковой позиции между блоками или рядом с номерами страниц;
-        - удалять явные артефакты копирования;
-        - восстанавливать реальные границы абзацев;
-        - сохранять настоящие списки и структуру документа.
-
-        Строго запрещено:
-        - исправлять орфографию;
-        - исправлять грамматику;
-        - менять пунктуацию;
-        - выполнять типографические замены;
-        - перефразировать;
-        - сокращать или дополнять;
-        - переводить;
-        - удалять содержательный текст;
-        - менять смысл.
-
-        Не изменяй URL, адреса электронной почты, пути, имена файлов, команды, программный код, теги, переменные, номера версий, артикулы и идентификаторы.
-
-        Если нет уверенности, что фрагмент является техническим мусором, сохрани его.
-
-        Верни только очищенный текст. Не добавляй пояснений, заголовков, списка удалённых элементов, Markdown-обёртки или фраз вроде "Готово" и "Очищенный текст".
+        Remove only clear copy/paste and document-extraction artifacts.
+        Join accidental line breaks inside sentences, restore words split by line-break hyphenation, remove repeated spaces, excessive blank lines, invisible or control characters, obvious standalone page numbers, and repeated headers or footers only when the same non-content line occurs more than twice in equivalent positions.
+        Preserve genuine paragraphs, lists, document structure, and all meaningful content.
+        Do not correct spelling, grammar, punctuation, or typography; do not rewrite, shorten, expand, translate, or alter meaning.
+        Preserve URLs, email addresses, file paths, file names, commands, code, tags, variables, version numbers, product codes, identifiers, and all other technical content.
+        If a fragment is not clearly an artifact, keep it unchanged.
+        Return only the cleaned text with no explanation, heading, removal list, or wrapper.
         """;
+
+    private const string LiteraryEditPrompt =
+        """
+        Edit the text for clarity, fluency, rhythm, and literary quality while preserving its original language, meaning, facts, names, narrative perspective, intended tone, and paragraph structure.
+        You may rewrite awkward sentences, improve word choice, and remove unintentional repetition, but do not invent information, add new ideas, omit meaningful content, or change the author's position.
+        Preserve URLs, email addresses, file paths, file names, commands, code, tags, variables, version numbers, product codes, identifiers, and all other technical content.
+        Return only the edited text with no explanation, heading, commentary, change list, or wrapper.
+        """;
+
+    private enum TextScript
+    {
+        None,
+        Latin,
+        Cyrillic,
+        Cjk,
+        Other
+    }
 }
 
 public sealed record ProtectedText(

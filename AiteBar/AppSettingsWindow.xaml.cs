@@ -631,6 +631,7 @@ public partial class AppSettingsWindow : DarkWindow
     private void RefreshAutomationNames()
     {
         AutomationProperties.SetName(CmbLanguage, LocalizationService.Get("AppSettingsWindow_Language"));
+        AutomationProperties.SetName(ChkShowPanelOnMouseHover, LocalizationService.Get("AppSettingsWindow_ShowPanelOnMouseHover"));
         AutomationProperties.SetName(ChkShowTaskbarPositionIndicator, LocalizationService.Get("AppSettingsWindow_ShowTaskbarPositionIndicator"));
         AutomationProperties.SetName(ChkSecondaryMonitor, LocalizationService.Get("AppSettingsWindow_SecondaryMonitor"));
         AutomationProperties.SetName(ChkCheckForUpdatesEnabled, LocalizationService.Get("AppSettingsWindow_CheckForUpdates"));
@@ -889,6 +890,7 @@ public partial class AppSettingsWindow : DarkWindow
             checkBox.IsChecked = definition.IsVisible(_settings);
         }
         ChkClipboardManagerPersistHistory.IsChecked = _settings.ClipboardManagerPersistHistory;
+        ChkShowPanelOnMouseHover.IsChecked = _settings.ShowPanelOnMouseHover;
         ChkShowTaskbarPositionIndicator.IsChecked = _settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
         ChkCheckForUpdatesEnabled.IsChecked = _settings.CheckForUpdatesEnabled;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
@@ -1176,6 +1178,7 @@ public partial class AppSettingsWindow : DarkWindow
                 definition.SetVisible(settings, checkBox.IsChecked ?? false);
             }
             settings.ClipboardManagerPersistHistory = ChkClipboardManagerPersistHistory.IsChecked ?? true;
+            settings.ShowPanelOnMouseHover = ChkShowPanelOnMouseHover.IsChecked ?? true;
             settings.ShowTaskbarPositionIndicator = ChkShowTaskbarPositionIndicator.IsChecked ?? true;
             settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;
             settings.UiCulture = _selectedUiCulture;
