@@ -102,15 +102,17 @@
         </Style>
     </Window.Resources>
 
-    <Border x:Name="RootBorder" Background="{StaticResource BorderColor}" CornerRadius="8" BorderBrush="#24FFFFFF" BorderThickness="0.7" Margin="3"
+    <Border x:Name="RootBorder" Background="Transparent" CornerRadius="9" BorderThickness="0" Margin="10,8,10,16"
             SnapsToDevicePixels="True"
             TextOptions.TextFormattingMode="Ideal"
             AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel" PreviewMouseDown="RootBorder_PreviewMouseDown">
-        <Border.Effect>
-            <DropShadowEffect Color="#000000" BlurRadius="12" ShadowDepth="1" Opacity="0.32"/>
-        </Border.Effect>
-        <Border Background="{StaticResource PanelBackground}" CornerRadius="7" SnapsToDevicePixels="True">
-        <DockPanel x:Name="MainPanel" HorizontalAlignment="Left" VerticalAlignment="Center" LastChildFill="False" Margin="2">
+        <Grid ClipToBounds="False">
+            <Border Background="#FF1689E8" CornerRadius="8" SnapsToDevicePixels="True">
+                <Border.Effect>
+                    <DropShadowEffect Color="#008DFF" BlurRadius="4" ShadowDepth="0" Opacity="0.45"/>
+                </Border.Effect>
+                <Border Background="{StaticResource PanelBackground}" BorderBrush="#14000000" BorderThickness="1" CornerRadius="7" Margin="1" SnapsToDevicePixels="True">
+                    <DockPanel x:Name="MainPanel" HorizontalAlignment="Left" VerticalAlignment="Center" LastChildFill="False" Margin="2">
                 <Border x:Name="DragHandle"
                         Width="14"
                         Height="44"
@@ -154,7 +156,9 @@
                     <Rectangle x:Name="SepAppSettings" Width="1" Height="20" Fill="#332A9CFF" Margin="4,0" VerticalAlignment="Center"/>
                     <Button x:Name="BtnAppSettings" Content="&#xF6A8;" Click="BtnAppSettings_Click" Foreground="#2A9CFF" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="20" Focusable="True"/>
                 </StackPanel>
-        </DockPanel>
-        </Border>
+                    </DockPanel>
+                </Border>
+            </Border>
+        </Grid>
     </Border>
 </Window>
