@@ -9,6 +9,16 @@
 
 ## [Unreleased]
 
+## [1.15.1] - 2026-08-08
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Конструктор промптов — «Графика»**: автоматический выбор модели больше не отклоняет запрос по устаревшему локальному списку; gateway выбирает доступный маршрут и fallback.
+- **Prompt Builder — Graphics**: automatic model selection no longer rejects requests using a stale local list; the gateway selects an available route and fallback.
+- **Конструктор промптов**: очистка и создание нового варианта выполняются сразу, без лишних окон подтверждения.
+- **Prompt Builder**: clearing and creating a new variant now run immediately, without unnecessary confirmation dialogs.
+- **Контекстные меню**: глифы во всех меню теперь центрируются по видимому контуру, а не по baseline шрифта.
+- **Context menus**: glyphs in every menu are now centered by their visible outline instead of the font baseline.
+
 ## [1.15.0] - 2026-08-08
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

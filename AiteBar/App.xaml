@@ -74,18 +74,13 @@
             </Setter>
         </Style>
 
-        <Style x:Key="ContextMenuIconTextStyle" TargetType="TextBlock">
+        <Style x:Key="ContextMenuIconTextStyle" TargetType="{x:Type local:CenteredGlyphTextBlock}">
             <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
             <Setter Property="FontSize" Value="18"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="TextAlignment" Value="Center"/>
             <Setter Property="Width" Value="24"/>
             <Setter Property="Height" Value="24"/>
-            <Setter Property="LineHeight" Value="24"/>
-            <Setter Property="LineStackingStrategy" Value="BlockLineHeight"/>
-            <Setter Property="Padding" Value="0"/>
-            <Setter Property="Margin" Value="0"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="UseLayoutRounding" Value="True"/>
         </Style>
@@ -126,7 +121,7 @@
                                                   Width="24"
                                                   Height="24">
                                     <ContentPresenter.Resources>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource ContextMenuIconTextStyle}">
+                                        <Style TargetType="{x:Type local:CenteredGlyphTextBlock}" BasedOn="{StaticResource ContextMenuIconTextStyle}">
                                             <Setter Property="Foreground" Value="#E6E6E6"/>
                                         </Style>
                                     </ContentPresenter.Resources>
@@ -282,22 +277,22 @@
                      TextBlock.LineStackingStrategy="MaxHeight">
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_Cut}" Command="ApplicationCommands.Cut" InputGestureText="Ctrl+X">
                 <MenuItem.Icon>
-                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14E;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
+                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14E;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_Copy}" Command="ApplicationCommands.Copy" InputGestureText="Ctrl+C">
                 <MenuItem.Icon>
-                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF381;"/>
+                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF381;"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_Paste}" Command="ApplicationCommands.Paste" InputGestureText="Ctrl+V">
                 <MenuItem.Icon>
-                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14F;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
+                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14F;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_SelectAll}" Command="ApplicationCommands.SelectAll" InputGestureText="Ctrl+A">
                 <MenuItem.Icon>
-                    <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE162;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
+                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE162;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>

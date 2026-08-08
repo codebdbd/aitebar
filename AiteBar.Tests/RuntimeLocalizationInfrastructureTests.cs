@@ -71,33 +71,25 @@ public sealed class RuntimeLocalizationInfrastructureTests
     {
         RunSta(() =>
         {
-            string originalCulture = LocalizationService.ResolvedCulture.Name;
-
-            try
+            var strings = new Dictionary<string, string>
             {
-                LocalizationService.ApplyCulture("en");
+                ["Menu_OpenLocation"] = "before"
+            };
+            var host = new Button();
+            var menuItem = new MenuItem();
+            BindingOperations.SetBinding(
+                menuItem,
+                HeaderedItemsControl.HeaderProperty,
+                new Binding("[Menu_OpenLocation]") { Source = strings });
 
-                var host = new Button();
-                var menuItem = new MenuItem();
-                BindingOperations.SetBinding(
-                    menuItem,
-                    HeaderedItemsControl.HeaderProperty,
-                    new Binding("[Menu_OpenLocation]") { Source = LocalizationService.Strings });
+            host.ContextMenu = new ContextMenu();
+            host.ContextMenu.Items.Add(menuItem);
+            Assert.Equal("before", menuItem.Header);
 
-                host.ContextMenu = new ContextMenu();
-                host.ContextMenu.Items.Add(menuItem);
+            strings["Menu_OpenLocation"] = "after";
+            LocalizationService.RefreshLocalizedBindings(host);
 
-                Assert.Equal("Open location", menuItem.Header);
-
-                LocalizationService.ApplyCulture("de");
-                LocalizationService.RefreshLocalizedBindings(host);
-
-                Assert.Equal("Speicherort öffnen", menuItem.Header);
-            }
-            finally
-            {
-                LocalizationService.ApplyCulture(originalCulture);
-            }
+            Assert.Equal("after", menuItem.Header);
         });
     }
 

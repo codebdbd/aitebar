@@ -57,7 +57,6 @@ public partial class PromptBuilderWindow : DarkWindow
     private bool _hasSuccessfulResult;
     private bool _isShowingOriginal;
     private bool _isShowingDiff;
-    private bool _isModifiedManually;
     private string _lastUsedModelDisplay = string.Empty;
     private string _inlineInfoStatus = string.Empty;
     private PromptBuilderCategory _currentMode = PromptBuilderCategory.Programming;
@@ -450,7 +449,6 @@ public partial class PromptBuilderWindow : DarkWindow
             if (!_isShowingOriginal)
             {
                 _processedText = TxtEditor.Text;
-                _isModifiedManually = true;
             }
         }
         SetStatus(string.Empty);
@@ -512,17 +510,6 @@ public partial class PromptBuilderWindow : DarkWindow
 
     private void BtnClear_Click(object sender, RoutedEventArgs e)
     {
-        if (!string.IsNullOrWhiteSpace(TxtEditor.Text))
-        {
-            bool confirmed = new DarkDialog(LocalizationService.Get("TextProcessing_ConfirmClear"), isConfirm: true)
-            {
-                Owner = this
-            }.ShowDialog() == true;
-            if (!confirmed)
-            {
-                return;
-            }
-        }
         Clear();
     }
 
@@ -709,17 +696,6 @@ public partial class PromptBuilderWindow : DarkWindow
                 }
                 return;
             }
-            if (_hasSuccessfulResult && !_isShowingOriginal && _isModifiedManually)
-            {
-                bool replaceEditedResult = new DarkDialog(LocalizationService.Get("TextProcessing_ConfirmRepeat"), isConfirm: true)
-                {
-                    Owner = this
-                }.ShowDialog() == true;
-                if (!replaceEditedResult)
-                {
-                    return;
-                }
-            }
         }
 
         AiChatRequest request = _service.BuildRequest(mode, input, createAlternative: repeatLast, paintingStyle: _paintingStyle, animationStyle: _animationStyle, photoStyle: _photoStyle, textType: _textType, textTone: _textTone, analysisDirection: _analysisDirection, videoDirection: _videoDirection, programmingTaskType: _programmingTaskType, visualTarget: _visualTarget, iconPlatform: _iconPlatform, iconStyle: _iconStyle, graphicType: _graphicType, graphicStyle: _graphicStyle);
@@ -733,18 +709,7 @@ public partial class PromptBuilderWindow : DarkWindow
                 return;
             }
         }
-        if (useAutoModel)
-        {
-            if (!_models.Any(model =>
-                    model.ModelId != null &&
-                    model.Tier == TextProcessingModelTier.CertifiedAutomatic &&
-                    (!model.ContextLength.HasValue || request.RequiredContextTokens <= model.ContextLength.Value)))
-            {
-                SetStatus(LocalizationService.Get("TextProcessing_ErrorContextOverflow"));
-                return;
-            }
-        }
-        else
+        if (!useAutoModel)
         {
             if (selected!.ContextLength.HasValue && request.RequiredContextTokens > selected.ContextLength.Value)
             {
@@ -760,7 +725,6 @@ public partial class PromptBuilderWindow : DarkWindow
         _isShowingOriginal = false;
         _isShowingDiff = false;
         _isProcessing = true;
-        _isModifiedManually = false;
         _processingCts = new CancellationTokenSource();
         StartProcessingProgress();
         RefreshUiState();
@@ -796,7 +760,6 @@ public partial class PromptBuilderWindow : DarkWindow
             _hasSuccessfulResult = true;
             _isShowingOriginal = false;
             _isShowingDiff = false;
-            _isModifiedManually = false;
             _lastOriginalText = input;
             _lastMode = mode;
             _lastWasAutoModel = useAutoModel;
@@ -962,7 +925,6 @@ public partial class PromptBuilderWindow : DarkWindow
         _hasSuccessfulResult = false;
         _isShowingOriginal = false;
         _isShowingDiff = false;
-        _isModifiedManually = false;
         ClearInfoStatus();
     }
 

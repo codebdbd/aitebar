@@ -54,6 +54,17 @@ public sealed class PromptBuilderIntegrationTests
     }
 
     [Fact]
+    public void ContextMenuGlyphs_UseFontMetricsInsideTheFixedIconCell()
+    {
+        string xaml = Read("AiteBar", "App.xaml");
+        string factory = Read("AiteBar", "AppContextMenuFactory.cs");
+
+        Assert.Contains("x:Key=\"ContextMenuIconTextStyle\"", xaml);
+        Assert.Contains("TargetType=\"{x:Type local:CenteredGlyphTextBlock}\"", xaml);
+        Assert.Contains("new CenteredGlyphTextBlock", factory);
+    }
+
+    [Fact]
     public void CopyNotification_IsTransientAndCannotChangeLayout()
     {
         string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
@@ -61,6 +72,16 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("ShowTransientInfoStatus(LocalizationService.Get(\"TextProcessing_Copied\"))", code);
         Assert.Contains("await Task.Delay(TimeSpan.FromSeconds(2));", code);
         Assert.DoesNotContain("SetStatus(LocalizationService.Get(\"TextProcessing_Copied\"))", code);
+    }
+
+    [Fact]
+    public void ClearAndNewVariant_DoNotShowConfirmationDialogs()
+    {
+        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+
+        Assert.DoesNotContain("TextProcessing_ConfirmClear", code);
+        Assert.DoesNotContain("TextProcessing_ConfirmRepeat", code);
+        Assert.DoesNotContain("new DarkDialog", code);
     }
 
     [Fact]
@@ -77,10 +98,16 @@ public sealed class PromptBuilderIntegrationTests
     public void PromptGeneration_DoesNotApplyTextPreservationRejection()
     {
         string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+        int start = code.IndexOf("private async Task ProcessAsync", StringComparison.Ordinal);
+        int end = code.IndexOf("private static AiChatRequest CopyRequestWithModel", start, StringComparison.Ordinal);
 
-        Assert.Contains("GeneratePromptBuilderStreamingAsync", code);
-        Assert.DoesNotContain("ViolatesContentPreservation", code);
-        Assert.DoesNotContain("ProtectTechnicalFragments", code);
+        Assert.True(start >= 0 && end > start);
+        string processMethod = code[start..end];
+
+        Assert.Contains("GeneratePromptBuilderStreamingAsync", processMethod);
+        Assert.DoesNotContain("model.Tier == TextProcessingModelTier.CertifiedAutomatic", processMethod);
+        Assert.DoesNotContain("ViolatesContentPreservation", processMethod);
+        Assert.DoesNotContain("ProtectTechnicalFragments", processMethod);
     }
 
     [Fact]

@@ -40,7 +40,7 @@ internal static class AppContextMenuFactory
             : isActive
                 ? (Brush)resourceOwner.FindResource("AccentColor")
                 : DefaultIconBrush;
-        var icon = new TextBlock
+        var icon = new CenteredGlyphTextBlock
         {
             Text = glyph,
             FontFamily = iconFont ?? FontHelper.Resolve(FontHelper.FluentKey),
