@@ -181,7 +181,7 @@ public sealed class PromptBuilderServiceTests
     [Fact]
     public void AnalysisInstruction_RequiresEvidenceBoundariesWithoutForcingOtherDirectionContracts()
     {
-        string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Analysis);
+        string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Analysis).ReplaceLineEndings("\n");
 
         Assert.Contains("separate:\n- confirmed facts;", prompt);
         Assert.Contains("missing evidence and uncertainty to be stated explicitly", prompt);

@@ -9,6 +9,12 @@
 
 ## [Unreleased]
 
+## [1.15.2] - 2026-08-08
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Release validation**: тесты Prompt Builder теперь одинаково проверяют многострочные шаблоны на Windows и в CI.
+- **Release validation**: Prompt Builder tests now validate multiline templates consistently on Windows and CI.
+
 ## [1.15.1] - 2026-08-08
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
