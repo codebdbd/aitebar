@@ -58,6 +58,7 @@
 
         <Style x:Key="CircleAccentButtonStyle" TargetType="Button">
             <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Width" Value="40"/>
             <Setter Property="Height" Value="40"/>
             <Setter Property="Margin" Value="2,2"/>
@@ -102,7 +103,7 @@
         </Style>
     </Window.Resources>
 
-    <Border x:Name="RootBorder" Background="Transparent" CornerRadius="9" BorderThickness="0" Margin="10,8,10,16"
+    <Border x:Name="RootBorder" Background="Transparent" CornerRadius="9" BorderThickness="0" Margin="10"
             SnapsToDevicePixels="True"
             TextOptions.TextFormattingMode="Ideal"
             AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel" PreviewMouseDown="RootBorder_PreviewMouseDown">
@@ -137,8 +138,8 @@
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
                         <Button x:Name="ContextIndicator" Width="40" Height="40" Margin="2,2"
-                                ToolTipService.InitialShowDelay="0" Click="ContextIndicator_Click">
-                            <Border Width="24" Height="24" Background="#2A9CFF" CornerRadius="12" 
+                                ToolTipService.InitialShowDelay="0" Click="ContextIndicator_Click" MouseRightButtonUp="ContextIndicator_MouseRightButtonUp">
+                            <Border Width="24" Height="24" Background="#2A9CFF" CornerRadius="4"
                                     HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="ContextIndicatorCircle">
                                 <TextBlock x:Name="ContextIndicatorText" Text="1" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF"
                                            HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0"/>

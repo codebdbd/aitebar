@@ -51,7 +51,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
 
     private const string DonatePageUrl = "https://codebdbd.github.io/";
-    private const double TopPanelVisibleOffset = 12;
+    private const double TopPanelVisibleOffset = 0;
     private bool _isPanelDragging = false;
     private bool _panelDragChanged = false;
     private DockEdge _dragStartEdge;
@@ -946,6 +946,22 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private void ExecuteHotkeyCommand(HotkeyCommand command)
     {
+        if (HotkeyService.TryGetContextNumber(command, out int contextNumber))
+        {
+            string contextId = ContextStateHelper.GetDefaultContextId(contextNumber);
+            if (!AppSettings.Contexts.Any(context => context.IsEnabled && string.Equals(context.Id, contextId, StringComparison.Ordinal)))
+            {
+                return;
+            }
+            var result = TryActivateContext(contextId);
+            if (result.changed)
+            {
+                _ = SaveSettingsWithNotificationAsync();
+            }
+            ShowDock(fromKeyboard: true);
+            return;
+        }
+
         switch (command)
         {
             case HotkeyCommand.ShowPanel:
@@ -1444,6 +1460,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             RefreshPanel();
             PositionWindowImmediately(_shown);
             _positionIndicatorService.Initialize(_settingsService, this);
+            _ = Dispatcher.BeginInvoke(IconPickerWindow.WarmupCatalogMetadata, DispatcherPriority.ApplicationIdle);
         }
         catch (OperationCanceledException)
         {
@@ -1640,7 +1657,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         int activeIndex = ContextStateHelper.FindEnabledContextIndex(settings.Contexts, settings.ActiveContextId);
         if (activeIndex < 0) activeIndex = 0;
 
-        ContextIndicatorText.Text = (activeIndex + 1).ToString();
+        ContextIndicatorText.Text = ContextStateHelper.GetContextNumber(settings.ActiveContextId).ToString();
         if (activeIndex < enabledCount)
         {
             PanelContext? activeContext = ContextStateHelper.GetEnabledContextAt(settings.Contexts, activeIndex);
@@ -1649,7 +1666,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 ContextIndicatorCircle.Background = GetCachedBrush(activeContext.Color);
                 ContextIndicator.ToolTip = LocalizationService.Format(
                     "Main_ContextIndicatorTooltipFormat",
-                    activeIndex + 1,
+                    ContextStateHelper.GetContextNumber(activeContext.Id),
                     activeContext.Name);
                 string contextLabel = ContextIndicator.ToolTip?.ToString() ?? activeContext.Name;
                 System.Windows.Automation.AutomationProperties.SetName(ContextIndicator, contextLabel);
@@ -1660,6 +1677,11 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private void ContextIndicator_Click(object sender, RoutedEventArgs e)
     {
+        ActivateContextRelative(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? -1 : 1);
+    }
+
+    private void ContextIndicator_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
         ContextMenu? menu = RootBorder.ContextMenu;
         if (menu is null)
         {
@@ -1668,6 +1690,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         menu.PlacementTarget = ContextIndicator;
         menu.IsOpen = true;
+        e.Handled = true;
     }
 
     private void ApplyUnifiedButtonIcon(Button button, UnifiedButton item, int panelVersion)

@@ -5,7 +5,7 @@ namespace AiteBar.Tests;
 public sealed class PromptBuilderIntegrationTests
 {
     [Fact]
-    public void Window_UsesSevenCategoriesAndFixedStatusArea()
+    public void Window_UsesAnalyticsCategoryAndFixedStatusArea()
     {
         string xaml = Read("AiteBar", "PromptBuilderWindow.xaml");
 
@@ -13,11 +13,39 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("<Grid Margin=\"32,16,32,24\">", xaml);
         Assert.Contains("x:Name=\"ModeProgramming\"", xaml);
         Assert.Contains("x:Name=\"ModeImages\"", xaml);
+        Assert.Contains("x:Name=\"ModePaintings\"", xaml);
+        Assert.Contains("x:Name=\"ModeAnimation\"", xaml);
+        Assert.Contains("x:Name=\"ModeIcons\"", xaml);
+        Assert.Contains("x:Name=\"ModeGraphics\"", xaml);
+        Assert.Contains("x:Name=\"TextOptionsHost\"", xaml);
+        Assert.Contains("x:Name=\"CmbTextType\"", xaml);
+        Assert.Contains("x:Name=\"CmbTextTone\"", xaml);
+        Assert.Contains("x:Name=\"VideoDirectionHost\"", xaml);
+        Assert.Contains("x:Name=\"CmbVideoDirection\"", xaml);
+        Assert.Contains("x:Name=\"ProgrammingTaskHost\"", xaml);
+        Assert.Contains("x:Name=\"CmbProgrammingTask\"", xaml);
+        Assert.Contains("x:Name=\"TxtProgrammingTaskOutcome\"", xaml);
+        Assert.Contains("TxtProgrammingTaskOutcome\" Grid.Column=\"3\" Margin=\"16,0,0,0\"", xaml);
+        Assert.Contains("x:Name=\"TxtVideoDirectionOutcome\"", xaml);
+        Assert.Contains("x:Name=\"TxtTextOptionsOutcome\"", xaml);
+        Assert.Contains("x:Name=\"VisualOptionsHost\"", xaml);
+        Assert.Contains("x:Name=\"CmbVisualTarget\"", xaml);
+        Assert.Contains("x:Name=\"IconOptionsHost\"", xaml);
+        Assert.Contains("x:Name=\"CmbIconPlatform\"", xaml);
+        Assert.Contains("x:Name=\"CmbIconStyle\"", xaml);
+        Assert.Contains("x:Name=\"GraphicOptionsHost\"", xaml);
+        Assert.Contains("x:Name=\"CmbGraphicType\"", xaml);
+        Assert.Contains("x:Name=\"CmbGraphicStyle\"", xaml);
+        Assert.Contains("PromptBuilder_StyleLabel", xaml);
+        Assert.Contains("x:Name=\"AnalysisDirectionHost\"", xaml);
+        Assert.Contains("x:Name=\"CmbAnalysisDirection\"", xaml);
+        Assert.Contains("x:Name=\"TxtAnalysisDirectionOutcome\"", xaml);
         Assert.Contains("x:Name=\"ModeTexts\"", xaml);
         Assert.Contains("x:Name=\"ModeVideo\"", xaml);
         Assert.Contains("x:Name=\"ModeMusic\"", xaml);
-        Assert.Contains("x:Name=\"ModeAnalysis\"", xaml);
-        Assert.Contains("x:Name=\"ModeIdeas\"", xaml);
+        Assert.Contains("x:Name=\"ModeAnalytics\"", xaml);
+        Assert.DoesNotContain("x:Name=\"ModeAnalysis\"", xaml);
+        Assert.DoesNotContain("x:Name=\"ModeIdeas\"", xaml);
         Assert.Contains("x:Name=\"ModeStatusHost\" DockPanel.Dock=\"Top\" Height=\"52\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModeVideoAudio\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModeAnalysisIdeas\"", xaml);
@@ -67,7 +95,7 @@ public sealed class PromptBuilderIntegrationTests
     }
 
     [Fact]
-    public void SwitchingCategory_ClearsInputResultHistoryAndStatus()
+    public void SwitchingCategory_PreservesPerCategoryDraftInsteadOfClearingIt()
     {
         string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
         int start = code.IndexOf("private void ModeTabs_SelectionChanged", StringComparison.Ordinal);
@@ -76,8 +104,10 @@ public sealed class PromptBuilderIntegrationTests
         Assert.True(start >= 0 && end > start);
         string handler = code[start..end];
         Assert.Contains("if (selectedMode == _currentMode)", handler);
+        Assert.Contains("SaveEditorText();", handler);
         Assert.Contains("_currentMode = selectedMode;", handler);
-        Assert.Contains("Clear();", handler);
+        Assert.Contains("RestoreEditorText(_settingsService.Settings);", handler);
+        Assert.DoesNotContain("Clear();", handler);
 
         int clearStart = code.IndexOf("private void Clear()", StringComparison.Ordinal);
         int clearEnd = code.IndexOf("private void ResetResultHistory()", clearStart, StringComparison.Ordinal);
@@ -86,6 +116,20 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("SetEditorText(string.Empty);", clearMethod);
         Assert.Contains("_operationHistory.Clear();", clearMethod);
         Assert.Contains("SetStatus(string.Empty);", clearMethod);
+        Assert.Contains("SaveEditorText();", clearMethod);
+    }
+
+    [Fact]
+    public void Drafts_PersistOriginalAndGeneratedPromptPerCategory()
+    {
+        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+        string models = Read("AiteBar", "Models.cs");
+
+        Assert.Contains("public Dictionary<string, PromptBuilderDraft> PromptBuilderDrafts", models);
+        Assert.Contains("Input = _hasSuccessfulResult ? _originalText", code);
+        Assert.Contains("Result = _hasSuccessfulResult ? _processedText", code);
+        Assert.Contains("_hasSuccessfulResult = true;", code);
+        Assert.Contains("_lastOriginalText = draft.Input;", code);
     }
 
     [Fact]

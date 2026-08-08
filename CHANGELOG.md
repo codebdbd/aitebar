@@ -9,6 +9,22 @@
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-08-08
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Панели 0–9 и быстрое переключение**: AiteBar поддерживает 10 контекстных панелей с яркой контрастной палитрой. `Alt+0`…`Alt+9` открывает панель и выбирает соответствующий включённый контекст; номер текущей панели переключает контексты кликом, `Enter`, `Shift` + клик или `Shift+Enter`.
+- **Panels 0–9 and fast switching**: AiteBar now supports 10 context panels with a bright, high-contrast palette. `Alt+0`…`Alt+9` opens the panel and selects the matching enabled context; the active-panel badge switches contexts with click, `Enter`, `Shift`+click, or `Shift+Enter`.
+- **Конструктор промптов**: Добавлены отдельные вкладки «Иконки» и «Графика» с независимыми шаблонами, параметрами и черновиками; вкладка «Код» теперь показывает краткий результат выбранного типа задачи.
+- **Prompt Builder**: Added separate Icons and Graphics tabs with independent templates, options, and drafts; the Code tab now shows a concise outcome for the selected task type.
+- **Резервные копии**: Добавлен экспорт и восстановление настроек и локальных данных приложения.
+- **Backups**: Added export and restore for application settings and local data.
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Локализация Prompt Builder**: Полные переводы вкладок, стилей и типов ресурсов доступны на русском, украинском, немецком и английском языках.
+- **Prompt Builder localization**: Complete translations for tabs, styles, and asset types are available in Russian, Ukrainian, German, and English.
+- **Тесты локализации**: Устранено зависание проверки локализации между потоками; полный набор тестов снова может завершаться.
+- **Localization tests**: Removed the cross-thread localization test deadlock so the full test suite can complete.
+
 ## [1.14.0] - 2026-08-02
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

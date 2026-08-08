@@ -106,7 +106,7 @@ internal static class UtilityButtonCatalog
         (settings, visible) => settings.ShowPresetTextProcessing = visible);
 
     public static UtilityButtonDefinition PromptBuilder { get; } = new(
-        "PromptBuilder", "\uE945", "#007ACC", "Main_PromptBuilderTooltip",
+        "PromptBuilder", "\U000F0631", "#007ACC", "Main_PromptBuilderTooltip",
         settings => settings.ShowPresetPromptBuilder,
         (settings, visible) => settings.ShowPresetPromptBuilder = visible);
 

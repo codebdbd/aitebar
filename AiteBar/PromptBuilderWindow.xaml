@@ -106,9 +106,9 @@
 
     <Grid>
         <ScrollViewer x:Name="LayoutViewport"
-                      HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Disabled"
-                      HorizontalContentAlignment="Center"
+                       HorizontalScrollBarVisibility="Auto"
+                       VerticalScrollBarVisibility="Disabled"
+                       HorizontalContentAlignment="Center"
                       VerticalContentAlignment="Stretch"
                       Focusable="False">
             <Grid Margin="32,16,32,24">
@@ -138,6 +138,22 @@
                              Header="{local:Loc ResourceKey=PromptBuilder_ModeImages}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
                              AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeImages}"/>
+                    <TabItem x:Name="ModePaintings" Tag="Paintings"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModePaintings}"
+                             Style="{StaticResource PromptBuilderTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModePaintings}"/>
+                    <TabItem x:Name="ModeAnimation" Tag="Animation"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeAnimation}"
+                             Style="{StaticResource PromptBuilderTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeAnimation}"/>
+                    <TabItem x:Name="ModeIcons" Tag="Icons"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeIcons}"
+                             Style="{StaticResource PromptBuilderTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeIcons}"/>
+                    <TabItem x:Name="ModeGraphics" Tag="Graphics"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeGraphics}"
+                             Style="{StaticResource PromptBuilderTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeGraphics}"/>
                     <TabItem x:Name="ModeTexts" Tag="Texts"
                              Header="{local:Loc ResourceKey=PromptBuilder_ModeTexts}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
@@ -150,14 +166,10 @@
                              Header="{local:Loc ResourceKey=PromptBuilder_ModeMusic}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
                              AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeMusic}"/>
-                    <TabItem x:Name="ModeAnalysis" Tag="Analysis"
-                             Header="{local:Loc ResourceKey=PromptBuilder_ModeAnalysis}"
+                    <TabItem x:Name="ModeAnalytics" Tag="Analytics"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeAnalytics}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeAnalysis}"/>
-                    <TabItem x:Name="ModeIdeas" Tag="Ideas"
-                             Header="{local:Loc ResourceKey=PromptBuilder_ModeIdeas}"
-                             Style="{StaticResource PromptBuilderTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeIdeas}"/>
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeAnalytics}"/>
                 </TabControl>
             </Border>
 
@@ -185,6 +197,101 @@
                 </Grid>
             </Border>
 
+            <Border x:Name="ProgrammingTaskHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="14,10"
+                    Background="{StaticResource PromptBuilderCardBrush}" BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1" CornerRadius="6" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="12"/><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="{local:Loc ResourceKey=ProgrammingTask_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbProgrammingTask" Grid.Column="2" Height="34" SelectionChanged="CmbProgrammingTask_SelectionChanged"
+                              AutomationProperties.Name="{local:Loc ResourceKey=ProgrammingTask_Label}"/>
+                    <TextBlock x:Name="TxtProgrammingTaskOutcome" Grid.Column="3" Margin="16,0,0,0"
+                               FontSize="12" Foreground="{DynamicResource MutedText}"
+                               TextWrapping="Wrap" LineHeight="16" MaxHeight="32"
+                               VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <Border x:Name="VideoDirectionHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="14,10"
+                    Background="{StaticResource PromptBuilderCardBrush}" BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1" CornerRadius="6" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="12"/><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="{local:Loc ResourceKey=VideoDirection_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbVideoDirection" Grid.Column="2" Height="34" SelectionChanged="CmbVideoDirection_SelectionChanged"
+                              AutomationProperties.Name="{local:Loc ResourceKey=VideoDirection_Label}"/>
+                    <TextBlock x:Name="TxtVideoDirectionOutcome" Grid.Column="3" Visibility="Collapsed"/>
+                </Grid>
+            </Border>
+
+            <Border x:Name="AnalysisDirectionHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="14,10"
+                    Background="{StaticResource PromptBuilderCardBrush}" BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1" CornerRadius="6" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="12"/><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="{local:Loc ResourceKey=AnalysisDirection_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbAnalysisDirection" Grid.Column="2" Height="34" SelectionChanged="CmbAnalysisDirection_SelectionChanged"
+                              AutomationProperties.Name="{local:Loc ResourceKey=AnalysisDirection_Label}"/>
+                    <TextBlock x:Name="TxtAnalysisDirectionOutcome" Grid.Column="3" Margin="16,0,0,0"
+                               FontSize="12" Foreground="{DynamicResource MutedText}"
+                               TextWrapping="Wrap" LineHeight="16" MaxHeight="32"
+                               VerticalAlignment="Center"/>
+                </Grid>
+            </Border>
+
+            <Border x:Name="TextOptionsHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="14,10"
+                    Background="{StaticResource PromptBuilderCardBrush}" BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1" CornerRadius="6" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="10"/><ColumnDefinition Width="260"/><ColumnDefinition Width="22"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="10"/><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="{local:Loc ResourceKey=TextType_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbTextType" Grid.Column="2" Height="34" SelectionChanged="CmbTextType_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=TextType_Label}"/>
+                    <TextBlock Grid.Column="4" Text="{local:Loc ResourceKey=TextTone_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbTextTone" Grid.Column="6" Height="34" SelectionChanged="CmbTextTone_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=TextTone_Label}"/>
+                    <TextBlock x:Name="TxtTextOptionsOutcome" Grid.Column="7" Visibility="Collapsed"/>
+                </Grid>
+            </Border>
+
+            <Border x:Name="VisualOptionsHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="14,10"
+                    Background="{StaticResource PromptBuilderCardBrush}" BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1" CornerRadius="6" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="10"/><ColumnDefinition Width="160"/><ColumnDefinition Width="24"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="10"/><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="{local:Loc ResourceKey=VisualTarget_Label}" ToolTip="{local:Loc ResourceKey=PromptBuilder_TargetModelHint}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbVisualTarget" Grid.Column="2" Height="34" SelectionChanged="CmbVisualTarget_SelectionChanged" ToolTip="{local:Loc ResourceKey=PromptBuilder_TargetModelHint}" AutomationProperties.Name="{local:Loc ResourceKey=VisualTarget_Label}"/>
+                    <TextBlock Grid.Column="4" Text="{local:Loc ResourceKey=PromptBuilder_StyleLabel}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbVisualStyle" Grid.Column="6" Height="34" SelectionChanged="CmbVisualStyle_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_StyleLabel}"/>
+                </Grid>
+            </Border>
+
+            <Border x:Name="IconOptionsHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="14,10"
+                    Background="{StaticResource PromptBuilderCardBrush}" BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1" CornerRadius="6" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="8"/><ColumnDefinition Width="150"/><ColumnDefinition Width="20"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="8"/><ColumnDefinition Width="150"/><ColumnDefinition Width="20"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="8"/><ColumnDefinition Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="{local:Loc ResourceKey=VisualTarget_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbIconTarget" Grid.Column="2" Height="34" SelectionChanged="CmbIconOrGraphicTarget_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=VisualTarget_Label}"/>
+                    <TextBlock Grid.Column="4" Text="{local:Loc ResourceKey=IconPlatform_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbIconPlatform" Grid.Column="6" Height="34" SelectionChanged="CmbIconOrGraphicOption_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=IconPlatform_Label}"/>
+                    <TextBlock Grid.Column="8" Text="{local:Loc ResourceKey=PromptBuilder_StyleLabel}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbIconStyle" Grid.Column="10" Height="34" SelectionChanged="CmbIconOrGraphicOption_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_StyleLabel}"/>
+                </Grid>
+            </Border>
+
+            <Border x:Name="GraphicOptionsHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="14,10"
+                    Background="{StaticResource PromptBuilderCardBrush}" BorderBrush="{DynamicResource BorderColor}"
+                    BorderThickness="1" CornerRadius="6" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="8"/><ColumnDefinition Width="150"/><ColumnDefinition Width="20"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="8"/><ColumnDefinition Width="170"/><ColumnDefinition Width="20"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="8"/><ColumnDefinition Width="180"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="{local:Loc ResourceKey=VisualTarget_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbGraphicTarget" Grid.Column="2" Height="34" SelectionChanged="CmbIconOrGraphicTarget_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=VisualTarget_Label}"/>
+                    <TextBlock Grid.Column="4" Text="{local:Loc ResourceKey=GraphicType_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbGraphicType" Grid.Column="6" Height="34" SelectionChanged="CmbIconOrGraphicOption_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=GraphicType_Label}"/>
+                    <TextBlock Grid.Column="8" Text="{local:Loc ResourceKey=PromptBuilder_StyleLabel}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbGraphicStyle" Grid.Column="10" Height="34" SelectionChanged="CmbIconOrGraphicOption_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_StyleLabel}"/>
+                </Grid>
+            </Border>
+
             <Border x:Name="LimitBorder" DockPanel.Dock="Top"
                     Background="{StaticResource PromptBuilderWarningBackgroundBrush}"
                     BorderBrush="{StaticResource PromptBuilderWarningBrush}" BorderThickness="1"
@@ -205,14 +312,16 @@
                     <ColumnDefinition x:Name="FooterCommandColumn" Width="150"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Grid.Column="0"
-                           Text="{local:Loc ResourceKey=TextProcessing_ModelLabel}"
+                           Text="{local:Loc ResourceKey=PromptBuilder_GeneratorLabel}"
+                           ToolTip="{local:Loc ResourceKey=PromptBuilder_GeneratorHint}"
                            FontSize="13" Foreground="{DynamicResource MutedText}"
                            VerticalAlignment="Center"/>
                 <ComboBox x:Name="CmbModels" Grid.Column="2"
                           Height="36" VerticalAlignment="Center"
                           SelectionChanged="CmbModels_SelectionChanged"
                           DropDownOpened="CmbModels_DropDownOpened"
-                          AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModelLabel}">
+                          ToolTip="{local:Loc ResourceKey=PromptBuilder_GeneratorHint}"
+                          AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_GeneratorLabel}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <TextBlock Text="{Binding FullDisplay}"
@@ -356,11 +465,11 @@
                             Style="{StaticResource CommandButtonStyle}"
                             Click="BtnRepeat_Click" Margin="0,0,0,8"
                             IsEnabled="False"
-                            AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ButtonRepeat}"
-                            ToolTip="{local:Loc ResourceKey=TextProcessing_ButtonRepeat}">
+                            AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ButtonNewVariant}"
+                            ToolTip="{local:Loc ResourceKey=PromptBuilder_ButtonNewVariant}">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <TextBlock Text="&#xE72C;" FontFamily="Segoe MDL2 Assets" FontSize="18" FontWeight="Normal" Margin="0,0,10,0"/>
-                            <TextBlock Text="{local:Loc ResourceKey=TextProcessing_ButtonRepeat}"/>
+                            <TextBlock Text="{local:Loc ResourceKey=PromptBuilder_ButtonNewVariant}"/>
                         </StackPanel>
                     </Button>
 
@@ -374,19 +483,6 @@
                                        FontSize="18" FontWeight="Normal" Margin="0,0,10,0"/>
                             <TextBlock x:Name="ToggleVersionLabel"
                                        Text="{local:Loc ResourceKey=PromptBuilder_ButtonBeforeProcessing}"/>
-                        </StackPanel>
-                    </Button>
-
-                    <Button x:Name="BtnShowDiff"
-                            Style="{StaticResource CommandButtonStyle}"
-                            Click="BtnShowDiff_Click" Margin="0,0,0,8"
-                            IsEnabled="False"
-                            AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ButtonShowDiff}"
-                            ToolTip="{local:Loc ResourceKey=TextProcessing_ButtonShowDiff}">
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBlock Text="&#xE8A1;" FontFamily="Segoe MDL2 Assets" FontSize="18" FontWeight="Normal" Margin="0,0,10,0"/>
-                            <TextBlock x:Name="ShowDiffLabel"
-                                       Text="{local:Loc ResourceKey=TextProcessing_ButtonShowDiff}"/>
                         </StackPanel>
                     </Button>
 

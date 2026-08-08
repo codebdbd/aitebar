@@ -153,6 +153,14 @@ namespace AiteBar
             PersistAndNotify();
         }
 
+        internal void ReplaceEntries(IEnumerable<ClipboardHistoryEntry> entries)
+        {
+            ArgumentNullException.ThrowIfNull(entries);
+            _entries.Clear();
+            _entries.AddRange(entries.Where(entry => !string.IsNullOrWhiteSpace(entry.Id)).Take(MaxEntries));
+            PersistAndNotify();
+        }
+
         public bool DeleteEntry(string entryId)
         {
             int removed = _entries.RemoveAll(entry => string.Equals(entry.Id, entryId, StringComparison.Ordinal));

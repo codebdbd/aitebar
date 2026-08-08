@@ -78,16 +78,16 @@ public sealed class AppSettingsServiceTests
     }
 
     [Fact]
-    public void NormalizeAppState_CreatesEightContextsWithOnlyFirstEnabledByDefault()
+    public void NormalizeAppState_CreatesTenContextsWithOnlyPanelZeroEnabledByDefault()
     {
         var settingsService = new AppSettingsService();
 
         settingsService.NormalizeAppState();
 
-        Assert.Equal(8, settingsService.Settings.Contexts.Count);
+        Assert.Equal(10, settingsService.Settings.Contexts.Count);
         Assert.True(settingsService.Settings.Contexts[0].IsEnabled);
         Assert.All(settingsService.Settings.Contexts.Skip(1), context => Assert.False(context.IsEnabled));
-        Assert.Equal("context-1", settingsService.Settings.ActiveContextId);
+        Assert.Equal("context-0", settingsService.Settings.ActiveContextId);
     }
 
     [Fact]
@@ -105,16 +105,19 @@ public sealed class AppSettingsServiceTests
 
         settingsService.NormalizeAppState();
 
-        Assert.Equal(8, settingsService.Settings.Contexts.Count);
-        Assert.Equal("Main", settingsService.Settings.Contexts[0].Name);
-        Assert.Equal("\uE111", settingsService.Settings.Contexts[0].IconGlyph);
-        Assert.True(settingsService.Settings.Contexts[0].IsEnabled);
-        Assert.Equal("Work", settingsService.Settings.Contexts[1].Name);
-        Assert.Equal("\uE222", settingsService.Settings.Contexts[1].IconGlyph);
-        Assert.True(settingsService.Settings.Contexts[1].IsEnabled);
-        Assert.Equal("Hidden", settingsService.Settings.Contexts[2].Name);
-        Assert.Equal("\uE333", settingsService.Settings.Contexts[2].IconGlyph);
-        Assert.False(settingsService.Settings.Contexts[2].IsEnabled);
+        Assert.Equal(10, settingsService.Settings.Contexts.Count);
+        PanelContext main = Assert.Single(settingsService.Settings.Contexts, context => context.Id == "context-1");
+        PanelContext work = Assert.Single(settingsService.Settings.Contexts, context => context.Id == "context-2");
+        PanelContext hidden = Assert.Single(settingsService.Settings.Contexts, context => context.Id == "context-3");
+        Assert.Equal("Main", main.Name);
+        Assert.Equal("\uE111", main.IconGlyph);
+        Assert.True(main.IsEnabled);
+        Assert.Equal("Work", work.Name);
+        Assert.Equal("\uE222", work.IconGlyph);
+        Assert.True(work.IsEnabled);
+        Assert.Equal("Hidden", hidden.Name);
+        Assert.Equal("\uE333", hidden.IconGlyph);
+        Assert.False(hidden.IsEnabled);
     }
 
     [Fact]
@@ -137,7 +140,7 @@ public sealed class AppSettingsServiceTests
 
         Assert.Single(settingsService.Elements);
         Assert.Equal("context-2", settingsService.Elements[0].ContextId);
-        Assert.Equal("context-1", settingsService.Settings.ActiveContextId);
+        Assert.Equal("context-0", settingsService.Settings.ActiveContextId);
     }
 
     [Fact]
@@ -159,7 +162,7 @@ public sealed class AppSettingsServiceTests
             await service.LoadAsync();
 
             Assert.Empty(service.Elements);
-            Assert.Equal("context-1", service.Settings.ActiveContextId);
+            Assert.Equal("context-0", service.Settings.ActiveContextId);
         }
         finally
         {
@@ -575,7 +578,7 @@ public sealed class AppSettingsServiceTests
         settings.Contexts[0].IsNameCustomized = true;
         service.Settings = settings;
 
-        var result = service.GetContextDisplayName("context-1");
+        var result = service.GetContextDisplayName("context-0");
 
         Assert.Equal("Test Panel", result);
     }
@@ -592,13 +595,13 @@ public sealed class AppSettingsServiceTests
             var settings = service.Settings;
             settings.Contexts =
             [
-                new() { Id = "context-1", Name = "Panel 1", IsNameCustomized = false, IsEnabled = true }
+                new() { Id = "context-0", Name = "Panel 0", IsNameCustomized = false, IsEnabled = true }
             ];
             service.Settings = settings;
 
-            var result = service.GetContextDisplayName("context-1");
+            var result = service.GetContextDisplayName("context-0");
 
-            Assert.Equal("Leiste 1", result);
+            Assert.Equal("Leiste 0", result);
         }
         finally
         {
@@ -642,10 +645,10 @@ public sealed class AppSettingsServiceTests
 
         Assert.True(changed);
         Assert.Equal("de", service.Settings.UiCulture);
-        Assert.Equal("context-1", service.Settings.ActiveContextId);
+        Assert.Equal("context-0", service.Settings.ActiveContextId);
         Assert.Equal(2, service.Elements.Count);
         Assert.False(string.IsNullOrWhiteSpace(service.Elements[0].Id));
-        Assert.Equal("context-1", service.Elements[0].ContextId);
+        Assert.Equal("context-0", service.Elements[0].ContextId);
         Assert.NotNull(service.Elements[0].RotationProfilePaths);
         Assert.Single(service.Elements, element => element.Id == "dup");
     }
@@ -766,14 +769,14 @@ public sealed class AppSettingsServiceTests
             var settings = service.Settings;
             settings.Contexts =
             [
-                new() { Id = "context-1", Name = "Panel 1", IsNameCustomized = false, IsEnabled = true },
+                new() { Id = "context-0", Name = "Panel 0", IsNameCustomized = false, IsEnabled = true },
                 new() { Id = "context-2", Name = "Work", IsNameCustomized = true, IsEnabled = true }
             ];
             service.Settings = settings;
 
             IReadOnlyList<PanelContext> snapshot = service.GetEnabledContextsSnapshot();
 
-            Assert.Equal("Панель 1", snapshot[0].Name);
+            Assert.Equal("Панель 0", snapshot[0].Name);
             Assert.Equal("Work", snapshot[1].Name);
         }
         finally
@@ -794,14 +797,14 @@ public sealed class AppSettingsServiceTests
             var settings = service.Settings;
             settings.Contexts =
             [
-                new() { Id = "context-1", Name = "Panel 1", IsNameCustomized = false, IsEnabled = true },
+                new() { Id = "context-0", Name = "Panel 0", IsNameCustomized = false, IsEnabled = true },
                 new() { Id = "context-2", Name = "Work", IsNameCustomized = true, IsEnabled = false }
             ];
             service.Settings = settings;
 
             IReadOnlyList<PanelContext> snapshot = service.GetAllContextsSnapshot();
 
-            Assert.Equal("Leiste 1", snapshot[0].Name);
+            Assert.Equal("Leiste 0", snapshot[0].Name);
             Assert.Equal("Work", snapshot[1].Name);
         }
         finally
@@ -822,7 +825,7 @@ public sealed class AppSettingsServiceTests
             var settings = service.Settings;
             settings.Contexts =
             [
-                new() { Id = "context-1", Name = "Panel 1", IsEnabled = true },
+                new() { Id = "context-0", Name = "Panel 0", IsEnabled = true },
                 new() { Id = "context-2", Name = "Work", IsNameCustomized = true, IsEnabled = true }
             ];
             service.Settings = settings;
@@ -830,10 +833,11 @@ public sealed class AppSettingsServiceTests
             bool changed = service.NormalizeAppState();
 
             Assert.True(changed);
-            Assert.Equal("Панель 1", service.Settings.Contexts[0].Name);
+            Assert.Equal("Панель 0", service.Settings.Contexts[0].Name);
             Assert.False(service.Settings.Contexts[0].IsNameCustomized);
-            Assert.Equal("Work", service.Settings.Contexts[1].Name);
-            Assert.True(service.Settings.Contexts[1].IsNameCustomized);
+            PanelContext work = Assert.Single(service.Settings.Contexts, context => context.Id == "context-2");
+            Assert.Equal("Work", work.Name);
+            Assert.True(work.IsNameCustomized);
         }
         finally
         {

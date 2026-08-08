@@ -14,7 +14,7 @@ public interface ISettingsWindowContext
 
 public class PanelContext
 {
-    public string Id { get; set; } = "context-1";
+    public string Id { get; set; } = "context-0";
     public string Name { get; set; } = string.Empty;
     public bool IsNameCustomized { get; set; }
     public string IconGlyph { get; set; } = "\uE8B7"; // Fluent "Folder" по умолчанию
@@ -157,7 +157,7 @@ public class CustomElement
     public bool Win { get; set; }
     public string Key { get; set; } = "None";
     public string ImagePath { get; set; } = "";
-    public string ContextId { get; set; } = "context-1";
+    public string ContextId { get; set; } = "context-0";
 }
 
 public enum DockEdge { Top, Bottom, Left, Right }
@@ -207,7 +207,7 @@ public class AppSettings
     public int ActivationDelayMs { get; set; } = 150;
     public string UiCulture { get; set; } = "auto";
     public List<PanelContext> Contexts { get; set; } = [];
-    public string ActiveContextId { get; set; } = "context-1";
+    public string ActiveContextId { get; set; } = "context-0";
     public HotkeyBinding NextContextHotkey { get; set; } = new();
     public HotkeyBinding PreviousContextHotkey { get; set; } = new();
     public HotkeyBinding AddButtonHotkey { get; set; } = new();
@@ -244,11 +244,26 @@ public class AppSettings
     public string? PromptBuilderWindowState { get; set; }
     public bool PromptBuilderWindowPlacementInitialized { get; set; }
     public int PromptBuilderLastMode { get; set; } = (int)PromptBuilderCategory.Programming;
+    public PaintingStyle PromptBuilderPaintingStyle { get; set; } = PaintingStyle.Auto;
+    public AnimationStyle PromptBuilderAnimationStyle { get; set; } = AnimationStyle.Auto;
+    public PhotoStyle PromptBuilderPhotoStyle { get; set; } = PhotoStyle.Auto;
+    public TextPromptType PromptBuilderTextType { get; set; } = TextPromptType.Auto;
+    public TextPromptTone PromptBuilderTextTone { get; set; } = TextPromptTone.Neutral;
+    public AnalysisDirection PromptBuilderAnalysisDirection { get; set; } = AnalysisDirection.Auto;
+    public VideoDirection PromptBuilderVideoDirection { get; set; } = VideoDirection.Auto;
+    public ProgrammingTaskType PromptBuilderProgrammingTaskType { get; set; } = ProgrammingTaskType.Auto;
+    public VisualTargetModel PromptBuilderVisualTarget { get; set; } = VisualTargetModel.Universal;
+    public IconPlatform PromptBuilderIconPlatform { get; set; } = IconPlatform.Auto;
+    public IconStyle PromptBuilderIconStyle { get; set; } = IconStyle.Auto;
+    public GraphicType PromptBuilderGraphicType { get; set; } = GraphicType.Auto;
+    public GraphicStyle PromptBuilderGraphicStyle { get; set; } = GraphicStyle.Auto;
     public string? PromptBuilderSelectedConnectionId { get; set; }
     public string? PromptBuilderSelectedModelId { get; set; }
     public string? PromptBuilderSelectedProviderId { get; set; }
     public bool PromptBuilderIsAutoModel { get; set; } = true;
     public string? PromptBuilderLastText { get; set; }
+    public Dictionary<string, PromptBuilderDraft> PromptBuilderDrafts { get; set; } = [];
+    public bool SavePromptBuilderDrafts { get; set; } = true;
 
     public List<CustomElement> Elements { get; set; } = new();
     public List<string> UtilityButtonOrder { get; set; } = new();
@@ -259,6 +274,14 @@ public class AppSettings
     public double? TaskbarIndicatorPositionY { get; set; }
     public AiSettings Ai { get; set; } = new();
     public SentrySettings? Sentry { get; set; }
+}
+
+public sealed class PromptBuilderDraft
+{
+    public string Input { get; set; } = string.Empty;
+    public string Result { get; set; } = string.Empty;
+    public bool HasResult { get; set; }
+    public bool ShowOriginal { get; set; }
 }
 
 public class SentrySettings

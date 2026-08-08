@@ -18,7 +18,7 @@ public sealed class AppSettingsLayoutContractTests
         "TxtAboutVersion", "SettingsFooter", "BtnKeepOnTop", "AiConnectionsList", "TxtAiConnectionsEmpty",
         "ChkShowPanelOnMouseHover", "ChkShowTaskbarPositionIndicator", "ChkSecondaryMonitor", "ChkCheckForUpdatesEnabled",
         "PanelContextsList",
-        "HotkeyShowPanel", "HotkeyNextContext", "HotkeyPreviousContext", "HotkeyAddButton",
+        "HotkeyNextContext", "HotkeyPreviousContext", "HotkeyAddButton",
         "HotkeyFileSorter", "HotkeyIconConverter", "HotkeyQuickNote", "HotkeyColorPicker", "HotkeyTimerStopwatch", "HotkeyQRCodeGenerator", "HotkeyClipboardManager",
         "ChkShowPresetSearch", "ChkShowPresetScreenshot", "ChkShowPresetVideo", "ChkShowPresetCalc",
         "ChkShowPresetExplorer", "ChkShowPresetDownloads", "ChkShowPresetFileSorter", "ChkShowPresetIconConverter",
@@ -90,7 +90,7 @@ public sealed class AppSettingsLayoutContractTests
             element.Attribute(XamlNamespace + "Name")?.Value is "TxtPanelSizeValue" or "TxtActivationZoneValue" or "TxtActivationDelayValue");
         Assert.DoesNotContain(window.Descendants(PresentationNamespace + "Style"), element =>
             element.Attribute(XamlNamespace + "Key")?.Value is "ModernValueChipStyle" or "ModernValueChipTextStyle");
-        Assert.Equal(14, window.Descendants().Count(element => element.Name.LocalName == "HotkeyCaptureBox"));
+        Assert.Equal(13, window.Descendants().Count(element => element.Name.LocalName == "HotkeyCaptureBox"));
         Assert.DoesNotContain(window.Descendants(), element =>
             (element.Attribute(XamlNamespace + "Name")?.Value ?? string.Empty).EndsWith("Key", StringComparison.Ordinal));
 

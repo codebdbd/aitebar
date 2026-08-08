@@ -48,7 +48,6 @@ public partial class TextProcessingWindow : DarkWindow
     private bool _isLoadingState = true;
     private bool _isLoadingModels;
     private bool _isApplyingEditorText;
-    private bool _isDirty;
     private bool _isProcessing;
     private bool _hasClipboardText;
     private bool _hasEligibleModel;
@@ -58,7 +57,6 @@ public partial class TextProcessingWindow : DarkWindow
     private bool _isShowingOriginal;
     private bool _isShowingDiff;
     private bool _isModifiedManually;
-    private bool _hasCopiedResult;
     private string _lastUsedModelDisplay = string.Empty;
     private string _inlineInfoStatus = string.Empty;
     private TextProcessingMode _currentMode = TextProcessingMode.Proofread;
@@ -128,7 +126,6 @@ public partial class TextProcessingWindow : DarkWindow
         string? saved = settings.TextProcessingLastText;
         _operationHistory.Clear();
         ResetResultHistory();
-        _isDirty = false;
         if (!string.IsNullOrEmpty(saved))
         {
             SetEditorText(saved, caretIndex: 0);
@@ -314,7 +311,6 @@ public partial class TextProcessingWindow : DarkWindow
                 _isModifiedManually = true;
             }
         }
-        _isDirty = true;
         SetStatus(string.Empty);
         ClearInfoStatus();
         RefreshUiState();
@@ -406,7 +402,6 @@ public partial class TextProcessingWindow : DarkWindow
                 clipboardText);
             ResetResultHistory();
             SetEditorText(updatedText, caretIndex, recordUndo: true);
-            _isDirty = true;
             SetStatus(string.Empty);
             RefreshClipboardAvailability(showError: false);
             RefreshUiState();
@@ -430,7 +425,6 @@ public partial class TextProcessingWindow : DarkWindow
                 Clipboard.SetText(TxtEditor.Text);
                 if (_hasSuccessfulResult)
                 {
-                    _hasCopiedResult = true;
                 }
                 SetStatus(string.Empty);
                 ShowTransientInfoStatus(LocalizationService.Get("TextProcessing_Copied"));
@@ -626,7 +620,6 @@ public partial class TextProcessingWindow : DarkWindow
         _isShowingDiff = false;
         _isProcessing = true;
         _isModifiedManually = false;
-        _hasCopiedResult = false;
         _processingCts = new CancellationTokenSource();
         StartProcessingProgress();
         RefreshUiState();
@@ -691,7 +684,6 @@ public partial class TextProcessingWindow : DarkWindow
                 _operationHistory.Record(textShownBeforeRequest);
             }
             SetEditorText(cleaned);
-            _isDirty = false;
             StopProcessingProgress();
             if (!string.IsNullOrEmpty(_lastUsedModelDisplay))
             {
@@ -831,7 +823,6 @@ public partial class TextProcessingWindow : DarkWindow
         ResetResultHistory();
         SetEditorText(string.Empty);
         _operationHistory.Clear();
-        _isDirty = false;
         SetStatus(string.Empty);
         RefreshUiState();
         FocusEditor();
@@ -846,7 +837,6 @@ public partial class TextProcessingWindow : DarkWindow
         _isShowingOriginal = false;
         _isShowingDiff = false;
         _isModifiedManually = false;
-        _hasCopiedResult = false;
         ClearInfoStatus();
     }
 
@@ -888,7 +878,6 @@ public partial class TextProcessingWindow : DarkWindow
         {
             ResetResultHistory();
             SetEditorText(previous);
-            _isDirty = true;
             SetStatus(string.Empty);
             RefreshUiState();
             FocusEditor();
@@ -910,7 +899,6 @@ public partial class TextProcessingWindow : DarkWindow
         {
             ResetResultHistory();
             SetEditorText(next);
-            _isDirty = true;
             SetStatus(string.Empty);
             RefreshUiState();
             FocusEditor();

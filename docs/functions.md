@@ -1653,6 +1653,16 @@ HEX-цвет формата `#RRGGBB` копируется в clipboard.
 
 `AiteBar/PromptBuilderUtility.cs`, `AiteBar/PromptBuilderWindow.xaml`, `AiteBar/PromptBuilderWindow.xaml.cs`, `AiteBar/PromptBuilderService.cs`, `AiteBar/AiGateway.cs`.
 
+The Prompt Builder's unified Analytics tab provides result-oriented directions for comparison, recommendation, market and competitor research, fact-checking, risk assessment, strategy, product and data analysis, scenarios, root causes, and solution options. The UI shows the expected result structure for the selected direction; the generated prompt enforces that contract. Legacy saved Ideas mode is opened as Analytics.
+
+Every Prompt Builder selector displays an in-context explanation of what it will create. The Video tab provides a persisted directing selector for advertising, cinematic scenes, product, fashion, documentary, vertical social, music video, interview, explainer, architecture, travel, action, time-lapse, macro, stop motion, 3D product animation, and loop animation.
+
+The Programming tab provides a persisted task-type selector for new features, bug fixes, refactoring, code review, architecture, testing, performance, security, APIs, databases, UI/UX, deployment, documentation, code analysis, and migrations.
+
+The Music tab provides a persisted musical-direction selector for Pop, Rock, Electronic, Hip-hop/R&B, Ambient, Cinematic score, Acoustic/Folk, Dance, Jazz/Soul, Classical, and Metal/Punk; it produces a ready-to-paste Suno Styles description.
+
+Prompt Builder keeps one persisted draft per tab: the original brief, the latest generated prompt, the selected options, and the original/result view state. Switching tabs does not clear work; Clear affects only the active tab.
+
 ## Дзен-редактор
 
 ### Назначение
@@ -2369,8 +2379,8 @@ Tray-меню.
 | `TimerIsStopwatchMode` | Последний выбранный режим таймера/секундомера | true/false | `false` |
 | `TimerDuration` | Последняя длительность таймера | TimeSpan | `00:05:00` |
 | `QuickNoteThemeId` | Тема Quick Note | `dark`, `graphite`, `rose`, `clay`, `sand`, `lemon`, `sage`, `mist`, `sky`, `lavender`, `mauve`, `stone` | `dark` |
-| `Contexts` | Панели-контексты | До 8 нормализованных панелей | Панель 1 включена |
-| `ActiveContextId` | Текущая панель | ID включенной панели | `context-1` |
+| `Contexts` | Панели-контексты | 10 нормализованных панелей `0`…`9` | Панель 0 включена |
+| `ActiveContextId` | Текущая панель | ID включенной панели | `context-0` |
 | `Elements` | Пользовательские кнопки | Список `CustomElement` | пустой список |
 
 ## Настройки кнопки
@@ -2393,7 +2403,7 @@ Tray-меню.
 | `ImagePath` | Пользовательская image-иконка | Локальный путь | пусто |
 | `Ctrl`, `Shift`, `Alt`, `Win`, `Key` | Hotkey-действие | Флаги + key | false / `None` |
 | `ActivationHotkey` | Глобальная горячая клавиша запуска кнопки (существует в модели и импорте/экспорте, но не зарегистрирована через `RegisterHotKey`) | `HotkeyBinding` | пустой binding |
-| `ContextId` | Панель кнопки | ID панели | `context-1` |
+| `ContextId` | Панель кнопки | ID панели | `context-0` |
 
 ---
 

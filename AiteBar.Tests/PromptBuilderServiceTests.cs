@@ -16,6 +16,10 @@ public sealed class PromptBuilderServiceTests
         Assert.Equal(4, (int)PromptBuilderCategory.Analysis);
         Assert.Equal(5, (int)PromptBuilderCategory.Music);
         Assert.Equal(6, (int)PromptBuilderCategory.Ideas);
+        Assert.Equal(7, (int)PromptBuilderCategory.Paintings);
+        Assert.Equal(8, (int)PromptBuilderCategory.Animation);
+        Assert.Equal(9, (int)PromptBuilderCategory.Icons);
+        Assert.Equal(10, (int)PromptBuilderCategory.Graphics);
     }
 
     [Fact]
@@ -25,19 +29,22 @@ public sealed class PromptBuilderServiceTests
         Assert.Equal(3, (int)PromptBuilderCategory.Video);
         // Старое значение 4 (AnalysisIdeas) -> новое Analysis (4)
         Assert.Equal(4, (int)PromptBuilderCategory.Analysis);
-        // Новые категории получают новые значения 5 и 6
+        // Legacy Ideas is migrated into the unified analytics mode.
         Assert.Equal(5, (int)PromptBuilderCategory.Music);
         Assert.Equal(6, (int)PromptBuilderCategory.Ideas);
     }
 
     [Theory]
     [InlineData(PromptBuilderCategory.Programming, "Return only the finished prompt")]
-    [InlineData(PromptBuilderCategory.Images, "Return only the finished image prompt")]
+    [InlineData(PromptBuilderCategory.Images, "Return only one finished prompt as a natural-language paragraph")]
     [InlineData(PromptBuilderCategory.Texts, "Return only the finished prompt")]
-    [InlineData(PromptBuilderCategory.Video, "Return only the finished video prompt")]
+    [InlineData(PromptBuilderCategory.Video, "Return only the finished video prompt in English")]
     [InlineData(PromptBuilderCategory.Music, "Return only the finished style description in English")]
     [InlineData(PromptBuilderCategory.Analysis, "Return only the finished prompt")]
-    [InlineData(PromptBuilderCategory.Ideas, "Return only the finished prompt")]
+    [InlineData(PromptBuilderCategory.Paintings, "Return only one finished natural-language prompt")]
+    [InlineData(PromptBuilderCategory.Animation, "Return only one finished natural-language prompt")]
+    [InlineData(PromptBuilderCategory.Icons, "application icon")]
+    [InlineData(PromptBuilderCategory.Graphics, "graphic-design asset")]
     public void GetSystemPrompt_EnforcesOneShotProfessionalOutput(
         PromptBuilderCategory category,
         string expectedReturnPhrase)
@@ -78,21 +85,15 @@ public sealed class PromptBuilderServiceTests
     }
 
     [Fact]
-    public void ImagesInstruction_DoesNotContainRoleOrTaskStructure()
+    public void ImagesInstruction_ProducesEnglishCreativeDirectorPromptWithoutLegacySyntax()
     {
         string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Images);
 
-        Assert.DoesNotContain("Role:", prompt);
-        Assert.DoesNotContain("Objective:", prompt);
-        Assert.DoesNotContain("Requirements:", prompt);
-        Assert.Contains("describe the visible result directly", prompt, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Do not include:\n- a role;", prompt);
-
-        // Фраза "You are an artist" должна присутствовать только как отрицательный пример в запретах
-        int artistIndex = prompt.IndexOf("You are an artist", StringComparison.OrdinalIgnoreCase);
-        Assert.True(artistIndex >= 0);
-        int doNotIncludeIndex = prompt.IndexOf("Do not include:");
-        Assert.True(artistIndex > doNotIncludeIndex);
+        Assert.Contains("polished English prompt", prompt);
+        Assert.Contains("expert art director", prompt);
+        Assert.Contains("Apply this selected photo direction: {photoStyle}", prompt);
+        Assert.Contains("negative-prompt section, placeholders", prompt);
+        Assert.DoesNotContain("Preserve the language of the user's brief", prompt);
     }
 
     [Fact]
@@ -100,8 +101,8 @@ public sealed class PromptBuilderServiceTests
     {
         string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Images);
 
-        Assert.Contains("preserve all unrelated elements, including identity, facial features, expression, pose, body proportions, clothing, composition, background, lighting, colors, and image dimensions", prompt);
-        Assert.Contains("what must remain unchanged", prompt);
+        Assert.Contains("preserve the unmentioned identity, proportions, pose, composition, and scene continuity", prompt);
+        Assert.Contains("do not write a separate negative prompt", prompt);
     }
 
     [Fact]
@@ -136,7 +137,21 @@ public sealed class PromptBuilderServiceTests
         Assert.Contains("camera movement", prompt);
         Assert.Contains("preserve the source image's identity, appearance, composition, clothing, proportions, background, lighting, and visual style", prompt);
         Assert.Contains("what must change and what must remain unchanged", prompt);
+        Assert.Contains("Translate the user's intent into fluent English internally", prompt);
+        Assert.DoesNotContain("Preserve the language of the user's brief", prompt);
         Assert.DoesNotContain("You are a video director", prompt, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void BuildRequest_VideoAppliesSelectedDirection()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Video,
+            "A watch rotates on a pedestal",
+            videoDirection: VideoDirection.ProductVideo);
+
+        Assert.Contains("Premium product film", request.Messages[0].Content);
+        Assert.DoesNotContain("{videoDirection}", request.Messages[0].Content);
     }
 
     [Fact]
@@ -152,32 +167,33 @@ public sealed class PromptBuilderServiceTests
     }
 
     [Fact]
-    public void AnalysisInstruction_RequiresCommonCriteriaAndTradeOffs()
+    public void BuildRequest_ProgrammingAppliesSelectedTaskType()
     {
-        string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Analysis);
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Programming,
+            "Fix an intermittent login error",
+            programmingTaskType: ProgrammingTaskType.BugFix);
 
-        Assert.Contains("common criteria and equivalent treatment of every option", prompt);
-        Assert.Contains("trade-offs, risks, constraints, and the reasoning behind the recommendation", prompt);
-        Assert.Contains("separate:\n- confirmed facts;", prompt);
-        Assert.Contains("missing evidence and uncertainty to be stated explicitly", prompt);
+        Assert.Contains("Require reproducible steps", request.Messages[0].Content);
+        Assert.DoesNotContain("{programmingTaskType}", request.Messages[0].Content);
     }
 
     [Fact]
-    public void IdeasInstruction_RequiresGenuinelyDifferentIdeas()
+    public void AnalysisInstruction_RequiresEvidenceBoundariesWithoutForcingOtherDirectionContracts()
+    {
+        string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Analysis);
+
+        Assert.Contains("separate:\n- confirmed facts;", prompt);
+        Assert.Contains("missing evidence and uncertainty to be stated explicitly", prompt);
+        Assert.DoesNotContain("For comparisons, require common criteria", prompt);
+    }
+
+    [Fact]
+    public void LegacyIdeasCategory_UsesUnifiedAnalyticsInstruction()
     {
         string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Ideas);
 
-        Assert.Contains("Require genuinely different ideas rather than minor variations of one concept", prompt);
-        Assert.Contains("practical ideas;", prompt);
-        Assert.Contains("original ideas;", prompt);
-        Assert.Contains("ambitious ideas", prompt);
-
-        // "academic research task" должна присутствовать только в запрете
-        int doNotAutoAssignIndex = prompt.IndexOf("Do not automatically assign a role");
-        Assert.True(doNotAutoAssignIndex >= 0);
-        int academicResearchIndex = prompt.IndexOf("academic research task", StringComparison.OrdinalIgnoreCase);
-        Assert.True(academicResearchIndex >= 0);
-        Assert.True(academicResearchIndex > doNotAutoAssignIndex);
+        Assert.Equal(_service.GetSystemPrompt(PromptBuilderCategory.Analysis), prompt);
     }
 
     [Fact]
@@ -198,10 +214,99 @@ public sealed class PromptBuilderServiceTests
             PromptBuilderCategory.Music, "test", maxOutputTokens: 1);
         Assert.Equal(0.30, musicRequest.Temperature);
 
-        // Ideas
-        AiChatRequest ideasRequest = _service.BuildRequest(
-            PromptBuilderCategory.Ideas, "test", maxOutputTokens: 1);
-        Assert.Equal(0.35, ideasRequest.Temperature);
+        AiChatRequest analyticsRequest = _service.BuildRequest(
+            PromptBuilderCategory.Analysis, "test", maxOutputTokens: 1);
+        Assert.Equal(0.25, analyticsRequest.Temperature);
+    }
+
+    [Fact]
+    public void BuildRequest_AnalyticsAppliesSelectedDirection()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Analysis,
+            "Choose a database for a desktop application",
+            analysisDirection: AnalysisDirection.Recommendation);
+
+        Assert.Contains("conditions that would change the recommendation", request.Messages[0].Content);
+        Assert.DoesNotContain("{analysisDirection}", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void BuildRequest_AnalyticsComparisonRequiresAnExplicitResultContract()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Analysis,
+            "Compare two CRM systems",
+            analysisDirection: AnalysisDirection.Comparison);
+
+        Assert.Contains("a table with common criteria", request.Messages[0].Content);
+        Assert.Contains("a concise conclusion", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void BuildRequest_IconsAppliesPlatformAndStyleWithoutPhotoContract()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Icons,
+            "Water tracker with a drop and checkmark",
+            iconPlatform: IconPlatform.MacOS,
+            iconStyle: IconStyle.Flat);
+
+        Assert.Contains("macOS app icon", request.Messages[0].Content);
+        Assert.Contains("flat icon design", request.Messages[0].Content);
+        Assert.Contains("recognition at small sizes", request.Messages[0].Content);
+        Assert.DoesNotContain("photo direction", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void BuildRequest_GraphicsAppliesTypeAndStyle()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Graphics,
+            "Friendly plant-care sticker pack",
+            graphicType: GraphicType.StickerPack,
+            graphicStyle: GraphicStyle.Bold);
+
+        Assert.Contains("cohesive sticker pack", request.Messages[0].Content);
+        Assert.Contains("bold graphic design", request.Messages[0].Content);
+        Assert.DoesNotContain("{graphicType}", request.Messages[0].Content);
+        Assert.DoesNotContain("{graphicStyle}", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void IconsAndGraphics_UseSeparateGenerationContracts()
+    {
+        AiChatRequest iconRequest = _service.BuildRequest(
+            PromptBuilderCategory.Icons,
+            "Water tracker",
+            iconPlatform: IconPlatform.IOS,
+            iconStyle: IconStyle.Glyph);
+        AiChatRequest graphicRequest = _service.BuildRequest(
+            PromptBuilderCategory.Graphics,
+            "Water tracker",
+            graphicType: GraphicType.Poster,
+            graphicStyle: GraphicStyle.Editorial);
+
+        Assert.Contains("application icon", iconRequest.Messages[0].Content);
+        Assert.Contains("iOS and iPadOS app icon", iconRequest.Messages[0].Content);
+        Assert.Contains("graphic-design asset", graphicRequest.Messages[0].Content);
+        Assert.Contains("poster composition", graphicRequest.Messages[0].Content);
+        Assert.NotEqual(iconRequest.Messages[0].Content, graphicRequest.Messages[0].Content);
+    }
+
+    [Theory]
+    [InlineData(PromptBuilderCategory.Programming, "alternative prompt version")]
+    [InlineData(PromptBuilderCategory.Texts, "alternative prompt version")]
+    [InlineData(PromptBuilderCategory.Video, "retry")]
+    [InlineData(PromptBuilderCategory.Analysis, "alternative prompt version")]
+    [InlineData(PromptBuilderCategory.Music, "alternative style version")]
+    public void BuildRequest_RepeatCreatesCategoryAppropriateAlternative(
+        PromptBuilderCategory category,
+        string expectedDirective)
+    {
+        AiChatRequest request = _service.BuildRequest(category, "test", createAlternative: true);
+
+        Assert.Contains(expectedDirective, request.Messages[0].Content, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -210,6 +315,92 @@ public sealed class PromptBuilderServiceTests
         string result = _service.CleanResponse("<think>analysis</think>\n```text\nReady prompt\n```");
 
         Assert.Equal("```text\nReady prompt\n```", result);
+    }
+
+    [Fact]
+    public void BuildRequest_PaintingsAppliesSelectedStyleAndAlternativeDirection()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Paintings,
+            "a woman by a stream",
+            createAlternative: true,
+            paintingStyle: PaintingStyle.Impressionism);
+
+        Assert.Contains("Impressionist oil painting", request.Messages[0].Content);
+        Assert.Contains("This is a retry", request.Messages[0].Content);
+        Assert.Equal("a woman by a stream", request.Messages[1].Content);
+        Assert.Equal(0.65, request.Temperature);
+    }
+
+    [Fact]
+    public void PaintingsInstruction_ForbidsUnrequestedFramesAndPresentationContext()
+    {
+        string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Paintings);
+
+        Assert.Contains("Do not add a frame, border, mat, canvas edge, easel, gallery wall, museum display", prompt);
+        Assert.Contains("not a photograph of an artwork", prompt);
+    }
+
+    [Fact]
+    public void PaintingCatalog_UsesNonExplicitFigureStudyAndPencilDirections()
+    {
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.JapaneseShunga && style.PromptDescriptor.Contains("woodblock figure study"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.AcademicNude && style.PromptDescriptor.Contains("adult model"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.PencilDrawing && style.PromptDescriptor.Contains("graphite pencil drawing"));
+    }
+
+    [Fact]
+    public void BuildRequest_AnimationAppliesSelectedStyleAndAlternativeDirection()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Animation,
+            "a fox detective in a city",
+            createAlternative: true,
+            animationStyle: AnimationStyle.AnimeCyberpunk);
+
+        Assert.Contains("Cyberpunk anime", request.Messages[0].Content);
+        Assert.Contains("This is a retry", request.Messages[0].Content);
+        Assert.Equal("a fox detective in a city", request.Messages[1].Content);
+        Assert.Equal(0.65, request.Temperature);
+    }
+
+    [Fact]
+    public void BuildRequest_PhotoAppliesSelectedStyle()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Images,
+            "a watch on a table",
+            photoStyle: PhotoStyle.Product);
+
+        Assert.Contains("Premium product photography", request.Messages[0].Content);
+        Assert.DoesNotContain("{photoStyle}", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void BuildRequest_VisualPromptAppliesSelectedTargetModel()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Images,
+            "a ceramic cup on a table",
+            visualTarget: VisualTargetModel.Flux);
+
+        Assert.Contains("precise, visually specific natural-language description", request.Messages[0].Content);
+        Assert.DoesNotContain("{visualTarget}", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void BuildRequest_TextAppliesSelectedTypeAndTone()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Texts,
+            "launch a product",
+            textType: TextPromptType.LandingPage,
+            textTone: TextPromptTone.Premium);
+
+        Assert.Contains("Landing page copy", request.Messages[0].Content);
+        Assert.Contains("refined premium tone", request.Messages[0].Content);
+        Assert.DoesNotContain("{textType}", request.Messages[0].Content);
+        Assert.DoesNotContain("{textTone}", request.Messages[0].Content);
     }
 
     [Fact]

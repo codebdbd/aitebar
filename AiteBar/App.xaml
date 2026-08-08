@@ -277,7 +277,9 @@
         </Style>
         <Style TargetType="Separator" BasedOn="{StaticResource DarkMenuSeparator}"/>
 
-        <ContextMenu x:Key="TextEditingContextMenu" x:Shared="False" Style="{StaticResource DarkContextMenu}">
+        <ContextMenu x:Key="TextEditingContextMenu" x:Shared="False" Style="{StaticResource DarkContextMenu}"
+                     TextBlock.LineHeight="NaN"
+                     TextBlock.LineStackingStrategy="MaxHeight">
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_Cut}" Command="ApplicationCommands.Cut" InputGestureText="Ctrl+X">
                 <MenuItem.Icon>
                     <TextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14E;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>

@@ -300,11 +300,34 @@ namespace AiteBar
                 PromptBuilderWindowState = original.PromptBuilderWindowState,
                 PromptBuilderWindowPlacementInitialized = original.PromptBuilderWindowPlacementInitialized,
                 PromptBuilderLastMode = original.PromptBuilderLastMode,
+                PromptBuilderPaintingStyle = original.PromptBuilderPaintingStyle,
+                PromptBuilderAnimationStyle = original.PromptBuilderAnimationStyle,
+                PromptBuilderPhotoStyle = original.PromptBuilderPhotoStyle,
+                PromptBuilderTextType = original.PromptBuilderTextType,
+                PromptBuilderTextTone = original.PromptBuilderTextTone,
+                PromptBuilderAnalysisDirection = original.PromptBuilderAnalysisDirection,
+                PromptBuilderVideoDirection = original.PromptBuilderVideoDirection,
+                PromptBuilderProgrammingTaskType = original.PromptBuilderProgrammingTaskType,
+                PromptBuilderVisualTarget = original.PromptBuilderVisualTarget,
+                PromptBuilderIconPlatform = original.PromptBuilderIconPlatform,
+                PromptBuilderIconStyle = original.PromptBuilderIconStyle,
+                PromptBuilderGraphicType = original.PromptBuilderGraphicType,
+                PromptBuilderGraphicStyle = original.PromptBuilderGraphicStyle,
                 PromptBuilderSelectedConnectionId = original.PromptBuilderSelectedConnectionId,
                 PromptBuilderSelectedModelId = original.PromptBuilderSelectedModelId,
                 PromptBuilderSelectedProviderId = original.PromptBuilderSelectedProviderId,
                 PromptBuilderIsAutoModel = original.PromptBuilderIsAutoModel,
                 PromptBuilderLastText = original.PromptBuilderLastText,
+                SavePromptBuilderDrafts = original.SavePromptBuilderDrafts,
+                PromptBuilderDrafts = (original.PromptBuilderDrafts ?? []).ToDictionary(
+                    pair => pair.Key,
+                    pair => new PromptBuilderDraft
+                    {
+                        Input = pair.Value.Input,
+                        Result = pair.Value.Result,
+                        HasResult = pair.Value.HasResult,
+                        ShowOriginal = pair.Value.ShowOriginal
+                    }),
                 SavedFileSortFolders = [.. (original.SavedFileSortFolders ?? [])]
             };
 
@@ -712,7 +735,8 @@ namespace AiteBar
                 int oldPromptBuilderMode = _appSettings.PromptBuilderLastMode;
                 int normalizedPromptBuilderMode = oldPromptBuilderMode switch
                 {
-                    0 or 1 or 2 or 3 or 4 => oldPromptBuilderMode,
+                    (int)PromptBuilderCategory.Ideas => (int)PromptBuilderCategory.Analysis,
+                    0 or 1 or 2 or 3 or 4 or 5 or 7 or 8 or 9 or 10 => oldPromptBuilderMode,
                     _ => (int)PromptBuilderCategory.Programming
                 };
                 if (oldPromptBuilderMode != normalizedPromptBuilderMode)

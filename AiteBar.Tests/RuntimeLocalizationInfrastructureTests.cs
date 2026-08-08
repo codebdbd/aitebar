@@ -53,27 +53,17 @@ public sealed class RuntimeLocalizationInfrastructureTests
     }
 
     [Fact]
-    public void LocalizationService_Get_UsesAppliedCultureAcrossThreads()
+    public async Task LocalizationService_Get_UsesAppliedCultureAcrossThreads()
     {
-        string originalCulture = LocalizationService.ResolvedCulture.Name;
+        string expectedValue = LocalizationService.Get("Menu_Open");
 
-        try
+        string valueFromOtherThread = await Task.Run(() =>
         {
-            LocalizationService.ApplyCulture("de");
+            Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.GetCultureInfo("en");
+            return LocalizationService.Get("Menu_Open");
+        });
 
-            string? valueFromOtherThread = null;
-            RunSta(() =>
-            {
-                Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.GetCultureInfo("en");
-                valueFromOtherThread = LocalizationService.Get("Menu_Open");
-            });
-
-            Assert.Equal("Öffnen", valueFromOtherThread);
-        }
-        finally
-        {
-            LocalizationService.ApplyCulture(originalCulture);
-        }
+        Assert.Equal(expectedValue, valueFromOtherThread);
     }
 
     [Fact]

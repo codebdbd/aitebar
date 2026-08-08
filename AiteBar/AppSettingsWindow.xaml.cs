@@ -618,6 +618,76 @@ public partial class AppSettingsWindow : DarkWindow
         }
     }
 
+    private async void BtnCreateBackup_Click(object sender, RoutedEventArgs e)
+    {
+        var optionsDialog = new BackupPasswordDialog(isRestore: false) { Owner = this };
+        if (optionsDialog.ShowDialog() != true) return;
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            Filter = "AiteBar backup (*.aitebarbackup)|*.aitebarbackup",
+            FileName = $"AiteBar-backup-{DateTime.Now:yyyy-MM-dd-HH-mm}.aitebarbackup"
+        };
+        if (dialog.ShowDialog(this) != true) return;
+        try
+        {
+            await new BackupService(_aiCredentialStore).CreateAsync(
+                dialog.FileName,
+                _mainWindow.GetAppSettings(),
+                new BackupCreateOptions(optionsDialog.IncludeSecrets, optionsDialog.IncludeClipboard, optionsDialog.Password));
+            new DarkDialog(LocalizationService.Get("Backup_CreateSuccess")) { Owner = this }.ShowDialog();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            new DarkDialog(LocalizationService.Format("Settings_SaveFailed", ex.Message)) { Owner = this }.ShowDialog();
+        }
+    }
+
+    private async void BtnRestoreBackup_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new Microsoft.Win32.OpenFileDialog { Filter = "AiteBar backup (*.aitebarbackup)|*.aitebarbackup" };
+        if (dialog.ShowDialog(this) != true) return;
+
+        var backupService = new BackupService(_aiCredentialStore);
+        string? password = null;
+        try
+        {
+            _ = await backupService.ReadAsync(dialog.FileName, new BackupRestoreOptions(null));
+        }
+        catch (InvalidOperationException)
+        {
+            var passwordDialog = new BackupPasswordDialog(isRestore: true) { Owner = this };
+            if (passwordDialog.ShowDialog() != true) return;
+            password = passwordDialog.Password;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            new DarkDialog(LocalizationService.Format("Backup_RestoreFailed", ex.Message)) { Owner = this }.ShowDialog();
+            return;
+        }
+
+        if (new DarkDialog(LocalizationService.Get("Backup_RestoreConfirm"), isConfirm: true) { Owner = this }.ShowDialog() != true) return;
+        try
+        {
+            string safetyDirectory = Path.Combine(_dataDirectory, "backups");
+            string safetyBackup = Path.Combine(safetyDirectory, $"before-restore-{DateTime.Now:yyyy-MM-dd-HH-mm-ss}.aitebarbackup");
+            await backupService.CreateAsync(safetyBackup, _mainWindow.GetAppSettings(), new BackupCreateOptions(false, false, null));
+            await backupService.RestoreAsync(dialog.FileName, new BackupRestoreOptions(password), _mainWindow.GetSettingsService());
+            IReadOnlyList<string> failedHotkeys = await _mainWindow.SaveAppSettings();
+            _mainWindow.RefreshPanel();
+            new DarkDialog(LocalizationService.Get("Backup_RestoreSuccess")) { Owner = this }.ShowDialog();
+            if (failedHotkeys.Count > 0)
+                new DarkDialog(LocalizationService.Format("HotkeyRegistrationFailed", string.Join("\n", failedHotkeys))) { Owner = this }.ShowDialog();
+            Close();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            new DarkDialog(LocalizationService.Format("Backup_RestoreFailed", ex.Message)) { Owner = this }.ShowDialog();
+        }
+    }
+
     private void BtnAboutOpenProgramFolder_Click(object sender, RoutedEventArgs e)
     {
         string? exeDirectory = Path.GetDirectoryName(Environment.ProcessPath ?? Process.GetCurrentProcess().MainModule?.FileName);
@@ -668,7 +738,6 @@ public partial class AppSettingsWindow : DarkWindow
 
         (HotkeyCaptureBox CaptureBox, string ResourceKey)[] hotkeyFields =
         [
-            (HotkeyShowPanel, "AppSettingsWindow_ShowPanel"),
             (HotkeyNextContext, "AppSettingsWindow_NextPanel"),
             (HotkeyPreviousContext, "AppSettingsWindow_PreviousPanel"),
             (HotkeyAddButton, "AppSettingsWindow_AddButton"),
@@ -694,7 +763,6 @@ public partial class AppSettingsWindow : DarkWindow
 
     private IEnumerable<HotkeyCaptureBox> GetHotkeyCaptureBoxes()
     {
-        yield return HotkeyShowPanel;
         yield return HotkeyNextContext;
         yield return HotkeyPreviousContext;
         yield return HotkeyAddButton;
@@ -805,7 +873,6 @@ public partial class AppSettingsWindow : DarkWindow
     }
 
     private bool ValidateHotkeyBindings(
-        HotkeyBinding globalBinding,
         HotkeyBinding nextBinding,
         HotkeyBinding previousBinding,
         HotkeyBinding addButtonBinding,
@@ -822,7 +889,6 @@ public partial class AppSettingsWindow : DarkWindow
     {
         var registrations = new (string Name, HotkeyBinding Binding)[]
         {
-            (LocalizationService.Get("AppSettingsWindow_ShowPanel"), globalBinding),
             (LocalizationService.Get("AppSettingsWindow_NextPanel"), nextBinding),
             (LocalizationService.Get("AppSettingsWindow_PreviousPanel"), previousBinding),
             (LocalizationService.Get("AppSettingsWindow_AddButton"), addButtonBinding),
@@ -897,20 +963,13 @@ public partial class AppSettingsWindow : DarkWindow
             checkBox.IsChecked = definition.IsVisible(_settings);
         }
         ChkClipboardManagerPersistHistory.IsChecked = _settings.ClipboardManagerPersistHistory;
+        ChkSavePromptBuilderDrafts.IsChecked = _settings.SavePromptBuilderDrafts;
         ChkShowPanelOnMouseHover.IsChecked = _settings.ShowPanelOnMouseHover;
         ChkShowTaskbarPositionIndicator.IsChecked = _settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
         ChkCheckForUpdatesEnabled.IsChecked = _settings.CheckForUpdatesEnabled;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
         SetComboValue(CmbLanguage, _selectedUiCulture);
 
-        HotkeyShowPanel.SetBinding(new HotkeyBinding
-        {
-            Ctrl = _settings.GlobalHotkeyCtrl,
-            Alt = _settings.GlobalHotkeyAlt,
-            Shift = _settings.GlobalHotkeyShift,
-            Win = _settings.GlobalHotkeyWin,
-            Key = _settings.GlobalHotkeyKey
-        });
         HotkeyNextContext.SetBinding(_settings.NextContextHotkey);
         HotkeyPreviousContext.SetBinding(_settings.PreviousContextHotkey);
         HotkeyAddButton.SetBinding(_settings.AddButtonHotkey);
@@ -977,6 +1036,7 @@ public partial class AppSettingsWindow : DarkWindow
         for (int i = 0; i < contexts.Count; i++)
         {
             PanelContext context = contexts[i];
+            int contextNumber = ContextStateHelper.GetContextNumber(context.Id);
             var row = new Grid { Height = formControlHeight + 20 };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -986,13 +1046,13 @@ public partial class AppSettingsWindow : DarkWindow
             {
                 Width = 22,
                 Height = 22,
-                CornerRadius = new CornerRadius(11),
-                Background = GetPanelBadgeBrush(ContextStateHelper.GetContextColor(i)),
+                CornerRadius = new CornerRadius(4),
+                Background = GetPanelBadgeBrush(ContextStateHelper.GetContextColor(contextNumber)),
                 VerticalAlignment = VerticalAlignment.Center
             };
             badge.Child = new TextBlock
             {
-                Text = (i + 1).ToString(CultureInfo.InvariantCulture),
+                Text = contextNumber.ToString(CultureInfo.InvariantCulture),
                 Foreground = System.Windows.Media.Brushes.White,
                 FontSize = 11,
                 FontWeight = FontWeights.SemiBold,
@@ -1017,9 +1077,9 @@ public partial class AppSettingsWindow : DarkWindow
             var enabledCheckBox = new CheckBox
             {
                 IsChecked = context.IsEnabled,
-                IsEnabled = i != 0,
+                IsEnabled = contextNumber != 0,
                 Style = (Style)FindResource("ModernSwitchStyle"),
-                ToolTip = i == 0
+                ToolTip = contextNumber == 0
                     ? LocalizationService.Get("AppSettingsWindow_PrimaryPanelAlwaysEnabled")
                     : LocalizationService.Get("AppSettingsWindow_PanelEnabled")
             };
@@ -1141,7 +1201,6 @@ public partial class AppSettingsWindow : DarkWindow
 
     private async void BtnSave_Click(object sender, RoutedEventArgs e)
     {
-        HotkeyBinding globalBinding = HotkeyShowPanel.GetBinding();
         HotkeyBinding nextBinding = HotkeyNextContext.GetBinding();
         HotkeyBinding previousBinding = HotkeyPreviousContext.GetBinding();
         HotkeyBinding addButtonBinding = HotkeyAddButton.GetBinding();
@@ -1156,19 +1215,13 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding promptBuilderBinding = HotkeyPromptBuilder.GetBinding();
         HotkeyBinding zenEditorBinding = HotkeyZenEditor.GetBinding();
 
-        if (!ValidateHotkeyBindings(globalBinding, nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding, textProcessingBinding, promptBuilderBinding, zenEditorBinding))
+        if (!ValidateHotkeyBindings(nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding, textProcessingBinding, promptBuilderBinding, zenEditorBinding))
         {
             return;
         }
 
         _mainWindow.GetSettingsService().UpdateSettings(settings =>
         {
-            settings.GlobalHotkeyCtrl = globalBinding.Ctrl;
-            settings.GlobalHotkeyAlt = globalBinding.Alt;
-            settings.GlobalHotkeyShift = globalBinding.Shift;
-            settings.GlobalHotkeyWin = globalBinding.Win;
-            settings.GlobalHotkeyKey = globalBinding.Key;
-
             settings.NextContextHotkey = nextBinding;
             settings.PreviousContextHotkey = previousBinding;
             settings.AddButtonHotkey = addButtonBinding;
@@ -1188,6 +1241,12 @@ public partial class AppSettingsWindow : DarkWindow
                 definition.SetVisible(settings, checkBox.IsChecked ?? false);
             }
             settings.ClipboardManagerPersistHistory = ChkClipboardManagerPersistHistory.IsChecked ?? true;
+            settings.SavePromptBuilderDrafts = ChkSavePromptBuilderDrafts.IsChecked ?? true;
+            if (!settings.SavePromptBuilderDrafts)
+            {
+                settings.PromptBuilderDrafts = [];
+                settings.PromptBuilderLastText = null;
+            }
             settings.ShowPanelOnMouseHover = ChkShowPanelOnMouseHover.IsChecked ?? true;
             settings.ShowTaskbarPositionIndicator = ChkShowTaskbarPositionIndicator.IsChecked ?? true;
             settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;
@@ -1230,13 +1289,14 @@ public partial class AppSettingsWindow : DarkWindow
 
             for (int i = 0; i < settings.Contexts.Count && i < _contextRows.Count; i++)
             {
+                int contextNumber = ContextStateHelper.GetContextNumber(settings.Contexts[i].Id);
                 string contextName = _contextRows[i].NameTextBox.Text;
-                bool isNameCustomized = ContextStateHelper.IsCustomizedContextNameInput(contextName, i);
+                bool isNameCustomized = ContextStateHelper.IsCustomizedContextNameInput(contextName, contextNumber);
                 settings.Contexts[i].Name = isNameCustomized
                     ? contextName.Trim()
-                    : ContextStateHelper.GetDefaultContextName(i);
+                    : ContextStateHelper.GetDefaultContextName(contextNumber);
                 settings.Contexts[i].IsNameCustomized = isNameCustomized;
-                settings.Contexts[i].IsEnabled = i == 0 || (_contextRows[i].EnabledCheckBox.IsChecked ?? false);
+                settings.Contexts[i].IsEnabled = contextNumber == 0 || (_contextRows[i].EnabledCheckBox.IsChecked ?? false);
             }
         });
         IReadOnlyList<string> failedHotkeys;

@@ -9,7 +9,7 @@ AiteBar — Your Personal Command Center for Windows. Turn the edge of your scre
 ### Features
 
 #### Workflow Organization
-- **Up to 8 context panels**: Separate your tools by tasks (Work, AI, Personal, Scripts, etc.)
+- **10 context panels (0-9)**: Separate your tools by tasks (Work, AI, Personal, Scripts, etc.) and switch directly with `Alt+0`…`Alt+9`
 - **Import/export panels**: Transfer ready-made button sets between computers using `.aitebarpanel`
 
 #### Web & Browser Tools
@@ -75,7 +75,7 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 ### Особенности
 
 #### Организация workflow
-- **До 8 панелей-контекстов**: Разделяй инструменты по задачам (Работа, AI, Личное, Скрипты и т.д.)
+- **10 панелей-контекстов (0-9)**: Разделяй инструменты по задачам (Работа, AI, Личное, Скрипты и т.д.) и быстро переключайся через `Alt+0`…`Alt+9`
 - **Импорт/экспорт панелей**: Переноси готовые наборы кнопок между компьютерами через `.aitebarpanel`
 
 #### Веб-инструменты и браузеры

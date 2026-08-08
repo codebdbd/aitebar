@@ -1374,16 +1374,21 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="QuickTool_PromptBuilder_Title" xml:space="preserve"><value>Конструктор промптов</value></data>
   <data name="QuickTool_PromptBuilder_Description" xml:space="preserve"><value>Создаёт профессиональный готовый промпт по краткому описанию задачи.</value></data>
   <data name="PromptBuilder_Title" xml:space="preserve"><value>Конструктор промптов</value></data>
+  <data name="PromptBuilder_SaveDrafts" xml:space="preserve"><value>Сохранять черновики Конструктора промптов</value></data>
+  <data name="PromptBuilder_SaveDraftsHint" xml:space="preserve"><value>При отключении сохранённые задачи и результаты будут удалены.</value></data>
+  <data name="PromptBuilder_TargetModelHint" xml:space="preserve"><value>Модель, в которую вы вставите готовый визуальный промпт.</value></data>
+  <data name="PromptBuilder_GeneratorLabel" xml:space="preserve"><value>Генератор</value></data>
+  <data name="PromptBuilder_GeneratorHint" xml:space="preserve"><value>Модель внутри AiteBar, которая создаёт готовый промпт.</value></data>
   <data name="PromptBuilder_Description" xml:space="preserve"><value>Создание профессиональных промптов для работы с нейросетями.</value></data>
-  <data name="PromptBuilder_ModeProgramming" xml:space="preserve"><value>Программирование</value></data>
+  <data name="PromptBuilder_ModeProgramming" xml:space="preserve"><value>Код</value></data>
   <data name="PromptBuilder_ModeProgrammingDesc" xml:space="preserve"><value>Создание подробных заданий для разработки и работы с кодом.</value></data>
-  <data name="PromptBuilder_ModeImages" xml:space="preserve"><value>Изображения</value></data>
-  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Создание промптов для генерации и редактирования изображений.</value></data>
+  <data name="PromptBuilder_ModeImages" xml:space="preserve"><value>Фото</value></data>
+  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Создаёт промпт для фотореалистичного изображения.</value></data>
   <data name="PromptBuilder_ModeTexts" xml:space="preserve"><value>Тексты</value></data>
   <data name="PromptBuilder_ModeTextsDesc" xml:space="preserve"><value>Создание заданий для написания, перевода и обработки текста.</value></data>
   <data name="PromptBuilder_ModeVideo" xml:space="preserve"><value>Видео</value></data>
   <data name="PromptBuilder_ModeVideoDesc" xml:space="preserve"><value>Создание промптов для генерации и редактирования видео.</value></data>
-  <data name="PromptBuilder_ModeMusic" xml:space="preserve"><value>Музыка для Suno</value></data>
+  <data name="PromptBuilder_ModeMusic" xml:space="preserve"><value>Музыка</value></data>
   <data name="PromptBuilder_ModeMusicDesc" xml:space="preserve"><value>Создание описаний музыкального стиля для поля Styles в Suno.</value></data>
   <data name="PromptBuilder_ModeAnalysis" xml:space="preserve"><value>Анализ</value></data>
   <data name="PromptBuilder_ModeAnalysisDesc" xml:space="preserve"><value>Создание заданий для исследования, сравнения и принятия решений.</value></data>
@@ -1391,12 +1396,138 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="PromptBuilder_ModeIdeasDesc" xml:space="preserve"><value>Создание заданий для поиска идей, концепций и вариантов решения.</value></data>
   <data name="PromptBuilder_Placeholder" xml:space="preserve"><value>Кратко опишите, что должна сделать нейросеть</value></data>
   <data name="PromptBuilder_ButtonProcess" xml:space="preserve"><value>Создать промпт</value></data>
+  <data name="PromptBuilder_ButtonNewVariant" xml:space="preserve"><value>Новый вариант</value></data>
   <data name="PromptBuilder_ButtonBeforeProcessing" xml:space="preserve"><value>Создайте промпт, чтобы увидеть результат.</value></data>
   <data name="PromptBuilder_ButtonShowOriginal" xml:space="preserve"><value>Показать задачу</value></data>
   <data name="PromptBuilder_ButtonShowResult" xml:space="preserve"><value>Показать промпт</value></data>
   <data name="PromptBuilder_DataWarning" xml:space="preserve"><value>Описание задачи отправляется выбранному AI-сервису только после запуска создания промпта.</value></data>
   <data name="PromptBuilder_ErrorEmptyInput" xml:space="preserve"><value>Сначала опишите задачу.</value></data>
   <data name="PromptBuilder_ErrorEmptyResponse" xml:space="preserve"><value>Нейросеть вернула пустой промпт. Попробуйте ещё раз.</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>Резервные копии</value></data>
+  <data name="Backup_Description" xml:space="preserve"><value>Экспортируйте настройки, панели и пользовательские иконки. Полная копия шифрует API-ключи и снимок clipboard вашим паролем.</value></data>
+  <data name="Backup_Create" xml:space="preserve"><value>Создать резервную копию...</value></data>
+  <data name="Backup_Restore" xml:space="preserve"><value>Восстановить из копии...</value></data>
+  <data name="Backup_DialogTitle" xml:space="preserve"><value>Параметры резервной копии</value></data>
+  <data name="Backup_CreateHint" xml:space="preserve"><value>Выберите обычную копию или включите шифрование чувствительных данных.</value></data>
+  <data name="Backup_RestorePasswordHint" xml:space="preserve"><value>Эта копия зашифрована. Введите пароль для восстановления.</value></data>
+  <data name="Backup_IncludeSensitive" xml:space="preserve"><value>Включить зашифрованные API-ключи и clipboard</value></data>
+  <data name="Backup_IncludeClipboard" xml:space="preserve"><value>Включить текущий снимок истории clipboard</value></data>
+  <data name="Backup_Password" xml:space="preserve"><value>Пароль</value></data>
+  <data name="Backup_PasswordRequired" xml:space="preserve"><value>Введите пароль для зашифрованных данных резервной копии.</value></data>
+  <data name="Backup_CreateSuccess" xml:space="preserve"><value>Резервная копия создана.</value></data>
+  <data name="Backup_RestoreConfirm" xml:space="preserve"><value>Текущие настройки будут заменены. Сначала будет создана локальная страховочная копия. Продолжить?</value></data>
+  <data name="Backup_RestoreSuccess" xml:space="preserve"><value>Резервная копия восстановлена.</value></data>
+  <data name="Backup_RestoreFailed" xml:space="preserve"><value>Не удалось восстановить резервную копию: {0}</value></data>
+  <data name="Backup_PanelHotkeyFormat" xml:space="preserve"><value>Панель {0}</value></data>
+  <data name="PromptBuilder_ModePaintings" xml:space="preserve"><value>Картины</value></data>
+  <data name="PromptBuilder_ModePaintingsDesc" xml:space="preserve"><value>Создаёт художественный промпт для живописной картины.</value></data>
+  <data name="PaintingStyle_Label" xml:space="preserve"><value>Стиль картины</value></data>
+  <data name="PaintingStyle_Hint" xml:space="preserve"><value>«Авто» выбирает подходящее направление. Повтор сохраняет стиль и создаёт новую композицию.</value></data>
+  <data name="PaintingStyle_Auto" xml:space="preserve"><value>Авто</value></data>
+  <data name="PaintingStyle_Impressionism" xml:space="preserve"><value>Импрессионизм</value></data>
+  <data name="PaintingStyle_PostImpressionism" xml:space="preserve"><value>Постимпрессионизм</value></data>
+  <data name="PaintingStyle_ArtNouveau" xml:space="preserve"><value>Ар-нуво</value></data>
+  <data name="PaintingStyle_JapaneseWoodblock" xml:space="preserve"><value>Японская гравюра</value></data>
+  <data name="PaintingStyle_Renaissance" xml:space="preserve"><value>Ренессанс</value></data>
+  <data name="PaintingStyle_Baroque" xml:space="preserve"><value>Барокко</value></data>
+  <data name="PaintingStyle_Surrealism" xml:space="preserve"><value>Сюрреализм</value></data>
+  <data name="PaintingStyle_Cubism" xml:space="preserve"><value>Кубизм</value></data>
+  <data name="PaintingStyle_Abstract" xml:space="preserve"><value>Абстракция</value></data>
+  <data name="PaintingStyle_Watercolor" xml:space="preserve"><value>Акварель</value></data>
+  <data name="PaintingStyle_OilPaint" xml:space="preserve"><value>Масляная живопись</value></data>
+  <data name="PromptBuilder_ModeAnimation" xml:space="preserve"><value>Анимация</value></data><data name="PromptBuilder_ModeAnimationDesc" xml:space="preserve"><value>Создаёт художественный промпт для анимации и комиксов.</value></data><data name="AnimationStyle_Label" xml:space="preserve"><value>Стиль анимации</value></data><data name="AnimationStyle_Hint" xml:space="preserve"><value>«Авто» выбирает подходящий язык. Повтор сохраняет стиль и меняет композицию.</value></data>
+  <data name="PaintingStyle_Romanticism" xml:space="preserve"><value>Романтизм</value></data><data name="PaintingStyle_PreRaphaelite" xml:space="preserve"><value>Прерафаэлиты</value></data><data name="PaintingStyle_Realism" xml:space="preserve"><value>Реализм</value></data><data name="PaintingStyle_Expressionism" xml:space="preserve"><value>Экспрессионизм</value></data><data name="PaintingStyle_Fauvism" xml:space="preserve"><value>Фовизм</value></data><data name="PaintingStyle_Symbolism" xml:space="preserve"><value>Символизм</value></data><data name="PaintingStyle_ArtDeco" xml:space="preserve"><value>Ар-деко</value></data><data name="PaintingStyle_InkWash" xml:space="preserve"><value>Тушь / sumi-e</value></data>
+  <data name="AnimationStyle_Auto" xml:space="preserve"><value>Авто</value></data><data name="AnimationStyle_Pixar" xml:space="preserve"><value>Pixar</value></data><data name="AnimationStyle_Disney" xml:space="preserve"><value>Disney</value></data><data name="AnimationStyle_AnimeShonen" xml:space="preserve"><value>Аниме: сёнэн</value></data><data name="AnimationStyle_AnimeGhibli" xml:space="preserve"><value>Аниме: рисованное фэнтези</value></data><data name="AnimationStyle_AnimeCyberpunk" xml:space="preserve"><value>Аниме: киберпанк</value></data><data name="AnimationStyle_AnimeShojo" xml:space="preserve"><value>Аниме: сёдзё</value></data><data name="AnimationStyle_ComicAmerican" xml:space="preserve"><value>Комикс: супергеройский</value></data><data name="AnimationStyle_ComicEuropean" xml:space="preserve"><value>Комикс: европейский</value></data><data name="AnimationStyle_ComicManga" xml:space="preserve"><value>Комикс: манга</value></data><data name="AnimationStyle_StopMotion" xml:space="preserve"><value>Кукольная анимация</value></data><data name="AnimationStyle_Claymation" xml:space="preserve"><value>Пластилиновая анимация</value></data>
+  <data name="PaintingStyle_JapaneseShunga" xml:space="preserve"><value>Японская фигуративная гравюра</value></data><data name="PaintingStyle_AcademicNude" xml:space="preserve"><value>Академическая фигура</value></data><data name="PaintingStyle_MythologicalNude" xml:space="preserve"><value>Мифологические фигуры</value></data><data name="PaintingStyle_ArtNouveauNude" xml:space="preserve"><value>Ар-нуво: фигура</value></data><data name="PaintingStyle_PencilDrawing" xml:space="preserve"><value>Карандашный рисунок</value></data>
+  <data name="PhotoStyle_Label" xml:space="preserve"><value>Стиль фото</value></data><data name="PhotoStyle_Hint" xml:space="preserve"><value>«Авто» использует естественную сбалансированную фотографию. Повтор сохраняет стиль и создаёт новую композицию.</value></data>
+  <data name="PhotoStyle_Auto" xml:space="preserve"><value>Авто</value></data><data name="PhotoStyle_Architecture" xml:space="preserve"><value>Архитектурная</value></data><data name="PhotoStyle_BeautyPortrait" xml:space="preserve"><value>Бьюти-портрет</value></data><data name="PhotoStyle_VintageFilm" xml:space="preserve"><value>Винтажная плёнка</value></data><data name="PhotoStyle_Documentary" xml:space="preserve"><value>Документальная</value></data><data name="PhotoStyle_Food" xml:space="preserve"><value>Еда и напитки</value></data><data name="PhotoStyle_Cinematic" xml:space="preserve"><value>Кинематографичная</value></data><data name="PhotoStyle_Commercial" xml:space="preserve"><value>Коммерческая реклама</value></data><data name="PhotoStyle_Macro" xml:space="preserve"><value>Макро</value></data><data name="PhotoStyle_FashionEditorial" xml:space="preserve"><value>Модная редакционная</value></data><data name="PhotoStyle_NeonNight" xml:space="preserve"><value>Ночная неоновая</value></data><data name="PhotoStyle_Landscape" xml:space="preserve"><value>Пейзажная</value></data><data name="PhotoStyle_Portrait" xml:space="preserve"><value>Портретная</value></data><data name="PhotoStyle_Product" xml:space="preserve"><value>Предметная</value></data><data name="PhotoStyle_Studio" xml:space="preserve"><value>Студийная</value></data><data name="PhotoStyle_Street" xml:space="preserve"><value>Уличная</value></data><data name="PhotoStyle_BlackAndWhite" xml:space="preserve"><value>Чёрно-белая</value></data>
+  <data name="TextType_Label" xml:space="preserve"><value>Тип текста</value></data><data name="TextTone_Label" xml:space="preserve"><value>Тон</value></data>
+  <data name="TextType_Auto" xml:space="preserve"><value>Авто</value></data><data name="TextType_AnalyticalArticle" xml:space="preserve"><value>Аналитическая статья</value></data><data name="TextType_BusinessEmail" xml:space="preserve"><value>Бизнес-письмо</value></data><data name="TextType_BlogPost" xml:space="preserve"><value>Блог-пост</value></data><data name="TextType_Instruction" xml:space="preserve"><value>Инструкция</value></data><data name="TextType_ProductCard" xml:space="preserve"><value>Карточка товара</value></data><data name="TextType_CommercialProposal" xml:space="preserve"><value>Коммерческое предложение</value></data><data name="TextType_LandingPage" xml:space="preserve"><value>Лендинг</value></data><data name="TextType_PressRelease" xml:space="preserve"><value>Новость / пресс-релиз</value></data><data name="TextType_EducationalText" xml:space="preserve"><value>Объяснение / учебный текст</value></data><data name="TextType_SocialPost" xml:space="preserve"><value>Пост для соцсетей</value></data><data name="TextType_SalesCopy" xml:space="preserve"><value>Продающий текст</value></data><data name="TextType_Editing" xml:space="preserve"><value>Редактура</value></data><data name="TextType_Summary" xml:space="preserve"><value>Резюме / краткое изложение</value></data><data name="TextType_Script" xml:space="preserve"><value>Сценарий</value></data><data name="TextType_SeoArticle" xml:space="preserve"><value>SEO-статья</value></data><data name="TextType_TechnicalDocumentation" xml:space="preserve"><value>Техническая документация</value></data><data name="TextType_CreativeWriting" xml:space="preserve"><value>Художественный текст</value></data>
+  <data name="TextTone_Neutral" xml:space="preserve"><value>Нейтральный</value></data><data name="TextTone_Expert" xml:space="preserve"><value>Экспертный</value></data><data name="TextTone_Friendly" xml:space="preserve"><value>Дружелюбный</value></data><data name="TextTone_Premium" xml:space="preserve"><value>Премиальный</value></data><data name="TextTone_Bold" xml:space="preserve"><value>Смелый</value></data><data name="TextTone_Formal" xml:space="preserve"><value>Официальный</value></data>
+  <data name="PromptBuilder_ModeAnalytics" xml:space="preserve"><value>Аналитика</value></data>
+  <data name="PromptBuilder_ModeAnalyticsDesc" xml:space="preserve"><value>Создаёт точные промпты для исследования, решений и структурированного анализа.</value></data>
+  <data name="PromptBuilder_AnalysisInputHint" xml:space="preserve"><value>Введите объект, цель и известные факты.</value></data>
+  <data name="AnalysisDirection_Label" xml:space="preserve"><value>Направление</value></data>
+  <data name="AnalysisDirection_Hint" xml:space="preserve"><value>«Авто» подбирает подход. Выберите направление, когда важна структура результата.</value></data>
+  <data name="AnalysisDirection_Auto" xml:space="preserve"><value>Авто</value></data>
+  <data name="AnalysisDirection_Comparison" xml:space="preserve"><value>Сравнить варианты</value></data>
+  <data name="AnalysisDirection_Recommendation" xml:space="preserve"><value>Выбрать и рекомендовать</value></data>
+  <data name="AnalysisDirection_MarketCompetition" xml:space="preserve"><value>Рынок и конкуренты</value></data>
+  <data name="AnalysisDirection_ResearchFactCheck" xml:space="preserve"><value>Исследование и фактчекинг</value></data>
+  <data name="AnalysisDirection_RiskAssessment" xml:space="preserve"><value>Оценка рисков</value></data>
+  <data name="AnalysisDirection_Strategy" xml:space="preserve"><value>Подготовить стратегию</value></data>
+  <data name="AnalysisDirection_ProductAnalysis" xml:space="preserve"><value>Анализ продукта</value></data>
+  <data name="AnalysisDirection_DataAnalysis" xml:space="preserve"><value>Проанализировать данные</value></data>
+  <data name="AnalysisDirection_ScenarioPlanning" xml:space="preserve"><value>Сценарное планирование</value></data>
+  <data name="AnalysisDirection_RootCause" xml:space="preserve"><value>Поиск первопричин</value></data>
+  <data name="AnalysisDirection_SolutionOptions" xml:space="preserve"><value>Предложить варианты решений</value></data>
+  <data name="AnalysisDirection_AutoOutcome" xml:space="preserve"><value>Сам подберёт наиболее полезную структуру результата для вашей задачи.</value></data>
+  <data name="AnalysisDirection_ComparisonOutcome" xml:space="preserve"><value>Результат: общие критерии, таблица сравнения, плюсы и минусы, итоговый вывод.</value></data>
+  <data name="AnalysisDirection_RecommendationOutcome" xml:space="preserve"><value>Результат: варианты, критерии выбора, компромиссы, рекомендация и условия её пересмотра.</value></data>
+  <data name="AnalysisDirection_MarketCompetitionOutcome" xml:space="preserve"><value>Результат: рынок, аудитория, конкуренты, позиционирование, возможности и следующие шаги.</value></data>
+  <data name="AnalysisDirection_ResearchFactCheckOutcome" xml:space="preserve"><value>Результат: подтверждённые и спорные утверждения, источники, пробелы в данных и вывод.</value></data>
+  <data name="AnalysisDirection_RiskAssessmentOutcome" xml:space="preserve"><value>Результат: реестр рисков, вероятность, влияние, признаки, меры и остаточные риски.</value></data>
+  <data name="AnalysisDirection_StrategyOutcome" xml:space="preserve"><value>Результат: цели, приоритеты, инициативы, порядок действий, метрики, риски и контрольные точки.</value></data>
+  <data name="AnalysisDirection_ProductAnalysisOutcome" xml:space="preserve"><value>Результат: проблема пользователя, ценность продукта, барьеры, улучшения, метрики и открытые вопросы.</value></data>
+  <data name="AnalysisDirection_DataAnalysisOutcome" xml:space="preserve"><value>Результат: качество данных, метод, закономерности, аномалии, ограничения, выводы и дальнейшие проверки.</value></data>
+  <data name="AnalysisDirection_ScenarioPlanningOutcome" xml:space="preserve"><value>Результат: 3-4 сценария, сигналы, последствия, риски, устойчивые действия и пересмотр.</value></data>
+  <data name="AnalysisDirection_RootCauseOutcome" xml:space="preserve"><value>Результат: симптомы, гипотезы, проверки, первопричины, исправления и профилактика.</value></data>
+  <data name="AnalysisDirection_SolutionOptionsOutcome" xml:space="preserve"><value>Результат: разные варианты, преимущества, ограничения, сложность, риски и рекомендуемый shortlist.</value></data>
+  <data name="VideoDirection_Label" xml:space="preserve"><value>Режиссура видео</value></data>
+  <data name="VideoDirection_Hint" xml:space="preserve"><value>«Авто» выбирает подход. Направление задаёт движение, работу камеры и темп.</value></data>
+  <data name="VideoDirection_Auto" xml:space="preserve"><value>Авто</value></data>
+  <data name="VideoDirection_Advertising" xml:space="preserve"><value>Рекламный ролик</value></data>
+  <data name="VideoDirection_CinematicScene" xml:space="preserve"><value>Кинематографичная сцена</value></data>
+  <data name="VideoDirection_ProductVideo" xml:space="preserve"><value>Предметное видео</value></data>
+  <data name="VideoDirection_FashionBeauty" xml:space="preserve"><value>Fashion / beauty</value></data>
+  <data name="VideoDirection_Documentary" xml:space="preserve"><value>Документальная съёмка</value></data>
+  <data name="VideoDirection_SocialVertical" xml:space="preserve"><value>Социальные сети / вертикальный ролик</value></data>
+  <data name="VideoDirection_MusicVideo" xml:space="preserve"><value>Музыкальный клип</value></data>
+  <data name="VideoDirection_Interview" xml:space="preserve"><value>Интервью / talking head</value></data>
+  <data name="VideoDirection_Explainer" xml:space="preserve"><value>Объясняющее видео</value></data>
+  <data name="VideoDirection_ArchitectureInterior" xml:space="preserve"><value>Архитектура и интерьер</value></data>
+  <data name="VideoDirection_TravelLandscape" xml:space="preserve"><value>Путешествия и пейзаж</value></data>
+  <data name="VideoDirection_Action" xml:space="preserve"><value>Экшен</value></data>
+  <data name="VideoDirection_Timelapse" xml:space="preserve"><value>Таймлапс</value></data>
+  <data name="VideoDirection_Macro" xml:space="preserve"><value>Макросъёмка</value></data>
+  <data name="VideoDirection_StopMotion" xml:space="preserve"><value>Stop motion</value></data>
+  <data name="VideoDirection_ProductAnimation3D" xml:space="preserve"><value>3D product animation</value></data>
+  <data name="VideoDirection_LoopAnimation" xml:space="preserve"><value>Луп-анимация</value></data>
+  <data name="ProgrammingTask_Label" xml:space="preserve"><value>Тип задачи</value></data>
+  <data name="ProgrammingTask_Hint" xml:space="preserve"><value>«Авто» определяет задачу. Выберите тип, чтобы задать необходимые инженерные проверки.</value></data>
+  <data name="ProgrammingTask_Auto" xml:space="preserve"><value>Авто</value></data>
+  <data name="ProgrammingTask_NewFeature" xml:space="preserve"><value>Новая функция</value></data>
+  <data name="ProgrammingTask_BugFix" xml:space="preserve"><value>Исправление ошибки</value></data>
+  <data name="ProgrammingTask_Refactoring" xml:space="preserve"><value>Рефакторинг</value></data>
+  <data name="ProgrammingTask_CodeReview" xml:space="preserve"><value>Code review</value></data>
+  <data name="ProgrammingTask_Architecture" xml:space="preserve"><value>Архитектура</value></data>
+  <data name="ProgrammingTask_Testing" xml:space="preserve"><value>Тесты</value></data>
+  <data name="ProgrammingTask_Performance" xml:space="preserve"><value>Производительность</value></data>
+  <data name="ProgrammingTask_Security" xml:space="preserve"><value>Безопасность</value></data>
+  <data name="ProgrammingTask_ApiIntegration" xml:space="preserve"><value>Интеграция API</value></data>
+  <data name="ProgrammingTask_Database" xml:space="preserve"><value>База данных</value></data>
+  <data name="ProgrammingTask_UiUx" xml:space="preserve"><value>UI / UX</value></data>
+  <data name="ProgrammingTask_DevOpsDeployment" xml:space="preserve"><value>DevOps и деплой</value></data>
+  <data name="ProgrammingTask_Documentation" xml:space="preserve"><value>Документация</value></data>
+  <data name="ProgrammingTask_ExistingCodeAnalysis" xml:space="preserve"><value>Анализ существующего кода</value></data>
+  <data name="ProgrammingTask_MigrationDependencies" xml:space="preserve"><value>Миграция и зависимости</value></data>
+  <data name="PromptBuilder_ProgrammingOutcome" xml:space="preserve"><value>Создаст инженерный промпт для «{0}»: требования, ограничения и проверка результата.</value></data>
+  <data name="PromptBuilder_VideoOutcome" xml:space="preserve"><value>Создаст видео-промпт «{0}» с движением, камерой, светом и темпом.</value></data>
+  <data name="PromptBuilder_PaintingOutcome" xml:space="preserve"><value>Создаст англоязычный промпт картины в стиле «{0}», без рамы и музейной подачи.</value></data>
+  <data name="PromptBuilder_PhotoOutcome" xml:space="preserve"><value>Создаст англоязычный фотореалистичный промпт в стиле «{0}».</value></data>
+  <data name="PromptBuilder_AnimationOutcome" xml:space="preserve"><value>Создаст англоязычный промпт анимации или комикса в стиле «{0}».</value></data>
+  <data name="PromptBuilder_TextOutcome" xml:space="preserve"><value>Создаст промпт для формата «{0}» в тоне «{1}» с подходящей структурой.</value></data>
+  <data name="VisualTarget_Label" xml:space="preserve"><value>Нейросеть</value></data><data name="VisualTarget_Universal" xml:space="preserve"><value>Универсальный</value></data><data name="VisualTarget_GptImage" xml:space="preserve"><value>GPT Image</value></data><data name="VisualTarget_Flux" xml:space="preserve"><value>FLUX</value></data><data name="VisualTarget_NanoBanana" xml:space="preserve"><value>Nano Banana</value></data><data name="VisualTarget_Midjourney" xml:space="preserve"><value>Midjourney</value></data><data name="VisualTarget_StableDiffusion" xml:space="preserve"><value>Stable Diffusion</value></data><data name="PromptBuilder_VisualTargetOutcome" xml:space="preserve"><value>Адаптирует готовый визуальный промпт под «{0}», сохраняя идею пользователя.</value></data><data name="PromptBuilder_StyleLabel" xml:space="preserve"><value>Стиль</value></data>
+  <data name="PromptBuilder_ModeIcons" xml:space="preserve"><value>Иконки</value></data>
+  <data name="PromptBuilder_ModeIconsDesc" xml:space="preserve"><value>Создаёт понятные промпты иконок приложений для выбранной платформы и стиля.</value></data>
+  <data name="PromptBuilder_ModeGraphics" xml:space="preserve"><value>Графика</value></data>
+  <data name="PromptBuilder_ModeGraphicsDesc" xml:space="preserve"><value>Создаёт промпты для стикеров, логотипов, UI-графики и дизайн-материалов.</value></data>
+  <data name="IconPlatform_Label" xml:space="preserve"><value>Платформа</value></data>
+  <data name="GraphicType_Label" xml:space="preserve"><value>Тип</value></data>
+  <data name="IconPlatform_Auto" xml:space="preserve"><value>Авто</value></data><data name="IconPlatform_MacOS" xml:space="preserve"><value>macOS</value></data><data name="IconPlatform_IOS" xml:space="preserve"><value>iOS / iPadOS</value></data><data name="IconPlatform_Windows11" xml:space="preserve"><value>Windows 11</value></data><data name="IconPlatform_AndroidMaterialYou" xml:space="preserve"><value>Android Material You</value></data><data name="IconPlatform_CrossPlatform" xml:space="preserve"><value>Кроссплатформенная</value></data>
+  <data name="IconStyle_Auto" xml:space="preserve"><value>Авто</value></data><data name="IconStyle_Flat" xml:space="preserve"><value>Флэт</value></data><data name="IconStyle_GradientFlat" xml:space="preserve"><value>Флэт с градиентом</value></data><data name="IconStyle_Monochrome" xml:space="preserve"><value>Монохром</value></data><data name="IconStyle_Line" xml:space="preserve"><value>Лайн</value></data><data name="IconStyle_Glyph" xml:space="preserve"><value>Глиф</value></data><data name="IconStyle_Filled" xml:space="preserve"><value>Заливка</value></data><data name="IconStyle_Duotone" xml:space="preserve"><value>Дуотон</value></data><data name="IconStyle_Isometric" xml:space="preserve"><value>Изометрия</value></data><data name="IconStyle_Glassmorphism" xml:space="preserve"><value>Глассморфизм</value></data><data name="IconStyle_Neumorphism" xml:space="preserve"><value>Неоморфизм</value></data><data name="IconStyle_ThreeDimensional" xml:space="preserve"><value>3D</value></data><data name="IconStyle_ClayThreeDimensional" xml:space="preserve"><value>Пластилин 3D</value></data><data name="IconStyle_PixelArt" xml:space="preserve"><value>Пиксель-арт</value></data><data name="IconStyle_Retro" xml:space="preserve"><value>Ретро</value></data><data name="IconStyle_HandDrawn" xml:space="preserve"><value>Рисованный</value></data><data name="IconStyle_Mascot" xml:space="preserve"><value>Маскот</value></data>
+  <data name="GraphicType_Auto" xml:space="preserve"><value>Авто</value></data><data name="GraphicType_Sticker" xml:space="preserve"><value>Стикер</value></data><data name="GraphicType_StickerPack" xml:space="preserve"><value>Стикерпак</value></data><data name="GraphicType_Logo" xml:space="preserve"><value>Логотип</value></data><data name="GraphicType_UiElement" xml:space="preserve"><value>UI-элемент</value></data><data name="GraphicType_VectorIllustration" xml:space="preserve"><value>Векторная иллюстрация</value></data><data name="GraphicType_Poster" xml:space="preserve"><value>Постер</value></data><data name="GraphicType_Banner" xml:space="preserve"><value>Баннер</value></data><data name="GraphicType_Infographic" xml:space="preserve"><value>Инфографика</value></data>
+  <data name="GraphicStyle_Auto" xml:space="preserve"><value>Авто</value></data><data name="GraphicStyle_Flat" xml:space="preserve"><value>Флэт</value></data><data name="GraphicStyle_Gradient" xml:space="preserve"><value>Градиент</value></data><data name="GraphicStyle_Minimal" xml:space="preserve"><value>Минимализм</value></data><data name="GraphicStyle_Bold" xml:space="preserve"><value>Яркий</value></data><data name="GraphicStyle_LineArt" xml:space="preserve"><value>Лайн-арт</value></data><data name="GraphicStyle_Duotone" xml:space="preserve"><value>Дуотон</value></data><data name="GraphicStyle_Isometric" xml:space="preserve"><value>Изометрия</value></data><data name="GraphicStyle_ThreeDimensional" xml:space="preserve"><value>3D</value></data><data name="GraphicStyle_HandDrawn" xml:space="preserve"><value>Рисованный</value></data><data name="GraphicStyle_PixelArt" xml:space="preserve"><value>Пиксель-арт</value></data><data name="GraphicStyle_Retro" xml:space="preserve"><value>Ретро</value></data><data name="GraphicStyle_Editorial" xml:space="preserve"><value>Редакционный</value></data>
 </root>
 
 

@@ -849,15 +849,15 @@ Open the GitHub release page?</value></data>
   <data name="QuickTool_PromptBuilder_Description" xml:space="preserve"><value>Creates a professional ready-to-use AI prompt from a brief task description.</value></data>
   <data name="PromptBuilder_Title" xml:space="preserve"><value>Prompt Builder</value></data>
   <data name="PromptBuilder_Description" xml:space="preserve"><value>Creates professional prompts for working with AI.</value></data>
-  <data name="PromptBuilder_ModeProgramming" xml:space="preserve"><value>Programming</value></data>
+  <data name="PromptBuilder_ModeProgramming" xml:space="preserve"><value>Code</value></data>
   <data name="PromptBuilder_ModeProgrammingDesc" xml:space="preserve"><value>Creates detailed tasks for software development and code work.</value></data>
-  <data name="PromptBuilder_ModeImages" xml:space="preserve"><value>Images</value></data>
-  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Creates prompts for image generation and editing.</value></data>
+  <data name="PromptBuilder_ModeImages" xml:space="preserve"><value>Photo</value></data>
+  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Creates a prompt for a photorealistic image.</value></data>
   <data name="PromptBuilder_ModeTexts" xml:space="preserve"><value>Texts</value></data>
   <data name="PromptBuilder_ModeTextsDesc" xml:space="preserve"><value>Creates tasks for writing, translation, and text processing.</value></data>
   <data name="PromptBuilder_ModeVideo" xml:space="preserve"><value>Video</value></data>
   <data name="PromptBuilder_ModeVideoDesc" xml:space="preserve"><value>Creates prompts for video generation and editing.</value></data>
-  <data name="PromptBuilder_ModeMusic" xml:space="preserve"><value>Music for Suno</value></data>
+  <data name="PromptBuilder_ModeMusic" xml:space="preserve"><value>Music</value></data>
   <data name="PromptBuilder_ModeMusicDesc" xml:space="preserve"><value>Creates music style descriptions for the Styles field in Suno.</value></data>
   <data name="PromptBuilder_ModeAnalysis" xml:space="preserve"><value>Analysis</value></data>
   <data name="PromptBuilder_ModeAnalysisDesc" xml:space="preserve"><value>Creates tasks for research, comparison, and decision making.</value></data>
@@ -871,6 +871,139 @@ Open the GitHub release page?</value></data>
   <data name="PromptBuilder_DataWarning" xml:space="preserve"><value>The task description is sent to the selected AI service only after prompt creation starts.</value></data>
   <data name="PromptBuilder_ErrorEmptyInput" xml:space="preserve"><value>Describe the task first.</value></data>
   <data name="PromptBuilder_ErrorEmptyResponse" xml:space="preserve"><value>The AI returned an empty prompt. Try again.</value></data>
+  <data name="Backup_Title" xml:space="preserve"><value>Backups</value></data>
+  <data name="Backup_Description" xml:space="preserve"><value>Export settings, panels, and custom icons. A full backup can encrypt API keys and a clipboard snapshot with your password.</value></data>
+  <data name="Backup_Create" xml:space="preserve"><value>Create backup...</value></data>
+  <data name="Backup_Restore" xml:space="preserve"><value>Restore backup...</value></data>
+  <data name="Backup_DialogTitle" xml:space="preserve"><value>Backup options</value></data>
+  <data name="Backup_CreateHint" xml:space="preserve"><value>Choose a standard backup or enable encrypted sensitive data.</value></data>
+  <data name="Backup_RestorePasswordHint" xml:space="preserve"><value>This backup is encrypted. Enter its password to restore it.</value></data>
+  <data name="Backup_IncludeSensitive" xml:space="preserve"><value>Include encrypted API keys and clipboard</value></data>
+  <data name="Backup_IncludeClipboard" xml:space="preserve"><value>Include current clipboard history snapshot</value></data>
+  <data name="Backup_Password" xml:space="preserve"><value>Password</value></data>
+  <data name="Backup_PasswordRequired" xml:space="preserve"><value>Enter a password for encrypted backup data.</value></data>
+  <data name="Backup_CreateSuccess" xml:space="preserve"><value>Backup created.</value></data>
+  <data name="Backup_RestoreConfirm" xml:space="preserve"><value>Current settings will be replaced. A local safety backup will be created first. Continue?</value></data>
+  <data name="Backup_RestoreSuccess" xml:space="preserve"><value>Backup restored.</value></data>
+  <data name="Backup_RestoreFailed" xml:space="preserve"><value>Could not restore backup: {0}</value></data>
+  <data name="Backup_PanelHotkeyFormat" xml:space="preserve"><value>Panel {0}</value></data>
+  <data name="PromptBuilder_ModePaintings" xml:space="preserve"><value>Paintings</value></data>
+  <data name="PromptBuilder_ModePaintingsDesc" xml:space="preserve"><value>Creates an art-directed prompt for a fine-art painting.</value></data>
+  <data name="PaintingStyle_Label" xml:space="preserve"><value>Painting style</value></data>
+  <data name="PaintingStyle_Hint" xml:space="preserve"><value>Auto chooses the most fitting artistic approach. Repeat keeps this style and creates a new composition.</value></data>
+  <data name="PaintingStyle_Auto" xml:space="preserve"><value>Auto</value></data>
+  <data name="PaintingStyle_Impressionism" xml:space="preserve"><value>Impressionism</value></data>
+  <data name="PaintingStyle_PostImpressionism" xml:space="preserve"><value>Post-Impressionism</value></data>
+  <data name="PaintingStyle_ArtNouveau" xml:space="preserve"><value>Art Nouveau</value></data>
+  <data name="PaintingStyle_JapaneseWoodblock" xml:space="preserve"><value>Japanese woodblock</value></data>
+  <data name="PaintingStyle_Renaissance" xml:space="preserve"><value>Renaissance</value></data>
+  <data name="PaintingStyle_Baroque" xml:space="preserve"><value>Baroque</value></data>
+  <data name="PaintingStyle_Surrealism" xml:space="preserve"><value>Surrealism</value></data>
+  <data name="PaintingStyle_Cubism" xml:space="preserve"><value>Cubism</value></data>
+  <data name="PaintingStyle_Abstract" xml:space="preserve"><value>Abstract</value></data>
+  <data name="PaintingStyle_Watercolor" xml:space="preserve"><value>Watercolor</value></data>
+  <data name="PaintingStyle_OilPaint" xml:space="preserve"><value>Oil painting</value></data>
+  <data name="PromptBuilder_ModeAnimation" xml:space="preserve"><value>Animation</value></data><data name="PromptBuilder_ModeAnimationDesc" xml:space="preserve"><value>Creates an art-directed prompt for animation and comic art.</value></data><data name="AnimationStyle_Label" xml:space="preserve"><value>Animation style</value></data><data name="AnimationStyle_Hint" xml:space="preserve"><value>Auto chooses a fitting visual language. Repeat keeps this style and changes the composition.</value></data>
+  <data name="PaintingStyle_Romanticism" xml:space="preserve"><value>Romanticism</value></data><data name="PaintingStyle_PreRaphaelite" xml:space="preserve"><value>Pre-Raphaelite</value></data><data name="PaintingStyle_Realism" xml:space="preserve"><value>Realism</value></data><data name="PaintingStyle_Expressionism" xml:space="preserve"><value>Expressionism</value></data><data name="PaintingStyle_Fauvism" xml:space="preserve"><value>Fauvism</value></data><data name="PaintingStyle_Symbolism" xml:space="preserve"><value>Symbolism</value></data><data name="PaintingStyle_ArtDeco" xml:space="preserve"><value>Art Deco</value></data><data name="PaintingStyle_InkWash" xml:space="preserve"><value>Ink wash / sumi-e</value></data>
+  <data name="AnimationStyle_Auto" xml:space="preserve"><value>Auto</value></data><data name="AnimationStyle_Pixar" xml:space="preserve"><value>Pixar</value></data><data name="AnimationStyle_Disney" xml:space="preserve"><value>Disney</value></data><data name="AnimationStyle_AnimeShonen" xml:space="preserve"><value>Anime: shonen</value></data><data name="AnimationStyle_AnimeGhibli" xml:space="preserve"><value>Anime: hand-painted fantasy</value></data><data name="AnimationStyle_AnimeCyberpunk" xml:space="preserve"><value>Anime: cyberpunk</value></data><data name="AnimationStyle_AnimeShojo" xml:space="preserve"><value>Anime: shojo</value></data><data name="AnimationStyle_ComicAmerican" xml:space="preserve"><value>Comic: American superhero</value></data><data name="AnimationStyle_ComicEuropean" xml:space="preserve"><value>Comic: European</value></data><data name="AnimationStyle_ComicManga" xml:space="preserve"><value>Comic: manga</value></data><data name="AnimationStyle_StopMotion" xml:space="preserve"><value>Stop motion</value></data><data name="AnimationStyle_Claymation" xml:space="preserve"><value>Claymation</value></data>
+  <data name="PaintingStyle_JapaneseShunga" xml:space="preserve"><value>Japanese figure print</value></data><data name="PaintingStyle_AcademicNude" xml:space="preserve"><value>Academic figure study</value></data><data name="PaintingStyle_MythologicalNude" xml:space="preserve"><value>Mythological figures</value></data><data name="PaintingStyle_ArtNouveauNude" xml:space="preserve"><value>Art Nouveau figure study</value></data><data name="PaintingStyle_PencilDrawing" xml:space="preserve"><value>Pencil drawing</value></data>
+  <data name="PhotoStyle_Label" xml:space="preserve"><value>Photo style</value></data><data name="PhotoStyle_Hint" xml:space="preserve"><value>Auto uses natural balanced photography. Repeat keeps the style and creates a new composition.</value></data>
+  <data name="PhotoStyle_Auto" xml:space="preserve"><value>Auto</value></data><data name="PhotoStyle_Architecture" xml:space="preserve"><value>Architecture</value></data><data name="PhotoStyle_BeautyPortrait" xml:space="preserve"><value>Beauty portrait</value></data><data name="PhotoStyle_VintageFilm" xml:space="preserve"><value>Vintage film</value></data><data name="PhotoStyle_Documentary" xml:space="preserve"><value>Documentary</value></data><data name="PhotoStyle_Food" xml:space="preserve"><value>Food and drink</value></data><data name="PhotoStyle_Cinematic" xml:space="preserve"><value>Cinematic</value></data><data name="PhotoStyle_Commercial" xml:space="preserve"><value>Commercial advertising</value></data><data name="PhotoStyle_Macro" xml:space="preserve"><value>Macro</value></data><data name="PhotoStyle_FashionEditorial" xml:space="preserve"><value>Fashion editorial</value></data><data name="PhotoStyle_NeonNight" xml:space="preserve"><value>Neon night</value></data><data name="PhotoStyle_Landscape" xml:space="preserve"><value>Landscape</value></data><data name="PhotoStyle_Portrait" xml:space="preserve"><value>Portrait</value></data><data name="PhotoStyle_Product" xml:space="preserve"><value>Product</value></data><data name="PhotoStyle_Studio" xml:space="preserve"><value>Studio</value></data><data name="PhotoStyle_Street" xml:space="preserve"><value>Street</value></data><data name="PhotoStyle_BlackAndWhite" xml:space="preserve"><value>Black and white</value></data>
+  <data name="TextType_Label" xml:space="preserve"><value>Text type</value></data><data name="TextTone_Label" xml:space="preserve"><value>Tone</value></data>
+  <data name="TextType_Auto" xml:space="preserve"><value>Auto</value></data><data name="TextType_AnalyticalArticle" xml:space="preserve"><value>Analytical article</value></data><data name="TextType_BusinessEmail" xml:space="preserve"><value>Business email</value></data><data name="TextType_BlogPost" xml:space="preserve"><value>Blog post</value></data><data name="TextType_Instruction" xml:space="preserve"><value>Instruction</value></data><data name="TextType_ProductCard" xml:space="preserve"><value>Product card</value></data><data name="TextType_CommercialProposal" xml:space="preserve"><value>Commercial proposal</value></data><data name="TextType_LandingPage" xml:space="preserve"><value>Landing page</value></data><data name="TextType_PressRelease" xml:space="preserve"><value>Press release</value></data><data name="TextType_EducationalText" xml:space="preserve"><value>Educational text</value></data><data name="TextType_SocialPost" xml:space="preserve"><value>Social post</value></data><data name="TextType_SalesCopy" xml:space="preserve"><value>Sales copy</value></data><data name="TextType_Editing" xml:space="preserve"><value>Editing</value></data><data name="TextType_Summary" xml:space="preserve"><value>Summary</value></data><data name="TextType_Script" xml:space="preserve"><value>Script</value></data><data name="TextType_SeoArticle" xml:space="preserve"><value>SEO article</value></data><data name="TextType_TechnicalDocumentation" xml:space="preserve"><value>Technical documentation</value></data><data name="TextType_CreativeWriting" xml:space="preserve"><value>Creative writing</value></data>
+  <data name="TextTone_Neutral" xml:space="preserve"><value>Neutral</value></data><data name="TextTone_Expert" xml:space="preserve"><value>Expert</value></data><data name="TextTone_Friendly" xml:space="preserve"><value>Friendly</value></data><data name="TextTone_Premium" xml:space="preserve"><value>Premium</value></data><data name="TextTone_Bold" xml:space="preserve"><value>Bold</value></data><data name="TextTone_Formal" xml:space="preserve"><value>Formal</value></data>
+  <data name="PromptBuilder_ModeAnalytics" xml:space="preserve"><value>Analytics</value></data>
+  <data name="PromptBuilder_ModeAnalyticsDesc" xml:space="preserve"><value>Creates focused prompts for research, decisions, and structured analysis.</value></data>
+  <data name="PromptBuilder_AnalysisInputHint" xml:space="preserve"><value>Enter the subject, goal, and known facts.</value></data>
+  <data name="AnalysisDirection_Label" xml:space="preserve"><value>Direction</value></data>
+  <data name="AnalysisDirection_Hint" xml:space="preserve"><value>Auto selects the best approach. Choose a direction when the output structure matters.</value></data>
+  <data name="AnalysisDirection_Auto" xml:space="preserve"><value>Auto</value></data>
+  <data name="AnalysisDirection_Comparison" xml:space="preserve"><value>Compare options</value></data>
+  <data name="AnalysisDirection_Recommendation" xml:space="preserve"><value>Choose and recommend</value></data>
+  <data name="AnalysisDirection_MarketCompetition" xml:space="preserve"><value>Market and competitors</value></data>
+  <data name="AnalysisDirection_ResearchFactCheck" xml:space="preserve"><value>Research and fact-checking</value></data>
+  <data name="AnalysisDirection_RiskAssessment" xml:space="preserve"><value>Risk assessment</value></data>
+  <data name="AnalysisDirection_Strategy" xml:space="preserve"><value>Build a strategy</value></data>
+  <data name="AnalysisDirection_ProductAnalysis" xml:space="preserve"><value>Product analysis</value></data>
+  <data name="AnalysisDirection_DataAnalysis" xml:space="preserve"><value>Analyze data</value></data>
+  <data name="AnalysisDirection_ScenarioPlanning" xml:space="preserve"><value>Scenario planning</value></data>
+  <data name="AnalysisDirection_RootCause" xml:space="preserve"><value>Root-cause analysis</value></data>
+  <data name="AnalysisDirection_SolutionOptions" xml:space="preserve"><value>Propose solution options</value></data>
+  <data name="AnalysisDirection_AutoOutcome" xml:space="preserve"><value>Chooses the most useful result structure for the task.</value></data>
+  <data name="AnalysisDirection_ComparisonOutcome" xml:space="preserve"><value>Result: common criteria, comparison table, trade-offs, and a concise conclusion.</value></data>
+  <data name="AnalysisDirection_RecommendationOutcome" xml:space="preserve"><value>Result: options, decision criteria, trade-offs, recommendation, and reversal conditions.</value></data>
+  <data name="AnalysisDirection_MarketCompetitionOutcome" xml:space="preserve"><value>Result: market, audience, competitors, positioning, opportunities, and next steps.</value></data>
+  <data name="AnalysisDirection_ResearchFactCheckOutcome" xml:space="preserve"><value>Result: confirmed and disputed claims, sources, evidence gaps, and a bounded conclusion.</value></data>
+  <data name="AnalysisDirection_RiskAssessmentOutcome" xml:space="preserve"><value>Result: risk register, likelihood, impact, signals, mitigations, and residual risks.</value></data>
+  <data name="AnalysisDirection_StrategyOutcome" xml:space="preserve"><value>Result: objectives, priorities, initiatives, sequencing, metrics, risks, and checkpoints.</value></data>
+  <data name="AnalysisDirection_ProductAnalysisOutcome" xml:space="preserve"><value>Result: user problem, product value, friction, improvements, metrics, and open questions.</value></data>
+  <data name="AnalysisDirection_DataAnalysisOutcome" xml:space="preserve"><value>Result: data quality, method, patterns, anomalies, limitations, conclusions, and follow-ups.</value></data>
+  <data name="AnalysisDirection_ScenarioPlanningOutcome" xml:space="preserve"><value>Result: 3-4 scenarios, signals, implications, risks, robust actions, and review cadence.</value></data>
+  <data name="AnalysisDirection_RootCauseOutcome" xml:space="preserve"><value>Result: symptoms, hypotheses, validation, root causes, corrective actions, and prevention.</value></data>
+  <data name="AnalysisDirection_SolutionOptionsOutcome" xml:space="preserve"><value>Result: distinct options, benefits, limits, complexity, risks, and a recommended shortlist.</value></data>
+  <data name="VideoDirection_Label" xml:space="preserve"><value>Video direction</value></data>
+  <data name="VideoDirection_Hint" xml:space="preserve"><value>Auto chooses the approach. The direction defines motion, camera work, and pacing.</value></data>
+  <data name="VideoDirection_Auto" xml:space="preserve"><value>Auto</value></data>
+  <data name="VideoDirection_Advertising" xml:space="preserve"><value>Advertising spot</value></data>
+  <data name="VideoDirection_CinematicScene" xml:space="preserve"><value>Cinematic scene</value></data>
+  <data name="VideoDirection_ProductVideo" xml:space="preserve"><value>Product video</value></data>
+  <data name="VideoDirection_FashionBeauty" xml:space="preserve"><value>Fashion and beauty</value></data>
+  <data name="VideoDirection_Documentary" xml:space="preserve"><value>Documentary</value></data>
+  <data name="VideoDirection_SocialVertical" xml:space="preserve"><value>Social vertical video</value></data>
+  <data name="VideoDirection_MusicVideo" xml:space="preserve"><value>Music video</value></data>
+  <data name="VideoDirection_Interview" xml:space="preserve"><value>Interview / talking head</value></data>
+  <data name="VideoDirection_Explainer" xml:space="preserve"><value>Explainer video</value></data>
+  <data name="VideoDirection_ArchitectureInterior" xml:space="preserve"><value>Architecture and interior</value></data>
+  <data name="VideoDirection_TravelLandscape" xml:space="preserve"><value>Travel and landscape</value></data>
+  <data name="VideoDirection_Action" xml:space="preserve"><value>Action</value></data>
+  <data name="VideoDirection_Timelapse" xml:space="preserve"><value>Time-lapse</value></data>
+  <data name="VideoDirection_Macro" xml:space="preserve"><value>Macro</value></data>
+  <data name="VideoDirection_StopMotion" xml:space="preserve"><value>Stop motion</value></data>
+  <data name="VideoDirection_ProductAnimation3D" xml:space="preserve"><value>3D product animation</value></data>
+  <data name="VideoDirection_LoopAnimation" xml:space="preserve"><value>Loop animation</value></data>
+  <data name="ProgrammingTask_Label" xml:space="preserve"><value>Task type</value></data>
+  <data name="ProgrammingTask_Hint" xml:space="preserve"><value>Auto detects the task. Choose a type to require its specific engineering checks.</value></data>
+  <data name="ProgrammingTask_Auto" xml:space="preserve"><value>Auto</value></data>
+  <data name="ProgrammingTask_NewFeature" xml:space="preserve"><value>New feature</value></data>
+  <data name="ProgrammingTask_BugFix" xml:space="preserve"><value>Bug fix</value></data>
+  <data name="ProgrammingTask_Refactoring" xml:space="preserve"><value>Refactoring</value></data>
+  <data name="ProgrammingTask_CodeReview" xml:space="preserve"><value>Code review</value></data>
+  <data name="ProgrammingTask_Architecture" xml:space="preserve"><value>Architecture</value></data>
+  <data name="ProgrammingTask_Testing" xml:space="preserve"><value>Testing</value></data>
+  <data name="ProgrammingTask_Performance" xml:space="preserve"><value>Performance</value></data>
+  <data name="ProgrammingTask_Security" xml:space="preserve"><value>Security</value></data>
+  <data name="ProgrammingTask_ApiIntegration" xml:space="preserve"><value>API integration</value></data>
+  <data name="ProgrammingTask_Database" xml:space="preserve"><value>Database</value></data>
+  <data name="ProgrammingTask_UiUx" xml:space="preserve"><value>UI / UX</value></data>
+  <data name="ProgrammingTask_DevOpsDeployment" xml:space="preserve"><value>DevOps and deployment</value></data>
+  <data name="ProgrammingTask_Documentation" xml:space="preserve"><value>Documentation</value></data>
+  <data name="ProgrammingTask_ExistingCodeAnalysis" xml:space="preserve"><value>Existing code analysis</value></data>
+  <data name="ProgrammingTask_MigrationDependencies" xml:space="preserve"><value>Migration and dependencies</value></data>
+  <data name="PromptBuilder_ProgrammingOutcome" xml:space="preserve"><value>Creates an engineering prompt for {0}: requirements, constraints, and result verification.</value></data>
+  <data name="PromptBuilder_VideoOutcome" xml:space="preserve"><value>Creates a {0} video prompt with movement, camera, lighting, and pacing.</value></data>
+  <data name="PromptBuilder_PaintingOutcome" xml:space="preserve"><value>Creates an English painting prompt in {0}, without a frame or gallery presentation.</value></data>
+  <data name="PromptBuilder_PhotoOutcome" xml:space="preserve"><value>Creates an English photorealistic prompt in {0}.</value></data>
+  <data name="PromptBuilder_AnimationOutcome" xml:space="preserve"><value>Creates an English animation or comic prompt in {0}.</value></data>
+  <data name="PromptBuilder_TextOutcome" xml:space="preserve"><value>Creates a {0} prompt in a {1} tone with a fitting structure.</value></data>
+  <data name="VisualTarget_Label" xml:space="preserve"><value>AI model</value></data><data name="VisualTarget_Universal" xml:space="preserve"><value>Universal</value></data><data name="VisualTarget_GptImage" xml:space="preserve"><value>GPT Image</value></data><data name="VisualTarget_Flux" xml:space="preserve"><value>FLUX</value></data><data name="VisualTarget_NanoBanana" xml:space="preserve"><value>Nano Banana</value></data><data name="PromptBuilder_VisualTargetOutcome" xml:space="preserve"><value>Adapts the finished visual prompt for {0} while preserving the user's idea.</value></data><data name="PromptBuilder_StyleLabel" xml:space="preserve"><value>Style</value></data>
+  <data name="PromptBuilder_ModeIcons" xml:space="preserve"><value>Icons</value></data>
+  <data name="PromptBuilder_ModeIconsDesc" xml:space="preserve"><value>Creates clear application-icon prompts for a selected platform and style.</value></data>
+  <data name="PromptBuilder_ModeGraphics" xml:space="preserve"><value>Graphics</value></data>
+  <data name="PromptBuilder_ModeGraphicsDesc" xml:space="preserve"><value>Creates prompts for stickers, logos, UI graphics, and design assets.</value></data>
+  <data name="IconPlatform_Label" xml:space="preserve"><value>Platform</value></data>
+  <data name="GraphicType_Label" xml:space="preserve"><value>Asset</value></data>
+  <data name="IconPlatform_Auto" xml:space="preserve"><value>Auto</value></data><data name="IconPlatform_MacOS" xml:space="preserve"><value>macOS</value></data><data name="IconPlatform_IOS" xml:space="preserve"><value>iOS / iPadOS</value></data><data name="IconPlatform_Windows11" xml:space="preserve"><value>Windows 11</value></data><data name="IconPlatform_AndroidMaterialYou" xml:space="preserve"><value>Android Material You</value></data><data name="IconPlatform_CrossPlatform" xml:space="preserve"><value>Cross-platform</value></data>
+  <data name="IconStyle_Auto" xml:space="preserve"><value>Auto</value></data><data name="IconStyle_Flat" xml:space="preserve"><value>Flat</value></data><data name="IconStyle_GradientFlat" xml:space="preserve"><value>Gradient flat</value></data><data name="IconStyle_Monochrome" xml:space="preserve"><value>Monochrome</value></data><data name="IconStyle_Line" xml:space="preserve"><value>Line</value></data><data name="IconStyle_Glyph" xml:space="preserve"><value>Glyph</value></data><data name="IconStyle_Filled" xml:space="preserve"><value>Filled</value></data><data name="IconStyle_Duotone" xml:space="preserve"><value>Duotone</value></data><data name="IconStyle_Isometric" xml:space="preserve"><value>Isometric</value></data><data name="IconStyle_Glassmorphism" xml:space="preserve"><value>Glassmorphism</value></data><data name="IconStyle_Neumorphism" xml:space="preserve"><value>Neumorphism</value></data><data name="IconStyle_ThreeDimensional" xml:space="preserve"><value>3D</value></data><data name="IconStyle_ClayThreeDimensional" xml:space="preserve"><value>Clay 3D</value></data><data name="IconStyle_PixelArt" xml:space="preserve"><value>Pixel art</value></data><data name="IconStyle_Retro" xml:space="preserve"><value>Retro</value></data><data name="IconStyle_HandDrawn" xml:space="preserve"><value>Hand-drawn</value></data><data name="IconStyle_Mascot" xml:space="preserve"><value>Mascot</value></data>
+  <data name="GraphicType_Auto" xml:space="preserve"><value>Auto</value></data><data name="GraphicType_Sticker" xml:space="preserve"><value>Sticker</value></data><data name="GraphicType_StickerPack" xml:space="preserve"><value>Sticker pack</value></data><data name="GraphicType_Logo" xml:space="preserve"><value>Logo</value></data><data name="GraphicType_UiElement" xml:space="preserve"><value>UI element</value></data><data name="GraphicType_VectorIllustration" xml:space="preserve"><value>Vector illustration</value></data><data name="GraphicType_Poster" xml:space="preserve"><value>Poster</value></data><data name="GraphicType_Banner" xml:space="preserve"><value>Banner</value></data><data name="GraphicType_Infographic" xml:space="preserve"><value>Infographic</value></data>
+  <data name="GraphicStyle_Auto" xml:space="preserve"><value>Auto</value></data><data name="GraphicStyle_Flat" xml:space="preserve"><value>Flat</value></data><data name="GraphicStyle_Gradient" xml:space="preserve"><value>Gradient</value></data><data name="GraphicStyle_Minimal" xml:space="preserve"><value>Minimal</value></data><data name="GraphicStyle_Bold" xml:space="preserve"><value>Bold</value></data><data name="GraphicStyle_LineArt" xml:space="preserve"><value>Line art</value></data><data name="GraphicStyle_Duotone" xml:space="preserve"><value>Duotone</value></data><data name="GraphicStyle_Isometric" xml:space="preserve"><value>Isometric</value></data><data name="GraphicStyle_ThreeDimensional" xml:space="preserve"><value>3D</value></data><data name="GraphicStyle_HandDrawn" xml:space="preserve"><value>Hand-drawn</value></data><data name="GraphicStyle_PixelArt" xml:space="preserve"><value>Pixel art</value></data><data name="GraphicStyle_Retro" xml:space="preserve"><value>Retro</value></data><data name="GraphicStyle_Editorial" xml:space="preserve"><value>Editorial</value></data>
+  <data name="PromptBuilder_SaveDrafts" xml:space="preserve"><value>Save Prompt Builder drafts</value></data>
+  <data name="PromptBuilder_SaveDraftsHint" xml:space="preserve"><value>Turning this off deletes saved tasks and results.</value></data>
+  <data name="PromptBuilder_TargetModelHint" xml:space="preserve"><value>The model where you will use the finished visual prompt.</value></data>
+  <data name="PromptBuilder_GeneratorLabel" xml:space="preserve"><value>Generator</value></data>
+  <data name="PromptBuilder_GeneratorHint" xml:space="preserve"><value>The AI model inside AiteBar that creates the finished prompt.</value></data>
+  <data name="PromptBuilder_ButtonNewVariant" xml:space="preserve"><value>New variant</value></data>
+  <data name="VisualTarget_Midjourney" xml:space="preserve"><value>Midjourney</value></data>
+  <data name="VisualTarget_StableDiffusion" xml:space="preserve"><value>Stable Diffusion</value></data>
 </root>
 
 
