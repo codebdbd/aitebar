@@ -292,16 +292,19 @@ namespace AiteBar
                 TextProcessingSelectedModelId = original.TextProcessingSelectedModelId,
                 TextProcessingSelectedProviderId = original.TextProcessingSelectedProviderId,
                 TextProcessingIsAutoModel = original.TextProcessingIsAutoModel,
+                TextProcessingLastText = original.TextProcessingLastText,
                 PromptBuilderLeft = original.PromptBuilderLeft,
                 PromptBuilderTop = original.PromptBuilderTop,
                 PromptBuilderWidth = original.PromptBuilderWidth,
                 PromptBuilderHeight = original.PromptBuilderHeight,
                 PromptBuilderWindowState = original.PromptBuilderWindowState,
                 PromptBuilderWindowPlacementInitialized = original.PromptBuilderWindowPlacementInitialized,
+                PromptBuilderLastMode = original.PromptBuilderLastMode,
                 PromptBuilderSelectedConnectionId = original.PromptBuilderSelectedConnectionId,
                 PromptBuilderSelectedModelId = original.PromptBuilderSelectedModelId,
                 PromptBuilderSelectedProviderId = original.PromptBuilderSelectedProviderId,
                 PromptBuilderIsAutoModel = original.PromptBuilderIsAutoModel,
+                PromptBuilderLastText = original.PromptBuilderLastText,
                 SavedFileSortFolders = [.. (original.SavedFileSortFolders ?? [])]
             };
 
@@ -698,6 +701,23 @@ namespace AiteBar
                 _appSettings.PanelSizePercent = Math.Clamp(_appSettings.PanelSizePercent, 50, 100);
                 if (Math.Abs(oldPanelSizePercent - _appSettings.PanelSizePercent) > 0.001)
                 {
+                    changed = true;
+                }
+
+                // Миграция категорий PromptBuilder:
+                // Старый VideoAudio (3) -> новый Video (3)
+                // Старый AnalysisIdeas (4) -> новый Analysis (4)
+                // Значения 0,1,2 остаются без изменений
+                // Недопустимые значения сбрасываем в Programming
+                int oldPromptBuilderMode = _appSettings.PromptBuilderLastMode;
+                int normalizedPromptBuilderMode = oldPromptBuilderMode switch
+                {
+                    0 or 1 or 2 or 3 or 4 => oldPromptBuilderMode,
+                    _ => (int)PromptBuilderCategory.Programming
+                };
+                if (oldPromptBuilderMode != normalizedPromptBuilderMode)
+                {
+                    _appSettings.PromptBuilderLastMode = normalizedPromptBuilderMode;
                     changed = true;
                 }
 

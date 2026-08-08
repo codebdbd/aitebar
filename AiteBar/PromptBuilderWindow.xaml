@@ -142,14 +142,22 @@
                              Header="{local:Loc ResourceKey=PromptBuilder_ModeTexts}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
                              AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeTexts}"/>
-                    <TabItem x:Name="ModeVideoAudio" Tag="VideoAudio"
-                             Header="{local:Loc ResourceKey=PromptBuilder_ModeVideoAudio}"
+                    <TabItem x:Name="ModeVideo" Tag="Video"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeVideo}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeVideoAudio}"/>
-                    <TabItem x:Name="ModeAnalysisIdeas" Tag="AnalysisIdeas"
-                             Header="{local:Loc ResourceKey=PromptBuilder_ModeAnalysisIdeas}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeVideo}"/>
+                    <TabItem x:Name="ModeMusic" Tag="Music"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeMusic}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeAnalysisIdeas}"/>
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeMusic}"/>
+                    <TabItem x:Name="ModeAnalysis" Tag="Analysis"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeAnalysis}"
+                             Style="{StaticResource PromptBuilderTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeAnalysis}"/>
+                    <TabItem x:Name="ModeIdeas" Tag="Ideas"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeIdeas}"
+                             Style="{StaticResource PromptBuilderTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeIdeas}"/>
                 </TabControl>
             </Border>
 

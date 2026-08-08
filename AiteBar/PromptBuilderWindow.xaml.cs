@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
@@ -15,6 +16,7 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Forms = System.Windows.Forms;
@@ -86,6 +88,7 @@ public partial class PromptBuilderWindow : DarkWindow
         _gateway = new AiGateway(settingsService);
         _currentMode = PromptBuilderCategory.Programming;
         InitializeComponent();
+        SourceInitialized += OnSourceInitialized;
         _progressTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) =>
             UpdateProcessingProgress(), Dispatcher);
         CmbModels.ItemsSource = _models;
@@ -94,12 +97,58 @@ public partial class PromptBuilderWindow : DarkWindow
         UpdateCommandButtonLayout();
     }
 
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        if (PresentationSource.FromVisual(this) is HwndSource source)
+        {
+            IntPtr hwnd = source.Handle;
+            int style = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_STYLE);
+            style &= ~NativeMethods.WS_MINIMIZEBOX;
+            _ = NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_STYLE, style);
+            _ = NativeMethods.SetWindowPos(
+                hwnd,
+                IntPtr.Zero,
+                0, 0, 0, 0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOZORDER | NativeMethods.SWP_FRAMECHANGED);
+        }
+    }
+
     public void ShowNearPanel(AppSettingsService settingsService)
     {
-        RestoreWindowState(settingsService.Settings);
+        AppSettings settings = settingsService.Settings;
+        RestoreWindowState(settings);
+        RestoreEditorText(settings);
         Show();
         Activate();
         FocusEditor();
+    }
+
+    private void RestoreEditorText(AppSettings settings)
+    {
+        string? saved = settings.PromptBuilderLastText;
+        _operationHistory.Clear();
+        ResetResultHistory();
+        _isDirty = false;
+        if (!string.IsNullOrEmpty(saved))
+        {
+            SetEditorText(saved, caretIndex: 0);
+        }
+        else
+        {
+            SetEditorText(string.Empty);
+        }
+        SetStatus(string.Empty);
+        ClearInfoStatus();
+        RefreshUiState();
+    }
+
+    private void SaveEditorText()
+    {
+        string text = TxtEditor.Text ?? string.Empty;
+        _settingsService.UpdateSettings(settings =>
+        {
+            settings.PromptBuilderLastText = text;
+        });
     }
 
     internal void RestoreFromAiteBar()
@@ -119,6 +168,7 @@ public partial class PromptBuilderWindow : DarkWindow
     private async void Window_Loaded(object sender, RoutedEventArgs e)
     {
         _isLoadingState = true;
+        RestoreCurrentMode();
         ApplyModeToUi();
         RefreshClipboardAvailability(showError: false);
         _loadModelsCts = new CancellationTokenSource();
@@ -154,27 +204,45 @@ public partial class PromptBuilderWindow : DarkWindow
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
-        bool hasContent = !string.IsNullOrWhiteSpace(TxtEditor.Text);
-        bool needsWarning = hasContent && (_isDirty || (_hasSuccessfulResult && !_hasCopiedResult));
-        if (needsWarning)
-        {
-            bool close = new DarkDialog(LocalizationService.Get("TextProcessing_ConfirmClose"), isConfirm: true)
-            {
-                Owner = this
-            }.ShowDialog() == true;
-            if (!close)
-            {
-                e.Cancel = true;
-                return;
-            }
-        }
+        SaveEditorText();
+        SaveCurrentMode();
         SaveWindowState();
         _processingCts?.Cancel();
         _loadModelsCts?.Cancel();
     }
 
+    private void SaveCurrentMode()
+    {
+        _settingsService.UpdateSettings(settings =>
+        {
+            settings.PromptBuilderLastMode = (int)_currentMode;
+        });
+    }
+
+    private void RestoreCurrentMode()
+    {
+        int storedMode = _settingsService.Settings.PromptBuilderLastMode;
+        PromptBuilderCategory restoredMode = storedMode switch
+        {
+            (int)PromptBuilderCategory.Programming => PromptBuilderCategory.Programming,
+            (int)PromptBuilderCategory.Images => PromptBuilderCategory.Images,
+            (int)PromptBuilderCategory.Texts => PromptBuilderCategory.Texts,
+            (int)PromptBuilderCategory.Video => PromptBuilderCategory.Video,
+            (int)PromptBuilderCategory.Analysis => PromptBuilderCategory.Analysis,
+            (int)PromptBuilderCategory.Music => PromptBuilderCategory.Music,
+            (int)PromptBuilderCategory.Ideas => PromptBuilderCategory.Ideas,
+            _ => PromptBuilderCategory.Programming
+        };
+        _currentMode = restoredMode;
+    }
+
     private void Window_StateChanged(object? sender, EventArgs e)
     {
+        if (WindowState == WindowState.Minimized)
+        {
+            Close();
+            return;
+        }
         if (!_isLoadingState && WindowState != WindowState.Minimized)
         {
             SaveWindowState();
@@ -251,8 +319,10 @@ public partial class PromptBuilderWindow : DarkWindow
             "Programming" => PromptBuilderCategory.Programming,
             "Images" => PromptBuilderCategory.Images,
             "Texts" => PromptBuilderCategory.Texts,
-            "VideoAudio" => PromptBuilderCategory.VideoAudio,
-            "AnalysisIdeas" => PromptBuilderCategory.AnalysisIdeas,
+            "Video" => PromptBuilderCategory.Video,
+            "Music" => PromptBuilderCategory.Music,
+            "Analysis" => PromptBuilderCategory.Analysis,
+            "Ideas" => PromptBuilderCategory.Ideas,
             _ => _currentMode
         };
 
@@ -262,6 +332,7 @@ public partial class PromptBuilderWindow : DarkWindow
         }
 
         _currentMode = selectedMode;
+        SaveCurrentMode();
         Clear();
         ApplyModeToUi();
         RefreshUiState();
@@ -913,8 +984,10 @@ public partial class PromptBuilderWindow : DarkWindow
         ModeProgramming.IsEnabled = state.CanSelectMode;
         ModeImages.IsEnabled = state.CanSelectMode;
         ModeTexts.IsEnabled = state.CanSelectMode;
-        ModeVideoAudio.IsEnabled = state.CanSelectMode;
-        ModeAnalysisIdeas.IsEnabled = state.CanSelectMode;
+        ModeVideo.IsEnabled = state.CanSelectMode;
+        ModeMusic.IsEnabled = state.CanSelectMode;
+        ModeAnalysis.IsEnabled = state.CanSelectMode;
+        ModeIdeas.IsEnabled = state.CanSelectMode;
         CmbModels.IsEnabled = !_isProcessing && !_isLoadingModels && _hasSelectableModel;
         BtnRefreshModels.IsEnabled = !_isProcessing && !_isLoadingModels;
         BtnPaste.IsEnabled = state.CanPaste;
@@ -1108,15 +1181,19 @@ public partial class PromptBuilderWindow : DarkWindow
         ModeProgramming.IsSelected = _currentMode == PromptBuilderCategory.Programming;
         ModeImages.IsSelected = _currentMode == PromptBuilderCategory.Images;
         ModeTexts.IsSelected = _currentMode == PromptBuilderCategory.Texts;
-        ModeVideoAudio.IsSelected = _currentMode == PromptBuilderCategory.VideoAudio;
-        ModeAnalysisIdeas.IsSelected = _currentMode == PromptBuilderCategory.AnalysisIdeas;
+        ModeVideo.IsSelected = _currentMode == PromptBuilderCategory.Video;
+        ModeMusic.IsSelected = _currentMode == PromptBuilderCategory.Music;
+        ModeAnalysis.IsSelected = _currentMode == PromptBuilderCategory.Analysis;
+        ModeIdeas.IsSelected = _currentMode == PromptBuilderCategory.Ideas;
         TxtModeDescription.Text = _currentMode switch
         {
             PromptBuilderCategory.Programming => LocalizationService.Get("PromptBuilder_ModeProgrammingDesc"),
             PromptBuilderCategory.Images => LocalizationService.Get("PromptBuilder_ModeImagesDesc"),
             PromptBuilderCategory.Texts => LocalizationService.Get("PromptBuilder_ModeTextsDesc"),
-            PromptBuilderCategory.VideoAudio => LocalizationService.Get("PromptBuilder_ModeVideoAudioDesc"),
-            PromptBuilderCategory.AnalysisIdeas => LocalizationService.Get("PromptBuilder_ModeAnalysisIdeasDesc"),
+            PromptBuilderCategory.Video => LocalizationService.Get("PromptBuilder_ModeVideoDesc"),
+            PromptBuilderCategory.Music => LocalizationService.Get("PromptBuilder_ModeMusicDesc"),
+            PromptBuilderCategory.Analysis => LocalizationService.Get("PromptBuilder_ModeAnalysisDesc"),
+            PromptBuilderCategory.Ideas => LocalizationService.Get("PromptBuilder_ModeIdeasDesc"),
             _ => string.Empty
         };
     }

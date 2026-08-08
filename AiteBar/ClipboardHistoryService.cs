@@ -94,6 +94,32 @@ namespace AiteBar
             HistoryChanged?.Invoke(this, EventArgs.Empty);
         }
 
+        public void ReinitializeFormatListener()
+        {
+            if (_disposed || !_hwnd.HasValue)
+            {
+                return;
+            }
+
+            try
+            {
+                NativeMethods.RemoveClipboardFormatListener(_hwnd.Value);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+
+            try
+            {
+                NativeMethods.AddClipboardFormatListener(_hwnd.Value);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+        }
+
         public void SuppressNextChange()
         {
             _suppressNextChange = true;

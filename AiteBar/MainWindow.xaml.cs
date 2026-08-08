@@ -1,4 +1,5 @@
 using System.Runtime.Versioning;
+using Microsoft.Win32;
 
 namespace AiteBar;
 
@@ -80,6 +81,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private bool _focusPanelButtonsOnShow = true;
     private AppSettingsWindow? _appSettingsWindow;
     private bool _isOpeningAppSettingsWindow;
+    private bool _powerModeEventsSubscribed;
+    private int _powerResumeGuard = 0;
 
     private const double PanelScreenPadding = Constants.PanelScreenPadding;
     private const double ButtonPitch = Constants.ButtonOuterSize;
@@ -897,6 +900,20 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
+        if (msg == NativeMethods.WM_POWERBROADCAST)
+        {
+            int powerEvent = wParam.ToInt32();
+            if (powerEvent == NativeMethods.PBT_APMSUSPEND)
+            {
+                HandleSystemSuspend();
+            }
+            else if (powerEvent == NativeMethods.PBT_APMRESUMESUSPEND ||
+                     powerEvent == NativeMethods.PBT_APMRESUMEAUTOMATIC)
+            {
+                HandleSystemResume();
+            }
+        }
+
         if (msg == NativeMethods.WM_HOTKEY)
         {
             int hotkeyId = wParam.ToInt32();
@@ -1189,6 +1206,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
             return;
         }
 
+        SubscribeToPowerEvents();
+
         _nativeService = new NativeIntegrationService();
         _nativeService.MouseDownOutside += (x, y) =>
         {
@@ -1261,6 +1280,126 @@ public partial class MainWindow : Window, ISettingsWindowContext
         _nativeService.InstallMouseHook();
         _startupInfrastructureInitialized = true;
         UpdateHoverActivationTimer();
+    }
+
+    private void SubscribeToPowerEvents()
+    {
+        if (_powerModeEventsSubscribed)
+        {
+            return;
+        }
+
+        try
+        {
+            SystemEvents.PowerModeChanged += OnPowerModeChanged;
+            _powerModeEventsSubscribed = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+    }
+
+    private void UnsubscribeFromPowerEvents()
+    {
+        if (!_powerModeEventsSubscribed)
+        {
+            return;
+        }
+
+        try
+        {
+            SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+
+        _powerModeEventsSubscribed = false;
+    }
+
+    private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
+    {
+        switch (e.Mode)
+        {
+            case PowerModes.Suspend:
+                HandleSystemSuspend();
+                break;
+            case PowerModes.Resume:
+                HandleSystemResume();
+                break;
+        }
+    }
+
+    private void HandleSystemSuspend()
+    {
+        try
+        {
+            _timer.Stop();
+            _activationDwellTracker.Reset();
+            _nativeService?.UninstallMouseHook();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+    }
+
+    private void HandleSystemResume()
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(HandleSystemResume), DispatcherPriority.Background);
+            return;
+        }
+
+        int guard = System.Threading.Interlocked.CompareExchange(ref _powerResumeGuard, 1, 0);
+        if (guard != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            _nativeService?.InstallMouseHook();
+
+            try
+            {
+                ClipboardHistoryService.Instance?.ReinitializeFormatListener();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+
+            try
+            {
+                UnregisterGlobalHotkey();
+                RegisterGlobalHotkey();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+
+            _isAnimating = false;
+            _isPanelDragging = false;
+            _isBlockingPanelInteraction = false;
+            _activationDwellTracker.Reset();
+
+            RefreshPanel();
+            PositionWindowImmediately(_shown);
+            UpdateHoverActivationTimer();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+        finally
+        {
+            System.Threading.Interlocked.Exchange(ref _powerResumeGuard, 0);
+        }
     }
 
     private void UpdateHoverActivationTimer(AppSettings? settings = null)
@@ -2144,6 +2283,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     {
         try
         {
+            UnsubscribeFromPowerEvents();
             _startupCts.Cancel();
             try
             {

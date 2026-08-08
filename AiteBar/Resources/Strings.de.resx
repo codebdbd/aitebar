@@ -793,15 +793,19 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="PromptBuilder_Title" xml:space="preserve"><value>Prompt-Generator</value></data>
   <data name="PromptBuilder_Description" xml:space="preserve"><value>Erstellt professionelle Prompts für die Arbeit mit KI.</value></data>
   <data name="PromptBuilder_ModeProgramming" xml:space="preserve"><value>Programmierung</value></data>
-  <data name="PromptBuilder_ModeProgrammingDesc" xml:space="preserve"><value>Ergänzt Anforderungen an Funktionen, Stack, Architektur, Tests und Ausgabeformat.</value></data>
+  <data name="PromptBuilder_ModeProgrammingDesc" xml:space="preserve"><value>Erstellt detaillierte Aufgaben für die Softwareentwicklung und die Arbeit mit Code.</value></data>
   <data name="PromptBuilder_ModeImages" xml:space="preserve"><value>Bilder</value></data>
-  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Definiert Komposition, Stil, Licht, Farbpalette, Bildformat und Einschränkungen.</value></data>
+  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Erstellt Prompts für die Bildgenerierung und -bearbeitung.</value></data>
   <data name="PromptBuilder_ModeTexts" xml:space="preserve"><value>Texte</value></data>
-  <data name="PromptBuilder_ModeTextsDesc" xml:space="preserve"><value>Legt Zielgruppe, Ziel, Ton, Struktur, Umfang, Format und Genauigkeit fest.</value></data>
-  <data name="PromptBuilder_ModeVideoAudio" xml:space="preserve"><value>Video und Audio</value></data>
-  <data name="PromptBuilder_ModeVideoAudioDesc" xml:space="preserve"><value>Definiert Ablauf, Dauer, Tempo, Szenen, Ton, Bewegung und technisches Format.</value></data>
-  <data name="PromptBuilder_ModeAnalysisIdeas" xml:space="preserve"><value>Analyse und Ideen</value></data>
-  <data name="PromptBuilder_ModeAnalysisIdeasDesc" xml:space="preserve"><value>Definiert Ziel, Kriterien, Methode, Quellen, Risiken und umsetzbare Ergebnisse.</value></data>
+  <data name="PromptBuilder_ModeTextsDesc" xml:space="preserve"><value>Erstellt Aufgaben für das Schreiben, Übersetzen und Bearbeiten von Texten.</value></data>
+  <data name="PromptBuilder_ModeVideo" xml:space="preserve"><value>Video</value></data>
+  <data name="PromptBuilder_ModeVideoDesc" xml:space="preserve"><value>Erstellt Prompts für die Videogenerierung und -bearbeitung.</value></data>
+  <data name="PromptBuilder_ModeMusic" xml:space="preserve"><value>Musik für Suno</value></data>
+  <data name="PromptBuilder_ModeMusicDesc" xml:space="preserve"><value>Erstellt Musikstilbeschreibungen für das Feld Styles in Suno.</value></data>
+  <data name="PromptBuilder_ModeAnalysis" xml:space="preserve"><value>Analyse</value></data>
+  <data name="PromptBuilder_ModeAnalysisDesc" xml:space="preserve"><value>Erstellt Aufgaben für Forschung, Vergleich und Entscheidungsfindung.</value></data>
+  <data name="PromptBuilder_ModeIdeas" xml:space="preserve"><value>Ideen</value></data>
+  <data name="PromptBuilder_ModeIdeasDesc" xml:space="preserve"><value>Erstellt Aufgaben für die Suche nach Ideen, Konzepten und Lösungsoptionen.</value></data>
   <data name="PromptBuilder_Placeholder" xml:space="preserve"><value>Beschreiben Sie kurz, was die KI tun soll</value></data>
   <data name="PromptBuilder_ButtonProcess" xml:space="preserve"><value>Prompt erstellen</value></data>
   <data name="PromptBuilder_ButtonBeforeProcessing" xml:space="preserve"><value>Erstellen Sie einen Prompt, um das Ergebnis zu sehen.</value></data>

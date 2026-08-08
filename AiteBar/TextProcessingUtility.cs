@@ -27,7 +27,6 @@ public sealed class TextProcessingUtility : UtilityBase<TextProcessingWindow>
 
     protected override bool RestoreExistingWindow(TextProcessingWindow window)
     {
-        window.RestoreFromAiteBar();
-        return true;
+        return false;
     }
 }

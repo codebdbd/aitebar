@@ -22,7 +22,6 @@ public sealed class PromptBuilderUtility : UtilityBase<PromptBuilderWindow>
 
     protected override bool RestoreExistingWindow(PromptBuilderWindow window)
     {
-        window.RestoreFromAiteBar();
-        return true;
+        return false;
     }
 }

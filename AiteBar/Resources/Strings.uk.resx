@@ -787,15 +787,19 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="PromptBuilder_Title" xml:space="preserve"><value>Конструктор промптів</value></data>
   <data name="PromptBuilder_Description" xml:space="preserve"><value>Створення професійних промптів для роботи з нейромережами.</value></data>
   <data name="PromptBuilder_ModeProgramming" xml:space="preserve"><value>Програмування</value></data>
-  <data name="PromptBuilder_ModeProgrammingDesc" xml:space="preserve"><value>Додасть вимоги до функцій, стеку, архітектури, тестів і формату результату.</value></data>
+  <data name="PromptBuilder_ModeProgrammingDesc" xml:space="preserve"><value>Створення детальних завдань для розробки та роботи з кодом.</value></data>
   <data name="PromptBuilder_ModeImages" xml:space="preserve"><value>Зображення</value></data>
-  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Уточнить композицію, стиль, світло, палітру, формат кадру й обмеження.</value></data>
+  <data name="PromptBuilder_ModeImagesDesc" xml:space="preserve"><value>Створення промптів для генерації та редагування зображень.</value></data>
   <data name="PromptBuilder_ModeTexts" xml:space="preserve"><value>Тексти</value></data>
-  <data name="PromptBuilder_ModeTextsDesc" xml:space="preserve"><value>Задасть аудиторію, мету, тон, структуру, обсяг, формат і вимоги до точності.</value></data>
-  <data name="PromptBuilder_ModeVideoAudio" xml:space="preserve"><value>Відео й аудіо</value></data>
-  <data name="PromptBuilder_ModeVideoAudioDesc" xml:space="preserve"><value>Опише сценарій, тривалість, темп, сцени, звук, рух і технічний формат.</value></data>
-  <data name="PromptBuilder_ModeAnalysisIdeas" xml:space="preserve"><value>Аналіз та ідеї</value></data>
-  <data name="PromptBuilder_ModeAnalysisIdeasDesc" xml:space="preserve"><value>Визначить мету, критерії, метод, джерела, ризики та формат практичних висновків.</value></data>
+  <data name="PromptBuilder_ModeTextsDesc" xml:space="preserve"><value>Створення завдань для написання, перекладу та обробки тексту.</value></data>
+  <data name="PromptBuilder_ModeVideo" xml:space="preserve"><value>Відео</value></data>
+  <data name="PromptBuilder_ModeVideoDesc" xml:space="preserve"><value>Створення промптів для генерації та редагування відео.</value></data>
+  <data name="PromptBuilder_ModeMusic" xml:space="preserve"><value>Музика для Suno</value></data>
+  <data name="PromptBuilder_ModeMusicDesc" xml:space="preserve"><value>Створення описів музичного стилю для поля Styles у Suno.</value></data>
+  <data name="PromptBuilder_ModeAnalysis" xml:space="preserve"><value>Аналіз</value></data>
+  <data name="PromptBuilder_ModeAnalysisDesc" xml:space="preserve"><value>Створення завдань для дослідження, порівняння та прийняття рішень.</value></data>
+  <data name="PromptBuilder_ModeIdeas" xml:space="preserve"><value>Ідеї</value></data>
+  <data name="PromptBuilder_ModeIdeasDesc" xml:space="preserve"><value>Створення завдань для пошуку ідей, концепцій та варіантів рішення.</value></data>
   <data name="PromptBuilder_Placeholder" xml:space="preserve"><value>Коротко опишіть, що має зробити нейромережа</value></data>
   <data name="PromptBuilder_ButtonProcess" xml:space="preserve"><value>Створити промпт</value></data>
   <data name="PromptBuilder_ButtonBeforeProcessing" xml:space="preserve"><value>Створіть промпт, щоб побачити результат.</value></data>

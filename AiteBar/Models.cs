@@ -235,6 +235,7 @@ public class AppSettings
     public string? TextProcessingSelectedModelId { get; set; }
     public string? TextProcessingSelectedProviderId { get; set; }
     public bool TextProcessingIsAutoModel { get; set; } = true;
+    public string? TextProcessingLastText { get; set; }
 
     public double? PromptBuilderLeft { get; set; }
     public double? PromptBuilderTop { get; set; }
@@ -242,10 +243,12 @@ public class AppSettings
     public double? PromptBuilderHeight { get; set; }
     public string? PromptBuilderWindowState { get; set; }
     public bool PromptBuilderWindowPlacementInitialized { get; set; }
+    public int PromptBuilderLastMode { get; set; } = (int)PromptBuilderCategory.Programming;
     public string? PromptBuilderSelectedConnectionId { get; set; }
     public string? PromptBuilderSelectedModelId { get; set; }
     public string? PromptBuilderSelectedProviderId { get; set; }
     public bool PromptBuilderIsAutoModel { get; set; } = true;
+    public string? PromptBuilderLastText { get; set; }
 
     public List<CustomElement> Elements { get; set; } = new();
     public List<string> UtilityButtonOrder { get; set; } = new();

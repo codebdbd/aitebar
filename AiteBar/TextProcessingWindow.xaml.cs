@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
@@ -15,6 +16,7 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Forms = System.Windows.Forms;
@@ -86,6 +88,7 @@ public partial class TextProcessingWindow : DarkWindow
         _gateway = new AiGateway(settingsService);
         _currentMode = TextProcessingMode.Proofread;
         InitializeComponent();
+        SourceInitialized += OnSourceInitialized;
         _progressTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) =>
             UpdateProcessingProgress(), Dispatcher);
         CmbModels.ItemsSource = _models;
@@ -94,12 +97,58 @@ public partial class TextProcessingWindow : DarkWindow
         UpdateCommandButtonLayout();
     }
 
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        if (PresentationSource.FromVisual(this) is HwndSource source)
+        {
+            IntPtr hwnd = source.Handle;
+            int style = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_STYLE);
+            style &= ~NativeMethods.WS_MINIMIZEBOX;
+            _ = NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_STYLE, style);
+            _ = NativeMethods.SetWindowPos(
+                hwnd,
+                IntPtr.Zero,
+                0, 0, 0, 0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOZORDER | NativeMethods.SWP_FRAMECHANGED);
+        }
+    }
+
     public void ShowNearPanel(AppSettingsService settingsService)
     {
-        RestoreWindowState(settingsService.Settings);
+        AppSettings settings = settingsService.Settings;
+        RestoreWindowState(settings);
+        RestoreEditorText(settings);
         Show();
         Activate();
         FocusEditor();
+    }
+
+    private void RestoreEditorText(AppSettings settings)
+    {
+        string? saved = settings.TextProcessingLastText;
+        _operationHistory.Clear();
+        ResetResultHistory();
+        _isDirty = false;
+        if (!string.IsNullOrEmpty(saved))
+        {
+            SetEditorText(saved, caretIndex: 0);
+        }
+        else
+        {
+            SetEditorText(string.Empty);
+        }
+        SetStatus(string.Empty);
+        ClearInfoStatus();
+        RefreshUiState();
+    }
+
+    private void SaveEditorText()
+    {
+        string text = TxtEditor.Text ?? string.Empty;
+        _settingsService.UpdateSettings(settings =>
+        {
+            settings.TextProcessingLastText = text;
+        });
     }
 
     internal void RestoreFromAiteBar()
@@ -154,20 +203,7 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
-        bool hasContent = !string.IsNullOrWhiteSpace(TxtEditor.Text);
-        bool needsWarning = hasContent && (_isDirty || (_hasSuccessfulResult && !_hasCopiedResult));
-        if (needsWarning)
-        {
-            bool close = new DarkDialog(LocalizationService.Get("TextProcessing_ConfirmClose"), isConfirm: true)
-            {
-                Owner = this
-            }.ShowDialog() == true;
-            if (!close)
-            {
-                e.Cancel = true;
-                return;
-            }
-        }
+        SaveEditorText();
         SaveWindowState();
         _processingCts?.Cancel();
         _loadModelsCts?.Cancel();
@@ -175,6 +211,11 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void Window_StateChanged(object? sender, EventArgs e)
     {
+        if (WindowState == WindowState.Minimized)
+        {
+            Close();
+            return;
+        }
         if (!_isLoadingState && WindowState != WindowState.Minimized)
         {
             SaveWindowState();

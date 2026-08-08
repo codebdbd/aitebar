@@ -5,7 +5,7 @@ namespace AiteBar.Tests;
 public sealed class PromptBuilderIntegrationTests
 {
     [Fact]
-    public void Window_UsesFiveCategoriesAndFixedStatusArea()
+    public void Window_UsesSevenCategoriesAndFixedStatusArea()
     {
         string xaml = Read("AiteBar", "PromptBuilderWindow.xaml");
 
@@ -14,9 +14,13 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("x:Name=\"ModeProgramming\"", xaml);
         Assert.Contains("x:Name=\"ModeImages\"", xaml);
         Assert.Contains("x:Name=\"ModeTexts\"", xaml);
-        Assert.Contains("x:Name=\"ModeVideoAudio\"", xaml);
-        Assert.Contains("x:Name=\"ModeAnalysisIdeas\"", xaml);
+        Assert.Contains("x:Name=\"ModeVideo\"", xaml);
+        Assert.Contains("x:Name=\"ModeMusic\"", xaml);
+        Assert.Contains("x:Name=\"ModeAnalysis\"", xaml);
+        Assert.Contains("x:Name=\"ModeIdeas\"", xaml);
         Assert.Contains("x:Name=\"ModeStatusHost\" DockPanel.Dock=\"Top\" Height=\"52\"", xaml);
+        Assert.DoesNotContain("x:Name=\"ModeVideoAudio\"", xaml);
+        Assert.DoesNotContain("x:Name=\"ModeAnalysisIdeas\"", xaml);
         Assert.DoesNotContain("Panel.ZIndex=\"10\"", xaml);
         Assert.DoesNotContain("Grid.ColumnSpan=\"3\"", xaml);
     }
