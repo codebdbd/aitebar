@@ -331,16 +331,6 @@ public partial class TextProcessingWindow : DarkWindow
         RefreshUiState();
     }
 
-    private void CmbModels_DropDownOpened(object sender, EventArgs e)
-    {
-        if (CmbModels.Template.FindName("DropDownBorder", CmbModels) is FrameworkElement dropDown)
-        {
-            dropDown.MinWidth = 0;
-            dropDown.Width = CmbModels.ActualWidth;
-            dropDown.MaxWidth = CmbModels.ActualWidth;
-        }
-    }
-
     private async void BtnProcess_Click(object sender, RoutedEventArgs e)
     {
         if (_isProcessing)

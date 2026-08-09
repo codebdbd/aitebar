@@ -245,13 +245,21 @@ public class AppSettings
     public bool PromptBuilderWindowPlacementInitialized { get; set; }
     public int PromptBuilderLastMode { get; set; } = (int)PromptBuilderCategory.Programming;
     public PaintingStyle PromptBuilderPaintingStyle { get; set; } = PaintingStyle.Auto;
+    public PaintingStyleSection PromptBuilderPaintingSection { get; set; } = PaintingStyleSection.All;
+    public PaintingArtist PromptBuilderPaintingArtist { get; set; } = PaintingArtist.Auto;
     public AnimationStyle PromptBuilderAnimationStyle { get; set; } = AnimationStyle.Auto;
+    public AnimationStyleSection PromptBuilderAnimationSection { get; set; } = AnimationStyleSection.All;
+    public PhotoSection PromptBuilderPhotoSection { get; set; } = PhotoSection.All;
     public PhotoStyle PromptBuilderPhotoStyle { get; set; } = PhotoStyle.Auto;
+    public ThemeSection PromptBuilderThemeSection { get; set; } = ThemeSection.All;
+    public ThemeStyle PromptBuilderThemeStyle { get; set; } = ThemeStyle.Auto;
     public TextPromptType PromptBuilderTextType { get; set; } = TextPromptType.Auto;
     public TextPromptTone PromptBuilderTextTone { get; set; } = TextPromptTone.Neutral;
     public AnalysisDirection PromptBuilderAnalysisDirection { get; set; } = AnalysisDirection.Auto;
     public VideoDirection PromptBuilderVideoDirection { get; set; } = VideoDirection.Auto;
     public ProgrammingTaskType PromptBuilderProgrammingTaskType { get; set; } = ProgrammingTaskType.Auto;
+    public ProgrammingProjectType PromptBuilderProgrammingProjectType { get; set; } = ProgrammingProjectType.Auto;
+    public ProgrammingPromptStyle PromptBuilderProgrammingStyle { get; set; } = ProgrammingPromptStyle.Auto;
     public VisualTargetModel PromptBuilderVisualTarget { get; set; } = VisualTargetModel.Universal;
     public IconPlatform PromptBuilderIconPlatform { get; set; } = IconPlatform.Auto;
     public IconStyle PromptBuilderIconStyle { get; set; } = IconStyle.Auto;

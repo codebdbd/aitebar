@@ -111,7 +111,6 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("ResizeMode=\"CanResize\"", xaml);
         Assert.DoesNotContain("CanResizeWithGrip", xaml);
         Assert.Contains("ShowInTaskbar=\"True\"", xaml);
-        Assert.Contains("DropDownOpened=\"CmbModels_DropDownOpened\"", xaml);
         Assert.Contains("TextTrimming=\"CharacterEllipsis\"", xaml);
         Assert.DoesNotContain("DisplayMemberPath=", xaml);
     }

@@ -107,8 +107,11 @@ public sealed class AiGateway
 
     internal Task<AiGatewayStream> GeneratePromptBuilderStreamingAsync(
         AiChatRequest request,
-        CancellationToken cancellationToken = default) =>
-        GenerateStreamingCoreAsync(request, RouteOrderingMode.DeterministicTextProcessing, cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        ClearPromptBuilderTemporaryAvailability();
+        return GenerateStreamingCoreAsync(request, RouteOrderingMode.DeterministicTextProcessing, cancellationToken);
+    }
 
     private async Task<AiGatewayStream> GenerateStreamingCoreAsync(
         AiChatRequest request,
@@ -448,6 +451,27 @@ public sealed class AiGateway
         return (result, lastError);
     }
 
+    // A new Prompt Builder submission is an explicit retry. Do not let a stale
+    // in-memory cooldown suppress it before an HTTP request is made.
+    internal void ClearPromptBuilderTemporaryAvailability()
+    {
+        foreach ((string connectionId, AiConnectionRuntimeStatus status) in _connectionStatuses)
+        {
+            if (status.State == AiConnectionState.Unavailable)
+            {
+                _connectionStatuses.TryRemove(connectionId, out _);
+            }
+        }
+
+        foreach ((string quotaKey, AiConnectionRuntimeStatus status) in _quotaStatuses)
+        {
+            if (status.State is AiConnectionState.CoolingDown or AiConnectionState.Unavailable)
+            {
+                _quotaStatuses.TryRemove(quotaKey, out _);
+            }
+        }
+    }
+
     internal static IReadOnlyList<AiModelDescriptor> ApplyTextProcessingModelPolicy(
         IEnumerable<AiModelDescriptor> models,
         bool requireExactModel)
@@ -595,9 +619,15 @@ public sealed class AiGateway
                     AiConnectionState.PermissionDenied, null, exception.Message, now);
                 break;
             case HttpStatusCode.TooManyRequests:
+                // Only a provider-supplied Retry-After is authoritative. Inventing a
+                // one-minute cooldown made transient 429 responses block this window
+                // until the application was restarted.
+                TimeSpan retryAfter = exception.RetryAfter is { } specifiedRetryAfter && specifiedRetryAfter > TimeSpan.Zero
+                    ? specifiedRetryAfter
+                    : TimeSpan.Zero;
                 _quotaStatuses[GetQuotaKey(connection, modelId)] = new(
                     AiConnectionState.CoolingDown,
-                    now + (exception.RetryAfter ?? TimeSpan.FromMinutes(1)),
+                    now + retryAfter,
                     exception.Message,
                     now);
                 break;

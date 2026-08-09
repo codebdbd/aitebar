@@ -27,6 +27,7 @@ public sealed class PromptBuilderEvaluationCatalogTests
             AiChatRequest request = service.BuildRequest(
                 scenario.Category,
                 scenario.Brief,
+                photoSection: scenario.PhotoSection,
                 paintingStyle: scenario.PaintingStyle,
                 animationStyle: scenario.AnimationStyle,
                 photoStyle: scenario.PhotoStyle,
@@ -35,6 +36,8 @@ public sealed class PromptBuilderEvaluationCatalogTests
                 analysisDirection: scenario.AnalysisDirection,
                 videoDirection: scenario.VideoDirection,
                 programmingTaskType: scenario.ProgrammingTaskType,
+                programmingProjectType: scenario.ProgrammingProjectType,
+                programmingStyle: scenario.ProgrammingStyle,
                 visualTarget: scenario.VisualTarget);
 
             foreach (string fragment in scenario.RequiredSystemPromptFragments)

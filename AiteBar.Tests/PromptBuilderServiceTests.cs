@@ -39,11 +39,10 @@ public sealed class PromptBuilderServiceTests
     [InlineData(PromptBuilderCategory.Images, "Return only one finished prompt as a natural-language paragraph")]
     [InlineData(PromptBuilderCategory.Texts, "Return only the finished prompt")]
     [InlineData(PromptBuilderCategory.Video, "Return only the finished video prompt in English")]
-    [InlineData(PromptBuilderCategory.Music, "Return only the finished style description in English")]
+    [InlineData(PromptBuilderCategory.Music, "Return only one finished English style prompt that can be pasted directly into Suno")]
     [InlineData(PromptBuilderCategory.Analysis, "Return only the finished prompt")]
     [InlineData(PromptBuilderCategory.Paintings, "Return only one finished natural-language prompt")]
     [InlineData(PromptBuilderCategory.Animation, "Return only one finished natural-language prompt")]
-    [InlineData(PromptBuilderCategory.Icons, "application icon")]
     [InlineData(PromptBuilderCategory.Graphics, "graphic-design asset")]
     public void GetSystemPrompt_EnforcesOneShotProfessionalOutput(
         PromptBuilderCategory category,
@@ -91,7 +90,8 @@ public sealed class PromptBuilderServiceTests
 
         Assert.Contains("polished English prompt", prompt);
         Assert.Contains("expert art director", prompt);
-        Assert.Contains("Apply this selected photo direction: {photoStyle}", prompt);
+        Assert.Contains("Apply this selected photo section: {photoSection}", prompt);
+        Assert.Contains("Apply this selected photo style: {photoStyle}", prompt);
         Assert.Contains("negative-prompt section, placeholders", prompt);
         Assert.DoesNotContain("Preserve the language of the user's brief", prompt);
     }
@@ -106,13 +106,42 @@ public sealed class PromptBuilderServiceTests
     }
 
     [Fact]
-    public void MusicInstruction_ProducesEnglishOnlyStyleDescription()
+    public void BuildRequest_ImagesPhotographersAppliesSelectedPhotographerReference()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Images,
+            "Portrait of a woman by the window",
+            photoSection: PhotoSection.Photographers,
+            photoStyle: PhotoStyle.AnnieLeibovitz);
+
+        Assert.Contains("photographic author references", request.Messages[0].Content);
+        Assert.Contains("Annie Leibovitz", request.Messages[0].Content);
+        Assert.DoesNotContain("{photoStyle}", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void GetPhotoStyles_PhotographersSectionReturnsPhotographerReferences()
+    {
+        PhotoStyle[] styles = PromptBuilderService.GetPhotoStyles(PhotoSection.Photographers)
+            .Select(item => item.Style)
+            .ToArray();
+
+        Assert.Contains(PhotoStyle.Auto, styles);
+        Assert.Contains(PhotoStyle.AnnieLeibovitz, styles);
+        Assert.Contains(PhotoStyle.FanHo, styles);
+        Assert.DoesNotContain(PhotoStyle.CleanBeauty, styles);
+    }
+
+    [Fact]
+    public void MusicInstruction_ProducesSunoStylePromptFromVibeOrScene()
     {
         string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Music);
 
-        Assert.Contains("Return only the finished style description in English", prompt);
-        Assert.Contains("Write one compact natural-language paragraph", prompt);
+        Assert.Contains("Return only one finished English style prompt that can be pasted directly into Suno", prompt);
+        Assert.Contains("Treat the user's brief as a vibe, scene, situation, or emotional starting point", prompt);
+        Assert.Contains("Write one compact but information-dense natural-language paragraph", prompt);
         Assert.Contains("Suno Styles field", prompt);
+        Assert.Contains("Strongly favor creative but coherent blends", prompt);
         Assert.DoesNotContain("You are a musician", prompt, StringComparison.OrdinalIgnoreCase);
 
         // "lyrics" и "song titles" должны присутствовать только в секции Do not include (запреты)
@@ -155,27 +184,40 @@ public sealed class PromptBuilderServiceTests
     }
 
     [Fact]
-    public void ProgrammingInstruction_IncludesRequirementsAcceptanceCriteria()
+    public void ProgrammingInstruction_UsesSoftwareTypeAndStyleInsteadOfEngineeringDiagnostics()
     {
         string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Programming);
 
+        Assert.Contains("Apply this selected software type: {programmingProjectType}", prompt);
+        Assert.Contains("Apply this selected product style: {programmingStyle}", prompt);
         Assert.Contains("acceptance criteria", prompt);
-        Assert.Contains("error handling", prompt);
         Assert.Contains("edge cases", prompt);
-        Assert.Contains("preserve the current architecture and existing behavior", prompt);
-        Assert.Contains("analyze the supplied code before making changes", prompt);
+        Assert.Contains("product-building or code-generation task", prompt);
+        Assert.DoesNotContain("{programmingTaskType}", prompt);
     }
 
     [Fact]
-    public void BuildRequest_ProgrammingAppliesSelectedTaskType()
+    public void BuildRequest_ProgrammingAppliesSelectedTypeAndStyle()
     {
         AiChatRequest request = _service.BuildRequest(
             PromptBuilderCategory.Programming,
-            "Fix an intermittent login error",
-            programmingTaskType: ProgrammingTaskType.BugFix);
+            "Create a portfolio website for a motion designer",
+            programmingProjectType: ProgrammingProjectType.Website,
+            programmingStyle: ProgrammingPromptStyle.EditorialStudio);
 
-        Assert.Contains("Require reproducible steps", request.Messages[0].Content);
-        Assert.DoesNotContain("{programmingTaskType}", request.Messages[0].Content);
+        Assert.Contains("general website or multi-page web presence", request.Messages[0].Content);
+        Assert.Contains("editorial studio style", request.Messages[0].Content);
+        Assert.DoesNotContain("{programmingProjectType}", request.Messages[0].Content);
+        Assert.DoesNotContain("{programmingStyle}", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void ProgrammingStyles_AreFilteredBySelectedType()
+    {
+        Assert.Contains(PromptBuilderService.GetProgrammingStyles(ProgrammingProjectType.HtmlGame), style => style.Style == ProgrammingPromptStyle.RetroArcadeGame);
+        Assert.DoesNotContain(PromptBuilderService.GetProgrammingStyles(ProgrammingProjectType.HtmlGame), style => style.Style == ProgrammingPromptStyle.CorporateWebsite);
+        Assert.Contains(PromptBuilderService.GetProgrammingStyles(ProgrammingProjectType.Dashboard), style => style.Style == ProgrammingPromptStyle.SaasDashboard);
+        Assert.Contains(PromptBuilderService.GetProgrammingStyles(ProgrammingProjectType.ApiBackend), style => style.Style == ProgrammingPromptStyle.DeveloperApi);
     }
 
     [Fact]
@@ -189,11 +231,14 @@ public sealed class PromptBuilderServiceTests
     }
 
     [Fact]
-    public void LegacyIdeasCategory_UsesUnifiedAnalyticsInstruction()
+    public void ThemesInstruction_UsesVisualSceneDirectionInsteadOfAnalytics()
     {
         string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Ideas);
 
-        Assert.Equal(_service.GetSystemPrompt(PromptBuilderCategory.Analysis), prompt);
+        Assert.Contains("thematic section", prompt);
+        Assert.Contains("thematic style", prompt);
+        Assert.Contains("scene-direction references", prompt);
+        Assert.DoesNotContain("{analysisDirection}", prompt);
     }
 
     [Fact]
@@ -217,6 +262,10 @@ public sealed class PromptBuilderServiceTests
         AiChatRequest analyticsRequest = _service.BuildRequest(
             PromptBuilderCategory.Analysis, "test", maxOutputTokens: 1);
         Assert.Equal(0.25, analyticsRequest.Temperature);
+
+        AiChatRequest themesRequest = _service.BuildRequest(
+            PromptBuilderCategory.Ideas, "test", maxOutputTokens: 1);
+        Assert.Equal(0.45, themesRequest.Temperature);
     }
 
     [Fact]
@@ -244,17 +293,44 @@ public sealed class PromptBuilderServiceTests
     }
 
     [Fact]
-    public void BuildRequest_IconsAppliesPlatformAndStyleWithoutPhotoContract()
+    public void BuildRequest_ThemesAppliesSelectedSectionAndStyle()
     {
         AiChatRequest request = _service.BuildRequest(
-            PromptBuilderCategory.Icons,
+            PromptBuilderCategory.Ideas,
+            "A frightened child looks down a dark apartment hallway",
+            themeSection: ThemeSection.Horror,
+            themeStyle: ThemeStyle.JapaneseHorror,
+            visualTarget: VisualTargetModel.GptImage);
+
+        Assert.Contains("horror scenes and genre references", request.Messages[0].Content);
+        Assert.Contains("Japanese horror atmosphere", request.Messages[0].Content);
+        Assert.DoesNotContain("{themeSection}", request.Messages[0].Content);
+        Assert.DoesNotContain("{themeStyle}", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void ThemeStyles_AreFilteredBySelectedSection()
+    {
+        Assert.Contains(PromptBuilderService.GetThemeStyles(ThemeSection.Horror), style => style.Style == ThemeStyle.JapaneseHorror);
+        Assert.DoesNotContain(PromptBuilderService.GetThemeStyles(ThemeSection.Horror), style => style.Style == ThemeStyle.SpaceStation);
+        Assert.Contains(PromptBuilderService.GetThemeStyles(ThemeSection.Space), style => style.Style == ThemeStyle.SpaceStation);
+        Assert.Contains(PromptBuilderService.GetThemeStyles(ThemeSection.SciFi), style => style.Style == ThemeStyle.RobotJunkyard);
+        Assert.Contains(PromptBuilderService.GetThemeStyles(ThemeSection.Professions), style => style.Style == ThemeStyle.ScientistLaboratory);
+    }
+
+    [Fact]
+    public void BuildRequest_GraphicsIconTypeUsesFormerIconStylesAndFullBleedContract()
+    {
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Graphics,
             "Water tracker with a drop and checkmark",
-            iconPlatform: IconPlatform.MacOS,
+            graphicType: GraphicType.Icon,
             iconStyle: IconStyle.Flat);
 
-        Assert.Contains("macOS app icon", request.Messages[0].Content);
+        Assert.Contains("square icon asset", request.Messages[0].Content);
         Assert.Contains("flat icon design", request.Messages[0].Content);
-        Assert.Contains("recognition at small sizes", request.Messages[0].Content);
+        Assert.Contains("95-98% of the square canvas", request.Messages[0].Content);
+        Assert.Contains("no rounded app-tile container", request.Messages[0].Content);
         Assert.DoesNotContain("photo direction", request.Messages[0].Content);
     }
 
@@ -263,35 +339,45 @@ public sealed class PromptBuilderServiceTests
     {
         AiChatRequest request = _service.BuildRequest(
             PromptBuilderCategory.Graphics,
-            "Friendly plant-care sticker pack",
-            graphicType: GraphicType.StickerPack,
-            graphicStyle: GraphicStyle.Bold);
+            "Avant-garde theatre poster",
+            graphicType: GraphicType.Poster,
+            graphicStyle: GraphicStyle.Constructivism);
 
-        Assert.Contains("cohesive sticker pack", request.Messages[0].Content);
-        Assert.Contains("bold graphic design", request.Messages[0].Content);
+        Assert.Contains("poster or placard composition", request.Messages[0].Content);
+        Assert.Contains("Constructivist poster design", request.Messages[0].Content);
         Assert.DoesNotContain("{graphicType}", request.Messages[0].Content);
         Assert.DoesNotContain("{graphicStyle}", request.Messages[0].Content);
     }
 
     [Fact]
-    public void IconsAndGraphics_UseSeparateGenerationContracts()
+    public void Graphics_UsesIconStylesOnlyForIconType()
     {
         AiChatRequest iconRequest = _service.BuildRequest(
-            PromptBuilderCategory.Icons,
+            PromptBuilderCategory.Graphics,
             "Water tracker",
-            iconPlatform: IconPlatform.IOS,
+            graphicType: GraphicType.Icon,
             iconStyle: IconStyle.Glyph);
         AiChatRequest graphicRequest = _service.BuildRequest(
             PromptBuilderCategory.Graphics,
-            "Water tracker",
-            graphicType: GraphicType.Poster,
-            graphicStyle: GraphicStyle.Editorial);
+            "premium headphone ad",
+            graphicType: GraphicType.AdvertisingLayout,
+            graphicStyle: GraphicStyle.LuxuryFashionAd);
 
-        Assert.Contains("application icon", iconRequest.Messages[0].Content);
-        Assert.Contains("iOS and iPadOS app icon", iconRequest.Messages[0].Content);
+        Assert.Contains("square icon asset", iconRequest.Messages[0].Content);
+        Assert.Contains("solid glyph icon", iconRequest.Messages[0].Content);
         Assert.Contains("graphic-design asset", graphicRequest.Messages[0].Content);
-        Assert.Contains("poster composition", graphicRequest.Messages[0].Content);
+        Assert.Contains("commercial advertising layout", graphicRequest.Messages[0].Content);
+        Assert.Contains("luxury fashion advertising style", graphicRequest.Messages[0].Content);
         Assert.NotEqual(iconRequest.Messages[0].Content, graphicRequest.Messages[0].Content);
+    }
+
+    [Fact]
+    public void GraphicsStyles_AreFilteredBySelectedType()
+    {
+        Assert.Contains(PromptBuilderService.GetGraphicStyles(GraphicType.Poster), style => style.Style == GraphicStyle.SwissStyle);
+        Assert.DoesNotContain(PromptBuilderService.GetGraphicStyles(GraphicType.Poster), style => style.Style == GraphicStyle.TechAd);
+        Assert.Contains(PromptBuilderService.GetGraphicStyles(GraphicType.UiElement), style => style.Style == GraphicStyle.GlassmorphismUi);
+        Assert.Contains(PromptBuilderService.GetGraphicStyles(GraphicType.StickerPack), style => style.Style == GraphicStyle.ChibiStickerPack);
     }
 
     [Theory]
@@ -299,6 +385,7 @@ public sealed class PromptBuilderServiceTests
     [InlineData(PromptBuilderCategory.Texts, "alternative prompt version")]
     [InlineData(PromptBuilderCategory.Video, "retry")]
     [InlineData(PromptBuilderCategory.Analysis, "alternative prompt version")]
+    [InlineData(PromptBuilderCategory.Ideas, "retry")]
     [InlineData(PromptBuilderCategory.Music, "alternative style version")]
     public void BuildRequest_RepeatCreatesCategoryAppropriateAlternative(
         PromptBuilderCategory category,
@@ -324,9 +411,11 @@ public sealed class PromptBuilderServiceTests
             PromptBuilderCategory.Paintings,
             "a woman by a stream",
             createAlternative: true,
-            paintingStyle: PaintingStyle.Impressionism);
+            paintingStyle: PaintingStyle.Impressionism,
+            paintingArtist: PaintingArtist.Monet);
 
         Assert.Contains("Impressionist oil painting", request.Messages[0].Content);
+        Assert.Contains("Use Claude Monet as a stylistic orientation", request.Messages[0].Content);
         Assert.Contains("This is a retry", request.Messages[0].Content);
         Assert.Equal("a woman by a stream", request.Messages[1].Content);
         Assert.Equal(0.65, request.Temperature);
@@ -347,6 +436,53 @@ public sealed class PromptBuilderServiceTests
         Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.JapaneseShunga && style.PromptDescriptor.Contains("woodblock figure study"));
         Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.AcademicNude && style.PromptDescriptor.Contains("adult model"));
         Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.PencilDrawing && style.PromptDescriptor.Contains("graphite pencil drawing"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.Gouache && style.PromptDescriptor.Contains("opaque matte color layers"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.Acrylic && style.PromptDescriptor.Contains("clean opaque modern paint layers"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.Fresco && style.PromptDescriptor.Contains("monumental wall-painting surface"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.ColoredPencil && style.PromptDescriptor.Contains("layered dry detail"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.Pastel && style.PromptDescriptor.Contains("powdery blended color"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.EtchingEngraving && style.PromptDescriptor.Contains("incisive linework"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.Linocut && style.PromptDescriptor.Contains("bold relief print shapes"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.ScreenPrint && style.PromptDescriptor.Contains("flat layered poster color"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.MixedMediaCollage && style.PromptDescriptor.Contains("layered cut-paper and painted textures"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.PinupCalendarAdvertising && style.PromptDescriptor.Contains("do not add lettering"));
+        Assert.Contains(PromptBuilderService.PaintingStyles, style => style.Style == PaintingStyle.PinupAirbrush && style.PromptDescriptor.Contains("1970s-1980s airbrush"));
+    }
+
+    [Fact]
+    public void PaintingArtistCatalog_CoversExpandedArtistReferencesWithDeterministicDescriptors()
+    {
+        Assert.Equal(Enum.GetValues<PaintingArtist>(), PromptBuilderService.PaintingArtists.Select(artist => artist.Artist));
+        Assert.Equal(43, PromptBuilderService.PaintingArtists.Count(artist => artist.Artist != PaintingArtist.Auto));
+        Assert.Contains(PromptBuilderService.PaintingArtists, artist => artist.Artist == PaintingArtist.Picasso && artist.PromptDescriptor.Contains("cubist geometry"));
+        Assert.Contains(PromptBuilderService.PaintingArtists, artist => artist.Artist == PaintingArtist.Monet && artist.PromptDescriptor.Contains("color patches"));
+        Assert.Contains(PromptBuilderService.PaintingArtists, artist => artist.Artist == PaintingArtist.Hokusai && artist.PromptDescriptor.Contains("ukiyo-e line precision"));
+        Assert.Contains(PromptBuilderService.PaintingArtists, artist => artist.Artist == PaintingArtist.TamaraDeLempicka && artist.PromptDescriptor.Contains("Art Deco glamour"));
+        Assert.Contains(PromptBuilderService.PaintingArtists, artist => artist.Artist == PaintingArtist.JMWTurner && artist.PromptDescriptor.Contains("storm luminosity"));
+        Assert.Contains(PromptBuilderService.PaintingArtists, artist => artist.Artist == PaintingArtist.AlphonseMucha && artist.PromptDescriptor.Contains("ornamental poster linework"));
+        Assert.Contains(PromptBuilderService.PaintingArtists, artist => artist.Artist == PaintingArtist.GeorgesBraque && artist.PromptDescriptor.Contains("analytical cubist structure"));
+        Assert.Contains(PromptBuilderService.PaintingArtists, artist => artist.Artist == PaintingArtist.JoanMiro && artist.PromptDescriptor.Contains("playful biomorphic abstraction"));
+    }
+
+    [Fact]
+    public void PaintingSections_ExposeDenseGroupedBuckets()
+    {
+        Assert.Contains(PromptBuilderService.GetPaintingStyles(PaintingStyleSection.Classical), style => style.Style == PaintingStyle.Romanticism);
+        Assert.Contains(PromptBuilderService.GetPaintingStyles(PaintingStyleSection.Classical), style => style.Style == PaintingStyle.Realism);
+        Assert.Contains(PromptBuilderService.GetPaintingStyles(PaintingStyleSection.Modern), style => style.Style == PaintingStyle.ArtNouveau);
+        Assert.Contains(PromptBuilderService.GetPaintingStyles(PaintingStyleSection.Modern), style => style.Style == PaintingStyle.Cubism);
+        Assert.Contains(PromptBuilderService.GetPaintingStyles(PaintingStyleSection.Eastern), style => style.Style == PaintingStyle.Woodcut);
+        Assert.Contains(PromptBuilderService.GetPaintingStyles(PaintingStyleSection.Eastern), style => style.Style == PaintingStyle.ScreenPrint);
+        Assert.Contains(PromptBuilderService.GetPaintingStyles(PaintingStyleSection.Techniques), style => style.Style == PaintingStyle.Acrylic);
+    }
+
+    [Fact]
+    public void PaintingsInstruction_TreatsArtistReferencesAsOrientationRatherThanIdentityGuarantee()
+    {
+        string prompt = _service.GetSystemPrompt(PromptBuilderCategory.Paintings);
+
+        Assert.Contains("Apply this chosen artist orientation: {paintingArtist}", prompt);
+        Assert.Contains("Treat artist references as strong stylistic orientation only", prompt);
     }
 
     [Fact]
@@ -365,14 +501,56 @@ public sealed class PromptBuilderServiceTests
     }
 
     [Fact]
+    public void AnimationCatalog_CoversEveryStyleWithSpecificModernAndAnimeDirections()
+    {
+        Assert.Equal(
+            Enum.GetValues<AnimationStyle>(),
+            PromptBuilderService.AnimationStyles.Select(style => style.Style));
+        Assert.Contains(PromptBuilderService.AnimationStyles, style => style.Style == AnimationStyle.Simpsons && style.PromptDescriptor.Contains("yellow-skinned"));
+        Assert.Contains(PromptBuilderService.AnimationStyles, style => style.Style == AnimationStyle.Arcane && style.PromptDescriptor.Contains("painterly 3D"));
+        Assert.Contains(PromptBuilderService.AnimationStyles, style => style.Style == AnimationStyle.SpiderVerse && style.PromptDescriptor.Contains("comic-book 3D"));
+        Assert.Contains(PromptBuilderService.AnimationStyles, style => style.Style == AnimationStyle.AnimeMecha && style.PromptDescriptor.Contains("mechanical design"));
+        Assert.Contains(PromptBuilderService.AnimationStyles, style => style.Style == AnimationStyle.AnimeIsekai && style.PromptDescriptor.Contains("magical world"));
+        Assert.Contains(PromptBuilderService.AnimationStyles, style => style.Style == AnimationStyle.AnimePinup && style.PromptDescriptor.Contains("adult character"));
+        Assert.Contains(PromptBuilderService.AnimationStyles, style => style.Style == AnimationStyle.TvCartoon && style.PromptDescriptor.Contains("thick clean outlines"));
+        Assert.Contains(PromptBuilderService.AnimationStyles, style => style.Style == AnimationStyle.LigneClaire && style.PromptDescriptor.Contains("uniform clean contour lines"));
+        Assert.Contains(PromptBuilderService.AnimationStyles, style => style.Style == AnimationStyle.TextileStopMotion && style.PromptDescriptor.Contains("felt, fabric, yarn"));
+        Assert.Contains(PromptBuilderService.AnimationStyles, style => style.Style == AnimationStyle.PopArtCartoon && style.PromptDescriptor.Contains("no lettering"));
+    }
+
+    [Fact]
+    public void AnimationSections_PartitionEveryStyleAndConstrainAutoPrompt()
+    {
+        AnimationStyle[] categorized = PromptBuilderService.AnimationStyleSections
+            .Where(section => section.Section != AnimationStyleSection.All)
+            .SelectMany(section => PromptBuilderService.GetAnimationStyles(section.Section))
+            .Where(style => style.Style != AnimationStyle.Auto)
+            .Select(style => style.Style)
+            .ToArray();
+
+        Assert.Equal(Enum.GetValues<AnimationStyle>().Length - 1, categorized.Length);
+        Assert.Equal(categorized.Length, categorized.Distinct().Count());
+        Assert.Equal(Enum.GetValues<AnimationStyle>(), PromptBuilderService.GetAnimationStyles(AnimationStyleSection.All).Select(style => style.Style));
+
+        AiChatRequest request = _service.BuildRequest(
+            PromptBuilderCategory.Animation,
+            "a fox detective in a city",
+            animationSection: AnimationStyleSection.Anime);
+
+        Assert.Contains("within anime visual languages", request.Messages[0].Content);
+    }
+
+    [Fact]
     public void BuildRequest_PhotoAppliesSelectedStyle()
     {
         AiChatRequest request = _service.BuildRequest(
             PromptBuilderCategory.Images,
             "a watch on a table",
-            photoStyle: PhotoStyle.Product);
+            photoSection: PhotoSection.Product,
+            photoStyle: PhotoStyle.CleanStudioProduct);
 
-        Assert.Contains("Premium product photography", request.Messages[0].Content);
+        Assert.Contains("product photography", request.Messages[0].Content);
+        Assert.Contains("Clean studio product photography", request.Messages[0].Content);
         Assert.DoesNotContain("{photoStyle}", request.Messages[0].Content);
     }
 

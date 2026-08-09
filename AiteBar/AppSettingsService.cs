@@ -301,13 +301,20 @@ namespace AiteBar
                 PromptBuilderWindowPlacementInitialized = original.PromptBuilderWindowPlacementInitialized,
                 PromptBuilderLastMode = original.PromptBuilderLastMode,
                 PromptBuilderPaintingStyle = original.PromptBuilderPaintingStyle,
+                PromptBuilderPaintingSection = original.PromptBuilderPaintingSection,
+                PromptBuilderPaintingArtist = original.PromptBuilderPaintingArtist,
                 PromptBuilderAnimationStyle = original.PromptBuilderAnimationStyle,
+                PromptBuilderPhotoSection = original.PromptBuilderPhotoSection,
                 PromptBuilderPhotoStyle = original.PromptBuilderPhotoStyle,
+                PromptBuilderThemeSection = original.PromptBuilderThemeSection,
+                PromptBuilderThemeStyle = original.PromptBuilderThemeStyle,
                 PromptBuilderTextType = original.PromptBuilderTextType,
                 PromptBuilderTextTone = original.PromptBuilderTextTone,
                 PromptBuilderAnalysisDirection = original.PromptBuilderAnalysisDirection,
                 PromptBuilderVideoDirection = original.PromptBuilderVideoDirection,
                 PromptBuilderProgrammingTaskType = original.PromptBuilderProgrammingTaskType,
+                PromptBuilderProgrammingProjectType = original.PromptBuilderProgrammingProjectType,
+                PromptBuilderProgrammingStyle = original.PromptBuilderProgrammingStyle,
                 PromptBuilderVisualTarget = original.PromptBuilderVisualTarget,
                 PromptBuilderIconPlatform = original.PromptBuilderIconPlatform,
                 PromptBuilderIconStyle = original.PromptBuilderIconStyle,
@@ -735,8 +742,8 @@ namespace AiteBar
                 int oldPromptBuilderMode = _appSettings.PromptBuilderLastMode;
                 int normalizedPromptBuilderMode = oldPromptBuilderMode switch
                 {
-                    (int)PromptBuilderCategory.Ideas => (int)PromptBuilderCategory.Analysis,
                     0 or 1 or 2 or 3 or 4 or 5 or 7 or 8 or 9 or 10 => oldPromptBuilderMode,
+                    (int)PromptBuilderCategory.Ideas => oldPromptBuilderMode,
                     _ => (int)PromptBuilderCategory.Programming
                 };
                 if (oldPromptBuilderMode != normalizedPromptBuilderMode)

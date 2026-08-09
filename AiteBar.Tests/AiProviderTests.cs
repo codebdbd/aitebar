@@ -90,6 +90,84 @@ public sealed class AiProviderTests
     }
 
     [Fact]
+    public async Task Gateway_429WithoutRetryAfter_DoesNotBlockTheNextGeneration()
+    {
+        var credentials = new MemoryCredentialStore();
+        credentials.Write("AiteBar/AI/one", "key-one");
+        var handler = new TransientRateLimitHandler();
+        var settingsService = new AppSettingsService
+        {
+            Settings = new AppSettings
+            {
+                Ai = new AiSettings
+                {
+                    FreeTierOnly = true,
+                    ProviderOrder = ["cerebras"],
+                    Connections = [Connection("one", "cerebras", "AiteBar/AI/one")]
+                }
+            }
+        };
+        var gateway = new AiGateway(
+            settingsService,
+            new AiProviderClient(new HttpClient(handler), credentials),
+            TimeProvider.System);
+        var request = new AiChatRequest
+        {
+            Messages = [new AiChatMessage("user", "hello")],
+            PreferredProviderId = "cerebras",
+            PreferredModelId = "writer",
+            RequireExactModel = true
+        };
+
+        await Assert.ThrowsAsync<NoAvailableConnectionException>(() => gateway.GenerateAsync(request));
+        AiGatewayResponse response = await gateway.GenerateAsync(request);
+
+        Assert.Equal("ok", response.Content);
+        Assert.Equal(2, handler.GenerationAttemptCount);
+    }
+
+    [Fact]
+    public async Task Gateway_PromptBuilderRetry_ClearsOnlyTemporaryLocalAvailability()
+    {
+        var credentials = new MemoryCredentialStore();
+        credentials.Write("AiteBar/AI/one", "key-one");
+        var handler = new TransientRateLimitHandler(includeRetryAfter: true);
+        var settingsService = new AppSettingsService
+        {
+            Settings = new AppSettings
+            {
+                Ai = new AiSettings
+                {
+                    FreeTierOnly = true,
+                    ProviderOrder = ["cerebras"],
+                    Connections = [Connection("one", "cerebras", "AiteBar/AI/one")]
+                }
+            }
+        };
+        var gateway = new AiGateway(
+            settingsService,
+            new AiProviderClient(new HttpClient(handler), credentials),
+            TimeProvider.System);
+        var request = new AiChatRequest
+        {
+            Messages = [new AiChatMessage("user", "hello")],
+            PreferredProviderId = "cerebras",
+            PreferredModelId = "writer",
+            RequireExactModel = true
+        };
+
+        await Assert.ThrowsAsync<NoAvailableConnectionException>(() => gateway.GenerateAsync(request));
+        Assert.Equal(AiConnectionState.CoolingDown,
+            gateway.GetQuotaStatus(settingsService.Settings.Ai.Connections[0], "writer")?.State);
+
+        gateway.ClearPromptBuilderTemporaryAvailability();
+        AiGatewayResponse response = await gateway.GenerateAsync(request);
+
+        Assert.Equal("ok", response.Content);
+        Assert.Equal(2, handler.GenerationAttemptCount);
+    }
+
+    [Fact]
     public async Task Gateway_AutomaticMode_ExhaustsSameModelRoutesBeforeChangingModel()
     {
         var credentials = new MemoryCredentialStore();
@@ -764,6 +842,46 @@ public sealed class AiProviderTests
             }
             return Task.FromResult(Json(HttpStatusCode.OK,
                 "{\"choices\":[{\"message\":{\"content\":\"ok\"}}],\"usage\":{\"prompt_tokens\":1,\"completion_tokens\":1}}"));
+        }
+
+        private static HttpResponseMessage Json(HttpStatusCode statusCode, string json) => new(statusCode)
+        {
+            Content = new StringContent(json, Encoding.UTF8, "application/json")
+        };
+    }
+
+    private sealed class TransientRateLimitHandler : HttpMessageHandler
+    {
+        private readonly bool _includeRetryAfter;
+
+        public TransientRateLimitHandler(bool includeRetryAfter = false) =>
+            _includeRetryAfter = includeRetryAfter;
+
+        public int GenerationAttemptCount { get; private set; }
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            if (request.Method == HttpMethod.Get)
+            {
+                return Task.FromResult(Json(HttpStatusCode.OK,
+                    "{\"data\":[{\"id\":\"writer\",\"name\":\"Writer\"}]}"));
+            }
+
+            GenerationAttemptCount++;
+            if (GenerationAttemptCount == 1)
+            {
+                HttpResponseMessage limited = Json(HttpStatusCode.TooManyRequests, "{\"error\":{\"message\":\"transient\"}}");
+                if (_includeRetryAfter)
+                {
+                    limited.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.FromMinutes(5));
+                }
+                return Task.FromResult(limited);
+            }
+
+            return Task.FromResult(Json(HttpStatusCode.OK,
+                "{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}"));
         }
 
         private static HttpResponseMessage Json(HttpStatusCode statusCode, string json) => new(statusCode)

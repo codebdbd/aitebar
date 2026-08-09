@@ -15,7 +15,7 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("x:Name=\"ModeImages\"", xaml);
         Assert.Contains("x:Name=\"ModePaintings\"", xaml);
         Assert.Contains("x:Name=\"ModeAnimation\"", xaml);
-        Assert.Contains("x:Name=\"ModeIcons\"", xaml);
+        Assert.Contains("x:Name=\"ModeIdeas\"", xaml);
         Assert.Contains("x:Name=\"ModeGraphics\"", xaml);
         Assert.Contains("x:Name=\"TextOptionsHost\"", xaml);
         Assert.Contains("x:Name=\"CmbTextType\"", xaml);
@@ -24,19 +24,32 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("x:Name=\"CmbVideoDirection\"", xaml);
         Assert.Contains("x:Name=\"ProgrammingTaskHost\"", xaml);
         Assert.Contains("x:Name=\"CmbProgrammingTask\"", xaml);
-        Assert.Contains("x:Name=\"TxtProgrammingTaskOutcome\"", xaml);
-        Assert.Contains("TxtProgrammingTaskOutcome\" Grid.Column=\"3\" Margin=\"16,0,0,0\"", xaml);
+        Assert.Contains("x:Name=\"CmbProgrammingStyle\"", xaml);
+        Assert.Contains("ProgrammingProjectType_Label", xaml);
+        Assert.Contains("ProgrammingStyle_Label", xaml);
         Assert.Contains("x:Name=\"TxtVideoDirectionOutcome\"", xaml);
         Assert.Contains("x:Name=\"TxtTextOptionsOutcome\"", xaml);
         Assert.Contains("x:Name=\"VisualOptionsHost\"", xaml);
         Assert.Contains("x:Name=\"CmbVisualTarget\"", xaml);
-        Assert.Contains("x:Name=\"IconOptionsHost\"", xaml);
-        Assert.Contains("x:Name=\"CmbIconPlatform\"", xaml);
-        Assert.Contains("x:Name=\"CmbIconStyle\"", xaml);
         Assert.Contains("x:Name=\"GraphicOptionsHost\"", xaml);
         Assert.Contains("x:Name=\"CmbGraphicType\"", xaml);
         Assert.Contains("x:Name=\"CmbGraphicStyle\"", xaml);
         Assert.Contains("PromptBuilder_StyleLabel", xaml);
+        Assert.Contains("x:Name=\"CmbPhotoSection\"", xaml);
+        Assert.Contains("x:Name=\"CmbAnimationSection\"", xaml);
+        Assert.Contains("AnimationSection_Label", xaml);
+        Assert.Contains("x:Name=\"CmbPaintingSection\"", xaml);
+        Assert.Contains("x:Name=\"CmbThemeSection\"", xaml);
+        Assert.Contains("ThemeSection_Label", xaml);
+        Assert.Contains("PaintingSection_Artists", Read("AiteBar", "Resources", "Strings.ru.resx"));
+        Assert.Contains("PaintingSection_Classical", Read("AiteBar", "Resources", "Strings.resx"));
+        Assert.Contains("PaintingSection_Modern", Read("AiteBar", "Resources", "Strings.ru.resx"));
+        Assert.Contains("PaintingSection_Eastern", Read("AiteBar", "Resources", "Strings.uk.resx"));
+        Assert.Contains("PaintingArtist_JMWTurner", Read("AiteBar", "Resources", "Strings.de.resx"));
+        Assert.Contains("ThemeStyle_JapaneseHorror", Read("AiteBar", "Resources", "Strings.ru.resx"));
+        Assert.Contains("ThemeSection_SciFi", Read("AiteBar", "Resources", "Strings.resx"));
+        Assert.Contains("ThemeSection_War", Read("AiteBar", "Resources", "Strings.ru.resx"));
+        Assert.Contains("ThemeSection_Professions", Read("AiteBar", "Resources", "Strings.uk.resx"));
         Assert.Contains("x:Name=\"AnalysisDirectionHost\"", xaml);
         Assert.Contains("x:Name=\"CmbAnalysisDirection\"", xaml);
         Assert.Contains("x:Name=\"TxtAnalysisDirectionOutcome\"", xaml);
@@ -45,7 +58,8 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("x:Name=\"ModeMusic\"", xaml);
         Assert.Contains("x:Name=\"ModeAnalytics\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModeAnalysis\"", xaml);
-        Assert.DoesNotContain("x:Name=\"ModeIdeas\"", xaml);
+        Assert.DoesNotContain("x:Name=\"ModeIcons\"", xaml);
+        Assert.DoesNotContain("x:Name=\"IconOptionsHost\"", xaml);
         Assert.Contains("x:Name=\"ModeStatusHost\" DockPanel.Dock=\"Top\" Height=\"52\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModeVideoAudio\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModeAnalysisIdeas\"", xaml);
@@ -133,7 +147,7 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("if (selectedMode == _currentMode)", handler);
         Assert.Contains("SaveEditorText();", handler);
         Assert.Contains("_currentMode = selectedMode;", handler);
-        Assert.Contains("RestoreEditorText(_settingsService.Settings);", handler);
+        Assert.Contains("RestoreEditorText(_settingsService.Settings, allowLastTextFallback: false);", handler);
         Assert.DoesNotContain("Clear();", handler);
 
         int clearStart = code.IndexOf("private void Clear()", StringComparison.Ordinal);
@@ -147,6 +161,112 @@ public sealed class PromptBuilderIntegrationTests
     }
 
     [Fact]
+    public void AutoOptions_AreAlwaysFirstBeforeLocalizedAlphabeticalOrdering()
+    {
+        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+
+        Assert.Contains("OrderAutoFirst(PromptBuilderService.GetAnimationStyles(_animationSection)", code);
+        Assert.Contains("OrderAutoFirst(PromptBuilderService.PaintingArtists", code);
+        Assert.Contains("OrderAutoFirst(PromptBuilderService.GetThemeStyles(_themeSection)", code);
+        Assert.Contains("OrderAutoFirst(PromptBuilderService.GetProgrammingStyles(_programmingProjectType)", code);
+        Assert.Contains("PaintingStyleSection.Artists", code);
+        Assert.Contains("OrderAutoFirst(definitions", code);
+        Assert.Contains(".OrderBy(item => isAuto(item) ? 0 : 1)", code);
+        Assert.Contains(".ThenBy(item => LocalizationService.Get(localizationKey(item))", code);
+    }
+
+    [Fact]
+    public void PaintingsMode_PersistsAndRefreshesArtistFilter()
+    {
+        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+        string models = Read("AiteBar", "Models.cs");
+        string settings = Read("AiteBar", "AppSettingsService.cs");
+
+        Assert.Contains("private PaintingArtist _paintingArtist = PaintingArtist.Auto;", code);
+        Assert.Contains("settings.PromptBuilderPaintingArtist = _paintingArtist;", code);
+        Assert.Contains("_paintingArtist = _settingsService.Settings.PromptBuilderPaintingArtist;", code);
+        Assert.Contains("PaintingStyleSection.Artists", code);
+        Assert.Contains("TxtVisualStyleLabel.Text", code);
+        Assert.DoesNotContain("private void CmbPaintingArtist_SelectionChanged", code);
+        Assert.Contains("public PaintingArtist PromptBuilderPaintingArtist { get; set; } = PaintingArtist.Auto;", models);
+        Assert.Contains("PromptBuilderPaintingArtist = original.PromptBuilderPaintingArtist", settings);
+    }
+
+    [Fact]
+    public void GraphicsMode_AbsorbsLegacyIconsAndUsesIconStylesForIconType()
+    {
+        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+        string service = Read("AiteBar", "PromptBuilderService.cs");
+
+        Assert.Contains("(int)PromptBuilderCategory.Icons => PromptBuilderCategory.Graphics", code);
+        Assert.Contains("if (storedMode == (int)PromptBuilderCategory.Icons && _graphicType == GraphicType.Auto)", code);
+        Assert.Contains("GraphicType.Icon", service);
+        Assert.Contains("PromptBuilderService.IconStyles", code);
+        Assert.Contains("PromptBuilderService.GetGraphicStyles(_graphicType)", code);
+        Assert.DoesNotContain("RefreshIconOptions()", code);
+    }
+
+    [Fact]
+    public void ImagesMode_PersistsAndFiltersStylesByPhotoSection()
+    {
+        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+        string models = Read("AiteBar", "Models.cs");
+        string settings = Read("AiteBar", "AppSettingsService.cs");
+        string service = Read("AiteBar", "PromptBuilderService.cs");
+
+        Assert.Contains("private PhotoSection _photoSection = PhotoSection.All;", code);
+        Assert.Contains("settings.PromptBuilderPhotoSection = _photoSection;", code);
+        Assert.Contains("_photoSection = _settingsService.Settings.PromptBuilderPhotoSection;", code);
+        Assert.Contains("RefreshPhotoSections();", code);
+        Assert.Contains("PromptBuilderService.GetPhotoStyles(_photoSection)", code);
+        Assert.Contains("public PhotoSection PromptBuilderPhotoSection { get; set; } = PhotoSection.All;", models);
+        Assert.Contains("PromptBuilderPhotoSection = original.PromptBuilderPhotoSection", settings);
+        Assert.Contains("public enum PhotoSection", service);
+    }
+
+    [Fact]
+    public void ThemesMode_PersistsAndFiltersStylesByThemeSection()
+    {
+        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+        string models = Read("AiteBar", "Models.cs");
+        string settings = Read("AiteBar", "AppSettingsService.cs");
+        string service = Read("AiteBar", "PromptBuilderService.cs");
+
+        Assert.Contains("private ThemeSection _themeSection = ThemeSection.All;", code);
+        Assert.Contains("private ThemeStyle _themeStyle = ThemeStyle.Auto;", code);
+        Assert.Contains("settings.PromptBuilderThemeSection = _themeSection;", code);
+        Assert.Contains("settings.PromptBuilderThemeStyle = _themeStyle;", code);
+        Assert.Contains("_themeSection = _settingsService.Settings.PromptBuilderThemeSection;", code);
+        Assert.Contains("RefreshThemeSections();", code);
+        Assert.Contains("PromptBuilderService.GetThemeStyles(_themeSection)", code);
+        Assert.Contains("public ThemeSection PromptBuilderThemeSection { get; set; } = ThemeSection.All;", models);
+        Assert.Contains("public ThemeStyle PromptBuilderThemeStyle { get; set; } = ThemeStyle.Auto;", models);
+        Assert.Contains("PromptBuilderThemeSection = original.PromptBuilderThemeSection", settings);
+        Assert.Contains("public enum ThemeSection", service);
+    }
+
+    [Fact]
+    public void ProgrammingMode_UsesTypeAndStyleInsteadOfEngineeringTaskKinds()
+    {
+        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+        string models = Read("AiteBar", "Models.cs");
+        string settings = Read("AiteBar", "AppSettingsService.cs");
+        string service = Read("AiteBar", "PromptBuilderService.cs");
+
+        Assert.Contains("private ProgrammingProjectType _programmingProjectType = ProgrammingProjectType.Auto;", code);
+        Assert.Contains("private ProgrammingPromptStyle _programmingStyle = ProgrammingPromptStyle.Auto;", code);
+        Assert.Contains("settings.PromptBuilderProgrammingProjectType = _programmingProjectType;", code);
+        Assert.Contains("settings.PromptBuilderProgrammingStyle = _programmingStyle;", code);
+        Assert.Contains("_programmingProjectType = _settingsService.Settings.PromptBuilderProgrammingProjectType;", code);
+        Assert.Contains("PromptBuilderService.GetProgrammingStyles(_programmingProjectType)", code);
+        Assert.Contains("public ProgrammingProjectType PromptBuilderProgrammingProjectType { get; set; } = ProgrammingProjectType.Auto;", models);
+        Assert.Contains("public ProgrammingPromptStyle PromptBuilderProgrammingStyle { get; set; } = ProgrammingPromptStyle.Auto;", models);
+        Assert.Contains("PromptBuilderProgrammingProjectType = original.PromptBuilderProgrammingProjectType", settings);
+        Assert.Contains("public enum ProgrammingProjectType", service);
+        Assert.DoesNotContain("TxtProgrammingTaskOutcome", Read("AiteBar", "PromptBuilderWindow.xaml"));
+    }
+
+    [Fact]
     public void Drafts_PersistOriginalAndGeneratedPromptPerCategory()
     {
         string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
@@ -157,6 +277,8 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("Result = _hasSuccessfulResult ? _processedText", code);
         Assert.Contains("_hasSuccessfulResult = true;", code);
         Assert.Contains("_lastOriginalText = draft.Input;", code);
+        Assert.Contains("private void RestoreEditorText(AppSettings settings, bool allowLastTextFallback = true)", code);
+        Assert.Contains("allowLastTextFallback && _currentMode == (PromptBuilderCategory)settings.PromptBuilderLastMode", code);
     }
 
     [Fact]

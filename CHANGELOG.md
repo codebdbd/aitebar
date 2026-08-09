@@ -9,6 +9,12 @@
 
 ## [Unreleased]
 
+## [1.15.3] - 2026-08-09
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Конструктор промптов**: унифицированы фильтры в визуальных вкладках, обновлены каталоги стилей и сюжетов, исправлено отображение длинных значений в комбобоксах без поломки списков моделей.
+- **Prompt Builder**: unified filters across visual tabs, refreshed style and scenario catalogs, and fixed long combo-box value rendering without breaking model lists.
+
 ## [1.15.2] - 2026-08-08
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed

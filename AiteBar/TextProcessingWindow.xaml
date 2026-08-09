@@ -203,7 +203,6 @@
                 <ComboBox x:Name="CmbModels" Grid.Column="2"
                           Height="36" VerticalAlignment="Center"
                           SelectionChanged="CmbModels_SelectionChanged"
-                          DropDownOpened="CmbModels_DropDownOpened"
                           AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModelLabel}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>

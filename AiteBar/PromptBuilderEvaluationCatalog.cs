@@ -7,6 +7,7 @@ public sealed record PromptBuilderEvaluationScenario(
     string Brief,
     IReadOnlyList<string> RequiredSystemPromptFragments,
     VisualTargetModel VisualTarget = VisualTargetModel.Universal,
+    PhotoSection PhotoSection = PhotoSection.All,
     PaintingStyle PaintingStyle = PaintingStyle.Auto,
     AnimationStyle AnimationStyle = AnimationStyle.Auto,
     PhotoStyle PhotoStyle = PhotoStyle.Auto,
@@ -14,7 +15,9 @@ public sealed record PromptBuilderEvaluationScenario(
     TextPromptTone TextTone = TextPromptTone.Neutral,
     AnalysisDirection AnalysisDirection = AnalysisDirection.Auto,
     VideoDirection VideoDirection = VideoDirection.Auto,
-    ProgrammingTaskType ProgrammingTaskType = ProgrammingTaskType.Auto);
+    ProgrammingTaskType ProgrammingTaskType = ProgrammingTaskType.Auto,
+    ProgrammingProjectType ProgrammingProjectType = ProgrammingProjectType.Auto,
+    ProgrammingPromptStyle ProgrammingStyle = ProgrammingPromptStyle.Auto);
 
 public static class PromptBuilderEvaluationCatalog
 {
@@ -27,15 +30,17 @@ public static class PromptBuilderEvaluationCatalog
             "A young woman shaving her legs beside a creek at sunset",
             ["direct natural language", "Do not default to moody underexposure", "negative prompts"],
             VisualTarget: VisualTargetModel.GptImage,
-            PhotoStyle: PhotoStyle.Portrait),
+            PhotoSection: PhotoSection.Portrait,
+            PhotoStyle: PhotoStyle.EnvironmentalPortrait),
         new(
             "flux-product-materials",
             "FLUX: product photography with material detail",
             PromptBuilderCategory.Images,
             "A brushed steel watch on black volcanic stone",
-            ["precise, visually specific natural-language description", "Premium product photography", "empty quality tags"],
+            ["precise, visually specific natural-language description", "Luxury product photography", "empty quality tags"],
             VisualTarget: VisualTargetModel.Flux,
-            PhotoStyle: PhotoStyle.Product),
+            PhotoSection: PhotoSection.Product,
+            PhotoStyle: PhotoStyle.LuxuryProductPhoto),
         new(
             "nano-banana-edit-preservation",
             "Nano Banana: edit preserves unmentioned elements",
@@ -43,7 +48,8 @@ public static class PromptBuilderEvaluationCatalog
             "Replace the jacket with a red raincoat; preserve the person and the street",
             ["prioritizes the requested subject", "preserve the unmentioned identity", "negative prompts"],
             VisualTarget: VisualTargetModel.NanoBanana,
-            PhotoStyle: PhotoStyle.Documentary),
+            PhotoSection: PhotoSection.StreetReportage,
+            PhotoStyle: PhotoStyle.DocumentaryReportage),
         new(
             "painting-no-frame",
             "Painting: scene, not a framed object",
@@ -53,12 +59,13 @@ public static class PromptBuilderEvaluationCatalog
             VisualTarget: VisualTargetModel.Flux,
             PaintingStyle: PaintingStyle.Impressionism),
         new(
-            "programming-bugfix",
-            "Programming: reproducible bug fix",
+            "programming-html-game",
+            "Programming: HTML game prompt",
             PromptBuilderCategory.Programming,
-            "Login sometimes fails after the application wakes from sleep",
-            ["Require reproducible steps", "root-cause analysis", "regression coverage"],
-            ProgrammingTaskType: ProgrammingTaskType.BugFix),
+            "A browser game where a small spaceship dodges asteroids and collects energy orbs",
+            ["self-contained HTML browser game", "retro arcade game style", "gameplay loop"],
+            ProgrammingProjectType: ProgrammingProjectType.HtmlGame,
+            ProgrammingStyle: ProgrammingPromptStyle.RetroArcadeGame),
         new(
             "analytics-comparison",
             "Analytics: options comparison",
