@@ -257,11 +257,9 @@ public class AppSettings
     public TextPromptTone PromptBuilderTextTone { get; set; } = TextPromptTone.Neutral;
     public AnalysisDirection PromptBuilderAnalysisDirection { get; set; } = AnalysisDirection.Auto;
     public VideoDirection PromptBuilderVideoDirection { get; set; } = VideoDirection.Auto;
-    public ProgrammingTaskType PromptBuilderProgrammingTaskType { get; set; } = ProgrammingTaskType.Auto;
     public ProgrammingProjectType PromptBuilderProgrammingProjectType { get; set; } = ProgrammingProjectType.Auto;
     public ProgrammingPromptStyle PromptBuilderProgrammingStyle { get; set; } = ProgrammingPromptStyle.Auto;
     public VisualTargetModel PromptBuilderVisualTarget { get; set; } = VisualTargetModel.Universal;
-    public IconPlatform PromptBuilderIconPlatform { get; set; } = IconPlatform.Auto;
     public IconStyle PromptBuilderIconStyle { get; set; } = IconStyle.Auto;
     public GraphicType PromptBuilderGraphicType { get; set; } = GraphicType.Auto;
     public GraphicStyle PromptBuilderGraphicStyle { get; set; } = GraphicStyle.Auto;

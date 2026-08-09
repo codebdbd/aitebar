@@ -167,7 +167,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     {
         if (!Dispatcher.CheckAccess())
         {
-            Dispatcher.Invoke(() => HandleCultureChanged(sender, e));
+            Dispatcher.BeginInvoke(() => HandleCultureChanged(sender, e));
             return;
         }
 

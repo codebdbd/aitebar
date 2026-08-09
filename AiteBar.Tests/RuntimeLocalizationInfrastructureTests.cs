@@ -18,6 +18,7 @@ public sealed class RuntimeLocalizationInfrastructureTests
         Assert.Contains("protected DarkWindow()", darkWindowCode);
         Assert.Contains("LocalizationService.EnsureAppliedCulture();", darkWindowCode);
         Assert.Contains("LocalizationService.CultureChanged += HandleCultureChanged;", darkWindowCode);
+        Assert.Contains("Dispatcher.BeginInvoke(() => HandleCultureChanged(sender, e));", darkWindowCode);
         Assert.Contains("LocalizationService.RefreshLocalizedBindings(this);", darkWindowCode);
         Assert.Contains("protected virtual void OnLocalizationChanged()", darkWindowCode);
     }
@@ -30,6 +31,7 @@ public sealed class RuntimeLocalizationInfrastructureTests
 
         Assert.Contains("SubscribeToLocalizationChanges();", mainWindowCode);
         Assert.Contains("LocalizationService.CultureChanged += HandleCultureChanged;", mainWindowCode);
+        Assert.Contains("Dispatcher.BeginInvoke(() => HandleCultureChanged(sender, e));", mainWindowCode);
         Assert.Contains("LocalizationService.EnsureAppliedCulture();", mainWindowCode);
         Assert.Contains("LocalizationService.RefreshLocalizedBindings(this);", mainWindowCode);
         Assert.Contains("ApplyLocalizedText();", mainWindowCode);

@@ -23,7 +23,7 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("x:Name=\"VideoDirectionHost\"", xaml);
         Assert.Contains("x:Name=\"CmbVideoDirection\"", xaml);
         Assert.Contains("x:Name=\"ProgrammingTaskHost\"", xaml);
-        Assert.Contains("x:Name=\"CmbProgrammingTask\"", xaml);
+        Assert.Contains("x:Name=\"CmbProgrammingProjectType\"", xaml);
         Assert.Contains("x:Name=\"CmbProgrammingStyle\"", xaml);
         Assert.Contains("ProgrammingProjectType_Label", xaml);
         Assert.Contains("ProgrammingStyle_Label", xaml);
@@ -49,7 +49,9 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("ThemeStyle_JapaneseHorror", Read("AiteBar", "Resources", "Strings.ru.resx"));
         Assert.Contains("ThemeSection_SciFi", Read("AiteBar", "Resources", "Strings.resx"));
         Assert.Contains("ThemeSection_War", Read("AiteBar", "Resources", "Strings.ru.resx"));
-        Assert.Contains("ThemeSection_Professions", Read("AiteBar", "Resources", "Strings.uk.resx"));
+        Assert.Contains("ThemeSection_Sports", Read("AiteBar", "Resources", "Strings.uk.resx"));
+        Assert.DoesNotContain("new(ThemeSection.Professions", Read("AiteBar", "PromptBuilderService.cs"));
+        Assert.DoesNotContain("ThemeStyle_PilotCockpit", Read("AiteBar", "PromptBuilderService.cs"));
         Assert.Contains("x:Name=\"AnalysisDirectionHost\"", xaml);
         Assert.Contains("x:Name=\"CmbAnalysisDirection\"", xaml);
         Assert.Contains("x:Name=\"TxtAnalysisDirectionOutcome\"", xaml);
@@ -169,6 +171,7 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("OrderAutoFirst(PromptBuilderService.PaintingArtists", code);
         Assert.Contains("OrderAutoFirst(PromptBuilderService.GetThemeStyles(_themeSection)", code);
         Assert.Contains("OrderAutoFirst(PromptBuilderService.GetProgrammingStyles(_programmingProjectType)", code);
+        Assert.DoesNotContain("ProgrammingTaskType", code);
         Assert.Contains("PaintingStyleSection.Artists", code);
         Assert.Contains("OrderAutoFirst(definitions", code);
         Assert.Contains(".OrderBy(item => isAuto(item) ? 0 : 1)", code);

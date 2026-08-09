@@ -203,7 +203,7 @@
                 <Grid>
                     <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="10"/><ColumnDefinition Width="250"/><ColumnDefinition Width="22"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="10"/><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                     <TextBlock Text="{local:Loc ResourceKey=ProgrammingProjectType_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="CmbProgrammingTask" Grid.Column="2" Height="34" SelectionChanged="CmbProgrammingTask_SelectionChanged"
+                    <ComboBox x:Name="CmbProgrammingProjectType" Grid.Column="2" Height="34" SelectionChanged="CmbProgrammingProjectType_SelectionChanged"
                               AutomationProperties.Name="{local:Loc ResourceKey=ProgrammingProjectType_Label}"/>
                     <TextBlock Grid.Column="4" Text="{local:Loc ResourceKey=ProgrammingStyle_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
                     <ComboBox x:Name="CmbProgrammingStyle" Grid.Column="6" Height="34" SelectionChanged="CmbProgrammingStyle_SelectionChanged"

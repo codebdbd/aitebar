@@ -9,6 +9,16 @@
 
 ## [Unreleased]
 
+## [1.15.4] - 2026-08-09
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Конструктор промптов**: каталог кода приведён к понятной схеме «Тип + Стиль», а неактуальные параметры удалены из активной логики и настроек.
+- **Prompt Builder**: the Code catalog now follows a clear “Type + Style” scheme, and obsolete parameters were removed from active logic and settings.
+- **Локализация**: синхронизированы каталоги и переводы Prompt Builder на русском, украинском, немецком и английском; проверка языковых ресурсов снова проходит полностью.
+- **Localization**: Prompt Builder catalogs and translations are synchronized across Russian, Ukrainian, German, and English; resource validation now passes completely.
+- **Стабильность**: устранено зависание при обновлении интерфейса после смены языка; полный набор автоматических тестов завершается.
+- **Stability**: fixed a UI refresh deadlock after a language change; the full automated test suite completes.
+
 ## [1.15.3] - 2026-08-09
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed

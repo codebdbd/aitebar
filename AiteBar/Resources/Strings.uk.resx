@@ -949,6 +949,125 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="PaintingArtist_Label" xml:space="preserve"><value>Художники</value></data><data name="PaintingArtist_Auto" xml:space="preserve"><value>Авто</value></data><data name="PaintingArtist_LeonardoDaVinci" xml:space="preserve"><value>Леонардо да Вінчі - сфумато та анатомічна точність</value></data><data name="PaintingArtist_Michelangelo" xml:space="preserve"><value>Мікеланджело - монументальна анатомія</value></data><data name="PaintingArtist_Raphael" xml:space="preserve"><value>Рафаель - гармонійна ясність</value></data><data name="PaintingArtist_Botticelli" xml:space="preserve"><value>Боттічеллі - лірична лінія і драпірування</value></data><data name="PaintingArtist_Caravaggio" xml:space="preserve"><value>Караваджо - драматичне кьяроскуро</value></data><data name="PaintingArtist_Rembrandt" xml:space="preserve"><value>Рембрандт - глибока тінь і тепле світло</value></data><data name="PaintingArtist_Vermeer" xml:space="preserve"><value>Вермеєр - тихі інтер'єри у денному світлі</value></data><data name="PaintingArtist_Goya" xml:space="preserve"><value>Гойя - похмура психологічна драма</value></data><data name="PaintingArtist_Monet" xml:space="preserve"><value>Моне - світло і кольорові плями</value></data><data name="PaintingArtist_Renoir" xml:space="preserve"><value>Ренуар - теплий живий колір</value></data><data name="PaintingArtist_Degas" xml:space="preserve"><value>Дега - рух і зміщена композиція</value></data><data name="PaintingArtist_Manet" xml:space="preserve"><value>Мане - смілива тональна модерність</value></data><data name="PaintingArtist_Pissarro" xml:space="preserve"><value>Піссарро - повітряна природна атмосфера</value></data><data name="PaintingArtist_VanGogh" xml:space="preserve"><value>Ван Гог - експресивні мазки</value></data><data name="PaintingArtist_Cezanne" xml:space="preserve"><value>Сезанн - структурні кольорові площини</value></data><data name="PaintingArtist_Gauguin" xml:space="preserve"><value>Гоген - плаский символічний колір</value></data><data name="PaintingArtist_Seurat" xml:space="preserve"><value>Сьора - пуантилістична структура світла</value></data><data name="PaintingArtist_Picasso" xml:space="preserve"><value>Пікассо - кубістична геометрія</value></data><data name="PaintingArtist_Matisse" xml:space="preserve"><value>Матісс - визволений декоративний колір</value></data><data name="PaintingArtist_Klimt" xml:space="preserve"><value>Клімт - золото, орнамент і візерунок</value></data><data name="PaintingArtist_Schiele" xml:space="preserve"><value>Шіле - кутасті експресивні фігури</value></data><data name="PaintingArtist_Kandinsky" xml:space="preserve"><value>Кандинський - абстрактний ритм кольору</value></data><data name="PaintingArtist_Mondrian" xml:space="preserve"><value>Мондріан - очищена геометрія</value></data><data name="PaintingArtist_Chagall" xml:space="preserve"><value>Шаґал - сновидна поетична символіка</value></data><data name="PaintingArtist_Klee" xml:space="preserve"><value>Клеє - грайлива лірична абстракція</value></data><data name="PaintingArtist_Dali" xml:space="preserve"><value>Далі - гіпердеталізований сюрреалізм</value></data><data name="PaintingArtist_Magritte" xml:space="preserve"><value>Магрітт - концептуальний візуальний парадокс</value></data><data name="PaintingArtist_Munch" xml:space="preserve"><value>Мунк - тривожна емоційна деформація</value></data><data name="PaintingArtist_Hopper" xml:space="preserve"><value>Гоппер - самотнє кінематографічне світло</value></data><data name="PaintingArtist_FridaKahlo" xml:space="preserve"><value>Фріда Кало - інтимний символічний портрет</value></data><data name="PaintingArtist_TamaraDeLempicka" xml:space="preserve"><value>Тамара де Лемпіцька - гладкий ар-деко гламур</value></data><data name="PaintingArtist_GeorgiaOKeeffe" xml:space="preserve"><value>Джорджія О'Кіф - збільшені органічні форми</value></data><data name="PaintingArtist_Basquiat" xml:space="preserve"><value>Баскія - сира неоекспресіоністська енергія</value></data><data name="PaintingArtist_Hokusai" xml:space="preserve"><value>Хокусай - графічна лінія укійо-е</value></data><data name="PaintingArtist_Hiroshige" xml:space="preserve"><value>Хіросіґе - лірична пейзажна гравюра</value></data><data name="PaintingArtist_JMWTurner" xml:space="preserve"><value>Тернер - атмосферне світло і буря</value></data><data name="PaintingArtist_CasparDavidFriedrich" xml:space="preserve"><value>Каспар Давид Фрідріх - споглядальний піднесений пейзаж</value></data><data name="PaintingArtist_AlphonseMucha" xml:space="preserve"><value>Альфонс Муха - орнаментальний плакат</value></data><data name="PaintingArtist_JohnWilliamWaterhouse" xml:space="preserve"><value>Джон Вільям Вотергаус - поетичний прерафаелітський сюжет</value></data><data name="PaintingArtist_GeorgesBraque" xml:space="preserve"><value>Жорж Брак - аналітичний кубізм</value></data><data name="PaintingArtist_IlyaRepin" xml:space="preserve"><value>Ілля Рєпін - драматична реалістична присутність</value></data><data name="PaintingArtist_AmedeoModigliani" xml:space="preserve"><value>Амедео Модільяні - видовжений портрет</value></data><data name="PaintingArtist_JoanMiro" xml:space="preserve"><value>Жоан Міро - грайлива біоморфна абстракція</value></data>
   <data name="ThemeSection_Label" xml:space="preserve"><value>Розділ</value></data><data name="ThemeSection_All" xml:space="preserve"><value>Усі</value></data><data name="ThemeSection_Horror" xml:space="preserve"><value>Жахи</value></data><data name="ThemeSection_Space" xml:space="preserve"><value>Космос</value></data><data name="ThemeSection_War" xml:space="preserve"><value>Війна</value></data><data name="ThemeSection_FairyTales" xml:space="preserve"><value>Казки</value></data><data name="ThemeSection_SciFi" xml:space="preserve"><value>Фантастика</value></data><data name="ThemeSection_Sports" xml:space="preserve"><value>Спорт</value></data><data name="ThemeSection_Professions" xml:space="preserve"><value>Професії</value></data>
   <data name="ThemeStyle_Auto" xml:space="preserve"><value>Авто</value></data><data name="ThemeStyle_JapaneseHorror" xml:space="preserve"><value>Японський горор</value></data><data name="ThemeStyle_LovecraftianHorror" xml:space="preserve"><value>Лавкрафтівський жах</value></data><data name="ThemeStyle_GothicOccult" xml:space="preserve"><value>Готичний окультизм</value></data><data name="ThemeStyle_CursedHouse" xml:space="preserve"><value>Проклятий дім</value></data><data name="ThemeStyle_AbandonedHospital" xml:space="preserve"><value>Покинута лікарня</value></data><data name="ThemeStyle_ForestNightmare" xml:space="preserve"><value>Лісовий кошмар</value></data><data name="ThemeStyle_OccultRitual" xml:space="preserve"><value>Окультний ритуал</value></data><data name="ThemeStyle_SpaceStation" xml:space="preserve"><value>Космічна станція</value></data><data name="ThemeStyle_DerelictSpaceship" xml:space="preserve"><value>Покинутий корабель</value></data><data name="ThemeStyle_PlanetaryColony" xml:space="preserve"><value>Колонія на іншій планеті</value></data><data name="ThemeStyle_AsteroidMine" xml:space="preserve"><value>Шахта на астероїді</value></data><data name="ThemeStyle_FirstContact" xml:space="preserve"><value>Перший контакт</value></data><data name="ThemeStyle_OrbitalLaboratory" xml:space="preserve"><value>Орбітальна лабораторія</value></data><data name="ThemeStyle_NuclearRuinedCity" xml:space="preserve"><value>Місто після ядерного вибуху</value></data><data name="ThemeStyle_UrbanCombatZone" xml:space="preserve"><value>Міські бої</value></data><data name="ThemeStyle_BunkerCommand" xml:space="preserve"><value>Підземний бункер</value></data><data name="ThemeStyle_BattlefieldAftermath" xml:space="preserve"><value>Поле після бою</value></data><data name="ThemeStyle_EvacuationUnderFire" xml:space="preserve"><value>Евакуація під вогнем</value></data><data name="ThemeStyle_ReconInRuins" xml:space="preserve"><value>Розвідка в руїнах</value></data><data name="ThemeStyle_EnchantedForest" xml:space="preserve"><value>Зачарований ліс</value></data><data name="ThemeStyle_WitchHut" xml:space="preserve"><value>Хатинка відьми</value></data><data name="ThemeStyle_RoyalCastle" xml:space="preserve"><value>Королівський замок</value></data><data name="ThemeStyle_UnderwaterKingdom" xml:space="preserve"><value>Підводне царство</value></data><data name="ThemeStyle_VillageAtForestEdge" xml:space="preserve"><value>Село біля лісу</value></data><data name="ThemeStyle_SpiritLake" xml:space="preserve"><value>Озеро духів</value></data><data name="ThemeStyle_CyberpunkMegacity" xml:space="preserve"><value>Кіберпанк-мегаполіс</value></data><data name="ThemeStyle_RobotJunkyard" xml:space="preserve"><value>Звалище роботів</value></data><data name="ThemeStyle_AndroidFactory" xml:space="preserve"><value>Завод андроїдів</value></data><data name="ThemeStyle_UndergroundTechCity" xml:space="preserve"><value>Підземне техномісто</value></data><data name="ThemeStyle_PostApocalypticWasteland" xml:space="preserve"><value>Постапокаліптичні пустки</value></data><data name="ThemeStyle_PortalAnomaly" xml:space="preserve"><value>Портальна аномалія</value></data><data name="ThemeStyle_StadiumFinal" xml:space="preserve"><value>Фінал на стадіоні</value></data><data name="ThemeStyle_TrainingMontage" xml:space="preserve"><value>Тренувальний монтаж</value></data><data name="ThemeStyle_BoxingRing" xml:space="preserve"><value>Боксерський ринг</value></data><data name="ThemeStyle_StreetBasketball" xml:space="preserve"><value>Вуличний баскетбол</value></data><data name="ThemeStyle_PitLane" xml:space="preserve"><value>Піт-лейн</value></data><data name="ThemeStyle_ExtremeOutdoor" xml:space="preserve"><value>Екстремальний спорт</value></data><data name="ThemeStyle_SurgeonOperation" xml:space="preserve"><value>Хірургічна операція</value></data><data name="ThemeStyle_FirefighterRescue" xml:space="preserve"><value>Пожежник на порятунку</value></data><data name="ThemeStyle_DetectiveCrimeScene" xml:space="preserve"><value>Детектив на місці злочину</value></data><data name="ThemeStyle_ScientistLaboratory" xml:space="preserve"><value>Вчений у лабораторії</value></data><data name="ThemeStyle_PilotCockpit" xml:space="preserve"><value>Пілот у кабіні</value></data><data name="ThemeStyle_MinerUnderground" xml:space="preserve"><value>Шахтар під землею</value></data>
+  <data name="ThemeStyle_TrainingGround" xml:space="preserve"><value>Тренувальний майданчик</value></data>
+  <data name="PhotoSection_Label" xml:space="preserve"><value>Розділ</value></data>
+  <data name="PhotoSection_All" xml:space="preserve"><value>Усі</value></data>
+  <data name="PhotoSection_Portrait" xml:space="preserve"><value>Портрет</value></data>
+  <data name="PhotoSection_Fashion" xml:space="preserve"><value>Мода</value></data>
+  <data name="PhotoSection_Beauty" xml:space="preserve"><value>Б'юті</value></data>
+  <data name="PhotoSection_Product" xml:space="preserve"><value>Предметна зйомка</value></data>
+  <data name="PhotoSection_Food" xml:space="preserve"><value>Їжа</value></data>
+  <data name="PhotoSection_ArchitectureInterior" xml:space="preserve"><value>Архітектура й інтер'єр</value></data>
+  <data name="PhotoSection_StreetReportage" xml:space="preserve"><value>Вулиця й репортаж</value></data>
+  <data name="PhotoSection_LandscapeTravel" xml:space="preserve"><value>Пейзаж і подорожі</value></data>
+  <data name="PhotoSection_Automotive" xml:space="preserve"><value>Автомобілі</value></data>
+  <data name="PhotoSection_Macro" xml:space="preserve"><value>Макро</value></data>
+  <data name="PhotoSection_Conceptual" xml:space="preserve"><value>Концептуальна</value></data>
+  <data name="PhotoSection_Advertising" xml:space="preserve"><value>Реклама</value></data>
+  <data name="PhotoStyle_ClassicStudioPortrait" xml:space="preserve"><value>Класичний студійний портрет</value></data>
+  <data name="PhotoStyle_CinematicPortrait" xml:space="preserve"><value>Кінематографічний портрет</value></data>
+  <data name="PhotoStyle_EditorialPortrait" xml:space="preserve"><value>Редакційний портрет</value></data>
+  <data name="PhotoStyle_HardFlashPortrait" xml:space="preserve"><value>Портрет із жорстким спалахом</value></data>
+  <data name="PhotoStyle_EnvironmentalPortrait" xml:space="preserve"><value>Портрет у середовищі</value></data>
+  <data name="PhotoStyle_MonochromePortrait" xml:space="preserve"><value>Чорно-білий портрет</value></data>
+  <data name="PhotoStyle_LuxuryEditorialFashion" xml:space="preserve"><value>Преміальна редакційна мода</value></data>
+  <data name="PhotoStyle_StreetFashion" xml:space="preserve"><value>Вулична мода</value></data>
+  <data name="PhotoStyle_Y2KFashion" xml:space="preserve"><value>Мода Y2K</value></data>
+  <data name="PhotoStyle_HighFlashFashion" xml:space="preserve"><value>Мода з яскравим спалахом</value></data>
+  <data name="PhotoStyle_AvantGardeFashion" xml:space="preserve"><value>Авангардна мода</value></data>
+  <data name="PhotoStyle_CleanBeauty" xml:space="preserve"><value>Чистий б'юті-стиль</value></data>
+  <data name="PhotoStyle_GlossyBeautyAd" xml:space="preserve"><value>Глянцева б'юті-реклама</value></data>
+  <data name="PhotoStyle_ColorGelBeauty" xml:space="preserve"><value>Б'юті з кольоровими гелями</value></data>
+  <data name="PhotoStyle_MacroBeauty" xml:space="preserve"><value>Макро б'юті</value></data>
+  <data name="PhotoStyle_PremiumSkincareBeauty" xml:space="preserve"><value>Преміальний догляд за шкірою</value></data>
+  <data name="PhotoStyle_CleanStudioProduct" xml:space="preserve"><value>Чистий студійний предметний кадр</value></data>
+  <data name="PhotoStyle_LuxuryProductPhoto" xml:space="preserve"><value>Преміальна предметна зйомка</value></data>
+  <data name="PhotoStyle_TechProductPhoto" xml:space="preserve"><value>Технічний продукт</value></data>
+  <data name="PhotoStyle_DarkPremiumProduct" xml:space="preserve"><value>Темний преміальний продукт</value></data>
+  <data name="PhotoStyle_SplashProductAd" xml:space="preserve"><value>Реклама продукту з бризками</value></data>
+  <data name="PhotoStyle_EditorialFood" xml:space="preserve"><value>Редакційна фуд-зйомка</value></data>
+  <data name="PhotoStyle_DarkMoodyFood" xml:space="preserve"><value>Темна атмосферна фуд-зйомка</value></data>
+  <data name="PhotoStyle_BrightCommercialFood" xml:space="preserve"><value>Яскрава комерційна фуд-зйомка</value></data>
+  <data name="PhotoStyle_FineDiningFood" xml:space="preserve"><value>Висока кухня</value></data>
+  <data name="PhotoStyle_OverheadTabletopFood" xml:space="preserve"><value>Їжа зверху на столі</value></data>
+  <data name="PhotoStyle_CleanArchitecture" xml:space="preserve"><value>Чиста архітектурна зйомка</value></data>
+  <data name="PhotoStyle_LuxuryInterior" xml:space="preserve"><value>Преміальний інтер'єр</value></data>
+  <data name="PhotoStyle_MinimalModernInterior" xml:space="preserve"><value>Мінімалістичний сучасний інтер'єр</value></data>
+  <data name="PhotoStyle_NightExteriorArchitecture" xml:space="preserve"><value>Нічний екстер'єр</value></data>
+  <data name="PhotoStyle_BrutalistArchitecture" xml:space="preserve"><value>Бруталістична архітектура</value></data>
+  <data name="PhotoStyle_DocumentaryReportage" xml:space="preserve"><value>Документальний репортаж</value></data>
+  <data name="PhotoStyle_StreetCandid" xml:space="preserve"><value>Невимушена вулична зйомка</value></data>
+  <data name="PhotoStyle_FlashStreet" xml:space="preserve"><value>Вулиця зі спалахом</value></data>
+  <data name="PhotoStyle_GrittyUrban" xml:space="preserve"><value>Груба міська зйомка</value></data>
+  <data name="PhotoStyle_BlackAndWhiteReportage" xml:space="preserve"><value>Чорно-білий репортаж</value></data>
+  <data name="PhotoStyle_EpicCinematicLandscape" xml:space="preserve"><value>Епічний кінематографічний пейзаж</value></data>
+  <data name="PhotoStyle_NaturalTravel" xml:space="preserve"><value>Природна тревел-зйомка</value></data>
+  <data name="PhotoStyle_GoldenHourLandscape" xml:space="preserve"><value>Пейзаж у золоту годину</value></data>
+  <data name="PhotoStyle_MoodyWeatherLandscape" xml:space="preserve"><value>Атмосферна негода</value></data>
+  <data name="PhotoStyle_AdventureTravel" xml:space="preserve"><value>Пригодницька подорож</value></data>
+  <data name="PhotoStyle_StudioAutomotive" xml:space="preserve"><value>Студійна автофотографія</value></data>
+  <data name="PhotoStyle_NeonNightAutomotive" xml:space="preserve"><value>Нічне неонове авто</value></data>
+  <data name="PhotoStyle_LuxuryAutomotive" xml:space="preserve"><value>Преміальний автомобіль</value></data>
+  <data name="PhotoStyle_RollingShotAutomotive" xml:space="preserve"><value>Авто в русі</value></data>
+  <data name="PhotoStyle_OffRoadAutomotive" xml:space="preserve"><value>Позашляхове авто</value></data>
+  <data name="PhotoStyle_ScientificMacro" xml:space="preserve"><value>Наукове макро</value></data>
+  <data name="PhotoStyle_LuxuryDetailMacro" xml:space="preserve"><value>Преміальне макро деталей</value></data>
+  <data name="PhotoStyle_NatureMacro" xml:space="preserve"><value>Природне макро</value></data>
+  <data name="PhotoStyle_JewelryMacro" xml:space="preserve"><value>Макро ювелірних виробів</value></data>
+  <data name="PhotoStyle_AbstractTextureMacro" xml:space="preserve"><value>Абстрактне макро текстур</value></data>
+  <data name="PhotoStyle_FineArtConceptual" xml:space="preserve"><value>Концептуальний fine art</value></data>
+  <data name="PhotoStyle_SurrealConceptual" xml:space="preserve"><value>Сюрреалістична концепція</value></data>
+  <data name="PhotoStyle_DarkPsychologicalConceptual" xml:space="preserve"><value>Темна психологічна концепція</value></data>
+  <data name="PhotoStyle_DreamlikeConceptual" xml:space="preserve"><value>Сновидна концепція</value></data>
+  <data name="PhotoStyle_FuturisticConceptual" xml:space="preserve"><value>Футуристична концепція</value></data>
+  <data name="PhotoStyle_PremiumCommercialAd" xml:space="preserve"><value>Преміальна комерційна реклама</value></data>
+  <data name="PhotoStyle_FmcgAdvertisingPhoto" xml:space="preserve"><value>Реклама FMCG</value></data>
+  <data name="PhotoStyle_TechCampaignPhoto" xml:space="preserve"><value>Технологічна кампанія</value></data>
+  <data name="PhotoStyle_LuxuryAdPhoto" xml:space="preserve"><value>Преміальна реклама</value></data>
+  <data name="PhotoStyle_BoldBillboardPhoto" xml:space="preserve"><value>Яскравий білборд</value></data>
+  <data name="ProgrammingProjectType_Label" xml:space="preserve"><value>Тип</value></data>
+  <data name="ProgrammingProjectType_Auto" xml:space="preserve"><value>Авто</value></data>
+  <data name="ProgrammingProjectType_Website" xml:space="preserve"><value>Сайт</value></data>
+  <data name="ProgrammingProjectType_LandingPage" xml:space="preserve"><value>Лендінг</value></data>
+  <data name="ProgrammingProjectType_OnlineStore" xml:space="preserve"><value>Інтернет-магазин</value></data>
+  <data name="ProgrammingProjectType_Dashboard" xml:space="preserve"><value>Дашборд</value></data>
+  <data name="ProgrammingProjectType_WebApp" xml:space="preserve"><value>Вебзастосунок</value></data>
+  <data name="ProgrammingProjectType_HtmlGame" xml:space="preserve"><value>HTML-гра</value></data>
+  <data name="ProgrammingProjectType_MiniUtility" xml:space="preserve"><value>Мініутиліта</value></data>
+  <data name="ProgrammingProjectType_TelegramBot" xml:space="preserve"><value>Telegram-бот</value></data>
+  <data name="ProgrammingProjectType_AutomationScript" xml:space="preserve"><value>Скрипт автоматизації</value></data>
+  <data name="ProgrammingProjectType_Parser" xml:space="preserve"><value>Парсер / збирач даних</value></data>
+  <data name="ProgrammingProjectType_ApiBackend" xml:space="preserve"><value>API / сервер</value></data>
+  <data name="ProgrammingProjectType_DesktopApp" xml:space="preserve"><value>Десктопний застосунок</value></data>
+  <data name="ProgrammingStyle_Label" xml:space="preserve"><value>Стиль</value></data>
+  <data name="ProgrammingPromptStyle_Auto" xml:space="preserve"><value>Авто</value></data>
+  <data name="ProgrammingPromptStyle_MinimalistWebsite" xml:space="preserve"><value>Мінімалістичний</value></data>
+  <data name="ProgrammingPromptStyle_CorporateWebsite" xml:space="preserve"><value>Корпоративний</value></data>
+  <data name="ProgrammingPromptStyle_PremiumShowcase" xml:space="preserve"><value>Преміальний</value></data>
+  <data name="ProgrammingPromptStyle_EditorialStudio" xml:space="preserve"><value>Едиторіал / студія</value></data>
+  <data name="ProgrammingPromptStyle_BrightPromo" xml:space="preserve"><value>Яскравий промо</value></data>
+  <data name="ProgrammingPromptStyle_DarkTech" xml:space="preserve"><value>Темний тех</value></data>
+  <data name="ProgrammingPromptStyle_SaasDashboard" xml:space="preserve"><value>SaaS-дашборд</value></data>
+  <data name="ProgrammingPromptStyle_AnalyticalDashboard" xml:space="preserve"><value>Аналітичний дашборд</value></data>
+  <data name="ProgrammingPromptStyle_ExecutiveDashboard" xml:space="preserve"><value>Для керівника</value></data>
+  <data name="ProgrammingPromptStyle_MobileFirstApp" xml:space="preserve"><value>Спершу мобільний</value></data>
+  <data name="ProgrammingPromptStyle_ProductiveWebApp" xml:space="preserve"><value>Продуктивний вебзастосунок</value></data>
+  <data name="ProgrammingPromptStyle_CommunityPlatform" xml:space="preserve"><value>Спільнота</value></data>
+  <data name="ProgrammingPromptStyle_RetroArcadeGame" xml:space="preserve"><value>Ретроаркада</value></data>
+  <data name="ProgrammingPromptStyle_PuzzleGame" xml:space="preserve"><value>Головоломка</value></data>
+  <data name="ProgrammingPromptStyle_NeonActionGame" xml:space="preserve"><value>Неон / екшен</value></data>
+  <data name="ProgrammingPromptStyle_CartoonGame" xml:space="preserve"><value>Мультяшний</value></data>
+  <data name="ProgrammingPromptStyle_PhysicsToyGame" xml:space="preserve"><value>Фізична мінігра</value></data>
+  <data name="ProgrammingPromptStyle_LightweightUtility" xml:space="preserve"><value>Легка утиліта</value></data>
+  <data name="ProgrammingPromptStyle_PowerUserTool" xml:space="preserve"><value>Для досвідчених</value></data>
+  <data name="ProgrammingPromptStyle_ConversationalBot" xml:space="preserve"><value>Діалоговий бот</value></data>
+  <data name="ProgrammingPromptStyle_SalesBot" xml:space="preserve"><value>Бот продажів</value></data>
+  <data name="ProgrammingPromptStyle_ContentParser" xml:space="preserve"><value>Контентний парсер</value></data>
+  <data name="ProgrammingPromptStyle_DataCollector" xml:space="preserve"><value>Збирач даних</value></data>
+  <data name="ProgrammingPromptStyle_DeveloperApi" xml:space="preserve"><value>API для розробників</value></data>
+  <data name="ProgrammingPromptStyle_StartupMvp" xml:space="preserve"><value>Стартап MVP</value></data>
+  <data name="ProgrammingPromptStyle_NativeDesktop" xml:space="preserve"><value>Нативний десктоп</value></data>
+  <data name="ProgrammingPromptStyle_CrossPlatformDesktop" xml:space="preserve"><value>Кросплатформний десктоп</value></data>
 </root>
 
 

@@ -15,7 +15,6 @@ public sealed record PromptBuilderEvaluationScenario(
     TextPromptTone TextTone = TextPromptTone.Neutral,
     AnalysisDirection AnalysisDirection = AnalysisDirection.Auto,
     VideoDirection VideoDirection = VideoDirection.Auto,
-    ProgrammingTaskType ProgrammingTaskType = ProgrammingTaskType.Auto,
     ProgrammingProjectType ProgrammingProjectType = ProgrammingProjectType.Auto,
     ProgrammingPromptStyle ProgrammingStyle = ProgrammingPromptStyle.Auto);
 

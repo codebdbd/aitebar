@@ -315,7 +315,8 @@ public sealed class PromptBuilderServiceTests
         Assert.DoesNotContain(PromptBuilderService.GetThemeStyles(ThemeSection.Horror), style => style.Style == ThemeStyle.SpaceStation);
         Assert.Contains(PromptBuilderService.GetThemeStyles(ThemeSection.Space), style => style.Style == ThemeStyle.SpaceStation);
         Assert.Contains(PromptBuilderService.GetThemeStyles(ThemeSection.SciFi), style => style.Style == ThemeStyle.RobotJunkyard);
-        Assert.Contains(PromptBuilderService.GetThemeStyles(ThemeSection.Professions), style => style.Style == ThemeStyle.ScientistLaboratory);
+        Assert.DoesNotContain(PromptBuilderService.ThemeSections, section => section.Section == ThemeSection.Professions);
+        Assert.Contains(PromptBuilderService.GetThemeStyles(ThemeSection.Sports), style => style.Style == ThemeStyle.TrainingMontage && style.PromptDescriptor.Contains("training-ground scene"));
     }
 
     [Fact]
@@ -552,6 +553,14 @@ public sealed class PromptBuilderServiceTests
         Assert.Contains("product photography", request.Messages[0].Content);
         Assert.Contains("Clean studio product photography", request.Messages[0].Content);
         Assert.DoesNotContain("{photoStyle}", request.Messages[0].Content);
+    }
+
+    [Fact]
+    public void PhotoStyles_AllSectionExposesTheEntireCatalog()
+    {
+        Assert.Equal(
+            PromptBuilderService.PhotoStyles.Select(style => style.Style),
+            PromptBuilderService.GetPhotoStyles(PhotoSection.All).Select(style => style.Style));
     }
 
     [Fact]

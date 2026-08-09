@@ -246,13 +246,6 @@ public enum VideoDirection
     TravelLandscape, Action, Timelapse, Macro, StopMotion, ProductAnimation3D, LoopAnimation
 }
 
-public enum ProgrammingTaskType
-{
-    Auto, NewFeature, BugFix, Refactoring, CodeReview, Architecture, Testing,
-    Performance, Security, ApiIntegration, Database, UiUx, DevOpsDeployment,
-    Documentation, ExistingCodeAnalysis, MigrationDependencies
-}
-
 public enum ProgrammingProjectType
 {
     Auto,
@@ -442,8 +435,6 @@ public enum PaintingArtist
     JoanMiro
 }
 
-public enum IconPlatform { Auto, MacOS, IOS, Windows11, AndroidMaterialYou, CrossPlatform }
-
 public enum IconStyle
 {
     Auto, Flat, GradientFlat, Monochrome, Line, Glyph, Filled, Duotone, Isometric,
@@ -536,11 +527,9 @@ public sealed record PaintingStyleSectionDefinition(PaintingStyleSection Section
 public sealed record PaintingArtistDefinition(PaintingArtist Artist, string LocalizationKey, string PromptDescriptor);
 public sealed record AnalysisDirectionDefinition(AnalysisDirection Direction, string LocalizationKey, string OutcomeLocalizationKey, string PromptDescriptor);
 public sealed record VideoDirectionDefinition(VideoDirection Direction, string LocalizationKey, string PromptDescriptor);
-public sealed record ProgrammingTaskTypeDefinition(ProgrammingTaskType Type, string LocalizationKey, string PromptDescriptor);
 public sealed record ProgrammingProjectTypeDefinition(ProgrammingProjectType Type, string LocalizationKey, string PromptDescriptor);
 public sealed record ProgrammingPromptStyleDefinition(ProgrammingPromptStyle Style, string LocalizationKey, string PromptDescriptor);
 public sealed record VisualTargetModelDefinition(VisualTargetModel Model, string LocalizationKey, string PromptDescriptor);
-public sealed record IconPlatformDefinition(IconPlatform Platform, string LocalizationKey, string PromptDescriptor);
 public sealed record IconStyleDefinition(IconStyle Style, string LocalizationKey, string PromptDescriptor);
 public sealed record GraphicTypeDefinition(GraphicType Type, string LocalizationKey, string PromptDescriptor);
 public sealed record GraphicStyleDefinition(GraphicStyle Style, string LocalizationKey, string PromptDescriptor);
@@ -781,9 +770,7 @@ public sealed class PromptBuilderService
     ];
 
     public static IEnumerable<PhotoStyleDefinition> GetPhotoStyles(PhotoSection section) =>
-        section == PhotoSection.All
-            ? PhotoStyles.Where(style => style.Style == PhotoStyle.Auto)
-            : PhotoStyles.Where(style => style.Style == PhotoStyle.Auto || GetPhotoStyleSection(style.Style) == section);
+        PhotoStyles.Where(style => section == PhotoSection.All || style.Style == PhotoStyle.Auto || GetPhotoStyleSection(style.Style) == section);
 
     private static PhotoSection GetPhotoStyleSection(PhotoStyle style) => style switch
     {
@@ -802,16 +789,6 @@ public sealed class PromptBuilderService
         PhotoStyle.AnnieLeibovitz or PhotoStyle.PeterLindbergh or PhotoStyle.HelmutNewton or PhotoStyle.RichardAvedon or PhotoStyle.SteveMcCurry or PhotoStyle.HenriCartierBresson or PhotoStyle.SebastiaoSalgado or PhotoStyle.GregoryCrewdson or PhotoStyle.DavidLaChapelle or PhotoStyle.IrvingPenn or PhotoStyle.EllenVonUnwerth or PhotoStyle.MarioTestino or PhotoStyle.TimWalker or PhotoStyle.PaoloRoversi or PhotoStyle.AndreasGursky or PhotoStyle.CindySherman or PhotoStyle.DaidoMoriyama or PhotoStyle.VivianMaier or PhotoStyle.SlimAarons or PhotoStyle.FanHo => PhotoSection.Photographers,
         _ => PhotoSection.All
     };
-
-    public static readonly IReadOnlyList<IconPlatformDefinition> IconPlatforms =
-    [
-        new(IconPlatform.Auto, "IconPlatform_Auto", "Choose the platform treatment that best fits the brief."),
-        new(IconPlatform.MacOS, "IconPlatform_MacOS", "macOS app icon: a rounded-square tile, elegant restrained depth or flat treatment, a centered distinctive symbol, clean safe padding, and no tiny detail."),
-        new(IconPlatform.IOS, "IconPlatform_IOS", "iOS and iPadOS app icon: a squircle composition, one centered memorable symbol, balanced color fields, generous safe padding, and instant recognition at small size."),
-        new(IconPlatform.Windows11, "IconPlatform_Windows11", "Windows 11 app icon: simple modern geometry, a high-contrast recognizable glyph, clean silhouette, optional transparent background when appropriate, and readability from 16 pixels."),
-        new(IconPlatform.AndroidMaterialYou, "IconPlatform_AndroidMaterialYou", "Android Material You adaptive icon: separate foreground symbol and background field, bold simple shapes, safe-zone aware composition, and no fragile fine detail."),
-        new(IconPlatform.CrossPlatform, "IconPlatform_CrossPlatform", "cross-platform app icon: a square scalable silhouette, generous safe padding, strong contrast, and recognizability from 16 pixels to a store listing."),
-    ];
 
     public static readonly IReadOnlyList<IconStyleDefinition> IconStyles =
     [
@@ -952,9 +929,8 @@ public sealed class PromptBuilderService
         new(ThemeSection.Space, "ThemeSection_Space", "space exploration, cosmic worlds, and interstellar scenes"),
         new(ThemeSection.War, "ThemeSection_War", "war, military conflict, survival, and battlefield aftermath scenes"),
         new(ThemeSection.FairyTales, "ThemeSection_FairyTales", "fairy-tale, folklore, and myth-inspired worlds"),
-        new(ThemeSection.SciFi, "ThemeSection_SciFi", "science-fiction cities, robots, laboratories, portals, and speculative future worlds"),
-        new(ThemeSection.Sports, "ThemeSection_Sports", "sports, competition, training, and athletic-event scenes"),
-        new(ThemeSection.Professions, "ThemeSection_Professions", "profession-driven scenes with clear workplace action, tools, and role-specific pressure")
+        new(ThemeSection.SciFi, "ThemeSection_SciFi", "science-fiction cities, robots, portals, ruins, and speculative future worlds"),
+        new(ThemeSection.Sports, "ThemeSection_Sports", "sports, competition, training, arenas, tracks, and athletic-event scenes")
     ];
 
     public static readonly IReadOnlyList<ThemeStyleDefinition> ThemeStyles =
@@ -992,17 +968,11 @@ public sealed class PromptBuilderService
         new(ThemeStyle.PostApocalypticWasteland, "ThemeStyle_PostApocalypticWasteland", "post-apocalyptic sci-fi wasteland: ruined networks, improvised survival technology, hostile emptiness, and a future built from collapse."),
         new(ThemeStyle.PortalAnomaly, "ThemeStyle_PortalAnomaly", "portal-anomaly scene: unstable dimensional rupture, distorted physics, scientific alarm, and the pull of another reality breaking through."),
         new(ThemeStyle.StadiumFinal, "ThemeStyle_StadiumFinal", "stadium final: peak competitive pressure, crowd scale, broadcast drama, and decisive championship intensity."),
-        new(ThemeStyle.TrainingMontage, "ThemeStyle_TrainingMontage", "training-montage scene: repetitive discipline, sweat, focused preparation, physical progression, and the build-up before a decisive event."),
+        new(ThemeStyle.TrainingMontage, "ThemeStyle_TrainingGround", "training-ground scene: focused preparation, functional equipment, disciplined movement, team or individual practice, and the build-up before a decisive event."),
         new(ThemeStyle.BoxingRing, "ThemeStyle_BoxingRing", "boxing-ring scene: direct confrontation, ring tension, impact, endurance, and the intimate brutality of combat sport."),
         new(ThemeStyle.StreetBasketball, "ThemeStyle_StreetBasketball", "street-basketball scene: asphalt court rhythm, local competition, improvisation, and raw urban athletic style."),
         new(ThemeStyle.PitLane, "ThemeStyle_PitLane", "motorsport pit-lane scene: speed engineering, team choreography, machine precision, and race-day urgency."),
-        new(ThemeStyle.ExtremeOutdoor, "ThemeStyle_ExtremeOutdoor", "extreme outdoor sport: exposed risk, raw landscape, high-adrenaline movement, and physical endurance."),
-        new(ThemeStyle.SurgeonOperation, "ThemeStyle_SurgeonOperation", "surgeon-in-operation scene: sterile precision, surgical lighting, coordinated teamwork, focused hands, and life-or-death concentration."),
-        new(ThemeStyle.FirefighterRescue, "ThemeStyle_FirefighterRescue", "firefighter-rescue scene: smoke, urgency, heavy protective gear, active hazard, and decisive lifesaving action."),
-        new(ThemeStyle.DetectiveCrimeScene, "ThemeStyle_DetectiveCrimeScene", "detective-at-crime-scene scene: forensic detail, guarded perimeter, investigative focus, and the tension of assembling hidden truth."),
-        new(ThemeStyle.ScientistLaboratory, "ThemeStyle_ScientistLaboratory", "scientist-in-laboratory scene: experimental setup, analytical observation, technical instruments, and concentrated research intensity."),
-        new(ThemeStyle.PilotCockpit, "ThemeStyle_PilotCockpit", "pilot-in-cockpit scene: instrument glow, flight-control focus, enclosed high-responsibility space, and split-second navigational decisions."),
-        new(ThemeStyle.MinerUnderground, "ThemeStyle_MinerUnderground", "miner-underground scene: confined industrial depth, heavy equipment, dust, pressure, and physically demanding work below the surface.")
+        new(ThemeStyle.ExtremeOutdoor, "ThemeStyle_ExtremeOutdoor", "extreme outdoor sport: exposed risk, raw landscape, high-adrenaline movement, and physical endurance.")
     ];
 
     public static IEnumerable<ThemeStyleDefinition> GetThemeStyles(ThemeSection section) =>
@@ -1016,7 +986,6 @@ public sealed class PromptBuilderService
         ThemeStyle.EnchantedForest or ThemeStyle.WitchHut or ThemeStyle.RoyalCastle or ThemeStyle.UnderwaterKingdom or ThemeStyle.VillageAtForestEdge or ThemeStyle.SpiritLake => ThemeSection.FairyTales,
         ThemeStyle.CyberpunkMegacity or ThemeStyle.RobotJunkyard or ThemeStyle.AndroidFactory or ThemeStyle.UndergroundTechCity or ThemeStyle.PostApocalypticWasteland or ThemeStyle.PortalAnomaly => ThemeSection.SciFi,
         ThemeStyle.StadiumFinal or ThemeStyle.TrainingMontage or ThemeStyle.BoxingRing or ThemeStyle.StreetBasketball or ThemeStyle.PitLane or ThemeStyle.ExtremeOutdoor => ThemeSection.Sports,
-        ThemeStyle.SurgeonOperation or ThemeStyle.FirefighterRescue or ThemeStyle.DetectiveCrimeScene or ThemeStyle.ScientistLaboratory or ThemeStyle.PilotCockpit or ThemeStyle.MinerUnderground => ThemeSection.Professions,
         _ => ThemeSection.All
     };
 
@@ -1088,26 +1057,6 @@ public sealed class PromptBuilderService
         new(VideoDirection.StopMotion, "VideoDirection_StopMotion", "Handcrafted stop-motion sequence with tactile miniature materials, intentional incremental motion, practical lighting, and consistent set continuity."),
         new(VideoDirection.ProductAnimation3D, "VideoDirection_ProductAnimation3D", "Polished 3D product animation with physically plausible materials, precise motion design, clean camera paths, and controlled lighting."),
         new(VideoDirection.LoopAnimation, "VideoDirection_LoopAnimation", "Seamless short looping animation with a clear repeating action, matching first and last frames, stable composition, and no visible jump." )
-    ];
-
-    public static readonly IReadOnlyList<ProgrammingTaskTypeDefinition> ProgrammingTaskTypes =
-    [
-        new(ProgrammingTaskType.Auto, "ProgrammingTask_Auto", "Infer the most useful software-development task type from the brief."),
-        new(ProgrammingTaskType.NewFeature, "ProgrammingTask_NewFeature", "Define the feature scope, user flows, data handling, edge cases, non-functional requirements, deliverables, and acceptance criteria."),
-        new(ProgrammingTaskType.BugFix, "ProgrammingTask_BugFix", "Require reproducible steps, observed and expected behavior, root-cause analysis grounded in the code, a minimal safe fix, regression coverage, and verification steps."),
-        new(ProgrammingTaskType.Refactoring, "ProgrammingTask_Refactoring", "Require a behavior-preserving refactoring plan, code smells or duplication supported by evidence, incremental changes, compatibility constraints, and regression tests."),
-        new(ProgrammingTaskType.CodeReview, "ProgrammingTask_CodeReview", "Request concrete evidence-based findings ordered by severity, with file and location, impact, explanation, and a practical correction; do not invent speculative issues."),
-        new(ProgrammingTaskType.Architecture, "ProgrammingTask_Architecture", "Request viable architecture options, constraints, trade-offs, boundaries, data flow, failure modes, security considerations, rollout plan, and a justified recommendation."),
-        new(ProgrammingTaskType.Testing, "ProgrammingTask_Testing", "Specify the test target, behavior to prove, critical paths, edge cases, failure conditions, fixture strategy, and the most appropriate test levels."),
-        new(ProgrammingTaskType.Performance, "ProgrammingTask_Performance", "Require a measurable performance goal, baseline, likely bottlenecks, profiling or measurement method, safe optimizations, trade-offs, and post-change verification."),
-        new(ProgrammingTaskType.Security, "ProgrammingTask_Security", "Identify the threat surface, trust boundaries, evidence-based vulnerabilities, severity, remediation, secure defaults, and verification without weakening protections."),
-        new(ProgrammingTaskType.ApiIntegration, "ProgrammingTask_ApiIntegration", "Specify contracts, authentication, request and response handling, retries, timeouts, error mapping, idempotency where relevant, observability, and integration tests."),
-        new(ProgrammingTaskType.Database, "ProgrammingTask_Database", "Specify data model, integrity constraints, query patterns, migrations, transactions, indexing, rollback, compatibility, and data-validation strategy."),
-        new(ProgrammingTaskType.UiUx, "ProgrammingTask_UiUx", "Specify user goals, interaction states, accessibility, responsive behavior, loading and error states, visual consistency, and acceptance criteria."),
-        new(ProgrammingTaskType.DevOpsDeployment, "ProgrammingTask_DevOpsDeployment", "Specify build and release flow, environments, configuration and secrets, deployment steps, rollback, monitoring, alerts, and verification."),
-        new(ProgrammingTaskType.Documentation, "ProgrammingTask_Documentation", "Specify audience, scope, prerequisites, accurate examples, procedures, expected outcomes, limitations, and maintenance ownership."),
-        new(ProgrammingTaskType.ExistingCodeAnalysis, "ProgrammingTask_ExistingCodeAnalysis", "Require inspection of the supplied code before conclusions, trace claims to concrete files or constructs, identify dependencies and risks, and separate observations from recommendations."),
-        new(ProgrammingTaskType.MigrationDependencies, "ProgrammingTask_MigrationDependencies", "Specify current and target versions, compatibility risks, breaking changes, staged migration, rollback, dependency locks, and validation tests." )
     ];
 
     public static readonly IReadOnlyList<ProgrammingProjectTypeDefinition> ProgrammingProjectTypes =
@@ -1404,20 +1353,6 @@ public sealed class PromptBuilderService
         Keep the result unmistakably painterly. Treat artist references as strong stylistic orientation only; do not promise or imply an exact identity match. Respect an explicitly requested medium, period, or artist direction when it conflicts with the selected default. Select 4:5 for portrait-oriented scenes, 16:9 for broad narratives, and 1:1 for a balanced composition unless the user specifies another ratio.
 
         Generate the depicted scene itself as artwork, not a photograph of an artwork or a decorative object. Do not add a frame, border, mat, canvas edge, easel, gallery wall, museum display, caption, signature, or any presentation context unless the user explicitly requests it.
-        """;
-
-    private const string IconsInstruction = """
-        Turn the user's brief into one polished English prompt for generating an application icon.
-
-        Return only one finished natural-language paragraph. Never add headings, lists, explanations, questions, placeholders, negative prompts, or invented visible text.
-
-        Preserve the app's purpose and any explicit symbol, color, platform, or style requirement. Expand a short idea into an intentional icon direction, but never invent brands, copyrighted characters, slogans, letters, or tiny decorative details.
-
-        Apply this platform treatment: {iconPlatform}
-        Apply this icon style: {iconStyle}
-        Apply this target-model profile: {visualTarget}
-
-        Prioritize a single memorable symbol, simple geometry, a clean silhouette, clear negative space, balanced visual weight, safe padding, and recognition at small sizes. Specify a square 1:1 composition unless the user explicitly requests another format. The output must describe the icon asset itself, not a mockup, device screen, app-store listing, or photograph of an icon.
         """;
 
     private const string GraphicsInstruction = """
@@ -1821,13 +1756,11 @@ public sealed class PromptBuilderService
         TextPromptTone textTone = TextPromptTone.Neutral,
         AnalysisDirection analysisDirection = AnalysisDirection.Auto,
         VideoDirection videoDirection = VideoDirection.Auto,
-        ProgrammingTaskType programmingTaskType = ProgrammingTaskType.Auto,
         ProgrammingProjectType programmingProjectType = ProgrammingProjectType.Auto,
         ProgrammingPromptStyle programmingStyle = ProgrammingPromptStyle.Auto,
         VisualTargetModel visualTarget = VisualTargetModel.Universal,
         ThemeSection themeSection = ThemeSection.All,
         ThemeStyle themeStyle = ThemeStyle.Auto,
-        IconPlatform iconPlatform = IconPlatform.Auto,
         IconStyle iconStyle = IconStyle.Auto,
         GraphicType graphicType = GraphicType.Auto,
         GraphicStyle graphicStyle = GraphicStyle.Auto,

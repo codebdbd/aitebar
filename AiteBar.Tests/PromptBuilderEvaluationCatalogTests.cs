@@ -35,7 +35,6 @@ public sealed class PromptBuilderEvaluationCatalogTests
                 textTone: scenario.TextTone,
                 analysisDirection: scenario.AnalysisDirection,
                 videoDirection: scenario.VideoDirection,
-                programmingTaskType: scenario.ProgrammingTaskType,
                 programmingProjectType: scenario.ProgrammingProjectType,
                 programmingStyle: scenario.ProgrammingStyle,
                 visualTarget: scenario.VisualTarget);
