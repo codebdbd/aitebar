@@ -30,6 +30,16 @@ namespace AiteBar
 
         public static string GetDefaultContextName(int number, CultureInfo culture) => LocalizationService.Format("Panel_DefaultNameFormat", culture, number);
 
+        public static string GetContextListDisplayName(PanelContext context)
+        {
+            int number = GetContextNumber(context.Id);
+            string defaultName = GetDefaultContextName(number);
+            string name = context.Name?.Trim() ?? string.Empty;
+            return IsDefaultContextName(name, number)
+                ? defaultName
+                : $"{defaultName} · {name}";
+        }
+
         // Получить фиксированный цвет для контекста по индексу
         public static string GetContextColor(int index) => DefaultContextColors[index % DefaultContextColors.Length];
 

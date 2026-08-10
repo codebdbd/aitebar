@@ -108,7 +108,11 @@ namespace AiteBar
             CmbContext.Items.Clear();
             foreach (var context in _context.GetContextsSnapshot())
             {
-                CmbContext.Items.Add(new ComboBoxItem { Content = context.Name, Tag = context.Id });
+                CmbContext.Items.Add(new ComboBoxItem
+                {
+                    Content = ContextStateHelper.GetContextListDisplayName(context),
+                    Tag = context.Id
+                });
             }
 
             if (_editingElement != null)

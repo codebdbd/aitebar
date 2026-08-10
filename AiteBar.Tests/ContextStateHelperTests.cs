@@ -137,6 +137,16 @@ public sealed class ContextStateHelperTests : IDisposable
         Assert.True(normalized[1].IsNameCustomized);
     }
 
+    [Fact]
+    public void GetContextListDisplayName_AlwaysIncludesPanelNumber()
+    {
+        var defaultContext = new PanelContext { Id = "context-1", Name = "Panel 1", IsNameCustomized = false };
+        var customContext = new PanelContext { Id = "context-4", Name = "Drawing", IsNameCustomized = true };
+
+        Assert.Equal("Panel 1", ContextStateHelper.GetContextListDisplayName(defaultContext));
+        Assert.Equal("Panel 4 · Drawing", ContextStateHelper.GetContextListDisplayName(customContext));
+    }
+
     [Theory]
     [InlineData("Panel 1", 1, true)]
     [InlineData("Панель 1", 1, true)]

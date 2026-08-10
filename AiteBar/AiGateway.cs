@@ -451,25 +451,12 @@ public sealed class AiGateway
         return (result, lastError);
     }
 
-    // A new Prompt Builder submission is an explicit retry. Do not let a stale
-    // in-memory cooldown suppress it before an HTTP request is made.
+    // A new Prompt Builder submission is an explicit retry. Runtime availability
+    // is only a routing optimization and must never block a user retry locally.
     internal void ClearPromptBuilderTemporaryAvailability()
     {
-        foreach ((string connectionId, AiConnectionRuntimeStatus status) in _connectionStatuses)
-        {
-            if (status.State == AiConnectionState.Unavailable)
-            {
-                _connectionStatuses.TryRemove(connectionId, out _);
-            }
-        }
-
-        foreach ((string quotaKey, AiConnectionRuntimeStatus status) in _quotaStatuses)
-        {
-            if (status.State is AiConnectionState.CoolingDown or AiConnectionState.Unavailable)
-            {
-                _quotaStatuses.TryRemove(quotaKey, out _);
-            }
-        }
+        _connectionStatuses.Clear();
+        _quotaStatuses.Clear();
     }
 
     internal static IReadOnlyList<AiModelDescriptor> ApplyTextProcessingModelPolicy(

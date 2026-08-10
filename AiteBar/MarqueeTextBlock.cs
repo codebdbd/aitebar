@@ -1,5 +1,7 @@
 using System.Globalization;
+using System.Reflection;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -9,6 +11,14 @@ namespace AiteBar;
 
 internal sealed class MarqueeTextBlock : FrameworkElement
 {
+    public static readonly DependencyProperty SourceProperty = DependencyProperty.Register(
+        nameof(Source), typeof(object), typeof(MarqueeTextBlock),
+        new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender, OnSourcePropertyChanged));
+
+    public static readonly DependencyProperty DisplayMemberPathProperty = DependencyProperty.Register(
+        nameof(DisplayMemberPath), typeof(string), typeof(MarqueeTextBlock),
+        new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender, OnSourcePropertyChanged));
+
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(
         nameof(Text), typeof(string), typeof(MarqueeTextBlock),
         new FrameworkPropertyMetadata(string.Empty, FrameworkPropertyMetadataOptions.AffectsMeasure | FrameworkPropertyMetadataOptions.AffectsRender, OnVisualPropertyChanged));
@@ -36,6 +46,8 @@ internal sealed class MarqueeTextBlock : FrameworkElement
         new FrameworkPropertyMetadata(0d, FrameworkPropertyMetadataOptions.AffectsRender));
 
     public string Text { get => (string)GetValue(TextProperty); set => SetValue(TextProperty, value); }
+    public object? Source { get => GetValue(SourceProperty); set => SetValue(SourceProperty, value); }
+    public string DisplayMemberPath { get => (string)GetValue(DisplayMemberPathProperty); set => SetValue(DisplayMemberPathProperty, value); }
     public FontFamily FontFamily { get => (FontFamily)GetValue(FontFamilyProperty); set => SetValue(FontFamilyProperty, value); }
     public double FontSize { get => (double)GetValue(FontSizeProperty); set => SetValue(FontSizeProperty, value); }
     public System.Windows.FontStyle FontStyle { get => (System.Windows.FontStyle)GetValue(FontStyleProperty); set => SetValue(FontStyleProperty, value); }
@@ -99,6 +111,77 @@ internal sealed class MarqueeTextBlock : FrameworkElement
         {
             marquee.StopMarquee();
         }
+    }
+
+    private static void OnSourcePropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not MarqueeTextBlock marquee)
+        {
+            return;
+        }
+
+        marquee.Text = ResolveDisplayText(marquee.Source, marquee.DisplayMemberPath);
+    }
+
+    internal static string ResolveDisplayText(object? source, string? displayMemberPath)
+    {
+        if (source is null)
+        {
+            return string.Empty;
+        }
+
+        if (source is string text)
+        {
+            return text;
+        }
+
+        if (source is ComboBoxItem comboBoxItem)
+        {
+            return ResolveDisplayText(comboBoxItem.Content, displayMemberPath);
+        }
+
+        if (source is TextBlock textBlock)
+        {
+            return textBlock.Text ?? string.Empty;
+        }
+
+        if (!string.IsNullOrWhiteSpace(displayMemberPath))
+        {
+            object? value = source;
+            foreach (string memberName in displayMemberPath.Split('.'))
+            {
+                if (value is null)
+                {
+                    return string.Empty;
+                }
+
+                PropertyInfo? property = value.GetType().GetProperty(memberName, BindingFlags.Instance | BindingFlags.Public);
+                if (property is null)
+                {
+                    value = null;
+                    break;
+                }
+
+                value = property.GetValue(value);
+            }
+
+            if (value is not null)
+            {
+                return Convert.ToString(value, CultureInfo.CurrentUICulture) ?? string.Empty;
+            }
+        }
+
+        if (source is ModelItem modelItem)
+        {
+            return modelItem.FullDisplay;
+        }
+
+        if (source is ContentControl contentControl && !ReferenceEquals(contentControl.Content, source))
+        {
+            return ResolveDisplayText(contentControl.Content, displayMemberPath);
+        }
+
+        return Convert.ToString(source, CultureInfo.CurrentUICulture) ?? string.Empty;
     }
 
     private FormattedText CreateFormattedText() =>

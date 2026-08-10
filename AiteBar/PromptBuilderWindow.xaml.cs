@@ -97,18 +97,20 @@ public partial class PromptBuilderWindow : DarkWindow
     public PromptBuilderWindow(
         PromptBuilderService service,
         AppSettingsService settingsService,
-        MainWindow? mainWindow = null)
+        MainWindow? mainWindow = null,
+        AiGateway? gateway = null)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _mainWindow = mainWindow;
-        _gateway = new AiGateway(settingsService);
+        _gateway = gateway ?? new AiGateway(settingsService);
         _currentMode = PromptBuilderCategory.Programming;
         InitializeComponent();
         SourceInitialized += OnSourceInitialized;
         _progressTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) =>
             UpdateProcessingProgress(), Dispatcher);
         CmbModels.ItemsSource = _models;
+        AddAutomaticModelOption();
         ApplyModeToUi();
         RefreshUiState();
         UpdateCommandButtonLayout();
@@ -477,10 +479,9 @@ public partial class PromptBuilderWindow : DarkWindow
         }
         if (_hasSuccessfulResult)
         {
-            if (!_isShowingOriginal)
-            {
-                _processedText = TxtEditor.Text;
-            }
+            // A manual edit starts a new brief. Keep the previous source only for
+            // the explicit repeat action, never as an implicit replacement.
+            ResetResultHistory();
         }
         SetStatus(string.Empty);
         ClearInfoStatus();
@@ -1760,6 +1761,13 @@ public partial class PromptBuilderWindow : DarkWindow
         }));
     }
 
+    private void AddAutomaticModelOption()
+    {
+        string automaticLabel = LocalizationService.Get("TextProcessing_ModelAuto");
+        _models.Add(new ModelItem(null, null, automaticLabel, null) { FullDisplay = automaticLabel });
+        CmbModels.SelectedIndex = 0;
+    }
+
     private async Task LoadModelsAsync(CancellationToken cancellationToken)
     {
         _isLoadingModels = true;
@@ -1767,9 +1775,7 @@ public partial class PromptBuilderWindow : DarkWindow
         _hasAutomaticModel = false;
         _hasSelectableModel = false;
         _models.Clear();
-        string automaticLabel = LocalizationService.Get("TextProcessing_ModelAuto");
-        _models.Add(new ModelItem(null, null, automaticLabel, null) { FullDisplay = automaticLabel });
-        CmbModels.SelectedIndex = 0;
+        AddAutomaticModelOption();
         RefreshUiState();
         var availableModels = new List<AiModelDescriptor>();
         var preferredIdentities = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

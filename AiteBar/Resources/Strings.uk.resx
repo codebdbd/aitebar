@@ -671,6 +671,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiSettings_StatusAvailable" xml:space="preserve"><value>Підключено · доступно моделей: {0}</value></data>
   <data name="AiSettings_StatusError" xml:space="preserve"><value>Помилка підключення: {0}</value></data>
   <data name="AiSettings_CredentialSaveFailed" xml:space="preserve"><value>Не вдалося зберегти API-ключ у Диспетчері облікових даних Windows.</value></data>
+  <data name="QuickTool_AiProviderRequiredTooltip" xml:space="preserve"><value>Щоб увімкнути ці утиліти, додайте хоча б один робочий API-ключ провайдера нейромереж.</value></data>
   <data name="Tool_TextProcessing" xml:space="preserve"><value>Обробка тексту</value></data>
   <data name="Main_TextProcessingTooltip" xml:space="preserve"><value>Обробка тексту</value></data>
   <data name="QuickTool_TextProcessing_Title" xml:space="preserve"><value>Обробка тексту</value></data>

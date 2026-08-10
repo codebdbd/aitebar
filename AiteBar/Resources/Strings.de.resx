@@ -677,6 +677,7 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="AiSettings_StatusAvailable" xml:space="preserve"><value>Verbunden · {0} Modelle verfügbar</value></data>
   <data name="AiSettings_StatusError" xml:space="preserve"><value>Verbindungsfehler: {0}</value></data>
   <data name="AiSettings_CredentialSaveFailed" xml:space="preserve"><value>Der API-Schlüssel konnte nicht in der Windows-Anmeldeinformationsverwaltung gespeichert werden.</value></data>
+  <data name="QuickTool_AiProviderRequiredTooltip" xml:space="preserve"><value>Um diese Werkzeuge zu aktivieren, fügen Sie mindestens einen funktionierenden API-Schlüssel eines KI-Anbieters hinzu.</value></data>
   <data name="Tool_TextProcessing" xml:space="preserve"><value>Textverarbeitung</value></data>
   <data name="Main_TextProcessingTooltip" xml:space="preserve"><value>Textverarbeitung</value></data>
   <data name="QuickTool_TextProcessing_Title" xml:space="preserve"><value>Textverarbeitung</value></data>

@@ -383,8 +383,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
             string targetContextId = context.Id;
 
             MenuItem item = CreateMenuItem(
-                glyph: string.IsNullOrEmpty(context.IconGlyph) ? "\uE8B7" : context.IconGlyph,
-                text: context.Name,
+                glyph: FluentGlyph(MenuIcons.Panels),
+                text: ContextStateHelper.GetContextListDisplayName(context),
                 onClick: (s, e) => ActivateContextById(targetContextId),
                 isActive: isActive
             );
@@ -428,10 +428,13 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         List<MenuItem> moveTargets = GetContextsSnapshot()
             .Where(context => !string.Equals(context.Id, element.ContextId, StringComparison.Ordinal))
-            .Select(context => CreateMenuItem(FluentGlyph(MenuIcons.Move), context.Name, async (s, e) =>
-            {
-                await RunPanelInteractionAsync(() => MoveElementToContextAsync(element.Id, context.Id));
-            }))
+            .Select(context => CreateMenuItem(
+                FluentGlyph(MenuIcons.Panels),
+                ContextStateHelper.GetContextListDisplayName(context),
+                async (s, e) =>
+                {
+                    await RunPanelInteractionAsync(() => MoveElementToContextAsync(element.Id, context.Id));
+                }))
             .ToList();
 
         if (moveTargets.Count > 0)

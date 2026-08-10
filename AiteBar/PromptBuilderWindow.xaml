@@ -311,17 +311,10 @@
                            VerticalAlignment="Center"/>
                 <ComboBox x:Name="CmbModels" Grid.Column="2"
                           Height="36" VerticalAlignment="Center"
+                          DisplayMemberPath="FullDisplay"
                           SelectionChanged="CmbModels_SelectionChanged"
                           ToolTip="{local:Loc ResourceKey=PromptBuilder_GeneratorHint}"
-                          AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_GeneratorLabel}">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding FullDisplay}"
-                                       TextTrimming="CharacterEllipsis"
-                                       ToolTip="{Binding FullDisplay}"/>
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
+                          AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_GeneratorLabel}"/>
 
                 <Button x:Name="BtnRefreshModels" Grid.Column="3"
                         Width="36" Height="36" MinWidth="36" MaxWidth="36"

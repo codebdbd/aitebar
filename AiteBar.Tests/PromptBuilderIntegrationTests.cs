@@ -285,6 +285,54 @@ public sealed class PromptBuilderIntegrationTests
     }
 
     [Fact]
+    public void ManualEditorChange_AfterGeneratedPrompt_ResetsResultHistory()
+    {
+        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+        int start = code.IndexOf("private void TxtEditor_TextChanged", StringComparison.Ordinal);
+        int end = code.IndexOf("private void CmbModels_SelectionChanged", start, StringComparison.Ordinal);
+
+        Assert.True(start >= 0 && end > start);
+        string handler = code[start..end];
+        Assert.Contains("if (_hasSuccessfulResult)", handler);
+        Assert.Contains("ResetResultHistory();", handler);
+        Assert.DoesNotContain("_processedText = TxtEditor.Text;", handler);
+    }
+
+    [Fact]
+    public void Generator_ShowsAutomaticOptionBeforeModelsFinishLoading()
+    {
+        string promptBuilderCode = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+        string textProcessingCode = Read("AiteBar", "TextProcessingWindow.xaml.cs");
+
+        Assert.Contains("CmbModels.ItemsSource = _models;\n        AddAutomaticModelOption();", promptBuilderCode);
+        Assert.Contains("CmbModels.ItemsSource = _models;\n        AddAutomaticModelOption();", textProcessingCode);
+        Assert.Contains("private void AddAutomaticModelOption()", promptBuilderCode);
+        Assert.Contains("private void AddAutomaticModelOption()", textProcessingCode);
+    }
+
+    [Fact]
+    public void Generator_UsesModelDisplayTextForTheSelectedValue()
+    {
+        string promptBuilderXaml = Read("AiteBar", "PromptBuilderWindow.xaml");
+
+        Assert.Contains("x:Name=\"CmbModels\"", promptBuilderXaml);
+        Assert.Contains("DisplayMemberPath=\"FullDisplay\"", promptBuilderXaml);
+    }
+
+    [Fact]
+    public void Utility_ReusesGatewayModelCacheAcrossWindowOpenings()
+    {
+        string utilityCode = Read("AiteBar", "PromptBuilderUtility.cs");
+        string windowCode = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+
+        Assert.Contains("private AiGateway? _gateway;", utilityCode);
+        Assert.Contains("_gateway ??= new AiGateway(settingsService);", utilityCode);
+        Assert.Contains("new(_service, settingsService, owner as MainWindow, _gateway)", utilityCode);
+        Assert.Contains("AiGateway? gateway = null", windowCode);
+        Assert.Contains("_gateway = gateway ?? new AiGateway(settingsService);", windowCode);
+    }
+
+    [Fact]
     public void ShiftEnterInEditor_ProcessesWhileEnterRemainsAvailableForNewLine()
     {
         string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");

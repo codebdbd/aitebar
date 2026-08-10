@@ -279,6 +279,7 @@ public partial class AppSettingsWindow : DarkWindow
         RefreshAutomationNames();
         SortQuickToolRows();
         BuildAiConnectionRows();
+        UpdateAiDependentQuickToolAvailability();
         UpdateAboutVersionText();
 
         if (_isWindowLoaded)
@@ -470,6 +471,7 @@ public partial class AppSettingsWindow : DarkWindow
             });
             _pendingAiCredentialTargets.Add(target);
             BuildAiConnectionRows();
+            UpdateAiDependentQuickToolAvailability();
         }
         catch (Exception ex)
         {
@@ -525,6 +527,7 @@ public partial class AppSettingsWindow : DarkWindow
             _removedAiCredentialTargets.Add(connection.CredentialTarget);
         }
         BuildAiConnectionRows();
+        UpdateAiDependentQuickToolAvailability();
     }
 
     private void CleanupPendingAiCredentials()
@@ -1003,6 +1006,41 @@ public partial class AppSettingsWindow : DarkWindow
         _aiConnections.Clear();
         _aiConnections.AddRange((_settings.Ai?.Connections ?? []).Select(CloneAiConnection));
         BuildAiConnectionRows();
+        UpdateAiDependentQuickToolAvailability();
+    }
+
+    private void UpdateAiDependentQuickToolAvailability()
+    {
+        bool hasAiConnection = _aiConnections.Any(IsUsableAiConnection);
+        string? tooltip = hasAiConnection
+            ? null
+            : LocalizationService.Get("QuickTool_AiProviderRequiredTooltip");
+
+        SetAiDependentQuickToolAvailability(QuickToolRowTextProcessing, ChkShowPresetTextProcessing, hasAiConnection, tooltip);
+        SetAiDependentQuickToolAvailability(QuickToolRowPromptBuilder, ChkShowPresetPromptBuilder, hasAiConnection, tooltip);
+    }
+
+    private static bool IsUsableAiConnection(AiConnectionSettings connection) =>
+        connection.IsEnabled &&
+        !string.IsNullOrWhiteSpace(connection.ProviderId) &&
+        !string.IsNullOrWhiteSpace(connection.CredentialTarget) &&
+        AiProviderCatalog.TryGet(connection.ProviderId, out _);
+
+    private static void SetAiDependentQuickToolAvailability(
+        FrameworkElement row,
+        CheckBox checkBox,
+        bool isEnabled,
+        string? tooltip)
+    {
+        row.IsEnabled = isEnabled;
+        row.ToolTip = tooltip;
+        ToolTipService.SetShowOnDisabled(row, true);
+        checkBox.ToolTip = tooltip;
+        ToolTipService.SetShowOnDisabled(checkBox, true);
+        if (!isEnabled)
+        {
+            checkBox.IsChecked = false;
+        }
     }
 
     private static AiConnectionSettings CloneAiConnection(AiConnectionSettings connection) => new()
@@ -1219,6 +1257,8 @@ public partial class AppSettingsWindow : DarkWindow
         {
             return;
         }
+
+        UpdateAiDependentQuickToolAvailability();
 
         _mainWindow.GetSettingsService().UpdateSettings(settings =>
         {

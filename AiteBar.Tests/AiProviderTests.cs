@@ -127,7 +127,7 @@ public sealed class AiProviderTests
     }
 
     [Fact]
-    public async Task Gateway_PromptBuilderRetry_ClearsOnlyTemporaryLocalAvailability()
+    public async Task Gateway_PromptBuilderRetry_ClearsTransientLocalAvailability()
     {
         var credentials = new MemoryCredentialStore();
         credentials.Write("AiteBar/AI/one", "key-one");
@@ -160,10 +160,111 @@ public sealed class AiProviderTests
         Assert.Equal(AiConnectionState.CoolingDown,
             gateway.GetQuotaStatus(settingsService.Settings.Ai.Connections[0], "writer")?.State);
 
-        gateway.ClearPromptBuilderTemporaryAvailability();
-        AiGatewayResponse response = await gateway.GenerateAsync(request);
+        AiGatewayStream response = await gateway.GeneratePromptBuilderStreamingAsync(request);
+        var content = new StringBuilder();
+        await foreach (string chunk in response.Chunks)
+        {
+            content.Append(chunk);
+        }
 
-        Assert.Equal("ok", response.Content);
+        Assert.Equal("ok", content.ToString());
+        Assert.Equal(2, handler.GenerationAttemptCount);
+    }
+
+    [Fact]
+    public async Task Gateway_PromptBuilderRetry_RechecksConnectionAfterForbidden()
+    {
+        var credentials = new MemoryCredentialStore();
+        credentials.Write("AiteBar/AI/one", "key-one");
+        var handler = new TransientRateLimitHandler(firstFailureStatus: HttpStatusCode.Forbidden);
+        var settingsService = new AppSettingsService
+        {
+            Settings = new AppSettings
+            {
+                Ai = new AiSettings
+                {
+                    FreeTierOnly = true,
+                    ProviderOrder = ["cerebras"],
+                    Connections = [Connection("one", "cerebras", "AiteBar/AI/one")]
+                }
+            }
+        };
+        var gateway = new AiGateway(
+            settingsService,
+            new AiProviderClient(new HttpClient(handler), credentials),
+            TimeProvider.System);
+        var request = new AiChatRequest
+        {
+            Messages = [new AiChatMessage("user", "hello")],
+            PreferredProviderId = "cerebras",
+            PreferredModelId = "writer",
+            RequireExactModel = true
+        };
+
+        await Assert.ThrowsAsync<NoAvailableConnectionException>(() => gateway.GenerateAsync(request));
+        Assert.Equal(AiConnectionState.PermissionDenied,
+            gateway.GetConnectionStatus(settingsService.Settings.Ai.Connections[0].Id)?.State);
+
+        AiGatewayStream response = await gateway.GeneratePromptBuilderStreamingAsync(request);
+        var content = new StringBuilder();
+        await foreach (string chunk in response.Chunks)
+        {
+            content.Append(chunk);
+        }
+
+        Assert.Equal("ok", content.ToString());
+        Assert.Equal(2, handler.GenerationAttemptCount);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Unauthorized, AiConnectionState.InvalidCredential)]
+    [InlineData(HttpStatusCode.PaymentRequired, AiConnectionState.QuotaExhausted)]
+    public async Task Gateway_PromptBuilderRetry_RechecksPermanentlyQuarantinedRoute(
+        HttpStatusCode failureStatus,
+        AiConnectionState expectedState)
+    {
+        var credentials = new MemoryCredentialStore();
+        credentials.Write("AiteBar/AI/one", "key-one");
+        var handler = new TransientRateLimitHandler(firstFailureStatus: failureStatus);
+        var settingsService = new AppSettingsService
+        {
+            Settings = new AppSettings
+            {
+                Ai = new AiSettings
+                {
+                    FreeTierOnly = true,
+                    ProviderOrder = ["cerebras"],
+                    Connections = [Connection("one", "cerebras", "AiteBar/AI/one")]
+                }
+            }
+        };
+        AiConnectionSettings connection = settingsService.Settings.Ai.Connections[0];
+        var gateway = new AiGateway(
+            settingsService,
+            new AiProviderClient(new HttpClient(handler), credentials),
+            TimeProvider.System);
+        var request = new AiChatRequest
+        {
+            Messages = [new AiChatMessage("user", "hello")],
+            PreferredProviderId = "cerebras",
+            PreferredModelId = "writer",
+            RequireExactModel = true
+        };
+
+        await Assert.ThrowsAsync<NoAvailableConnectionException>(() => gateway.GenerateAsync(request));
+        AiConnectionState? actualState = failureStatus == HttpStatusCode.Unauthorized
+            ? gateway.GetConnectionStatus(connection.Id)?.State
+            : gateway.GetQuotaStatus(connection, "writer")?.State;
+        Assert.Equal(expectedState, actualState);
+
+        AiGatewayStream response = await gateway.GeneratePromptBuilderStreamingAsync(request);
+        var content = new StringBuilder();
+        await foreach (string chunk in response.Chunks)
+        {
+            content.Append(chunk);
+        }
+
+        Assert.Equal("ok", content.ToString());
         Assert.Equal(2, handler.GenerationAttemptCount);
     }
 
@@ -853,35 +954,55 @@ public sealed class AiProviderTests
     private sealed class TransientRateLimitHandler : HttpMessageHandler
     {
         private readonly bool _includeRetryAfter;
+        private readonly HttpStatusCode _firstFailureStatus;
 
-        public TransientRateLimitHandler(bool includeRetryAfter = false) =>
+        public TransientRateLimitHandler(
+            bool includeRetryAfter = false,
+            HttpStatusCode firstFailureStatus = HttpStatusCode.TooManyRequests)
+        {
             _includeRetryAfter = includeRetryAfter;
+            _firstFailureStatus = firstFailureStatus;
+        }
 
         public int GenerationAttemptCount { get; private set; }
 
-        protected override Task<HttpResponseMessage> SendAsync(
+        protected override async Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
             if (request.Method == HttpMethod.Get)
             {
-                return Task.FromResult(Json(HttpStatusCode.OK,
-                    "{\"data\":[{\"id\":\"writer\",\"name\":\"Writer\"}]}"));
+                return Json(HttpStatusCode.OK,
+                    "{\"data\":[{\"id\":\"writer\",\"name\":\"Writer\"}]}");
             }
 
             GenerationAttemptCount++;
             if (GenerationAttemptCount == 1)
             {
-                HttpResponseMessage limited = Json(HttpStatusCode.TooManyRequests, "{\"error\":{\"message\":\"transient\"}}");
-                if (_includeRetryAfter)
+                HttpResponseMessage failure = Json(_firstFailureStatus, "{\"error\":{\"message\":\"transient\"}}");
+                if (_includeRetryAfter && _firstFailureStatus == HttpStatusCode.TooManyRequests)
                 {
-                    limited.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.FromMinutes(5));
+                    failure.Headers.RetryAfter = new System.Net.Http.Headers.RetryConditionHeaderValue(TimeSpan.FromMinutes(5));
                 }
-                return Task.FromResult(limited);
+                return failure;
             }
 
-            return Task.FromResult(Json(HttpStatusCode.OK,
-                "{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}"));
+            string requestBody = request.Content == null
+                ? string.Empty
+                : await request.Content.ReadAsStringAsync(cancellationToken);
+            if (requestBody.Contains("\"stream\":true", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        "data: {\"choices\":[{\"delta\":{\"content\":\"ok\"}}]}\n\ndata: [DONE]\n\n",
+                        Encoding.UTF8,
+                        "text/event-stream")
+                };
+            }
+
+            return Json(HttpStatusCode.OK,
+                "{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}");
         }
 
         private static HttpResponseMessage Json(HttpStatusCode statusCode, string json) => new(statusCode)
