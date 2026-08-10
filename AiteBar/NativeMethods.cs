@@ -23,6 +23,9 @@ namespace AiteBar
         internal static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll")]
+        internal static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [DllImport("user32.dll")]
         internal static extern IntPtr SetWindowsHookEx(int idHook, LowLevelMouseProc lpfn, IntPtr hMod, uint dwThreadId);
 
         [DllImport("user32.dll", SetLastError = true)]
@@ -132,6 +135,12 @@ namespace AiteBar
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern int GetWindowLong(IntPtr hWnd, int nIndex);
 
+        [DllImport("user32.dll", SetLastError = true)]
+        internal static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+        [DllImport("user32.dll")]
+        internal static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
+
         [DllImport("user32.dll")]
         internal static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
@@ -216,7 +225,9 @@ namespace AiteBar
         internal static readonly IntPtr HWND_BOTTOM = new IntPtr(1);
         internal const uint SWP_NOSIZE = 0x0001;
         internal const uint SWP_NOMOVE = 0x0002;
+        internal const uint SWP_NOZORDER = 0x0004;
         internal const uint SWP_NOACTIVATE = 0x0010;
+        internal const uint SWP_FRAMECHANGED = 0x0020;
         internal const uint SWP_SHOWWINDOW = 0x0040;
 
         internal const int WH_MOUSE_LL = 14;
@@ -227,15 +238,23 @@ namespace AiteBar
         internal const int WM_HOTKEY = 0x0312;
         internal const int WM_SETTINGCHANGE = 0x001A;
         internal const int WM_DPICHANGED = 0x02E0;
+        internal const int WM_NCACTIVATE = 0x0086;
+        internal const int WM_NCPAINT = 0x0085;
+        internal const int WM_STYLECHANGING = 0x007C;
+        internal const int WM_STYLECHANGED = 0x007D;
         internal const int GWL_STYLE = -16;
         internal const int GWL_EXSTYLE = -20;
         internal const int WS_POPUP = unchecked((int)0x80000000);
         internal const int WS_CAPTION = 0x00C00000;
         internal const int WS_VISIBLE = 0x10000000;
+        internal const int WS_MINIMIZEBOX = 0x00020000;
         internal const int WS_EX_TOOLWINDOW = 0x00000080;
         internal const int WS_EX_NOACTIVATE = 0x08000000;
         internal const int SW_SHOWMAXIMIZED = 3;
         internal const int SW_SHOWMINIMIZED = 2;
+        internal const int SW_HIDE = 0;
+        internal const int SW_SHOWNORMAL = 1;
+        internal const int SW_SHOW = 5;
   
         [DllImport("user32.dll", SetLastError = true)]
         internal static extern bool AddClipboardFormatListener(IntPtr hWnd);
@@ -244,5 +263,10 @@ namespace AiteBar
         internal static extern bool RemoveClipboardFormatListener(IntPtr hWnd);
   
         internal const int WM_CLIPBOARDUPDATE = 0x031D;
+
+        internal const int WM_POWERBROADCAST = 0x0218;
+        internal const int PBT_APMSUSPEND = 0x4;
+        internal const int PBT_APMRESUMESUSPEND = 0x7;
+        internal const int PBT_APMRESUMEAUTOMATIC = 0x12;
     }
 }

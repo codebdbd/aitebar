@@ -7,7 +7,7 @@ namespace AiteBar
 {
     internal static class ContextStateHelper
     {
-        public const int FixedContextCount = 8;
+        public const int FixedContextCount = 10;
         public const string DefaultContextPrefix = "Panel ";
         private static readonly CultureInfo[] LocalizedCultures =
         [
@@ -20,21 +20,25 @@ namespace AiteBar
         // Фиксированные цвета для каждого контекста (хорошо видны белые цифры)
         private static readonly string[] DefaultContextColors =
         [
-            "#2563EB",   // Синий
-            "#059669",   // Зелёный
-            "#D97706",   // Оранжевый
-            "#7C3AED",   // Фиолетовый
-            "#0891B2",   // Голубой (циан)
-            "#BE123C",   // Красный
-            "#4D7C0F",   // Тёмно-зелёный
-            "#6D28D9"    // Тёмно-фиолетовый
+            "#3B82F6", "#22C55E", "#F97316", "#A855F7", "#06B6D4",
+            "#F43F5E", "#84CC16", "#EAB308", "#EC4899", "#14B8A6"
         ];
 
-        public static string GetDefaultContextId(int index) => $"context-{index + 1}";
+        public static string GetDefaultContextId(int number) => $"context-{number}";
 
         public static string GetDefaultContextName(int index) => GetDefaultContextName(index, LocalizationService.ResolvedCulture);
 
-        public static string GetDefaultContextName(int index, CultureInfo culture) => LocalizationService.Format("Panel_DefaultNameFormat", culture, index + 1);
+        public static string GetDefaultContextName(int number, CultureInfo culture) => LocalizationService.Format("Panel_DefaultNameFormat", culture, number);
+
+        public static string GetContextListDisplayName(PanelContext context)
+        {
+            int number = GetContextNumber(context.Id);
+            string defaultName = GetDefaultContextName(number);
+            string name = context.Name?.Trim() ?? string.Empty;
+            return IsDefaultContextName(name, number)
+                ? defaultName
+                : $"{defaultName} · {name}";
+        }
 
         // Получить фиксированный цвет для контекста по индексу
         public static string GetContextColor(int index) => DefaultContextColors[index % DefaultContextColors.Length];
@@ -47,32 +51,28 @@ namespace AiteBar
         public static List<PanelContext> NormalizeContexts(IReadOnlyList<PanelContext>? source, CultureInfo culture)
         {
             var normalized = new List<PanelContext>(FixedContextCount);
-            var usedIds = new HashSet<string>(StringComparer.Ordinal);
+            var existingById = (source ?? []).Where(context => !string.IsNullOrWhiteSpace(context.Id))
+                .GroupBy(context => context.Id, StringComparer.Ordinal)
+                .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
 
-            for (int i = 0; i < FixedContextCount; i++)
+            for (int number = 0; number < FixedContextCount; number++)
             {
-                PanelContext? existing = source != null && i < source.Count ? source[i] : null;
-                string id = string.IsNullOrWhiteSpace(existing?.Id) ? GetDefaultContextId(i) : existing!.Id;
-                bool isNameCustomized = DetermineIsNameCustomized(existing, i);
+                string id = GetDefaultContextId(number);
+                existingById.TryGetValue(id, out PanelContext? existing);
+                bool isNameCustomized = DetermineIsNameCustomized(existing, number);
                 string name = isNameCustomized
                     ? existing!.Name.Trim()
-                    : GetDefaultContextName(i, culture);
-
-                if (!usedIds.Add(id) || !string.Equals(id, GetDefaultContextId(i), StringComparison.Ordinal))
-                {
-                    id = GetDefaultContextId(i);
-                    usedIds.Add(id);
-                }
+                    : GetDefaultContextName(number, culture);
 
                 // Цвет всегда фиксированный для каждого индекса
                 normalized.Add(new PanelContext
                 {
                     Id = id,
-                    Name = string.IsNullOrWhiteSpace(name) ? GetDefaultContextName(i, culture) : name,
+                    Name = string.IsNullOrWhiteSpace(name) ? GetDefaultContextName(number, culture) : name,
                     IsNameCustomized = isNameCustomized,
                     IconGlyph = string.IsNullOrWhiteSpace(existing?.IconGlyph) ? "\uE8B7" : existing.IconGlyph,
-                    IsEnabled = i == 0 || (existing?.IsEnabled ?? false),
-                    Color = GetContextColor(i)
+                    IsEnabled = number == 0 || (existing?.IsEnabled ?? false),
+                    Color = GetContextColor(number)
                 });
             }
 
@@ -180,6 +180,15 @@ namespace AiteBar
 
             int wrapped = index % count;
             return wrapped < 0 ? wrapped + count : wrapped;
+        }
+
+        public static int GetContextNumber(string? contextId)
+        {
+            const string prefix = "context-";
+            return contextId != null && contextId.StartsWith(prefix, StringComparison.Ordinal) &&
+                   int.TryParse(contextId[prefix.Length..], out int number) && number is >= 0 and < FixedContextCount
+                ? number
+                : 0;
         }
 
         public static bool IsDefaultContextName(string? name, int index)

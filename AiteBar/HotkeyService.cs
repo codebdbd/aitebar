@@ -20,7 +20,18 @@ public enum HotkeyCommand
     QRCodeGenerator,
     ClipboardManager,
     TextProcessing,
-    ZenEditor
+    PromptBuilder,
+    ZenEditor,
+    ActivateContext0,
+    ActivateContext1,
+    ActivateContext2,
+    ActivateContext3,
+    ActivateContext4,
+    ActivateContext5,
+    ActivateContext6,
+    ActivateContext7,
+    ActivateContext8,
+    ActivateContext9
 }
 
 public sealed record HotkeyDefinition(HotkeyCommand? Command, int Id, string DisplayName, HotkeyBinding Binding);
@@ -64,6 +75,8 @@ public sealed class HotkeyService
     internal const int ClipboardManagerId = 9010;
     internal const int TextProcessingId = 9011;
     internal const int ZenEditorId = 9012;
+    internal const int PromptBuilderId = 9013;
+    internal const int ContextHotkeyBaseId = 9100;
 
     internal const uint ModAlt = 0x0001;
     internal const uint ModControl = 0x0002;
@@ -72,7 +85,6 @@ public sealed class HotkeyService
 
     private static readonly IReadOnlyList<HotkeyDescriptor> Descriptors =
     [
-        new HotkeyDescriptor(HotkeyCommand.ShowPanel, ShowPanelId, "AppSettingsWindow_ShowPanel"),
         new HotkeyDescriptor(HotkeyCommand.NextContext, NextContextId, "AppSettingsWindow_NextPanel"),
         new HotkeyDescriptor(HotkeyCommand.PreviousContext, PreviousContextId, "AppSettingsWindow_PreviousPanel"),
         new HotkeyDescriptor(HotkeyCommand.AddButton, AddButtonId, "AppSettingsWindow_AddButton"),
@@ -84,11 +96,15 @@ public sealed class HotkeyService
         new HotkeyDescriptor(HotkeyCommand.QRCodeGenerator, QRCodeGeneratorId, "Tool_QRCodeGenerator"),
         new HotkeyDescriptor(HotkeyCommand.ClipboardManager, ClipboardManagerId, "Tool_ClipboardManager"),
         new HotkeyDescriptor(HotkeyCommand.TextProcessing, TextProcessingId, "Tool_TextProcessing"),
+        new HotkeyDescriptor(HotkeyCommand.PromptBuilder, PromptBuilderId, "Tool_PromptBuilder"),
         new HotkeyDescriptor(HotkeyCommand.ZenEditor, ZenEditorId, "Tool_ZenEditor")
     ];
 
     private static readonly IReadOnlyDictionary<int, HotkeyCommand> CommandsById =
-        Descriptors.ToDictionary(descriptor => descriptor.Id, descriptor => descriptor.Command);
+        Descriptors.ToDictionary(descriptor => descriptor.Id, descriptor => descriptor.Command)
+            .Concat(Enumerable.Range(0, ContextStateHelper.FixedContextCount)
+                .ToDictionary(number => ContextHotkeyBaseId + number, number => (HotkeyCommand)((int)HotkeyCommand.ActivateContext0 + number)))
+            .ToDictionary(pair => pair.Key, pair => pair.Value);
 
     private readonly IHotkeyRegistrar _registrar;
 
@@ -105,18 +121,8 @@ public sealed class HotkeyService
 
     public IReadOnlyList<HotkeyDefinition> CreateDefinitions(AppSettings settings, Func<string, string> getDisplayName)
     {
-        var showPanelBinding = new HotkeyBinding
-        {
-            Ctrl = settings.GlobalHotkeyCtrl,
-            Alt = settings.GlobalHotkeyAlt,
-            Shift = settings.GlobalHotkeyShift,
-            Win = settings.GlobalHotkeyWin,
-            Key = settings.GlobalHotkeyKey
-        };
-
         var bindings = new Dictionary<HotkeyCommand, HotkeyBinding>
         {
-            [HotkeyCommand.ShowPanel] = showPanelBinding,
             [HotkeyCommand.NextContext] = settings.NextContextHotkey,
             [HotkeyCommand.PreviousContext] = settings.PreviousContextHotkey,
             [HotkeyCommand.AddButton] = settings.AddButtonHotkey,
@@ -128,16 +134,22 @@ public sealed class HotkeyService
             [HotkeyCommand.QRCodeGenerator] = settings.QRCodeGeneratorHotkey,
             [HotkeyCommand.ClipboardManager] = settings.ClipboardManagerHotkey,
             [HotkeyCommand.TextProcessing] = settings.TextProcessingHotkey,
+            [HotkeyCommand.PromptBuilder] = settings.PromptBuilderHotkey,
             [HotkeyCommand.ZenEditor] = settings.ZenEditorHotkey
         };
 
-        return Descriptors
+        var definitions = Descriptors
             .Select(descriptor => new HotkeyDefinition(
                 descriptor.Command,
                 descriptor.Id,
                 getDisplayName(descriptor.DisplayNameKey),
                 bindings[descriptor.Command]))
             .ToList();
+        for (int number = 0; number < ContextStateHelper.FixedContextCount; number++)
+        {
+            definitions.Add(new HotkeyDefinition((HotkeyCommand)((int)HotkeyCommand.ActivateContext0 + number), ContextHotkeyBaseId + number, getDisplayName("Backup_PanelHotkeyFormat").Replace("{0}", number.ToString(System.Globalization.CultureInfo.CurrentCulture), StringComparison.Ordinal), new HotkeyBinding { Alt = true, Key = $"D{number}" }));
+        }
+        return definitions;
     }
 
     public IReadOnlyList<HotkeyRegistrationResult> RegisterAll(IntPtr hwnd, IReadOnlyList<HotkeyDefinition> definitions)
@@ -196,6 +208,12 @@ public sealed class HotkeyService
 
     public bool TryGetCommand(int hotkeyId, out HotkeyCommand command) =>
         CommandsById.TryGetValue(hotkeyId, out command);
+
+    public static bool TryGetContextNumber(HotkeyCommand command, out int number)
+    {
+        number = (int)command - (int)HotkeyCommand.ActivateContext0;
+        return number is >= 0 and < ContextStateHelper.FixedContextCount;
+    }
 
     public static bool TryMapBinding(HotkeyBinding? binding, out HotkeyRegistrationData data, out string? failureReason)
     {

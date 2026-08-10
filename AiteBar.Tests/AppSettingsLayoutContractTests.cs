@@ -18,19 +18,19 @@ public sealed class AppSettingsLayoutContractTests
         "TxtAboutVersion", "SettingsFooter", "BtnKeepOnTop", "AiConnectionsList", "TxtAiConnectionsEmpty",
         "ChkShowPanelOnMouseHover", "ChkShowTaskbarPositionIndicator", "ChkSecondaryMonitor", "ChkCheckForUpdatesEnabled",
         "PanelContextsList",
-        "HotkeyShowPanel", "HotkeyNextContext", "HotkeyPreviousContext", "HotkeyAddButton",
+        "HotkeyNextContext", "HotkeyPreviousContext", "HotkeyAddButton",
         "HotkeyFileSorter", "HotkeyIconConverter", "HotkeyQuickNote", "HotkeyColorPicker", "HotkeyTimerStopwatch", "HotkeyQRCodeGenerator", "HotkeyClipboardManager",
         "ChkShowPresetSearch", "ChkShowPresetScreenshot", "ChkShowPresetVideo", "ChkShowPresetCalc",
         "ChkShowPresetExplorer", "ChkShowPresetDownloads", "ChkShowPresetFileSorter", "ChkShowPresetIconConverter",
         "ChkShowPresetTimerStopwatch", "ChkShowPresetColorPicker", "ChkShowPresetQuickNote", "ChkShowPresetQRCodeGenerator",
         "ChkShowPresetClipboardManager", "ChkShowPresetShowDesktop", "ChkShowPresetAppsFolder", "ChkShowPresetCopilot",
-        "ChkShowPresetTextProcessing",
+        "ChkShowPresetTextProcessing", "ChkShowPresetPromptBuilder", "HotkeyPromptBuilder",
         "ChkClipboardManagerPersistHistory", "QuickToolsList",
         "QuickToolRowQuickNote", "QuickToolRowQRCodeGenerator", "QuickToolRowDownloads", "QuickToolRowVideo",
         "QuickToolRowCopilot", "QuickToolRowCalculator", "QuickToolRowIconConverter", "QuickToolRowClipboardManager",
         "QuickToolRowColorPicker", "QuickToolRowSearch", "QuickToolRowShowDesktop", "QuickToolRowAppsFolder",
         "QuickToolRowExplorer", "QuickToolRowScreenshot", "QuickToolRowFileSorter", "QuickToolRowTimerStopwatch",
-        "QuickToolRowTextProcessing"
+        "QuickToolRowTextProcessing", "QuickToolRowPromptBuilder"
     ];
 
     [Fact]

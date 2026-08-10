@@ -32,16 +32,16 @@ public sealed class ContextStateHelperTests : IDisposable
     }
 
     [Fact]
-    public void NormalizeContexts_CreatesEightDefaultContextsWithOnlyFirstEnabled()
+    public void NormalizeContexts_CreatesTenDefaultContextsWithOnlyZeroEnabled()
     {
         List<PanelContext> contexts = ContextStateHelper.NormalizeContexts([]);
 
-        Assert.Equal(8, contexts.Count);
-        Assert.Equal("context-1", contexts[0].Id);
-        Assert.Equal("Panel 1", contexts[0].Name);
+        Assert.Equal(10, contexts.Count);
+        Assert.Equal("context-0", contexts[0].Id);
+        Assert.Equal("Panel 0", contexts[0].Name);
         Assert.True(contexts[0].IsEnabled);
-        Assert.Equal("context-8", contexts[7].Id);
-        Assert.Equal("Panel 8", contexts[7].Name);
+        Assert.Equal("context-9", contexts[9].Id);
+        Assert.Equal("Panel 9", contexts[9].Name);
         Assert.All(contexts.Skip(1), context => Assert.False(context.IsEnabled));
     }
 
@@ -84,9 +84,9 @@ public sealed class ContextStateHelperTests : IDisposable
 
         List<PanelContext> normalized = ContextStateHelper.NormalizeContexts(contexts);
 
-        Assert.Equal("\uE123", normalized[0].IconGlyph);
-        Assert.Equal("\uE456", normalized[1].IconGlyph);
-        Assert.Equal("\uE8B7", normalized[2].IconGlyph);
+        Assert.Equal("\uE8B7", normalized[0].IconGlyph);
+        Assert.Equal("\uE123", normalized[1].IconGlyph);
+        Assert.Equal("\uE456", normalized[2].IconGlyph);
         Assert.Equal("\uE8B7", normalized[3].IconGlyph);
     }
 
@@ -101,9 +101,9 @@ public sealed class ContextStateHelperTests : IDisposable
 
         List<PanelContext> normalized = ContextStateHelper.NormalizeContexts(contexts);
 
-        Assert.Equal("#2563EB", normalized[0].Color);
-        Assert.Equal("#059669", normalized[1].Color);
-        Assert.Equal("#D97706", normalized[2].Color);
+        Assert.Equal("#3B82F6", normalized[0].Color);
+        Assert.Equal("#22C55E", normalized[1].Color);
+        Assert.Equal("#F97316", normalized[2].Color);
     }
 
     [Fact]
@@ -117,10 +117,10 @@ public sealed class ContextStateHelperTests : IDisposable
 
         List<PanelContext> normalized = ContextStateHelper.NormalizeContexts(contexts, CultureInfo.GetCultureInfo("ru"));
 
-        Assert.Equal("Панель 1", normalized[0].Name);
-        Assert.Equal("Панель 2", normalized[1].Name);
-        Assert.False(normalized[0].IsNameCustomized);
+        Assert.Equal("Панель 1", normalized[1].Name);
+        Assert.Equal("Панель 2", normalized[2].Name);
         Assert.False(normalized[1].IsNameCustomized);
+        Assert.False(normalized[2].IsNameCustomized);
     }
 
     [Fact]
@@ -133,15 +133,25 @@ public sealed class ContextStateHelperTests : IDisposable
 
         List<PanelContext> normalized = ContextStateHelper.NormalizeContexts(contexts, CultureInfo.GetCultureInfo("ru"));
 
-        Assert.Equal("Work", normalized[0].Name);
-        Assert.True(normalized[0].IsNameCustomized);
+        Assert.Equal("Work", normalized[1].Name);
+        Assert.True(normalized[1].IsNameCustomized);
+    }
+
+    [Fact]
+    public void GetContextListDisplayName_AlwaysIncludesPanelNumber()
+    {
+        var defaultContext = new PanelContext { Id = "context-1", Name = "Panel 1", IsNameCustomized = false };
+        var customContext = new PanelContext { Id = "context-4", Name = "Drawing", IsNameCustomized = true };
+
+        Assert.Equal("Panel 1", ContextStateHelper.GetContextListDisplayName(defaultContext));
+        Assert.Equal("Panel 4 · Drawing", ContextStateHelper.GetContextListDisplayName(customContext));
     }
 
     [Theory]
-    [InlineData("Panel 1", 0, true)]
-    [InlineData("Панель 1", 0, true)]
-    [InlineData("Leiste 1", 0, true)]
-    [InlineData("Work", 0, false)]
+    [InlineData("Panel 1", 1, true)]
+    [InlineData("Панель 1", 1, true)]
+    [InlineData("Leiste 1", 1, true)]
+    [InlineData("Work", 1, false)]
     public void IsDefaultContextName_DetectsLocalizedDefaults(string value, int index, bool expected)
     {
         Assert.Equal(expected, ContextStateHelper.IsDefaultContextName(value, index));

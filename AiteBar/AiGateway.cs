@@ -105,6 +105,14 @@ public sealed class AiGateway
         CancellationToken cancellationToken = default) =>
         GenerateStreamingCoreAsync(request, RouteOrderingMode.DeterministicTextProcessing, cancellationToken);
 
+    internal Task<AiGatewayStream> GeneratePromptBuilderStreamingAsync(
+        AiChatRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ClearPromptBuilderTemporaryAvailability();
+        return GenerateStreamingCoreAsync(request, RouteOrderingMode.DeterministicTextProcessing, cancellationToken);
+    }
+
     private async Task<AiGatewayStream> GenerateStreamingCoreAsync(
         AiChatRequest request,
         RouteOrderingMode mode,
@@ -443,6 +451,14 @@ public sealed class AiGateway
         return (result, lastError);
     }
 
+    // A new Prompt Builder submission is an explicit retry. Runtime availability
+    // is only a routing optimization and must never block a user retry locally.
+    internal void ClearPromptBuilderTemporaryAvailability()
+    {
+        _connectionStatuses.Clear();
+        _quotaStatuses.Clear();
+    }
+
     internal static IReadOnlyList<AiModelDescriptor> ApplyTextProcessingModelPolicy(
         IEnumerable<AiModelDescriptor> models,
         bool requireExactModel)
@@ -590,9 +606,15 @@ public sealed class AiGateway
                     AiConnectionState.PermissionDenied, null, exception.Message, now);
                 break;
             case HttpStatusCode.TooManyRequests:
+                // Only a provider-supplied Retry-After is authoritative. Inventing a
+                // one-minute cooldown made transient 429 responses block this window
+                // until the application was restarted.
+                TimeSpan retryAfter = exception.RetryAfter is { } specifiedRetryAfter && specifiedRetryAfter > TimeSpan.Zero
+                    ? specifiedRetryAfter
+                    : TimeSpan.Zero;
                 _quotaStatuses[GetQuotaKey(connection, modelId)] = new(
                     AiConnectionState.CoolingDown,
-                    now + (exception.RetryAfter ?? TimeSpan.FromMinutes(1)),
+                    now + retryAfter,
                     exception.Message,
                     now);
                 break;

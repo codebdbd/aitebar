@@ -64,6 +64,25 @@ public sealed class ComboBoxPopupChromeTests
         Assert.Equal("False", popupScrollViewer.Attribute("CanContentScroll")?.Value);
     }
 
+    [Fact]
+    public void BaseStyle_ConstrainsPopupWidthToTheOwningComboBox()
+    {
+        XDocument resources = XDocument.Load(Path.Combine(
+            FindRepoRoot(),
+            "AiteBar",
+            "FormControlsResources.xaml"));
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        XNamespace xaml = "http://schemas.microsoft.com/winfx/2006/xaml";
+
+        XElement style = Assert.Single(resources.Descendants(presentation + "Style"),
+            element => element.Attribute(xaml + "Key")?.Value == "BaseComboBoxStyle");
+        XElement dropDown = Assert.Single(style.Descendants(presentation + "Border"),
+            element => element.Attribute(xaml + "Name")?.Value == "DropDownBorder");
+
+        Assert.Equal("{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}", dropDown.Attribute("Width")?.Value);
+        Assert.Null(dropDown.Attribute("MinWidth"));
+    }
+
     private static string FindRepoRoot()
     {
         string? current = AppContext.BaseDirectory;

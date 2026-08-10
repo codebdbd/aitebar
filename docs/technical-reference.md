@@ -119,8 +119,8 @@ AiteBar запускается как один экземпляр. Если по
 | `Ai` | объект | Настройки AI-подключений (список подключений, метаданные роутинга). См. раздел ниже. |
 | `Sentry` | объект | Настройки телеметрии Sentry (Dsn, IsEnabled, Environment, TracesSampleRate, SendDefaultPii). Отключено по умолчанию. |
 | `LastFileSortOperation` | — | Undo-состояние последней сессии File Sorter для отката нажатием на панели результата |
-| `Contexts` | 8 панелей | Список панелей-контекстов. Каждый PanelContext дополнительно содержит `IsNameCustomized`, `IconGlyph`, `Color` (AC9 — hex или RGB строка). |
-| `ActiveContextId` | `context-1` | Активная панель |
+| `Contexts` | 10 панелей | Список панелей-контекстов `context-0`…`context-9`. Каждый PanelContext дополнительно содержит `IsNameCustomized`, `IconGlyph`, `Color` (AC9 — hex или RGB строка). |
+| `ActiveContextId` | `context-0` | Активная панель |
 | `Elements` | пустой список | Пользовательские кнопки |
 | `UtilityButtonOrder` | пустой список | Порядок кнопок встроенных утилит |
 

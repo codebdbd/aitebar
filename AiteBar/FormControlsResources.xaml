@@ -275,6 +275,9 @@
                         <ContentPresenter Margin="{TemplateBinding Padding}"
                                           HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
                                           VerticalAlignment="Center"
+                                          Content="{TemplateBinding Content}"
+                                          ContentTemplate="{TemplateBinding ContentTemplate}"
+                                          ContentTemplateSelector="{TemplateBinding ContentTemplateSelector}"
                                           RecognizesAccessKey="True"/>
                     </Border>
                     <ControlTemplate.Triggers>
@@ -340,15 +343,19 @@
                                     </ToggleButton.Template>
                                 </ToggleButton>
 
-                                <ContentPresenter x:Name="ContentSite"
-                                                  Margin="{TemplateBinding Padding}"
-                                                  VerticalAlignment="Center"
-                                                  HorizontalAlignment="Left"
-                                                  RecognizesAccessKey="True"
-                                                  IsHitTestVisible="False"
-                                                  Content="{TemplateBinding SelectionBoxItem}"
-                                                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                                  ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
+                                <local:MarqueeTextBlock x:Name="ContentSite"
+                                                        Margin="{TemplateBinding Padding}"
+                                                        VerticalAlignment="Center"
+                                                        HorizontalAlignment="Stretch"
+                                                        IsHitTestVisible="False"
+                                                        Source="{Binding SelectedItem, RelativeSource={RelativeSource TemplatedParent}}"
+                                                        DisplayMemberPath="{TemplateBinding DisplayMemberPath}"
+                                                        Foreground="{TemplateBinding Foreground}"
+                                                        FontFamily="{TemplateBinding FontFamily}"
+                                                        FontSize="{TemplateBinding FontSize}"
+                                                        FontStyle="{TemplateBinding FontStyle}"
+                                                        FontWeight="{TemplateBinding FontWeight}"
+                                                        FontStretch="{TemplateBinding FontStretch}"/>
 
                                 <Path x:Name="Arrow"
                                       Grid.Column="1"
@@ -370,7 +377,7 @@
                                PopupAnimation="Fade"
                                VerticalOffset="0">
                             <Border x:Name="DropDownBorder"
-                                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                    Width="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                                     MaxHeight="300"
                                     Background="{StaticResource FormControlBackground}"
                                     BorderBrush="{Binding Background, ElementName=Outline}"

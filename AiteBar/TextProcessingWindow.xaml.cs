@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using System.Threading;
@@ -15,6 +16,7 @@ using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Threading;
 using Forms = System.Windows.Forms;
@@ -46,7 +48,6 @@ public partial class TextProcessingWindow : DarkWindow
     private bool _isLoadingState = true;
     private bool _isLoadingModels;
     private bool _isApplyingEditorText;
-    private bool _isDirty;
     private bool _isProcessing;
     private bool _hasClipboardText;
     private bool _hasEligibleModel;
@@ -56,7 +57,6 @@ public partial class TextProcessingWindow : DarkWindow
     private bool _isShowingOriginal;
     private bool _isShowingDiff;
     private bool _isModifiedManually;
-    private bool _hasCopiedResult;
     private string _lastUsedModelDisplay = string.Empty;
     private string _inlineInfoStatus = string.Empty;
     private TextProcessingMode _currentMode = TextProcessingMode.Proofread;
@@ -73,6 +73,7 @@ public partial class TextProcessingWindow : DarkWindow
     private double _requiredMinWidth = PreferredMinWidth;
     private DateTimeOffset _processingStartedAt;
     private bool _isProgressStatusVisible;
+    private int _infoStatusVersion;
 
     public TextProcessingWindow(
         TextProcessingService service,
@@ -85,20 +86,67 @@ public partial class TextProcessingWindow : DarkWindow
         _gateway = new AiGateway(settingsService);
         _currentMode = TextProcessingMode.Proofread;
         InitializeComponent();
+        SourceInitialized += OnSourceInitialized;
         _progressTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) =>
             UpdateProcessingProgress(), Dispatcher);
         CmbModels.ItemsSource = _models;
+        AddAutomaticModelOption();
         ApplyModeToUi();
         RefreshUiState();
         UpdateCommandButtonLayout();
     }
 
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        if (PresentationSource.FromVisual(this) is HwndSource source)
+        {
+            IntPtr hwnd = source.Handle;
+            int style = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_STYLE);
+            style &= ~NativeMethods.WS_MINIMIZEBOX;
+            _ = NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_STYLE, style);
+            _ = NativeMethods.SetWindowPos(
+                hwnd,
+                IntPtr.Zero,
+                0, 0, 0, 0,
+                NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOZORDER | NativeMethods.SWP_FRAMECHANGED);
+        }
+    }
+
     public void ShowNearPanel(AppSettingsService settingsService)
     {
-        RestoreWindowState(settingsService.Settings);
+        AppSettings settings = settingsService.Settings;
+        RestoreWindowState(settings);
+        RestoreEditorText(settings);
         Show();
         Activate();
         FocusEditor();
+    }
+
+    private void RestoreEditorText(AppSettings settings)
+    {
+        string? saved = settings.TextProcessingLastText;
+        _operationHistory.Clear();
+        ResetResultHistory();
+        if (!string.IsNullOrEmpty(saved))
+        {
+            SetEditorText(saved, caretIndex: 0);
+        }
+        else
+        {
+            SetEditorText(string.Empty);
+        }
+        SetStatus(string.Empty);
+        ClearInfoStatus();
+        RefreshUiState();
+    }
+
+    private void SaveEditorText()
+    {
+        string text = TxtEditor.Text ?? string.Empty;
+        _settingsService.UpdateSettings(settings =>
+        {
+            settings.TextProcessingLastText = text;
+        });
     }
 
     internal void RestoreFromAiteBar()
@@ -153,20 +201,7 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
-        bool hasContent = !string.IsNullOrWhiteSpace(TxtEditor.Text);
-        bool needsWarning = hasContent && (_isDirty || (_hasSuccessfulResult && !_hasCopiedResult));
-        if (needsWarning)
-        {
-            bool close = new DarkDialog(LocalizationService.Get("TextProcessing_ConfirmClose"), isConfirm: true)
-            {
-                Owner = this
-            }.ShowDialog() == true;
-            if (!close)
-            {
-                e.Cancel = true;
-                return;
-            }
-        }
+        SaveEditorText();
         SaveWindowState();
         _processingCts?.Cancel();
         _loadModelsCts?.Cancel();
@@ -174,6 +209,11 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void Window_StateChanged(object? sender, EventArgs e)
     {
+        if (WindowState == WindowState.Minimized)
+        {
+            Close();
+            return;
+        }
         if (!_isLoadingState && WindowState != WindowState.Minimized)
         {
             SaveWindowState();
@@ -198,7 +238,12 @@ public partial class TextProcessingWindow : DarkWindow
 
     private async void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.Control)
+        ModifierKeys modifiers = Keyboard.Modifiers;
+        bool processFromEditor = e.Key == Key.Enter &&
+            modifiers == ModifierKeys.Shift &&
+            TxtEditor.IsKeyboardFocusWithin;
+        bool processFromLegacyShortcut = e.Key == Key.Enter && modifiers == ModifierKeys.Control;
+        if (processFromEditor || processFromLegacyShortcut)
         {
             e.Handled = true;
             if (!_isProcessing)
@@ -246,6 +291,7 @@ public partial class TextProcessingWindow : DarkWindow
             "Typography" => TextProcessingMode.Typography,
             "Cleanup" => TextProcessingMode.Cleanup,
             "LiteraryEdit" => TextProcessingMode.LiteraryEdit,
+            "NaturalStyle" => TextProcessingMode.NaturalStyle,
             _ => _currentMode
         };
         ApplyModeToUi();
@@ -266,7 +312,6 @@ public partial class TextProcessingWindow : DarkWindow
                 _isModifiedManually = true;
             }
         }
-        _isDirty = true;
         SetStatus(string.Empty);
         ClearInfoStatus();
         RefreshUiState();
@@ -285,16 +330,6 @@ public partial class TextProcessingWindow : DarkWindow
         SaveModelSelection();
         SetStatus(string.Empty);
         RefreshUiState();
-    }
-
-    private void CmbModels_DropDownOpened(object sender, EventArgs e)
-    {
-        if (CmbModels.Template.FindName("DropDownBorder", CmbModels) is FrameworkElement dropDown)
-        {
-            dropDown.MinWidth = 0;
-            dropDown.Width = CmbModels.ActualWidth;
-            dropDown.MaxWidth = CmbModels.ActualWidth;
-        }
     }
 
     private async void BtnProcess_Click(object sender, RoutedEventArgs e)
@@ -358,7 +393,6 @@ public partial class TextProcessingWindow : DarkWindow
                 clipboardText);
             ResetResultHistory();
             SetEditorText(updatedText, caretIndex, recordUndo: true);
-            _isDirty = true;
             SetStatus(string.Empty);
             RefreshClipboardAvailability(showError: false);
             RefreshUiState();
@@ -382,9 +416,9 @@ public partial class TextProcessingWindow : DarkWindow
                 Clipboard.SetText(TxtEditor.Text);
                 if (_hasSuccessfulResult)
                 {
-                    _hasCopiedResult = true;
                 }
-                SetStatus(LocalizationService.Get("TextProcessing_Copied"));
+                SetStatus(string.Empty);
+                ShowTransientInfoStatus(LocalizationService.Get("TextProcessing_Copied"));
             }
             RefreshClipboardAvailability(showError: false);
             RefreshUiState();
@@ -577,7 +611,6 @@ public partial class TextProcessingWindow : DarkWindow
         _isShowingDiff = false;
         _isProcessing = true;
         _isModifiedManually = false;
-        _hasCopiedResult = false;
         _processingCts = new CancellationTokenSource();
         StartProcessingProgress();
         RefreshUiState();
@@ -642,7 +675,6 @@ public partial class TextProcessingWindow : DarkWindow
                 _operationHistory.Record(textShownBeforeRequest);
             }
             SetEditorText(cleaned);
-            _isDirty = false;
             StopProcessingProgress();
             if (!string.IsNullOrEmpty(_lastUsedModelDisplay))
             {
@@ -782,7 +814,6 @@ public partial class TextProcessingWindow : DarkWindow
         ResetResultHistory();
         SetEditorText(string.Empty);
         _operationHistory.Clear();
-        _isDirty = false;
         SetStatus(string.Empty);
         RefreshUiState();
         FocusEditor();
@@ -797,7 +828,6 @@ public partial class TextProcessingWindow : DarkWindow
         _isShowingOriginal = false;
         _isShowingDiff = false;
         _isModifiedManually = false;
-        _hasCopiedResult = false;
         ClearInfoStatus();
     }
 
@@ -839,7 +869,6 @@ public partial class TextProcessingWindow : DarkWindow
         {
             ResetResultHistory();
             SetEditorText(previous);
-            _isDirty = true;
             SetStatus(string.Empty);
             RefreshUiState();
             FocusEditor();
@@ -861,7 +890,6 @@ public partial class TextProcessingWindow : DarkWindow
         {
             ResetResultHistory();
             SetEditorText(next);
-            _isDirty = true;
             SetStatus(string.Empty);
             RefreshUiState();
             FocusEditor();
@@ -936,6 +964,7 @@ public partial class TextProcessingWindow : DarkWindow
         ModeTypography.IsEnabled = state.CanSelectMode;
         ModeCleanup.IsEnabled = state.CanSelectMode;
         ModeLiteraryEdit.IsEnabled = state.CanSelectMode;
+        ModeNaturalStyle.IsEnabled = state.CanSelectMode;
         CmbModels.IsEnabled = !_isProcessing && !_isLoadingModels && _hasSelectableModel;
         BtnRefreshModels.IsEnabled = !_isProcessing && !_isLoadingModels;
         BtnPaste.IsEnabled = state.CanPaste;
@@ -1076,10 +1105,22 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void SetInfoStatus(string message)
     {
+        unchecked { _infoStatusVersion++; }
         _inlineInfoStatus = message ?? string.Empty;
         if (IsInitialized)
         {
             RefreshUiState();
+        }
+    }
+
+    private async void ShowTransientInfoStatus(string message)
+    {
+        SetInfoStatus(message);
+        int version = _infoStatusVersion;
+        await Task.Delay(TimeSpan.FromSeconds(2));
+        if (version == _infoStatusVersion)
+        {
+            ClearInfoStatus();
         }
     }
 
@@ -1118,12 +1159,14 @@ public partial class TextProcessingWindow : DarkWindow
         ModeTypography.IsSelected = _currentMode == TextProcessingMode.Typography;
         ModeCleanup.IsSelected = _currentMode == TextProcessingMode.Cleanup;
         ModeLiteraryEdit.IsSelected = _currentMode == TextProcessingMode.LiteraryEdit;
+        ModeNaturalStyle.IsSelected = _currentMode == TextProcessingMode.NaturalStyle;
         TxtModeDescription.Text = _currentMode switch
         {
             TextProcessingMode.Proofread => LocalizationService.Get("TextProcessing_ModeProofreadDesc"),
             TextProcessingMode.Typography => LocalizationService.Get("TextProcessing_ModeTypographyDesc"),
             TextProcessingMode.Cleanup => LocalizationService.Get("TextProcessing_ModeCleanupDesc"),
             TextProcessingMode.LiteraryEdit => LocalizationService.Get("TextProcessing_ModeLiteraryEditDesc"),
+            TextProcessingMode.NaturalStyle => LocalizationService.Get("TextProcessing_ModeNaturalStyleDesc"),
             _ => string.Empty
         };
     }
@@ -1165,6 +1208,13 @@ public partial class TextProcessingWindow : DarkWindow
         }));
     }
 
+    private void AddAutomaticModelOption()
+    {
+        string automaticLabel = LocalizationService.Get("TextProcessing_ModelAuto");
+        _models.Add(new ModelItem(null, null, automaticLabel, null) { FullDisplay = automaticLabel });
+        CmbModels.SelectedIndex = 0;
+    }
+
     private async Task LoadModelsAsync(CancellationToken cancellationToken)
     {
         _isLoadingModels = true;
@@ -1172,9 +1222,7 @@ public partial class TextProcessingWindow : DarkWindow
         _hasAutomaticModel = false;
         _hasSelectableModel = false;
         _models.Clear();
-        string automaticLabel = LocalizationService.Get("TextProcessing_ModelAuto");
-        _models.Add(new ModelItem(null, null, automaticLabel, null) { FullDisplay = automaticLabel });
-        CmbModels.SelectedIndex = 0;
+        AddAutomaticModelOption();
         RefreshUiState();
         var availableModels = new List<AiModelDescriptor>();
         var preferredIdentities = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

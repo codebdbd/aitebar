@@ -58,7 +58,7 @@ namespace AiteBar
         {
             if (!Dispatcher.CheckAccess())
             {
-                Dispatcher.Invoke(() => HandleCultureChanged(sender, e));
+                Dispatcher.BeginInvoke(() => HandleCultureChanged(sender, e));
                 return;
             }
 

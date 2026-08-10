@@ -111,7 +111,7 @@
                       HorizontalContentAlignment="Center"
                       VerticalContentAlignment="Stretch"
                       Focusable="False">
-            <Grid Margin="32,24">
+            <Grid Margin="32,16,32,24">
                 <DockPanel x:Name="ContentHost"
                            HorizontalAlignment="Center" VerticalAlignment="Stretch">
 
@@ -146,21 +146,35 @@
                              Header="{local:Loc ResourceKey=TextProcessing_ModeLiteraryEdit}"
                              Style="{StaticResource TextProcessingTabItemStyle}"
                              AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeLiteraryEdit}"/>
+                    <TabItem x:Name="ModeNaturalStyle" Tag="NaturalStyle"
+                             Header="{local:Loc ResourceKey=TextProcessing_ModeNaturalStyle}"
+                             Style="{StaticResource TextProcessingTabItemStyle}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModeNaturalStyle}"/>
                 </TabControl>
             </Border>
 
-            <Border DockPanel.Dock="Top" Height="52" Margin="0,0,0,16"
+            <Border x:Name="ModeStatusHost" DockPanel.Dock="Top" Height="52" Margin="0,0,0,16"
                     Background="Transparent" BorderBrush="{DynamicResource BorderColor}"
-                    BorderThickness="1" CornerRadius="6" Padding="16,0">
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="18"
-                               Foreground="{DynamicResource AccentColor}" Margin="0,0,12,0"
-                               VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TxtModeDescription"
-                               FontSize="14" Foreground="{DynamicResource PrimaryText}"
-                               TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
-                               AutomationProperties.LiveSetting="Polite"/>
-                </StackPanel>
+                    BorderThickness="1" CornerRadius="6">
+                <Grid>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0">
+                        <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="18"
+                                   Foreground="{DynamicResource AccentColor}" Margin="0,0,12,0"
+                                   VerticalAlignment="Center"/>
+                        <TextBlock x:Name="TxtModeDescription"
+                                   FontSize="14" Foreground="{DynamicResource PrimaryText}"
+                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                   AutomationProperties.LiveSetting="Polite"/>
+                    </StackPanel>
+                    <Border x:Name="StatusBorder"
+                            Background="{StaticResource TextProcessingErrorBackgroundBrush}"
+                            BorderBrush="{StaticResource TextProcessingErrorBrush}" BorderThickness="1"
+                            CornerRadius="6" Padding="14,8"
+                            Visibility="Collapsed" AutomationProperties.LiveSetting="Assertive">
+                        <TextBlock x:Name="TxtStatusMessage" TextWrapping="Wrap"
+                                   FontSize="13" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
+                    </Border>
+                </Grid>
             </Border>
 
             <Border x:Name="LimitBorder" DockPanel.Dock="Top"
@@ -189,7 +203,6 @@
                 <ComboBox x:Name="CmbModels" Grid.Column="2"
                           Height="36" VerticalAlignment="Center"
                           SelectionChanged="CmbModels_SelectionChanged"
-                          DropDownOpened="CmbModels_DropDownOpened"
                           AutomationProperties.Name="{local:Loc ResourceKey=TextProcessing_ModelLabel}">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
@@ -380,16 +393,6 @@
                     </Button>
                 </StackPanel>
 
-                <Border x:Name="StatusBorder"
-                        Grid.Column="0" Grid.ColumnSpan="3"
-                        Panel.ZIndex="10" VerticalAlignment="Top"
-                        Background="{StaticResource TextProcessingErrorBackgroundBrush}"
-                        BorderBrush="{StaticResource TextProcessingErrorBrush}" BorderThickness="1"
-                        CornerRadius="6" Padding="14,10" Margin="0,0,0,0"
-                        Visibility="Collapsed" AutomationProperties.LiveSetting="Assertive">
-                    <TextBlock x:Name="TxtStatusMessage" TextWrapping="Wrap"
-                               FontSize="13" Foreground="{DynamicResource PrimaryText}" VerticalAlignment="Center"/>
-                </Border>
             </Grid>
 
                 </DockPanel>

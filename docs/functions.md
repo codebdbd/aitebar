@@ -1614,7 +1614,7 @@ HEX-цвет формата `#RRGGBB` копируется в clipboard.
 
 ### Назначение
 
-Выполняет AI-обработку текста в одном из четырёх независимых режимов: проверка орфографии, грамматики и пунктуации; типографическое оформление; очистка артефактов копирования; литературная редакция. Первые три режима не меняют формулировки. Литературная редакция улучшает ясность, ритм и стиль, но сохраняет язык, смысл, факты, имена, авторскую позицию и структуру абзацев.
+Выполняет AI-обработку текста в одном из пяти независимых режимов: проверка орфографии, грамматики и пунктуации; типографическое оформление; очистка артефактов копирования; литературная редакция; естественный стиль. Первые три режима не меняют формулировки. Редакторские режимы сохраняют язык, смысл, факты, имена и авторскую позицию; `Естественный стиль` дополнительно убирает шаблонность, чрезмерно ровную структуру и избыточную типографику.
 
 ### Где находится
 
@@ -1624,8 +1624,8 @@ HEX-цвет формата `#RRGGBB` копируется в clipboard.
 
 1. Настроить хотя бы одно включённое AI-подключение.
 2. Ввести текст либо вставить содержимое буфера в позицию курсора; выделенный фрагмент при вставке заменяется.
-3. Выбрать один из четырёх режимов и автоматический выбор либо конкретную доступную бесплатную текстовую модель. Каждая модель показана один раз независимо от количества API-ключей провайдера. Платные модели, модели с неизвестной стоимостью и генераторы изображений/видео утилита не использует.
-4. Запустить обработку кнопкой или сочетанием `Ctrl+Enter`.
+3. Выбрать один из пяти режимов и автоматический выбор либо конкретную доступную бесплатную текстовую модель. Каждая модель показана один раз независимо от количества API-ключей провайдера. Платные модели, модели с неизвестной стоимостью и генераторы изображений/видео утилита не использует.
+4. Запустить обработку кнопкой или `Shift+Enter` в редакторе. Обычный `Enter` вставляет перенос строки; `Ctrl+Enter` также поддерживается.
 5. Наблюдать появление результата по мере генерации и время выполнения; при необходимости отменить запрос кнопкой `Отменить` или `Esc`.
 6. После успеха переключаться между исходником, результатом и подсвеченным списком изменений. Удалённое показывается красным зачёркнутым, добавленное — зелёным подчёркнутым; открытая команда `Показать изменения` меняется на `Скрыть изменения`.
 7. Использовать `Ctrl+Z` и `Ctrl+Y` для отмены и повтора редактирования и операций утилиты.
@@ -1638,6 +1638,30 @@ HEX-цвет формата `#RRGGBB` копируется в clipboard.
 ### Подтверждение в коде
 
 `AiteBar/TextProcessingUtility.cs`, `AiteBar/TextProcessingWindow.xaml`, `AiteBar/TextProcessingWindow.xaml.cs`, `AiteBar/TextProcessingService.cs`, `AiteBar/AiGateway.cs`.
+
+## Конструктор промптов
+
+### Назначение
+
+Создаёт один профессиональный готовый промпт по краткому описанию задачи. Поддерживает пять независимых рубрик: программирование, изображения, тексты, видео и аудио, анализ и идеи. Результат не содержит приветствия, объяснений или уточняющих вопросов.
+
+### Где находится и как использовать
+
+Включите `Конструктор промптов` среди быстрых инструментов, выберите рубрику, опишите задачу и нажмите `Создать промпт`. Утилита использует выбранную бесплатную текстовую модель, показывает потоковый результат и поддерживает повтор, исходную задачу, готовый промпт, сравнение и копирование. Одна команда всегда создаёт один итоговый промпт; обязательные неизвестные данные обозначаются заполнителями в квадратных скобках.
+
+### Подтверждение в коде
+
+`AiteBar/PromptBuilderUtility.cs`, `AiteBar/PromptBuilderWindow.xaml`, `AiteBar/PromptBuilderWindow.xaml.cs`, `AiteBar/PromptBuilderService.cs`, `AiteBar/AiGateway.cs`.
+
+The Prompt Builder's unified Analytics tab provides result-oriented directions for comparison, recommendation, market and competitor research, fact-checking, risk assessment, strategy, product and data analysis, scenarios, root causes, and solution options. The UI shows the expected result structure for the selected direction; the generated prompt enforces that contract. Legacy saved Ideas mode is opened as Analytics.
+
+Every Prompt Builder selector displays an in-context explanation of what it will create. The Video tab provides a persisted directing selector for advertising, cinematic scenes, product, fashion, documentary, vertical social, music video, interview, explainer, architecture, travel, action, time-lapse, macro, stop motion, 3D product animation, and loop animation.
+
+The Programming tab provides a persisted task-type selector for new features, bug fixes, refactoring, code review, architecture, testing, performance, security, APIs, databases, UI/UX, deployment, documentation, code analysis, and migrations.
+
+The Music tab provides a persisted musical-direction selector for Pop, Rock, Electronic, Hip-hop/R&B, Ambient, Cinematic score, Acoustic/Folk, Dance, Jazz/Soul, Classical, and Metal/Punk; it produces a ready-to-paste Suno Styles description.
+
+Prompt Builder keeps one persisted draft per tab: the original brief, the latest generated prompt, the selected options, and the original/result view state. Switching tabs does not clear work; Clear affects only the active tab.
 
 ## Дзен-редактор
 
@@ -2335,6 +2359,7 @@ Tray-меню.
 | `QRCodeGeneratorHotkey` | Hotkey QR Code Generator | HotkeyBinding | пустой binding |
 | `ClipboardManagerHotkey` | Hotkey Clipboard Manager | HotkeyBinding | пустой binding |
 | `TextProcessingHotkey` | Hotkey Обработки текста | HotkeyBinding | пустой binding |
+| `PromptBuilderHotkey` | Hotkey Конструктора промптов | HotkeyBinding | пустой binding |
 | `ZenEditorHotkey` | Hotkey Дзен-редактора | HotkeyBinding | пустой binding |
 | `ShowPresetSearch` | Показывать поиск | true/false | `true` |
 | `ShowPresetScreenshot` | Показывать скриншот | true/false | `true` |
@@ -2346,6 +2371,7 @@ Tray-меню.
 | `ShowPresetColorPicker` | Показывать пипетку | true/false | `false` |
 | `ShowPresetQuickNote` | Показывать Quick Note | true/false | `false` |
 | `ShowPresetZenEditor` | Показывать Дзен-редактор | true/false | `true` |
+| `ShowPresetPromptBuilder` | Показывать Конструктор промптов | true/false | `false` |
 | `ShowPresetQRCodeGenerator` | Показывать QR Code Generator | true/false | `false` |
 | `ShowPresetClipboardManager` | Показывать Clipboard Manager | true/false | `false` |
 | `ClipboardManagerPersistHistory` | Сохранять историю Clipboard Manager между сессиями | true/false | `true` |
@@ -2353,8 +2379,8 @@ Tray-меню.
 | `TimerIsStopwatchMode` | Последний выбранный режим таймера/секундомера | true/false | `false` |
 | `TimerDuration` | Последняя длительность таймера | TimeSpan | `00:05:00` |
 | `QuickNoteThemeId` | Тема Quick Note | `dark`, `graphite`, `rose`, `clay`, `sand`, `lemon`, `sage`, `mist`, `sky`, `lavender`, `mauve`, `stone` | `dark` |
-| `Contexts` | Панели-контексты | До 8 нормализованных панелей | Панель 1 включена |
-| `ActiveContextId` | Текущая панель | ID включенной панели | `context-1` |
+| `Contexts` | Панели-контексты | 10 нормализованных панелей `0`…`9` | Панель 0 включена |
+| `ActiveContextId` | Текущая панель | ID включенной панели | `context-0` |
 | `Elements` | Пользовательские кнопки | Список `CustomElement` | пустой список |
 
 ## Настройки кнопки
@@ -2377,7 +2403,7 @@ Tray-меню.
 | `ImagePath` | Пользовательская image-иконка | Локальный путь | пусто |
 | `Ctrl`, `Shift`, `Alt`, `Win`, `Key` | Hotkey-действие | Флаги + key | false / `None` |
 | `ActivationHotkey` | Глобальная горячая клавиша запуска кнопки (существует в модели и импорте/экспорте, но не зарегистрирована через `RegisterHotKey`) | `HotkeyBinding` | пустой binding |
-| `ContextId` | Панель кнопки | ID панели | `context-1` |
+| `ContextId` | Панель кнопки | ID панели | `context-0` |
 
 ---
 

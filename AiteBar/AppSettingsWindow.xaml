@@ -827,6 +827,7 @@
                                 <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_CheckForUpdates}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_CheckForUpdatesHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkCheckForUpdatesEnabled" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
                                 <Border Style="{StaticResource ModernDividerStyle}"/>
                                 <Grid Margin="0,12,0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=ClipboardManager_PersistHistorySetting}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=ClipboardManager_PersistHistoryHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkClipboardManagerPersistHistory" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}" Content="{local:Loc ResourceKey=ClipboardManager_PersistHistorySetting}"/></Grid>
+                                <Grid Margin="0,12,0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=PromptBuilder_SaveDrafts}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=PromptBuilder_SaveDraftsHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkSavePromptBuilderDrafts" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
                             </StackPanel>
                         </Border>
 
@@ -896,16 +897,9 @@
                                 <StackPanel>
 
 
-                            <!-- Показать панель -->
-
-                            <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_ShowPanel}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyShowPanel" Grid.Column="1"/></Grid>
-                            <Border Style="{StaticResource ModernDividerStyle}"/>
-
-                            
-
                             <!-- Следующая панель -->
 
-                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_NextPanel}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyNextContext" Grid.Column="1"/></Grid>
+                            <Grid Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_NextPanel}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyNextContext" Grid.Column="1"/></Grid>
                             <Border Style="{StaticResource ModernDividerStyle}"/>
 
                             
@@ -962,6 +956,9 @@
                             <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_TextProcessing}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyTextProcessing" Grid.Column="1"/></Grid>
                             <Border Style="{StaticResource ModernDividerStyle}"/>
 
+                            <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_PromptBuilder}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyPromptBuilder" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
+
                             <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_ZenEditor}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyZenEditor" Grid.Column="1"/></Grid>
 
                                 </StackPanel>
@@ -1008,6 +1005,7 @@
                                 <Grid x:Name="QuickToolRowFileSorter" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_FileSorter_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_FileSorter_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetFileSorter" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
                                 <Grid x:Name="QuickToolRowTimerStopwatch" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_TimerStopwatch_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_TimerStopwatch_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetTimerStopwatch" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
                                 <Grid x:Name="QuickToolRowTextProcessing" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_TextProcessing_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_TextProcessing_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetTextProcessing" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
+                                <Grid x:Name="QuickToolRowPromptBuilder" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_PromptBuilder_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_PromptBuilder_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetPromptBuilder" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
                                 <Grid x:Name="QuickToolRowZenEditor" Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=QuickTool_ZenEditor_Title}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=QuickTool_ZenEditor_Description}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkShowPresetZenEditor" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
                             </StackPanel>
                         </Border>
@@ -1106,6 +1104,15 @@
                                 <TextBlock Text="© 2026 Codebdbd" Style="{StaticResource ModernSettingDescriptionStyle}" Margin="0,3,0,0"/>
                                 <TextBlock Text="{local:Loc ResourceKey=About_License}" Style="{StaticResource ModernSettingDescriptionStyle}" Margin="0,3,0,0"/>
                                 <TextBlock Text="{local:Loc ResourceKey=About_TechnologiesValue}" Style="{StaticResource ModernSettingDescriptionStyle}" Margin="0,3,0,0"/>
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0">
+                            <StackPanel>
+                                <TextBlock Text="{local:Loc ResourceKey=Backup_Title}" Style="{StaticResource ModernSettingTitleStyle}" Margin="10,0,10,8"/>
+                                <TextBlock Text="{local:Loc ResourceKey=Backup_Description}" Style="{StaticResource ModernSettingDescriptionStyle}" Margin="10,0,10,8" TextWrapping="Wrap"/>
+                                <Button Content="{local:Loc ResourceKey=Backup_Create}" Style="{StaticResource AboutActionButtonStyle}" Click="BtnCreateBackup_Click"/>
+                                <Button Content="{local:Loc ResourceKey=Backup_Restore}" Style="{StaticResource AboutActionButtonStyle}" Click="BtnRestoreBackup_Click"/>
                             </StackPanel>
                         </Border>
 

@@ -104,6 +104,7 @@ namespace AiteBar
                 ShowPresetAppsFolder = original.ShowPresetAppsFolder,
                 ShowPresetCopilot = original.ShowPresetCopilot,
                 ShowPresetTextProcessing = original.ShowPresetTextProcessing,
+                ShowPresetPromptBuilder = original.ShowPresetPromptBuilder,
                 ShowPresetZenEditor = original.ShowPresetZenEditor,
                 ClipboardManagerPersistHistory = original.ClipboardManagerPersistHistory,
                 QuickNoteThemeId = original.QuickNoteThemeId,
@@ -229,6 +230,14 @@ namespace AiteBar
                     Win = original.TextProcessingHotkey.Win,
                     Key = original.TextProcessingHotkey.Key
                 },
+                PromptBuilderHotkey = new HotkeyBinding
+                {
+                    Ctrl = original.PromptBuilderHotkey.Ctrl,
+                    Alt = original.PromptBuilderHotkey.Alt,
+                    Shift = original.PromptBuilderHotkey.Shift,
+                    Win = original.PromptBuilderHotkey.Win,
+                    Key = original.PromptBuilderHotkey.Key
+                },
                 ZenEditorHotkey = new HotkeyBinding
                 {
                     Ctrl = original.ZenEditorHotkey.Ctrl,
@@ -283,6 +292,47 @@ namespace AiteBar
                 TextProcessingSelectedModelId = original.TextProcessingSelectedModelId,
                 TextProcessingSelectedProviderId = original.TextProcessingSelectedProviderId,
                 TextProcessingIsAutoModel = original.TextProcessingIsAutoModel,
+                TextProcessingLastText = original.TextProcessingLastText,
+                PromptBuilderLeft = original.PromptBuilderLeft,
+                PromptBuilderTop = original.PromptBuilderTop,
+                PromptBuilderWidth = original.PromptBuilderWidth,
+                PromptBuilderHeight = original.PromptBuilderHeight,
+                PromptBuilderWindowState = original.PromptBuilderWindowState,
+                PromptBuilderWindowPlacementInitialized = original.PromptBuilderWindowPlacementInitialized,
+                PromptBuilderLastMode = original.PromptBuilderLastMode,
+                PromptBuilderPaintingStyle = original.PromptBuilderPaintingStyle,
+                PromptBuilderPaintingSection = original.PromptBuilderPaintingSection,
+                PromptBuilderPaintingArtist = original.PromptBuilderPaintingArtist,
+                PromptBuilderAnimationStyle = original.PromptBuilderAnimationStyle,
+                PromptBuilderPhotoSection = original.PromptBuilderPhotoSection,
+                PromptBuilderPhotoStyle = original.PromptBuilderPhotoStyle,
+                PromptBuilderThemeSection = original.PromptBuilderThemeSection,
+                PromptBuilderThemeStyle = original.PromptBuilderThemeStyle,
+                PromptBuilderTextType = original.PromptBuilderTextType,
+                PromptBuilderTextTone = original.PromptBuilderTextTone,
+                PromptBuilderAnalysisDirection = original.PromptBuilderAnalysisDirection,
+                PromptBuilderVideoDirection = original.PromptBuilderVideoDirection,
+                PromptBuilderProgrammingProjectType = original.PromptBuilderProgrammingProjectType,
+                PromptBuilderProgrammingStyle = original.PromptBuilderProgrammingStyle,
+                PromptBuilderVisualTarget = original.PromptBuilderVisualTarget,
+                PromptBuilderIconStyle = original.PromptBuilderIconStyle,
+                PromptBuilderGraphicType = original.PromptBuilderGraphicType,
+                PromptBuilderGraphicStyle = original.PromptBuilderGraphicStyle,
+                PromptBuilderSelectedConnectionId = original.PromptBuilderSelectedConnectionId,
+                PromptBuilderSelectedModelId = original.PromptBuilderSelectedModelId,
+                PromptBuilderSelectedProviderId = original.PromptBuilderSelectedProviderId,
+                PromptBuilderIsAutoModel = original.PromptBuilderIsAutoModel,
+                PromptBuilderLastText = original.PromptBuilderLastText,
+                SavePromptBuilderDrafts = original.SavePromptBuilderDrafts,
+                PromptBuilderDrafts = (original.PromptBuilderDrafts ?? []).ToDictionary(
+                    pair => pair.Key,
+                    pair => new PromptBuilderDraft
+                    {
+                        Input = pair.Value.Input,
+                        Result = pair.Value.Result,
+                        HasResult = pair.Value.HasResult,
+                        ShowOriginal = pair.Value.ShowOriginal
+                    }),
                 SavedFileSortFolders = [.. (original.SavedFileSortFolders ?? [])]
             };
 
@@ -679,6 +729,24 @@ namespace AiteBar
                 _appSettings.PanelSizePercent = Math.Clamp(_appSettings.PanelSizePercent, 50, 100);
                 if (Math.Abs(oldPanelSizePercent - _appSettings.PanelSizePercent) > 0.001)
                 {
+                    changed = true;
+                }
+
+                // Миграция категорий PromptBuilder:
+                // Старый VideoAudio (3) -> новый Video (3)
+                // Старый AnalysisIdeas (4) -> новый Analysis (4)
+                // Значения 0,1,2 остаются без изменений
+                // Недопустимые значения сбрасываем в Programming
+                int oldPromptBuilderMode = _appSettings.PromptBuilderLastMode;
+                int normalizedPromptBuilderMode = oldPromptBuilderMode switch
+                {
+                    0 or 1 or 2 or 3 or 4 or 5 or 7 or 8 or 9 or 10 => oldPromptBuilderMode,
+                    (int)PromptBuilderCategory.Ideas => oldPromptBuilderMode,
+                    _ => (int)PromptBuilderCategory.Programming
+                };
+                if (oldPromptBuilderMode != normalizedPromptBuilderMode)
+                {
+                    _appSettings.PromptBuilderLastMode = normalizedPromptBuilderMode;
                     changed = true;
                 }
 

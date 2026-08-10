@@ -105,6 +105,11 @@ internal static class UtilityButtonCatalog
         settings => settings.ShowPresetTextProcessing,
         (settings, visible) => settings.ShowPresetTextProcessing = visible);
 
+    public static UtilityButtonDefinition PromptBuilder { get; } = new(
+        "PromptBuilder", "\U000F0631", "#007ACC", "Main_PromptBuilderTooltip",
+        settings => settings.ShowPresetPromptBuilder,
+        (settings, visible) => settings.ShowPresetPromptBuilder = visible);
+
     public static UtilityButtonDefinition ZenEditor { get; } = new(
         "ZenEditor", "\uE367", "#5B8DB8", "Main_ZenEditorTooltip",
         settings => settings.ShowPresetZenEditor,
@@ -129,6 +134,7 @@ internal static class UtilityButtonCatalog
         AppsFolder,
         Copilot,
         TextProcessing,
+        PromptBuilder,
         ZenEditor
     ];
 

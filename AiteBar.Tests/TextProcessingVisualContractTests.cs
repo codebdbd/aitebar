@@ -16,15 +16,16 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("x:Name=\"BtnShowDiff\"", xaml);
         Assert.Contains("x:Name=\"BtnClear\"", xaml);
         Assert.Contains("x:Name=\"BtnProcess\"", xaml);
+        Assert.Contains("x:Name=\"ModeNaturalStyle\" Tag=\"NaturalStyle\"", xaml);
         Assert.Contains("x:Name=\"TxtModelState\" Grid.Column=\"1\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModelStateBorder\"", xaml);
         Assert.DoesNotContain("x:Name=\"InfoStatusBorder\"", xaml);
         Assert.DoesNotContain("x:Name=\"TxtInfoMessage\"", xaml);
         Assert.Contains("TextProcessing_DataWarning", xaml);
         Assert.Contains("x:Name=\"StatusBorder\"", xaml);
-        Assert.Contains("Grid.Column=\"0\" Grid.ColumnSpan=\"3\"", xaml);
-        Assert.Contains("Panel.ZIndex=\"10\" VerticalAlignment=\"Top\"", xaml);
-        Assert.DoesNotContain("x:Name=\"StatusBorder\" DockPanel.Dock=\"Top\"", xaml);
+        Assert.Contains("x:Name=\"ModeStatusHost\" DockPanel.Dock=\"Top\" Height=\"52\"", xaml);
+        Assert.DoesNotContain("Panel.ZIndex=\"10\"", xaml);
+        Assert.DoesNotContain("Grid.ColumnSpan=\"3\"", xaml);
     }
 
     [Fact]
@@ -37,6 +38,7 @@ public sealed class TextProcessingVisualContractTests
         Assert.DoesNotContain("WindowState=\"Maximized\"", xaml);
         Assert.Contains("Width=\"1280\" Height=\"840\"", xaml);
         Assert.Contains("MinWidth=\"1000\" MinHeight=\"700\"", xaml);
+        Assert.Contains("<Grid Margin=\"32,16,32,24\">", xaml);
         Assert.Contains("<DockPanel x:Name=\"ContentHost\"", xaml);
         Assert.DoesNotContain("x:Name=\"ContentHost\" Width=", xaml);
         Assert.Contains("HorizontalAlignment=\"Center\" VerticalAlignment=\"Stretch\"", xaml);
@@ -58,6 +60,11 @@ public sealed class TextProcessingVisualContractTests
             "ContextMenu=\"{StaticResource TextEditingContextMenu}\"",
             StringSplitOptions.None).Length - 1);
         Assert.Contains("<Trigger Property=\"IsKeyboardFocused\" Value=\"True\">", xaml);
+
+        string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs"));
+        Assert.Contains("modifiers == ModifierKeys.Shift", code);
+        Assert.Contains("TxtEditor.IsKeyboardFocusWithin", code);
+        Assert.Contains("modifiers == ModifierKeys.Control", code);
     }
 
     [Fact]
@@ -104,7 +111,6 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("ResizeMode=\"CanResize\"", xaml);
         Assert.DoesNotContain("CanResizeWithGrip", xaml);
         Assert.Contains("ShowInTaskbar=\"True\"", xaml);
-        Assert.Contains("DropDownOpened=\"CmbModels_DropDownOpened\"", xaml);
         Assert.Contains("TextTrimming=\"CharacterEllipsis\"", xaml);
         Assert.DoesNotContain("DisplayMemberPath=", xaml);
     }
@@ -226,6 +232,19 @@ public sealed class TextProcessingVisualContractTests
 
         throw new DirectoryNotFoundException(
             "Repository root with AiteBar.sln was not found.");
+    }
+
+    [Fact]
+    public void CopyConfirmation_UsesTransientInlineStatusInsteadOfErrorOverlay()
+    {
+        string code = File.ReadAllText(Path.Combine(
+            FindRepoRoot(),
+            "AiteBar",
+            "TextProcessingWindow.xaml.cs"));
+
+        Assert.Contains("ShowTransientInfoStatus(LocalizationService.Get(\"TextProcessing_Copied\"))", code);
+        Assert.DoesNotContain("SetStatus(LocalizationService.Get(\"TextProcessing_Copied\"))", code);
+        Assert.Contains("Task.Delay(TimeSpan.FromSeconds(2))", code);
     }
 
     [Fact]

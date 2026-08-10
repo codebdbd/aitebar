@@ -176,6 +176,24 @@ public sealed class PanelLayoutHelperTests
     }
 
     [Fact]
+    public void Calculate_Vertical_KeepsControlsInTwoColumnsWhenStackingWouldOverflow()
+    {
+        var metrics = PanelLayoutHelper.Calculate(
+            isVertical: true,
+            availablePrimary: 450,
+            panelPercent: 100,
+            totalButtonCount: 7,
+            controlButtonCount: 2,
+            trailingControlButtonCount: 1);
+
+        Assert.True(metrics.UseMultiColumnControls);
+        Assert.Equal(53, metrics.FixedHeight);
+        Assert.Equal(44, metrics.UserWidth);
+        Assert.Equal(361, metrics.UserHeight);
+        Assert.Equal(1, metrics.UserBands);
+    }
+
+    [Fact]
     public void Calculate_NoButtons_UsesOnlyControlButtons()
     {
         var metrics = PanelLayoutHelper.Calculate(

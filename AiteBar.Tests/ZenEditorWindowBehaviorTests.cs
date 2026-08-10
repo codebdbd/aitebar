@@ -89,7 +89,7 @@ public sealed class ZenEditorWindowBehaviorTests
                 {
                     Assert.False(string.IsNullOrWhiteSpace(command.Header?.ToString()));
                     Assert.Same(window.FindResource("DarkMenuItem"), command.Style);
-                    Assert.IsType<TextBlock>(command.Icon);
+                    Assert.IsType<CenteredGlyphTextBlock>(command.Icon);
                 });
                 AssertIconFont(commands, "Ctrl+Z", "Segoe UI");
                 AssertIconFont(commands, "Ctrl+Y", "Segoe UI");
@@ -116,7 +116,7 @@ public sealed class ZenEditorWindowBehaviorTests
                 {
                     Assert.False(string.IsNullOrWhiteSpace(theme.Header?.ToString()));
                     Assert.Same(window.FindResource("DarkMenuItem"), theme.Style);
-                    Assert.IsType<TextBlock>(theme.Icon);
+                    Assert.IsType<CenteredGlyphTextBlock>(theme.Icon);
                 });
 
                 MenuItem formatting = commands.Single(command => command.Items.Count == 3);
@@ -131,7 +131,7 @@ public sealed class ZenEditorWindowBehaviorTests
                 {
                     Assert.True(command.IsCheckable);
                     Assert.Same(window.FindResource("DarkMenuItem"), command.Style);
-                    Assert.IsType<TextBlock>(command.Icon);
+                    Assert.IsType<CenteredGlyphTextBlock>(command.Icon);
                 });
 
                 FrameworkElement searchOverlay = Assert.IsAssignableFrom<FrameworkElement>(
@@ -312,7 +312,7 @@ public sealed class ZenEditorWindowBehaviorTests
         string expectedFont)
     {
         MenuItem command = commands.Single(item => item.InputGestureText == gesture);
-        TextBlock icon = Assert.IsType<TextBlock>(command.Icon);
+        CenteredGlyphTextBlock icon = Assert.IsType<CenteredGlyphTextBlock>(command.Icon);
         Assert.Equal(expectedFont, icon.FontFamily.Source);
     }
 

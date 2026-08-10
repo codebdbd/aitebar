@@ -1,4 +1,5 @@
 using System.Runtime.Versioning;
+using Microsoft.Win32;
 
 namespace AiteBar;
 
@@ -50,7 +51,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
 
     private const string DonatePageUrl = "https://codebdbd.github.io/";
-    private const double TopPanelVisibleOffset = 12;
+    private const double TopPanelVisibleOffset = 0;
     private bool _isPanelDragging = false;
     private bool _panelDragChanged = false;
     private DockEdge _dragStartEdge;
@@ -80,6 +81,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private bool _focusPanelButtonsOnShow = true;
     private AppSettingsWindow? _appSettingsWindow;
     private bool _isOpeningAppSettingsWindow;
+    private bool _powerModeEventsSubscribed;
+    private int _powerResumeGuard = 0;
 
     private const double PanelScreenPadding = Constants.PanelScreenPadding;
     private const double ButtonPitch = Constants.ButtonOuterSize;
@@ -164,7 +167,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     {
         if (!Dispatcher.CheckAccess())
         {
-            Dispatcher.Invoke(() => HandleCultureChanged(sender, e));
+            Dispatcher.BeginInvoke(() => HandleCultureChanged(sender, e));
             return;
         }
 
@@ -380,8 +383,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
             string targetContextId = context.Id;
 
             MenuItem item = CreateMenuItem(
-                glyph: string.IsNullOrEmpty(context.IconGlyph) ? "\uE8B7" : context.IconGlyph,
-                text: context.Name,
+                glyph: FluentGlyph(MenuIcons.Panels),
+                text: ContextStateHelper.GetContextListDisplayName(context),
                 onClick: (s, e) => ActivateContextById(targetContextId),
                 isActive: isActive
             );
@@ -425,10 +428,13 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         List<MenuItem> moveTargets = GetContextsSnapshot()
             .Where(context => !string.Equals(context.Id, element.ContextId, StringComparison.Ordinal))
-            .Select(context => CreateMenuItem(FluentGlyph(MenuIcons.Move), context.Name, async (s, e) =>
-            {
-                await RunPanelInteractionAsync(() => MoveElementToContextAsync(element.Id, context.Id));
-            }))
+            .Select(context => CreateMenuItem(
+                FluentGlyph(MenuIcons.Panels),
+                ContextStateHelper.GetContextListDisplayName(context),
+                async (s, e) =>
+                {
+                    await RunPanelInteractionAsync(() => MoveElementToContextAsync(element.Id, context.Id));
+                }))
             .ToList();
 
         if (moveTargets.Count > 0)
@@ -897,6 +903,20 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
     {
+        if (msg == NativeMethods.WM_POWERBROADCAST)
+        {
+            int powerEvent = wParam.ToInt32();
+            if (powerEvent == NativeMethods.PBT_APMSUSPEND)
+            {
+                HandleSystemSuspend();
+            }
+            else if (powerEvent == NativeMethods.PBT_APMRESUMESUSPEND ||
+                     powerEvent == NativeMethods.PBT_APMRESUMEAUTOMATIC)
+            {
+                HandleSystemResume();
+            }
+        }
+
         if (msg == NativeMethods.WM_HOTKEY)
         {
             int hotkeyId = wParam.ToInt32();
@@ -929,6 +949,22 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private void ExecuteHotkeyCommand(HotkeyCommand command)
     {
+        if (HotkeyService.TryGetContextNumber(command, out int contextNumber))
+        {
+            string contextId = ContextStateHelper.GetDefaultContextId(contextNumber);
+            if (!AppSettings.Contexts.Any(context => context.IsEnabled && string.Equals(context.Id, contextId, StringComparison.Ordinal)))
+            {
+                return;
+            }
+            var result = TryActivateContext(contextId);
+            if (result.changed)
+            {
+                _ = SaveSettingsWithNotificationAsync();
+            }
+            ShowDock(fromKeyboard: true);
+            return;
+        }
+
         switch (command)
         {
             case HotkeyCommand.ShowPanel:
@@ -966,6 +1002,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 break;
             case HotkeyCommand.TextProcessing:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("TextProcessing", HideDock));
+                break;
+            case HotkeyCommand.PromptBuilder:
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("PromptBuilder", HideDock));
                 break;
             case HotkeyCommand.ZenEditor:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("ZenEditor", HideDock));
@@ -1186,6 +1225,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
             return;
         }
 
+        SubscribeToPowerEvents();
+
         _nativeService = new NativeIntegrationService();
         _nativeService.MouseDownOutside += (x, y) =>
         {
@@ -1260,6 +1301,126 @@ public partial class MainWindow : Window, ISettingsWindowContext
         UpdateHoverActivationTimer();
     }
 
+    private void SubscribeToPowerEvents()
+    {
+        if (_powerModeEventsSubscribed)
+        {
+            return;
+        }
+
+        try
+        {
+            SystemEvents.PowerModeChanged += OnPowerModeChanged;
+            _powerModeEventsSubscribed = true;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+    }
+
+    private void UnsubscribeFromPowerEvents()
+    {
+        if (!_powerModeEventsSubscribed)
+        {
+            return;
+        }
+
+        try
+        {
+            SystemEvents.PowerModeChanged -= OnPowerModeChanged;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+
+        _powerModeEventsSubscribed = false;
+    }
+
+    private void OnPowerModeChanged(object sender, PowerModeChangedEventArgs e)
+    {
+        switch (e.Mode)
+        {
+            case PowerModes.Suspend:
+                HandleSystemSuspend();
+                break;
+            case PowerModes.Resume:
+                HandleSystemResume();
+                break;
+        }
+    }
+
+    private void HandleSystemSuspend()
+    {
+        try
+        {
+            _timer.Stop();
+            _activationDwellTracker.Reset();
+            _nativeService?.UninstallMouseHook();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+    }
+
+    private void HandleSystemResume()
+    {
+        if (!Dispatcher.CheckAccess())
+        {
+            Dispatcher.BeginInvoke(new Action(HandleSystemResume), DispatcherPriority.Background);
+            return;
+        }
+
+        int guard = System.Threading.Interlocked.CompareExchange(ref _powerResumeGuard, 1, 0);
+        if (guard != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            _nativeService?.InstallMouseHook();
+
+            try
+            {
+                ClipboardHistoryService.Instance?.ReinitializeFormatListener();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+
+            try
+            {
+                UnregisterGlobalHotkey();
+                RegisterGlobalHotkey();
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+
+            _isAnimating = false;
+            _isPanelDragging = false;
+            _isBlockingPanelInteraction = false;
+            _activationDwellTracker.Reset();
+
+            RefreshPanel();
+            PositionWindowImmediately(_shown);
+            UpdateHoverActivationTimer();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+        finally
+        {
+            System.Threading.Interlocked.Exchange(ref _powerResumeGuard, 0);
+        }
+    }
+
     private void UpdateHoverActivationTimer(AppSettings? settings = null)
     {
         settings ??= AppSettings;
@@ -1302,6 +1463,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             RefreshPanel();
             PositionWindowImmediately(_shown);
             _positionIndicatorService.Initialize(_settingsService, this);
+            _ = Dispatcher.BeginInvoke(IconPickerWindow.WarmupCatalogMetadata, DispatcherPriority.ApplicationIdle);
         }
         catch (OperationCanceledException)
         {
@@ -1498,7 +1660,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         int activeIndex = ContextStateHelper.FindEnabledContextIndex(settings.Contexts, settings.ActiveContextId);
         if (activeIndex < 0) activeIndex = 0;
 
-        ContextIndicatorText.Text = (activeIndex + 1).ToString();
+        ContextIndicatorText.Text = ContextStateHelper.GetContextNumber(settings.ActiveContextId).ToString();
         if (activeIndex < enabledCount)
         {
             PanelContext? activeContext = ContextStateHelper.GetEnabledContextAt(settings.Contexts, activeIndex);
@@ -1507,7 +1669,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 ContextIndicatorCircle.Background = GetCachedBrush(activeContext.Color);
                 ContextIndicator.ToolTip = LocalizationService.Format(
                     "Main_ContextIndicatorTooltipFormat",
-                    activeIndex + 1,
+                    ContextStateHelper.GetContextNumber(activeContext.Id),
                     activeContext.Name);
                 string contextLabel = ContextIndicator.ToolTip?.ToString() ?? activeContext.Name;
                 System.Windows.Automation.AutomationProperties.SetName(ContextIndicator, contextLabel);
@@ -1518,6 +1680,11 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private void ContextIndicator_Click(object sender, RoutedEventArgs e)
     {
+        ActivateContextRelative(Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ? -1 : 1);
+    }
+
+    private void ContextIndicator_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
+    {
         ContextMenu? menu = RootBorder.ContextMenu;
         if (menu is null)
         {
@@ -1526,6 +1693,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         menu.PlacementTarget = ContextIndicator;
         menu.IsOpen = true;
+        e.Handled = true;
     }
 
     private void ApplyUnifiedButtonIcon(Button button, UnifiedButton item, int panelVersion)
@@ -1686,6 +1854,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                         break;
                     case "TextProcessing":
                         await _actionService.LaunchUtilityAsync("TextProcessing", HideDock);
+                        break;
+                    case "PromptBuilder":
+                        await _actionService.LaunchUtilityAsync("PromptBuilder", HideDock);
                         break;
                     case "ZenEditor":
                         await _actionService.LaunchUtilityAsync("ZenEditor", HideDock);
@@ -2138,6 +2309,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     {
         try
         {
+            UnsubscribeFromPowerEvents();
             _startupCts.Cancel();
             try
             {

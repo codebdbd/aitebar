@@ -60,6 +60,15 @@ public static class PanelLayoutHelper
         {
             fixedPrimary = (controlButtonCount * ButtonOuterSize) + (fixedSeparatorCount * SeparatorSize);
             (userLayout, userLeadingReserve, userOverflowReserve) = CalculateVerticalUserSection(totalButtonCount, maxPrimary, fixedPrimary, trailingPrimary);
+
+            // Stacking the context and add buttons can itself push a single user
+            // button into a new column. Keep the controls side by side in that case.
+            if (userLayout.Bands > 1)
+            {
+                useMultiColumnControls = true;
+                fixedPrimary = ButtonOuterSize + (fixedSeparatorCount * SeparatorSize);
+                (userLayout, userLeadingReserve, userOverflowReserve) = CalculateVerticalUserSection(totalButtonCount, maxPrimary, fixedPrimary, trailingPrimary);
+            }
         }
         else if (!isVertical && useMultiColumnControls)
         {

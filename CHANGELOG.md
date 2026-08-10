@@ -9,6 +9,100 @@
 
 ## [Unreleased]
 
+## [1.15.9] - 2026-08-09
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Конструктор промптов**: каждый новый запрос повторно обращается к провайдеру после любого отказа модели; сохранённые runtime-статусы `401`, `402`, `403` и `429` больше не блокируют генерацию внутри запущенного приложения.
+- **Prompt Builder**: every new submission reaches the provider again after any model failure; cached `401`, `402`, `403`, and `429` runtime states no longer block generation inside the running application.
+- **Генератор**: выбранная модель корректно отображается общим шаблоном ComboBox и поддерживает бегущую строку для длинного названия.
+- **Generator**: the selected model is rendered correctly by the shared ComboBox template and retains marquee behavior for long names.
+
+## [1.15.8] - 2026-08-09
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Конструктор промптов**: выбранный генератор корректно отображается в ComboBox, включая значение «Автоматически».
+- **Prompt Builder**: the selected generator is displayed correctly in the ComboBox, including “Automatically”.
+
+## [1.15.7] - 2026-08-09
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Конструктор промптов**: «Автоматически» отображается в генераторе сразу при открытии окна; каталог моделей кэшируется между повторными открытиями утилиты.
+- **Prompt Builder**: “Automatically” is displayed in the generator immediately when the window opens; the model catalog is cached between subsequent openings of the utility.
+
+## [1.15.6] - 2026-08-09
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Вертикальная панель**: «Контекст» и «Добавить» остаются в двух колонках, если их вертикальное расположение вызвало бы перенос пользовательской кнопки.
+- **Vertical panel**: Context and Add stay in two columns when stacking them would wrap a user button.
+- **Конструктор промптов**: ручная замена текста после генерации всегда становится новым запросом и больше не подставляет удалённый предыдущий запрос.
+- **Prompt Builder**: manually replacing text after generation always creates a new request and no longer restores the removed previous request.
+
+## [1.15.5] - 2026-08-09
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Конструктор промптов**: повторная генерация после временного ответа `403 Forbidden` снова обращается к провайдеру, а не остаётся заблокированной внутренним статусом приложения.
+- **Prompt Builder**: retrying after a transient `403 Forbidden` now reaches the provider again instead of remaining blocked by the application's internal status.
+
+## [1.15.4] - 2026-08-09
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Конструктор промптов**: каталог кода приведён к понятной схеме «Тип + Стиль», а неактуальные параметры удалены из активной логики и настроек.
+- **Prompt Builder**: the Code catalog now follows a clear “Type + Style” scheme, and obsolete parameters were removed from active logic and settings.
+- **Локализация**: синхронизированы каталоги и переводы Prompt Builder на русском, украинском, немецком и английском; проверка языковых ресурсов снова проходит полностью.
+- **Localization**: Prompt Builder catalogs and translations are synchronized across Russian, Ukrainian, German, and English; resource validation now passes completely.
+- **Стабильность**: устранено зависание при обновлении интерфейса после смены языка; полный набор автоматических тестов завершается.
+- **Stability**: fixed a UI refresh deadlock after a language change; the full automated test suite completes.
+
+## [1.15.3] - 2026-08-09
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Конструктор промптов**: унифицированы фильтры в визуальных вкладках, обновлены каталоги стилей и сюжетов, исправлено отображение длинных значений в комбобоксах без поломки списков моделей.
+- **Prompt Builder**: unified filters across visual tabs, refreshed style and scenario catalogs, and fixed long combo-box value rendering without breaking model lists.
+
+## [1.15.2] - 2026-08-08
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Release validation**: тесты Prompt Builder теперь одинаково проверяют многострочные шаблоны на Windows и в CI.
+- **Release validation**: Prompt Builder tests now validate multiline templates consistently on Windows and CI.
+
+## [1.15.1] - 2026-08-08
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Конструктор промптов — «Графика»**: автоматический выбор модели больше не отклоняет запрос по устаревшему локальному списку; gateway выбирает доступный маршрут и fallback.
+- **Prompt Builder — Graphics**: automatic model selection no longer rejects requests using a stale local list; the gateway selects an available route and fallback.
+- **Конструктор промптов**: очистка и создание нового варианта выполняются сразу, без лишних окон подтверждения.
+- **Prompt Builder**: clearing and creating a new variant now run immediately, without unnecessary confirmation dialogs.
+- **Контекстные меню**: глифы во всех меню теперь центрируются по видимому контуру, а не по baseline шрифта.
+- **Context menus**: glyphs in every menu are now centered by their visible outline instead of the font baseline.
+
+## [1.15.0] - 2026-08-08
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Панели 0–9 и быстрое переключение**: AiteBar поддерживает 10 контекстных панелей с яркой контрастной палитрой. `Alt+0`…`Alt+9` открывает панель и выбирает соответствующий включённый контекст; номер текущей панели переключает контексты кликом, `Enter`, `Shift` + клик или `Shift+Enter`.
+- **Panels 0–9 and fast switching**: AiteBar now supports 10 context panels with a bright, high-contrast palette. `Alt+0`…`Alt+9` opens the panel and selects the matching enabled context; the active-panel badge switches contexts with click, `Enter`, `Shift`+click, or `Shift+Enter`.
+- **Конструктор промптов**: Добавлены отдельные вкладки «Иконки» и «Графика» с независимыми шаблонами, параметрами и черновиками; вкладка «Код» теперь показывает краткий результат выбранного типа задачи.
+- **Prompt Builder**: Added separate Icons and Graphics tabs with independent templates, options, and drafts; the Code tab now shows a concise outcome for the selected task type.
+- **Резервные копии**: Добавлен экспорт и восстановление настроек и локальных данных приложения.
+- **Backups**: Added export and restore for application settings and local data.
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Локализация Prompt Builder**: Полные переводы вкладок, стилей и типов ресурсов доступны на русском, украинском, немецком и английском языках.
+- **Prompt Builder localization**: Complete translations for tabs, styles, and asset types are available in Russian, Ukrainian, German, and English.
+- **Тесты локализации**: Устранено зависание проверки локализации между потоками; полный набор тестов снова может завершаться.
+- **Localization tests**: Removed the cross-thread localization test deadlock so the full test suite can complete.
+
+## [1.14.0] - 2026-08-02
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Утилита Prompt Builder**: Новое окно конструирования промптов с шаблонами ролей, переменными, предпросмотром, историей и интеграцией с AiGateway; отдельные юнит- и интеграционные тесты и ExecPlan.
+- **Prompt Builder utility**: New prompt-construction window with role templates, variables, preview, history, and AiGateway integration; dedicated unit/integration tests and ExecPlan.
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+- **Обработка текста — расширенные режимы**: Дополнены режимы работы сервиса, синхронизирована разметка окна и code-behind; расширены контрактные тесты сервиса, визуального слоя и layout.
+- **Text Processing extended modes**: Additional service modes, synchronized window markup and code-behind; expanded service, visual, and layout contract tests.
+- **Документация и локализация**: Обновлены `functions.md`, `USER_MANUAL.md`, `README.md`, строковые ресурсы Strings.ru/uk/de.resx для Prompt Builder и изменений TextProcessing.
+- **Docs and localization**: Updated `functions.md`, `USER_MANUAL.md`, `README.md`, and Strings.ru/uk/de.resx resources for Prompt Builder and TextProcessing changes.
+
 ## [1.13.0] - 2026-08-02
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

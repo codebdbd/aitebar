@@ -61,6 +61,12 @@ namespace AiteBar
             Loaded += (_, _) => TxtSearch.Focus();
         }
 
+        internal static void WarmupCatalogMetadata()
+        {
+            _ = LoadFluentMap();
+            _ = LoadMaterialMap();
+        }
+
         private void BtnTabMaterial_Click(object sender, RoutedEventArgs e)
             => SetActiveTab(FontHelper.MaterialKey);
 
