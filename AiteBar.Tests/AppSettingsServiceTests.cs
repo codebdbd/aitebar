@@ -1311,6 +1311,149 @@ public sealed class AppSettingsServiceTests
         Assert.Equal("dsn", original.Sentry.Dsn);
     }
 
+    [Fact]
+    public void PanelContextClear_RemovesOnlySelectedContextButtons()
+    {
+        var settings = new AppSettings
+        {
+            Contexts =
+            [
+                new PanelContext { Id = "context-0", Name = "Main", IsNameCustomized = true },
+                new PanelContext { Id = "context-1", Name = "Work", IsNameCustomized = true },
+                new PanelContext { Id = "context-2", Name = "Home", IsNameCustomized = true }
+            ],
+            Elements =
+            [
+                new CustomElement { Id = "main-1", Name = "Main", ContextId = "context-0" },
+                new CustomElement { Id = "work-1", Name = "Work 1", ContextId = "context-1" },
+                new CustomElement { Id = "work-2", Name = "Work 2", ContextId = "context-1" },
+                new CustomElement { Id = "home-1", Name = "Home", ContextId = "context-2" }
+            ]
+        };
+
+        int removed = AppSettingsWindow.ClearElementsForContexts(settings, new HashSet<string>(StringComparer.Ordinal) { "context-1" });
+
+        Assert.Equal(2, removed);
+        Assert.Equal(["main-1", "home-1"], settings.Elements.Select(element => element.Id).ToArray());
+        Assert.Equal(["Main", "Work", "Home"], settings.Contexts.Select(context => context.Name).ToArray());
+        Assert.All(settings.Contexts, context => Assert.True(context.IsNameCustomized));
+    }
+
+    [Fact]
+    public void PanelContextClear_EmptySelectionKeepsElements()
+    {
+        var settings = new AppSettings
+        {
+            Elements =
+            [
+                new CustomElement { Id = "main-1", ContextId = "context-0" },
+                new CustomElement { Id = "work-1", ContextId = "context-1" }
+            ]
+        };
+
+        int removed = AppSettingsWindow.ClearElementsForContexts(settings, new HashSet<string>(StringComparer.Ordinal));
+
+        Assert.Equal(0, removed);
+        Assert.Equal(["main-1", "work-1"], settings.Elements.Select(element => element.Id).ToArray());
+    }
+
+    [Fact]
+    public void RemoveElementsForContexts_RemovesLinksFromServiceState()
+    {
+        var service = new AppSettingsService();
+        service.Settings = new AppSettings
+        {
+            Elements =
+            [
+                new CustomElement { Id = "main-1", ContextId = "context-0" },
+                new CustomElement { Id = "work-1", ContextId = "context-1" },
+                new CustomElement { Id = "work-2", ContextId = "context-1" }
+            ]
+        };
+
+        int removed = service.RemoveElementsForContexts(
+            new HashSet<string>(StringComparer.Ordinal) { "context-1" });
+
+        Assert.Equal(2, removed);
+        Assert.Equal(["main-1"], service.Elements.Select(element => element.Id).ToArray());
+        Assert.Equal(["main-1"], service.Settings.Elements.Select(element => element.Id).ToArray());
+    }
+
+    [Fact]
+    public void ContextReorder_BuildReorderedContexts_PreservesContextIdsAndMetadata()
+    {
+        var settings = new AppSettings
+        {
+            ActiveContextId = "context-2",
+            Contexts =
+            [
+                new PanelContext { Id = "context-0", Name = "Panel 0", IconGlyph = "\uE100", IsEnabled = true },
+                new PanelContext { Id = "context-1", Name = "Work", IsNameCustomized = true, IconGlyph = "\uE101", IsEnabled = true },
+                new PanelContext { Id = "context-2", Name = "Home", IsNameCustomized = true, IconGlyph = "\uE102", IsEnabled = true },
+                new PanelContext { Id = "context-3", Name = "Panel 3", IsEnabled = false },
+                new PanelContext { Id = "context-4", Name = "Panel 4", IsEnabled = false },
+                new PanelContext { Id = "context-5", Name = "Panel 5", IsEnabled = false },
+                new PanelContext { Id = "context-6", Name = "Panel 6", IsEnabled = false },
+                new PanelContext { Id = "context-7", Name = "Panel 7", IsEnabled = false },
+                new PanelContext { Id = "context-8", Name = "Panel 8", IsEnabled = false },
+                new PanelContext { Id = "context-9", Name = "Panel 9", IsEnabled = false }
+            ],
+            Elements =
+            [
+                new CustomElement { Id = "home-button", ContextId = "context-2" },
+                new CustomElement { Id = "work-button", ContextId = "context-1" }
+            ]
+        };
+
+        List<PanelContext> reordered = AppSettingsWindow.BuildReorderedContexts(
+            settings,
+            [
+                new AppSettingsContextRowState("context-2", "Home", true),
+                new AppSettingsContextRowState("context-0", "Panel 1", true),
+                new AppSettingsContextRowState("context-1", "Work", true)
+            ]);
+
+        Assert.Equal(["context-2", "context-0", "context-1"], reordered.Take(3).Select(context => context.Id).ToArray());
+        Assert.Equal(["Home", ContextStateHelper.GetDefaultContextName(1), "Work"], reordered.Take(3).Select(context => context.Name).ToArray());
+        Assert.Equal(["\uE102", "\uE100", "\uE101"], reordered.Take(3).Select(context => context.IconGlyph).ToArray());
+        Assert.True(reordered[0].IsEnabled);
+        Assert.Equal("context-2", settings.Elements[0].ContextId);
+        Assert.Equal("context-1", settings.Elements[1].ContextId);
+    }
+
+    [Fact]
+    public void ContextReorder_BuildReorderedContexts_ForcesFirstRowEnabledOnlyByPosition()
+    {
+        var settings = new AppSettings
+        {
+            Contexts =
+            [
+                new PanelContext { Id = "context-0", Name = "Panel 0", IsEnabled = true },
+                new PanelContext { Id = "context-3", Name = "Panel 3", IsEnabled = false },
+                new PanelContext { Id = "context-1", Name = "Panel 1", IsEnabled = true },
+                new PanelContext { Id = "context-2", Name = "Panel 2", IsEnabled = false },
+                new PanelContext { Id = "context-4", Name = "Panel 4", IsEnabled = false },
+                new PanelContext { Id = "context-5", Name = "Panel 5", IsEnabled = false },
+                new PanelContext { Id = "context-6", Name = "Panel 6", IsEnabled = false },
+                new PanelContext { Id = "context-7", Name = "Panel 7", IsEnabled = false },
+                new PanelContext { Id = "context-8", Name = "Panel 8", IsEnabled = false },
+                new PanelContext { Id = "context-9", Name = "Panel 9", IsEnabled = false }
+            ]
+        };
+
+        List<PanelContext> reordered = AppSettingsWindow.BuildReorderedContexts(
+            settings,
+            [
+                new AppSettingsContextRowState("context-3", "Panel 0", false),
+                new AppSettingsContextRowState("context-0", "Panel 1", false)
+            ]);
+
+        Assert.Equal("context-3", reordered[0].Id);
+        Assert.True(reordered[0].IsEnabled);
+        Assert.Equal("context-0", reordered[1].Id);
+        Assert.False(reordered[1].IsEnabled);
+    }
+
     private static void AssertCloneHotkeyBinding(HotkeyBinding original, HotkeyBinding clone)
     {
         Assert.NotSame(original, clone);

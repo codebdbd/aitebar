@@ -9,6 +9,22 @@
 
 ## [Unreleased]
 
+## [1.15.10] - 2026-08-11
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+- **Импорт AiteCommander**: ZIP-архивы AiteCommander импортируются в текущую панель вместе со ссылками, типами действий и доступными пользовательскими иконками; общий фильтр файлов сразу показывает `.aitebarpanel` и `.zip`.
+- **AiteCommander import**: AiteCommander ZIP archives can be imported into the current panel with links, action types, and available custom icons; the default file filter now shows both `.aitebarpanel` and `.zip`.
+- **Управление панелями**: панели можно переставлять перетаскиванием в настройках; порядок используется переключением, индикатором и прямыми горячими клавишами.
+- **Panel management**: panels can be reordered by drag and drop in settings; switching, the active indicator, and direct hotkeys follow the saved order.
+- **Пользовательские иконки**: выбор иконки кнопки поддерживает безопасный импорт SVG с преобразованием в PNG; существующая поддержка ICO сохранена.
+- **Custom icons**: button icon selection supports safe SVG import converted to PNG while retaining existing ICO support.
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Очистка панели**: подтверждённая очистка удаляет ссылки выбранной панели из фактического состояния приложения и сохраняет результат, не затрагивая другие панели.
+- **Panel clearing**: confirmed clearing removes links from the selected panel in the persisted application state without affecting other panels.
+- **Релизные тесты**: проверка первоначального выбора модели больше не зависит от формата переносов строк `LF`/`CRLF`.
+- **Release tests**: the initial model-selection check no longer depends on `LF` versus `CRLF` source line endings.
+
 ## [1.15.9] - 2026-08-09
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed

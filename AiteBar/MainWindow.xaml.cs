@@ -289,7 +289,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private string? GetContextIdByIndex(int index)
     {
-        return ContextStateHelper.GetEnabledContextAt(AppSettings.Contexts, index)?.Id;
+        PanelContext? context = ContextStateHelper.GetContextAt(AppSettings.Contexts, index);
+        return context?.IsEnabled == true ? context.Id : null;
     }
 
     private Brush GetCachedBrush(string colorHex)
@@ -951,11 +952,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
     {
         if (HotkeyService.TryGetContextNumber(command, out int contextNumber))
         {
-            string contextId = ContextStateHelper.GetDefaultContextId(contextNumber);
-            if (!AppSettings.Contexts.Any(context => context.IsEnabled && string.Equals(context.Id, contextId, StringComparison.Ordinal)))
+            PanelContext? context = ContextStateHelper.GetContextAt(AppSettings.Contexts, contextNumber);
+            if (context?.IsEnabled != true)
             {
                 return;
             }
+            string contextId = context.Id;
             var result = TryActivateContext(contextId);
             if (result.changed)
             {
@@ -1660,7 +1662,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
         int activeIndex = ContextStateHelper.FindEnabledContextIndex(settings.Contexts, settings.ActiveContextId);
         if (activeIndex < 0) activeIndex = 0;
 
-        ContextIndicatorText.Text = ContextStateHelper.GetContextNumber(settings.ActiveContextId).ToString();
+        int displayNumber = ContextStateHelper.GetContextDisplayNumber(settings.Contexts, settings.ActiveContextId);
+        ContextIndicatorText.Text = displayNumber.ToString();
         if (activeIndex < enabledCount)
         {
             PanelContext? activeContext = ContextStateHelper.GetEnabledContextAt(settings.Contexts, activeIndex);
@@ -1669,7 +1672,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 ContextIndicatorCircle.Background = GetCachedBrush(activeContext.Color);
                 ContextIndicator.ToolTip = LocalizationService.Format(
                     "Main_ContextIndicatorTooltipFormat",
-                    ContextStateHelper.GetContextNumber(activeContext.Id),
+                    displayNumber,
                     activeContext.Name);
                 string contextLabel = ContextIndicator.ToolTip?.ToString() ?? activeContext.Name;
                 System.Windows.Automation.AutomationProperties.SetName(ContextIndicator, contextLabel);

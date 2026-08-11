@@ -30,6 +30,14 @@
   <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>Diese Namen werden im Leistenmenü und bei der Auswahl einer Leiste für Schaltflächen verwendet.</value></data>
   <data name="AppSettingsWindow_PanelEnabled" xml:space="preserve"><value>Aktiv</value></data>
   <data name="AppSettingsWindow_PrimaryPanelAlwaysEnabled" xml:space="preserve"><value>Die erste Leiste ist immer aktiv.</value></data>
+  <data name="AppSettingsWindow_ClearPanelTooltip" xml:space="preserve"><value>Leiste "{0}" leeren ({1} Schaltflächen)</value></data>
+  <data name="AppSettingsWindow_ClearPanelAutomation" xml:space="preserve"><value>Leiste "{0}" leeren</value></data>
+  <data name="AppSettingsWindow_ClearPanelEmpty" xml:space="preserve"><value>Leiste ist bereits leer</value></data>
+  <data name="AppSettingsWindow_ClearPanelPending" xml:space="preserve"><value>Leiste wird geleert</value></data>
+  <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Ziehen, um Leisten neu anzuordnen</value></data>
+  <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve"><value>Leiste "{0}" leeren?
+
+Es werden {1} benutzerdefinierte Schaltflächen nur aus dieser Leiste entfernt. Name und Einstellungen der Leiste bleiben erhalten.</value></data>
   <data name="AppSettingsWindow_HotkeysHint" xml:space="preserve"><value>Tastenkürzel zum Anzeigen der Leiste, zum Wechseln zwischen Leisten und zum Hinzufügen einer Schaltfläche festlegen.</value></data>
   <data name="AppSettingsWindow_ShowPanel" xml:space="preserve"><value>Leiste anzeigen</value></data>
   <data name="AppSettingsWindow_NextPanel" xml:space="preserve"><value>Nächste Leiste</value></data>
@@ -83,6 +91,7 @@
   <data name="DeleteButtonConfirm" xml:space="preserve"><value>'{0}' löschen?</value></data>
   <data name="Export_Title" xml:space="preserve"><value>Aktuelle Leiste exportieren</value></data>
   <data name="Export_Filter" xml:space="preserve"><value>AiteBar-Leiste (*.aitebarpanel)|*.aitebarpanel</value></data>
+  <data name="Import_FileFilter" xml:space="preserve"><value>Unterstützte Leisten (*.aitebarpanel;*.zip)|*.aitebarpanel;*.zip|AiteBar-Leiste (*.aitebarpanel)|*.aitebarpanel|AiteCommander-Archiv (*.zip)|*.zip|Alle Dateien (*.*)|*.*</value></data>
   <data name="Export_Success" xml:space="preserve"><value>Exportierte Schaltflächen: {0}</value></data>
   <data name="Import_Title" xml:space="preserve"><value>Leiste importieren</value></data>
   <data name="Import_Success" xml:space="preserve"><value>Importierte Schaltflächen: {0}</value></data>
@@ -218,7 +227,7 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
 {0}</value></data>
   <data name="SettingsWindow_SelectKey" xml:space="preserve"><value>Taste wählen...</value></data>
   <data name="SettingsWindow_SelectIconTitle" xml:space="preserve"><value>Symbol wählen</value></data>
-  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Bilder (*.png;*.jpg;*.jpeg;*.bmp;*.ico)|*.png;*.jpg;*.jpeg;*.bmp;*.ico|Alle Dateien (*.*)|*.*</value></data>
+  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Bilder (*.png;*.jpg;*.jpeg;*.bmp;*.ico;*.svg)|*.png;*.jpg;*.jpeg;*.bmp;*.ico;*.svg|Alle Dateien (*.*)|*.*</value></data>
   <data name="SettingsWindow_RequiredWeb" xml:space="preserve"><value>Website-URL einfügen (erforderlich):</value></data>
   <data name="SettingsWindow_RequiredProgram" xml:space="preserve"><value>Pfad zu Programm oder Verknüpfung angeben (erforderlich):</value></data>
   <data name="SettingsWindow_RequiredFile" xml:space="preserve"><value>Dateipfad angeben (erforderlich):</value></data>

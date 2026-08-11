@@ -167,7 +167,7 @@
   <data name="SettingsWindow_HexPlaceholder" xml:space="preserve"><value>Наприклад: #FFFFFF</value></data>
   <data name="SettingsWindow_SelectKey" xml:space="preserve"><value>Виберіть клавішу...</value></data>
   <data name="SettingsWindow_SelectIconTitle" xml:space="preserve"><value>Виберіть піктограму</value></data>
-  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Зображення (*.png;*.jpg;*.jpeg;*.bmp;*.ico)|*.png;*.jpg;*.jpeg;*.bmp;*.ico|Усі файли (*.*)|*.*</value></data>
+  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Зображення (*.png;*.jpg;*.jpeg;*.bmp;*.ico;*.svg)|*.png;*.jpg;*.jpeg;*.bmp;*.ico;*.svg|Усі файли (*.*)|*.*</value></data>
   <data name="SettingsWindow_RequiredWeb" xml:space="preserve"><value>Вставте URL сайту (обов’язково):</value></data>
   <data name="SettingsWindow_RequiredProgram" xml:space="preserve"><value>Укажіть шлях до програми або ярлика (обов’язково):</value></data>
   <data name="SettingsWindow_RequiredFile" xml:space="preserve"><value>Укажіть шлях до файлу (обов’язково):</value></data>
@@ -220,6 +220,14 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AppSettingsWindow_Delay" xml:space="preserve"><value>Затримка появи, мс</value></data>
   <data name="AppSettingsWindow_ContextNamesTooltip" xml:space="preserve"><value>Ці назви використовуються в меню панелі та налаштуваннях кнопок.</value></data>
   <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>Ці назви використовуються в меню панелі та під час вибору панелі для кнопок.</value></data>
+  <data name="AppSettingsWindow_ClearPanelTooltip" xml:space="preserve"><value>Очистити панель «{0}» ({1} кнопок)</value></data>
+  <data name="AppSettingsWindow_ClearPanelAutomation" xml:space="preserve"><value>Очистити панель «{0}»</value></data>
+  <data name="AppSettingsWindow_ClearPanelEmpty" xml:space="preserve"><value>Панель уже порожня</value></data>
+  <data name="AppSettingsWindow_ClearPanelPending" xml:space="preserve"><value>Панель очищується</value></data>
+  <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Перетягніть, щоб змінити порядок панелей</value></data>
+  <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve"><value>Очистити панель «{0}»?
+
+Буде видалено користувацьких кнопок: {1}. Тільки з цієї панелі. Назва й налаштування панелі збережуться.</value></data>
   <data name="AppSettingsWindow_QuickToolsHint" xml:space="preserve"><value>Увімкніть вбудовані кнопки, що відображаються на головній панелі.</value></data>
   <data name="Monitor_Format" xml:space="preserve"><value>Монітор {0}{1}</value></data>
   <data name="Monitor_PrimarySuffix" xml:space="preserve"><value> (Основний)</value></data>
@@ -273,6 +281,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="DeleteButtonConfirm" xml:space="preserve"><value>Видалити «{0}»?</value></data>
   <data name="Export_Title" xml:space="preserve"><value>Експорт поточної панелі</value></data>
   <data name="Export_Filter" xml:space="preserve"><value>Панель AiteBar (*.aitebarpanel)|*.aitebarpanel</value></data>
+  <data name="Import_FileFilter" xml:space="preserve"><value>Підтримувані панелі (*.aitebarpanel;*.zip)|*.aitebarpanel;*.zip|Панель AiteBar (*.aitebarpanel)|*.aitebarpanel|Архів AiteCommander (*.zip)|*.zip|Усі файли (*.*)|*.*</value></data>
   <data name="Export_Success" xml:space="preserve"><value>Експортовано кнопок: {0}</value></data>
   <data name="Export_Failed" xml:space="preserve"><value>Не вдалося експортувати панель.
 {0}</value></data>

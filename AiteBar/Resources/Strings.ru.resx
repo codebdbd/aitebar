@@ -213,6 +213,26 @@
   <data name="AppSettingsWindow_PrimaryPanelAlwaysEnabled" xml:space="preserve">
     <value>Первая панель всегда включена.</value>
   </data>
+  <data name="AppSettingsWindow_ClearPanelTooltip" xml:space="preserve">
+    <value>Очистить панель «{0}» ({1} кнопок)</value>
+  </data>
+  <data name="AppSettingsWindow_ClearPanelAutomation" xml:space="preserve">
+    <value>Очистить панель «{0}»</value>
+  </data>
+  <data name="AppSettingsWindow_ClearPanelEmpty" xml:space="preserve">
+    <value>Панель уже пустая</value>
+  </data>
+  <data name="AppSettingsWindow_ClearPanelPending" xml:space="preserve">
+    <value>Панель очищается</value>
+  </data>
+  <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve">
+    <value>Перетащите, чтобы изменить порядок панелей</value>
+  </data>
+  <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve">
+    <value>Очистить панель «{0}»?
+
+Будет удалено пользовательских кнопок: {1}. Только из этой панели. Название и настройки панели сохранятся.</value>
+  </data>
   <data name="AppSettingsWindow_Hotkeys" xml:space="preserve">
     <value>Горячие клавиши</value>
   </data>
@@ -608,10 +628,10 @@
     <value>Панели</value>
   </data>
   <data name="Menu_ImportCurrentPanel" xml:space="preserve">
-    <value>Импорт в текущую панель...</value>
+    <value>Импорт в панель</value>
   </data>
   <data name="Menu_ExportCurrentPanel" xml:space="preserve">
-    <value>Экспорт текущей панели...</value>
+    <value>Экспорт из панели</value>
   </data>
   <data name="Menu_About" xml:space="preserve">
     <value>О программе</value>
@@ -810,7 +830,7 @@
     <value>Не удалось выполнить сортировку.
 {0}</value>
   </data>
-  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Изображения (*.png;*.jpg;*.jpeg;*.bmp;*.ico)|*.png;*.jpg;*.jpeg;*.bmp;*.ico|Все файлы (*.*)|*.*</value></data>
+  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Изображения (*.png;*.jpg;*.jpeg;*.bmp;*.ico;*.svg)|*.png;*.jpg;*.jpeg;*.bmp;*.ico;*.svg|Все файлы (*.*)|*.*</value></data>
   <data name="SettingsWindow_RequiredWeb" xml:space="preserve"><value>Вставьте URL сайта (обязательно):</value></data>
   <data name="SettingsWindow_RequiredProgram" xml:space="preserve"><value>Укажите путь к программе или ярлыку (обязательно):</value></data>
   <data name="SettingsWindow_RequiredFile" xml:space="preserve"><value>Укажите путь к файлу (обязательно):</value></data>
@@ -870,6 +890,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="DeleteButtonConfirm" xml:space="preserve"><value>Удалить «{0}»?</value></data>
   <data name="Export_Title" xml:space="preserve"><value>Экспорт текущей панели</value></data>
   <data name="Export_Filter" xml:space="preserve"><value>Панель AiteBar (*.aitebarpanel)|*.aitebarpanel</value></data>
+  <data name="Import_FileFilter" xml:space="preserve"><value>Поддерживаемые панели (*.aitebarpanel;*.zip)|*.aitebarpanel;*.zip|Панель AiteBar (*.aitebarpanel)|*.aitebarpanel|Архив AiteCommander (*.zip)|*.zip|Все файлы (*.*)|*.*</value></data>
   <data name="Export_Success" xml:space="preserve"><value>Экспортировано кнопок: {0}</value></data>
   <data name="Export_Failed" xml:space="preserve"><value>Не удалось экспортировать панель.
 {0}</value></data>

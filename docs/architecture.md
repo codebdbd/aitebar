@@ -102,6 +102,8 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `ClipboardManagerWindow` — окно менеджера буфера обмена
 - `TextProcessingWindow` — окно AI-обработки текста (дифф оригинала/результата, Undo/Redo, отмена потока)
 - `ZenEditorWindow` — полноэкранный Дзен-редактор с темами, множеством документов, поиском по документам и экспортом TXT
+- `PromptBuilderWindow` — окно Конструктора промптов с рубриками (Программирование, Изображения, Тексты, Видео, Анализ, Музыка, Идеи, Живопись, Анимация, Иконки, Графика), стилями, предпросмотром, историей и AI-генерацией
+- `BackupPasswordDialog` — модальный диалог параметров бэкапа: выбор стандартного или полного (с API-ключами) бэкапа, опция включения истории буфера обмена и поле ввода пароля шифрования; используется и при восстановлении
 - `IconPickerWindow` — выбор иконки
 - `AiConnectionDialog` — диалог создания/редактирования одного AI-подключения с проверкой связи по API
 - `ColorPickerDialog` — диалог выбора цвета для кнопок (палитра, HEX-поле, привязка к теме)
@@ -144,6 +146,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `Logger` — логирование ошибок и событий
 - `UiDispatcher` — централизованная обёртка над `Application.Current.Dispatcher`; все фоновые сервисы (`TextProcessingService`, `ZenEditorStore`, `HotkeyService`, `UpdateCheckService`) переключаются на UI-поток строго через `UiDispatcher`, чтобы не вызывать Dispatcher напрямую и не допускать race на коллекциях
 - `KeyboardFocusVisualService` — единое управление логическим фокусом и фокус-обводкой в окнах утилит: гарантирует, что Enter/Esc/стрелки фокусируются на ожидаемых элементах, и фокус-рамка всегда пиксель-перфект
+- `BackupService` — экспорт и восстановление настроек приложения, пользовательских иконок, API-ключей (через Windows Credential Manager) и истории буфера обмена в ZIP-архив `.aitebarbackup`; шифрование приватной части через AES-GCM 256 + PBKDF2 (SHA-256, 210 000 итераций); предварительное создание safety backup перед восстановлением
 - `IndicatorPositionHelper` / `PanelPositionHelper` / `TaskbarGeometryHelper` / `EasingHelper` (расчётная часть) — см. Helpers Layer
 - `HotkeyCaptureHelper` / `HotkeyKeyCatalog` / `HotkeyValidationHelper` — единый стек захвата, каталога и валидации hotkey в UI настроек
 - `AppSettingsDiscreteChoiceHelper` / `AppSettingsSelectionHelper` / `AppSettingsSectionNavigationHelper` — UI-хелперы формы общих настроек
@@ -179,7 +182,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `HotkeyKeyCatalog` — каталог доступных клавиш для горячих клавиш
 - `HotkeyCaptureHelper` — обработчик захвата комбинации клавиш в UI (используется `HotkeyCaptureBox`-контролом)
 - `PanelPackageManifest` — модель манифеста пакета панелей
-- `UtilityButtonCatalog` — централизованный каталог всех 18 встроенных кнопок утилит: Id, локализация, глифы, видимость по `ShowPreset*`, порядок по умолчанию. Единый источник правды для MainWindow, AppSettingsWindow и импорта/экспорта.
+- `UtilityButtonCatalog` — централизованный каталог всех 19 встроенных кнопок утилит: Id, локализация, глифы, видимость по `ShowPreset*`, порядок по умолчанию. Единый источник правды для MainWindow, AppSettingsWindow и импорта/экспорта.
 - `ZenEditorAsyncCommandGuard` — общая граница обработки ошибок асинхронных команд Дзен-редактора; перехватывает исключение и передаёт его UI восстановления
 - `ZenEditorShortcutResolver` — чистый резолвер сочетаний поиска и тем Дзен-редактора: `Ctrl+F`, `F3`, `Shift+F3`, `Ctrl+Alt+↑/↓` и `Ctrl+Alt+1..5`
 - `ZenEditorUndoHistory` — ограниченная история Undo/Redo текстовых изменений и диапазонов форматирования; поддерживает группировку последовательного ввода и `Ctrl+Z`/`Ctrl+Y`
@@ -191,7 +194,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `AiModels` — POCO-модели и enum AI-подсистемы (AiProviderId, AiConnection, AiModelInfo, AiModelPricing, AiRequestOptions, AiChatMessage и т. д.); используются `AiProviderCatalog`, `AiGateway`, `TextProcessingService`, `AiConnectionDialog`
 - `QRCodeShortcutHelper` — горячие клавиши и input bindings окна генератора QR-кодов: Ctrl+C скопировать PNG, Ctrl+S сохранить, Ctrl+E экспорт SVG, очистка поля по Escape
 - `ClipboardTextTransforms` — преобразования текста в Clipboard Manager: копирование «как одна строка», обрезка пробелов, нормализация переносов строк, URL-encode для промптов и команд; используются как контекстные действия над клипом
-- `UnifiedButton` — DTO/контракт между `UnifiedButtonService` и UI-панелью; одна унифицированная кнопка представляет либо пользовательский `CustomElement`, либо одну из 18 встроенных утилит `UtilityButtonDefinition` из каталога.
+- `UnifiedButton` — DTO/контракт между `UnifiedButtonService` и UI-панелью; одна унифицированная кнопка представляет либо пользовательский `CustomElement`, либо одну из 19 встроенных утилит `UtilityButtonDefinition` из каталога.
 - `ActionExecutionResult` — enum-результат выполнения `ActionService.ExecuteAsync` (Success / FailedWithWarning / FailedCancelled / Failed) с сообщением об ошибке; используется UI feedback и тестами.
 - `QRCodeModels` — POCO и enum для QR Code Generator (уровень коррекции ошибок, режим экспорта PNG/SVG, размеры QrCodeData); коррелирует по назначению с `IconConverterModels` и `ZenEditorModels`.
 
@@ -222,6 +225,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 | [ZenEditorModels.cs](../AiteBar/ZenEditorModels.cs) | Документ, диапазоны форматирования, индекс хранилища, метаданные, summaries, результат загрузки и описание темы Дзен-редактора. |
 | [IconConverterModels.cs](../AiteBar/IconConverterModels.cs) | Icon Converter DTO (входные форматы, выходные размеры, профиль ICO). |
 | [QRCodeModels.cs](../AiteBar/QRCodeModels.cs) | QR Code Generator DTO (ErrorCorrectionLevel, режим экспорта PNG/SVG, размеры). |
+| [BackupModels.cs](../AiteBar/BackupModels.cs) | Резервное копирование: опции создания/восстановления (`BackupCreateOptions`, `BackupRestoreOptions`), payload секретов (`BackupSecretPayload`) и результат чтения бэкапа (`BackupReadResult`). |
 | [UnifiedButton.cs](../AiteBar/UnifiedButton.cs) | Унифицированный DTO одной кнопки для UI-панели; представляет либо `CustomElement`, либо `UtilityButtonDefinition`. |
 | [ActionExecutionResult.cs](../AiteBar/ActionExecutionResult.cs) | Result-тип возврата `ActionService.ExecuteAsync`: Success/FailedWithWarning/FailedCancelled/Failed + сообщение; используется UI feedback и unit-тесты. |
 | [PanelPackageManifest.cs](../AiteBar/PanelPackageManifest.cs) | JSON-схема файла `manifest.json` внутри `.aitebarpanel` ZIP (AppVersion, ExportedAt, Elements, Images). |
@@ -465,7 +469,7 @@ UI Layer использует Services Layer для выполнения биз�
 **Основные компоненты:**
 - IUtility — интерфейс для всех утилит
 - UtilityRegistry — статический класс для регистрации и получения утилит
-- Классы утилит: QuickNoteUtility, TimerStopwatchUtility, ColorPickerUtility, FileSorterUtility, IconConverterUtility, QRCodeGeneratorUtility, ClipboardManagerUtility, TextProcessingUtility, ZenEditorUtility
+- Классы утилит: QuickNoteUtility, TimerStopwatchUtility, ColorPickerUtility, FileSorterUtility, IconConverterUtility, QRCodeGeneratorUtility, ClipboardManagerUtility, TextProcessingUtility, ZenEditorUtility, PromptBuilderUtility
 
 **Основные функции:**
 - UtilityRegistry.Register() — регистрация утилиты
@@ -589,7 +593,7 @@ UI Layer использует Services Layer для выполнения биз�
 - Нет
 
 **Основные константы:**
-- FixedContextCount = 8
+- FixedContextCount = 10
 - DefaultContextPrefix = "Panel "
 
 **Основные функции:**

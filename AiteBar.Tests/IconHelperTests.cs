@@ -207,4 +207,67 @@ public sealed class IconHelperTests
             Directory.Delete(root, recursive: true);
         }
     }
+
+    [Fact]
+    public void SaveCustomIcon_SvgFile_ConvertsToPng()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(root, "test");
+        Directory.CreateDirectory(root);
+        string sourcePath = Path.Combine(root, "icon.svg");
+        File.WriteAllText(sourcePath, """
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="24" fill="#007ACC"/>
+              <path d="M20 33 L29 42 L45 22" fill="none" stroke="white" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            """);
+        string? savedPath = null;
+
+        try
+        {
+            PathHelper.SetAppDataFolderOverride(testRoot);
+            savedPath = IconHelper.SaveCustomIcon(sourcePath);
+
+            Assert.NotNull(savedPath);
+            Assert.Equal(".png", Path.GetExtension(savedPath));
+            Assert.True(File.Exists(savedPath));
+            Assert.True(IconHelper.IsSupportedImageFile(savedPath!));
+        }
+        finally
+        {
+            PathHelper.ClearAppDataFolderOverride();
+            if (savedPath != null && File.Exists(savedPath))
+            {
+                File.Delete(savedPath);
+            }
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void SaveCustomIcon_UnsafeSvgFile_ReturnsNull()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(root, "test");
+        Directory.CreateDirectory(root);
+        string sourcePath = Path.Combine(root, "icon.svg");
+        File.WriteAllText(sourcePath, """
+            <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+              <image href="https://example.com/icon.png" width="64" height="64"/>
+            </svg>
+            """);
+
+        try
+        {
+            PathHelper.SetAppDataFolderOverride(testRoot);
+            var savedPath = IconHelper.SaveCustomIcon(sourcePath);
+
+            Assert.Null(savedPath);
+        }
+        finally
+        {
+            PathHelper.ClearAppDataFolderOverride();
+            Directory.Delete(root, recursive: true);
+        }
+    }
 }

@@ -106,11 +106,13 @@ namespace AiteBar
         private void LoadContexts()
         {
             CmbContext.Items.Clear();
-            foreach (var context in _context.GetContextsSnapshot())
+            IReadOnlyList<PanelContext> contexts = _context.GetContextsSnapshot();
+            for (int i = 0; i < contexts.Count; i++)
             {
+                PanelContext context = contexts[i];
                 CmbContext.Items.Add(new ComboBoxItem
                 {
-                    Content = ContextStateHelper.GetContextListDisplayName(context),
+                    Content = ContextStateHelper.GetContextListDisplayName(context, i),
                     Tag = context.Id
                 });
             }

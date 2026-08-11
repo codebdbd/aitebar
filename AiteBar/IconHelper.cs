@@ -147,6 +147,12 @@ namespace AiteBar
                     bitmap.Save(destPath, ImageFormat.Png);
                     return destPath;
                 }
+                else if (ext == ".svg")
+                {
+                    string destPath = Path.Combine(PathHelper.IconsFolder, Path.ChangeExtension(fileName, ".png"));
+                    SaveSvgAsPng(sourcePath, destPath);
+                    return destPath;
+                }
                 else
                 {
                     if (!IsSupportedImageFile(sourcePath))
@@ -164,6 +170,26 @@ namespace AiteBar
                 Logger.Log(ex);
                 return null;
             }
+        }
+
+        private static void SaveSvgAsPng(string sourcePath, string destinationPath)
+        {
+            var service = new IconConverterService();
+            IReadOnlyList<IconPreviewImage> previews = service.GeneratePreviewsAsync(
+                sourcePath,
+                new IconConversionOptions
+                {
+                    Sizes = [128],
+                    PaddingPercent = 0,
+                    BackgroundMode = IconBackgroundMode.Transparent,
+                    FitMode = IconFitMode.Fit
+                }).GetAwaiter().GetResult();
+
+            IconPreviewImage preview = previews.Count > 0
+                ? previews[0]
+                : throw new InvalidDataException(LocalizationService.Get("IconConverter_ErrorRenderFailed"));
+
+            File.WriteAllBytes(destinationPath, preview.PngBytes);
         }
 
         public static bool IsSupportedImageFile(string path)

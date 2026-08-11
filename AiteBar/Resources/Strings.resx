@@ -54,7 +54,7 @@
   <data name="SettingsWindow_AppSettings" xml:space="preserve"><value>Program settings</value></data>
   <data name="SettingsWindow_SelectKey" xml:space="preserve"><value>Choose a key...</value></data>
   <data name="SettingsWindow_SelectIconTitle" xml:space="preserve"><value>Choose icon</value></data>
-  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Images (*.png;*.jpg;*.jpeg;*.bmp;*.ico)|*.png;*.jpg;*.jpeg;*.bmp;*.ico|All files (*.*)|*.*</value></data>
+  <data name="SettingsWindow_ImageFilter" xml:space="preserve"><value>Images (*.png;*.jpg;*.jpeg;*.bmp;*.ico;*.svg)|*.png;*.jpg;*.jpeg;*.bmp;*.ico;*.svg|All files (*.*)|*.*</value></data>
   <data name="SettingsWindow_RequiredWeb" xml:space="preserve"><value>Paste website URL (required):</value></data>
   <data name="SettingsWindow_RequiredProgram" xml:space="preserve"><value>Specify program or shortcut path (required):</value></data>
   <data name="SettingsWindow_RequiredFile" xml:space="preserve"><value>Specify file path (required):</value></data>
@@ -117,6 +117,14 @@ For modular Python projects use the "Command" type.</value></data>
   <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>These names are used in the panel menu and when choosing a panel for buttons.</value></data>
   <data name="AppSettingsWindow_PanelEnabled" xml:space="preserve"><value>Enabled</value></data>
   <data name="AppSettingsWindow_PrimaryPanelAlwaysEnabled" xml:space="preserve"><value>The first panel is always enabled.</value></data>
+  <data name="AppSettingsWindow_ClearPanelTooltip" xml:space="preserve"><value>Clear panel "{0}" ({1} buttons)</value></data>
+  <data name="AppSettingsWindow_ClearPanelAutomation" xml:space="preserve"><value>Clear panel "{0}"</value></data>
+  <data name="AppSettingsWindow_ClearPanelEmpty" xml:space="preserve"><value>Panel is already empty</value></data>
+  <data name="AppSettingsWindow_ClearPanelPending" xml:space="preserve"><value>Panel is being cleared</value></data>
+  <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Drag to reorder panels</value></data>
+  <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve"><value>Clear panel "{0}"?
+
+This will remove {1} custom buttons from this panel only. Panel name and settings will be preserved.</value></data>
   <data name="AppSettingsWindow_Hotkeys" xml:space="preserve"><value>Hotkeys</value></data>
   <data name="AppSettingsWindow_HotkeysHint" xml:space="preserve"><value>Assign shortcuts for showing the panel, switching between panels, and adding a button.</value></data>
   <data name="AppSettingsWindow_ShowPanel" xml:space="preserve"><value>Show panel</value></data>
@@ -285,6 +293,7 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="DeleteButtonConfirm" xml:space="preserve"><value>Delete '{0}'?</value></data>
   <data name="Export_Title" xml:space="preserve"><value>Export current panel</value></data>
   <data name="Export_Filter" xml:space="preserve"><value>AiteBar Panel (*.aitebarpanel)|*.aitebarpanel</value></data>
+  <data name="Import_FileFilter" xml:space="preserve"><value>Supported panel files (*.aitebarpanel;*.zip)|*.aitebarpanel;*.zip|AiteBar Panel (*.aitebarpanel)|*.aitebarpanel|AiteCommander Archive (*.zip)|*.zip|All files (*.*)|*.*</value></data>
   <data name="Export_Success" xml:space="preserve"><value>Exported buttons: {0}</value></data>
   <data name="Export_Failed" xml:space="preserve"><value>Could not export panel.
 {0}</value></data>

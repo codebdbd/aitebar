@@ -21,17 +21,20 @@ public class ColorBrushConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, System.Globalization.CultureInfo culture) => throw new NotImplementedException();
 }
 
+internal sealed record AppSettingsContextRowState(string ContextId, string Name, bool IsEnabled);
+
 [SupportedOSPlatform("windows6.1")]
 public partial class AppSettingsWindow : DarkWindow
 {
     private const string SupportUrl = "https://codebdbd.github.io/";
     private const string RepositoryUrl = "https://github.com/codebdbd/aitebar";
-    private sealed record ContextRowDraft(string Name, bool IsEnabled, bool IsNameCustomized);
+    private sealed record ContextRowDraft(string ContextId, string Name, bool IsEnabled, bool IsNameCustomized);
+    private sealed record ContextRow(string ContextId, CheckBox EnabledCheckBox, TextBox NameTextBox, Border BadgeBorder, Button ClearButton);
 
     private readonly MainWindow _mainWindow;
     private readonly AppSettings _settings;
     private readonly string _dataDirectory;
-    private readonly List<(CheckBox EnabledCheckBox, TextBox NameTextBox, Border BadgeBorder)> _contextRows = new();
+    private readonly List<ContextRow> _contextRows = new();
     private readonly IAiCredentialStore _aiCredentialStore = new WindowsAiCredentialStore();
     private readonly AiProviderClient _aiProviderClient;
     private readonly List<AiConnectionSettings> _aiConnections = [];
@@ -48,6 +51,8 @@ public partial class AppSettingsWindow : DarkWindow
     private bool _isSynchronizingNavigation;
     private bool _isWindowLoaded;
     private AppSettingsSection _requestedSection;
+    private string? _draggedContextId;
+    private Point _contextDragStartPoint;
 
     public AppSettingsWindow(MainWindow mainWindow, AppSettingsSection initialSection = AppSettingsSection.General)
     {
@@ -273,8 +278,7 @@ public partial class AppSettingsWindow : DarkWindow
         int selectedSectionIndex = Math.Max(0, SettingsNavigationList.SelectedIndex);
         List<ContextRowDraft> drafts = CaptureContextRowDrafts();
         ReloadLocalizedChoiceLists();
-        BuildContextRows(_mainWindow.GetAllContextsSnapshot());
-        ApplyContextRowDrafts(drafts);
+        BuildContextRows(BuildContextDisplaySnapshot(_mainWindow.GetAllContextsSnapshot(), drafts));
         RefreshContextRowTooltips();
         RefreshAutomationNames();
         SortQuickToolRows();
@@ -788,6 +792,7 @@ public partial class AppSettingsWindow : DarkWindow
         {
             string draftName = _contextRows[i].NameTextBox.Text;
             drafts.Add(new ContextRowDraft(
+                _contextRows[i].ContextId,
                 draftName,
                 _contextRows[i].EnabledCheckBox.IsChecked ?? false,
                 ContextStateHelper.IsCustomizedContextNameInput(draftName, i)));
@@ -800,6 +805,11 @@ public partial class AppSettingsWindow : DarkWindow
     {
         for (int i = 0; i < _contextRows.Count && i < drafts.Count; i++)
         {
+            if (!string.Equals(_contextRows[i].ContextId, drafts[i].ContextId, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
             if (drafts[i].IsNameCustomized)
             {
                 _contextRows[i].NameTextBox.Text = drafts[i].Name.Trim();
@@ -812,17 +822,80 @@ public partial class AppSettingsWindow : DarkWindow
         }
     }
 
+    private static IReadOnlyList<PanelContext> BuildContextDisplaySnapshot(
+        IReadOnlyList<PanelContext> source,
+        IReadOnlyList<ContextRowDraft> drafts)
+    {
+        if (drafts.Count == 0)
+        {
+            return source;
+        }
+
+        var sourceById = source.ToDictionary(context => context.Id, StringComparer.Ordinal);
+        var ordered = new List<PanelContext>(source.Count);
+        var usedIds = new HashSet<string>(StringComparer.Ordinal);
+
+        for (int i = 0; i < drafts.Count; i++)
+        {
+            ContextRowDraft draft = drafts[i];
+            if (!sourceById.TryGetValue(draft.ContextId, out PanelContext? sourceContext) || !usedIds.Add(draft.ContextId))
+            {
+                continue;
+            }
+
+            bool isNameCustomized = ContextStateHelper.IsCustomizedContextNameInput(draft.Name, i);
+            ordered.Add(new PanelContext
+            {
+                Id = sourceContext.Id,
+                Name = isNameCustomized ? draft.Name.Trim() : ContextStateHelper.GetDefaultContextName(i),
+                IsNameCustomized = isNameCustomized,
+                IconGlyph = sourceContext.IconGlyph,
+                IsEnabled = i == 0 || draft.IsEnabled,
+                Color = ContextStateHelper.GetContextColor(i)
+            });
+        }
+
+        foreach (PanelContext context in source)
+        {
+            if (usedIds.Add(context.Id))
+            {
+                ordered.Add(context);
+            }
+        }
+
+        return ordered;
+    }
+
     private void RefreshContextRowTooltips()
     {
         for (int i = 0; i < _contextRows.Count; i++)
         {
-            _contextRows[i].EnabledCheckBox.ToolTip = i == 0
+            ContextRow row = _contextRows[i];
+            row.EnabledCheckBox.ToolTip = i == 0
                 ? LocalizationService.Get("AppSettingsWindow_PrimaryPanelAlwaysEnabled")
                 : LocalizationService.Get("AppSettingsWindow_PanelEnabled");
             AutomationProperties.SetName(
-                _contextRows[i].EnabledCheckBox,
-                $"{_contextRows[i].NameTextBox.Text}: {LocalizationService.Get("AppSettingsWindow_PanelEnabled")}");
+                row.EnabledCheckBox,
+                $"{row.NameTextBox.Text}: {LocalizationService.Get("AppSettingsWindow_PanelEnabled")}");
+
+            RefreshContextClearButton(row);
         }
+    }
+
+    private void RefreshContextClearButton(ContextRow row)
+    {
+        int buttonCount = CountContextButtons(row.ContextId);
+        row.ClearButton.IsEnabled = buttonCount > 0;
+        row.ClearButton.ToolTip = buttonCount > 0
+            ? LocalizationService.Format("AppSettingsWindow_ClearPanelTooltip", row.NameTextBox.Text, buttonCount)
+            : LocalizationService.Get("AppSettingsWindow_ClearPanelEmpty");
+        AutomationProperties.SetName(row.ClearButton, LocalizationService.Format("AppSettingsWindow_ClearPanelAutomation", row.NameTextBox.Text));
+        ToolTipService.SetShowOnDisabled(row.ClearButton, true);
+    }
+
+    private int CountContextButtons(string contextId)
+    {
+        return _settings.Elements.Count(element => string.Equals(element.ContextId, contextId, StringComparison.Ordinal));
     }
 
     private static void SetBadgeColor(Border badgeBorder, string colorString)
@@ -1074,11 +1147,41 @@ public partial class AppSettingsWindow : DarkWindow
         for (int i = 0; i < contexts.Count; i++)
         {
             PanelContext context = contexts[i];
-            int contextNumber = ContextStateHelper.GetContextNumber(context.Id);
+            int contextNumber = i;
             var row = new Grid { Height = formControlHeight + 20 };
+            row.Tag = context.Id;
+            row.AllowDrop = true;
+            row.DragOver += ContextRow_DragOver;
+            row.Drop += ContextRow_Drop;
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(60) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var dragHandle = new Border
+            {
+                Width = 24,
+                Height = formControlHeight,
+                Cursor = System.Windows.Input.Cursors.SizeAll,
+                ToolTip = LocalizationService.Get("AppSettingsWindow_ReorderPanelTooltip"),
+                VerticalAlignment = VerticalAlignment.Center,
+                Child = new TextBlock
+                {
+                    Text = "\uE945",
+                    FontFamily = FontHelper.Resolve(FontHelper.MaterialKey),
+                    Foreground = (System.Windows.Media.Brush)FindResource("MutedText"),
+                    FontSize = 18,
+                    HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                    VerticalAlignment = System.Windows.VerticalAlignment.Center,
+                    TextAlignment = System.Windows.TextAlignment.Center
+                }
+            };
+            dragHandle.PreviewMouseLeftButtonDown += ContextDragHandle_PreviewMouseLeftButtonDown;
+            dragHandle.PreviewMouseMove += ContextDragHandle_PreviewMouseMove;
+            dragHandle.Tag = context.Id;
+            Grid.SetColumn(dragHandle, 0);
+            row.Children.Add(dragHandle);
 
             var badge = new Border
             {
@@ -1098,7 +1201,7 @@ public partial class AppSettingsWindow : DarkWindow
                 VerticalAlignment = System.Windows.VerticalAlignment.Center,
                 TextAlignment = System.Windows.TextAlignment.Center
             };
-            Grid.SetColumn(badge, 0);
+            Grid.SetColumn(badge, 1);
             row.Children.Add(badge);
 
             var nameTextBox = new TextBox
@@ -1109,7 +1212,7 @@ public partial class AppSettingsWindow : DarkWindow
                 VerticalContentAlignment = VerticalAlignment.Center,
                 Style = (Style)FindResource("BaseTextBoxStyle")
             };
-            Grid.SetColumn(nameTextBox, 1);
+            Grid.SetColumn(nameTextBox, 2);
             row.Children.Add(nameTextBox);
 
             var enabledCheckBox = new CheckBox
@@ -1124,8 +1227,30 @@ public partial class AppSettingsWindow : DarkWindow
             AutomationProperties.SetName(
                 enabledCheckBox,
                 $"{context.Name}: {LocalizationService.Get("AppSettingsWindow_PanelEnabled")}");
-            Grid.SetColumn(enabledCheckBox, 2);
+            Grid.SetColumn(enabledCheckBox, 3);
             row.Children.Add(enabledCheckBox);
+
+            var clearButton = new Button
+            {
+                Content = "\uF34D",
+                Tag = context.Id,
+                Width = formControlHeight,
+                Height = formControlHeight,
+                Margin = new Thickness(8, 0, 0, 0),
+                Padding = new Thickness(0),
+                FontFamily = FontHelper.Resolve(FontHelper.FluentKey),
+                FontSize = 17,
+                MinWidth = 0,
+                HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                Style = (Style)FindResource("ContextIconButtonStyle")
+            };
+            clearButton.Click += BtnClearContext_Click;
+            Grid.SetColumn(clearButton, 4);
+            row.Children.Add(clearButton);
+
+            var contextRow = new ContextRow(context.Id, enabledCheckBox, nameTextBox, badge, clearButton);
+            RefreshContextClearButton(contextRow);
 
             PanelContextsList.Children.Add(row);
             if (i < contexts.Count - 1)
@@ -1136,8 +1261,138 @@ public partial class AppSettingsWindow : DarkWindow
                     Background = (System.Windows.Media.Brush)FindResource("ModernRowDivider")
                 });
             }
-            _contextRows.Add((enabledCheckBox, nameTextBox, badge));
+            _contextRows.Add(contextRow);
         }
+    }
+
+    private async void BtnClearContext_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string contextId })
+        {
+            return;
+        }
+
+        ContextRow? row = _contextRows.FirstOrDefault(entry => string.Equals(entry.ContextId, contextId, StringComparison.Ordinal));
+        if (row == null)
+        {
+            return;
+        }
+
+        int buttonCount = CountContextButtons(contextId);
+        if (buttonCount <= 0)
+        {
+            RefreshContextClearButton(row);
+            return;
+        }
+
+        string panelName = row.NameTextBox.Text.TrimOrDefault(_mainWindow.GetSettingsService().GetContextDisplayName(contextId));
+        string message = LocalizationService.Format("AppSettingsWindow_ClearPanelConfirm", panelName, buttonCount);
+        if (new DarkDialog(message, isConfirm: true) { Owner = this }.ShowDialog() != true)
+        {
+            return;
+        }
+
+        row.ClearButton.IsEnabled = false;
+        List<CustomElement> originalElements = _settings.Elements.ToList();
+        var contextIds = new HashSet<string>(StringComparer.Ordinal) { contextId };
+        AppSettingsService settingsService = _mainWindow.GetSettingsService();
+        AppSettings originalServiceSettings = settingsService.Settings;
+        settingsService.RemoveElementsForContexts(contextIds);
+        ClearElementsForContexts(_settings, contextIds);
+
+        IReadOnlyList<string> failedHotkeys;
+        try
+        {
+            failedHotkeys = await _mainWindow.SaveAppSettings();
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            settingsService.Settings = originalServiceSettings;
+            _settings.Elements = originalElements;
+            RefreshContextRowTooltips();
+            new DarkDialog(LocalizationService.Format("Settings_SaveFailed", ex.Message))
+            {
+                Owner = this
+            }.ShowDialog();
+            return;
+        }
+
+        _mainWindow.RefreshPanel();
+        RefreshContextRowTooltips();
+
+        if (failedHotkeys.Count > 0)
+        {
+            new DarkDialog(LocalizationService.Format("HotkeyRegistrationFailed", string.Join("\n", failedHotkeys)))
+            {
+                Owner = this
+            }.ShowDialog();
+        }
+    }
+
+    private void ContextDragHandle_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        _draggedContextId = (sender as FrameworkElement)?.Tag as string;
+        _contextDragStartPoint = e.GetPosition(this);
+    }
+
+    private void ContextDragHandle_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (_draggedContextId == null || e.LeftButton != System.Windows.Input.MouseButtonState.Pressed)
+        {
+            return;
+        }
+
+        Point current = e.GetPosition(this);
+        if (Math.Abs(current.X - _contextDragStartPoint.X) < SystemParameters.MinimumHorizontalDragDistance &&
+            Math.Abs(current.Y - _contextDragStartPoint.Y) < SystemParameters.MinimumVerticalDragDistance)
+        {
+            return;
+        }
+
+        DragDrop.DoDragDrop((DependencyObject)sender, _draggedContextId, DragDropEffects.Move);
+        _draggedContextId = null;
+    }
+
+    private void ContextRow_DragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = e.Data.GetDataPresent(DataFormats.StringFormat) ? DragDropEffects.Move : DragDropEffects.None;
+        e.Handled = true;
+    }
+
+    private void ContextRow_Drop(object sender, DragEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string targetContextId } ||
+            e.Data.GetData(DataFormats.StringFormat) is not string sourceContextId ||
+            string.Equals(sourceContextId, targetContextId, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        ReorderContextRows(sourceContextId, targetContextId);
+    }
+
+    private void ReorderContextRows(string sourceContextId, string targetContextId)
+    {
+        List<ContextRowDraft> drafts = CaptureContextRowDrafts();
+        int sourceIndex = drafts.FindIndex(draft => string.Equals(draft.ContextId, sourceContextId, StringComparison.Ordinal));
+        if (sourceIndex < 0)
+        {
+            return;
+        }
+
+        ContextRowDraft moved = drafts[sourceIndex];
+        drafts.RemoveAt(sourceIndex);
+        int targetIndex = drafts.FindIndex(draft => string.Equals(draft.ContextId, targetContextId, StringComparison.Ordinal));
+        if (targetIndex < 0)
+        {
+            return;
+        }
+
+        drafts.Insert(targetIndex, moved);
+        BuildContextRows(BuildContextDisplaySnapshot(_mainWindow.GetAllContextsSnapshot(), drafts));
+        ApplyContextRowDrafts(drafts);
+        RefreshContextRowTooltips();
     }
 
     private System.Windows.Media.Brush GetPanelBadgeBrush(string colorString)
@@ -1327,17 +1582,12 @@ public partial class AppSettingsWindow : DarkWindow
                     SliderActivationDelay.Value),
                 _activationDelaySelectionChanged);
 
-            for (int i = 0; i < settings.Contexts.Count && i < _contextRows.Count; i++)
-            {
-                int contextNumber = ContextStateHelper.GetContextNumber(settings.Contexts[i].Id);
-                string contextName = _contextRows[i].NameTextBox.Text;
-                bool isNameCustomized = ContextStateHelper.IsCustomizedContextNameInput(contextName, contextNumber);
-                settings.Contexts[i].Name = isNameCustomized
-                    ? contextName.Trim()
-                    : ContextStateHelper.GetDefaultContextName(contextNumber);
-                settings.Contexts[i].IsNameCustomized = isNameCustomized;
-                settings.Contexts[i].IsEnabled = contextNumber == 0 || (_contextRows[i].EnabledCheckBox.IsChecked ?? false);
-            }
+            settings.Contexts = BuildReorderedContexts(settings, _contextRows
+                .Select(row => new AppSettingsContextRowState(
+                    row.ContextId,
+                    row.NameTextBox.Text,
+                    row.EnabledCheckBox.IsChecked ?? false))
+                .ToList());
         });
         IReadOnlyList<string> failedHotkeys;
         try
@@ -1378,6 +1628,58 @@ public partial class AppSettingsWindow : DarkWindow
     protected override void OnLocalizationChanged()
     {
         RefreshLocalizedUi();
+    }
+
+    internal static int ClearElementsForContexts(AppSettings settings, IReadOnlySet<string> contextIds)
+    {
+        if (contextIds.Count == 0 || settings.Elements.Count == 0)
+        {
+            return 0;
+        }
+
+        int before = settings.Elements.Count;
+        settings.Elements = settings.Elements
+            .Where(element => !contextIds.Contains(element.ContextId))
+            .ToList();
+        return before - settings.Elements.Count;
+    }
+
+    internal static List<PanelContext> BuildReorderedContexts(AppSettings settings, IReadOnlyList<AppSettingsContextRowState> rows)
+    {
+        var existingById = settings.Contexts.ToDictionary(context => context.Id, StringComparer.Ordinal);
+        var result = new List<PanelContext>(rows.Count);
+        var usedIds = new HashSet<string>(StringComparer.Ordinal);
+
+        for (int i = 0; i < rows.Count; i++)
+        {
+            AppSettingsContextRowState row = rows[i];
+            if (!usedIds.Add(row.ContextId))
+            {
+                continue;
+            }
+
+            existingById.TryGetValue(row.ContextId, out PanelContext? existing);
+            bool isNameCustomized = ContextStateHelper.IsCustomizedContextNameInput(row.Name, i);
+            result.Add(new PanelContext
+            {
+                Id = row.ContextId,
+                Name = isNameCustomized ? row.Name.Trim() : ContextStateHelper.GetDefaultContextName(i),
+                IsNameCustomized = isNameCustomized,
+                IconGlyph = string.IsNullOrWhiteSpace(existing?.IconGlyph) ? "\uE8B7" : existing.IconGlyph,
+                IsEnabled = i == 0 || row.IsEnabled,
+                Color = ContextStateHelper.GetContextColor(i)
+            });
+        }
+
+        foreach (PanelContext existing in settings.Contexts)
+        {
+            if (usedIds.Add(existing.Id))
+            {
+                result.Add(existing);
+            }
+        }
+
+        return ContextStateHelper.NormalizeContexts(result);
     }
 }
 

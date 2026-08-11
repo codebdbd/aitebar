@@ -117,10 +117,10 @@ public sealed class ContextStateHelperTests : IDisposable
 
         List<PanelContext> normalized = ContextStateHelper.NormalizeContexts(contexts, CultureInfo.GetCultureInfo("ru"));
 
+        Assert.Equal("Панель 0", normalized[0].Name);
         Assert.Equal("Панель 1", normalized[1].Name);
-        Assert.Equal("Панель 2", normalized[2].Name);
+        Assert.False(normalized[0].IsNameCustomized);
         Assert.False(normalized[1].IsNameCustomized);
-        Assert.False(normalized[2].IsNameCustomized);
     }
 
     [Fact]
@@ -145,6 +145,47 @@ public sealed class ContextStateHelperTests : IDisposable
 
         Assert.Equal("Panel 1", ContextStateHelper.GetContextListDisplayName(defaultContext));
         Assert.Equal("Panel 4 · Drawing", ContextStateHelper.GetContextListDisplayName(customContext));
+    }
+
+    [Fact]
+    public void ContextReorder_NormalizeContexts_PreservesInputOrderAndStableIds()
+    {
+        List<PanelContext> contexts =
+        [
+            new() { Id = "context-4", Name = "Design", IsNameCustomized = true, IsEnabled = true },
+            new() { Id = "context-1", Name = "Panel 1", IsNameCustomized = false, IsEnabled = true },
+            new() { Id = "context-0", Name = "Panel 0", IsNameCustomized = false, IsEnabled = true },
+            new() { Id = "context-2", Name = "Panel 2", IsNameCustomized = false, IsEnabled = false },
+            new() { Id = "context-3", Name = "Panel 3", IsNameCustomized = false, IsEnabled = false },
+            new() { Id = "context-5", Name = "Panel 5", IsNameCustomized = false, IsEnabled = false },
+            new() { Id = "context-6", Name = "Panel 6", IsNameCustomized = false, IsEnabled = false },
+            new() { Id = "context-7", Name = "Panel 7", IsNameCustomized = false, IsEnabled = false },
+            new() { Id = "context-8", Name = "Panel 8", IsNameCustomized = false, IsEnabled = false },
+            new() { Id = "context-9", Name = "Panel 9", IsNameCustomized = false, IsEnabled = false }
+        ];
+
+        List<PanelContext> normalized = ContextStateHelper.NormalizeContexts(contexts);
+
+        Assert.Equal(["context-4", "context-1", "context-0"], normalized.Take(3).Select(context => context.Id).ToArray());
+        Assert.Equal("Design", normalized[0].Name);
+        Assert.Equal("Panel 1", normalized[1].Name);
+        Assert.True(normalized[0].IsEnabled);
+        Assert.Equal("#3B82F6", normalized[0].Color);
+        Assert.Equal("#22C55E", normalized[1].Color);
+    }
+
+    [Fact]
+    public void ContextReorder_GetContextDisplayNumber_UsesListPosition()
+    {
+        List<PanelContext> contexts =
+        [
+            new() { Id = "context-4" },
+            new() { Id = "context-1" },
+            new() { Id = "context-0" }
+        ];
+
+        Assert.Equal(0, ContextStateHelper.GetContextDisplayNumber(contexts, "context-4"));
+        Assert.Equal(2, ContextStateHelper.GetContextDisplayNumber(contexts, "context-0"));
     }
 
     [Theory]

@@ -301,8 +301,8 @@ public sealed class PromptBuilderIntegrationTests
     [Fact]
     public void Generator_ShowsAutomaticOptionBeforeModelsFinishLoading()
     {
-        string promptBuilderCode = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
-        string textProcessingCode = Read("AiteBar", "TextProcessingWindow.xaml.cs");
+        string promptBuilderCode = Read("AiteBar", "PromptBuilderWindow.xaml.cs").ReplaceLineEndings("\n");
+        string textProcessingCode = Read("AiteBar", "TextProcessingWindow.xaml.cs").ReplaceLineEndings("\n");
 
         Assert.Contains("CmbModels.ItemsSource = _models;\n        AddAutomaticModelOption();", promptBuilderCode);
         Assert.Contains("CmbModels.ItemsSource = _models;\n        AddAutomaticModelOption();", textProcessingCode);

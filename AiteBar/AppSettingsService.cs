@@ -1021,6 +1021,30 @@ namespace AiteBar
             await SaveAsync();
         }
 
+        internal int RemoveElementsForContexts(IReadOnlySet<string> contextIds)
+        {
+            ArgumentNullException.ThrowIfNull(contextIds);
+            if (contextIds.Count == 0)
+            {
+                return 0;
+            }
+
+            int removed;
+            lock (_stateLock)
+            {
+                int before = _elements.Count;
+                _elements.RemoveAll(element => contextIds.Contains(element.ContextId));
+                removed = before - _elements.Count;
+                _appSettings.Elements = _elements;
+            }
+
+            if (removed > 0)
+            {
+                SettingsChanged?.Invoke(this, EventArgs.Empty);
+            }
+            return removed;
+        }
+
         internal async Task AddElementsAsync(IEnumerable<CustomElement> elements)
         {
             lock (_stateLock)

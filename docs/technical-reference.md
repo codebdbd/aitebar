@@ -73,6 +73,11 @@ AiteBar запускается как один экземпляр. Если по
 | `ClipboardManagerHotkey` | не назначено | Запустить Clipboard Manager |
 | `TextProcessingHotkey` | не назначено | Запустить Обработку текста |
 | `ZenEditorHotkey` | не назначено | Запустить Дзен-редактор |
+| `PromptBuilderHotkey` | не назначено | Запустить Конструктор промптов |
+| `FileSorterHotkey` | не назначено | Запустить File Sorter |
+| `QuickNoteHotkey` | не назначено | Запустить Quick Note |
+| `ColorPickerHotkey` | не назначено | Запустить Color Picker |
+| `TimerStopwatchHotkey` | не назначено | Запустить таймер и секундомер |
 | `ShowPresetSearch` | `true` | Показывать поиск |
 | `ShowPresetScreenshot` | `true` | Показывать скриншот |
 | `ShowPresetVideo` | `true` | Показывать запись видео |
@@ -89,6 +94,7 @@ AiteBar запускается как один экземпляр. Если по
 | `ShowPresetShowDesktop` | `true` | Показывать Show Desktop |
 | `ShowPresetAppsFolder` | `true` | Показывать Apps Folder |
 | `ShowPresetCopilot` | `true` | Показывать Copilot |
+| `ShowPresetPromptBuilder` | `false` | Показывать Конструктор промптов (AI) на панели |
 | `ShowPresetTextProcessing` | `true` | Показывать Обработку текста (AI) |
 | `ShowPresetZenEditor` | `true` | Показывать Дзен-редактор |
 | `ClipboardManagerPersistHistory` | `true` | Сохранять историю Clipboard Manager между сессиями |
@@ -116,6 +122,36 @@ AiteBar запускается как один экземпляр. Если по
 | `TextProcessingSelectedModelId` | — | Идентификатор последней выбранной AI-модели |
 | `TextProcessingSelectedProviderId` | — | Идентификатор последнего выбранного AI-провайдера |
 | `TextProcessingIsAutoModel` | `true` | Автовыбор модели в Обработке текста по стоимости и контексту |
+| `PromptBuilderLeft` | — | Координата X окна Конструктора промптов |
+| `PromptBuilderTop` | — | Координата Y окна Конструктора промптов |
+| `PromptBuilderWidth` | — | Ширина окна Конструктора промптов |
+| `PromptBuilderHeight` | — | Высота окна Конструктора промптов |
+| `PromptBuilderWindowState` | — | Состояние окна Конструктора промптов (Normal/Maximized/Minimized) |
+| `PromptBuilderWindowPlacementInitialized` | `false` | Флаг, что окно PromptBuilder уже было открыто и его геометрия инициализирована |
+| `PromptBuilderLastMode` | `0` (Programming) | Последняя выбранная рубрика Конструктора промптов (PromptBuilderCategory enum) |
+| `PromptBuilderPaintingStyle` | `Auto` | Последний выбранный стиль живописи |
+| `PromptBuilderPaintingSection` | `All` | Последняя выбранная секция стилей живописи |
+| `PromptBuilderPaintingArtist` | `Auto` | Последний выбранный художник для живописи |
+| `PromptBuilderAnimationStyle` | `Auto` | Последний выбранный стиль анимации |
+| `PromptBuilderAnimationSection` | `All` | Последняя секция стилей анимации |
+| `PromptBuilderPhotoSection` | `All` | Последняя секция стилей фото |
+| `PromptBuilderPhotoStyle` | `Auto` | Последний стиль фото |
+| `PromptBuilderThemeSection` | `All` | Последняя секция стилей темы |
+| `PromptBuilderThemeStyle` | `Auto` | Последний стиль темы |
+| `PromptBuilderTextType` | `Auto` | Последний тип текстового промпта |
+| `PromptBuilderTextTone` | `Neutral` | Последний тон текстового промпта |
+| `PromptBuilderAnalysisDirection` | `Auto` | Последнее направление анализа |
+| `PromptBuilderVideoDirection` | `Auto` | Последнее направление видео |
+| `PromptBuilderProgrammingProjectType` | `Auto` | Последний тип проекта программирования |
+| `PromptBuilderProgrammingStyle` | `Auto` | Последний стиль программирования |
+| `PromptBuilderVisualTarget` | `Universal` | Последняя целевая модель для визуальных промптов |
+| `PromptBuilderIconStyle` | `Auto` | Последний стиль иконок |
+| `PromptBuilderGraphicType` | `Auto` | Последний тип графики |
+| `PromptBuilderGraphicStyle` | `Auto` | Последний стиль графики |
+| `PromptBuilderSelectedConnectionId` | — | Последнее выбранное AI-подключение в Prompt Builder |
+| `PromptBuilderSelectedModelId` | — | Последняя выбранная AI-модель в Prompt Builder |
+| `PromptBuilderSelectedProviderId` | — | Последний выбранный AI-провайдер в Prompt Builder |
+| `PromptBuilderIsAutoModel` | `true` | Автовыбор модели в Prompt Builder для генерации промпта |
 | `Ai` | объект | Настройки AI-подключений (список подключений, метаданные роутинга). См. раздел ниже. |
 | `Sentry` | объект | Настройки телеметрии Sentry (Dsn, IsEnabled, Environment, TracesSampleRate, SendDefaultPii). Отключено по умолчанию. |
 | `LastFileSortOperation` | — | Undo-состояние последней сессии File Sorter для отката нажатием на панели результата |
@@ -124,11 +160,11 @@ AiteBar запускается как один экземпляр. Если по
 | `Elements` | пустой список | Пользовательские кнопки |
 | `UtilityButtonOrder` | пустой список | Порядок кнопок встроенных утилит |
 
-**Nullable-геометрия окон.** Для полей `QuickNoteLeft/Top/Width/Height`, `TextProcessingLeft/Top/Width/Height`, `TaskbarIndicatorPositionX/Y` значение `—` означает `null` в JSON настроек. Пока пользователь ни разу не перемещал и не изменял размер окна, параметр не записан. При первом открытии:
+**Nullable-геометрия окон.** Для полей `QuickNoteLeft/Top/Width/Height`, `TextProcessingLeft/Top/Width/Height`, `PromptBuilderLeft/Top/Width/Height`, `TaskbarIndicatorPositionX/Y` значение `—` означает `null` в JSON настроек. Пока пользователь ни разу не перемещал и не изменял размер окна, параметр не записан. При первом открытии:
 
-- Окна утилит (Quick Note, Timer/Stopwatch, QR Code Generator, Clipboard Manager, Обработка текста и др.): размер и положение вычисляются через [UtilityWindowLayoutHelper.cs](../AiteBar/UtilityWindowLayoutHelper.cs): fallback к стандартному размеру (например, 680×520 для Quick Note), затем автоматически clamp-ится в рабочую область монитора.
+- Окна утилит (Quick Note, Timer/Stopwatch, QR Code Generator, Clipboard Manager, Обработка текста, Дзен-редактор, Конструктор промптов и др.): размер и положение вычисляются через [UtilityWindowLayoutHelper.cs](../AiteBar/UtilityWindowLayoutHelper.cs): fallback к стандартному размеру (например, 680×520 для Quick Note), затем автоматически clamp-ится в рабочую область монитора.
 - `TaskbarIndicatorPositionX/Y`: берётся середина текущего края (0,5 относительной координаты по оси панели).
-- `TextProcessingWindowState`: Default = `Normal`.
+- `TextProcessingWindowState`, `PromptBuilderWindowState`: Default = `Normal`.
 
 После первого перемещения/resize окна или ручного перетаскивания индикатора параметр сохраняется в `settings.json` и в дальнейшем используется как точка старта.
 
@@ -147,7 +183,7 @@ AiteBar запускается как один экземпляр. Если по
 - **Cerebras** (cerebras.ai) — быстрые open-source модели; ключ Cerebras
 - **Google Gemini** (generativelanguage.googleapis.com) — Gemini семейство; ключ Google AI Studio
 - **Groq** (groq.com) — очень быстрые open-source модели; ключ Groq
-- **GitHub Models** (models.inference.ai.azure.com) — платные GitHub-токены GITHUB_TOKEN с областью `inference`
+- **GitHub Models** (models.inference.ai.azure.com) — платные GitHub-токены; для fine-grained Personal Access Token область `Models: read`, для классического GITHUB_TOKEN (Actions) scope `inference`
 - **Mistral AI** (api.mistral.ai) — семейство Mistral; ключ Mistral
 
 Сценарии выбора провайдеров/моделей (подробно см. [AI_PROVIDERS.md](AI_PROVIDERS.md)):
@@ -173,6 +209,7 @@ AiteBar запускается как один экземпляр. Если по
 - запустить Clipboard Manager.
 - запустить Обработку текста.
 - запустить Дзен-редактор.
+- запустить Конструктор промптов.
 
 **Дефолтные комбинации на чистом профиле** (до первой ручной правки настроек):
 
@@ -191,6 +228,7 @@ AiteBar запускается как один экземпляр. Если по
 | Запустить Clipboard Manager | `ClipboardManagerHotkey` | не назначено |
 | Запустить Обработку текста | `TextProcessingHotkey` | не назначено |
 | Запустить Дзен-редактор | `ZenEditorHotkey` | не назначено |
+| Запустить Конструктор промптов | `PromptBuilderHotkey` | не назначено |
 
 Все Hotkey-поля используют структуру `HotkeyBinding { Ctrl, Alt, Shift, Win, Key }`. Если пользователь не сохранял настройки, поле остаётся пустым `new();`, и hotkey не регистрируется в Windows.
 
@@ -290,6 +328,9 @@ AiteBar запускается как один экземпляр. Если по
 | Show Desktop | Минимизирует окна и показывает рабочий стол |
 | Apps Folder | Открывает системную папку Applications |
 | Copilot | Запускает Windows Copilot |
+| Обработка текста (AI) | AI-окно с потоковой SSE-генерацией, диффом оригинала/результата, Undo/Redo, отмена потока, 4 preset-режима Proofread/Typography/Cleanup/LiteraryEdit |
+| Дзен-редактор (AI) | Полноэкранный редактор Markdown с темами, множеством документов, поиском по документам, экспортом TXT и корзиной недавно удалённых |
+| Конструктор промптов (AI) | Окно с 11 рубриками (Программирование, Изображения, Тексты, Видео, Анализ, Музыка, Идеи, Живопись, Анимация, Иконки, Графика), пресетами стилей, предпросмотром и AI-генерацией готового промпта |
 
 ## Таймер и секундомер
 
@@ -338,6 +379,66 @@ Quick Note сохраняет данные в `QuickNote.md`. Поддержив
 - не меняет имя текущей панели.
 
 Ограничения размера пакета и проверки manifest относятся к технической валидации и не должны подробно описываться в user manual.
+
+## Резервное копирование `.aitebarbackup`
+
+Формат бэкапа: ZIP-архив с расширением `.aitebarbackup`, максимальный размер 100 МБ. Генерируется и читается через [BackupService.cs](../AiteBar/BackupService.cs).
+
+### Состав архива
+
+| Entry в ZIP | Обязательно | Шифрование | Назначение |
+|---|---:|---|---|
+| `settings.json` | да | нет | Полная сериализация `AppSettings` (10 панелей-контекстов, все hotkeys, ShowPreset*, геометрии окон, AI-подключения без секретов, порядок кнопок). |
+| `icons/<relative-path>` | нет | нет | Все пользовательские иконки из `%AppData%\Codebdbd\Aite Bar\icons`. Набор записей зависит от наличия пользовательских иконок на панели. |
+| `private.bin` | нет | **AES-GCM-256 + PBKDF2** | Только при `IncludeSecrets=true`. Контейнер с: 1) API-ключами AI-подключений из Credential Manager (`BackupSecretPayload.Credentials`), 2) опционально снимком истории буфера обмена (`ClipboardEntries`). |
+
+### Параметры экспорта
+
+Опции задаются в [BackupPasswordDialog.xaml](../AiteBar/BackupPasswordDialog.xaml) и передаются как `BackupCreateOptions`:
+
+| Опция | Тип | Описание |
+|---|---|---|
+| `IncludeSecrets` | bool | Включать ли `private.bin`. Если `true` — `Password` обязателен. |
+| `IncludeClipboard` | bool | Только при `IncludeSecrets=true`. Сохранить текущий `ClipboardHistoryService.Entries` снимок в `private.bin`. |
+| `Password` | string? | Пароль пользователя для ключа PBKDF2. |
+
+### Шифрование private.bin
+
+Параметры криптографии (жёстко закодированы в [BackupService.cs](../AiteBar/BackupService.cs)):
+
+| Параметр | Значение |
+|---|---:|
+| Алгоритм | `AesGcm` (256-bit key, 128-bit tag) |
+| Размер ключа | 32 байта (256 bit) |
+| Key derivation | `Rfc2898DeriveBytes.Pbkdf2` |
+| Hash | `SHA256` |
+| Итераций PBKDF2 | `210_000` |
+| Salt | 16 случайных байт |
+| Nonce/IV | 12 случайных байт |
+| Tag (MAC) | 16 байт |
+
+Формат `private.bin` на диске: `[salt 16B][nonce 12B][tag 16B][ciphertext N bytes]`. После дешифрации payload парсится как UTF-8 JSON с `BackupSecretPayload`. Неверный пароль → `CryptographicException`, который маппится в `InvalidDataException("Backup password is incorrect or data is damaged.")`.
+
+### Восстановление
+
+`RestoreAsync()` выполняет шаги строго в порядке:
+
+1. **Safety backup**: снимает текущее состояние перед заменой (в случае неудачного восстановления).
+2. **Read archive**: вызывает `ReadAsync()` и валидирует структуру, размеры и пути иконок (защита от path traversal `..`).
+3. **Write icons**: записывает `icons/` в `PathHelper.IconsFolder` с проверкой `destination.StartsWith(root)` для недопущения выхода за границы.
+4. **Write secrets**: при наличии decrypted `BackupSecretPayload`:
+   - записывает каждый Credential из `Credentials` в `IAiCredentialStore.Write(target, secret)`;
+   - вызывает `ClipboardHistoryService.Instance.ReplaceEntries(ClipboardEntries)`.
+5. **Apply settings**: `settingsService.Settings = backup.Settings` → `NormalizeAppState()` → `SaveAsync()`.
+
+### UI точки входа
+
+Кнопки в разделе `Backups` вкладки `About` [AppSettingsWindow.xaml#L1110-L1116](../AiteBar/AppSettingsWindow.xaml#L1110-L1116):
+
+| Действие | Метод-обработчик |
+|---|---|
+| Create backup... | `AppSettingsWindow.xaml.cs: BtnCreateBackup_Click()` |
+| Restore backup... | `AppSettingsWindow.xaml.cs: BtnRestoreBackup_Click()` |
 
 ## Контекстные меню
 

@@ -200,6 +200,23 @@ public sealed class LocalizationServiceTests
         }
     }
 
+    [Theory]
+    [InlineData("Strings.resx")]
+    [InlineData("Strings.de.resx")]
+    [InlineData("Strings.ru.resx")]
+    [InlineData("Strings.uk.resx")]
+    public void ImportFileFilter_ShowsAiteBarAndAiteCommanderFilesByDefault(string resourceFile)
+    {
+        string resourcesDirectory = Path.Combine(FindRepoRoot(), "AiteBar", "Resources");
+        Dictionary<string, string> resources = LoadResources(Path.Combine(resourcesDirectory, resourceFile));
+        string[] filterParts = resources["Import_FileFilter"].Split('|');
+
+        Assert.True(filterParts.Length >= 2);
+        Assert.Contains("*.aitebarpanel", filterParts[0], StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("*.zip", filterParts[0], StringComparison.OrdinalIgnoreCase);
+        Assert.Equal("*.aitebarpanel;*.zip", filterParts[1]);
+    }
+
     [Fact]
     public void XamlTextProperties_DoNotContainTranslatableLiteralText()
     {

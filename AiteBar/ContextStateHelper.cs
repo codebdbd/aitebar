@@ -33,6 +33,12 @@ namespace AiteBar
         public static string GetContextListDisplayName(PanelContext context)
         {
             int number = GetContextNumber(context.Id);
+            return GetContextListDisplayName(context, number);
+        }
+
+        public static string GetContextListDisplayName(PanelContext context, int displayNumber)
+        {
+            int number = displayNumber;
             string defaultName = GetDefaultContextName(number);
             string name = context.Name?.Trim() ?? string.Empty;
             return IsDefaultContextName(name, number)
@@ -51,28 +57,50 @@ namespace AiteBar
         public static List<PanelContext> NormalizeContexts(IReadOnlyList<PanelContext>? source, CultureInfo culture)
         {
             var normalized = new List<PanelContext>(FixedContextCount);
-            var existingById = (source ?? []).Where(context => !string.IsNullOrWhiteSpace(context.Id))
+            var validIds = Enumerable.Range(0, FixedContextCount)
+                .Select(GetDefaultContextId)
+                .ToHashSet(StringComparer.Ordinal);
+            var orderedValidExisting = (source ?? [])
+                .Where(context => !string.IsNullOrWhiteSpace(context.Id) && validIds.Contains(context.Id))
                 .GroupBy(context => context.Id, StringComparer.Ordinal)
-                .ToDictionary(group => group.Key, group => group.First(), StringComparer.Ordinal);
+                .Select(group => group.First())
+                .ToList();
 
-            for (int number = 0; number < FixedContextCount; number++)
+            List<PanelContext> orderedExisting;
+            if (orderedValidExisting.Count == FixedContextCount)
             {
-                string id = GetDefaultContextId(number);
-                existingById.TryGetValue(id, out PanelContext? existing);
-                bool isNameCustomized = DetermineIsNameCustomized(existing, number);
-                string name = isNameCustomized
-                    ? existing!.Name.Trim()
-                    : GetDefaultContextName(number, culture);
+                orderedExisting = orderedValidExisting;
+            }
+            else
+            {
+                var existingById = orderedValidExisting.ToDictionary(context => context.Id, StringComparer.Ordinal);
+                orderedExisting = new List<PanelContext>(FixedContextCount);
+                for (int number = 0; number < FixedContextCount; number++)
+                {
+                    string id = GetDefaultContextId(number);
+                    orderedExisting.Add(existingById.TryGetValue(id, out PanelContext? existing)
+                        ? existing
+                        : new PanelContext { Id = id, IsEnabled = false });
+                }
+            }
 
-                // Цвет всегда фиксированный для каждого индекса
+            for (int index = 0; index < FixedContextCount; index++)
+            {
+                PanelContext existing = orderedExisting[index];
+                bool isNameCustomized = DetermineIsNameCustomized(existing, index);
+                string name = isNameCustomized
+                    ? existing.Name.Trim()
+                    : GetDefaultContextName(index, culture);
+
+                // Цвет всегда фиксированный для текущей позиции панели
                 normalized.Add(new PanelContext
                 {
-                    Id = id,
-                    Name = string.IsNullOrWhiteSpace(name) ? GetDefaultContextName(number, culture) : name,
+                    Id = existing.Id,
+                    Name = string.IsNullOrWhiteSpace(name) ? GetDefaultContextName(index, culture) : name,
                     IsNameCustomized = isNameCustomized,
-                    IconGlyph = string.IsNullOrWhiteSpace(existing?.IconGlyph) ? "\uE8B7" : existing.IconGlyph,
-                    IsEnabled = number == 0 || (existing?.IsEnabled ?? false),
-                    Color = GetContextColor(number)
+                    IconGlyph = string.IsNullOrWhiteSpace(existing.IconGlyph) ? "\uE8B7" : existing.IconGlyph,
+                    IsEnabled = index == 0 || existing.IsEnabled,
+                    Color = GetContextColor(index)
                 });
             }
 
@@ -153,6 +181,22 @@ namespace AiteBar
             return null;
         }
 
+        public static PanelContext? GetContextAt(IReadOnlyList<PanelContext> contexts, int index) =>
+            index >= 0 && index < contexts.Count ? contexts[index] : null;
+
+        public static int GetContextDisplayNumber(IReadOnlyList<PanelContext> contexts, string? contextId)
+        {
+            for (int i = 0; i < contexts.Count; i++)
+            {
+                if (string.Equals(contexts[i].Id, contextId, StringComparison.Ordinal))
+                {
+                    return i;
+                }
+            }
+
+            return GetContextNumber(contextId);
+        }
+
         public static string? GetRelativeEnabledContextId(string activeContextId, IReadOnlyList<PanelContext> contexts, int direction)
         {
             int enabledCount = CountEnabledContexts(contexts);
@@ -206,7 +250,7 @@ namespace AiteBar
         public static bool IsCustomizedContextNameInput(string? name, int index) =>
             !string.IsNullOrWhiteSpace(name) && !IsDefaultContextName(name, index);
 
-        private static bool DetermineIsNameCustomized(PanelContext? existing, int index)
+        private static bool DetermineIsNameCustomized(PanelContext? existing, int displayIndex)
         {
             if (existing == null)
             {
@@ -218,7 +262,8 @@ namespace AiteBar
                 return !string.IsNullOrWhiteSpace(existing.Name);
             }
 
-            return IsCustomizedContextNameInput(existing.Name, index);
+            return IsCustomizedContextNameInput(existing.Name, displayIndex) &&
+                   IsCustomizedContextNameInput(existing.Name, GetContextNumber(existing.Id));
         }
     }
 }

@@ -42,7 +42,7 @@ public partial class MainWindow
             var dialog = new Microsoft.Win32.OpenFileDialog
             {
                 Title = LocalizationService.Get("Import_Title"),
-                Filter = LocalizationService.Get("Export_Filter"),
+                Filter = LocalizationService.Get("Import_FileFilter"),
                 DefaultExt = PanelPackageService.PackageExtension,
                 CheckFileExists = true,
                 Multiselect = false
