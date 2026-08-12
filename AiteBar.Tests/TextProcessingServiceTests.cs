@@ -67,9 +67,8 @@ public sealed class TextProcessingServiceTests
         string systemPrompt = request.Messages[0].Content;
 
         Assert.Equal(_service.GetSystemPrompt(TextProcessingMode.Proofread), systemPrompt);
-        Assert.Equal(
-            "Correct only spelling, grammar, and punctuation errors and return only the corrected text without changing its language, meaning, wording, structure, or technical content.",
-            systemPrompt);
+        Assert.StartsWith("Correct only spelling, grammar, and punctuation errors.", systemPrompt);
+        Assert.Contains("Return only the corrected text", systemPrompt);
     }
 
     [Theory]
@@ -307,14 +306,34 @@ public sealed class TextProcessingServiceTests
     }
 
     [Fact]
-    public void BuildRequest_LiteraryEditMode_UsesCorrectPromptAndSharedContracts()
+    public void BuildRequest_LiteraryEditMode_UsesCorrectSelfContainedPrompt()
     {
         var request = _service.BuildRequest(TextProcessingMode.LiteraryEdit, "text");
         string prompt = request.Messages[0].Content;
 
+        Assert.Equal(_service.GetSystemPrompt(TextProcessingMode.LiteraryEdit), prompt);
         Assert.StartsWith("Edit the text for clarity, fluency, rhythm, and literary quality", prompt);
-        Assert.Contains("LANGUAGE AND CONTENT", prompt);
-        Assert.Contains("PROTECTED TOKENS", prompt);
+        Assert.Contains("Preserve the original language of every input segment", prompt);
+        Assert.Contains("Tokens matching __AITEBAR_PROTECTED_...__", prompt);
+    }
+
+    [Fact]
+    public void BuildRequest_EachModeUsesItsOwnSelfContainedPrompt()
+    {
+        string proofreadPrompt = _service.BuildRequest(TextProcessingMode.Proofread, "text").Messages[0].Content;
+        string literaryPrompt = _service.BuildRequest(TextProcessingMode.LiteraryEdit, "text").Messages[0].Content;
+        string naturalPrompt = _service.BuildRequest(TextProcessingMode.NaturalStyle, "text").Messages[0].Content;
+        string typographyPrompt = _service.BuildRequest(TextProcessingMode.Typography, "text").Messages[0].Content;
+
+        Assert.Equal(_service.GetSystemPrompt(TextProcessingMode.Proofread), proofreadPrompt);
+        Assert.Equal(_service.GetSystemPrompt(TextProcessingMode.LiteraryEdit), literaryPrompt);
+        Assert.Equal(_service.GetSystemPrompt(TextProcessingMode.NaturalStyle), naturalPrompt);
+        Assert.Equal(_service.GetSystemPrompt(TextProcessingMode.Typography), typographyPrompt);
+        Assert.DoesNotContain("if the requested transformation would require rewriting", literaryPrompt);
+        Assert.DoesNotContain("if the requested transformation would require rewriting", naturalPrompt);
+        Assert.Contains("You may rewrite awkward sentences", literaryPrompt);
+        Assert.Contains("Rewrite the text so it sounds natural", naturalPrompt);
+        Assert.Contains("Do not correct spelling or grammar, rewrite wording", typographyPrompt);
     }
 
     [Fact]
@@ -399,9 +418,8 @@ public sealed class TextProcessingServiceTests
     public void GetSystemPrompt_ProofreadPrompt_IsOneDirectSentence()
     {
         string prompt = _service.GetSystemPrompt(TextProcessingMode.Proofread);
-        Assert.DoesNotContain('\n', prompt);
         Assert.Contains("Correct only", prompt);
-        Assert.Contains("return only the corrected text", prompt);
+        Assert.Contains("Return only the corrected text", prompt);
     }
 
     [Fact]

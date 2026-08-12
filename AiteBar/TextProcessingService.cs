@@ -27,9 +27,7 @@ public sealed partial class TextProcessingService
 
     public AiChatRequest BuildRequest(TextProcessingMode mode, string text, int? maxOutputTokens = null)
     {
-        string systemPrompt = mode == TextProcessingMode.Proofread
-            ? ProofreadPrompt
-            : GetSystemPrompt(mode) + LanguagePreservationInstruction + ProtectedMarkerInstruction;
+        string systemPrompt = GetSystemPrompt(mode);
         int estimated = EstimateTokens(systemPrompt) + EstimateTokens(text);
         int outputBudget = Math.Max(estimated, text.Length / 2);
         if (maxOutputTokens.HasValue)
@@ -459,31 +457,23 @@ public sealed partial class TextProcessingService
         RegexOptions.CultureInvariant)]
     private static partial Regex ExplicitFinalAnswerRegex();
 
-    private const string ProtectedMarkerInstruction =
-        """
-
-        PROTECTED TOKENS:
-        Tokens matching __AITEBAR_PROTECTED_...__ represent protected technical content.
-        Copy every protected token exactly once, unchanged and in its original position; do not translate, edit, split, reorder, omit, or duplicate it.
-        """;
-
-    private const string LanguagePreservationInstruction =
-        """
-
-        LANGUAGE AND CONTENT:
-        Preserve the language of every input segment and never translate any part of the text.
-        Preserve meaning, names, facts, and content order; if the requested transformation would require rewriting, keep the affected fragment unchanged.
-        """;
-
     private const string ProofreadPrompt =
-        "Correct only spelling, grammar, and punctuation errors and return only the corrected text without changing its language, meaning, wording, structure, or technical content.";
+        """
+        Correct only spelling, grammar, and punctuation errors.
+        Preserve the original language, meaning, wording, structure, paragraph boundaries, names, facts, and content order.
+        Preserve URLs, email addresses, file paths, file names, commands, code, HTML/XML tags, Markdown syntax, variables, templates, version numbers, product codes, identifiers, and all other technical content.
+        Tokens matching __AITEBAR_PROTECTED_...__ represent protected technical content; copy every protected token exactly once, unchanged and in its original position.
+        Return only the corrected text with no explanation, heading, commentary, change list, or wrapper.
+        """;
 
     private const string TypographyPrompt =
         """
         Apply typography only, using the conventions of each language present in the text.
         Normalize quotation marks, hyphens and dashes, ellipses, punctuation spacing, non-breaking spaces, ranges, initials, abbreviations, percentages, currencies, degrees, units, and repeated spaces.
-        Do not correct spelling or grammar, rewrite wording, improve style, add or remove content, reorder sentences, change paragraph boundaries, translate, or alter meaning.
+        Preserve the original language of every input segment and never translate any part of the text.
+        Do not correct spelling or grammar, rewrite wording, improve style, add or remove content, reorder sentences, change paragraph boundaries, or alter meaning.
         Preserve URLs, email addresses, file paths, file names, commands, code, HTML/XML tags, Markdown syntax, variables, templates, version numbers, product codes, identifiers, and all other technical content.
+        Tokens matching __AITEBAR_PROTECTED_...__ represent protected technical content; copy every protected token exactly once, unchanged and in its original position.
         Return only the typographically formatted text with no explanation, heading, change list, or wrapper.
         """;
 
@@ -492,8 +482,10 @@ public sealed partial class TextProcessingService
         Remove only clear copy/paste and document-extraction artifacts.
         Join accidental line breaks inside sentences, restore words split by line-break hyphenation, remove repeated spaces, excessive blank lines, invisible or control characters, obvious standalone page numbers, and repeated headers or footers only when the same non-content line occurs more than twice in equivalent positions.
         Preserve genuine paragraphs, lists, document structure, and all meaningful content.
-        Do not correct spelling, grammar, punctuation, or typography; do not rewrite, shorten, expand, translate, or alter meaning.
+        Preserve the original language of every input segment and never translate any part of the text.
+        Do not correct spelling, grammar, punctuation, or typography; do not rewrite, shorten, expand, or alter meaning.
         Preserve URLs, email addresses, file paths, file names, commands, code, tags, variables, version numbers, product codes, identifiers, and all other technical content.
+        Tokens matching __AITEBAR_PROTECTED_...__ represent protected technical content; copy every protected token exactly once, unchanged and in its original position.
         If a fragment is not clearly an artifact, keep it unchanged.
         Return only the cleaned text with no explanation, heading, removal list, or wrapper.
         """;
@@ -502,7 +494,9 @@ public sealed partial class TextProcessingService
         """
         Edit the text for clarity, fluency, rhythm, and literary quality while preserving its original language, meaning, facts, names, narrative perspective, intended tone, and paragraph structure.
         You may rewrite awkward sentences, improve word choice, and remove unintentional repetition, but do not invent information, add new ideas, omit meaningful content, or change the author's position.
+        Preserve the original language of every input segment and never translate any part of the text.
         Preserve URLs, email addresses, file paths, file names, commands, code, tags, variables, version numbers, product codes, identifiers, and all other technical content.
+        Tokens matching __AITEBAR_PROTECTED_...__ represent protected technical content; copy every protected token exactly once, unchanged and in its original position.
         Return only the edited text with no explanation, heading, commentary, change list, or wrapper.
         """;
 
@@ -511,7 +505,9 @@ public sealed partial class TextProcessingService
         Rewrite the text so it sounds natural, lively, and human while preserving its original language, meaning, facts, names, authorial position, intended tone, and logical flow.
         Use restrained typography appropriate to the language. Vary sentence length and rhythm where useful, remove formulaic phrases, canned transitions, excessive parallel constructions, repetitive openings, and an unnaturally uniform paragraph structure.
         Do not add new ideas, claims, examples, emotional coloring, slang, or factual details; do not omit meaningful content or make the text less accurate.
+        Preserve the original language of every input segment and never translate any part of the text.
         Preserve URLs, email addresses, file paths, file names, commands, code, tags, variables, version numbers, product codes, identifiers, and all other technical content.
+        Tokens matching __AITEBAR_PROTECTED_...__ represent protected technical content; copy every protected token exactly once, unchanged and in its original position.
         Return only the revised text with no explanation, heading, commentary, change list, or wrapper.
         """;
 

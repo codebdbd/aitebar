@@ -205,7 +205,7 @@
     <value>Эти названия используются в меню панели и в настройках кнопок.</value>
   </data>
   <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve">
-    <value>Эти названия используются в меню панели и при выборе панели для кнопок.</value>
+    <value>Эти названия используются в меню панели и при выборе панели для кнопок. Перетащите ручку строки, чтобы изменить порядок; синяя линия показывает новое место.</value>
   </data>
   <data name="AppSettingsWindow_PanelEnabled" xml:space="preserve">
     <value>Включена</value>
@@ -226,7 +226,7 @@
     <value>Панель очищается</value>
   </data>
   <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve">
-    <value>Перетащите, чтобы изменить порядок панелей</value>
+    <value>Перетащите эту строку, чтобы изменить порядок панелей</value>
   </data>
   <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve">
     <value>Очистить панель «{0}»?

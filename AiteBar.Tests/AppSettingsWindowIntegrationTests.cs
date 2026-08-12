@@ -75,6 +75,23 @@ public sealed class AppSettingsWindowIntegrationTests
     }
 
     [Fact]
+    public void ContextRows_ShowExplicitDragAndDropPositionFeedback()
+    {
+        string repoRoot = FindRepoRoot();
+        string settingsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "AppSettingsWindow.xaml.cs"));
+        string resources = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "Resources", "Strings.resx"));
+
+        Assert.Contains("DragHandle", settingsCode);
+        Assert.Contains("InsertBeforeIndicator", settingsCode);
+        Assert.Contains("InsertAfterIndicator", settingsCode);
+        Assert.Contains("CreateContextDropIndicator(VerticalAlignment.Top)", settingsCode);
+        Assert.Contains("CreateContextDropIndicator(VerticalAlignment.Bottom)", settingsCode);
+        Assert.Contains("e.GetPosition(row).Y > row.ActualHeight / 2.0", settingsCode);
+        Assert.Contains("targetIndex++;", settingsCode);
+        Assert.Contains("the blue line shows the new position", resources);
+    }
+
+    [Fact]
     public void ValidateHotkeyBindings_ChecksReservedHotkeys()
     {
         string repoRoot = FindRepoRoot();

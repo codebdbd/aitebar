@@ -9,6 +9,14 @@
 
 ## [Unreleased]
 
+## [1.15.11] - 2026-08-12
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Литературная редакция текста**: вкладки обработки текста снова используют собственные самостоятельные инструкции без общего поведенческого хвоста; литературная редакция теперь может реально переписывать неудачные фразы, сохраняя язык, смысл и факты.
+- **Literary text editing**: text-processing tabs now use their own self-contained instructions without a shared behavioral suffix; literary editing can actually rewrite awkward phrasing while preserving language, meaning, and facts.
+- **Перетаскивание панелей**: в настройках «Имена панелей» добавлены заметная ручка, подсветка перетаскиваемой строки и синяя линия вставки выше/ниже цели, чтобы было понятно, что и куда переносится.
+- **Panel drag and drop**: the “Panel names” settings list now shows a clearer handle, highlights the dragged row, and displays a blue insertion line above or below the target row so the drop position is explicit.
+
 ## [1.15.10] - 2026-08-11
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

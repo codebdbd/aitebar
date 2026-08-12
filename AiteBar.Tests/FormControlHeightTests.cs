@@ -107,7 +107,7 @@ public sealed class FormControlHeightTests
         string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "AppSettingsWindow.xaml.cs"));
 
         Assert.Contains("double formControlHeight = (double)FindResource(\"FormControlHeight\");", code);
-        Assert.Contains("new Grid { Height = formControlHeight", code);
+        Assert.Contains("Height = formControlHeight + 20", code);
         Assert.DoesNotContain("new Grid { Height = 34", code);
     }
 

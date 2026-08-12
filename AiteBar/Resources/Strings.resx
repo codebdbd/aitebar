@@ -114,14 +114,14 @@ For modular Python projects use the "Command" type.</value></data>
   <data name="AppSettingsWindow_Delay" xml:space="preserve"><value>Appearance delay, ms</value></data>
   <data name="AppSettingsWindow_ContextNames" xml:space="preserve"><value>Panel names</value></data>
   <data name="AppSettingsWindow_ContextNamesTooltip" xml:space="preserve"><value>These names are used in the panel menu and button settings.</value></data>
-  <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>These names are used in the panel menu and when choosing a panel for buttons.</value></data>
+  <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>These names are used in the panel menu and when choosing a panel for buttons. Drag the handle to reorder panels; the blue line shows the new position.</value></data>
   <data name="AppSettingsWindow_PanelEnabled" xml:space="preserve"><value>Enabled</value></data>
   <data name="AppSettingsWindow_PrimaryPanelAlwaysEnabled" xml:space="preserve"><value>The first panel is always enabled.</value></data>
   <data name="AppSettingsWindow_ClearPanelTooltip" xml:space="preserve"><value>Clear panel "{0}" ({1} buttons)</value></data>
   <data name="AppSettingsWindow_ClearPanelAutomation" xml:space="preserve"><value>Clear panel "{0}"</value></data>
   <data name="AppSettingsWindow_ClearPanelEmpty" xml:space="preserve"><value>Panel is already empty</value></data>
   <data name="AppSettingsWindow_ClearPanelPending" xml:space="preserve"><value>Panel is being cleared</value></data>
-  <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Drag to reorder panels</value></data>
+  <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Drag this row to reorder panels</value></data>
   <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve"><value>Clear panel "{0}"?
 
 This will remove {1} custom buttons from this panel only. Panel name and settings will be preserved.</value></data>

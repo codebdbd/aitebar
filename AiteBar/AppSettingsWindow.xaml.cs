@@ -29,7 +29,16 @@ public partial class AppSettingsWindow : DarkWindow
     private const string SupportUrl = "https://codebdbd.github.io/";
     private const string RepositoryUrl = "https://github.com/codebdbd/aitebar";
     private sealed record ContextRowDraft(string ContextId, string Name, bool IsEnabled, bool IsNameCustomized);
-    private sealed record ContextRow(string ContextId, CheckBox EnabledCheckBox, TextBox NameTextBox, Border BadgeBorder, Button ClearButton);
+    private sealed record ContextRow(
+        string ContextId,
+        CheckBox EnabledCheckBox,
+        TextBox NameTextBox,
+        Border BadgeBorder,
+        Button ClearButton,
+        Border DragHandle,
+        Border RowSurface,
+        Border InsertBeforeIndicator,
+        Border InsertAfterIndicator);
 
     private readonly MainWindow _mainWindow;
     private readonly AppSettings _settings;
@@ -53,6 +62,8 @@ public partial class AppSettingsWindow : DarkWindow
     private AppSettingsSection _requestedSection;
     private string? _draggedContextId;
     private Point _contextDragStartPoint;
+    private string? _dragOverContextId;
+    private bool _dragOverAfter;
 
     public AppSettingsWindow(MainWindow mainWindow, AppSettingsSection initialSection = AppSettingsSection.General)
     {
@@ -1148,11 +1159,33 @@ public partial class AppSettingsWindow : DarkWindow
         {
             PanelContext context = contexts[i];
             int contextNumber = i;
-            var row = new Grid { Height = formControlHeight + 20 };
+            var row = new Grid
+            {
+                Height = formControlHeight + 20,
+                Background = System.Windows.Media.Brushes.Transparent
+            };
             row.Tag = context.Id;
             row.AllowDrop = true;
             row.DragOver += ContextRow_DragOver;
+            row.DragLeave += ContextRow_DragLeave;
             row.Drop += ContextRow_Drop;
+            var rowSurface = new Border
+            {
+                Margin = new Thickness(0, 4, 0, 4),
+                CornerRadius = new CornerRadius(6),
+                Background = System.Windows.Media.Brushes.Transparent,
+                BorderBrush = System.Windows.Media.Brushes.Transparent,
+                BorderThickness = new Thickness(1),
+                IsHitTestVisible = false
+            };
+            Grid.SetColumnSpan(rowSurface, 5);
+            row.Children.Add(rowSurface);
+
+            var insertBeforeIndicator = CreateContextDropIndicator(VerticalAlignment.Top);
+            var insertAfterIndicator = CreateContextDropIndicator(VerticalAlignment.Bottom);
+            Grid.SetColumnSpan(insertBeforeIndicator, 5);
+            Grid.SetColumnSpan(insertAfterIndicator, 5);
+
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -1163,20 +1196,25 @@ public partial class AppSettingsWindow : DarkWindow
             {
                 Width = 24,
                 Height = formControlHeight,
-                Cursor = System.Windows.Input.Cursors.SizeAll,
+                Background = BrushFromHex("#2C333B"),
+                BorderBrush = BrushFromHex("#4A5868"),
+                BorderThickness = new Thickness(1),
+                CornerRadius = new CornerRadius(4),
+                Cursor = System.Windows.Input.Cursors.SizeNS,
                 ToolTip = LocalizationService.Get("AppSettingsWindow_ReorderPanelTooltip"),
                 VerticalAlignment = VerticalAlignment.Center,
                 Child = new TextBlock
                 {
                     Text = "\uE945",
                     FontFamily = FontHelper.Resolve(FontHelper.MaterialKey),
-                    Foreground = (System.Windows.Media.Brush)FindResource("MutedText"),
+                    Foreground = BrushFromHex("#DCE6F2"),
                     FontSize = 18,
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                     VerticalAlignment = System.Windows.VerticalAlignment.Center,
                     TextAlignment = System.Windows.TextAlignment.Center
                 }
             };
+            AutomationProperties.SetName(dragHandle, LocalizationService.Get("AppSettingsWindow_ReorderPanelTooltip"));
             dragHandle.PreviewMouseLeftButtonDown += ContextDragHandle_PreviewMouseLeftButtonDown;
             dragHandle.PreviewMouseMove += ContextDragHandle_PreviewMouseMove;
             dragHandle.Tag = context.Id;
@@ -1248,8 +1286,19 @@ public partial class AppSettingsWindow : DarkWindow
             clearButton.Click += BtnClearContext_Click;
             Grid.SetColumn(clearButton, 4);
             row.Children.Add(clearButton);
+            row.Children.Add(insertBeforeIndicator);
+            row.Children.Add(insertAfterIndicator);
 
-            var contextRow = new ContextRow(context.Id, enabledCheckBox, nameTextBox, badge, clearButton);
+            var contextRow = new ContextRow(
+                context.Id,
+                enabledCheckBox,
+                nameTextBox,
+                badge,
+                clearButton,
+                dragHandle,
+                rowSurface,
+                insertBeforeIndicator,
+                insertAfterIndicator);
             RefreshContextClearButton(contextRow);
 
             PanelContextsList.Children.Add(row);
@@ -1264,6 +1313,17 @@ public partial class AppSettingsWindow : DarkWindow
             _contextRows.Add(contextRow);
         }
     }
+
+    private Border CreateContextDropIndicator(VerticalAlignment alignment) => new()
+    {
+        Height = 3,
+        Margin = new Thickness(0, 0, 0, 0),
+        CornerRadius = new CornerRadius(2),
+        Background = (System.Windows.Media.Brush)FindResource("AccentColor"),
+        VerticalAlignment = alignment,
+        Visibility = Visibility.Collapsed,
+        IsHitTestVisible = false
+    };
 
     private async void BtnClearContext_Click(object sender, RoutedEventArgs e)
     {
@@ -1350,29 +1410,65 @@ public partial class AppSettingsWindow : DarkWindow
             return;
         }
 
-        DragDrop.DoDragDrop((DependencyObject)sender, _draggedContextId, DragDropEffects.Move);
-        _draggedContextId = null;
+        SetContextDragVisuals(_draggedContextId, null, false);
+        try
+        {
+            DragDrop.DoDragDrop((DependencyObject)sender, _draggedContextId, DragDropEffects.Move);
+        }
+        finally
+        {
+            _draggedContextId = null;
+            ClearContextDragVisuals();
+        }
     }
 
     private void ContextRow_DragOver(object sender, DragEventArgs e)
     {
-        e.Effects = e.Data.GetDataPresent(DataFormats.StringFormat) ? DragDropEffects.Move : DragDropEffects.None;
+        if (sender is not FrameworkElement { Tag: string targetContextId } row ||
+            e.Data.GetData(DataFormats.StringFormat) is not string sourceContextId ||
+            string.Equals(sourceContextId, targetContextId, StringComparison.Ordinal))
+        {
+            e.Effects = DragDropEffects.None;
+            ClearContextDropTargetVisuals();
+            e.Handled = true;
+            return;
+        }
+
+        bool insertAfter = e.GetPosition(row).Y > row.ActualHeight / 2.0;
+        e.Effects = DragDropEffects.Move;
+        if (!string.Equals(_dragOverContextId, targetContextId, StringComparison.Ordinal) ||
+            _dragOverAfter != insertAfter)
+        {
+            SetContextDragVisuals(sourceContextId, targetContextId, insertAfter);
+        }
         e.Handled = true;
+    }
+
+    private void ContextRow_DragLeave(object sender, DragEventArgs e)
+    {
+        if (sender is FrameworkElement { Tag: string contextId } &&
+            string.Equals(_dragOverContextId, contextId, StringComparison.Ordinal))
+        {
+            ClearContextDropTargetVisuals();
+        }
     }
 
     private void ContextRow_Drop(object sender, DragEventArgs e)
     {
+        bool insertAfter = sender is FrameworkElement row && e.GetPosition(row).Y > row.ActualHeight / 2.0;
         if (sender is not FrameworkElement { Tag: string targetContextId } ||
             e.Data.GetData(DataFormats.StringFormat) is not string sourceContextId ||
             string.Equals(sourceContextId, targetContextId, StringComparison.Ordinal))
         {
+            ClearContextDragVisuals();
             return;
         }
 
-        ReorderContextRows(sourceContextId, targetContextId);
+        ReorderContextRows(sourceContextId, targetContextId, insertAfter);
+        ClearContextDragVisuals();
     }
 
-    private void ReorderContextRows(string sourceContextId, string targetContextId)
+    private void ReorderContextRows(string sourceContextId, string targetContextId, bool insertAfter)
     {
         List<ContextRowDraft> drafts = CaptureContextRowDrafts();
         int sourceIndex = drafts.FindIndex(draft => string.Equals(draft.ContextId, sourceContextId, StringComparison.Ordinal));
@@ -1389,16 +1485,69 @@ public partial class AppSettingsWindow : DarkWindow
             return;
         }
 
+        if (insertAfter)
+        {
+            targetIndex++;
+        }
+
         drafts.Insert(targetIndex, moved);
         BuildContextRows(BuildContextDisplaySnapshot(_mainWindow.GetAllContextsSnapshot(), drafts));
         ApplyContextRowDrafts(drafts);
         RefreshContextRowTooltips();
     }
 
+    private void SetContextDragVisuals(string? sourceContextId, string? targetContextId, bool insertAfter)
+    {
+        _dragOverContextId = targetContextId;
+        _dragOverAfter = insertAfter;
+        foreach (ContextRow row in _contextRows)
+        {
+            bool isSource = string.Equals(row.ContextId, sourceContextId, StringComparison.Ordinal);
+            bool isTarget = string.Equals(row.ContextId, targetContextId, StringComparison.Ordinal);
+            row.RowSurface.Background = isSource ? BrushFromHex("#203548") : System.Windows.Media.Brushes.Transparent;
+            row.RowSurface.BorderBrush = isSource ? BrushFromHex("#2F78C4") : System.Windows.Media.Brushes.Transparent;
+            row.DragHandle.Background = isSource ? BrushFromHex("#0F5EA8") : BrushFromHex("#2C333B");
+            row.DragHandle.BorderBrush = isSource ? BrushFromHex("#69B9FF") : BrushFromHex("#4A5868");
+            row.InsertBeforeIndicator.Visibility = isTarget && !insertAfter ? Visibility.Visible : Visibility.Collapsed;
+            row.InsertAfterIndicator.Visibility = isTarget && insertAfter ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
+
+    private void ClearContextDropTargetVisuals()
+    {
+        _dragOverContextId = null;
+        foreach (ContextRow row in _contextRows)
+        {
+            row.InsertBeforeIndicator.Visibility = Visibility.Collapsed;
+            row.InsertAfterIndicator.Visibility = Visibility.Collapsed;
+        }
+    }
+
+    private void ClearContextDragVisuals()
+    {
+        _dragOverContextId = null;
+        _dragOverAfter = false;
+        foreach (ContextRow row in _contextRows)
+        {
+            row.RowSurface.Background = System.Windows.Media.Brushes.Transparent;
+            row.RowSurface.BorderBrush = System.Windows.Media.Brushes.Transparent;
+            row.DragHandle.Background = BrushFromHex("#2C333B");
+            row.DragHandle.BorderBrush = BrushFromHex("#4A5868");
+            row.InsertBeforeIndicator.Visibility = Visibility.Collapsed;
+            row.InsertAfterIndicator.Visibility = Visibility.Collapsed;
+        }
+    }
+
     private System.Windows.Media.Brush GetPanelBadgeBrush(string colorString)
     {
         var converter = new System.Windows.Media.BrushConverter();
         return (System.Windows.Media.Brush)(converter.ConvertFromString(colorString) ?? System.Windows.Media.Brushes.DimGray);
+    }
+
+    private static System.Windows.Media.Brush BrushFromHex(string colorString)
+    {
+        var converter = new System.Windows.Media.BrushConverter();
+        return (System.Windows.Media.Brush)(converter.ConvertFromString(colorString) ?? System.Windows.Media.Brushes.Transparent);
     }
 
     private void SliderPanelSize_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)

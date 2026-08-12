@@ -27,14 +27,14 @@
   <data name="AppSettingsWindow_ActivationZoneTooltip" xml:space="preserve"><value>Der reagierende Teil des gewählten Randes: 10 % nur in der Mitte, 100 % am gesamten Rand.</value></data>
   <data name="AppSettingsWindow_Delay" xml:space="preserve"><value>Einblendverzögerung, ms</value></data>
   <data name="AppSettingsWindow_ContextNamesTooltip" xml:space="preserve"><value>Diese Namen werden im Leistenmenü und in den Schaltflächeneinstellungen verwendet.</value></data>
-  <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>Diese Namen werden im Leistenmenü und bei der Auswahl einer Leiste für Schaltflächen verwendet.</value></data>
+  <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>Diese Namen werden im Leistenmenü und bei der Auswahl einer Leiste für Schaltflächen verwendet. Ziehen Sie den Griff der Zeile, um Leisten neu anzuordnen; die blaue Linie zeigt die neue Position.</value></data>
   <data name="AppSettingsWindow_PanelEnabled" xml:space="preserve"><value>Aktiv</value></data>
   <data name="AppSettingsWindow_PrimaryPanelAlwaysEnabled" xml:space="preserve"><value>Die erste Leiste ist immer aktiv.</value></data>
   <data name="AppSettingsWindow_ClearPanelTooltip" xml:space="preserve"><value>Leiste "{0}" leeren ({1} Schaltflächen)</value></data>
   <data name="AppSettingsWindow_ClearPanelAutomation" xml:space="preserve"><value>Leiste "{0}" leeren</value></data>
   <data name="AppSettingsWindow_ClearPanelEmpty" xml:space="preserve"><value>Leiste ist bereits leer</value></data>
   <data name="AppSettingsWindow_ClearPanelPending" xml:space="preserve"><value>Leiste wird geleert</value></data>
-  <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Ziehen, um Leisten neu anzuordnen</value></data>
+  <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Diese Zeile ziehen, um Leisten neu anzuordnen</value></data>
   <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve"><value>Leiste "{0}" leeren?
 
 Es werden {1} benutzerdefinierte Schaltflächen nur aus dieser Leiste entfernt. Name und Einstellungen der Leiste bleiben erhalten.</value></data>

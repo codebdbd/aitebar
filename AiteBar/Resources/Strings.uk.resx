@@ -219,12 +219,12 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AppSettingsWindow_ActivationZoneTooltip" xml:space="preserve"><value>Частина вибраного краю, що реагує на вказівник: 10% — лише центр, 100% — увесь край.</value></data>
   <data name="AppSettingsWindow_Delay" xml:space="preserve"><value>Затримка появи, мс</value></data>
   <data name="AppSettingsWindow_ContextNamesTooltip" xml:space="preserve"><value>Ці назви використовуються в меню панелі та налаштуваннях кнопок.</value></data>
-  <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>Ці назви використовуються в меню панелі та під час вибору панелі для кнопок.</value></data>
+  <data name="AppSettingsWindow_ContextNamesHint" xml:space="preserve"><value>Ці назви використовуються в меню панелі та під час вибору панелі для кнопок. Перетягніть ручку рядка, щоб змінити порядок; синя лінія показує нове місце.</value></data>
   <data name="AppSettingsWindow_ClearPanelTooltip" xml:space="preserve"><value>Очистити панель «{0}» ({1} кнопок)</value></data>
   <data name="AppSettingsWindow_ClearPanelAutomation" xml:space="preserve"><value>Очистити панель «{0}»</value></data>
   <data name="AppSettingsWindow_ClearPanelEmpty" xml:space="preserve"><value>Панель уже порожня</value></data>
   <data name="AppSettingsWindow_ClearPanelPending" xml:space="preserve"><value>Панель очищується</value></data>
-  <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Перетягніть, щоб змінити порядок панелей</value></data>
+  <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Перетягніть цей рядок, щоб змінити порядок панелей</value></data>
   <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve"><value>Очистити панель «{0}»?
 
 Буде видалено користувацьких кнопок: {1}. Тільки з цієї панелі. Назва й налаштування панелі збережуться.</value></data>
