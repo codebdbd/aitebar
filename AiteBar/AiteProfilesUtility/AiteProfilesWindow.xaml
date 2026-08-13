@@ -608,16 +608,16 @@
                               Margin="0,0,6,0"
                               IsChecked="{Binding RememberQuickLink}"
                               ToolTip="{local:Loc ResourceKey=AiteProfiles_RememberLink}"
-                              Content="&#xE78F;"/>
+                              Content="&#xF602;"/>
                 <ToggleButton Style="{StaticResource AiteProfilesToggleButtonStyle}"
                               IsChecked="{Binding RotationEnabled}"
                               ToolTip="{local:Loc ResourceKey=AiteProfiles_Rotation}"
-                              Content="&#xF13D;"/>
+                              Content="&#xF186;"/>
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
                 <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF109;" Command="{Binding AddQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_AddLink}"/>
                 <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF3DD;" Command="{Binding EditQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_EditLink}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF159;" Command="{Binding ImportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ImportLinks}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE4DF;" Command="{Binding ImportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ImportLinks}"/>
                 <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE0C7;" Command="{Binding ExportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ExportLinks}"/>
                 <Button Height="36" MinWidth="118" Style="{StaticResource PrimaryButtonStyle}" Content="{local:Loc ResourceKey=AiteProfiles_Launch}" Command="{Binding LaunchCommand}"/>
             </StackPanel>
