@@ -8,6 +8,7 @@
                   Width="720" Height="420" MinWidth="720" MinHeight="420" MaxWidth="720" MaxHeight="420"
                   WindowStartupLocation="Manual"
                   Background="Transparent" Foreground="#DCDCDC"
+                  AllowsTransparency="True"
                   WindowStyle="None"
                   ResizeMode="NoResize"
                   ShowInTaskbar="False"
@@ -195,7 +196,7 @@
                 <Setter Property="VerticalContentAlignment" Value="Stretch"/>
                 <Setter Property="Padding" Value="0"/>
                 <Setter Property="Margin" Value="0"/>
-                <Setter Property="MinHeight" Value="68"/>
+                <Setter Property="MinHeight" Value="56"/>
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Foreground" Value="#E8EDF2"/>
@@ -221,15 +222,25 @@
                 </Setter>
             </Style>
 
-            <Style x:Key="AiteProfilesHeaderButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Style x:Key="AiteProfilesHeaderButtonStyle" TargetType="Button">
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Height" Value="24"/>
-                <Setter Property="Padding" Value="6,0"/>
+                <Setter Property="Padding" Value="0"/>
                 <Setter Property="MinWidth" Value="0"/>
                 <Setter Property="HorizontalAlignment" Value="Left"/>
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Foreground" Value="#AEB4BA"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Button">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              RecognizesAccessKey="True"/>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <Style x:Key="AiteProfilesMutedTextStyle" TargetType="TextBlock">
@@ -260,11 +271,16 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Border Background="#0C0C0D"
-            BorderBrush="#27272A"
-            BorderThickness="1"
-            CornerRadius="12"
-            Padding="12">
+    <Border Background="#FF1689E8"
+            CornerRadius="8"
+            SnapsToDevicePixels="True">
+        <Border Background="{StaticResource PanelBackground}"
+                BorderBrush="#14000000"
+                BorderThickness="1"
+                CornerRadius="7"
+                Margin="1"
+                Padding="12"
+                SnapsToDevicePixels="True">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -359,14 +375,17 @@
                     </Grid.ColumnDefinitions>
                     <CheckBox Grid.Column="0"
                               Style="{StaticResource AiteProfilesSmallCheckBoxStyle}"
+                              Margin="10,0,0,0"
                               IsThreeState="False"
                               Click="SelectAllCheckBox_Click"/>
                     <Button Grid.Column="2"
                             Style="{StaticResource AiteProfilesHeaderButtonStyle}"
+                            Margin="18,0,0,0"
                             Content="{local:Loc ResourceKey=AiteProfiles_ColumnProfile}"
                             Click="ProfileHeader_Click"/>
                     <Button Grid.Column="3"
                             Style="{StaticResource AiteProfilesHeaderButtonStyle}"
+                            Margin="18,0,0,0"
                             Content="{local:Loc ResourceKey=AiteProfiles_ColumnTime}"
                             Click="TimeHeader_Click"/>
                     <TextBlock Grid.Column="4"
@@ -374,7 +393,7 @@
                                Foreground="#AEB4BA"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"
-                               Margin="6,0,0,0"/>
+                               Margin="18,0,0,0"/>
                 </Grid>
 
                 <ListView x:Name="ProfilesGrid"
@@ -468,8 +487,8 @@
                     </ListView.ContextMenu>
                     <ListView.ItemTemplate>
                         <DataTemplate>
-                            <Border MinHeight="68" Padding="10,4,10,4" Background="Transparent">
-                                <Grid>
+                            <Border MinHeight="56" Padding="10,2,10,2" Background="Transparent">
+                                <Grid VerticalAlignment="Center">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="40"/>
                                         <ColumnDefinition Width="64"/>
@@ -501,7 +520,10 @@
                                             ClipToBounds="True">
                                         <Grid>
                                             <Image Source="{Binding AvatarImagePath}"
-                                                   Stretch="UniformToFill">
+                                                   Stretch="Uniform"
+                                                   SnapsToDevicePixels="True"
+                                                   UseLayoutRounding="True"
+                                                   RenderOptions.BitmapScalingMode="HighQuality">
                                                 <Image.Style>
                                                     <Style TargetType="Image">
                                                         <Setter Property="Visibility" Value="Visible"/>
@@ -629,5 +651,6 @@
                    Foreground="#8F98A3"
                    FontSize="12"/>
     </Grid>
+        </Border>
     </Border>
 </local:DarkWindow>
