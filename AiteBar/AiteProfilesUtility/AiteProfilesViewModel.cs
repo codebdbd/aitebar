@@ -238,7 +238,9 @@ internal sealed class AiteProfilesViewModel : NotifyObject
             RebuildQuickLinkSuggestions();
             QuickLinkText = _quickLinks.GetPreparedText();
             await ReloadFromStoreAsync(cancellationToken).ConfigureAwait(true);
-            await RefreshAsync(includeExpensiveStats: false).ConfigureAwait(true);
+            StatusText = Profiles.Count > 0
+                ? LocalizationService.Format("AiteProfiles_StatusProfiles", Profiles.Count)
+                : LocalizationService.Get("AiteProfiles_StatusNoCachedProfiles");
         }
         finally
         {

@@ -1701,6 +1701,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiteProfiles_TagsPrompt" xml:space="preserve"><value>Теги через запятую</value></data>
   <data name="AiteProfiles_StatusScanning" xml:space="preserve"><value>Сканирование профилей Chrome...</value></data>
   <data name="AiteProfiles_StatusProfiles" xml:space="preserve"><value>Показано профилей: {0}</value></data>
+  <data name="AiteProfiles_StatusNoCachedProfiles" xml:space="preserve"><value>Кэша профилей нет. Нажмите Скан.</value></data>
   <data name="AiteProfiles_StatusScanFailed" xml:space="preserve"><value>Не удалось просканировать профили</value></data>
   <data name="AiteProfiles_StatusEmailCopied" xml:space="preserve"><value>Email скопирован</value></data>
   <data name="AiteProfiles_StatusLinksImported" xml:space="preserve"><value>Импортировано ссылок: {0}</value></data>

@@ -1016,6 +1016,7 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="AiteProfiles_TagsPrompt" xml:space="preserve"><value>Tags, separated by commas</value></data>
   <data name="AiteProfiles_StatusScanning" xml:space="preserve"><value>Scanning Chrome profiles...</value></data>
   <data name="AiteProfiles_StatusProfiles" xml:space="preserve"><value>{0} profiles shown</value></data>
+  <data name="AiteProfiles_StatusNoCachedProfiles" xml:space="preserve"><value>No cached profiles. Press Scan.</value></data>
   <data name="AiteProfiles_StatusScanFailed" xml:space="preserve"><value>Profile scan failed</value></data>
   <data name="AiteProfiles_StatusEmailCopied" xml:space="preserve"><value>Email copied</value></data>
   <data name="AiteProfiles_StatusLinksImported" xml:space="preserve"><value>{0} links imported</value></data>
