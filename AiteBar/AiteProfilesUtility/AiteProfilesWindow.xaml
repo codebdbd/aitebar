@@ -267,11 +267,7 @@
                     Style="{StaticResource SecondaryButtonStyle}"/>
         </Grid>
 
-        <Border Grid.Row="1"
-                Background="#151517"
-                BorderBrush="#27272A"
-                BorderThickness="1"
-                CornerRadius="8">
+        <Grid Grid.Row="1">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -279,7 +275,7 @@
                 </Grid.RowDefinitions>
 
                 <Grid Grid.Row="0"
-                      Background="#202023"
+                      Background="Transparent"
                       Height="34"
                       Margin="10,0,10,0"
                       VerticalAlignment="Top">
@@ -315,7 +311,7 @@
                 <ListView x:Name="ProfilesGrid"
                           Grid.Row="1"
                           ItemsSource="{Binding Profiles}"
-                          Background="#1A1A1C"
+                          Background="Transparent"
                           BorderThickness="0"
                           SelectionMode="Extended"
                           HorizontalContentAlignment="Stretch"
@@ -525,7 +521,7 @@
                     </ListView.ItemTemplate>
                 </ListView>
             </Grid>
-        </Border>
+        </Grid>
 
         <Grid Grid.Row="2" Margin="0,8,0,6">
             <Grid.ColumnDefinitions>
