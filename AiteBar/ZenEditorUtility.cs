@@ -12,7 +12,7 @@ public sealed class ZenEditorUtility : UtilityBase<ZenEditorWindow>
     public override string Id => "ZenEditor";
     public override string DisplayNameKey => "Tool_ZenEditor";
     public override string IconGlyph => "\uE367";
-    public override string IconColor => "#5B8DB8";
+    public override string IconColor => UtilityIconColors.TextWorkspace;
 
     protected override ZenEditorWindow CreateWindow(AppSettingsService settingsService, Window? owner) =>
         new(Store, owner as MainWindow);

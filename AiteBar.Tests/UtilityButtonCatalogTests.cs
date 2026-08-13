@@ -74,6 +74,61 @@ public sealed class UtilityButtonCatalogTests
     }
 
     [Fact]
+    public void PresetUtilityColors_FollowSemanticGroups()
+    {
+        AssertSameColor(
+            UtilityIconColors.FolderAccess,
+            UtilityButtonCatalog.Explorer,
+            UtilityButtonCatalog.Downloads,
+            UtilityButtonCatalog.FileSorter,
+            UtilityButtonCatalog.ShowDesktop,
+            UtilityButtonCatalog.AppsFolder);
+
+        AssertSameColor(
+            UtilityIconColors.ScreenCapture,
+            UtilityButtonCatalog.Screenshot,
+            UtilityButtonCatalog.Record,
+            UtilityButtonCatalog.ColorPicker);
+
+        AssertSameColor(
+            UtilityIconColors.AssetCreation,
+            UtilityButtonCatalog.IconConverter,
+            UtilityButtonCatalog.QRCodeGenerator);
+
+        AssertSameColor(
+            UtilityIconColors.TextWorkspace,
+            UtilityButtonCatalog.QuickNote,
+            UtilityButtonCatalog.ClipboardManager,
+            UtilityButtonCatalog.TextProcessing,
+            UtilityButtonCatalog.ZenEditor);
+
+        AssertSameColor(
+            UtilityIconColors.AiTools,
+            UtilityButtonCatalog.Copilot,
+            UtilityButtonCatalog.PromptBuilder);
+
+        AssertSameColor(
+            UtilityIconColors.Productivity,
+            UtilityButtonCatalog.Calculator,
+            UtilityButtonCatalog.TimerStopwatch);
+    }
+
+    [Fact]
+    public void UtilityImplementations_ReuseCatalogGroupColors()
+    {
+        Assert.Equal(UtilityButtonCatalog.FileSorter.Color, new FileSorterUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.IconConverter.Color, new IconConverterUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.TimerStopwatch.Color, new TimerStopwatchUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.ColorPicker.Color, new ColorPickerUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.QuickNote.Color, new QuickNoteUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.QRCodeGenerator.Color, new QRCodeGeneratorUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.ClipboardManager.Color, new ClipboardManagerUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.TextProcessing.Color, new TextProcessingUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.PromptBuilder.Color, new PromptBuilderUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.ZenEditor.Color, new ZenEditorUtility().IconColor);
+    }
+
+    [Fact]
     public void UnifiedButtonService_UsesCatalogVisibilityAndStableOrderingOnlyInPrimaryContext()
     {
         var settingsService = new AppSettingsService();
@@ -146,5 +201,10 @@ public sealed class UtilityButtonCatalogTests
 
         Assert.Equal(beforeUnknown.ShowPresetSearch, service.Settings.ShowPresetSearch);
         Assert.Equal(beforeUnknown.ShowPresetIconConverter, service.Settings.ShowPresetIconConverter);
+    }
+
+    private static void AssertSameColor(string expected, params UtilityButtonDefinition[] definitions)
+    {
+        Assert.All(definitions, definition => Assert.Equal(expected, definition.Color));
     }
 }

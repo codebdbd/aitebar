@@ -12,7 +12,7 @@ public class ColorPickerUtility : IUtility
     public string Id => "ColorPicker";
     public string DisplayNameKey => "Tool_ColorPicker";
     public string IconGlyph => "\uE5FE";
-    public string IconColor => "#A855F7";
+    public string IconColor => UtilityIconColors.ScreenCapture;
 
     public async Task LaunchAsync(AppSettingsService settingsService, Window? owner, Func<Task>? onBeforeExecute = null)
     {

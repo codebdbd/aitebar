@@ -11,7 +11,7 @@ namespace AiteBar
         public override string Id => "ClipboardManager";
         public override string DisplayNameKey => "Tool_ClipboardManager";
         public override string IconGlyph => "\uE34E";
-        public override string IconColor => "#F59E0B";
+        public override string IconColor => UtilityIconColors.TextWorkspace;
 
         protected override ClipboardManagerWindow CreateWindow(AppSettingsService settingsService, Window? owner)
         {

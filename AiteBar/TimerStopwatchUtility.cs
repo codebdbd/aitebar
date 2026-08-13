@@ -10,7 +10,7 @@ public class TimerStopwatchUtility : UtilityBase<TimerStopwatchWindow>
     public override string Id => "TimerStopwatch";
     public override string DisplayNameKey => "Tool_TimerStopwatch";
     public override string IconGlyph => "\uED88";
-    public override string IconColor => "#38BDF8";
+    public override string IconColor => UtilityIconColors.Productivity;
 
     protected override TimerStopwatchWindow CreateWindow(AppSettingsService settingsService, Window? owner)
     {

@@ -10,7 +10,7 @@ public sealed class QRCodeGeneratorUtility : UtilityBase<QRCodeGeneratorWindow>
     public override string Id => "QRCodeGenerator";
     public override string DisplayNameKey => "Tool_QRCodeGenerator";
     public override string IconGlyph => "\uF635";
-    public override string IconColor => "#60A5FA";
+    public override string IconColor => UtilityIconColors.AssetCreation;
 
     protected override QRCodeGeneratorWindow CreateWindow(AppSettingsService settingsService, Window? owner)
     {

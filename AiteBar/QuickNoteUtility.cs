@@ -12,7 +12,7 @@ public class QuickNoteUtility : UtilityBase<QuickNoteWindow>
     public override string Id => "QuickNote";
     public override string DisplayNameKey => "Tool_QuickNote";
     public override string IconGlyph => "\uF56F";
-    public override string IconColor => "#22D3EE";
+    public override string IconColor => UtilityIconColors.TextWorkspace;
 
     protected override QuickNoteWindow CreateWindow(AppSettingsService settingsService, Window? owner)
     {
