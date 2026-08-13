@@ -94,6 +94,7 @@ internal sealed class AiteProfileListItemViewModel : NotifyObject
         Bookmarks = profile.Bookmarks;
         DiskMb = profile.DiskMb;
         AvatarPath = profile.AvatarPath;
+        AvatarImagePath = HasAvatar ? profile.AvatarPath : string.Empty;
         SearchKey = profile.SearchKey;
         _isFavorite = profile.IsFavorite;
         _isFarm = profile.IsFarm;
@@ -108,6 +109,7 @@ internal sealed class AiteProfileListItemViewModel : NotifyObject
     public int Bookmarks { get; }
     public double DiskMb { get; }
     public string AvatarPath { get; }
+    public string AvatarImagePath { get; }
     public bool HasAvatar => !string.IsNullOrWhiteSpace(AvatarPath) && System.IO.File.Exists(AvatarPath);
     public string FallbackGlyph => "\uE77B";
     public string SearchKey { get; }

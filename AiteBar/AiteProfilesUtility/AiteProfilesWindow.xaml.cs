@@ -141,28 +141,24 @@ public partial class AiteProfilesWindow : DarkWindow
     private void ProfilesGrid_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
     {
         DependencyObject? source = e.OriginalSource as DependencyObject;
-        while (source is not null && source is not DataGridRow)
+        while (source is not null && source is not System.Windows.Controls.ListViewItem)
         {
             source = VisualTreeHelper.GetParent(source);
         }
 
-        if (source is DataGridRow { DataContext: AiteProfileListItemViewModel item } row)
+        if (source is System.Windows.Controls.ListViewItem { DataContext: AiteProfileListItemViewModel item } row)
         {
             row.IsSelected = true;
             _viewModel.CurrentProfile = item;
         }
     }
 
-    private void ProfilesGrid_Sorting(object sender, DataGridSortingEventArgs e)
-    {
-        e.Handled = true;
-        int column = e.Column.SortMemberPath switch
-        {
-            "LastTs" => 2,
-            _ => e.Column.DisplayIndex == 1 ? 4 : 0
-        };
-        _viewModel.SetSortColumn(column);
-    }
+    private void SelectAllCheckBox_Click(object sender, RoutedEventArgs e) =>
+        _viewModel.SelectAllVisible(sender is CheckBox { IsChecked: true });
+
+    private void ProfileHeader_Click(object sender, RoutedEventArgs e) => _viewModel.SetSortColumn(4);
+
+    private void TimeHeader_Click(object sender, RoutedEventArgs e) => _viewModel.SetSortColumn(2);
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {

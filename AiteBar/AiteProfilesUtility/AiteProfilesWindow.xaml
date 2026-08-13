@@ -79,27 +79,73 @@
                 <Setter Property="Padding" Value="8,0"/>
             </Style>
 
-            <Style TargetType="DataGridColumnHeader">
-                <Setter Property="Background" Value="#202023"/>
+            <Style x:Key="AiteProfilesListItemStyle" TargetType="ListViewItem">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="VerticalContentAlignment" Value="Stretch"/>
+                <Setter Property="Padding" Value="0"/>
+                <Setter Property="Margin" Value="0"/>
+                <Setter Property="MinHeight" Value="68"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Foreground" Value="#E8EDF2"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListViewItem">
+                            <Border x:Name="RowBorder"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="#303034"
+                                    BorderThickness="0,0,0,1">
+                                <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="RowBorder" Property="Background" Value="#20242B"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="RowBorder" Property="Background" Value="#233247"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="AiteProfilesHeaderButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="Padding" Value="6,0"/>
+                <Setter Property="MinWidth" Value="0"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderThickness" Value="0"/>
                 <Setter Property="Foreground" Value="#AEB4BA"/>
-                <Setter Property="BorderBrush" Value="#303034"/>
-                <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                <Setter Property="Padding" Value="8,6"/>
                 <Setter Property="FontWeight" Value="SemiBold"/>
             </Style>
 
-            <Style TargetType="DataGridRow">
-                <Setter Property="Background" Value="#1A1A1C"/>
-                <Setter Property="Foreground" Value="#E8EDF2"/>
-                <Style.Triggers>
-                    <Trigger Property="IsMouseOver" Value="True">
-                        <Setter Property="Background" Value="#20242B"/>
-                    </Trigger>
-                    <Trigger Property="IsSelected" Value="True">
-                        <Setter Property="Background" Value="#233247"/>
-                    </Trigger>
-                </Style.Triggers>
+            <Style x:Key="AiteProfilesMutedTextStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#8F98A3"/>
+                <Setter Property="FontSize" Value="12"/>
             </Style>
+
+            <Style x:Key="AiteProfilesPrimaryTextStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="#F2F5F8"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="FontSize" Value="13"/>
+            </Style>
+
+            <Style x:Key="AiteProfilesMetaIconStyle" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                <Setter Property="Foreground" Value="#7891AF"/>
+                <Setter Property="FontSize" Value="11"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <Style x:Key="AiteProfilesSmallCheckBoxStyle" TargetType="CheckBox">
+                <Setter Property="Width" Value="16"/>
+                <Setter Property="Height" Value="16"/>
+                <Setter Property="HorizontalAlignment" Value="Center"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
         </ResourceDictionary>
     </Window.Resources>
 
@@ -123,15 +169,45 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel Orientation="Horizontal">
-                <Button Style="{StaticResource AiteProfilesTabButtonStyle}"
-                        Content="{local:Loc ResourceKey=AiteProfiles_AllTab}"
-                        Command="{Binding SetAllTabCommand}"/>
-                <Button Style="{StaticResource AiteProfilesTabButtonStyle}"
-                        Content="{local:Loc ResourceKey=AiteProfiles_FavoritesTab}"
-                        Command="{Binding SetFavoritesTabCommand}"/>
-                <Button Style="{StaticResource AiteProfilesTabButtonStyle}"
-                        Content="{local:Loc ResourceKey=AiteProfiles_FarmTab}"
-                        Command="{Binding SetFarmTabCommand}"/>
+                <Button Content="{local:Loc ResourceKey=AiteProfiles_AllTab}"
+                        Command="{Binding SetAllTabCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource AiteProfilesTabButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsAllTabActive}" Value="True">
+                                    <Setter Property="BorderBrush" Value="#007ACC"/>
+                                    <Setter Property="Background" Value="#16324A"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{local:Loc ResourceKey=AiteProfiles_FavoritesTab}"
+                        Command="{Binding SetFavoritesTabCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource AiteProfilesTabButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsFavoritesTabActive}" Value="True">
+                                    <Setter Property="BorderBrush" Value="#007ACC"/>
+                                    <Setter Property="Background" Value="#16324A"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="{local:Loc ResourceKey=AiteProfiles_FarmTab}"
+                        Command="{Binding SetFarmTabCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource AiteProfilesTabButtonStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsFarmTabActive}" Value="True">
+                                    <Setter Property="BorderBrush" Value="#007ACC"/>
+                                    <Setter Property="Background" Value="#16324A"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
             </StackPanel>
             <TextBox x:Name="SearchBox"
                      Grid.Column="1"
@@ -152,27 +228,57 @@
                 BorderBrush="#27272A"
                 BorderThickness="1"
                 CornerRadius="8">
-            <DataGrid x:Name="ProfilesGrid"
-                      ItemsSource="{Binding Profiles}"
-                      AutoGenerateColumns="False"
-                      CanUserAddRows="False"
-                      CanUserDeleteRows="False"
-                      CanUserReorderColumns="False"
-                      CanUserResizeRows="False"
-                      HeadersVisibility="Column"
-                      GridLinesVisibility="Horizontal"
-                      HorizontalGridLinesBrush="#303034"
-                      Background="#1A1A1C"
-                      BorderThickness="0"
-                      RowHeight="68"
-                      HorizontalScrollBarVisibility="Disabled"
-                      SelectionMode="Extended"
-                      SelectionUnit="FullRow"
-                      SelectionChanged="ProfilesGrid_SelectionChanged"
-                      MouseDoubleClick="ProfilesGrid_MouseDoubleClick"
-                      PreviewMouseRightButtonDown="ProfilesGrid_PreviewMouseRightButtonDown"
-                      Sorting="ProfilesGrid_Sorting">
-                <DataGrid.ContextMenu>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0"
+                      Background="#202023"
+                      Height="34"
+                      Margin="0"
+                      VerticalAlignment="Top">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition Width="64"/>
+                        <ColumnDefinition Width="2.3*"/>
+                        <ColumnDefinition Width="1.1*"/>
+                        <ColumnDefinition Width="1.7*"/>
+                    </Grid.ColumnDefinitions>
+                    <CheckBox Grid.Column="0"
+                              Style="{StaticResource AiteProfilesSmallCheckBoxStyle}"
+                              IsThreeState="False"
+                              Click="SelectAllCheckBox_Click"/>
+                    <Button Grid.Column="2"
+                            Style="{StaticResource AiteProfilesHeaderButtonStyle}"
+                            Content="{local:Loc ResourceKey=AiteProfiles_ColumnProfile}"
+                            Click="ProfileHeader_Click"/>
+                    <Button Grid.Column="3"
+                            Style="{StaticResource AiteProfilesHeaderButtonStyle}"
+                            Content="{local:Loc ResourceKey=AiteProfiles_ColumnTime}"
+                            Click="TimeHeader_Click"/>
+                    <TextBlock Grid.Column="4"
+                               Text="{local:Loc ResourceKey=AiteProfiles_ColumnInfo}"
+                               Foreground="#AEB4BA"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Margin="6,0,0,0"/>
+                </Grid>
+
+                <ListView x:Name="ProfilesGrid"
+                          Grid.Row="1"
+                          ItemsSource="{Binding Profiles}"
+                          Background="#1A1A1C"
+                          BorderThickness="0"
+                          SelectionMode="Extended"
+                          HorizontalContentAlignment="Stretch"
+                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                          ItemContainerStyle="{StaticResource AiteProfilesListItemStyle}"
+                          SelectionChanged="ProfilesGrid_SelectionChanged"
+                          MouseDoubleClick="ProfilesGrid_MouseDoubleClick"
+                          PreviewMouseRightButtonDown="ProfilesGrid_PreviewMouseRightButtonDown">
+                    <ListView.ContextMenu>
                     <ContextMenu Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Open}" Command="{Binding OpenProfileCommand}">
                             <MenuItem.Icon>
@@ -248,37 +354,42 @@
                             </MenuItem.Icon>
                         </MenuItem>
                     </ContextMenu>
-                </DataGrid.ContextMenu>
-                <DataGrid.Columns>
-                    <DataGridTemplateColumn Width="42">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <CheckBox HorizontalAlignment="Center"
-                                          VerticalAlignment="Center"
-                                          IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                          Click="ProfileCheckBox_Click"/>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnProfile}" Width="410" MinWidth="410" SortMemberPath="Name">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <Grid Margin="0,4" Width="400" HorizontalAlignment="Left">
+                    </ListView.ContextMenu>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border MinHeight="68" Padding="10,4,10,4" Background="Transparent">
+                                <Grid>
                                     <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="40"/>
                                         <ColumnDefinition Width="64"/>
-                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="2.3*"/>
+                                        <ColumnDefinition Width="1.1*"/>
+                                        <ColumnDefinition Width="1.7*"/>
                                     </Grid.ColumnDefinitions>
-                                    <Border Width="48"
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <CheckBox Grid.Column="0"
+                                              Grid.RowSpan="2"
+                                              Style="{StaticResource AiteProfilesSmallCheckBoxStyle}"
+                                              IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              Click="ProfileCheckBox_Click"/>
+
+                                    <Border Grid.Column="1"
+                                            Grid.RowSpan="2"
+                                            Width="48"
                                             Height="48"
                                             CornerRadius="10"
-                                            Background="#2B2F36"
-                                            BorderBrush="#3A4654"
+                                            Background="#26303B"
+                                            BorderBrush="#344150"
                                             BorderThickness="1"
                                             HorizontalAlignment="Left"
                                             VerticalAlignment="Center"
                                             ClipToBounds="True">
                                         <Grid>
-                                            <Image Source="{Binding AvatarPath}"
+                                            <Image Source="{Binding AvatarImagePath}"
                                                    Stretch="UniformToFill">
                                                 <Image.Style>
                                                     <Style TargetType="Image">
@@ -309,39 +420,62 @@
                                             </TextBlock>
                                         </Grid>
                                     </Border>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
-                                        <TextBlock Text="{Binding Name, TargetNullValue='-'}" Foreground="#F2F5F8" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding Email, TargetNullValue=''}" Foreground="#8F98A3" FontSize="12" TextTrimming="CharacterEllipsis"/>
+
+                                    <TextBlock Grid.Column="2"
+                                               Grid.Row="0"
+                                               Margin="8,0,8,0"
+                                               Text="{Binding Name}"
+                                               Style="{StaticResource AiteProfilesPrimaryTextStyle}"
+                                               VerticalAlignment="Bottom"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Grid.Column="2"
+                                               Grid.Row="1"
+                                               Margin="8,2,8,0"
+                                               Text="{Binding Email}"
+                                               Style="{StaticResource AiteProfilesMutedTextStyle}"
+                                               VerticalAlignment="Top"
+                                               TextTrimming="CharacterEllipsis"/>
+
+                                    <TextBlock Grid.Column="3"
+                                               Grid.Row="0"
+                                               Margin="8,0,8,0"
+                                               Text="{Binding LastLaunchDate}"
+                                               Style="{StaticResource AiteProfilesMutedTextStyle}"
+                                               VerticalAlignment="Bottom"/>
+                                    <TextBlock Grid.Column="3"
+                                               Grid.Row="1"
+                                               Margin="8,2,8,0"
+                                               Text="{Binding LastLaunchTime}"
+                                               Style="{StaticResource AiteProfilesMutedTextStyle}"
+                                               VerticalAlignment="Top"/>
+
+                                    <TextBlock Grid.Column="4"
+                                               Grid.Row="0"
+                                               Margin="8,0,0,0"
+                                               Text="{Binding TagsDisplay}"
+                                               Style="{StaticResource AiteProfilesMutedTextStyle}"
+                                               VerticalAlignment="Bottom"
+                                               TextTrimming="CharacterEllipsis"/>
+                                    <StackPanel Grid.Column="4"
+                                                Grid.Row="1"
+                                                Margin="8,2,0,0"
+                                                Orientation="Horizontal"
+                                                VerticalAlignment="Top">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
+                                            <TextBlock Text="&#xE734;" Style="{StaticResource AiteProfilesMetaIconStyle}" Margin="0,0,4,0"/>
+                                            <TextBlock Text="{Binding BookmarksDisplay}" Style="{StaticResource AiteProfilesMutedTextStyle}"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE7F1;" Style="{StaticResource AiteProfilesMetaIconStyle}" Margin="0,0,4,0"/>
+                                            <TextBlock Text="{Binding DiskDisplay}" Style="{StaticResource AiteProfilesMutedTextStyle}"/>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Grid>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnTime}" Width="105" SortMemberPath="LastTs">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding LastLaunchDate}" Foreground="#E8EDF2"/>
-                                    <TextBlock Text="{Binding LastLaunchTime}" Foreground="#8F98A3" FontSize="12"/>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnInfo}" Width="*" MinWidth="130">
-                        <DataGridTemplateColumn.CellTemplate>
-                            <DataTemplate>
-                                <StackPanel>
-                                    <TextBlock Text="{Binding CategoryDisplay}" TextTrimming="CharacterEllipsis"/>
-                                    <TextBlock Foreground="#8F98A3" FontSize="12">
-                                        <Run Text="{local:Loc ResourceKey=AiteProfiles_BookmarksShort}"/>
-                                        <Run Text="{Binding BookmarksDisplay}"/>
-                                    </TextBlock>
-                                </StackPanel>
-                            </DataTemplate>
-                        </DataGridTemplateColumn.CellTemplate>
-                    </DataGridTemplateColumn>
-                </DataGrid.Columns>
-            </DataGrid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+            </Grid>
         </Border>
 
         <Grid Grid.Row="2" Margin="0,8,0,6">
