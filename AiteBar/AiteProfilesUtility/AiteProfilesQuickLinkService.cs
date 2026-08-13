@@ -147,6 +147,55 @@ internal sealed class AiteProfilesQuickLinkService
         return urls.Count > 0;
     }
 
+    public bool TryResolveSnippet(
+        string candidate,
+        AiteProfileSnippet? chosenSnippet,
+        IReadOnlyList<AiteProfileSnippet> snippets,
+        out AiteProfileSnippet snippet,
+        out bool shouldSaveToDatabase)
+    {
+        snippet = new AiteProfileSnippet();
+        shouldSaveToDatabase = false;
+
+        if (chosenSnippet is not null)
+        {
+            snippet = chosenSnippet.Clone();
+            return true;
+        }
+
+        string normalized = NormalizePart(candidate);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return false;
+        }
+
+        if (TryParseCommand(normalized, out snippet))
+        {
+            shouldSaveToDatabase = true;
+            return true;
+        }
+
+        if (TryParseDirectUrls(normalized, out List<string> urls))
+        {
+            snippet = new AiteProfileSnippet
+            {
+                Name = urls.Count == 1 ? "direct" : "group",
+                Tags = [],
+                Urls = urls
+            };
+            return true;
+        }
+
+        AiteProfileSnippet? fallback = RankSnippets(snippets, normalized).FirstOrDefault();
+        if (fallback is null)
+        {
+            return false;
+        }
+
+        snippet = fallback.Clone();
+        return true;
+    }
+
     public bool TryNormalizeUrl(string rawInput, out string normalizedUrl) =>
         TryNormalizeAndValidateUrl(rawInput, out normalizedUrl);
 
@@ -191,6 +240,54 @@ internal sealed class AiteProfilesQuickLinkService
 
     public string BuildJsonExport(IReadOnlyList<AiteProfileSnippet> snippets) =>
         System.Text.Json.JsonSerializer.Serialize(NormalizeSnippets(snippets), AiteProfilesJsonStore.Options);
+
+    public IReadOnlyList<AiteProfileSnippet> RankSnippets(IEnumerable<AiteProfileSnippet> snippets, string query)
+    {
+        string normalizedQuery = NormalizePart(query).ToLowerInvariant();
+        var normalizedSnippets = NormalizeSnippets(snippets);
+        var emitted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (string.IsNullOrWhiteSpace(normalizedQuery))
+        {
+            return normalizedSnippets
+                .OrderBy(static snippet => snippet.Name, StringComparer.OrdinalIgnoreCase)
+                .Where(snippet => emitted.Add(BuildSnippetKey(snippet)))
+                .Select(static snippet => snippet.Clone())
+                .ToList();
+        }
+
+        var ranked = new List<(AiteProfileSnippet Snippet, int Rank)>();
+        foreach (AiteProfileSnippet snippet in normalizedSnippets)
+        {
+            bool tagHit = snippet.Tags.Any(tag => tag.Contains(normalizedQuery, StringComparison.Ordinal));
+            bool nameHit = snippet.Name.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase);
+            bool urlHit = snippet.Urls.Any(url => url.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase));
+
+            if (tagHit)
+            {
+                ranked.Add((snippet, 0));
+                continue;
+            }
+
+            if (nameHit)
+            {
+                ranked.Add((snippet, 1));
+                continue;
+            }
+
+            if (urlHit)
+            {
+                ranked.Add((snippet, 2));
+            }
+        }
+
+        return ranked
+            .OrderBy(static item => item.Rank)
+            .ThenBy(static item => item.Snippet.Name, StringComparer.OrdinalIgnoreCase)
+            .Where(item => emitted.Add(BuildSnippetKey(item.Snippet)))
+            .Select(static item => item.Snippet.Clone())
+            .ToList();
+    }
 
     public static IReadOnlyList<AiteProfileSnippet> NormalizeSnippets(IEnumerable<AiteProfileSnippet> snippets)
     {
@@ -282,6 +379,9 @@ internal sealed class AiteProfilesQuickLinkService
     }
 
     private static string NormalizePart(string value) => (value ?? string.Empty).Trim(' ', '\t', '\r', '\n');
+
+    private static string BuildSnippetKey(AiteProfileSnippet snippet) =>
+        $"{snippet.Name}|{string.Join('|', snippet.Urls)}";
 
     private sealed class LastLaunchRecord
     {

@@ -30,6 +30,46 @@ public sealed class AiteProfilesUtilityTests
     }
 
     [Fact]
+    public void QuickLinkService_ResolvesCommandDirectUrlAndRankedFallbackLikeOriginal()
+    {
+        var service = new AiteProfilesQuickLinkService(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+        var snippets = new[]
+        {
+            new AiteProfileSnippet { Name = "Drive Docs", Tags = ["work"], Urls = ["https://drive.google.com/"] },
+            new AiteProfileSnippet { Name = "Gmail", Tags = ["mail"], Urls = ["https://mail.google.com/"] }
+        };
+
+        Assert.True(service.TryResolveSnippet("ai:Gemini:gemini.google.com", null, snippets, out AiteProfileSnippet command, out bool saveCommand));
+        Assert.True(saveCommand);
+        Assert.Equal("Gemini", command.Name);
+        Assert.Equal(["https://gemini.google.com/"], command.Urls);
+
+        Assert.True(service.TryResolveSnippet("example.com", null, snippets, out AiteProfileSnippet direct, out bool saveDirect));
+        Assert.False(saveDirect);
+        Assert.Equal("direct", direct.Name);
+        Assert.Equal(["https://example.com/"], direct.Urls);
+
+        Assert.True(service.TryResolveSnippet("work", null, snippets, out AiteProfileSnippet fallback, out bool saveFallback));
+        Assert.False(saveFallback);
+        Assert.Equal("Drive Docs", fallback.Name);
+    }
+
+    [Fact]
+    public void QuickLinkService_RanksTagsBeforeNameBeforeUrl()
+    {
+        var service = new AiteProfilesQuickLinkService(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+        var ranked = service.RankSnippets(
+            [
+                new AiteProfileSnippet { Name = "Work Name", Tags = ["misc"], Urls = ["https://name.example.com/"] },
+                new AiteProfileSnippet { Name = "Alpha", Tags = ["work"], Urls = ["https://alpha.example.com/"] },
+                new AiteProfileSnippet { Name = "Beta", Tags = ["misc"], Urls = ["https://work.example.com/"] }
+            ],
+            "work");
+
+        Assert.Equal(["Alpha", "Work Name", "Beta"], ranked.Select(static snippet => snippet.Name).ToArray());
+    }
+
+    [Fact]
     public void Store_NormalizeTags_TrimsDeduplicatesAndPreservesFirstCasing()
     {
         string normalized = AiteProfilesStore.NormalizeTags(" Farm, ai, farm,  Work ");

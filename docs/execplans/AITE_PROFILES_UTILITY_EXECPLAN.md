@@ -21,6 +21,14 @@ The new utility is not a pixel-perfect port of the old WinUI application. It is 
 - [x] (2026-08-13 11:45Z) Ran `dotnet build .\AiteBar.sln -c Release` successfully with 0 warnings and 0 errors.
 - [x] (2026-08-13 11:50Z) Ran `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --filter "FullyQualifiedName~AiteProfiles"` successfully with 5 passed tests.
 - [x] (2026-08-13 12:20Z) Ran full `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release` successfully with 1332 passed tests.
+- [x] (2026-08-13 12:21Z) Reworked the profile grid away from a WPF `DataGrid` into the original row structure: checkbox, avatar, profile name/email, time, and tags/info in one fixed popup-sized list.
+- [x] (2026-08-13 12:39Z) Compared the port against the standalone `MainViewModel`, `TerminalViewModel`, `RefreshController`, `SnippetService`, `QuickLinkSelectionService`, and `RotationStateService`; found that the first port had simplified quick-link resolution and refresh behavior.
+- [x] (2026-08-13 12:40Z) Ported original quick-link resolution order and ranking: selected suggestion, `tags:name:url|url` command, direct URLs, then ranked fallback by tags, name, and URL.
+- [x] (2026-08-13 12:40Z) Updated refresh to do a fast profile pass followed by a stats pass for bookmarks and disk, while still excluding password counting.
+- [x] (2026-08-13 12:41Z) Ran `dotnet build .\AiteBar.sln -c Release` successfully with 0 warnings and 0 errors.
+- [x] (2026-08-13 12:42Z) Ran `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --filter "FullyQualifiedName~AiteProfiles"` successfully with 7 passed tests.
+- [x] (2026-08-13 12:43Z) Ran full `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release` successfully with 1334 passed tests.
+- [x] (2026-08-13 12:40Z) Built the installer at `artifacts\installer\AiteBar-Setup-1.15.11.exe`.
 - [ ] Manually validate the utility window and AiteBar panel behavior on all four panel sides.
 
 ## Surprises & Discoveries
@@ -39,6 +47,12 @@ The new utility is not a pixel-perfect port of the old WinUI application. It is 
 
 - Observation: Existing layout tests were manually disabling the previous fixed list of built-in utilities.
   Evidence: after adding `AiteProfiles` to `UtilityButtonCatalog.All`, `MainWindowIconConverterOrientationTests` still left the new utility visible and failed with two panel children. The helper now disables built-ins through the catalog and re-enables only Icon Converter.
+
+- Observation: The first WPF port simplified the original quick-link terminal behavior too much.
+  Evidence: standalone `TerminalViewModel` resolves selected suggestions, `tags:name:url|url` commands, direct URL groups, and ranked fallback matches; the AiteBar port initially only matched exact snippet names/URLs or direct URLs. The port now mirrors the original resolution and ranking order.
+
+- Observation: The standalone refresh pipeline is two-phase.
+  Evidence: `RefreshController` runs a fast pass without heavy stats and then a second pass with stats. The utility now follows that pattern for bookmarks and disk, while still not reading password databases.
 
 ## Decision Log
 
@@ -73,6 +87,8 @@ The new utility is not a pixel-perfect port of the old WinUI application. It is 
 ## Outcomes & Retrospective
 
 Implemented a first complete AiteBar-native Aite Profiles utility. It scans local Chrome profile metadata without reading password databases, stores AiteBar-owned favorites/farm/tags/snippets/rotation/cache data, launches Chrome profiles and Google actions, supports multi-selection, search, sorting, quick-link import/export/edit/selection, remembered quick links, rotation mode, context actions, and focus-loss hiding. Automated Release build and tests pass; remaining validation is manual UI exercise from the live AiteBar panel on all four panel sides.
+
+After user validation feedback, corrected two major mismatches with the standalone program: the profile list now follows the original row structure instead of a WPF `DataGrid`, and quick-link launch behavior now follows the standalone terminal algorithm. Refresh now follows the standalone two-phase model without reintroducing password count logic.
 
 ## Context and Orientation
 

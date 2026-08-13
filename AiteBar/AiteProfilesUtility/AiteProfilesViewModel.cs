@@ -26,6 +26,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
     private bool _isBusy;
     private bool _rotationEnabled;
     private bool _rememberQuickLink;
+    private bool _updatingQuickLinkText;
     private int _sortColumn = 4;
     private bool _sortAscending = true;
 
@@ -42,7 +43,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         _rotationEnabled = _rotation.GetEnabled();
         _rememberQuickLink = _quickLinks.GetRememberEnabled();
         Profiles = [];
-        RefreshCommand = new AiteProfilesAsyncCommand(_ => RefreshAsync(includeExpensiveStats: false));
+        RefreshCommand = new AiteProfilesAsyncCommand(_ => RefreshAsync());
         LaunchCommand = new AiteProfilesAsyncCommand(_ => LaunchAsync(), _ => CanLaunch);
         OpenProfileCommand = new AiteProfilesCommand(_ => OpenSelectedProfile(), _ => HasActionProfile);
         OpenSelectedProfilesCommand = new AiteProfilesCommand(_ => OpenSelectedProfiles(), _ => SelectedProfiles.Count > 1);
@@ -136,7 +137,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
                 if (value is not null)
                 {
                     _quickLinks.SetActiveSnippet(value);
-                    QuickLinkText = string.Join('|', value.Urls);
+                    SetQuickLinkTextFromSelection(value.Urls.FirstOrDefault() ?? string.Join('|', value.Urls));
                 }
 
                 RaiseCommandStates();
@@ -187,7 +188,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         {
             if (SetProperty(ref _rememberQuickLink, value))
             {
-                _quickLinks.SetRememberEnabled(value);
+                ApplyRememberQuickLinkState(value);
             }
         }
     }
@@ -248,15 +249,22 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         }
     }
 
-    public async Task RefreshAsync(bool includeExpensiveStats = false, CancellationToken cancellationToken = default)
+    public async Task RefreshAsync(bool includeExpensiveStats = true, CancellationToken cancellationToken = default)
     {
         IsBusy = true;
         StatusText = LocalizationService.Get("AiteProfiles_StatusScanning");
         try
         {
-            await _store.RefreshAsync(includeExpensiveStats, cancellationToken).ConfigureAwait(true);
+            await _store.RefreshAsync(includeExpensiveStats: false, cancellationToken).ConfigureAwait(true);
             await ReloadFromStoreAsync(cancellationToken).ConfigureAwait(true);
             StatusText = LocalizationService.Format("AiteProfiles_StatusProfiles", Profiles.Count);
+
+            if (includeExpensiveStats)
+            {
+                await _store.RefreshAsync(includeExpensiveStats: true, cancellationToken).ConfigureAwait(true);
+                await ReloadFromStoreAsync(cancellationToken).ConfigureAwait(true);
+                StatusText = LocalizationService.Format("AiteProfiles_StatusProfiles", Profiles.Count);
+            }
         }
         catch (Exception ex)
         {
@@ -321,9 +329,9 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         list.Add(updated);
         _snippets = AiteProfilesQuickLinkService.NormalizeSnippets(list);
         await _quickLinks.SaveAsync(_snippets).ConfigureAwait(true);
-        RebuildQuickLinkSuggestions(updated);
+        RebuildQuickLinkSuggestions(QuickLinkText, updated);
         _quickLinks.SetActiveSnippet(updated);
-        QuickLinkText = string.Join('|', updated.Urls);
+        SetQuickLinkTextFromSelection(updated.Urls.FirstOrDefault() ?? string.Join('|', updated.Urls));
         RaiseCommandStates();
     }
 
@@ -332,7 +340,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         var imported = _quickLinks.ParseImportLines(content);
         _snippets = AiteProfilesQuickLinkService.NormalizeSnippets(_snippets.Concat(imported));
         await _quickLinks.SaveAsync(_snippets).ConfigureAwait(true);
-        RebuildQuickLinkSuggestions();
+        RebuildQuickLinkSuggestions(QuickLinkText);
         StatusText = LocalizationService.Format("AiteProfiles_StatusLinksImported", imported.Count);
         RaiseCommandStates();
     }
@@ -385,10 +393,14 @@ internal sealed class AiteProfilesViewModel : NotifyObject
 
     private void UpdateQuickLinkFromInput()
     {
+        if (_updatingQuickLinkText)
+        {
+            return;
+        }
+
         _quickLinks.UpdatePreparedText(QuickLinkText);
-        AiteProfileSnippet? matching = _snippets.FirstOrDefault(snippet =>
-            string.Equals(snippet.Name, QuickLinkText.Trim(), StringComparison.OrdinalIgnoreCase) ||
-            snippet.Urls.Any(url => string.Equals(url, QuickLinkText.Trim(), StringComparison.OrdinalIgnoreCase)));
+        RebuildQuickLinkSuggestions(QuickLinkText);
+        AiteProfileSnippet? matching = FindExactSnippet(QuickLinkText);
         if (matching is not null)
         {
             _selectedQuickLink = matching;
@@ -404,19 +416,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
             OnPropertyChanged(nameof(SelectedQuickLink));
         }
 
-        if (_quickLinks.TryParseDirectUrls(QuickLinkText, out List<string> urls))
-        {
-            _quickLinks.SetActiveSnippet(new AiteProfileSnippet
-            {
-                Name = "direct",
-                Tags = ["direct"],
-                Urls = urls
-            });
-        }
-        else
-        {
-            _quickLinks.SetActiveSnippet(null);
-        }
+        _quickLinks.SetActiveSnippet(null);
 
         RaiseCommandStates();
     }
@@ -460,7 +460,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
             return;
         }
 
-        AiteProfileSnippet? snippet = _quickLinks.GetActiveSnippet();
+        AiteProfileSnippet? snippet = await ResolveCurrentQuickLinkAsync().ConfigureAwait(true);
         ExecuteLauncher(() =>
         {
             foreach (AiteProfileListItemViewModel profile in profiles)
@@ -478,7 +478,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
 
         if (snippet is not null && snippet.Urls.Count > 0)
         {
-            QuickLinkText = await _quickLinks.MarkLaunchedAsync(snippet).ConfigureAwait(true);
+            SetQuickLinkTextFromSelection(await _quickLinks.MarkLaunchedAsync(snippet).ConfigureAwait(true));
         }
     }
 
@@ -602,10 +602,10 @@ internal sealed class AiteProfilesViewModel : NotifyObject
 
     private void SetActiveCategory(AiteProfilesCategoryTab category) => ActiveCategory = category;
 
-    private void RebuildQuickLinkSuggestions(AiteProfileSnippet? preferred = null)
+    private void RebuildQuickLinkSuggestions(string query = "", AiteProfileSnippet? preferred = null)
     {
         QuickLinkSuggestions.Clear();
-        foreach (AiteProfileSnippet snippet in _snippets)
+        foreach (AiteProfileSnippet snippet in _quickLinks.RankSnippets(_snippets, query).Take(50))
         {
             QuickLinkSuggestions.Add(snippet);
         }
@@ -615,6 +615,75 @@ internal sealed class AiteProfilesViewModel : NotifyObject
             : QuickLinkSuggestions.FirstOrDefault(item =>
                 string.Equals(item.Name, preferred.Name, StringComparison.OrdinalIgnoreCase) &&
                 item.Urls.SequenceEqual(preferred.Urls, StringComparer.OrdinalIgnoreCase));
+    }
+
+    private async Task<AiteProfileSnippet?> ResolveCurrentQuickLinkAsync()
+    {
+        string candidate = QuickLinkText;
+        AiteProfileSnippet? chosen = SelectedQuickLink ?? _quickLinks.GetActiveSnippet();
+        if (!_quickLinks.TryResolveSnippet(candidate, chosen, _snippets, out AiteProfileSnippet snippet, out bool shouldSaveToDatabase))
+        {
+            _quickLinks.SetActiveSnippet(null);
+            return null;
+        }
+
+        if (shouldSaveToDatabase)
+        {
+            _snippets = AiteProfilesQuickLinkService.NormalizeSnippets(_snippets.Append(snippet));
+            await _quickLinks.SaveAsync(_snippets).ConfigureAwait(true);
+            RebuildQuickLinkSuggestions(candidate, snippet);
+        }
+
+        _quickLinks.SetActiveSnippet(snippet);
+        return snippet;
+    }
+
+    private AiteProfileSnippet? FindExactSnippet(string text)
+    {
+        string candidate = (text ?? string.Empty).Trim();
+        return _snippets.FirstOrDefault(snippet =>
+            string.Equals(snippet.Name, candidate, StringComparison.OrdinalIgnoreCase) ||
+            snippet.Urls.Any(url => string.Equals(url, candidate, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private void SetQuickLinkTextFromSelection(string value)
+    {
+        _updatingQuickLinkText = true;
+        try
+        {
+            QuickLinkText = value ?? string.Empty;
+            _quickLinks.UpdatePreparedText(QuickLinkText);
+            RebuildQuickLinkSuggestions(QuickLinkText);
+        }
+        finally
+        {
+            _updatingQuickLinkText = false;
+        }
+    }
+
+    private void ApplyRememberQuickLinkState(bool remember)
+    {
+        if (!remember)
+        {
+            _quickLinks.SetRememberEnabled(false);
+            _quickLinks.SetActiveSnippet(null);
+            _quickLinks.UpdatePreparedText(string.Empty);
+            SetQuickLinkTextFromSelection(string.Empty);
+            return;
+        }
+
+        if (!_quickLinks.TryResolveSnippet(QuickLinkText, SelectedQuickLink, _snippets, out AiteProfileSnippet snippet, out _))
+        {
+            _rememberQuickLink = false;
+            OnPropertyChanged(nameof(RememberQuickLink));
+            StatusText = LocalizationService.Get("AiteProfiles_QuickLinkPlaceholder");
+            _quickLinks.SetRememberEnabled(false);
+            return;
+        }
+
+        _quickLinks.SetActiveSnippet(snippet);
+        _quickLinks.UpdatePreparedText(QuickLinkText);
+        _quickLinks.SetRememberEnabled(true);
     }
 
     private static IEnumerable<AiteProfileListItemViewModel> SortByProfile(IEnumerable<AiteProfileListItemViewModel> source, bool ascending)
