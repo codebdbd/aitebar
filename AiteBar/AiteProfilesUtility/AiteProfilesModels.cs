@@ -111,7 +111,7 @@ internal sealed class AiteProfileListItemViewModel : NotifyObject
     public string AvatarPath { get; }
     public string AvatarImagePath { get; }
     public bool HasAvatar => !string.IsNullOrWhiteSpace(AvatarPath) && System.IO.File.Exists(AvatarPath);
-    public string FallbackGlyph => "\uE77B";
+    public string FallbackGlyph => "\uF5BD";
     public string SearchKey { get; }
 
     public bool IsSelected

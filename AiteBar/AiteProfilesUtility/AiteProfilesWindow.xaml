@@ -33,7 +33,7 @@
                 <Setter Property="Width" Value="34"/>
                 <Setter Property="Height" Value="34"/>
                 <Setter Property="Margin" Value="0,0,6,0"/>
-                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
                 <Setter Property="FontSize" Value="14"/>
             </Style>
 
@@ -44,7 +44,7 @@
                 <Setter Property="Background" Value="#2B2B2D"/>
                 <Setter Property="BorderBrush" Value="#3A3A3D"/>
                 <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
                 <Setter Property="FontSize" Value="14"/>
                 <Setter Property="Template">
                     <Setter.Value>
@@ -71,12 +71,122 @@
             </Style>
 
             <Style x:Key="AiteProfilesComboBoxStyle" TargetType="ComboBox">
-                <Setter Property="Height" Value="36"/>
-                <Setter Property="Foreground" Value="#E8EDF2"/>
-                <Setter Property="Background" Value="#252526"/>
-                <Setter Property="BorderBrush" Value="#3A3A3D"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Height" Value="{StaticResource FormControlHeight}"/>
+                <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
+                <Setter Property="Background" Value="{StaticResource FormInputBackground}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Padding" Value="8,0"/>
+                <Setter Property="Padding" Value="10,0"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ComboBox">
+                            <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                                <Border x:Name="Outline"
+                                        Background="{TemplateBinding BorderBrush}"
+                                        CornerRadius="4"/>
+                                <Border x:Name="Chrome"
+                                        Margin="1"
+                                        Background="{TemplateBinding Background}"
+                                        CornerRadius="3">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="28"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBox x:Name="PART_EditableTextBox"
+                                                 Grid.Column="0"
+                                                 Margin="{TemplateBinding Padding}"
+                                                 Background="Transparent"
+                                                 BorderThickness="0"
+                                                 Foreground="{TemplateBinding Foreground}"
+                                                 CaretBrush="{TemplateBinding Foreground}"
+                                                 VerticalContentAlignment="Center"
+                                                 Padding="0"
+                                                 FocusVisualStyle="{x:Null}"
+                                                 Visibility="Hidden"/>
+
+                                        <ContentPresenter x:Name="ContentSite"
+                                                          Grid.Column="0"
+                                                          Margin="{TemplateBinding Padding}"
+                                                          VerticalAlignment="Center"
+                                                          HorizontalAlignment="Stretch"
+                                                          IsHitTestVisible="False"
+                                                          Content="{TemplateBinding SelectionBoxItem}"
+                                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
+
+                                        <ToggleButton x:Name="PART_DropDownToggle"
+                                                      Grid.ColumnSpan="2"
+                                                      Background="Transparent"
+                                                      BorderThickness="0"
+                                                      Focusable="False"
+                                                      ClickMode="Press"
+                                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                            <ToggleButton.Template>
+                                                <ControlTemplate TargetType="ToggleButton">
+                                                    <Border Background="Transparent"/>
+                                                </ControlTemplate>
+                                            </ToggleButton.Template>
+                                        </ToggleButton>
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="&#xF2A3;"
+                                                   FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
+                                                   Foreground="{StaticResource FormControlMutedForegroundBrush}"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   IsHitTestVisible="False"/>
+                                    </Grid>
+                                </Border>
+
+                                <Popup x:Name="PART_Popup"
+                                       Placement="Bottom"
+                                       IsOpen="{TemplateBinding IsDropDownOpen}"
+                                       AllowsTransparency="True"
+                                       Focusable="False"
+                                       PopupAnimation="Fade">
+                                    <Border Width="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                            MaxHeight="300"
+                                            Background="{StaticResource FormControlBackground}"
+                                            BorderBrush="{Binding Background, ElementName=Outline}"
+                                            BorderThickness="1"
+                                            CornerRadius="4"
+                                            SnapsToDevicePixels="True">
+                                        <ScrollViewer Margin="3" CanContentScroll="False">
+                                            <ItemsPresenter/>
+                                        </ScrollViewer>
+                                    </Border>
+                                </Popup>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsEditable" Value="True">
+                                    <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
+                                    <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden"/>
+                                </Trigger>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormInputBackgroundHover}"/>
+                                    <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                    <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsDropDownOpen" Value="True">
+                                    <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormInputBackgroundHover}"/>
+                                    <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Foreground" Value="{StaticResource FormControlDisabledForegroundBrush}"/>
+                                    <Setter TargetName="Chrome" Property="Opacity" Value="0.55"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <Style x:Key="AiteProfilesListItemStyle" TargetType="ListViewItem">
@@ -133,7 +243,7 @@
             </Style>
 
             <Style x:Key="AiteProfilesMetaIconStyle" TargetType="TextBlock">
-                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
                 <Setter Property="Foreground" Value="#7891AF"/>
                 <Setter Property="FontSize" Value="11"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
@@ -403,7 +513,7 @@
                                                 </Image.Style>
                                             </Image>
                                             <TextBlock Text="{Binding FallbackGlyph}"
-                                                       FontFamily="Segoe MDL2 Assets"
+                                                       FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
                                                        Foreground="#8FA7C4"
                                                        HorizontalAlignment="Center"
                                                        VerticalAlignment="Center">
@@ -461,12 +571,12 @@
                                                 Margin="8,2,0,0"
                                                 Orientation="Horizontal"
                                                 VerticalAlignment="Top">
-                                        <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
-                                            <TextBlock Text="&#xE734;" Style="{StaticResource AiteProfilesMetaIconStyle}" Margin="0,0,4,0"/>
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,12,0">
+                                            <TextBlock Text="&#xF70F;" Style="{StaticResource AiteProfilesMetaIconStyle}" Margin="0,0,4,0"/>
                                             <TextBlock Text="{Binding BookmarksDisplay}" Style="{StaticResource AiteProfilesMutedTextStyle}"/>
                                         </StackPanel>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xE7F1;" Style="{StaticResource AiteProfilesMetaIconStyle}" Margin="0,0,4,0"/>
+                                            <TextBlock Text="&#xE6E3;" Style="{StaticResource AiteProfilesMetaIconStyle}" Margin="0,0,4,0"/>
                                             <TextBlock Text="{Binding DiskDisplay}" Style="{StaticResource AiteProfilesMutedTextStyle}"/>
                                         </StackPanel>
                                     </StackPanel>
@@ -498,17 +608,17 @@
                               Margin="0,0,6,0"
                               IsChecked="{Binding RememberQuickLink}"
                               ToolTip="{local:Loc ResourceKey=AiteProfiles_RememberLink}"
-                              Content="&#xE735;"/>
+                              Content="&#xE78F;"/>
                 <ToggleButton Style="{StaticResource AiteProfilesToggleButtonStyle}"
                               IsChecked="{Binding RotationEnabled}"
                               ToolTip="{local:Loc ResourceKey=AiteProfiles_Rotation}"
-                              Content="&#xE8D7;"/>
+                              Content="&#xF13D;"/>
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE710;" Command="{Binding AddQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_AddLink}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE70F;" Command="{Binding EditQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_EditLink}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE8B5;" Command="{Binding ImportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ImportLinks}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE74E;" Command="{Binding ExportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ExportLinks}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF109;" Command="{Binding AddQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_AddLink}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF3DD;" Command="{Binding EditQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_EditLink}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF159;" Command="{Binding ImportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ImportLinks}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE0C7;" Command="{Binding ExportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ExportLinks}"/>
                 <Button Height="36" MinWidth="118" Style="{StaticResource PrimaryButtonStyle}" Content="{local:Loc ResourceKey=AiteProfiles_Launch}" Command="{Binding LaunchCommand}"/>
             </StackPanel>
         </Grid>
