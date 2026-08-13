@@ -47,9 +47,8 @@ public partial class AiteProfilesWindow : DarkWindow
             ? screens[settings.MonitorIndex]
             : System.Windows.Forms.Screen.PrimaryScreen;
         var work = screen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
-        (double left, double top) = UtilityWindowLayoutHelper.GetCenteredCoordinates(settings.Edge, work, Width, Height);
-        Left = left;
-        Top = top;
+        Left = work.Left + Math.Max(0, (work.Width - Width) / 2.0);
+        Top = work.Bottom - Height - 10;
         Show();
         Activate();
         SearchBox.Focus();

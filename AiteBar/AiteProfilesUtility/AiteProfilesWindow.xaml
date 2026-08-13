@@ -5,11 +5,11 @@
                   xmlns:ap="clr-namespace:AiteBar.AiteProfilesUtility"
                   Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
                   Title="{local:Loc ResourceKey=AiteProfiles_Title}"
-                  Width="760" Height="560" MinWidth="680" MinHeight="480"
-                  WindowStartupLocation="CenterScreen"
-                  Background="#191919" Foreground="#DCDCDC"
-                  WindowStyle="SingleBorderWindow"
-                  ResizeMode="CanResize"
+                  Width="720" Height="420" MinWidth="720" MinHeight="420" MaxWidth="720" MaxHeight="420"
+                  WindowStartupLocation="Manual"
+                  Background="Transparent" Foreground="#DCDCDC"
+                  WindowStyle="None"
+                  ResizeMode="NoResize"
                   ShowInTaskbar="False"
                   Topmost="True"
                   Deactivated="Window_Deactivated"
@@ -37,6 +37,48 @@
                 <Setter Property="FontSize" Value="14"/>
             </Style>
 
+            <Style x:Key="AiteProfilesToggleButtonStyle" TargetType="ToggleButton">
+                <Setter Property="Width" Value="36"/>
+                <Setter Property="Height" Value="36"/>
+                <Setter Property="Foreground" Value="#D7DEE7"/>
+                <Setter Property="Background" Value="#2B2B2D"/>
+                <Setter Property="BorderBrush" Value="#3A3A3D"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ToggleButton">
+                            <Border Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                    CornerRadius="4">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+                <Style.Triggers>
+                    <Trigger Property="IsChecked" Value="True">
+                        <Setter Property="Background" Value="#16324A"/>
+                        <Setter Property="BorderBrush" Value="#007ACC"/>
+                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                    </Trigger>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="BorderBrush" Value="#5A6472"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="AiteProfilesComboBoxStyle" TargetType="ComboBox">
+                <Setter Property="Height" Value="36"/>
+                <Setter Property="Foreground" Value="#E8EDF2"/>
+                <Setter Property="Background" Value="#252526"/>
+                <Setter Property="BorderBrush" Value="#3A3A3D"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="8,0"/>
+            </Style>
+
             <Style TargetType="DataGridColumnHeader">
                 <Setter Property="Background" Value="#202023"/>
                 <Setter Property="Foreground" Value="#AEB4BA"/>
@@ -61,7 +103,12 @@
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid Margin="14">
+    <Border Background="#0C0C0D"
+            BorderBrush="#27272A"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="12">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
@@ -69,7 +116,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0" Margin="0,0,0,10">
+        <Grid Grid.Row="0" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
@@ -101,10 +148,10 @@
         </Grid>
 
         <Border Grid.Row="1"
-                Background="#1A1A1C"
-                BorderBrush="#303034"
+                Background="#151517"
+                BorderBrush="#27272A"
                 BorderThickness="1"
-                CornerRadius="6">
+                CornerRadius="8">
             <DataGrid x:Name="ProfilesGrid"
                       ItemsSource="{Binding Profiles}"
                       AutoGenerateColumns="False"
@@ -117,7 +164,7 @@
                       HorizontalGridLinesBrush="#303034"
                       Background="#1A1A1C"
                       BorderThickness="0"
-                      RowHeight="62"
+                      RowHeight="50"
                       SelectionMode="Extended"
                       SelectionUnit="FullRow"
                       SelectionChanged="ProfilesGrid_SelectionChanged"
@@ -156,7 +203,61 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnProfile}" Binding="{Binding Name}" Width="2.2*"/>
+                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnProfile}" Width="2.4*" SortMemberPath="Name">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <Grid Margin="0,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="38"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="30"
+                                            Height="30"
+                                            CornerRadius="15"
+                                            Background="#2B2F36"
+                                            BorderBrush="#3A4654"
+                                            BorderThickness="1"
+                                            ClipToBounds="True">
+                                        <Grid>
+                                            <Image Source="{Binding AvatarPath}"
+                                                   Stretch="UniformToFill">
+                                                <Image.Style>
+                                                    <Style TargetType="Image">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasAvatar}" Value="False">
+                                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Image.Style>
+                                            </Image>
+                                            <TextBlock Text="{Binding FallbackGlyph}"
+                                                       FontFamily="Segoe MDL2 Assets"
+                                                       Foreground="#8FA7C4"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding HasAvatar}" Value="False">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Grid>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <TextBlock Text="{Binding Name}" Foreground="#F2F5F8" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding Folder}" Foreground="#8F98A3" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                </Grid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
                     <DataGridTextColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnEmail}" Binding="{Binding Email}" Width="2*"/>
                     <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnTime}" Width="112" SortMemberPath="LastTs">
                         <DataGridTemplateColumn.CellTemplate>
@@ -176,9 +277,6 @@
                                     <TextBlock Foreground="#8F98A3" FontSize="12">
                                         <Run Text="{local:Loc ResourceKey=AiteProfiles_BookmarksShort}"/>
                                         <Run Text="{Binding BookmarksDisplay}"/>
-                                        <Run Text="  "/>
-                                        <Run Text="{local:Loc ResourceKey=AiteProfiles_DiskShort}"/>
-                                        <Run Text="{Binding DiskDisplay}"/>
                                     </TextBlock>
                                 </StackPanel>
                             </DataTemplate>
@@ -188,14 +286,14 @@
             </DataGrid>
         </Border>
 
-        <Grid Grid.Row="2" Margin="0,10,0,8">
+        <Grid Grid.Row="2" Margin="0,8,0,6">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <ComboBox Grid.Column="0"
-                      Height="36"
+                      Style="{StaticResource AiteProfilesComboBoxStyle}"
                       IsEditable="True"
                       IsTextSearchEnabled="False"
                       ItemsSource="{Binding QuickLinkSuggestions}"
@@ -204,19 +302,15 @@
                       Text="{Binding QuickLinkText, UpdateSourceTrigger=PropertyChanged}"
                       ToolTip="{local:Loc ResourceKey=AiteProfiles_QuickLinkPlaceholder}"/>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
-                <ToggleButton Width="36"
-                              Height="36"
+                <ToggleButton Style="{StaticResource AiteProfilesToggleButtonStyle}"
                               Margin="0,0,6,0"
                               IsChecked="{Binding RememberQuickLink}"
                               ToolTip="{local:Loc ResourceKey=AiteProfiles_RememberLink}"
-                              Content="&#xE735;"
-                              FontFamily="Segoe MDL2 Assets"/>
-                <ToggleButton Width="36"
-                              Height="36"
+                              Content="&#xE735;"/>
+                <ToggleButton Style="{StaticResource AiteProfilesToggleButtonStyle}"
                               IsChecked="{Binding RotationEnabled}"
                               ToolTip="{local:Loc ResourceKey=AiteProfiles_Rotation}"
-                              Content="&#xE8D7;"
-                              FontFamily="Segoe MDL2 Assets"/>
+                              Content="&#xE8D7;"/>
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
                 <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE710;" Command="{Binding AddQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_AddLink}"/>
@@ -232,4 +326,5 @@
                    Foreground="#8F98A3"
                    FontSize="12"/>
     </Grid>
+    </Border>
 </local:DarkWindow>

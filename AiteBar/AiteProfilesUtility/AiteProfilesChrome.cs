@@ -100,11 +100,15 @@ internal sealed class AiteProfilesChromeScanner : IAiteProfilesScanner
 
         if (string.Equals(folder, "Default", StringComparison.OrdinalIgnoreCase) || knownProfileFolders.Contains(folder) || ProfileNumberRegex.IsMatch(folder))
         {
-            return true;
+            return HasProfileMetadata(fullPath);
         }
 
-        return SignatureFiles.Any(file => File.Exists(Path.Combine(fullPath, file)));
+        return false;
     }
+
+    private static bool HasProfileMetadata(string fullPath) =>
+        File.Exists(Path.Combine(fullPath, "Preferences")) ||
+        File.Exists(Path.Combine(fullPath, "Secure Preferences"));
 
     private static AiteProfileScanRow BuildRow(
         string fullPath,

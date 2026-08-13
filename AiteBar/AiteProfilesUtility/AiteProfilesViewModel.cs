@@ -42,7 +42,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         _rotationEnabled = _rotation.GetEnabled();
         _rememberQuickLink = _quickLinks.GetRememberEnabled();
         Profiles = [];
-        RefreshCommand = new AiteProfilesAsyncCommand(_ => RefreshAsync(includeExpensiveStats: true));
+        RefreshCommand = new AiteProfilesAsyncCommand(_ => RefreshAsync(includeExpensiveStats: false));
         LaunchCommand = new AiteProfilesAsyncCommand(_ => LaunchAsync(), _ => CanLaunch);
         OpenProfileCommand = new AiteProfilesCommand(_ => OpenSelectedProfile(), _ => HasActionProfile);
         OpenSelectedProfilesCommand = new AiteProfilesCommand(_ => OpenSelectedProfiles(), _ => SelectedProfiles.Count > 1);
@@ -238,10 +238,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
             RebuildQuickLinkSuggestions();
             QuickLinkText = _quickLinks.GetPreparedText();
             await ReloadFromStoreAsync(cancellationToken).ConfigureAwait(true);
-            if (Profiles.Count == 0)
-            {
-                await RefreshAsync(includeExpensiveStats: false).ConfigureAwait(true);
-            }
+            await RefreshAsync(includeExpensiveStats: false).ConfigureAwait(true);
         }
         finally
         {

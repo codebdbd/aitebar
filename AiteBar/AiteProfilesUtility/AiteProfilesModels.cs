@@ -108,6 +108,8 @@ internal sealed class AiteProfileListItemViewModel : NotifyObject
     public int Bookmarks { get; }
     public double DiskMb { get; }
     public string AvatarPath { get; }
+    public bool HasAvatar => !string.IsNullOrWhiteSpace(AvatarPath) && System.IO.File.Exists(AvatarPath);
+    public string FallbackGlyph => "\uE77B";
     public string SearchKey { get; }
 
     public bool IsSelected
