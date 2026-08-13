@@ -282,65 +282,65 @@
                     <ContextMenu Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Open}" Command="{Binding OpenProfileCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF5B0;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF582;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_OpenSelected}" Command="{Binding OpenSelectedProfilesCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE972;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF582;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_OpenIncognito}" Command="{Binding OpenIncognitoCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF51B;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF4A1;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator/>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_EditTags}" Command="{Binding EditTagsCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE70F;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF77C;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_ToggleFavorite}" Command="{Binding ToggleFavoriteCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF714;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF70F;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_ToggleFarm}" Command="{Binding ToggleFarmCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE82D;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF1FC;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator/>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Gemini}" Command="{Binding OpenGeminiCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE945;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF45A;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Gmail}" Command="{Binding OpenGmailCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE715;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF506;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Drive}" Command="{Binding OpenDriveCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE8B7;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF530;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Account}" Command="{Binding OpenAccountCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE77B;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF5C1;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Compose}" Command="{Binding ComposeEmailCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE70F;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF314;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <Separator/>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_CopyEmail}" Command="{Binding CopyEmailCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE8C8;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF32B;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_OpenFolder}" Command="{Binding OpenFolderCommand}">
@@ -350,7 +350,7 @@
                         </MenuItem>
                         <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_CreateProfile}" Command="{Binding CreateProfileCommand}">
                             <MenuItem.Icon>
-                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF5B4;"/>
+                                <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF5C2;"/>
                             </MenuItem.Icon>
                         </MenuItem>
                     </ContextMenu>
