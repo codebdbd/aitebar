@@ -71,130 +71,6 @@
                 </Style.Triggers>
             </Style>
 
-            <Style x:Key="AiteProfilesComboBoxStyle" TargetType="ComboBox">
-                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                <Setter Property="Height" Value="{StaticResource FormControlHeight}"/>
-                <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
-                <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Padding" Value="10,0"/>
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
-                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ComboBox">
-                            <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
-                                <Border x:Name="Outline"
-                                        Background="{TemplateBinding BorderBrush}"
-                                        CornerRadius="4"/>
-                                <Border x:Name="Chrome"
-                                        Margin="1"
-                                        Background="{TemplateBinding Background}"
-                                        CornerRadius="3">
-                                    <Grid>
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="28"/>
-                                        </Grid.ColumnDefinitions>
-
-                                        <TextBox x:Name="PART_EditableTextBox"
-                                                 Grid.Column="0"
-                                                 Margin="{TemplateBinding Padding}"
-                                                 Style="{x:Null}"
-                                                 Background="Transparent"
-                                                 BorderThickness="0"
-                                                 Foreground="{TemplateBinding Foreground}"
-                                                 CaretBrush="{TemplateBinding Foreground}"
-                                                 VerticalContentAlignment="Center"
-                                                 Padding="0"
-                                                 FocusVisualStyle="{x:Null}"
-                                                 Visibility="Hidden"/>
-
-                                        <ContentPresenter x:Name="ContentSite"
-                                                          Grid.Column="0"
-                                                          Margin="{TemplateBinding Padding}"
-                                                          VerticalAlignment="Center"
-                                                          HorizontalAlignment="Stretch"
-                                                          IsHitTestVisible="False"
-                                                          Content="{TemplateBinding SelectionBoxItem}"
-                                                          ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
-                                                          ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"/>
-
-                                        <ToggleButton x:Name="PART_DropDownToggle"
-                                                      Grid.ColumnSpan="2"
-                                                      Background="Transparent"
-                                                      BorderThickness="0"
-                                                      Focusable="False"
-                                                      ClickMode="Press"
-                                                      IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
-                                            <ToggleButton.Template>
-                                                <ControlTemplate TargetType="ToggleButton">
-                                                    <Border Background="Transparent"/>
-                                                </ControlTemplate>
-                                            </ToggleButton.Template>
-                                        </ToggleButton>
-
-                                        <TextBlock Grid.Column="1"
-                                                   Text="&#xF2A3;"
-                                                   FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-                                                   Foreground="{StaticResource FormControlMutedForegroundBrush}"
-                                                   HorizontalAlignment="Center"
-                                                   VerticalAlignment="Center"
-                                                   IsHitTestVisible="False"/>
-                                    </Grid>
-                                </Border>
-
-                                <Popup x:Name="PART_Popup"
-                                       Placement="Bottom"
-                                       IsOpen="{TemplateBinding IsDropDownOpen}"
-                                       AllowsTransparency="True"
-                                       Focusable="False"
-                                       PopupAnimation="Fade">
-                                    <Border Width="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
-                                            MaxHeight="300"
-                                            Background="{StaticResource FormControlBackground}"
-                                            BorderBrush="{Binding Background, ElementName=Outline}"
-                                            BorderThickness="1"
-                                            CornerRadius="4"
-                                            SnapsToDevicePixels="True">
-                                        <ScrollViewer Margin="3" CanContentScroll="False">
-                                            <ItemsPresenter/>
-                                        </ScrollViewer>
-                                    </Border>
-                                </Popup>
-                            </Grid>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsEditable" Value="True">
-                                    <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible"/>
-                                    <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden"/>
-                                </Trigger>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                                    <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
-                                </Trigger>
-                                <MultiTrigger>
-                                    <MultiTrigger.Conditions>
-                                        <Condition Property="IsKeyboardFocusWithin" Value="True"/>
-                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
-                                    </MultiTrigger.Conditions>
-                                    <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
-                                </MultiTrigger>
-                                <Trigger Property="IsDropDownOpen" Value="True">
-                                    <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                                    <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
-                                </Trigger>
-                                <Trigger Property="IsEnabled" Value="False">
-                                    <Setter Property="Foreground" Value="{StaticResource FormControlDisabledForegroundBrush}"/>
-                                    <Setter TargetName="Chrome" Property="Opacity" Value="0.55"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
             <Style x:Key="AiteProfilesListItemStyle" TargetType="ListViewItem">
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                 <Setter Property="VerticalContentAlignment" Value="Stretch"/>
@@ -270,6 +146,43 @@
                 <Setter Property="Height" Value="16"/>
                 <Setter Property="HorizontalAlignment" Value="Center"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
+            </Style>
+
+            <Style x:Key="AiteProfilesSuggestionListStyle" TargetType="ListBox">
+                <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
+                <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="Padding" Value="3"/>
+                <Setter Property="MaxHeight" Value="180"/>
+                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
+            </Style>
+
+            <Style x:Key="AiteProfilesSuggestionItemStyle" TargetType="ListBoxItem">
+                <Setter Property="Padding" Value="8,5"/>
+                <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Border x:Name="ItemChrome"
+                                    Background="{TemplateBinding Background}"
+                                    CornerRadius="3"
+                                    Padding="{TemplateBinding Padding}">
+                                <ContentPresenter/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="ItemChrome" Property="Background" Value="#2B2B2D"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="ItemChrome" Property="Background" Value="#333338"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
         </ResourceDictionary>
@@ -620,15 +533,30 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <ComboBox Grid.Column="0"
-                      Style="{StaticResource AiteProfilesComboBoxStyle}"
-                      IsEditable="True"
-                      IsTextSearchEnabled="False"
-                      ItemsSource="{Binding QuickLinkSuggestions}"
-                      SelectedItem="{Binding SelectedQuickLink, Mode=TwoWay}"
-                      DisplayMemberPath="DisplayText"
-                      Text="{Binding QuickLinkText, UpdateSourceTrigger=PropertyChanged}"
-                      ToolTip="{local:Loc ResourceKey=AiteProfiles_QuickLinkPlaceholder}"/>
+            <Grid Grid.Column="0">
+                <TextBox x:Name="QuickLinkBox"
+                         Style="{StaticResource BaseTextBoxStyle}"
+                         Text="{Binding QuickLinkText, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="{local:Loc ResourceKey=AiteProfiles_QuickLinkPlaceholder}"
+                         GotKeyboardFocus="QuickLinkBox_GotKeyboardFocus"
+                         LostKeyboardFocus="QuickLinkBox_LostKeyboardFocus"
+                         TextChanged="QuickLinkBox_TextChanged"/>
+                <Popup x:Name="QuickLinkSuggestionsPopup"
+                       PlacementTarget="{Binding ElementName=QuickLinkBox}"
+                       Placement="Top"
+                       AllowsTransparency="True"
+                       Focusable="False"
+                       StaysOpen="True"
+                       PopupAnimation="Fade">
+                    <ListBox x:Name="QuickLinkSuggestionsList"
+                             Width="{Binding ActualWidth, ElementName=QuickLinkBox}"
+                             ItemsSource="{Binding QuickLinkSuggestions}"
+                             DisplayMemberPath="DisplayText"
+                             Style="{StaticResource AiteProfilesSuggestionListStyle}"
+                             ItemContainerStyle="{StaticResource AiteProfilesSuggestionItemStyle}"
+                             MouseLeftButtonUp="QuickLinkSuggestionsList_MouseLeftButtonUp"/>
+                </Popup>
+            </Grid>
             <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
                 <ToggleButton Style="{StaticResource AiteProfilesToggleButtonStyle}"
                               Margin="0,0,6,0"

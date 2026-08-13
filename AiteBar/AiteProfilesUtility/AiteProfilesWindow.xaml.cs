@@ -162,6 +162,11 @@ public partial class AiteProfilesWindow : DarkWindow
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
+        if (HandleQuickLinkSuggestionKey(e))
+        {
+            return;
+        }
+
         if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.F)
         {
             SearchBox.Focus();
@@ -196,6 +201,116 @@ public partial class AiteProfilesWindow : DarkWindow
 
             Hide();
             e.Handled = true;
+        }
+    }
+
+    private void QuickLinkBox_GotKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) => UpdateQuickLinkSuggestionsPopup();
+
+    private void QuickLinkBox_LostKeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) =>
+        Dispatcher.BeginInvoke((Action)(() =>
+        {
+            if (!QuickLinkBox.IsKeyboardFocusWithin && !QuickLinkSuggestionsList.IsKeyboardFocusWithin)
+            {
+                QuickLinkSuggestionsPopup.IsOpen = false;
+            }
+        }));
+
+    private void QuickLinkBox_TextChanged(object sender, TextChangedEventArgs e) =>
+        Dispatcher.BeginInvoke((Action)UpdateQuickLinkSuggestionsPopup);
+
+    private void QuickLinkSuggestionsList_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (QuickLinkSuggestionsList.SelectedItem is AiteProfileSnippet snippet)
+        {
+            ApplyQuickLinkSuggestion(snippet);
+            e.Handled = true;
+        }
+    }
+
+    private bool HandleQuickLinkSuggestionKey(KeyEventArgs e)
+    {
+        if (!QuickLinkBox.IsKeyboardFocusWithin)
+        {
+            return false;
+        }
+
+        if (e.Key == Key.Escape && QuickLinkSuggestionsPopup.IsOpen)
+        {
+            QuickLinkSuggestionsPopup.IsOpen = false;
+            e.Handled = true;
+            return true;
+        }
+
+        if (!QuickLinkSuggestionsPopup.IsOpen || _viewModel.QuickLinkSuggestions.Count == 0)
+        {
+            return false;
+        }
+
+        if (e.Key == Key.Down)
+        {
+            MoveQuickLinkSuggestionSelection(1);
+            e.Handled = true;
+            return true;
+        }
+
+        if (e.Key == Key.Up)
+        {
+            MoveQuickLinkSuggestionSelection(-1);
+            e.Handled = true;
+            return true;
+        }
+
+        if (e.Key is Key.Enter or Key.Tab)
+        {
+            if (QuickLinkSuggestionsList.SelectedItem is AiteProfileSnippet snippet)
+            {
+                ApplyQuickLinkSuggestion(snippet);
+                e.Handled = true;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void MoveQuickLinkSuggestionSelection(int delta)
+    {
+        int count = _viewModel.QuickLinkSuggestions.Count;
+        if (count == 0)
+        {
+            return;
+        }
+
+        int current = QuickLinkSuggestionsList.SelectedIndex;
+        int next = current < 0
+            ? (delta > 0 ? 0 : count - 1)
+            : Math.Clamp(current + delta, 0, count - 1);
+        QuickLinkSuggestionsList.SelectedIndex = next;
+        QuickLinkSuggestionsList.ScrollIntoView(QuickLinkSuggestionsList.SelectedItem);
+    }
+
+    private void ApplyQuickLinkSuggestion(AiteProfileSnippet snippet)
+    {
+        _viewModel.SelectedQuickLink = snippet;
+        QuickLinkSuggestionsPopup.IsOpen = false;
+        QuickLinkBox.Focus();
+        QuickLinkBox.CaretIndex = QuickLinkBox.Text.Length;
+    }
+
+    private void UpdateQuickLinkSuggestionsPopup()
+    {
+        if (!QuickLinkBox.IsKeyboardFocusWithin)
+        {
+            QuickLinkSuggestionsPopup.IsOpen = false;
+            return;
+        }
+
+        bool hasSuggestions = _viewModel.QuickLinkSuggestions.Count > 0;
+        bool hasText = !string.IsNullOrWhiteSpace(QuickLinkBox.Text);
+        QuickLinkSuggestionsPopup.IsOpen = hasSuggestions && hasText;
+        if (QuickLinkSuggestionsPopup.IsOpen && QuickLinkSuggestionsList.SelectedIndex < 0)
+        {
+            QuickLinkSuggestionsList.SelectedIndex = 0;
         }
     }
 
