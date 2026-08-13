@@ -82,6 +82,7 @@ AiteBar - desktop-утилита для Windows: скрываемая edge-па�
   - Открыть Clipboard Manager
   - Открыть обработку текста
   - Открыть Дзен-редактор
+  - Открыть Aite Profiles
   - Проверить орфографию и пунктуацию без изменения формулировок
   - Применить типографику с учетом языка текста
   - Очистить артефакты копирования из PDF, документов и веб-страниц
@@ -161,6 +162,7 @@ AiteBar - desktop-утилита для Windows: скрываемая edge-па�
   - Назначить hotkey Обработки текста
   - Назначить hotkey Дзен-редактора
   - Назначить hotkey Конструктора промптов
+  - Назначить hotkey Aite Profiles
   - Включить/отключить встроенные быстрые инструменты
   - Изменить порядок кнопок встроенных утилит
   - Сохранить или отменить настройки
@@ -1711,6 +1713,28 @@ plain-text содержимого. Экспорт создаёт независ�
 `AiteBar/ZenEditorWindow.xaml.cs`, `AiteBar/ZenParagraphEditor.cs`,
 `AiteBar/ZenEditorStore.cs`,
 `AiteBar/ZenEditorThemeCatalog.cs`.
+
+## Aite Profiles
+
+### Назначение
+
+Встроенная утилита для локальных профилей Google Chrome. Она сканирует профили, показывает их в таблице, позволяет искать, сортировать, выбирать один или несколько профилей, открывать профиль, incognito, Gmail, Drive, Gemini, настройки аккаунта, Gmail compose, папку профиля и Chrome profile picker.
+
+### Как использовать
+
+1. Включить `Aite Profiles` в быстрых инструментах, если кнопка скрыта.
+2. Открыть утилиту с панели AiteBar.
+3. Нажать `Scan`, если нужен свежий список профилей.
+4. Использовать поиск, вкладки `All`, `Favorites`, `Farm`, выделение строк и контекстное меню.
+5. Ввести или выбрать quick-link, включить lock/rotation при необходимости и нажать `Launch`.
+
+### Данные и ограничения
+
+Утилита читает локальные Chrome metadata-файлы профилей, bookmarks и timestamps. Она не читает Chrome `Login Data`, не считает пароли, не запускает API-сервер, не создаёт tray-иконку и не регистрирует собственные глобальные hotkey. Собственные данные AiteBar сохраняются локально в подпапке `AiteProfiles`: cache, favorites, farm, tags, snippets и rotation.
+
+### Подтверждение в коде
+
+`AiteBar/AiteProfilesUtility/*`, `AiteBar/UtilityButtonCatalog.cs`, `AiteBar/MainWindow.xaml.cs`.
 
 ## Quick Note
 

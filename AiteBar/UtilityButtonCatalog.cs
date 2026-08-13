@@ -126,6 +126,11 @@ internal static class UtilityButtonCatalog
         settings => settings.ShowPresetZenEditor,
         (settings, visible) => settings.ShowPresetZenEditor = visible);
 
+    public static UtilityButtonDefinition AiteProfiles { get; } = new(
+        "AiteProfiles", "\uE716", UtilityIconColors.SearchAndNavigation, "Main_AiteProfilesTooltip",
+        settings => settings.ShowPresetAiteProfiles,
+        (settings, visible) => settings.ShowPresetAiteProfiles = visible);
+
     public static IReadOnlyList<UtilityButtonDefinition> All { get; } =
     [
         Search,
@@ -146,7 +151,8 @@ internal static class UtilityButtonCatalog
         Copilot,
         TextProcessing,
         PromptBuilder,
-        ZenEditor
+        ZenEditor,
+        AiteProfiles
     ];
 
     private static readonly IReadOnlyDictionary<string, UtilityButtonDefinition> ById =

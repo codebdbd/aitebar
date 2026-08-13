@@ -106,6 +106,7 @@ namespace AiteBar
                 ShowPresetTextProcessing = original.ShowPresetTextProcessing,
                 ShowPresetPromptBuilder = original.ShowPresetPromptBuilder,
                 ShowPresetZenEditor = original.ShowPresetZenEditor,
+                ShowPresetAiteProfiles = original.ShowPresetAiteProfiles,
                 ClipboardManagerPersistHistory = original.ClipboardManagerPersistHistory,
                 QuickNoteThemeId = original.QuickNoteThemeId,
                 QuickNotePinned = original.QuickNotePinned,

@@ -189,6 +189,7 @@ public class AppSettings
         public bool ShowPresetTextProcessing { get; set; } = true;
         public bool ShowPresetPromptBuilder { get; set; } = false;
         public bool ShowPresetZenEditor { get; set; } = true;
+        public bool ShowPresetAiteProfiles { get; set; } = true;
     public bool ClipboardManagerPersistHistory { get; set; } = true;
     public string QuickNoteThemeId { get; set; } = "dark";
     public bool QuickNotePinned { get; set; } = false;

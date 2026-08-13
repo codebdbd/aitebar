@@ -239,7 +239,8 @@ public partial class AppSettingsWindow : DarkWindow
         (ChkShowPresetCopilot, UtilityButtonCatalog.Copilot),
         (ChkShowPresetTextProcessing, UtilityButtonCatalog.TextProcessing),
         (ChkShowPresetPromptBuilder, UtilityButtonCatalog.PromptBuilder),
-        (ChkShowPresetZenEditor, UtilityButtonCatalog.ZenEditor)
+        (ChkShowPresetZenEditor, UtilityButtonCatalog.ZenEditor),
+        (ChkShowPresetAiteProfiles, UtilityButtonCatalog.AiteProfiles)
     ];
 
     private static void SetComboValue(ComboBox combo, string? value)
@@ -747,6 +748,7 @@ public partial class AppSettingsWindow : DarkWindow
             (ChkShowPresetTextProcessing, "Tool_TextProcessing"),
             (ChkShowPresetPromptBuilder, "Tool_PromptBuilder"),
             (ChkShowPresetZenEditor, "Tool_ZenEditor"),
+            (ChkShowPresetAiteProfiles, "Tool_AiteProfiles"),
             (ChkClipboardManagerPersistHistory, "ClipboardManager_PersistHistorySetting")
         ];
         foreach ((CheckBox checkBox, string resourceKey) in utilitySwitches)

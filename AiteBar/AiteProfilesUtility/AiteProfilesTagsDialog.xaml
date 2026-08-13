@@ -1,0 +1,44 @@
+<local:DarkWindow x:Class="AiteBar.AiteProfilesUtility.AiteProfilesTagsDialog"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:local="clr-namespace:AiteBar"
+                  Title="{local:Loc ResourceKey=AiteProfiles_EditTags}"
+                  Width="380" Height="170"
+                  ResizeMode="NoResize"
+                  WindowStartupLocation="CenterOwner"
+                  ShowInTaskbar="False"
+                  Background="#1A1A1C"
+                  Foreground="#E8EDF2">
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="{local:Loc ResourceKey=AiteProfiles_TagsPrompt}"
+                   Foreground="#AEB4BA"
+                   Margin="0,0,0,8"/>
+        <TextBox x:Name="TagsBox"
+                 Grid.Row="1"
+                 Height="34"
+                 VerticalContentAlignment="Center"/>
+        <StackPanel Grid.Row="2"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="0,12,0,0">
+            <Button MinWidth="86"
+                    Height="32"
+                    Margin="0,0,8,0"
+                    Style="{StaticResource SecondaryButtonStyle}"
+                    Content="{local:Loc ResourceKey=Common_Cancel}"
+                    Click="Cancel_Click"/>
+            <Button MinWidth="86"
+                    Height="32"
+                    Style="{StaticResource PrimaryButtonStyle}"
+                    Content="{local:Loc ResourceKey=Common_Save}"
+                    Click="Save_Click"/>
+        </StackPanel>
+    </Grid>
+</local:DarkWindow>

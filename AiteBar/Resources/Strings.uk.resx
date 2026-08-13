@@ -1078,6 +1078,58 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ProgrammingPromptStyle_StartupMvp" xml:space="preserve"><value>Стартап MVP</value></data>
   <data name="ProgrammingPromptStyle_NativeDesktop" xml:space="preserve"><value>Нативний десктоп</value></data>
   <data name="ProgrammingPromptStyle_CrossPlatformDesktop" xml:space="preserve"><value>Кросплатформний десктоп</value></data>
+  <data name="Tool_AiteProfiles" xml:space="preserve"><value>Aite Profiles</value></data>
+  <data name="Main_AiteProfilesTooltip" xml:space="preserve"><value>Chrome profiles</value></data>
+  <data name="QuickTool_AiteProfiles_Title" xml:space="preserve"><value>Aite Profiles</value></data>
+  <data name="QuickTool_AiteProfiles_Description" xml:space="preserve"><value>Scan and launch local Chrome profiles with quick links, tags, favorites, and rotation.</value></data>
+  <data name="AiteProfiles_Title" xml:space="preserve"><value>Aite Profiles</value></data>
+  <data name="AiteProfiles_AllTab" xml:space="preserve"><value>All</value></data>
+  <data name="AiteProfiles_FavoritesTab" xml:space="preserve"><value>Favorites</value></data>
+  <data name="AiteProfiles_FarmTab" xml:space="preserve"><value>Farm</value></data>
+  <data name="AiteProfiles_SearchPlaceholder" xml:space="preserve"><value>Search profiles</value></data>
+  <data name="AiteProfiles_Scan" xml:space="preserve"><value>Scan</value></data>
+  <data name="AiteProfiles_ColumnProfile" xml:space="preserve"><value>Profile</value></data>
+  <data name="AiteProfiles_ColumnEmail" xml:space="preserve"><value>Email</value></data>
+  <data name="AiteProfiles_ColumnTime" xml:space="preserve"><value>Time</value></data>
+  <data name="AiteProfiles_ColumnInfo" xml:space="preserve"><value>Tags and info</value></data>
+  <data name="AiteProfiles_BookmarksShort" xml:space="preserve"><value>Bookmarks: </value></data>
+  <data name="AiteProfiles_DiskShort" xml:space="preserve"><value>Disk: </value></data>
+  <data name="AiteProfiles_QuickLinkPlaceholder" xml:space="preserve"><value>Search or paste quick-link URLs</value></data>
+  <data name="AiteProfiles_RememberLink" xml:space="preserve"><value>Lock link</value></data>
+  <data name="AiteProfiles_Rotation" xml:space="preserve"><value>Rotation mode</value></data>
+  <data name="AiteProfiles_AddLink" xml:space="preserve"><value>Add link</value></data>
+  <data name="AiteProfiles_EditLink" xml:space="preserve"><value>Edit selected link</value></data>
+  <data name="AiteProfiles_ImportLinks" xml:space="preserve"><value>Import links</value></data>
+  <data name="AiteProfiles_ExportLinks" xml:space="preserve"><value>Export links</value></data>
+  <data name="AiteProfiles_Launch" xml:space="preserve"><value>Launch</value></data>
+  <data name="AiteProfiles_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="AiteProfiles_OpenSelected" xml:space="preserve"><value>Open selected</value></data>
+  <data name="AiteProfiles_OpenIncognito" xml:space="preserve"><value>Open incognito</value></data>
+  <data name="AiteProfiles_EditTags" xml:space="preserve"><value>Edit tags</value></data>
+  <data name="AiteProfiles_ToggleFavorite" xml:space="preserve"><value>Toggle favorite</value></data>
+  <data name="AiteProfiles_ToggleFarm" xml:space="preserve"><value>Toggle farm</value></data>
+  <data name="AiteProfiles_Gemini" xml:space="preserve"><value>Gemini</value></data>
+  <data name="AiteProfiles_Gmail" xml:space="preserve"><value>Gmail</value></data>
+  <data name="AiteProfiles_Drive" xml:space="preserve"><value>Google Drive</value></data>
+  <data name="AiteProfiles_Account" xml:space="preserve"><value>Account settings</value></data>
+  <data name="AiteProfiles_Compose" xml:space="preserve"><value>Compose email</value></data>
+  <data name="AiteProfiles_CopyEmail" xml:space="preserve"><value>Copy email</value></data>
+  <data name="AiteProfiles_OpenFolder" xml:space="preserve"><value>Profile folder</value></data>
+  <data name="AiteProfiles_CreateProfile" xml:space="preserve"><value>Create profile</value></data>
+  <data name="AiteProfiles_TagsPrompt" xml:space="preserve"><value>Tags, separated by commas</value></data>
+  <data name="AiteProfiles_StatusScanning" xml:space="preserve"><value>Scanning Chrome profiles...</value></data>
+  <data name="AiteProfiles_StatusProfiles" xml:space="preserve"><value>{0} profiles shown</value></data>
+  <data name="AiteProfiles_StatusScanFailed" xml:space="preserve"><value>Profile scan failed</value></data>
+  <data name="AiteProfiles_StatusEmailCopied" xml:space="preserve"><value>Email copied</value></data>
+  <data name="AiteProfiles_StatusLinksImported" xml:space="preserve"><value>{0} links imported</value></data>
+  <data name="AiteProfiles_ChromeMissing" xml:space="preserve"><value>Google Chrome executable was not found.</value></data>
+  <data name="AiteProfiles_QuickLinkDialogTitle" xml:space="preserve"><value>Quick link</value></data>
+  <data name="AiteProfiles_LinkName" xml:space="preserve"><value>Name</value></data>
+  <data name="AiteProfiles_LinkTags" xml:space="preserve"><value>Tags</value></data>
+  <data name="AiteProfiles_LinkUrls" xml:space="preserve"><value>URLs</value></data>
+  <data name="AiteProfiles_LinkValidation" xml:space="preserve"><value>Enter a name and at least one HTTP or HTTPS URL.</value></data>
+  <data name="AiteProfiles_LinkImportFilter" xml:space="preserve"><value>Text or JSON files (*.txt;*.json)|*.txt;*.json|All files (*.*)|*.*</value></data>
+  <data name="AiteProfiles_LinkExportFilter" xml:space="preserve"><value>Text files (*.txt)|*.txt|All files (*.*)|*.*</value></data>
 </root>
 
 

@@ -15,10 +15,13 @@ The new utility is not a pixel-perfect port of the old WinUI application. It is 
 - [x] (2026-08-13 08:40Z) Inspected the AiteBar utility contract, panel catalog, settings model, localization paths, and the standalone AiteProfiles project structure.
 - [x] (2026-08-13 08:50Z) Confirmed the user requirement: preserve all user-facing functionality except API integration, password counting, standalone tray behavior, old hotkeys, and old-data migration.
 - [x] (2026-08-13 09:05Z) Created this ExecPlan to guide the implementation.
-- [ ] Implement the non-UI profile, Chrome scan, Chrome launch, quick-link, category, rotation, and persistence services inside AiteBar.
-- [ ] Implement the WPF Aite Profiles utility window and component layout in AiteBar style.
-- [ ] Integrate the utility into AiteBar registration, panel button catalog, settings, localization, documentation, and tests.
-- [ ] Run Release build, automated tests, and manual utility/panel validation.
+- [x] (2026-08-13 10:35Z) Implemented the non-UI profile, Chrome scan, Chrome launch, quick-link, category, rotation, and persistence services inside `AiteBar/AiteProfilesUtility`.
+- [x] (2026-08-13 11:05Z) Implemented the WPF Aite Profiles utility window in AiteBar style with tabs, search, profile grid, context actions, quick-link controls, remembered link, rotation, import/export, and focus-loss hiding.
+- [x] (2026-08-13 11:25Z) Integrated the utility into AiteBar utility discovery, panel catalog, settings, localization, and tests.
+- [x] (2026-08-13 11:45Z) Ran `dotnet build .\AiteBar.sln -c Release` successfully with 0 warnings and 0 errors.
+- [x] (2026-08-13 11:50Z) Ran `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --filter "FullyQualifiedName~AiteProfiles"` successfully with 5 passed tests.
+- [x] (2026-08-13 12:20Z) Ran full `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release` successfully with 1332 passed tests.
+- [ ] Manually validate the utility window and AiteBar panel behavior on all four panel sides.
 
 ## Surprises & Discoveries
 
@@ -33,6 +36,9 @@ The new utility is not a pixel-perfect port of the old WinUI application. It is 
 
 - Observation: Password counting is the main extra dependency and privacy/performance risk in the profile scanner.
   Evidence: `D:\01_Codebdbd\01_projects\aiteprofiles\src\Domain\Chrome\ChromeProfileScanner.cs` uses `Microsoft.Data.Sqlite` and reads Chrome `Login Data` files to count saved passwords. The user explicitly chose to remove this behavior.
+
+- Observation: Existing layout tests were manually disabling the previous fixed list of built-in utilities.
+  Evidence: after adding `AiteProfiles` to `UtilityButtonCatalog.All`, `MainWindowIconConverterOrientationTests` still left the new utility visible and failed with two panel children. The helper now disables built-ins through the catalog and re-enables only Icon Converter.
 
 ## Decision Log
 
@@ -56,9 +62,17 @@ The new utility is not a pixel-perfect port of the old WinUI application. It is 
   Rationale: The user explicitly said old data does not need to be transferred. The new utility will create fresh AiteBar-owned data files under the AiteBar app data directory.
   Date/Author: 2026-08-13 / Codex
 
+- Decision: Keep the first implementation folder flat under `AiteBar/AiteProfilesUtility` instead of adding nested `Domain`, `Services`, `ViewModels`, and `Views` folders immediately.
+  Rationale: The first port is scoped and the current AiteBar utility pattern uses compact utility-specific files. The architectural boundary is still isolated in one folder, and nested folders can be introduced later if this utility grows.
+  Date/Author: 2026-08-13 / Codex
+
+- Decision: Implement `Create profile` by opening Chrome's profile picker.
+  Rationale: Chrome owns actual profile creation. This preserves the original user workflow without adding browser automation or unsafe profile directory fabrication.
+  Date/Author: 2026-08-13 / Codex
+
 ## Outcomes & Retrospective
 
-No implementation has been completed yet. This initial plan records the scope, exclusions, architecture, and acceptance criteria so the next implementation turn can proceed without relying on chat history.
+Implemented a first complete AiteBar-native Aite Profiles utility. It scans local Chrome profile metadata without reading password databases, stores AiteBar-owned favorites/farm/tags/snippets/rotation/cache data, launches Chrome profiles and Google actions, supports multi-selection, search, sorting, quick-link import/export/edit/selection, remembered quick links, rotation mode, context actions, and focus-loss hiding. Automated Release build and tests pass; remaining validation is manual UI exercise from the live AiteBar panel on all four panel sides.
 
 ## Context and Orientation
 

@@ -975,6 +975,58 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="PhotoStyle_FineArtConceptual" xml:space="preserve"><value>Konzeptuelles Fine Art</value></data><data name="PhotoStyle_SurrealConceptual" xml:space="preserve"><value>Surreales Konzept</value></data><data name="PhotoStyle_DarkPsychologicalConceptual" xml:space="preserve"><value>Dunkles psychologisches Konzept</value></data><data name="PhotoStyle_DreamlikeConceptual" xml:space="preserve"><value>Traumhaftes Konzept</value></data><data name="PhotoStyle_FuturisticConceptual" xml:space="preserve"><value>Futuristisches Konzept</value></data><data name="PhotoStyle_PremiumCommercialAd" xml:space="preserve"><value>Premium-Werbung</value></data><data name="PhotoStyle_FmcgAdvertisingPhoto" xml:space="preserve"><value>FMCG-Werbung</value></data><data name="PhotoStyle_TechCampaignPhoto" xml:space="preserve"><value>Technologiekampagne</value></data><data name="PhotoStyle_LuxuryAdPhoto" xml:space="preserve"><value>Luxuswerbung</value></data><data name="PhotoStyle_BoldBillboardPhoto" xml:space="preserve"><value>Auffälliges Billboard</value></data>
   <data name="ProgrammingProjectType_Label" xml:space="preserve"><value>Typ</value></data><data name="ProgrammingProjectType_Auto" xml:space="preserve"><value>Auto</value></data><data name="ProgrammingProjectType_Website" xml:space="preserve"><value>Website</value></data><data name="ProgrammingProjectType_LandingPage" xml:space="preserve"><value>Landingpage</value></data><data name="ProgrammingProjectType_OnlineStore" xml:space="preserve"><value>Onlineshop</value></data><data name="ProgrammingProjectType_Dashboard" xml:space="preserve"><value>Dashboard</value></data><data name="ProgrammingProjectType_WebApp" xml:space="preserve"><value>Web-App</value></data><data name="ProgrammingProjectType_HtmlGame" xml:space="preserve"><value>HTML-Spiel</value></data><data name="ProgrammingProjectType_MiniUtility" xml:space="preserve"><value>Mini-Tool</value></data><data name="ProgrammingProjectType_TelegramBot" xml:space="preserve"><value>Telegram-Bot</value></data><data name="ProgrammingProjectType_AutomationScript" xml:space="preserve"><value>Automatisierungsskript</value></data><data name="ProgrammingProjectType_Parser" xml:space="preserve"><value>Parser / Scraper</value></data><data name="ProgrammingProjectType_ApiBackend" xml:space="preserve"><value>API / Backend</value></data><data name="ProgrammingProjectType_DesktopApp" xml:space="preserve"><value>Desktop-App</value></data><data name="ProgrammingStyle_Label" xml:space="preserve"><value>Stil</value></data>
   <data name="ProgrammingPromptStyle_Auto" xml:space="preserve"><value>Auto</value></data><data name="ProgrammingPromptStyle_MinimalistWebsite" xml:space="preserve"><value>Minimalistisch</value></data><data name="ProgrammingPromptStyle_CorporateWebsite" xml:space="preserve"><value>Unternehmen</value></data><data name="ProgrammingPromptStyle_PremiumShowcase" xml:space="preserve"><value>Premium</value></data><data name="ProgrammingPromptStyle_EditorialStudio" xml:space="preserve"><value>Editorial / Studio</value></data><data name="ProgrammingPromptStyle_BrightPromo" xml:space="preserve"><value>Heller Promo</value></data><data name="ProgrammingPromptStyle_DarkTech" xml:space="preserve"><value>Dunkler Tech</value></data><data name="ProgrammingPromptStyle_SaasDashboard" xml:space="preserve"><value>SaaS-Dashboard</value></data><data name="ProgrammingPromptStyle_AnalyticalDashboard" xml:space="preserve"><value>Analytisches Dashboard</value></data><data name="ProgrammingPromptStyle_ExecutiveDashboard" xml:space="preserve"><value>Für Führungskräfte</value></data><data name="ProgrammingPromptStyle_MobileFirstApp" xml:space="preserve"><value>Mobile First</value></data><data name="ProgrammingPromptStyle_ProductiveWebApp" xml:space="preserve"><value>Produktive Web-App</value></data><data name="ProgrammingPromptStyle_CommunityPlatform" xml:space="preserve"><value>Community-Plattform</value></data><data name="ProgrammingPromptStyle_RetroArcadeGame" xml:space="preserve"><value>Retro-Arcade</value></data><data name="ProgrammingPromptStyle_PuzzleGame" xml:space="preserve"><value>Rätsel</value></data><data name="ProgrammingPromptStyle_NeonActionGame" xml:space="preserve"><value>Neon-Action</value></data><data name="ProgrammingPromptStyle_CartoonGame" xml:space="preserve"><value>Cartoon</value></data><data name="ProgrammingPromptStyle_PhysicsToyGame" xml:space="preserve"><value>Physikspiel</value></data><data name="ProgrammingPromptStyle_LightweightUtility" xml:space="preserve"><value>Leichtes Tool</value></data><data name="ProgrammingPromptStyle_PowerUserTool" xml:space="preserve"><value>Profi-Tool</value></data><data name="ProgrammingPromptStyle_ConversationalBot" xml:space="preserve"><value>Dialog-Bot</value></data><data name="ProgrammingPromptStyle_SalesBot" xml:space="preserve"><value>Verkaufs-Bot</value></data><data name="ProgrammingPromptStyle_ContentParser" xml:space="preserve"><value>Content-Parser</value></data><data name="ProgrammingPromptStyle_DataCollector" xml:space="preserve"><value>Datensammler</value></data><data name="ProgrammingPromptStyle_DeveloperApi" xml:space="preserve"><value>Entwickler-API</value></data><data name="ProgrammingPromptStyle_StartupMvp" xml:space="preserve"><value>Startup-MVP</value></data><data name="ProgrammingPromptStyle_NativeDesktop" xml:space="preserve"><value>Nativer Desktop</value></data><data name="ProgrammingPromptStyle_CrossPlatformDesktop" xml:space="preserve"><value>Plattformübergreifender Desktop</value></data>
+  <data name="Tool_AiteProfiles" xml:space="preserve"><value>Aite Profiles</value></data>
+  <data name="Main_AiteProfilesTooltip" xml:space="preserve"><value>Chrome profiles</value></data>
+  <data name="QuickTool_AiteProfiles_Title" xml:space="preserve"><value>Aite Profiles</value></data>
+  <data name="QuickTool_AiteProfiles_Description" xml:space="preserve"><value>Scan and launch local Chrome profiles with quick links, tags, favorites, and rotation.</value></data>
+  <data name="AiteProfiles_Title" xml:space="preserve"><value>Aite Profiles</value></data>
+  <data name="AiteProfiles_AllTab" xml:space="preserve"><value>All</value></data>
+  <data name="AiteProfiles_FavoritesTab" xml:space="preserve"><value>Favorites</value></data>
+  <data name="AiteProfiles_FarmTab" xml:space="preserve"><value>Farm</value></data>
+  <data name="AiteProfiles_SearchPlaceholder" xml:space="preserve"><value>Search profiles</value></data>
+  <data name="AiteProfiles_Scan" xml:space="preserve"><value>Scan</value></data>
+  <data name="AiteProfiles_ColumnProfile" xml:space="preserve"><value>Profile</value></data>
+  <data name="AiteProfiles_ColumnEmail" xml:space="preserve"><value>Email</value></data>
+  <data name="AiteProfiles_ColumnTime" xml:space="preserve"><value>Time</value></data>
+  <data name="AiteProfiles_ColumnInfo" xml:space="preserve"><value>Tags and info</value></data>
+  <data name="AiteProfiles_BookmarksShort" xml:space="preserve"><value>Bookmarks: </value></data>
+  <data name="AiteProfiles_DiskShort" xml:space="preserve"><value>Disk: </value></data>
+  <data name="AiteProfiles_QuickLinkPlaceholder" xml:space="preserve"><value>Search or paste quick-link URLs</value></data>
+  <data name="AiteProfiles_RememberLink" xml:space="preserve"><value>Lock link</value></data>
+  <data name="AiteProfiles_Rotation" xml:space="preserve"><value>Rotation mode</value></data>
+  <data name="AiteProfiles_AddLink" xml:space="preserve"><value>Add link</value></data>
+  <data name="AiteProfiles_EditLink" xml:space="preserve"><value>Edit selected link</value></data>
+  <data name="AiteProfiles_ImportLinks" xml:space="preserve"><value>Import links</value></data>
+  <data name="AiteProfiles_ExportLinks" xml:space="preserve"><value>Export links</value></data>
+  <data name="AiteProfiles_Launch" xml:space="preserve"><value>Launch</value></data>
+  <data name="AiteProfiles_Open" xml:space="preserve"><value>Open</value></data>
+  <data name="AiteProfiles_OpenSelected" xml:space="preserve"><value>Open selected</value></data>
+  <data name="AiteProfiles_OpenIncognito" xml:space="preserve"><value>Open incognito</value></data>
+  <data name="AiteProfiles_EditTags" xml:space="preserve"><value>Edit tags</value></data>
+  <data name="AiteProfiles_ToggleFavorite" xml:space="preserve"><value>Toggle favorite</value></data>
+  <data name="AiteProfiles_ToggleFarm" xml:space="preserve"><value>Toggle farm</value></data>
+  <data name="AiteProfiles_Gemini" xml:space="preserve"><value>Gemini</value></data>
+  <data name="AiteProfiles_Gmail" xml:space="preserve"><value>Gmail</value></data>
+  <data name="AiteProfiles_Drive" xml:space="preserve"><value>Google Drive</value></data>
+  <data name="AiteProfiles_Account" xml:space="preserve"><value>Account settings</value></data>
+  <data name="AiteProfiles_Compose" xml:space="preserve"><value>Compose email</value></data>
+  <data name="AiteProfiles_CopyEmail" xml:space="preserve"><value>Copy email</value></data>
+  <data name="AiteProfiles_OpenFolder" xml:space="preserve"><value>Profile folder</value></data>
+  <data name="AiteProfiles_CreateProfile" xml:space="preserve"><value>Create profile</value></data>
+  <data name="AiteProfiles_TagsPrompt" xml:space="preserve"><value>Tags, separated by commas</value></data>
+  <data name="AiteProfiles_StatusScanning" xml:space="preserve"><value>Scanning Chrome profiles...</value></data>
+  <data name="AiteProfiles_StatusProfiles" xml:space="preserve"><value>{0} profiles shown</value></data>
+  <data name="AiteProfiles_StatusScanFailed" xml:space="preserve"><value>Profile scan failed</value></data>
+  <data name="AiteProfiles_StatusEmailCopied" xml:space="preserve"><value>Email copied</value></data>
+  <data name="AiteProfiles_StatusLinksImported" xml:space="preserve"><value>{0} links imported</value></data>
+  <data name="AiteProfiles_ChromeMissing" xml:space="preserve"><value>Google Chrome executable was not found.</value></data>
+  <data name="AiteProfiles_QuickLinkDialogTitle" xml:space="preserve"><value>Quick link</value></data>
+  <data name="AiteProfiles_LinkName" xml:space="preserve"><value>Name</value></data>
+  <data name="AiteProfiles_LinkTags" xml:space="preserve"><value>Tags</value></data>
+  <data name="AiteProfiles_LinkUrls" xml:space="preserve"><value>URLs</value></data>
+  <data name="AiteProfiles_LinkValidation" xml:space="preserve"><value>Enter a name and at least one HTTP or HTTPS URL.</value></data>
+  <data name="AiteProfiles_LinkImportFilter" xml:space="preserve"><value>Text or JSON files (*.txt;*.json)|*.txt;*.json|All files (*.*)|*.*</value></data>
+  <data name="AiteProfiles_LinkExportFilter" xml:space="preserve"><value>Text files (*.txt)|*.txt|All files (*.*)|*.*</value></data>
 </root>
 
 

@@ -1864,6 +1864,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                     case "ZenEditor":
                         await _actionService.LaunchUtilityAsync("ZenEditor", HideDock);
                         break;
+                    case "AiteProfiles":
+                        await _actionService.LaunchUtilityAsync("AiteProfiles", HideDock);
+                        break;
                 }
             });
         }

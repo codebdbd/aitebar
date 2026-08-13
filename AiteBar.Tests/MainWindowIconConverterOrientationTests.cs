@@ -233,23 +233,12 @@ public sealed class MainWindowIconConverterOrientationTests
         AppSettings settings = window.GetAppSettings();
         settings.Contexts = ContextStateHelper.NormalizeContexts(settings.Contexts);
         settings.ActiveContextId = settings.Contexts[0].Id;
-        settings.ShowPresetSearch = false;
-        settings.ShowPresetScreenshot = false;
-        settings.ShowPresetVideo = false;
-        settings.ShowPresetCalc = false;
-        settings.ShowPresetExplorer = false;
-        settings.ShowPresetDownloads = false;
-        settings.ShowPresetFileSorter = false;
-        settings.ShowPresetTimerStopwatch = false;
-        settings.ShowPresetColorPicker = false;
-        settings.ShowPresetQuickNote = false;
-        settings.ShowPresetQRCodeGenerator = false;
-        settings.ShowPresetShowDesktop = false;
-        settings.ShowPresetAppsFolder = false;
-        settings.ShowPresetCopilot = false;
-        settings.ShowPresetTextProcessing = false;
-        settings.ShowPresetZenEditor = false;
-        settings.ShowPresetIconConverter = true;
+        foreach (UtilityButtonDefinition definition in UtilityButtonCatalog.All)
+        {
+            definition.SetVisible(settings, false);
+        }
+
+        UtilityButtonCatalog.IconConverter.SetVisible(settings, true);
         window.GetSettingsService().Settings = settings;
     }
 

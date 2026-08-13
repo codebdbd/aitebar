@@ -132,3 +132,4 @@ public bool ShowPresetMyNewUtility { get; set; } = true;
 - `TextProcessingUtility.cs`: AI-утилита с потоковым SSE-выводом через AiGateway, Diff, Undo/Redo, защита технических фрагментов.
 - `ZenEditorUtility.cs`: отдельное полноэкранное окно с multi-document store, поиском, темами, экспортом TXT и корзиной.
 - `PromptBuilderUtility.cs`: комплексная AI-утилита с 11 рубриками, каталогом стилей, кэшем моделей AiGateway и сохранением draft-ов (PromptBuilderDrafts) для каждого направления.
+- `AiteProfilesUtility/AiteProfilesUtility.cs`: WPF-утилита для локальных Chrome-профилей с поиском, категориями, тегами, quick-link, rotation и запуском профилей; не переносит standalone tray/API/hotkeys и не читает Chrome `Login Data`.

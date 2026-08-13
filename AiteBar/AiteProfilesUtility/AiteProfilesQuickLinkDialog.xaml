@@ -1,0 +1,56 @@
+<local:DarkWindow x:Class="AiteBar.AiteProfilesUtility.AiteProfilesQuickLinkDialog"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:local="clr-namespace:AiteBar"
+                  Title="{local:Loc ResourceKey=AiteProfiles_QuickLinkDialogTitle}"
+                  Width="460" Height="390"
+                  WindowStartupLocation="CenterOwner"
+                  ResizeMode="NoResize"
+                  ShowInTaskbar="False"
+                  Background="#191919"
+                  Foreground="#DCDCDC">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/AiteBar;component/SettingsWindowResources.xaml"/>
+                <ResourceDictionary Source="/AiteBar;component/FormControlsResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Margin="18">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,12">
+            <TextBlock Text="{local:Loc ResourceKey=AiteProfiles_LinkName}" Foreground="#AEB4BA" Margin="0,0,0,4"/>
+            <TextBox x:Name="NameBox" Height="34" TextChanged="Input_TextChanged"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Margin="0,0,0,12">
+            <TextBlock Text="{local:Loc ResourceKey=AiteProfiles_LinkTags}" Foreground="#AEB4BA" Margin="0,0,0,4"/>
+            <TextBox x:Name="TagsBox" Height="34" TextChanged="Input_TextChanged"/>
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Margin="0,0,0,12">
+            <TextBlock Text="{local:Loc ResourceKey=AiteProfiles_LinkUrls}" Foreground="#AEB4BA" Margin="0,0,0,4"/>
+            <TextBox x:Name="UrlsBox"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalScrollBarVisibility="Auto"
+                     MinHeight="118"
+                     TextChanged="Input_TextChanged"/>
+        </StackPanel>
+
+        <TextBlock Grid.Row="3" x:Name="StatusText" Foreground="#D06A6A" FontSize="12" Margin="0,0,0,12"/>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="{local:Loc ResourceKey=Common_Cancel}" Width="96" Margin="0,0,8,0" Click="Cancel_Click" Style="{StaticResource SecondaryButtonStyle}"/>
+            <Button x:Name="SaveButton" Content="{local:Loc ResourceKey=Common_Save}" Width="96" Click="Save_Click" Style="{StaticResource PrimaryButtonStyle}"/>
+        </StackPanel>
+    </Grid>
+</local:DarkWindow>

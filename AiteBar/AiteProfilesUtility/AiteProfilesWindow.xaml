@@ -1,0 +1,235 @@
+<local:DarkWindow x:Class="AiteBar.AiteProfilesUtility.AiteProfilesWindow"
+                  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                  xmlns:local="clr-namespace:AiteBar"
+                  xmlns:ap="clr-namespace:AiteBar.AiteProfilesUtility"
+                  Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
+                  Title="{local:Loc ResourceKey=AiteProfiles_Title}"
+                  Width="760" Height="560" MinWidth="680" MinHeight="480"
+                  WindowStartupLocation="CenterScreen"
+                  Background="#191919" Foreground="#DCDCDC"
+                  WindowStyle="SingleBorderWindow"
+                  ResizeMode="CanResize"
+                  ShowInTaskbar="False"
+                  Topmost="True"
+                  Deactivated="Window_Deactivated"
+                  PreviewKeyDown="Window_PreviewKeyDown">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/AiteBar;component/SettingsWindowResources.xaml"/>
+                <ResourceDictionary Source="/AiteBar;component/FormControlsResources.xaml"/>
+                <ResourceDictionary Source="/AiteBar;component/UtilityWindowResources.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <Style x:Key="AiteProfilesTabButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                <Setter Property="Height" Value="34"/>
+                <Setter Property="MinWidth" Value="92"/>
+                <Setter Property="Padding" Value="12,0"/>
+                <Setter Property="Margin" Value="0,0,6,0"/>
+            </Style>
+
+            <Style x:Key="AiteProfilesIconButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
+                <Setter Property="Width" Value="34"/>
+                <Setter Property="Height" Value="34"/>
+                <Setter Property="Margin" Value="0,0,6,0"/>
+                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                <Setter Property="FontSize" Value="14"/>
+            </Style>
+
+            <Style TargetType="DataGridColumnHeader">
+                <Setter Property="Background" Value="#202023"/>
+                <Setter Property="Foreground" Value="#AEB4BA"/>
+                <Setter Property="BorderBrush" Value="#303034"/>
+                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                <Setter Property="Padding" Value="8,6"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+            </Style>
+
+            <Style TargetType="DataGridRow">
+                <Setter Property="Background" Value="#1A1A1C"/>
+                <Setter Property="Foreground" Value="#E8EDF2"/>
+                <Style.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True">
+                        <Setter Property="Background" Value="#20242B"/>
+                    </Trigger>
+                    <Trigger Property="IsSelected" Value="True">
+                        <Setter Property="Background" Value="#233247"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid Margin="14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal">
+                <Button Style="{StaticResource AiteProfilesTabButtonStyle}"
+                        Content="{local:Loc ResourceKey=AiteProfiles_AllTab}"
+                        Command="{Binding SetAllTabCommand}"/>
+                <Button Style="{StaticResource AiteProfilesTabButtonStyle}"
+                        Content="{local:Loc ResourceKey=AiteProfiles_FavoritesTab}"
+                        Command="{Binding SetFavoritesTabCommand}"/>
+                <Button Style="{StaticResource AiteProfilesTabButtonStyle}"
+                        Content="{local:Loc ResourceKey=AiteProfiles_FarmTab}"
+                        Command="{Binding SetFarmTabCommand}"/>
+            </StackPanel>
+            <TextBox x:Name="SearchBox"
+                     Grid.Column="1"
+                     Height="34"
+                     Margin="8,0"
+                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                     ToolTip="{local:Loc ResourceKey=AiteProfiles_SearchPlaceholder}"/>
+            <Button Grid.Column="2"
+                    Height="34"
+                    MinWidth="96"
+                    Content="{local:Loc ResourceKey=AiteProfiles_Scan}"
+                    Command="{Binding RefreshCommand}"
+                    Style="{StaticResource SecondaryButtonStyle}"/>
+        </Grid>
+
+        <Border Grid.Row="1"
+                Background="#1A1A1C"
+                BorderBrush="#303034"
+                BorderThickness="1"
+                CornerRadius="6">
+            <DataGrid x:Name="ProfilesGrid"
+                      ItemsSource="{Binding Profiles}"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      CanUserReorderColumns="False"
+                      CanUserResizeRows="False"
+                      HeadersVisibility="Column"
+                      GridLinesVisibility="Horizontal"
+                      HorizontalGridLinesBrush="#303034"
+                      Background="#1A1A1C"
+                      BorderThickness="0"
+                      RowHeight="62"
+                      SelectionMode="Extended"
+                      SelectionUnit="FullRow"
+                      SelectionChanged="ProfilesGrid_SelectionChanged"
+                      MouseDoubleClick="ProfilesGrid_MouseDoubleClick"
+                      PreviewMouseRightButtonDown="ProfilesGrid_PreviewMouseRightButtonDown"
+                      Sorting="ProfilesGrid_Sorting">
+                <DataGrid.ContextMenu>
+                    <ContextMenu Opened="ContextMenu_Opened" Closed="ContextMenu_Closed">
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Open}" Command="{Binding OpenProfileCommand}"/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_OpenSelected}" Command="{Binding OpenSelectedProfilesCommand}"/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_OpenIncognito}" Command="{Binding OpenIncognitoCommand}"/>
+                        <Separator/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_EditTags}" Command="{Binding EditTagsCommand}"/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_ToggleFavorite}" Command="{Binding ToggleFavoriteCommand}"/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_ToggleFarm}" Command="{Binding ToggleFarmCommand}"/>
+                        <Separator/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Gemini}" Command="{Binding OpenGeminiCommand}"/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Gmail}" Command="{Binding OpenGmailCommand}"/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Drive}" Command="{Binding OpenDriveCommand}"/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Account}" Command="{Binding OpenAccountCommand}"/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_Compose}" Command="{Binding ComposeEmailCommand}"/>
+                        <Separator/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_CopyEmail}" Command="{Binding CopyEmailCommand}"/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_OpenFolder}" Command="{Binding OpenFolderCommand}"/>
+                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_CreateProfile}" Command="{Binding CreateProfileCommand}"/>
+                    </ContextMenu>
+                </DataGrid.ContextMenu>
+                <DataGrid.Columns>
+                    <DataGridTemplateColumn Width="42">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <CheckBox HorizontalAlignment="Center"
+                                          VerticalAlignment="Center"
+                                          IsChecked="{Binding IsSelected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Click="ProfileCheckBox_Click"/>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTextColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnProfile}" Binding="{Binding Name}" Width="2.2*"/>
+                    <DataGridTextColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnEmail}" Binding="{Binding Email}" Width="2*"/>
+                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnTime}" Width="112" SortMemberPath="LastTs">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding LastLaunchDate}" Foreground="#E8EDF2"/>
+                                    <TextBlock Text="{Binding LastLaunchTime}" Foreground="#8F98A3" FontSize="12"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnInfo}" Width="1.7*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <StackPanel>
+                                    <TextBlock Text="{Binding CategoryDisplay}" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Foreground="#8F98A3" FontSize="12">
+                                        <Run Text="{local:Loc ResourceKey=AiteProfiles_BookmarksShort}"/>
+                                        <Run Text="{Binding BookmarksDisplay}"/>
+                                        <Run Text="  "/>
+                                        <Run Text="{local:Loc ResourceKey=AiteProfiles_DiskShort}"/>
+                                        <Run Text="{Binding DiskDisplay}"/>
+                                    </TextBlock>
+                                </StackPanel>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="0,10,0,8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <ComboBox Grid.Column="0"
+                      Height="36"
+                      IsEditable="True"
+                      IsTextSearchEnabled="False"
+                      ItemsSource="{Binding QuickLinkSuggestions}"
+                      SelectedItem="{Binding SelectedQuickLink, Mode=TwoWay}"
+                      DisplayMemberPath="DisplayText"
+                      Text="{Binding QuickLinkText, UpdateSourceTrigger=PropertyChanged}"
+                      ToolTip="{local:Loc ResourceKey=AiteProfiles_QuickLinkPlaceholder}"/>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
+                <ToggleButton Width="36"
+                              Height="36"
+                              Margin="0,0,6,0"
+                              IsChecked="{Binding RememberQuickLink}"
+                              ToolTip="{local:Loc ResourceKey=AiteProfiles_RememberLink}"
+                              Content="&#xE735;"
+                              FontFamily="Segoe MDL2 Assets"/>
+                <ToggleButton Width="36"
+                              Height="36"
+                              IsChecked="{Binding RotationEnabled}"
+                              ToolTip="{local:Loc ResourceKey=AiteProfiles_Rotation}"
+                              Content="&#xE8D7;"
+                              FontFamily="Segoe MDL2 Assets"/>
+            </StackPanel>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE710;" Command="{Binding AddQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_AddLink}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE70F;" Command="{Binding EditQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_EditLink}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE8B5;" Command="{Binding ImportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ImportLinks}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE74E;" Command="{Binding ExportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ExportLinks}"/>
+                <Button Height="36" MinWidth="118" Style="{StaticResource PrimaryButtonStyle}" Content="{local:Loc ResourceKey=AiteProfiles_Launch}" Command="{Binding LaunchCommand}"/>
+            </StackPanel>
+        </Grid>
+
+        <TextBlock Grid.Row="3"
+                   Text="{Binding StatusText}"
+                   Foreground="#8F98A3"
+                   FontSize="12"/>
+    </Grid>
+</local:DarkWindow>

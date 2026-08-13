@@ -1660,6 +1660,58 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ProgrammingStyle_Label" xml:space="preserve"><value>Стиль</value></data><data name="ProgrammingPromptStyle_Auto" xml:space="preserve"><value>Авто</value></data><data name="ProgrammingPromptStyle_MinimalistWebsite" xml:space="preserve"><value>Минималистичный</value></data><data name="ProgrammingPromptStyle_CorporateWebsite" xml:space="preserve"><value>Корпоративный</value></data><data name="ProgrammingPromptStyle_PremiumShowcase" xml:space="preserve"><value>Премиальный</value></data><data name="ProgrammingPromptStyle_EditorialStudio" xml:space="preserve"><value>Эдиториал / студия</value></data><data name="ProgrammingPromptStyle_BrightPromo" xml:space="preserve"><value>Яркий промо</value></data><data name="ProgrammingPromptStyle_DarkTech" xml:space="preserve"><value>Тёмный тех</value></data><data name="ProgrammingPromptStyle_SaasDashboard" xml:space="preserve"><value>SaaS-дашборд</value></data><data name="ProgrammingPromptStyle_AnalyticalDashboard" xml:space="preserve"><value>Аналитический</value></data><data name="ProgrammingPromptStyle_ExecutiveDashboard" xml:space="preserve"><value>Для руководителя</value></data><data name="ProgrammingPromptStyle_MobileFirstApp" xml:space="preserve"><value>Сначала мобильный</value></data><data name="ProgrammingPromptStyle_ProductiveWebApp" xml:space="preserve"><value>Продуктивное веб-приложение</value></data><data name="ProgrammingPromptStyle_CommunityPlatform" xml:space="preserve"><value>Сообщество</value></data><data name="ProgrammingPromptStyle_RetroArcadeGame" xml:space="preserve"><value>Ретро-аркада</value></data><data name="ProgrammingPromptStyle_PuzzleGame" xml:space="preserve"><value>Головоломка</value></data><data name="ProgrammingPromptStyle_NeonActionGame" xml:space="preserve"><value>Неон / экшен</value></data><data name="ProgrammingPromptStyle_CartoonGame" xml:space="preserve"><value>Мультяшный</value></data><data name="ProgrammingPromptStyle_PhysicsToyGame" xml:space="preserve"><value>Физическая мини-игра</value></data><data name="ProgrammingPromptStyle_LightweightUtility" xml:space="preserve"><value>Лёгкая утилита</value></data><data name="ProgrammingPromptStyle_PowerUserTool" xml:space="preserve"><value>Для продвинутых</value></data><data name="ProgrammingPromptStyle_ConversationalBot" xml:space="preserve"><value>Диалоговый бот</value></data><data name="ProgrammingPromptStyle_SalesBot" xml:space="preserve"><value>Бот продаж</value></data><data name="ProgrammingPromptStyle_ContentParser" xml:space="preserve"><value>Контентный парсер</value></data><data name="ProgrammingPromptStyle_DataCollector" xml:space="preserve"><value>Сборщик данных</value></data><data name="ProgrammingPromptStyle_DeveloperApi" xml:space="preserve"><value>API для разработчиков</value></data><data name="ProgrammingPromptStyle_StartupMvp" xml:space="preserve"><value>Стартап MVP</value></data><data name="ProgrammingPromptStyle_NativeDesktop" xml:space="preserve"><value>Нативный десктоп</value></data><data name="ProgrammingPromptStyle_CrossPlatformDesktop" xml:space="preserve"><value>Кроссплатформенный десктоп</value></data>
   <data name="ThemeStyle_TrainingGround" xml:space="preserve"><value>Тренировочная площадка</value></data>
   <data name="PhotoStyle_Architecture" xml:space="preserve"><value>Архитектурная</value></data><data name="PhotoStyle_BeautyPortrait" xml:space="preserve"><value>Бьюти-портрет</value></data><data name="PhotoStyle_VintageFilm" xml:space="preserve"><value>Винтажная пленка</value></data><data name="PhotoStyle_Documentary" xml:space="preserve"><value>Документальная</value></data><data name="PhotoStyle_Food" xml:space="preserve"><value>Еда и напитки</value></data><data name="PhotoStyle_Cinematic" xml:space="preserve"><value>Кинематографичная</value></data><data name="PhotoStyle_Commercial" xml:space="preserve"><value>Коммерческая реклама</value></data><data name="PhotoStyle_Macro" xml:space="preserve"><value>Макро</value></data><data name="PhotoStyle_FashionEditorial" xml:space="preserve"><value>Модный эдиториал</value></data><data name="PhotoStyle_NeonNight" xml:space="preserve"><value>Неоновая ночь</value></data><data name="PhotoStyle_Landscape" xml:space="preserve"><value>Пейзажная</value></data><data name="PhotoStyle_Portrait" xml:space="preserve"><value>Портретная</value></data><data name="PhotoStyle_Product" xml:space="preserve"><value>Предметная</value></data><data name="PhotoStyle_Studio" xml:space="preserve"><value>Студийная</value></data><data name="PhotoStyle_Street" xml:space="preserve"><value>Уличная</value></data><data name="PhotoStyle_BlackAndWhite" xml:space="preserve"><value>Черно-белая</value></data>
+  <data name="Tool_AiteProfiles" xml:space="preserve"><value>Aite Profiles</value></data>
+  <data name="Main_AiteProfilesTooltip" xml:space="preserve"><value>Профили Chrome</value></data>
+  <data name="QuickTool_AiteProfiles_Title" xml:space="preserve"><value>Aite Profiles</value></data>
+  <data name="QuickTool_AiteProfiles_Description" xml:space="preserve"><value>Сканирование и запуск локальных профилей Chrome со ссылками, тегами, избранным и ротацией.</value></data>
+  <data name="AiteProfiles_Title" xml:space="preserve"><value>Aite Profiles</value></data>
+  <data name="AiteProfiles_AllTab" xml:space="preserve"><value>Все</value></data>
+  <data name="AiteProfiles_FavoritesTab" xml:space="preserve"><value>Избранное</value></data>
+  <data name="AiteProfiles_FarmTab" xml:space="preserve"><value>Фарм</value></data>
+  <data name="AiteProfiles_SearchPlaceholder" xml:space="preserve"><value>Поиск профилей</value></data>
+  <data name="AiteProfiles_Scan" xml:space="preserve"><value>Скан</value></data>
+  <data name="AiteProfiles_ColumnProfile" xml:space="preserve"><value>Профиль</value></data>
+  <data name="AiteProfiles_ColumnEmail" xml:space="preserve"><value>Email</value></data>
+  <data name="AiteProfiles_ColumnTime" xml:space="preserve"><value>Время</value></data>
+  <data name="AiteProfiles_ColumnInfo" xml:space="preserve"><value>Теги и инфо</value></data>
+  <data name="AiteProfiles_BookmarksShort" xml:space="preserve"><value>Закладки: </value></data>
+  <data name="AiteProfiles_DiskShort" xml:space="preserve"><value>Диск: </value></data>
+  <data name="AiteProfiles_QuickLinkPlaceholder" xml:space="preserve"><value>Поиск или URL quick link</value></data>
+  <data name="AiteProfiles_RememberLink" xml:space="preserve"><value>Закрепить ссылку</value></data>
+  <data name="AiteProfiles_Rotation" xml:space="preserve"><value>Ротация</value></data>
+  <data name="AiteProfiles_AddLink" xml:space="preserve"><value>Добавить ссылку</value></data>
+  <data name="AiteProfiles_EditLink" xml:space="preserve"><value>Редактировать ссылку</value></data>
+  <data name="AiteProfiles_ImportLinks" xml:space="preserve"><value>Импорт ссылок</value></data>
+  <data name="AiteProfiles_ExportLinks" xml:space="preserve"><value>Экспорт ссылок</value></data>
+  <data name="AiteProfiles_Launch" xml:space="preserve"><value>Запуск</value></data>
+  <data name="AiteProfiles_Open" xml:space="preserve"><value>Открыть</value></data>
+  <data name="AiteProfiles_OpenSelected" xml:space="preserve"><value>Открыть выбранные</value></data>
+  <data name="AiteProfiles_OpenIncognito" xml:space="preserve"><value>Открыть инкогнито</value></data>
+  <data name="AiteProfiles_EditTags" xml:space="preserve"><value>Редактировать теги</value></data>
+  <data name="AiteProfiles_ToggleFavorite" xml:space="preserve"><value>Переключить избранное</value></data>
+  <data name="AiteProfiles_ToggleFarm" xml:space="preserve"><value>Переключить фарм</value></data>
+  <data name="AiteProfiles_Gemini" xml:space="preserve"><value>Gemini</value></data>
+  <data name="AiteProfiles_Gmail" xml:space="preserve"><value>Gmail</value></data>
+  <data name="AiteProfiles_Drive" xml:space="preserve"><value>Google Drive</value></data>
+  <data name="AiteProfiles_Account" xml:space="preserve"><value>Настройки аккаунта</value></data>
+  <data name="AiteProfiles_Compose" xml:space="preserve"><value>Написать письмо</value></data>
+  <data name="AiteProfiles_CopyEmail" xml:space="preserve"><value>Копировать email</value></data>
+  <data name="AiteProfiles_OpenFolder" xml:space="preserve"><value>Папка профиля</value></data>
+  <data name="AiteProfiles_CreateProfile" xml:space="preserve"><value>Создать профиль</value></data>
+  <data name="AiteProfiles_TagsPrompt" xml:space="preserve"><value>Теги через запятую</value></data>
+  <data name="AiteProfiles_StatusScanning" xml:space="preserve"><value>Сканирование профилей Chrome...</value></data>
+  <data name="AiteProfiles_StatusProfiles" xml:space="preserve"><value>Показано профилей: {0}</value></data>
+  <data name="AiteProfiles_StatusScanFailed" xml:space="preserve"><value>Не удалось просканировать профили</value></data>
+  <data name="AiteProfiles_StatusEmailCopied" xml:space="preserve"><value>Email скопирован</value></data>
+  <data name="AiteProfiles_StatusLinksImported" xml:space="preserve"><value>Импортировано ссылок: {0}</value></data>
+  <data name="AiteProfiles_ChromeMissing" xml:space="preserve"><value>Не найден исполняемый файл Google Chrome.</value></data>
+  <data name="AiteProfiles_QuickLinkDialogTitle" xml:space="preserve"><value>Quick link</value></data>
+  <data name="AiteProfiles_LinkName" xml:space="preserve"><value>Название</value></data>
+  <data name="AiteProfiles_LinkTags" xml:space="preserve"><value>Теги</value></data>
+  <data name="AiteProfiles_LinkUrls" xml:space="preserve"><value>URL</value></data>
+  <data name="AiteProfiles_LinkValidation" xml:space="preserve"><value>Укажите название и хотя бы один HTTP или HTTPS URL.</value></data>
+  <data name="AiteProfiles_LinkImportFilter" xml:space="preserve"><value>Текст или JSON (*.txt;*.json)|*.txt;*.json|Все файлы (*.*)|*.*</value></data>
+  <data name="AiteProfiles_LinkExportFilter" xml:space="preserve"><value>Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*</value></data>
 </root>
 
 

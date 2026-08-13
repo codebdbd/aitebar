@@ -25,7 +25,8 @@ public sealed class UtilityButtonCatalogTests
         "Copilot",
         "TextProcessing",
         "PromptBuilder",
-        "ZenEditor"
+        "ZenEditor",
+        "AiteProfiles"
     ];
 
     [Fact]
@@ -108,6 +109,11 @@ public sealed class UtilityButtonCatalogTests
             UtilityButtonCatalog.PromptBuilder);
 
         AssertSameColor(
+            UtilityIconColors.SearchAndNavigation,
+            UtilityButtonCatalog.Search,
+            UtilityButtonCatalog.AiteProfiles);
+
+        AssertSameColor(
             UtilityIconColors.Productivity,
             UtilityButtonCatalog.Calculator,
             UtilityButtonCatalog.TimerStopwatch);
@@ -126,6 +132,7 @@ public sealed class UtilityButtonCatalogTests
         Assert.Equal(UtilityButtonCatalog.TextProcessing.Color, new TextProcessingUtility().IconColor);
         Assert.Equal(UtilityButtonCatalog.PromptBuilder.Color, new PromptBuilderUtility().IconColor);
         Assert.Equal(UtilityButtonCatalog.ZenEditor.Color, new ZenEditorUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.AiteProfiles.Color, new AiteProfilesUtility.AiteProfilesUtility().IconColor);
     }
 
     [Fact]
