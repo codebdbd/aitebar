@@ -149,17 +149,17 @@
             </Style>
 
             <Style x:Key="AiteProfilesSuggestionListStyle" TargetType="ListBox">
-                <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="Padding" Value="3"/>
-                <Setter Property="MaxHeight" Value="180"/>
+                <Setter Property="Background" Value="#252526"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Padding" Value="2"/>
+                <Setter Property="MinWidth" Value="220"/>
+                <Setter Property="MaxHeight" Value="160"/>
                 <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
                 <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
             </Style>
 
             <Style x:Key="AiteProfilesSuggestionItemStyle" TargetType="ListBoxItem">
-                <Setter Property="Padding" Value="8,5"/>
+                <Setter Property="Padding" Value="8,4"/>
                 <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
@@ -174,10 +174,10 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="ItemChrome" Property="Background" Value="#2B2B2D"/>
+                                    <Setter TargetName="ItemChrome" Property="Background" Value="#303033"/>
                                 </Trigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="ItemChrome" Property="Background" Value="#333338"/>
+                                    <Setter TargetName="ItemChrome" Property="Background" Value="#303033"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
@@ -540,12 +540,13 @@
                 <Popup x:Name="QuickLinkSuggestionsPopup"
                        PlacementTarget="{Binding ElementName=QuickLinkBox}"
                        Placement="Top"
+                       VerticalOffset="-2"
                        AllowsTransparency="True"
                        Focusable="False"
                        StaysOpen="True"
                        PopupAnimation="Fade">
                     <ListBox x:Name="QuickLinkSuggestionsList"
-                             Width="{Binding ActualWidth, ElementName=QuickLinkBox}"
+                             MaxWidth="{Binding ActualWidth, ElementName=QuickLinkBox}"
                              ItemsSource="{Binding QuickLinkSuggestions}"
                              DisplayMemberPath="DisplayText"
                              Style="{StaticResource AiteProfilesSuggestionListStyle}"
