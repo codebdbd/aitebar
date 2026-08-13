@@ -164,7 +164,8 @@
                       HorizontalGridLinesBrush="#303034"
                       Background="#1A1A1C"
                       BorderThickness="0"
-                      RowHeight="50"
+                      RowHeight="68"
+                      HorizontalScrollBarVisibility="Disabled"
                       SelectionMode="Extended"
                       SelectionUnit="FullRow"
                       SelectionChanged="ProfilesGrid_SelectionChanged"
@@ -259,20 +260,22 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnProfile}" Width="2.4*" SortMemberPath="Name">
+                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnProfile}" Width="410" MinWidth="410" SortMemberPath="Name">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
-                                <Grid Margin="0,4">
+                                <Grid Margin="0,4" Width="400" HorizontalAlignment="Left">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="38"/>
+                                        <ColumnDefinition Width="64"/>
                                         <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <Border Width="30"
-                                            Height="30"
-                                            CornerRadius="15"
+                                    <Border Width="48"
+                                            Height="48"
+                                            CornerRadius="10"
                                             Background="#2B2F36"
                                             BorderBrush="#3A4654"
                                             BorderThickness="1"
+                                            HorizontalAlignment="Left"
+                                            VerticalAlignment="Center"
                                             ClipToBounds="True">
                                         <Grid>
                                             <Image Source="{Binding AvatarPath}"
@@ -306,16 +309,15 @@
                                             </TextBlock>
                                         </Grid>
                                     </Border>
-                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Name}" Foreground="#F2F5F8" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-                                        <TextBlock Text="{Binding Folder}" Foreground="#8F98A3" FontSize="11" TextTrimming="CharacterEllipsis"/>
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                                        <TextBlock Text="{Binding Name, TargetNullValue='-'}" Foreground="#F2F5F8" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                                        <TextBlock Text="{Binding Email, TargetNullValue=''}" Foreground="#8F98A3" FontSize="12" TextTrimming="CharacterEllipsis"/>
                                     </StackPanel>
                                 </Grid>
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTextColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnEmail}" Binding="{Binding Email}" Width="2*"/>
-                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnTime}" Width="112" SortMemberPath="LastTs">
+                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnTime}" Width="105" SortMemberPath="LastTs">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel>
@@ -325,7 +327,7 @@
                             </DataTemplate>
                         </DataGridTemplateColumn.CellTemplate>
                     </DataGridTemplateColumn>
-                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnInfo}" Width="1.7*">
+                    <DataGridTemplateColumn Header="{local:Loc ResourceKey=AiteProfiles_ColumnInfo}" Width="*" MinWidth="130">
                         <DataGridTemplateColumn.CellTemplate>
                             <DataTemplate>
                                 <StackPanel>

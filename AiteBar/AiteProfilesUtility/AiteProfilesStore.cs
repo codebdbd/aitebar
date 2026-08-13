@@ -216,13 +216,15 @@ internal sealed class AiteProfilesStore
 
     private void ReplaceProfiles(IReadOnlyList<AiteProfileScanRow> rows)
     {
-        _profiles = rows.Select(row =>
+        _profiles = rows
+            .Where(IsExistingProfilePath)
+            .Select(row =>
         {
             string key = AiteProfileKey.Build(row.Folder, row.Path);
             return new AiteProfile
             {
                 Folder = row.Folder,
-                Name = row.Name,
+                Name = string.IsNullOrWhiteSpace(row.Name) ? row.Folder : row.Name,
                 Email = row.Email,
                 LastTs = row.LastTs,
                 Path = row.Path,
@@ -239,7 +241,7 @@ internal sealed class AiteProfilesStore
 
     private async Task SaveCacheAsync(IReadOnlyList<AiteProfileScanRow> rows, CancellationToken cancellationToken)
     {
-        var profiles = rows.ToDictionary(
+        var profiles = rows.Where(IsExistingProfilePath).ToDictionary(
             row => AiteProfileKey.Build(row.Folder, row.Path),
             row => new AiteProfileCacheEntry
             {
@@ -260,6 +262,13 @@ internal sealed class AiteProfilesStore
 
     private static string BuildSearchKey(string folder, string name, string email, string path, string tags) =>
         $"{folder} {name} {email} {path} {tags}".ToLowerInvariant().Trim();
+
+    private static bool IsExistingProfilePath(AiteProfileScanRow row)
+    {
+        return !string.IsNullOrWhiteSpace(row.Folder) &&
+               !string.IsNullOrWhiteSpace(row.Path) &&
+               Directory.Exists(row.Path);
+    }
 
     private static (int Group, int Index) ProfileSortKey(string folder)
     {
