@@ -30,11 +30,11 @@
             </Style>
 
             <Style x:Key="AiteProfilesIconButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
-                <Setter Property="Width" Value="34"/>
-                <Setter Property="Height" Value="34"/>
+                <Setter Property="Width" Value="36"/>
+                <Setter Property="Height" Value="36"/>
                 <Setter Property="Margin" Value="0,0,6,0"/>
                 <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
-                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontSize" Value="16"/>
             </Style>
 
             <Style x:Key="AiteProfilesToggleButtonStyle" TargetType="ToggleButton">
@@ -45,7 +45,7 @@
                 <Setter Property="BorderBrush" Value="#3A3A3D"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
-                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="FontSize" Value="16"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ToggleButton">
@@ -74,7 +74,7 @@
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
                 <Setter Property="Height" Value="{StaticResource FormControlHeight}"/>
                 <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
-                <Setter Property="Background" Value="{StaticResource FormInputBackground}"/>
+                <Setter Property="Background" Value="{StaticResource FormControlBackground}"/>
                 <Setter Property="BorderBrush" Value="{StaticResource FormControlBorderBrush}"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="Padding" Value="10,0"/>
@@ -101,6 +101,7 @@
                                         <TextBox x:Name="PART_EditableTextBox"
                                                  Grid.Column="0"
                                                  Margin="{TemplateBinding Padding}"
+                                                 Style="{x:Null}"
                                                  Background="Transparent"
                                                  BorderThickness="0"
                                                  Foreground="{TemplateBinding Foreground}"
@@ -169,14 +170,14 @@
                                     <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden"/>
                                 </Trigger>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormInputBackgroundHover}"/>
+                                    <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                                     <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsKeyboardFocusWithin" Value="True">
                                     <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsDropDownOpen" Value="True">
-                                    <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormInputBackgroundHover}"/>
+                                    <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                                     <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
                                 </Trigger>
                                 <Trigger Property="IsEnabled" Value="False">
