@@ -3,6 +3,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using SkiaSharp;
 
 namespace AiteBar;
 
@@ -14,6 +15,8 @@ internal static class IcoEncoder
     private const ushort IconType = 1;
     private const ushort Planes = 1;
     private const ushort BitCount = 32;
+    private const int BitmapInfoHeaderSize = 40;
+    private const int PngOnlySize = 256;
 
     public static byte[] Encode(IReadOnlyList<IcoImageEntry> images)
     {
@@ -55,15 +58,19 @@ internal static class IcoEncoder
             }
         }
 
+        EncodedIcoImage[] encodedImages = ordered
+            .Select(image => new EncodedIcoImage(image.Size, image.Size == PngOnlySize ? image.PngBytes : EncodeDibPayload(image)))
+            .ToArray();
+
         using var stream = new MemoryStream();
         using var writer = new BinaryWriter(stream);
 
         writer.Write((ushort)0);
         writer.Write(IconType);
-        writer.Write((ushort)ordered.Length);
+        writer.Write((ushort)encodedImages.Length);
 
-        int dataOffset = IconDirSize + (IconDirEntrySize * ordered.Length);
-        foreach (IcoImageEntry image in ordered)
+        int dataOffset = IconDirSize + (IconDirEntrySize * encodedImages.Length);
+        foreach (EncodedIcoImage image in encodedImages)
         {
             byte sizeByte = image.Size == 256 ? (byte)0 : (byte)image.Size;
             writer.Write(sizeByte);
@@ -72,14 +79,68 @@ internal static class IcoEncoder
             writer.Write((byte)0);
             writer.Write(Planes);
             writer.Write(BitCount);
-            writer.Write((uint)image.PngBytes.Length);
+            writer.Write((uint)image.Payload.Length);
             writer.Write((uint)dataOffset);
-            dataOffset += image.PngBytes.Length;
+            dataOffset += image.Payload.Length;
         }
 
-        foreach (IcoImageEntry image in ordered)
+        foreach (EncodedIcoImage image in encodedImages)
         {
-            writer.Write(image.PngBytes);
+            writer.Write(image.Payload);
+        }
+
+        writer.Flush();
+        return stream.ToArray();
+    }
+
+    private static byte[] EncodeDibPayload(IcoImageEntry image)
+    {
+        using SKBitmap bitmap = SKBitmap.Decode(image.PngBytes)
+            ?? throw new ArgumentException("ICO image data must be a decodable PNG.", nameof(image));
+
+        int size = image.Size;
+        int xorStride = size * 4;
+        int andStride = ((size + 31) / 32) * 4;
+        using var stream = new MemoryStream(BitmapInfoHeaderSize + (xorStride * size) + (andStride * size));
+        using var writer = new BinaryWriter(stream);
+
+        writer.Write(BitmapInfoHeaderSize);
+        writer.Write(size);
+        writer.Write(size * 2);
+        writer.Write(Planes);
+        writer.Write(BitCount);
+        writer.Write(0);
+        writer.Write(xorStride * size);
+        writer.Write(0);
+        writer.Write(0);
+        writer.Write(0);
+        writer.Write(0);
+
+        for (int y = size - 1; y >= 0; y--)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                SKColor pixel = bitmap.GetPixel(x, y);
+                writer.Write(pixel.Blue);
+                writer.Write(pixel.Green);
+                writer.Write(pixel.Red);
+                writer.Write(pixel.Alpha);
+            }
+        }
+
+        Span<byte> maskRow = stackalloc byte[andStride];
+        for (int y = size - 1; y >= 0; y--)
+        {
+            maskRow.Clear();
+            for (int x = 0; x < size; x++)
+            {
+                if (bitmap.GetPixel(x, y).Alpha == 0)
+                {
+                    maskRow[x / 8] |= (byte)(0x80 >> (x % 8));
+                }
+            }
+
+            writer.Write(maskRow);
         }
 
         writer.Flush();
@@ -107,4 +168,6 @@ internal static class IcoEncoder
             BinaryPrimitives.ReadInt32BigEndian(data.AsSpan(16, 4)),
             BinaryPrimitives.ReadInt32BigEndian(data.AsSpan(20, 4)));
     }
+
+    private sealed record EncodedIcoImage(int Size, byte[] Payload);
 }

@@ -74,10 +74,11 @@ public sealed class IconConverterServiceTests
             IcoEntry[] entries = ReadEntries(result.IcoBytes);
 
             Assert.Equal([16, 32, 256], entries.Select(entry => entry.Size));
-            Assert.All(entries, entry => Assert.True(HasPngSignature(entry.Payload)));
+            Assert.All(entries.Where(entry => entry.Size < 256), entry => Assert.True(HasDibHeader(entry.Payload)));
+            Assert.True(HasPngSignature(entries.Single(entry => entry.Size == 256).Payload));
             Assert.Contains(entries, entry => entry.Size == 256 && entry.WidthByte == 0 && entry.HeightByte == 0);
 
-            using SKBitmap? bitmap = SKBitmap.Decode(entries.First(entry => entry.Size == 32).Payload);
+            using SKBitmap? bitmap = SKBitmap.Decode(entries.First(entry => entry.Size == 256).Payload);
             Assert.NotNull(bitmap);
             Assert.True(HasTransparentPixel(bitmap!));
         }
@@ -109,7 +110,7 @@ public sealed class IconConverterServiceTests
     }
 
     [Fact]
-    public async Task ConvertAsync_Jpg_ProducesOpaquePngPayload()
+    public async Task ConvertAsync_Jpg_ProducesOpaqueDibPayload()
     {
         string path = WriteTempImage(".jpg", SKEncodedImageFormat.Jpeg, withAlpha: false);
         try
@@ -118,13 +119,12 @@ public sealed class IconConverterServiceTests
             IconConversionResult result = await service.ConvertAsync(path, new IconConversionOptions { Sizes = [32] });
             IcoEntry entry = Assert.Single(ReadEntries(result.IcoBytes));
 
-            using SKBitmap? bitmap = SKBitmap.Decode(entry.Payload);
-            Assert.NotNull(bitmap);
-            Assert.All(Enumerable.Range(0, bitmap!.Width), x =>
+            Assert.True(HasDibHeader(entry.Payload));
+            Assert.All(Enumerable.Range(0, 32), x =>
             {
-                for (int y = 0; y < bitmap.Height; y++)
+                for (int y = 0; y < 32; y++)
                 {
-                    Assert.Equal(255, bitmap.GetPixel(x, y).Alpha);
+                    Assert.Equal(255, ReadDibPixelAlpha(entry.Payload, 32, x, y));
                 }
             });
         }
@@ -148,8 +148,15 @@ public sealed class IconConverterServiceTests
 
             IcoEntry[] entries = ReadEntries(result.IcoBytes);
             Assert.Equal(IconConversionOptions.WindowsDpiSizes, entries.Select(entry => entry.Size).ToArray());
-            Assert.All(entries, entry => Assert.Equal(entry.Size, ReadPngWidth(entry.Payload)));
-            Assert.All(entries, entry => Assert.Equal(entry.Size, ReadPngHeight(entry.Payload)));
+            Assert.All(entries.Where(entry => entry.Size < 256), entry =>
+            {
+                Assert.True(HasDibHeader(entry.Payload));
+                Assert.Equal(entry.Size, ReadDibWidth(entry.Payload));
+                Assert.Equal(entry.Size * 2, ReadDibHeight(entry.Payload));
+            });
+            IcoEntry size256 = entries.Single(entry => entry.Size == 256);
+            Assert.Equal(256, ReadPngWidth(size256.Payload));
+            Assert.Equal(256, ReadPngHeight(size256.Payload));
             Assert.Empty(result.Warnings);
         }
         finally
@@ -325,7 +332,7 @@ public sealed class IconConverterServiceTests
 
             IcoEntry entry = Assert.Single(ReadEntries(result.IcoBytes));
             Assert.Equal(32, entry.Size);
-            Assert.True(HasPngSignature(entry.Payload));
+            Assert.True(HasDibHeader(entry.Payload));
         }
         finally
         {
@@ -389,9 +396,23 @@ public sealed class IconConverterServiceTests
         data[6] == 0x1A &&
         data[7] == 0x0A;
 
+    private static bool HasDibHeader(byte[] data) =>
+        data.Length >= 40 && BitConverter.ToUInt32(data, 0) == 40;
+
     private static int ReadPngWidth(byte[] png) => BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(16, 4));
 
     private static int ReadPngHeight(byte[] png) => BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(20, 4));
+
+    private static int ReadDibWidth(byte[] dib) => BitConverter.ToInt32(dib, 4);
+
+    private static int ReadDibHeight(byte[] dib) => BitConverter.ToInt32(dib, 8);
+
+    private static byte ReadDibPixelAlpha(byte[] dib, int size, int x, int y)
+    {
+        int bottomUpY = size - 1 - y;
+        int offset = 40 + (bottomUpY * size * 4) + (x * 4) + 3;
+        return dib[offset];
+    }
 
     private static bool HasTransparentPixel(SKBitmap bitmap)
     {

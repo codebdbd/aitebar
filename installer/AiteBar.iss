@@ -1,7 +1,8 @@
-#define AppName "Aite Bar"
+#define AppName "AiteBar"
 #define AppDisplayName "AiteBar"
 #define AppPublisher "Codebdbd"
 #define AppExeName "AiteBar.exe"
+#define AppURL "https://github.com/codebdbd/aitebar"
 #ifndef AppVersion
   #define AppVersion "1.15.11"
 #endif
@@ -11,14 +12,19 @@
 AppId={{0B8E4B6C-6DB0-4E14-9DA1-68A7AAB95571}
 AppName={#AppDisplayName}
 AppVersion={#AppVersion}
+AppVerName={#AppDisplayName} {#AppVersion}
 AppPublisher={#AppPublisher}
+AppPublisherURL={#AppURL}
+AppSupportURL={#AppURL}
+AppUpdatesURL={#AppURL}
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppDisplayName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
+LicenseFile=..\LICENSE
 OutputDir=..\artifacts\installer
-OutputBaseFilename=AiteBar-Setup
+OutputBaseFilename=AiteBar-Setup-{#AppVersion}
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppDisplayName} Installer
 VersionInfoProductName={#AppDisplayName}
@@ -26,7 +32,7 @@ VersionInfoProductVersion={#AppVersion}
 VersionInfoVersion={#AppVersion}
 UninstallDisplayIcon={app}\{#AppExeName}
 DirExistsWarning=no
-Compression=lzma
+Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
@@ -34,7 +40,7 @@ ArchitecturesInstallIn64BitMode=x64compatible
 SetupIconFile=..\AiteBar\Resources\app.ico
 AppMutex=Global\AiteBar_Mutex_Unique_String_123
 CloseApplications=yes
-RestartApplications=yes
+RestartApplications=no
 
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\*"
@@ -45,9 +51,12 @@ Type: filesandordirs; Name: "{app}"
 [Languages]
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
 
+[CustomMessages]
+russian.AutoStartTask=Запускать при входе в Windows
+
 [Tasks]
-Name: "desktopicon"; Description: "Создать ярлык на рабочем столе"; GroupDescription: "Дополнительные параметры:"
-Name: "autostart"; Description: "Запускать при входе в Windows"; GroupDescription: "Дополнительные параметры:"
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "autostart"; Description: "{cm:AutoStartTask}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
 Source: "{#PublishDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -109,7 +118,7 @@ begin
 end;
 
 [Run]
-Filename: "{app}\{#AppExeName}"; Description: "Запустить {#AppDisplayName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(AppDisplayName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 
 

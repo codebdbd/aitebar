@@ -141,7 +141,10 @@ $checksumLine = "$($installerHash.Hash)  $($installers[0].Name)`r`n"
 
 try {
     [System.IO.File]::WriteAllText($checksumTempPath, $checksumLine, [System.Text.Encoding]::ASCII)
-    [System.IO.File]::Move($checksumTempPath, $checksumPath, $true)
+    if (Test-Path $checksumPath) {
+        Remove-Item -LiteralPath $checksumPath -Force
+    }
+    Move-Item -LiteralPath $checksumTempPath -Destination $checksumPath -Force
 }
 finally {
     if (Test-Path $checksumTempPath) {
