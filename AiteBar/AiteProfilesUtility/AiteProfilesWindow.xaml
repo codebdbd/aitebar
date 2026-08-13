@@ -174,9 +174,13 @@
                                     <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                                     <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
                                 </Trigger>
-                                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <MultiTrigger>
+                                    <MultiTrigger.Conditions>
+                                        <Condition Property="IsKeyboardFocusWithin" Value="True"/>
+                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                                    </MultiTrigger.Conditions>
                                     <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
-                                </Trigger>
+                                </MultiTrigger>
                                 <Trigger Property="IsDropDownOpen" Value="True">
                                     <Setter TargetName="Chrome" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
                                     <Setter TargetName="Outline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
@@ -364,7 +368,7 @@
                 <Grid Grid.Row="0"
                       Background="#202023"
                       Height="34"
-                      Margin="0"
+                      Margin="10,0,10,0"
                       VerticalAlignment="Top">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="40"/>
@@ -375,17 +379,16 @@
                     </Grid.ColumnDefinitions>
                     <CheckBox Grid.Column="0"
                               Style="{StaticResource AiteProfilesSmallCheckBoxStyle}"
-                              Margin="10,0,0,0"
                               IsThreeState="False"
                               Click="SelectAllCheckBox_Click"/>
                     <Button Grid.Column="2"
                             Style="{StaticResource AiteProfilesHeaderButtonStyle}"
-                            Margin="18,0,0,0"
+                            Margin="8,0,0,0"
                             Content="{local:Loc ResourceKey=AiteProfiles_ColumnProfile}"
                             Click="ProfileHeader_Click"/>
                     <Button Grid.Column="3"
                             Style="{StaticResource AiteProfilesHeaderButtonStyle}"
-                            Margin="18,0,0,0"
+                            Margin="8,0,0,0"
                             Content="{local:Loc ResourceKey=AiteProfiles_ColumnTime}"
                             Click="TimeHeader_Click"/>
                     <TextBlock Grid.Column="4"
@@ -393,7 +396,7 @@
                                Foreground="#AEB4BA"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center"
-                               Margin="18,0,0,0"/>
+                               Margin="8,0,0,0"/>
                 </Grid>
 
                 <ListView x:Name="ProfilesGrid"
