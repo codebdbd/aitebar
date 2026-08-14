@@ -977,6 +977,17 @@ namespace AiteBar
                     }
                 }
 
+                // Отменяем pending favicon download перед сохранением
+                CancelPendingFaviconDownload();
+
+                // Если это веб-элемент без иконки — очищаем ImagePath, чтобы MainWindow.SaveElement запустил скачивание favicon
+                string finalImagePath = _selectedImagePath;
+                if (actionType == ActionType.Web && string.IsNullOrEmpty(_selectedImagePath) &&
+                    (_selectedIcon == "\uF45B" || string.IsNullOrEmpty(_selectedIcon)))
+                {
+                    finalImagePath = "";
+                }
+
                 var newElement = new CustomElement
                 {
                     Id = _editingElement?.Id ?? Guid.NewGuid().ToString(),
@@ -987,7 +998,7 @@ namespace AiteBar
                     Icon = _selectedIcon,
                     IconFont = _selectedFont,
                     Color = _selectedColor,
-                    ImagePath = _selectedImagePath,
+                    ImagePath = finalImagePath,
                     ChromeProfile = GetSelectedLaunchProfile(browserType),
                     RotationProfilePaths = [.. _rotationProfilePaths],
                     IsAppMode = ChkAppMode.IsChecked ?? false,

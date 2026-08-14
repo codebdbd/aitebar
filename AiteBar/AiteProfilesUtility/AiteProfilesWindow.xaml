@@ -31,22 +31,22 @@
             </Style>
 
             <Style x:Key="AiteProfilesIconButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
-                <Setter Property="Width" Value="36"/>
-                <Setter Property="Height" Value="36"/>
+                <Setter Property="Width" Value="44"/>
+                <Setter Property="Height" Value="44"/>
                 <Setter Property="Margin" Value="0,0,6,0"/>
                 <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
-                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="FontSize" Value="20"/>
             </Style>
 
             <Style x:Key="AiteProfilesToggleButtonStyle" TargetType="ToggleButton">
-                <Setter Property="Width" Value="36"/>
-                <Setter Property="Height" Value="36"/>
+                <Setter Property="Width" Value="44"/>
+                <Setter Property="Height" Value="44"/>
                 <Setter Property="Foreground" Value="#D7DEE7"/>
                 <Setter Property="Background" Value="#2B2B2D"/>
                 <Setter Property="BorderBrush" Value="#3A3A3D"/>
                 <Setter Property="BorderThickness" Value="1"/>
                 <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
-                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="FontSize" Value="20"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ToggleButton">
@@ -260,11 +260,12 @@
                      Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                      ToolTip="{local:Loc ResourceKey=AiteProfiles_SearchPlaceholder}"/>
             <Button Grid.Column="2"
-                    Height="34"
-                    MinWidth="96"
-                    Content="{local:Loc ResourceKey=AiteProfiles_Scan}"
+                    Style="{StaticResource AiteProfilesIconButtonStyle}"
+                    Content="&#xE112;"
+                    Foreground="#93C5FD"
                     Command="{Binding RefreshCommand}"
-                    Style="{StaticResource SecondaryButtonStyle}"/>
+                    ToolTip="{local:Loc ResourceKey=AiteProfiles_Scan}"
+                    Margin="0,0,0,0"/>
         </Grid>
 
         <Grid Grid.Row="1">
@@ -327,7 +328,7 @@
                                 <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF582;"/>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_OpenSelected}" Command="{Binding OpenSelectedProfilesCommand}">
+                        <MenuItem x:Name="OpenSelectedMenuItem" Header="{local:Loc ResourceKey=AiteProfiles_OpenSelected}" Command="{Binding OpenSelectedProfilesCommand}">
                             <MenuItem.Icon>
                                 <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF582;"/>
                             </MenuItem.Icon>
@@ -343,12 +344,12 @@
                                 <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF77C;"/>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_ToggleFavorite}" Command="{Binding ToggleFavoriteCommand}">
+                        <MenuItem x:Name="ToggleFavoriteMenuItem" Header="{local:Loc ResourceKey=AiteProfiles_ToggleFavorite}" Command="{Binding ToggleFavoriteCommand}">
                             <MenuItem.Icon>
                                 <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF70F;"/>
                             </MenuItem.Icon>
                         </MenuItem>
-                        <MenuItem Header="{local:Loc ResourceKey=AiteProfiles_ToggleFarm}" Command="{Binding ToggleFarmCommand}">
+                        <MenuItem x:Name="ToggleFarmMenuItem" Header="{local:Loc ResourceKey=AiteProfiles_ToggleFarm}" Command="{Binding ToggleFarmCommand}">
                             <MenuItem.Icon>
                                 <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF1FC;"/>
                             </MenuItem.Icon>
@@ -532,6 +533,7 @@
             <Grid Grid.Column="0">
                 <TextBox x:Name="QuickLinkBox"
                          Style="{StaticResource BaseTextBoxStyle}"
+                         Height="44"
                          Text="{Binding QuickLinkText, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="{local:Loc ResourceKey=AiteProfiles_QuickLinkPlaceholder}"
                          GotKeyboardFocus="QuickLinkBox_GotKeyboardFocus"
@@ -558,19 +560,43 @@
                 <ToggleButton Style="{StaticResource AiteProfilesToggleButtonStyle}"
                               Margin="0,0,6,0"
                               IsChecked="{Binding RememberQuickLink}"
-                              ToolTip="{local:Loc ResourceKey=AiteProfiles_RememberLink}"
-                              Content="&#xF602;"/>
+                              ToolTip="{local:Loc ResourceKey=AiteProfiles_RememberLink}">
+                    <TextBlock Text="&#xF602;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="20">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#FFD166"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=ToggleButton}}" Value="True">
+                                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </ToggleButton>
                 <ToggleButton Style="{StaticResource AiteProfilesToggleButtonStyle}"
                               IsChecked="{Binding RotationEnabled}"
-                              ToolTip="{local:Loc ResourceKey=AiteProfiles_Rotation}"
-                              Content="&#xF186;"/>
+                              ToolTip="{local:Loc ResourceKey=AiteProfiles_Rotation}">
+                    <TextBlock Text="&#xF186;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="20">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Foreground" Value="#CDEBB0"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=ToggleButton}}" Value="True">
+                                        <Setter Property="Foreground" Value="#FFFFFF"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </ToggleButton>
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF109;" Command="{Binding AddQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_AddLink}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF3DD;" Command="{Binding EditQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_EditLink}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE4DF;" Command="{Binding ImportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ImportLinks}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE0C7;" Command="{Binding ExportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ExportLinks}"/>
-                <Button Height="36" MinWidth="118" Style="{StaticResource PrimaryButtonStyle}" Content="{local:Loc ResourceKey=AiteProfiles_Launch}" Command="{Binding LaunchCommand}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF109;" Foreground="#5EEAD4" Command="{Binding AddQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_AddLink}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF3DD;" Foreground="#CDEBB0" Command="{Binding EditQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_EditLink}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE4DF;" Foreground="#FFD166" Command="{Binding ImportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ImportLinks}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF401;" Foreground="#FFD166" Command="{Binding ExportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ExportLinks}"/>
+                <Button Height="44" MinWidth="118" Style="{StaticResource PrimaryButtonStyle}" Content="{local:Loc ResourceKey=AiteProfiles_Launch}" Command="{Binding LaunchCommand}"/>
             </StackPanel>
         </Grid>
 

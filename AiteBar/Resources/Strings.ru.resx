@@ -1667,9 +1667,9 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiteProfiles_Title" xml:space="preserve"><value>Aite Profiles</value></data>
   <data name="AiteProfiles_AllTab" xml:space="preserve"><value>Все</value></data>
   <data name="AiteProfiles_FavoritesTab" xml:space="preserve"><value>Избранное</value></data>
-  <data name="AiteProfiles_FarmTab" xml:space="preserve"><value>Фарм</value></data>
+  <data name="AiteProfiles_FarmTab" xml:space="preserve"><value>Ферма</value></data>
   <data name="AiteProfiles_SearchPlaceholder" xml:space="preserve"><value>Поиск профилей</value></data>
-  <data name="AiteProfiles_Scan" xml:space="preserve"><value>Скан</value></data>
+  <data name="AiteProfiles_Scan" xml:space="preserve"><value>Сканировать профили</value></data>
   <data name="AiteProfiles_ColumnProfile" xml:space="preserve"><value>Профиль</value></data>
   <data name="AiteProfiles_ColumnEmail" xml:space="preserve"><value>Email</value></data>
   <data name="AiteProfiles_ColumnTime" xml:space="preserve"><value>Время</value></data>
@@ -1689,7 +1689,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiteProfiles_OpenIncognito" xml:space="preserve"><value>Открыть инкогнито</value></data>
   <data name="AiteProfiles_EditTags" xml:space="preserve"><value>Редактировать теги</value></data>
   <data name="AiteProfiles_ToggleFavorite" xml:space="preserve"><value>Переключить избранное</value></data>
-  <data name="AiteProfiles_ToggleFarm" xml:space="preserve"><value>Переключить фарм</value></data>
+  <data name="AiteProfiles_ToggleFarm" xml:space="preserve"><value>В группу «Ферма»</value></data>
   <data name="AiteProfiles_Gemini" xml:space="preserve"><value>Gemini</value></data>
   <data name="AiteProfiles_Gmail" xml:space="preserve"><value>Gmail</value></data>
   <data name="AiteProfiles_Drive" xml:space="preserve"><value>Google Drive</value></data>
@@ -1701,7 +1701,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiteProfiles_TagsPrompt" xml:space="preserve"><value>Теги через запятую</value></data>
   <data name="AiteProfiles_StatusScanning" xml:space="preserve"><value>Сканирование профилей Chrome...</value></data>
   <data name="AiteProfiles_StatusProfiles" xml:space="preserve"><value>Показано профилей: {0}</value></data>
-  <data name="AiteProfiles_StatusNoCachedProfiles" xml:space="preserve"><value>Кэша профилей нет. Нажмите Скан.</value></data>
+  <data name="AiteProfiles_StatusNoCachedProfiles" xml:space="preserve"><value>Кэша профилей нет. Нажмите Сканировать.</value></data>
   <data name="AiteProfiles_StatusScanFailed" xml:space="preserve"><value>Не удалось просканировать профили</value></data>
   <data name="AiteProfiles_StatusEmailCopied" xml:space="preserve"><value>Email скопирован</value></data>
   <data name="AiteProfiles_StatusLinksImported" xml:space="preserve"><value>Импортировано ссылок: {0}</value></data>
@@ -1713,6 +1713,9 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiteProfiles_LinkValidation" xml:space="preserve"><value>Укажите название и хотя бы один HTTP или HTTPS URL.</value></data>
   <data name="AiteProfiles_LinkImportFilter" xml:space="preserve"><value>Текст или JSON (*.txt;*.json)|*.txt;*.json|Все файлы (*.*)|*.*</value></data>
   <data name="AiteProfiles_LinkExportFilter" xml:space="preserve"><value>Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*</value></data>
+  <data name="AiteProfiles_LinkNamePlaceholder" xml:space="preserve"><value>Например: Документы, Рабочая почта...</value></data>
+  <data name="AiteProfiles_LinkTagsPlaceholder" xml:space="preserve"><value>work, mail, ai...</value></data>
+  <data name="AiteProfiles_LinkUrlsPlaceholder" xml:space="preserve"><value>https://example.com/&#10;По одному URL на строку или через |</value></data>
 </root>
 
 

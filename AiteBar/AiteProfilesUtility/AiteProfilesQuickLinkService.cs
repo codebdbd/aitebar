@@ -226,8 +226,8 @@ internal sealed class AiteProfilesQuickLinkService
         var sb = new StringBuilder();
         foreach (AiteProfileSnippet snippet in NormalizeSnippets(snippets))
         {
-            string tag = snippet.Tags.Count > 0 ? snippet.Tags[0] : "misc";
-            sb.Append(tag);
+            List<string> tags = snippet.Tags.Count > 0 ? snippet.Tags : ["misc"];
+            sb.Append(string.Join(',', tags));
             sb.Append(':');
             sb.Append(snippet.Name);
             sb.Append(':');

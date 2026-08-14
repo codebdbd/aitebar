@@ -3,9 +3,10 @@
                   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                   xmlns:local="clr-namespace:AiteBar"
                   Title="{local:Loc ResourceKey=AiteProfiles_QuickLinkDialogTitle}"
-                  Width="460" Height="390"
+                  Width="520" Height="440"
                   WindowStartupLocation="CenterOwner"
-                  ResizeMode="NoResize"
+                  ResizeMode="CanResize"
+                  MinWidth="440" MinHeight="380"
                   ShowInTaskbar="False"
                   Background="#191919"
                   Foreground="#DCDCDC">
@@ -17,7 +18,7 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
-    <Grid Margin="18">
+    <Grid Margin="16">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -28,29 +29,110 @@
 
         <StackPanel Grid.Row="0" Margin="0,0,0,12">
             <TextBlock Text="{local:Loc ResourceKey=AiteProfiles_LinkName}" Foreground="#AEB4BA" Margin="0,0,0,4"/>
-            <TextBox x:Name="NameBox" Height="34" TextChanged="Input_TextChanged"/>
+            <Border x:Name="NameChrome"
+                    Background="{StaticResource FormInputBackground}"
+                    BorderBrush="{StaticResource FormControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Height="34"
+                    SnapsToDevicePixels="True">
+                <Grid>
+                    <TextBox x:Name="NameBox"
+                             Style="{x:Null}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="{StaticResource FormControlForegroundBrush}"
+                             CaretBrush="{StaticResource FormControlForegroundBrush}"
+                             VerticalContentAlignment="Center"
+                             HorizontalContentAlignment="Left"
+                             Padding="10,0"
+                             TextChanged="Input_TextChanged"/>
+                    <TextBlock x:Name="NamePlaceholder"
+                               Text="{local:Loc ResourceKey=AiteProfiles_LinkNamePlaceholder}"
+                               Foreground="{StaticResource PlaceholderForegroundBrush}"
+                               Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False"/>
+                </Grid>
+            </Border>
         </StackPanel>
 
         <StackPanel Grid.Row="1" Margin="0,0,0,12">
             <TextBlock Text="{local:Loc ResourceKey=AiteProfiles_LinkTags}" Foreground="#AEB4BA" Margin="0,0,0,4"/>
-            <TextBox x:Name="TagsBox" Height="34" TextChanged="Input_TextChanged"/>
+            <Border x:Name="TagsChrome"
+                    Background="{StaticResource FormInputBackground}"
+                    BorderBrush="{StaticResource FormControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Height="34"
+                    SnapsToDevicePixels="True">
+                <Grid>
+                    <TextBox x:Name="TagsBox"
+                             Style="{x:Null}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="{StaticResource FormControlForegroundBrush}"
+                             CaretBrush="{StaticResource FormControlForegroundBrush}"
+                             VerticalContentAlignment="Center"
+                             HorizontalContentAlignment="Left"
+                             Padding="10,0"
+                             TextChanged="Input_TextChanged"/>
+                    <TextBlock x:Name="TagsPlaceholder"
+                               Text="{local:Loc ResourceKey=AiteProfiles_LinkTagsPlaceholder}"
+                               Foreground="{StaticResource PlaceholderForegroundBrush}"
+                               Margin="12,0,0,0"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False"/>
+                </Grid>
+            </Border>
         </StackPanel>
 
-        <StackPanel Grid.Row="2" Margin="0,0,0,12">
-            <TextBlock Text="{local:Loc ResourceKey=AiteProfiles_LinkUrls}" Foreground="#AEB4BA" Margin="0,0,0,4"/>
-            <TextBox x:Name="UrlsBox"
-                     AcceptsReturn="True"
-                     TextWrapping="Wrap"
-                     VerticalScrollBarVisibility="Auto"
-                     MinHeight="118"
-                     TextChanged="Input_TextChanged"/>
-        </StackPanel>
+        <Grid Grid.Row="2" Margin="0,0,0,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0"
+                       Text="{local:Loc ResourceKey=AiteProfiles_LinkUrls}"
+                       Foreground="#AEB4BA"
+                       Margin="0,0,0,4"/>
+            <Border x:Name="UrlsChrome"
+                    Grid.Row="1"
+                    Background="{StaticResource FormInputBackground}"
+                    BorderBrush="{StaticResource FormControlBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    SnapsToDevicePixels="True">
+                <Grid>
+                    <TextBox x:Name="UrlsBox"
+                             Style="{x:Null}"
+                             Background="Transparent"
+                             BorderThickness="0"
+                             Foreground="{StaticResource FormControlForegroundBrush}"
+                             CaretBrush="{StaticResource FormControlForegroundBrush}"
+                             AcceptsReturn="True"
+                             AcceptsTab="True"
+                             TextWrapping="NoWrap"
+                             HorizontalScrollBarVisibility="Auto"
+                             VerticalScrollBarVisibility="Auto"
+                             Padding="10,8"
+                             TextChanged="Input_TextChanged"/>
+                    <TextBlock x:Name="UrlsPlaceholder"
+                               Text="{local:Loc ResourceKey=AiteProfiles_LinkUrlsPlaceholder}"
+                               Foreground="{StaticResource PlaceholderForegroundBrush}"
+                               Margin="12,8,0,0"
+                               IsHitTestVisible="False"
+                               VerticalAlignment="Top"
+                               TextWrapping="NoWrap"/>
+                </Grid>
+            </Border>
+        </Grid>
 
         <TextBlock Grid.Row="3" x:Name="StatusText" Foreground="#D06A6A" FontSize="12" Margin="0,0,0,12"/>
 
         <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="{local:Loc ResourceKey=Common_Cancel}" Width="96" Margin="0,0,8,0" Click="Cancel_Click" Style="{StaticResource SecondaryButtonStyle}"/>
-            <Button x:Name="SaveButton" Content="{local:Loc ResourceKey=Common_Save}" Width="96" Click="Save_Click" Style="{StaticResource PrimaryButtonStyle}"/>
+            <Button Content="{local:Loc ResourceKey=Common_Cancel}" Width="110" Height="38" Margin="0,0,8,0" Click="Cancel_Click" Style="{StaticResource SecondaryButtonStyle}"/>
+            <Button x:Name="SaveButton" Content="{local:Loc ResourceKey=Common_Save}" Width="110" Height="38" Click="Save_Click" Style="{StaticResource PrimaryButtonStyle}"/>
         </StackPanel>
     </Grid>
 </local:DarkWindow>

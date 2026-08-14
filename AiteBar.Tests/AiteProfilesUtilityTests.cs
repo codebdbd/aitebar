@@ -94,4 +94,38 @@ public sealed class AiteProfilesUtilityTests
         Assert.NotNull(definition);
         Assert.Equal("Main_AiteProfilesTooltip", definition.TooltipKey);
     }
+
+    [Fact]
+    public void BuildTextExport_ExportsAllTags_RoundTripMatches()
+    {
+        var service = new AiteProfilesQuickLinkService(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+        var snippets = new[]
+        {
+            new AiteProfileSnippet { Name = "Multi", Tags = ["work", "ai", "docs"], Urls = ["https://example.com/"] },
+            new AiteProfileSnippet { Name = "Single", Tags = ["mail"], Urls = ["https://mail.google.com/"] }
+        };
+
+        string exported = service.BuildTextExport(snippets);
+        IReadOnlyList<AiteProfileSnippet> reimported = service.ParseImportLines(exported);
+
+        AiteProfileSnippet multi = Assert.Single(reimported, s => s.Name == "Multi");
+        Assert.Equal(["ai", "docs", "work"], multi.Tags.OrderBy(x => x, StringComparer.Ordinal));
+
+        AiteProfileSnippet single = Assert.Single(reimported, s => s.Name == "Single");
+        Assert.Equal(["mail"], single.Tags);
+    }
+
+    [Fact]
+    public void BuildTextExport_SingleTag_FormatPreservedLegacyCompatible()
+    {
+        var service = new AiteProfilesQuickLinkService(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+        var snippets = new[]
+        {
+            new AiteProfileSnippet { Name = "Legacy", Tags = ["misc"], Urls = ["https://example.com/"] }
+        };
+
+        string exported = service.BuildTextExport(snippets).TrimEnd();
+
+        Assert.Equal("misc:Legacy:https://example.com/", exported);
+    }
 }

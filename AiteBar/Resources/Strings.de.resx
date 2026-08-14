@@ -1004,7 +1004,7 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="AiteProfiles_OpenIncognito" xml:space="preserve"><value>Open incognito</value></data>
   <data name="AiteProfiles_EditTags" xml:space="preserve"><value>Edit tags</value></data>
   <data name="AiteProfiles_ToggleFavorite" xml:space="preserve"><value>Toggle favorite</value></data>
-  <data name="AiteProfiles_ToggleFarm" xml:space="preserve"><value>Toggle farm</value></data>
+  <data name="AiteProfiles_ToggleFarm" xml:space="preserve"><value>Add to Farm group</value></data>
   <data name="AiteProfiles_Gemini" xml:space="preserve"><value>Gemini</value></data>
   <data name="AiteProfiles_Gmail" xml:space="preserve"><value>Gmail</value></data>
   <data name="AiteProfiles_Drive" xml:space="preserve"><value>Google Drive</value></data>
@@ -1028,6 +1028,9 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="AiteProfiles_LinkValidation" xml:space="preserve"><value>Enter a name and at least one HTTP or HTTPS URL.</value></data>
   <data name="AiteProfiles_LinkImportFilter" xml:space="preserve"><value>Text or JSON files (*.txt;*.json)|*.txt;*.json|All files (*.*)|*.*</value></data>
   <data name="AiteProfiles_LinkExportFilter" xml:space="preserve"><value>Text files (*.txt)|*.txt|All files (*.*)|*.*</value></data>
+  <data name="AiteProfiles_LinkNamePlaceholder" xml:space="preserve"><value>Example: Docs, Work mail...</value></data>
+  <data name="AiteProfiles_LinkTagsPlaceholder" xml:space="preserve"><value>work, mail, ai...</value></data>
+  <data name="AiteProfiles_LinkUrlsPlaceholder" xml:space="preserve"><value>https://example.com/&#10;One URL per line, or separated by |</value></data>
 </root>
 
 

@@ -42,6 +42,16 @@ internal sealed class AiteProfilesChromeScanner : IAiteProfilesScanner
         "CertificateRevocation"
     };
 
+    private static readonly HashSet<string> DefaultProfileNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Your Chrome",
+        "Ваш Chrome",
+        "Profile",
+        "Профиль",
+        "Default",
+        "Person"
+    };
+
     public Task<IReadOnlyList<AiteProfileScanRow>> ScanAsync(
         IReadOnlyDictionary<string, AiteProfileCacheEntry>? cache = null,
         bool includeExpensiveStats = true,
@@ -125,14 +135,25 @@ internal sealed class AiteProfilesChromeScanner : IAiteProfilesScanner
 
         try
         {
-            string fallbackName = names.TryGetValue(folder, out string? profileName) ? profileName : string.Empty;
-            string name = cacheHit ? cached!.Name : ReadProfileDisplayName(fullPath);
+            string email = cacheHit ? cached!.Email : ReadProfileEmail(fullPath);
+            string gaiaFallback = names.TryGetValue(folder, out string? profileName) && !IsDefaultProfileName(profileName) ? profileName : string.Empty;
+            string prefsName = cacheHit ? string.Empty : ReadProfileDisplayName(fullPath);
+            string cachedName = cacheHit && !IsDefaultProfileName(cached!.Name) ? cached.Name : string.Empty;
+
+            string name = gaiaFallback;
             if (string.IsNullOrWhiteSpace(name))
             {
-                name = fallbackName;
+                name = cachedName;
+            }
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                name = prefsName;
+            }
+            if (string.IsNullOrWhiteSpace(name) && email.Contains('@', StringComparison.Ordinal))
+            {
+                name = email.Split('@', 2)[0];
             }
 
-            string email = cacheHit ? cached!.Email : ReadProfileEmail(fullPath);
             int bookmarks = cacheHit ? cached!.Bookmarks : GetBookmarksCount(fullPath);
             string avatarPath = ResolveAvatarPath(fullPath);
             double diskMb = cached?.DiskMb ?? -1.0;
@@ -160,11 +181,22 @@ internal sealed class AiteProfilesChromeScanner : IAiteProfilesScanner
         catch (Exception ex)
         {
             Logger.Log(ex);
+            string email = cached?.Email ?? string.Empty;
+            string gaiaFallback = names.TryGetValue(folder, out string? profileName) && !IsDefaultProfileName(profileName) ? profileName : string.Empty;
+            string name = gaiaFallback;
+            if (string.IsNullOrWhiteSpace(name) && !IsDefaultProfileName(cached?.Name ?? string.Empty))
+            {
+                name = cached!.Name;
+            }
+            if (string.IsNullOrWhiteSpace(name) && email.Contains('@', StringComparison.Ordinal))
+            {
+                name = email.Split('@', 2)[0];
+            }
             return new AiteProfileScanRow
             {
                 Folder = folder,
-                Name = cached?.Name ?? folder,
-                Email = cached?.Email ?? string.Empty,
+                Name = string.IsNullOrWhiteSpace(name) ? folder : name,
+                Email = email,
                 LastTs = cached?.LastTs ?? 0,
                 Path = fullPath,
                 Sig = sig,
@@ -196,14 +228,18 @@ internal sealed class AiteProfilesChromeScanner : IAiteProfilesScanner
                 }
 
                 string name = ToText(meta["gaia_name"]);
-                if (string.IsNullOrWhiteSpace(name))
+                if (string.IsNullOrWhiteSpace(name) || IsDefaultProfileName(name))
                 {
                     name = ToText(meta["gaia_given_name"]);
                 }
 
-                if (string.IsNullOrWhiteSpace(name))
+                if (string.IsNullOrWhiteSpace(name) || IsDefaultProfileName(name))
                 {
-                    name = ToText(meta["name"]);
+                    string rawName = ToText(meta["name"]);
+                    if (!IsDefaultProfileName(rawName))
+                    {
+                        name = rawName;
+                    }
                 }
 
                 if (!string.IsNullOrWhiteSpace(name))
@@ -241,12 +277,33 @@ internal sealed class AiteProfilesChromeScanner : IAiteProfilesScanner
         foreach (string filename in new[] { "Preferences", "Secure Preferences" })
         {
             JsonObject? root = ReadJsonObject(Path.Combine(profilePath, filename));
-            AddCandidate(candidates, root?["profile"]?["name"]);
             AddCandidate(candidates, root?["account_info"]?[0]?["full_name"]);
             AddCandidate(candidates, root?["account_info"]?[0]?["given_name"]);
+            AddCandidate(candidates, root?["profile"]?["name"]);
         }
 
-        return candidates.FirstOrDefault(static value => !string.IsNullOrWhiteSpace(value)) ?? string.Empty;
+        return candidates.FirstOrDefault(static value => !string.IsNullOrWhiteSpace(value) && !IsDefaultProfileName(value)) ?? string.Empty;
+    }
+
+    private static bool IsDefaultProfileName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return true;
+        }
+
+        string trimmed = name.Trim();
+        if (DefaultProfileNames.Contains(trimmed))
+        {
+            return true;
+        }
+
+        if (Regex.IsMatch(trimmed, @"^(Profile|Профиль)\s*\d*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant))
+        {
+            return true;
+        }
+
+        return false;
     }
 
     private static int GetBookmarksCount(string profilePath)

@@ -15,8 +15,17 @@ namespace AiteBar.AiteProfilesUtility;
 public partial class AiteProfilesWindow : DarkWindow
 {
     private readonly AiteProfilesViewModel _viewModel;
-    private bool _suppressAutoHide;
+    private int _suppressAutoHideRefCount;
     private bool _initialized;
+
+    private void PushSuppressAutoHide() => _suppressAutoHideRefCount++;
+    private void PopSuppressAutoHide()
+    {
+        if (_suppressAutoHideRefCount > 0)
+        {
+            _suppressAutoHideRefCount--;
+        }
+    }
 
     public AiteProfilesWindow(AppSettingsService settingsService)
     {
@@ -79,7 +88,7 @@ public partial class AiteProfilesWindow : DarkWindow
 
     private void Window_Deactivated(object sender, EventArgs e)
     {
-        if (_suppressAutoHide)
+        if (_suppressAutoHideRefCount > 0)
         {
             return;
         }
@@ -87,15 +96,33 @@ public partial class AiteProfilesWindow : DarkWindow
         Hide();
     }
 
-    private void ContextMenu_Opened(object sender, RoutedEventArgs e) => _suppressAutoHide = true;
+    private void ContextMenu_Opened(object sender, RoutedEventArgs e)
+    {
+        PushSuppressAutoHide();
+        UpdateContextMenuState();
+    }
 
     private void ContextMenu_Closed(object sender, RoutedEventArgs e)
     {
-        _suppressAutoHide = false;
-        if (!IsActive)
+        PopSuppressAutoHide();
+        if (_suppressAutoHideRefCount == 0 && !IsActive)
         {
             Hide();
         }
+    }
+
+    private void UpdateContextMenuState()
+    {
+        AiteProfileListItemViewModel? profile = _viewModel.SelectedProfiles.FirstOrDefault() ?? _viewModel.CurrentProfile;
+        bool multipleSelected = _viewModel.SelectedProfiles.Count > 1;
+
+        OpenSelectedMenuItem.Visibility = multipleSelected ? Visibility.Visible : Visibility.Collapsed;
+
+        bool isFavorite = profile?.IsFavorite ?? false;
+        ToggleFavoriteMenuItem.Header = isFavorite ? "Удалить из избранного" : "Добавить в избранное";
+
+        bool isFarm = profile?.IsFarm ?? false;
+        ToggleFarmMenuItem.Header = isFarm ? "Удалить из \"Ферма\"" : "Добавить в \"Ферма\"";
     }
 
     private void ProfilesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -321,7 +348,7 @@ public partial class AiteProfilesWindow : DarkWindow
             return;
         }
 
-        _suppressAutoHide = true;
+        PushSuppressAutoHide();
         try
         {
             var dialog = new AiteProfilesTagsDialog(profile.TagsText)
@@ -335,13 +362,13 @@ public partial class AiteProfilesWindow : DarkWindow
         }
         finally
         {
-            _suppressAutoHide = false;
+            PopSuppressAutoHide();
         }
     }
 
     private async Task EditQuickLinkAsync(AiteProfileSnippet? original)
     {
-        _suppressAutoHide = true;
+        PushSuppressAutoHide();
         try
         {
             var dialog = new AiteProfilesQuickLinkDialog(_viewModel.GetSnippets(), original)
@@ -355,13 +382,13 @@ public partial class AiteProfilesWindow : DarkWindow
         }
         finally
         {
-            _suppressAutoHide = false;
+            PopSuppressAutoHide();
         }
     }
 
     private async Task ImportQuickLinksAsync()
     {
-        _suppressAutoHide = true;
+        PushSuppressAutoHide();
         try
         {
             var dialog = new Microsoft.Win32.OpenFileDialog
@@ -376,13 +403,13 @@ public partial class AiteProfilesWindow : DarkWindow
         }
         finally
         {
-            _suppressAutoHide = false;
+            PopSuppressAutoHide();
         }
     }
 
     private async Task ExportQuickLinksAsync()
     {
-        _suppressAutoHide = true;
+        PushSuppressAutoHide();
         try
         {
             var dialog = new Microsoft.Win32.SaveFileDialog
@@ -397,20 +424,20 @@ public partial class AiteProfilesWindow : DarkWindow
         }
         finally
         {
-            _suppressAutoHide = false;
+            PopSuppressAutoHide();
         }
     }
 
     private void ShowMessage(string title, string message)
     {
-        _suppressAutoHide = true;
+        PushSuppressAutoHide();
         try
         {
             new DarkDialog(message) { Owner = this, Title = title }.ShowDialog();
         }
         finally
         {
-            _suppressAutoHide = false;
+            PopSuppressAutoHide();
         }
     }
 }

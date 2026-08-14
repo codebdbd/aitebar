@@ -28,6 +28,7 @@ public partial class AiteProfilesQuickLinkDialog : DarkWindow
 
         Loaded += (_, _) =>
         {
+            UpdatePlaceholders();
             NameBox.Focus();
             NameBox.SelectAll();
         };
@@ -36,7 +37,29 @@ public partial class AiteProfilesQuickLinkDialog : DarkWindow
 
     internal AiteProfileSnippet? ResultSnippet { get; private set; }
 
-    private void Input_TextChanged(object sender, TextChangedEventArgs e) => UpdateState();
+    private void Input_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        UpdateState();
+        UpdatePlaceholders();
+    }
+
+    private void UpdatePlaceholders()
+    {
+        if (NamePlaceholder is not null)
+        {
+            NamePlaceholder.Visibility = string.IsNullOrWhiteSpace(NameBox?.Text) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        if (TagsPlaceholder is not null)
+        {
+            TagsPlaceholder.Visibility = string.IsNullOrWhiteSpace(TagsBox?.Text) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        if (UrlsPlaceholder is not null)
+        {
+            UrlsPlaceholder.Visibility = string.IsNullOrWhiteSpace(UrlsBox?.Text) ? Visibility.Visible : Visibility.Collapsed;
+        }
+    }
 
     private void Save_Click(object sender, RoutedEventArgs e)
     {
