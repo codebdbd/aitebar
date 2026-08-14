@@ -661,7 +661,7 @@ public sealed class IconConverterService
                 break;
         }
 
-        canvas.DrawBitmap(bitmap, 0, 0);
+        canvas.DrawBitmap(bitmap, 0, 0, SKSamplingOptions.Default);
         canvas.Flush();
         bitmap.Dispose();
         return oriented;
