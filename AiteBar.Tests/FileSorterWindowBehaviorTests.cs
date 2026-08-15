@@ -48,9 +48,9 @@ public sealed class FileSorterWindowBehaviorTests
                 Assert.True(desktopActions[0].IsEnabled);
                 Assert.False(downloadsActions[0].IsEnabled);
                 Assert.True(desktopActions[1].IsEnabled);
-                Assert.Equal("\uE7A7", desktopActions[0].Content);
-                Assert.Equal("\uE838", desktopActions[1].Content);
-                Assert.Equal("Segoe MDL2 Assets", desktopActions[0].FontFamily.Source);
+                Assert.Equal("\uF19A", desktopActions[0].Content);
+                Assert.Equal("\uF42F", desktopActions[1].Content);
+                Assert.Equal("./Resources/#FluentSystemIcons-Regular", desktopActions[0].FontFamily.Source);
 
                 Assert.NotNull(window.FindName("TxtSelectionCount"));
                 Assert.NotNull(window.FindName("TxtOverallStatus"));

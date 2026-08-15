@@ -20,6 +20,14 @@
 - **Utility background**: unified background across all utilities to #191919 via the PanelBackground resource.
 - **Удаление документов в Zen Editor**: добавлена кнопка удаления документа прямо в строку списка документов с глифом U+F34D; кнопка скрыта для текущего документа.
 - **Zen Editor document deletion**: added delete button directly in the document list row with glyph U+F34D; button is hidden for the current document.
+- **Кнопка удаления папки в FileSorter**: добавлена кнопка удаления сохранённой папки в строку списка (глиф U+F34D); скрыта для системных папок (Desktop, Downloads); IsEnabled синхронизирован с состоянием busy.
+- **FileSorter remove folder button**: added saved-folder removal button in the list row (glyph U+F34D); hidden for system folders (Desktop, Downloads); IsEnabled syncs with the busy state.
+- **Автокопирование в Zen Editor**: убрано автоматическое копирование выделения в буфер обмена (Ctrl+A и обычное выделение больше не затирают буфер пользователя); копирование только явно через Ctrl+C или меню.
+- **Zen Editor auto-copy on selection**: removed automatic selection-to-clipboard copy (Ctrl+A and regular selection no longer overwrite the user's clipboard); copying is now explicit via Ctrl+C or the menu only.
+- **Синхронизация версии сборки**: исправлена рассинхронизация версии между AiteBar.csproj (1.15.12), AssemblyInfo.cs и installer/AiteBar.iss, которая вызывала FileNotFoundException при старте; добавлен тест ReleaseVersionTests для контроля синхронизации.
+- **Assembly version sync**: fixed version mismatch between AiteBar.csproj (1.15.12), AssemblyInfo.cs, and installer/AiteBar.iss that caused a startup FileNotFoundException; ReleaseVersionTests test added to guard the sync.
+- **Релизные тесты**: актуализированы ожидания глифов FileSorterWindow и ZenEditor под FluentSystemIcons-Regular.
+- **Release tests**: updated FileSorterWindow and ZenEditor glyph expectations for FluentSystemIcons-Regular.
 
 ## [1.15.11] - 2026-08-12
 

@@ -8,7 +8,7 @@ public sealed class ZenEditorIntegrationTests
     [Fact]
     public void PanelCatalog_UsesRequestedFluentGlyph()
     {
-        Assert.Equal("\uE367", UtilityButtonCatalog.ZenEditor.Icon);
+        Assert.Equal("\uF1EC", UtilityButtonCatalog.ZenEditor.Icon);
         Assert.Equal("ZenEditor", UtilityButtonCatalog.ZenEditor.Id);
     }
 
