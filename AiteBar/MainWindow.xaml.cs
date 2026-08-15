@@ -1011,6 +1011,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
             case HotkeyCommand.ZenEditor:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("ZenEditor", HideDock));
                 break;
+            case HotkeyCommand.AiteProfiles:
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("AiteProfiles", HideDock));
+                break;
         }
     }
 

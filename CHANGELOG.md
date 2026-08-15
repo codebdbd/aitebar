@@ -9,6 +9,18 @@
 
 ## [Unreleased]
 
+## [1.15.12] - 2026-08-15
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Глифы утилит**: исправлены глифы для FileSorterWindow (удаление, открыть папку, откатить), ZenEditor, FileSorter, PromptBuilder и AiteProfiles для соответствия шрифту FluentSystemIcons-Regular.
+- **Utility glyphs**: fixed glyphs for FileSorterWindow (delete, open folder, undo), ZenEditor, FileSorter, PromptBuilder, and AiteProfiles to match the FluentSystemIcons-Regular font.
+- **Цвета кнопок AiteProfiles**: унифицированы цвета кнопок — закрепить и ротация используют один цвет (#FFD166), остальные кнопки — другой (#5EEAD4).
+- **AiteProfiles button colors**: unified button colors — pin and rotation use the same color (#FFD166), other buttons use a different color (#5EEAD4).
+- **Фон утилит**: унифицирован фон всех утилит на #191919 через ресурс PanelBackground.
+- **Utility background**: unified background across all utilities to #191919 via the PanelBackground resource.
+- **Удаление документов в Zen Editor**: добавлена кнопка удаления документа прямо в строку списка документов с глифом U+F34D; кнопка скрыта для текущего документа.
+- **Zen Editor document deletion**: added delete button directly in the document list row with glyph U+F34D; button is hidden for the current document.
+
 ## [1.15.11] - 2026-08-12
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed

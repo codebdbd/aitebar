@@ -580,9 +580,6 @@ public sealed class ActionServiceTests
     [InlineData("Record")]
     [InlineData("Calculator")]
     [InlineData("Explorer")]
-    [InlineData("Downloads")]
-    [InlineData("ShowDesktop")]
-    [InlineData("AppsFolder")]
     public async Task SystemUtilityLaunch_WhenRuntimeReturnsNull_ThrowsLocalizedFailure(string utility)
     {
         var runtime = new FakeActionServiceRuntime();
@@ -596,9 +593,6 @@ public sealed class ActionServiceTests
             "Record" => service.StartRecordVideoAsync(),
             "Calculator" => service.StartCalculatorAsync(),
             "Explorer" => service.StartExplorerAsync(),
-            "Downloads" => service.StartDownloadsAsync(),
-            "ShowDesktop" => service.StartShowDesktopAsync(),
-            "AppsFolder" => service.StartAppsFolderAsync(),
             _ => throw new ArgumentOutOfRangeException(nameof(utility))
         };
 

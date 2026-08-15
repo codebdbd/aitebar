@@ -35,7 +35,8 @@ public partial class ZenEditorDocumentPicker : DarkWindow
             summary.Id,
             summary.ModifiedUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss"),
             summary.Title,
-            summary.IsCurrent ? "•" : string.Empty)).ToList();
+            summary.IsCurrent ? "•" : string.Empty,
+            summary.IsCurrent)).ToList();
         DocumentList.ItemsSource = _items;
         DocumentList.SelectedIndex = _items.Count > 0 ? 0 : -1;
         _prefixTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(900) };
@@ -121,6 +122,16 @@ public partial class ZenEditorDocumentPicker : DarkWindow
 
     private void DocumentList_MouseDoubleClick(object sender, MouseButtonEventArgs e) => AcceptSelected();
 
+    private void DeleteButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button button && button.Tag is Guid documentId)
+        {
+            SelectedDocumentId = documentId;
+            DeleteRequested = true;
+            DialogResult = true;
+        }
+    }
+
     private void AcceptSelected()
     {
         if (DocumentList.SelectedItem is not PickerItem selected)
@@ -136,5 +147,5 @@ public partial class ZenEditorDocumentPicker : DarkWindow
     private static SolidColorBrush BrushFrom(string color) =>
         new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
 
-    private sealed record PickerItem(Guid Id, string Modified, string Title, string CurrentMarker);
+    private sealed record PickerItem(Guid Id, string Modified, string Title, string CurrentMarker, bool IsCurrent);
 }

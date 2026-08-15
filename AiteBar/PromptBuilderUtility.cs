@@ -12,7 +12,7 @@ public sealed class PromptBuilderUtility : UtilityBase<PromptBuilderWindow>
 
     public override string Id => "PromptBuilder";
     public override string DisplayNameKey => "Tool_PromptBuilder";
-    public override string IconGlyph => "\uE945";
+    public override string IconGlyph => "\uF6A6";
     public override string IconColor => UtilityIconColors.AiTools;
 
     protected override PromptBuilderWindow CreateWindow(AppSettingsService settingsService, Window? owner)

@@ -9,7 +9,7 @@ public class FileSorterUtility : UtilityBase<FileSorterWindow>
 {
     public override string Id => "FileSorter";
     public override string DisplayNameKey => "Tool_FileSorter";
-    public override string IconGlyph => "\uF202";
+    public override string IconGlyph => "\uF18B";
     public override string IconColor => UtilityIconColors.FolderAccess;
 
     protected override FileSorterWindow CreateWindow(AppSettingsService settingsService, Window? owner)

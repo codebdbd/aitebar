@@ -62,7 +62,7 @@ internal static class UtilityButtonCatalog
         (settings, visible) => settings.ShowPresetDownloads = visible);
 
     public static UtilityButtonDefinition FileSorter { get; } = new(
-        "FileSorter", "\uF202", UtilityIconColors.FolderAccess, "Main_FileSorterTooltip",
+        "FileSorter", "\uF18B", UtilityIconColors.FolderAccess, "Main_FileSorterTooltip",
         settings => settings.ShowPresetFileSorter,
         (settings, visible) => settings.ShowPresetFileSorter = visible);
 
@@ -117,17 +117,17 @@ internal static class UtilityButtonCatalog
         (settings, visible) => settings.ShowPresetTextProcessing = visible);
 
     public static UtilityButtonDefinition PromptBuilder { get; } = new(
-        "PromptBuilder", "\U000F0631", UtilityIconColors.AiTools, "Main_PromptBuilderTooltip",
+        "PromptBuilder", "\uF6A6", UtilityIconColors.AiTools, "Main_PromptBuilderTooltip",
         settings => settings.ShowPresetPromptBuilder,
         (settings, visible) => settings.ShowPresetPromptBuilder = visible);
 
     public static UtilityButtonDefinition ZenEditor { get; } = new(
-        "ZenEditor", "\uE367", UtilityIconColors.TextWorkspace, "Main_ZenEditorTooltip",
+        "ZenEditor", "\uF1EC", UtilityIconColors.TextWorkspace, "Main_ZenEditorTooltip",
         settings => settings.ShowPresetZenEditor,
         (settings, visible) => settings.ShowPresetZenEditor = visible);
 
     public static UtilityButtonDefinition AiteProfiles { get; } = new(
-        "AiteProfiles", "\uE716", UtilityIconColors.SearchAndNavigation, "Main_AiteProfilesTooltip",
+        "AiteProfiles", "\uF409", UtilityIconColors.SearchAndNavigation, "Main_AiteProfilesTooltip",
         settings => settings.ShowPresetAiteProfiles,
         (settings, visible) => settings.ShowPresetAiteProfiles = visible);
 

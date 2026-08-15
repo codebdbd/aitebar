@@ -18,7 +18,9 @@ namespace AiteBar;
 [SupportedOSPlatform("windows6.1")]
 public partial class FileSorterWindow : DarkWindow
 {
-    private static readonly FontFamily RowActionIconFont = new("Segoe MDL2 Assets");
+    private static readonly FontFamily RowActionIconFont = new FontFamily(
+        new Uri("pack://application:,,,/"),
+        "./Resources/#FluentSystemIcons-Regular");
     private readonly AppSettingsService _settingsService;
     private readonly FileSorterService _fileSorterService = new();
     private readonly List<FolderListEntry> _folderEntries = [];
@@ -171,7 +173,7 @@ public partial class FileSorterWindow : DarkWindow
         string undoTooltip = LocalizationService.Get("FileSorter_UndoFolderTooltip");
         var undoButton = new Button
         {
-            Content = "\uE7A7",
+            Content = "\uF19A",
             Style = (Style)FindResource("FolderActionButtonStyle"),
             FontFamily = RowActionIconFont,
             ToolTip = undoTooltip
@@ -182,7 +184,7 @@ public partial class FileSorterWindow : DarkWindow
         string openTooltip = LocalizationService.Get("FileSorter_OpenFolderTooltip");
         var openButton = new Button
         {
-            Content = "\uE838",
+            Content = "\uF42F",
             Style = (Style)FindResource("FolderActionButtonStyle"),
             FontFamily = RowActionIconFont,
             ToolTip = openTooltip
@@ -190,8 +192,21 @@ public partial class FileSorterWindow : DarkWindow
         System.Windows.Automation.AutomationProperties.SetName(openButton, openTooltip);
         openButton.Click += (_, _) => OpenFolder(path);
 
+        string removeTooltip = LocalizationService.Get("FileSorter_RemoveFolderContextMenu");
+        var removeButton = new Button
+        {
+            Content = "\uF34D",
+            Style = (Style)FindResource("FolderActionButtonStyle"),
+            FontFamily = RowActionIconFont,
+            ToolTip = removeTooltip,
+            Visibility = isSystem ? Visibility.Collapsed : Visibility.Visible
+        };
+        System.Windows.Automation.AutomationProperties.SetName(removeButton, removeTooltip);
+        removeButton.Click += async (_, _) => await RemoveSavedFolderAsync(path);
+
         actionsPanel.Children.Add(undoButton);
         actionsPanel.Children.Add(openButton);
+        actionsPanel.Children.Add(removeButton);
         Grid.SetColumn(actionsPanel, 3);
         grid.Children.Add(actionsPanel);
 
@@ -212,7 +227,7 @@ public partial class FileSorterWindow : DarkWindow
             ContextMenu menu = AppContextMenuFactory.CreateMenu(this);
             menu.Items.Add(AppContextMenuFactory.CreateItem(
                 this,
-                "\uE74D",
+                "\uF34D",
                 LocalizationService.Get("FileSorter_RemoveFolderContextMenu"),
                 async (_, _) => await RemoveSavedFolderAsync(path),
                 isDanger: true));
@@ -265,6 +280,20 @@ public partial class FileSorterWindow : DarkWindow
             entry.CheckBox.IsHitTestVisible = acceptsInput;
             entry.OpenButton.IsEnabled = Directory.Exists(entry.Path);
             entry.OpenButton.IsHitTestVisible = acceptsInput;
+            Grid? rowGrid = entry.CheckBox.Parent as Grid;
+            if (rowGrid != null)
+            {
+                Button? deleteGlyphButton = rowGrid.Children
+                    .OfType<StackPanel>()
+                    .Where(panel => Grid.GetColumn(panel) == 3)
+                    .SelectMany(panel => panel.Children.OfType<Button>())
+                    .FirstOrDefault(btn => string.Equals("\uF34D", btn.Content as string, StringComparison.Ordinal));
+                if (deleteGlyphButton != null)
+                {
+                    deleteGlyphButton.IsEnabled = acceptsInput;
+                    deleteGlyphButton.IsHitTestVisible = acceptsInput;
+                }
+            }
             entry.UndoButton.IsEnabled = FindUndoState(entry.Path) != null;
             entry.UndoButton.IsHitTestVisible = acceptsInput;
         }

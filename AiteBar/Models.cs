@@ -222,6 +222,7 @@ public class AppSettings
     public HotkeyBinding TextProcessingHotkey { get; set; } = new();
     public HotkeyBinding PromptBuilderHotkey { get; set; } = new();
     public HotkeyBinding ZenEditorHotkey { get; set; } = new();
+    public HotkeyBinding AiteProfilesHotkey { get; set; } = new();
     public FileSortUndoState? LastFileSortOperation { get; set; }
     public MultiFileSortUndoState? LastMultiFileSortOperation { get; set; }
     public List<string> SavedFileSortFolders { get; set; } = [];

@@ -130,6 +130,7 @@ public sealed class FileSorterWindowBehaviorTests
             .OfType<StackPanel>()
             .Where(panel => Grid.GetColumn(panel) == 3)
             .SelectMany(panel => panel.Children.OfType<Button>())
+            .Where(btn => btn.Visibility == Visibility.Visible)
             .ToArray();
 
     private static FileSortUndoState CreateUndoState(string rootPath) =>

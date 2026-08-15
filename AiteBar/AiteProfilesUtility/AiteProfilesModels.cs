@@ -83,13 +83,14 @@ internal sealed class AiteProfileListItemViewModel : NotifyObject
     private bool _isFavorite;
     private bool _isFarm;
     private string _tagsText;
+    private long _lastTs;
 
     public AiteProfileListItemViewModel(AiteProfile profile)
     {
         Folder = profile.Folder;
         Name = string.IsNullOrWhiteSpace(profile.Name) ? profile.Folder : profile.Name;
         Email = profile.Email;
-        LastTs = profile.LastTs;
+        _lastTs = profile.LastTs;
         Path = profile.Path;
         Bookmarks = profile.Bookmarks;
         DiskMb = profile.DiskMb;
@@ -104,7 +105,20 @@ internal sealed class AiteProfileListItemViewModel : NotifyObject
     public string Folder { get; }
     public string Name { get; }
     public string Email { get; }
-    public long LastTs { get; }
+
+    public long LastTs
+    {
+        get => _lastTs;
+        set
+        {
+            if (SetProperty(ref _lastTs, value))
+            {
+                OnPropertyChanged(nameof(LastLaunchDate));
+                OnPropertyChanged(nameof(LastLaunchTime));
+            }
+        }
+    }
+
     public string Path { get; }
     public int Bookmarks { get; }
     public double DiskMb { get; }

@@ -150,6 +150,7 @@ public sealed class HotkeyServiceTests
         Assert.True(service.TryGetCommand(HotkeyService.TextProcessingId, out var textProcessing));
         Assert.True(service.TryGetCommand(HotkeyService.PromptBuilderId, out var promptBuilder));
         Assert.True(service.TryGetCommand(HotkeyService.ZenEditorId, out var zenEditor));
+        Assert.True(service.TryGetCommand(HotkeyService.AiteProfilesId, out var aiteProfiles));
         Assert.False(service.TryGetCommand(123, out _));
         Assert.Equal(HotkeyCommand.FileSorter, fileSorter);
         Assert.Equal(HotkeyCommand.IconConverter, iconConverter);
@@ -159,6 +160,7 @@ public sealed class HotkeyServiceTests
         Assert.Equal(HotkeyCommand.TextProcessing, textProcessing);
         Assert.Equal(HotkeyCommand.PromptBuilder, promptBuilder);
         Assert.Equal(HotkeyCommand.ZenEditor, zenEditor);
+        Assert.Equal(HotkeyCommand.AiteProfiles, aiteProfiles);
     }
 
     [Fact]
@@ -193,6 +195,7 @@ public sealed class HotkeyServiceTests
                 HotkeyCommand.TextProcessing,
                 HotkeyCommand.PromptBuilder,
                 HotkeyCommand.ZenEditor,
+                HotkeyCommand.AiteProfiles,
                 HotkeyCommand.ActivateContext0,
                 HotkeyCommand.ActivateContext1,
                 HotkeyCommand.ActivateContext2,

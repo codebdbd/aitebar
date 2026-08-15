@@ -157,6 +157,32 @@ internal sealed class AiteProfilesStore
         }
     }
 
+    public async Task<long> UpdateLastLaunchAsync(string folder, string path, CancellationToken cancellationToken = default)
+    {
+        string key = AiteProfileKey.Build(folder, path);
+        long ts = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            _profiles = _profiles.Select(profile => string.Equals(AiteProfileKey.Build(profile.Folder, profile.Path), key, StringComparison.Ordinal)
+                ? profile with { LastTs = ts }
+                : profile).ToList();
+
+            AiteProfilesCacheDocument cache = await LoadCacheAsync(cancellationToken).ConfigureAwait(false);
+            if (cache.Profiles.TryGetValue(key, out AiteProfileCacheEntry? entry))
+            {
+                cache.Profiles[key] = entry with { LastTs = ts };
+                await AiteProfilesJsonStore.WriteAsync(_cachePath, cache, cancellationToken).ConfigureAwait(false);
+            }
+
+            return ts;
+        }
+        finally
+        {
+            _gate.Release();
+        }
+    }
+
     internal static string NormalizeTags(string tagsText)
     {
         if (string.IsNullOrWhiteSpace(tagsText))

@@ -324,7 +324,8 @@ public partial class AppSettingsWindow : DarkWindow
         (QuickToolRowTimerStopwatch, "QuickTool_TimerStopwatch_Title"),
         (QuickToolRowTextProcessing, "QuickTool_TextProcessing_Title"),
         (QuickToolRowPromptBuilder, "QuickTool_PromptBuilder_Title"),
-        (QuickToolRowZenEditor, "QuickTool_ZenEditor_Title")
+        (QuickToolRowZenEditor, "QuickTool_ZenEditor_Title"),
+        (QuickToolRowAiteProfiles, "QuickTool_AiteProfiles_Title")
     ];
 
     private void SortQuickToolRows()
@@ -770,7 +771,8 @@ public partial class AppSettingsWindow : DarkWindow
             (HotkeyClipboardManager, "Tool_ClipboardManager"),
             (HotkeyTextProcessing, "Tool_TextProcessing"),
             (HotkeyPromptBuilder, "Tool_PromptBuilder"),
-            (HotkeyZenEditor, "Tool_ZenEditor")
+            (HotkeyZenEditor, "Tool_ZenEditor"),
+            (HotkeyAiteProfiles, "Tool_AiteProfiles")
         ];
         foreach ((HotkeyCaptureBox captureBox, string resourceKey) in hotkeyFields)
         {
@@ -796,6 +798,7 @@ public partial class AppSettingsWindow : DarkWindow
         yield return HotkeyTextProcessing;
         yield return HotkeyPromptBuilder;
         yield return HotkeyZenEditor;
+        yield return HotkeyAiteProfiles;
     }
 
     private List<ContextRowDraft> CaptureContextRowDrafts()
@@ -974,7 +977,8 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding clipboardManagerBinding,
         HotkeyBinding textProcessingBinding,
         HotkeyBinding promptBuilderBinding,
-        HotkeyBinding zenEditorBinding)
+        HotkeyBinding zenEditorBinding,
+        HotkeyBinding aiteProfilesBinding)
     {
         var registrations = new (string Name, HotkeyBinding Binding)[]
         {
@@ -990,7 +994,8 @@ public partial class AppSettingsWindow : DarkWindow
             (LocalizationService.Get("Tool_ClipboardManager"), clipboardManagerBinding),
             (LocalizationService.Get("Tool_TextProcessing"), textProcessingBinding),
             (LocalizationService.Get("Tool_PromptBuilder"), promptBuilderBinding),
-            (LocalizationService.Get("Tool_ZenEditor"), zenEditorBinding)
+            (LocalizationService.Get("Tool_ZenEditor"), zenEditorBinding),
+            (LocalizationService.Get("Tool_AiteProfiles"), aiteProfilesBinding)
         };
 
         var missingModifiers = registrations
@@ -1072,6 +1077,7 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyTextProcessing.SetBinding(_settings.TextProcessingHotkey);
         HotkeyPromptBuilder.SetBinding(_settings.PromptBuilderHotkey);
         HotkeyZenEditor.SetBinding(_settings.ZenEditorHotkey);
+        HotkeyAiteProfiles.SetBinding(_settings.AiteProfilesHotkey);
 
         SelectSegmentByTag(_settings.Edge.ToString(), SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
         ChkSecondaryMonitor.IsChecked = _settings.MonitorIndex > 0;
@@ -1171,6 +1177,7 @@ public partial class AppSettingsWindow : DarkWindow
             row.DragOver += ContextRow_DragOver;
             row.DragLeave += ContextRow_DragLeave;
             row.Drop += ContextRow_Drop;
+            row.GiveFeedback += ContextRow_GiveFeedback;
             var rowSurface = new Border
             {
                 Margin = new Thickness(0, 4, 0, 4),
@@ -1198,18 +1205,17 @@ public partial class AppSettingsWindow : DarkWindow
             {
                 Width = 24,
                 Height = formControlHeight,
-                Background = BrushFromHex("#2C333B"),
-                BorderBrush = BrushFromHex("#4A5868"),
-                BorderThickness = new Thickness(1),
+                Background = BrushFromHex("#242A30"),
+                BorderBrush = System.Windows.Media.Brushes.Transparent,
+                BorderThickness = new Thickness(0),
                 CornerRadius = new CornerRadius(4),
-                Cursor = System.Windows.Input.Cursors.SizeNS,
-                ToolTip = LocalizationService.Get("AppSettingsWindow_ReorderPanelTooltip"),
+                Cursor = System.Windows.Input.Cursors.Hand,
                 VerticalAlignment = VerticalAlignment.Center,
                 Child = new TextBlock
                 {
                     Text = "\uE945",
                     FontFamily = FontHelper.Resolve(FontHelper.MaterialKey),
-                    Foreground = BrushFromHex("#DCE6F2"),
+                    Foreground = BrushFromHex("#8A95A3"),
                     FontSize = 18,
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
                     VerticalAlignment = System.Windows.VerticalAlignment.Center,
@@ -1219,6 +1225,8 @@ public partial class AppSettingsWindow : DarkWindow
             AutomationProperties.SetName(dragHandle, LocalizationService.Get("AppSettingsWindow_ReorderPanelTooltip"));
             dragHandle.PreviewMouseLeftButtonDown += ContextDragHandle_PreviewMouseLeftButtonDown;
             dragHandle.PreviewMouseMove += ContextDragHandle_PreviewMouseMove;
+            dragHandle.MouseEnter += ContextDragHandle_MouseEnter;
+            dragHandle.MouseLeave += ContextDragHandle_MouseLeave;
             dragHandle.Tag = context.Id;
             Grid.SetColumn(dragHandle, 0);
             row.Children.Add(dragHandle);
@@ -1272,7 +1280,7 @@ public partial class AppSettingsWindow : DarkWindow
 
             var clearButton = new Button
             {
-                Content = "\uF34D",
+                Content = "\uF202",
                 Tag = context.Id,
                 Width = formControlHeight,
                 Height = formControlHeight,
@@ -1318,13 +1326,19 @@ public partial class AppSettingsWindow : DarkWindow
 
     private Border CreateContextDropIndicator(VerticalAlignment alignment) => new()
     {
-        Height = 3,
-        Margin = new Thickness(0, 0, 0, 0),
-        CornerRadius = new CornerRadius(2),
+        Height = 2,
+        Margin = new Thickness(32, 0, 8, 0),
+        CornerRadius = new CornerRadius(1),
         Background = (System.Windows.Media.Brush)FindResource("AccentColor"),
         VerticalAlignment = alignment,
         Visibility = Visibility.Collapsed,
-        IsHitTestVisible = false
+        IsHitTestVisible = false,
+        Effect = new System.Windows.Media.Effects.DropShadowEffect
+        {
+            Color = System.Windows.Media.Color.FromArgb(0x80, 0x00, 0x7A, 0xCC),
+            BlurRadius = 4,
+            ShadowDepth = 0
+        }
     };
 
     private async void BtnClearContext_Click(object sender, RoutedEventArgs e)
@@ -1396,6 +1410,45 @@ public partial class AppSettingsWindow : DarkWindow
     {
         _draggedContextId = (sender as FrameworkElement)?.Tag as string;
         _contextDragStartPoint = e.GetPosition(this);
+    }
+
+    private void ContextDragHandle_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = BrushFromHex("#2E363D");
+            if (border.Child is TextBlock glyph)
+            {
+                glyph.Foreground = BrushFromHex("#E8EEF6");
+            }
+        }
+    }
+
+    private void ContextDragHandle_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+    {
+        if (sender is Border border)
+        {
+            border.Background = BrushFromHex("#242A30");
+            if (border.Child is TextBlock glyph)
+            {
+                glyph.Foreground = BrushFromHex("#8A95A3");
+            }
+        }
+    }
+
+    private void ContextRow_GiveFeedback(object sender, System.Windows.GiveFeedbackEventArgs e)
+    {
+        e.UseDefaultCursors = false;
+        if ((e.Effects & DragDropEffects.Move) != 0)
+        {
+            System.Windows.Input.Mouse.SetCursor(System.Windows.Input.Cursors.Hand);
+        }
+        else
+        {
+            System.Windows.Input.Mouse.SetCursor(System.Windows.Input.Cursors.No);
+        }
+
+        e.Handled = true;
     }
 
     private void ContextDragHandle_PreviewMouseMove(object sender, System.Windows.Input.MouseEventArgs e)
@@ -1506,10 +1559,32 @@ public partial class AppSettingsWindow : DarkWindow
         {
             bool isSource = string.Equals(row.ContextId, sourceContextId, StringComparison.Ordinal);
             bool isTarget = string.Equals(row.ContextId, targetContextId, StringComparison.Ordinal);
-            row.RowSurface.Background = isSource ? BrushFromHex("#203548") : System.Windows.Media.Brushes.Transparent;
-            row.RowSurface.BorderBrush = isSource ? BrushFromHex("#2F78C4") : System.Windows.Media.Brushes.Transparent;
-            row.DragHandle.Background = isSource ? BrushFromHex("#0F5EA8") : BrushFromHex("#2C333B");
-            row.DragHandle.BorderBrush = isSource ? BrushFromHex("#69B9FF") : BrushFromHex("#4A5868");
+
+            if (isSource)
+            {
+                row.RowSurface.Background = BrushFromHex("#203548");
+                row.RowSurface.BorderBrush = BrushFromHex("#2F78C4");
+                row.DragHandle.Background = BrushFromHex("#0F5EA8");
+                row.DragHandle.BorderBrush = System.Windows.Media.Brushes.Transparent;
+                row.DragHandle.BorderThickness = new Thickness(0);
+                if (row.DragHandle.Child is TextBlock sourceGlyph)
+                {
+                    sourceGlyph.Foreground = System.Windows.Media.Brushes.White;
+                }
+            }
+            else
+            {
+                row.RowSurface.Background = isTarget ? BrushFromHex("#222A34") : System.Windows.Media.Brushes.Transparent;
+                row.RowSurface.BorderBrush = isTarget ? BrushFromHex("#3C9EFF") : System.Windows.Media.Brushes.Transparent;
+                row.DragHandle.Background = BrushFromHex("#242A30");
+                row.DragHandle.BorderBrush = System.Windows.Media.Brushes.Transparent;
+                row.DragHandle.BorderThickness = new Thickness(0);
+                if (row.DragHandle.Child is TextBlock otherGlyph)
+                {
+                    otherGlyph.Foreground = BrushFromHex("#8A95A3");
+                }
+            }
+
             row.InsertBeforeIndicator.Visibility = isTarget && !insertAfter ? Visibility.Visible : Visibility.Collapsed;
             row.InsertAfterIndicator.Visibility = isTarget && insertAfter ? Visibility.Visible : Visibility.Collapsed;
         }
@@ -1522,6 +1597,11 @@ public partial class AppSettingsWindow : DarkWindow
         {
             row.InsertBeforeIndicator.Visibility = Visibility.Collapsed;
             row.InsertAfterIndicator.Visibility = Visibility.Collapsed;
+            if (row.RowSurface.Background != BrushFromHex("#203548"))
+            {
+                row.RowSurface.Background = System.Windows.Media.Brushes.Transparent;
+                row.RowSurface.BorderBrush = System.Windows.Media.Brushes.Transparent;
+            }
         }
     }
 
@@ -1533,8 +1613,13 @@ public partial class AppSettingsWindow : DarkWindow
         {
             row.RowSurface.Background = System.Windows.Media.Brushes.Transparent;
             row.RowSurface.BorderBrush = System.Windows.Media.Brushes.Transparent;
-            row.DragHandle.Background = BrushFromHex("#2C333B");
-            row.DragHandle.BorderBrush = BrushFromHex("#4A5868");
+            row.DragHandle.Background = BrushFromHex("#242A30");
+            row.DragHandle.BorderBrush = System.Windows.Media.Brushes.Transparent;
+            row.DragHandle.BorderThickness = new Thickness(0);
+            if (row.DragHandle.Child is TextBlock glyph)
+            {
+                glyph.Foreground = BrushFromHex("#8A95A3");
+            }
             row.InsertBeforeIndicator.Visibility = Visibility.Collapsed;
             row.InsertAfterIndicator.Visibility = Visibility.Collapsed;
         }
@@ -1658,8 +1743,9 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding textProcessingBinding = HotkeyTextProcessing.GetBinding();
         HotkeyBinding promptBuilderBinding = HotkeyPromptBuilder.GetBinding();
         HotkeyBinding zenEditorBinding = HotkeyZenEditor.GetBinding();
+        HotkeyBinding aiteProfilesBinding = HotkeyAiteProfiles.GetBinding();
 
-        if (!ValidateHotkeyBindings(nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding, textProcessingBinding, promptBuilderBinding, zenEditorBinding))
+        if (!ValidateHotkeyBindings(nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding, textProcessingBinding, promptBuilderBinding, zenEditorBinding, aiteProfilesBinding))
         {
             return;
         }
@@ -1681,6 +1767,7 @@ public partial class AppSettingsWindow : DarkWindow
             settings.TextProcessingHotkey = textProcessingBinding;
             settings.PromptBuilderHotkey = promptBuilderBinding;
             settings.ZenEditorHotkey = zenEditorBinding;
+            settings.AiteProfilesHotkey = aiteProfilesBinding;
 
             foreach (var (checkBox, definition) in GetUtilityVisibilityBindings())
             {

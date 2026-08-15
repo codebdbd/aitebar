@@ -11,7 +11,7 @@
             </ResourceDictionary.MergedDictionaries>
             <!-- Colors -->
         <SolidColorBrush x:Key="WindowBackground" Color="#191919"/>
-        <SolidColorBrush x:Key="PanelBackground" Color="#1F1F1F"/>
+        <SolidColorBrush x:Key="PanelBackground" Color="#191919"/>
         <SolidColorBrush x:Key="BorderColor" Color="#2A2A2A"/>
         <SolidColorBrush x:Key="AccentColor" Color="#007ACC"/>
         <SolidColorBrush x:Key="MutedText" Color="#9BA1A6"/>

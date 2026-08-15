@@ -1078,11 +1078,11 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ProgrammingPromptStyle_StartupMvp" xml:space="preserve"><value>Стартап MVP</value></data>
   <data name="ProgrammingPromptStyle_NativeDesktop" xml:space="preserve"><value>Нативний десктоп</value></data>
   <data name="ProgrammingPromptStyle_CrossPlatformDesktop" xml:space="preserve"><value>Кросплатформний десктоп</value></data>
-  <data name="Tool_AiteProfiles" xml:space="preserve"><value>Aite Profiles</value></data>
-  <data name="Main_AiteProfilesTooltip" xml:space="preserve"><value>Chrome profiles</value></data>
-  <data name="QuickTool_AiteProfiles_Title" xml:space="preserve"><value>Aite Profiles</value></data>
+  <data name="Tool_AiteProfiles" xml:space="preserve"><value>Менеджер профілів</value></data>
+  <data name="Main_AiteProfilesTooltip" xml:space="preserve"><value>Менеджер профілів</value></data>
+  <data name="QuickTool_AiteProfiles_Title" xml:space="preserve"><value>Менеджер профілів</value></data>
   <data name="QuickTool_AiteProfiles_Description" xml:space="preserve"><value>Scan and launch local Chrome profiles with quick links, tags, favorites, and rotation.</value></data>
-  <data name="AiteProfiles_Title" xml:space="preserve"><value>Aite Profiles</value></data>
+  <data name="AiteProfiles_Title" xml:space="preserve"><value>Менеджер профілів</value></data>
   <data name="AiteProfiles_AllTab" xml:space="preserve"><value>All</value></data>
   <data name="AiteProfiles_FavoritesTab" xml:space="preserve"><value>Favorites</value></data>
   <data name="AiteProfiles_FarmTab" xml:space="preserve"><value>Farm</value></data>

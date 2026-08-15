@@ -22,6 +22,7 @@ public enum HotkeyCommand
     TextProcessing,
     PromptBuilder,
     ZenEditor,
+    AiteProfiles,
     ActivateContext0,
     ActivateContext1,
     ActivateContext2,
@@ -76,6 +77,7 @@ public sealed class HotkeyService
     internal const int TextProcessingId = 9011;
     internal const int ZenEditorId = 9012;
     internal const int PromptBuilderId = 9013;
+    internal const int AiteProfilesId = 9014;
     internal const int ContextHotkeyBaseId = 9100;
 
     internal const uint ModAlt = 0x0001;
@@ -97,7 +99,8 @@ public sealed class HotkeyService
         new HotkeyDescriptor(HotkeyCommand.ClipboardManager, ClipboardManagerId, "Tool_ClipboardManager"),
         new HotkeyDescriptor(HotkeyCommand.TextProcessing, TextProcessingId, "Tool_TextProcessing"),
         new HotkeyDescriptor(HotkeyCommand.PromptBuilder, PromptBuilderId, "Tool_PromptBuilder"),
-        new HotkeyDescriptor(HotkeyCommand.ZenEditor, ZenEditorId, "Tool_ZenEditor")
+        new HotkeyDescriptor(HotkeyCommand.ZenEditor, ZenEditorId, "Tool_ZenEditor"),
+        new HotkeyDescriptor(HotkeyCommand.AiteProfiles, AiteProfilesId, "Tool_AiteProfiles")
     ];
 
     private static readonly IReadOnlyDictionary<int, HotkeyCommand> CommandsById =
@@ -135,7 +138,8 @@ public sealed class HotkeyService
             [HotkeyCommand.ClipboardManager] = settings.ClipboardManagerHotkey,
             [HotkeyCommand.TextProcessing] = settings.TextProcessingHotkey,
             [HotkeyCommand.PromptBuilder] = settings.PromptBuilderHotkey,
-            [HotkeyCommand.ZenEditor] = settings.ZenEditorHotkey
+            [HotkeyCommand.ZenEditor] = settings.ZenEditorHotkey,
+            [HotkeyCommand.AiteProfiles] = settings.AiteProfilesHotkey
         };
 
         var definitions = Descriptors

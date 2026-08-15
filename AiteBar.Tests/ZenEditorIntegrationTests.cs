@@ -140,7 +140,7 @@ public sealed class ZenEditorIntegrationTests
         Assert.Contains("SetFullscreenTopmost(isTopmost: true)", windowCode);
         Assert.Contains("SetFullscreenTopmost(isTopmost: false)", windowCode);
         Assert.Contains("RetrySaveButton.Focus()", windowCode);
-        Assert.Contains("_suppressSelectionCopy = true", windowCode);
+        Assert.Contains("SearchTextBox.Focus()", windowCode);
     }
 
     [Fact]

@@ -9,7 +9,7 @@ public sealed class AiteProfilesUtility : UtilityBase<AiteProfilesWindow>
 {
     public override string Id => "AiteProfiles";
     public override string DisplayNameKey => "Tool_AiteProfiles";
-    public override string IconGlyph => "\uE716";
+    public override string IconGlyph => "\uF409";
     public override string IconColor => UtilityIconColors.SearchAndNavigation;
 
     protected override AiteProfilesWindow CreateWindow(AppSettingsService settingsService, Window? owner)

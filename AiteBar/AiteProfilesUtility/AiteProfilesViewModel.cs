@@ -45,18 +45,18 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         Profiles = [];
         RefreshCommand = new AiteProfilesAsyncCommand(_ => RefreshAsync());
         LaunchCommand = new AiteProfilesAsyncCommand(_ => LaunchAsync(), _ => CanLaunch);
-        OpenProfileCommand = new AiteProfilesCommand(_ => OpenSelectedProfile(), _ => HasActionProfile);
-        OpenSelectedProfilesCommand = new AiteProfilesCommand(_ => OpenSelectedProfiles(), _ => SelectedProfiles.Count > 1);
-        OpenIncognitoCommand = new AiteProfilesCommand(_ => ExecuteForActionProfiles(profile => _launcher.OpenProfileIncognito(profile.Folder)), _ => HasActionProfile);
+        OpenProfileCommand = new AiteProfilesAsyncCommand(_ => OpenSelectedProfileAsync(), _ => HasActionProfile);
+        OpenSelectedProfilesCommand = new AiteProfilesAsyncCommand(_ => OpenSelectedProfilesAsync(), _ => SelectedProfiles.Count > 1);
+        OpenIncognitoCommand = new AiteProfilesAsyncCommand(_ => ExecuteForActionProfilesAsync(profile => _launcher.OpenProfileIncognito(profile.Folder), updateLastLaunch: true), _ => HasActionProfile);
         OpenFolderCommand = new AiteProfilesCommand(_ => ExecuteForActionProfiles(profile => _launcher.OpenFolder(profile.Path)), _ => HasActionProfile);
         OpenProfilePickerCommand = new AiteProfilesCommand(_ => ExecuteLauncher(_launcher.OpenProfilePicker));
         CreateProfileCommand = new AiteProfilesCommand(_ => ExecuteLauncher(_launcher.OpenProfilePicker));
         CopyEmailCommand = new AiteProfilesCommand(_ => CopyEmail(), _ => !string.IsNullOrWhiteSpace(CurrentActionProfile?.Email));
-        OpenGeminiCommand = new AiteProfilesCommand(_ => ExecuteForActionProfiles(profile => _launcher.OpenGemini(profile.Folder)), _ => HasActionProfile);
-        OpenGmailCommand = new AiteProfilesCommand(_ => ExecuteForActionProfiles(profile => _launcher.OpenGmail(profile.Folder)), _ => HasActionProfile);
-        OpenDriveCommand = new AiteProfilesCommand(_ => ExecuteForActionProfiles(profile => _launcher.OpenGoogleDrive(profile.Folder)), _ => HasActionProfile);
-        OpenAccountCommand = new AiteProfilesCommand(_ => ExecuteForActionProfiles(profile => _launcher.OpenGoogleAccountSettings(profile.Folder)), _ => HasActionProfile);
-        ComposeEmailCommand = new AiteProfilesCommand(_ => ExecuteForActionProfiles(profile => _launcher.OpenGmailCompose(profile.Folder)), _ => HasActionProfile);
+        OpenGeminiCommand = new AiteProfilesAsyncCommand(_ => ExecuteForActionProfilesAsync(profile => _launcher.OpenGemini(profile.Folder), updateLastLaunch: true), _ => HasActionProfile);
+        OpenGmailCommand = new AiteProfilesAsyncCommand(_ => ExecuteForActionProfilesAsync(profile => _launcher.OpenGmail(profile.Folder), updateLastLaunch: true), _ => HasActionProfile);
+        OpenDriveCommand = new AiteProfilesAsyncCommand(_ => ExecuteForActionProfilesAsync(profile => _launcher.OpenGoogleDrive(profile.Folder), updateLastLaunch: true), _ => HasActionProfile);
+        OpenAccountCommand = new AiteProfilesAsyncCommand(_ => ExecuteForActionProfilesAsync(profile => _launcher.OpenGoogleAccountSettings(profile.Folder), updateLastLaunch: true), _ => HasActionProfile);
+        ComposeEmailCommand = new AiteProfilesAsyncCommand(_ => ExecuteForActionProfilesAsync(profile => _launcher.OpenGmailCompose(profile.Folder), updateLastLaunch: true), _ => HasActionProfile);
         ToggleFavoriteCommand = new AiteProfilesAsyncCommand(_ => ToggleFavoriteAsync(), _ => HasActionProfile);
         ToggleFarmCommand = new AiteProfilesAsyncCommand(_ => ToggleFarmAsync(), _ => HasActionProfile);
         EditTagsCommand = new AiteProfilesAsyncCommand(_ => EditTagsRequested?.Invoke(CurrentActionProfile) ?? Task.CompletedTask, _ => HasActionProfile);
@@ -440,18 +440,12 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         await ExecuteOpenWithQuickLinkAsync(GetProfilesForAction()).ConfigureAwait(true);
     }
 
-    private void OpenSelectedProfile()
+    private async Task OpenSelectedProfileAsync()
     {
-        ExecuteLauncher(() =>
-        {
-            foreach (AiteProfileListItemViewModel profile in GetProfilesForAction())
-            {
-                _launcher.OpenProfile(profile.Folder);
-            }
-        });
+        await ExecuteForActionProfilesAsync(profile => _launcher.OpenProfile(profile.Folder), updateLastLaunch: true).ConfigureAwait(true);
     }
 
-    private void OpenSelectedProfiles() => OpenSelectedProfile();
+    private async Task OpenSelectedProfilesAsync() => await OpenSelectedProfileAsync().ConfigureAwait(true);
 
     private async Task ExecuteOpenWithQuickLinkAsync(IReadOnlyList<AiteProfileListItemViewModel> profiles)
     {
@@ -459,6 +453,8 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         {
             return;
         }
+
+        await UpdateLastLaunchesAsync(profiles).ConfigureAwait(true);
 
         AiteProfileSnippet? snippet = await ResolveCurrentQuickLinkAsync().ConfigureAwait(true);
         ExecuteLauncher(() =>
@@ -482,6 +478,28 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         }
     }
 
+    private async Task ExecuteForActionProfilesAsync(Action<AiteProfileListItemViewModel> action, bool updateLastLaunch)
+    {
+        IReadOnlyList<AiteProfileListItemViewModel> profiles = GetProfilesForAction();
+        if (profiles.Count == 0)
+        {
+            return;
+        }
+
+        if (updateLastLaunch)
+        {
+            await UpdateLastLaunchesAsync(profiles).ConfigureAwait(true);
+        }
+
+        ExecuteLauncher(() =>
+        {
+            foreach (AiteProfileListItemViewModel profile in profiles)
+            {
+                action(profile);
+            }
+        });
+    }
+
     private void ExecuteForActionProfiles(Action<AiteProfileListItemViewModel> action)
     {
         ExecuteLauncher(() =>
@@ -491,6 +509,22 @@ internal sealed class AiteProfilesViewModel : NotifyObject
                 action(profile);
             }
         });
+    }
+
+    private async Task UpdateLastLaunchesAsync(IReadOnlyList<AiteProfileListItemViewModel> profiles)
+    {
+        foreach (AiteProfileListItemViewModel profile in profiles)
+        {
+            try
+            {
+                long ts = await _store.UpdateLastLaunchAsync(profile.Folder, profile.Path).ConfigureAwait(true);
+                profile.LastTs = ts;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+        }
     }
 
     private void ExecuteLauncher(Action action)

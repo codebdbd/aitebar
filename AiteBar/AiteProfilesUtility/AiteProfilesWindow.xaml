@@ -261,7 +261,7 @@
                      ToolTip="{local:Loc ResourceKey=AiteProfiles_SearchPlaceholder}"/>
             <Button Grid.Column="2"
                     Style="{StaticResource AiteProfilesIconButtonStyle}"
-                    Content="&#xE112;"
+                    Content="&#xF191;"
                     Foreground="#93C5FD"
                     Command="{Binding RefreshCommand}"
                     ToolTip="{local:Loc ResourceKey=AiteProfiles_Scan}"
@@ -580,7 +580,7 @@
                     <TextBlock Text="&#xF186;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="20">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
-                                <Setter Property="Foreground" Value="#CDEBB0"/>
+                                <Setter Property="Foreground" Value="#FFD166"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=ToggleButton}}" Value="True">
                                         <Setter Property="Foreground" Value="#FFFFFF"/>
@@ -593,9 +593,9 @@
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
                 <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF109;" Foreground="#5EEAD4" Command="{Binding AddQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_AddLink}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF3DD;" Foreground="#CDEBB0" Command="{Binding EditQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_EditLink}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE4DF;" Foreground="#FFD166" Command="{Binding ImportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ImportLinks}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF401;" Foreground="#FFD166" Command="{Binding ExportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ExportLinks}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF3DD;" Foreground="#5EEAD4" Command="{Binding EditQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_EditLink}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE4DF;" Foreground="#5EEAD4" Command="{Binding ImportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ImportLinks}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF401;" Foreground="#5EEAD4" Command="{Binding ExportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ExportLinks}"/>
                 <Button Height="44" MinWidth="118" Style="{StaticResource PrimaryButtonStyle}" Content="{local:Loc ResourceKey=AiteProfiles_Launch}" Command="{Binding LaunchCommand}"/>
             </StackPanel>
         </Grid>

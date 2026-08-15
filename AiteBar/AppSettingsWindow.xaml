@@ -1005,6 +1005,8 @@
                             <Border Style="{StaticResource ModernDividerStyle}"/>
 
                             <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_ZenEditor}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyZenEditor" Grid.Column="1"/></Grid>
+                            <Border Style="{StaticResource ModernDividerStyle}"/>
+                            <Grid Margin="0,12,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><TextBlock Text="{local:Loc ResourceKey=Tool_AiteProfiles}" Style="{StaticResource ModernSettingTitleStyle}" Margin="0,0,20,0" VerticalAlignment="Center"/><local:HotkeyCaptureBox x:Name="HotkeyAiteProfiles" Grid.Column="1"/></Grid>
 
                                 </StackPanel>
                             </Border>

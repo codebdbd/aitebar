@@ -24,7 +24,6 @@ namespace AiteBar;
 public partial class ZenEditorWindow : DarkWindow
 {
     private static readonly TimeSpan AutoSaveDelay = TimeSpan.FromMilliseconds(300);
-    private static readonly TimeSpan SelectionCopyDelay = TimeSpan.FromMilliseconds(150);
     private static readonly TimeSpan SnapshotInterval = TimeSpan.FromMinutes(5);
     private static readonly IntPtr HwndTopmost = new(-1);
     private static readonly IntPtr HwndNotTopmost = new(-2);
@@ -59,7 +58,6 @@ public partial class ZenEditorWindow : DarkWindow
     private readonly ZenEditorStore _store;
     private readonly MainWindow? _mainWindow;
     private readonly DispatcherTimer _saveTimer;
-    private readonly DispatcherTimer _selectionTimer;
     private readonly SemaphoreSlim _saveGate = new(1, 1);
     private readonly Dictionary<Guid, ZenEditorUndoHistory> _undoHistories = [];
     private ZenEditorStoreIndex _index = new();
@@ -73,7 +71,6 @@ public partial class ZenEditorWindow : DarkWindow
     private bool _allowClose;
     private bool _closeInProgress;
     private bool _sessionEndingSubscribed;
-    private bool _suppressSelectionCopy;
     private bool _suppressSearchChange;
     private int _editVersion;
     private string _previousText = string.Empty;
@@ -86,7 +83,6 @@ public partial class ZenEditorWindow : DarkWindow
         InitializeComponent();
 
         _saveTimer = CreateTimer(AutoSaveDelay, async () => await SaveNowAsync());
-        _selectionTimer = CreateTimer(SelectionCopyDelay, CopySelectionToClipboard);
         EditorHost.SizeChanged += (_, _) => UpdateEditorGeometry();
         RefreshContextMenu();
     }
@@ -195,7 +191,6 @@ public partial class ZenEditorWindow : DarkWindow
             _sessionEndingSubscribed = false;
         }
         _saveTimer.Stop();
-        _selectionTimer.Stop();
         _saveGate.Dispose();
     }
 
@@ -419,23 +414,12 @@ public partial class ZenEditorWindow : DarkWindow
 
     private void Editor_SelectionChanged(object sender, RoutedEventArgs e)
     {
-        if (_suppressChanges || _suppressSelectionCopy || !_isLoaded)
-        {
-            _selectionTimer.Stop();
-            return;
-        }
-
-        _selectionTimer.Stop();
-        if (Editor.SelectionLength > 0)
-        {
-            _selectionTimer.Start();
-        }
+        // Selection auto-copy to clipboard has been removed; keep caret/scroll handling only.
     }
 
     private void Editor_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
     {
-        _selectionTimer.Stop();
-        CopySelectionToClipboard();
+        // Selection auto-copy to clipboard has been removed.
     }
 
     private void Editor_PreviewMouseWheel(object sender, MouseWheelEventArgs e) => _manualScroll = true;
@@ -1121,17 +1105,8 @@ public partial class ZenEditorWindow : DarkWindow
         }
 
         SearchStatusText.Text = string.Empty;
-        _selectionTimer.Stop();
-        _suppressSelectionCopy = true;
-        try
-        {
-            Editor.Select(match, query.Length);
-            Editor.Focus();
-        }
-        finally
-        {
-            _suppressSelectionCopy = false;
-        }
+        Editor.Select(match, query.Length);
+        Editor.Focus();
 
         SearchTextBox.Focus();
     }
@@ -1208,22 +1183,11 @@ public partial class ZenEditorWindow : DarkWindow
         _saveTimer.Start();
     }
 
+    [Obsolete("Selection auto-copy to clipboard has been removed. Standard Ctrl+C / Copy menu command still works via Editor.Copy().")]
     private void CopySelectionToClipboard()
     {
-        _selectionTimer.Stop();
-        if (Editor.SelectionLength <= 0)
-        {
-            return;
-        }
-
-        try
-        {
-            Clipboard.SetText(Editor.SelectedText);
-        }
-        catch (ExternalException ex)
-        {
-            Logger.Log(ex);
-        }
+        // Intentionally left blank. Selection auto-copy to clipboard was removed because
+        // it overwrote the user's clipboard on any selection (including Ctrl+A).
     }
 
     private void KeepCaretInWorkingZone()
