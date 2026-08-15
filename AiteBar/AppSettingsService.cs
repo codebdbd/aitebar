@@ -247,14 +247,14 @@ namespace AiteBar
                     Win = original.ZenEditorHotkey.Win,
                     Key = original.ZenEditorHotkey.Key
                 },
-                AiteProfilesHotkey = new HotkeyBinding
+                AiteProfilesHotkey = original.AiteProfilesHotkey != null ? new HotkeyBinding
                 {
                     Ctrl = original.AiteProfilesHotkey.Ctrl,
                     Alt = original.AiteProfilesHotkey.Alt,
                     Shift = original.AiteProfilesHotkey.Shift,
                     Win = original.AiteProfilesHotkey.Win,
                     Key = original.AiteProfilesHotkey.Key
-                },
+                } : new(),
                 Contexts = original.Contexts?.Select(ctx => new PanelContext
                 {
                     Id = ctx.Id,
