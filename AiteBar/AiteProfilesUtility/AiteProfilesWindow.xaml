@@ -83,12 +83,19 @@
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ListViewItem">
-                            <Border x:Name="RowBorder"
-                                    Background="{TemplateBinding Background}"
-                                    BorderBrush="#303034"
-                                    BorderThickness="0,0,0,1">
-                                <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
-                            </Border>
+                            <Grid>
+                                <Border x:Name="AccentBar"
+                                        Width="3"
+                                        HorizontalAlignment="Left"
+                                        Background="Transparent"
+                                        SnapsToDevicePixels="True"/>
+                                <Border x:Name="RowBorder"
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="#303034"
+                                        BorderThickness="0,0,0,1">
+                                    <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                </Border>
+                            </Grid>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
                                     <Setter TargetName="RowBorder" Property="Background" Value="#20242B"/>
@@ -96,6 +103,9 @@
                                 <Trigger Property="IsSelected" Value="True">
                                     <Setter TargetName="RowBorder" Property="Background" Value="#233247"/>
                                 </Trigger>
+                                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                    <Setter TargetName="AccentBar" Property="Background" Value="#007ACC"/>
+                                </DataTrigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
@@ -146,6 +156,67 @@
                 <Setter Property="Height" Value="16"/>
                 <Setter Property="HorizontalAlignment" Value="Center"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="CheckBox">
+                            <Grid>
+                                <VisualStateManager.VisualStateGroups>
+                                    <VisualStateGroup x:Name="CheckStates">
+                                        <VisualState x:Name="Unchecked"/>
+                                        <VisualState x:Name="Checked">
+                                            <Storyboard>
+                                                <ColorAnimation To="#007ACC"
+                                                                Storyboard.TargetName="CheckBoxBorder"
+                                                                Storyboard.TargetProperty="(Border.Background).(SolidColorBrush.Color)"/>
+                                                <ColorAnimation To="#007ACC"
+                                                                Storyboard.TargetName="CheckBoxBorder"
+                                                                Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"/>
+                                                <DoubleAnimation To="1"
+                                                                 Storyboard.TargetName="CheckMark"
+                                                                 Storyboard.TargetProperty="Opacity"/>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Indeterminate"/>
+                                    </VisualStateGroup>
+                                    <VisualStateGroup x:Name="CommonStates">
+                                        <VisualState x:Name="Normal"/>
+                                        <VisualState x:Name="MouseOver">
+                                            <Storyboard>
+                                                <ColorAnimation To="#5A6472"
+                                                                Storyboard.TargetName="CheckBoxBorder"
+                                                                Storyboard.TargetProperty="(Border.BorderBrush).(SolidColorBrush.Color)"/>
+                                            </Storyboard>
+                                        </VisualState>
+                                        <VisualState x:Name="Pressed"/>
+                                        <VisualState x:Name="Disabled"/>
+                                    </VisualStateGroup>
+                                </VisualStateManager.VisualStateGroups>
+                                <Border x:Name="CheckBoxBorder"
+                                        Width="16"
+                                        Height="16"
+                                        CornerRadius="3"
+                                        Background="#2B2B2D"
+                                        BorderBrush="#3A3A3D"
+                                        BorderThickness="1">
+                                    <Grid>
+                                        <Path x:Name="CheckMark"
+                                              Opacity="0"
+                                              Data="M 3 8.5 L 6.5 12 L 13 4.5"
+                                              StrokeThickness="2"
+                                              StrokeLineJoin="Miter"
+                                              StrokeStartLineCap="Flat"
+                                              StrokeEndLineCap="Flat"
+                                              Stretch="Fill"
+                                              Stroke="#FFFFFF"
+                                              SnapsToDevicePixels="True"
+                                              UseLayoutRounding="True"/>
+                                    </Grid>
+                                </Border>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
             </Style>
 
             <Style x:Key="AiteProfilesSuggestionListStyle" TargetType="ListBox">

@@ -127,21 +127,9 @@ public partial class AiteProfilesWindow : DarkWindow
 
     private void ProfilesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        foreach (object item in e.RemovedItems)
+        if (e.AddedItems.Count > 0 && e.AddedItems[^1] is AiteProfileListItemViewModel lastAdded)
         {
-            if (item is AiteProfileListItemViewModel profile)
-            {
-                profile.IsSelected = false;
-            }
-        }
-
-        foreach (object item in e.AddedItems)
-        {
-            if (item is AiteProfileListItemViewModel profile)
-            {
-                profile.IsSelected = true;
-                _viewModel.CurrentProfile = profile;
-            }
+            _viewModel.CurrentProfile = lastAdded;
         }
     }
 
@@ -150,6 +138,7 @@ public partial class AiteProfilesWindow : DarkWindow
         if (sender is CheckBox { DataContext: AiteProfileListItemViewModel item })
         {
             _viewModel.ToggleItemSelection(item, item.IsSelected);
+            e.Handled = true;
         }
     }
 
@@ -206,6 +195,15 @@ public partial class AiteProfilesWindow : DarkWindow
         {
             _viewModel.SelectAllVisible(selected: true);
             ProfilesGrid.SelectAll();
+            e.Handled = true;
+            return;
+        }
+
+        if (e.Key == Key.Space && !e.IsRepeat && ProfilesGrid.IsKeyboardFocusWithin &&
+            ProfilesGrid.SelectedItem is AiteProfileListItemViewModel item)
+        {
+            item.IsSelected = !item.IsSelected;
+            _viewModel.ToggleItemSelection(item, item.IsSelected);
             e.Handled = true;
             return;
         }
