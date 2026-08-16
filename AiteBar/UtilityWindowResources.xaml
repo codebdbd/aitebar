@@ -38,4 +38,49 @@
     </Style>
 
     <Style x:Key="HeaderButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButtonStyle}"/>
+
+    <!-- Window Control Buttons Styles -->
+    <Style x:Key="WindowCloseButtonStyle" TargetType="Button" BasedOn="{StaticResource HeaderButtonStyle}">
+        <Setter Property="Content" Value="&#xF36A;"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Foreground" Value="#FF7272"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="WindowPinToggleButtonStyle" TargetType="ToggleButton">
+        <Setter Property="Content" Value="&#xF602;"/>
+        <Setter Property="Width" Value="32"/>
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="Foreground" Value="#AEB6C1"/>
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Focusable" Value="False"/>
+        <Setter Property="IsTabStop" Value="False"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
+                        <Border x:Name="Outline" Background="Transparent" CornerRadius="4"/>
+                        <Border x:Name="Fill" Margin="1" Background="{TemplateBinding Background}" CornerRadius="3">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Fill" Property="Background" Value="#25FFFFFF"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter Property="Foreground" Value="#007ACC"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

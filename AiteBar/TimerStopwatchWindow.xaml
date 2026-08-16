@@ -6,6 +6,7 @@
         Width="420" Height="420" MinWidth="420" MinHeight="330"
         WindowStartupLocation="Manual" WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" Foreground="White" ResizeMode="NoResize"
+        WindowClass="OverlayWidget"
         ShowInTaskbar="False" Topmost="True"
         Loaded="Window_Loaded"
         MouseLeftButtonDown="Window_MouseLeftButtonDown"
@@ -156,8 +157,13 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <Button x:Name="BtnCompact" Content="&#xE923;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource HeaderButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Compact}" Click="BtnCompact_Click"/>
-                        <Button Content="&#xF369;" Style="{StaticResource HeaderButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
+                        <ToggleButton x:Name="BtnPin"
+                                      Style="{StaticResource WindowPinToggleButtonStyle}"
+                                      ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
+                                      IsChecked="{Binding IsPinned, RelativeSource={RelativeSource AncestorType=local:DarkWindow}, Mode=TwoWay}"
+                                      Margin="0,0,4,0"/>
+                        <Button x:Name="BtnCompact" Content="&#xE923;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource HeaderButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Compact}" Click="BtnCompact_Click" Margin="0,0,4,0"/>
+                        <Button Style="{StaticResource WindowCloseButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
                     </StackPanel>
                 </Grid>
 

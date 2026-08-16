@@ -21,4 +21,10 @@ public class TimerStopwatchUtility : UtilityBase<TimerStopwatchWindow>
     {
         window.ShowNearPanel(settingsService);
     }
+
+    protected override bool RestoreExistingWindow(TimerStopwatchWindow window)
+    {
+        window.RestoreFromAiteBar();
+        return true;
+    }
 }

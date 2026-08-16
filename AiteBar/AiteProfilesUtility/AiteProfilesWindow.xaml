@@ -5,16 +5,21 @@
                   xmlns:ap="clr-namespace:AiteBar.AiteProfilesUtility"
                   Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
                   Title="{local:Loc ResourceKey=AiteProfiles_Title}"
-                  Width="720" Height="420" MinWidth="720" MinHeight="420" MaxWidth="720" MaxHeight="420"
+                  Width="720" Height="420" MinWidth="720" MaxWidth="720" MinHeight="420"
                   WindowStartupLocation="Manual"
                   Background="Transparent" Foreground="#DCDCDC"
                   AllowsTransparency="True"
                   WindowStyle="None"
-                  ResizeMode="NoResize"
+                  ResizeMode="CanResize"
+                  WindowClass="OverlayWidget"
                   ShowInTaskbar="False"
                   Topmost="True"
-                  Deactivated="Window_Deactivated"
-                  PreviewKeyDown="Window_PreviewKeyDown">
+                  PreviewKeyDown="Window_PreviewKeyDown"
+                  MouseLeftButtonDown="Window_MouseLeftButtonDown">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome ResizeBorderThickness="6" CaptionHeight="0" GlassFrameThickness="0" CornerRadius="8"/>
+    </WindowChrome.WindowChrome>
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -26,16 +31,28 @@
 
 
             <Style x:Key="AiteProfilesIconButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
-                <Setter Property="Width" Value="44"/>
-                <Setter Property="Height" Value="44"/>
+                <Setter Property="Width" Value="40"/>
+                <Setter Property="Height" Value="40"/>
                 <Setter Property="Margin" Value="0,0,6,0"/>
                 <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
                 <Setter Property="FontSize" Value="20"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="Foreground" Value="#5EEAD4"/>
+                <Style.Triggers>
+                    <Trigger Property="IsEnabled" Value="False">
+                        <Setter Property="Foreground" Value="#4B5563"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+
+            <Style x:Key="AiteProfilesRefreshButtonStyle" TargetType="Button" BasedOn="{StaticResource AiteProfilesIconButtonStyle}">
+                <Setter Property="Foreground" Value="#93C5FD"/>
             </Style>
 
             <Style x:Key="AiteProfilesToggleButtonStyle" TargetType="ToggleButton">
-                <Setter Property="Width" Value="44"/>
-                <Setter Property="Height" Value="44"/>
+                <Setter Property="Width" Value="40"/>
+                <Setter Property="Height" Value="40"/>
+                <Setter Property="Cursor" Value="Hand"/>
                 <Setter Property="Foreground" Value="#D7DEE7"/>
                 <Setter Property="Background" Value="#2B2B2D"/>
                 <Setter Property="BorderBrush" Value="#3A3A3D"/>
@@ -288,10 +305,10 @@
                 <TabItem Header="{local:Loc ResourceKey=AiteProfiles_FarmTab}"
                          Style="{StaticResource UnderlineTabItemStyle}"/>
             </TabControl>
-            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
                 <TextBox x:Name="SearchBox"
                          Width="200"
-                         Height="34"
+                         Height="40"
                          Margin="8,0"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="{local:Loc ResourceKey=AiteProfiles_SearchPlaceholder}"/>
@@ -300,7 +317,19 @@
                         Foreground="#93C5FD"
                         Command="{Binding RefreshCommand}"
                         ToolTip="{local:Loc ResourceKey=AiteProfiles_Scan}"
-                        Margin="0,0,0,0"/>
+                        Margin="0,0,4,0"/>
+                <ToggleButton x:Name="BtnPin"
+                              Style="{StaticResource WindowPinToggleButtonStyle}"
+                              Width="40"
+                              Height="40"
+                              ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
+                              IsChecked="{Binding IsPinned, RelativeSource={RelativeSource AncestorType=local:DarkWindow}, Mode=TwoWay}"
+                              Margin="0,0,4,0"/>
+                <Button Style="{StaticResource WindowCloseButtonStyle}"
+                        Width="40"
+                        Height="40"
+                        ToolTip="{local:Loc ResourceKey=Common_Close}"
+                        Click="BtnClose_Click"/>
             </StackPanel>
         </Grid>
 
@@ -569,7 +598,7 @@
             <Grid Grid.Column="0">
                 <TextBox x:Name="QuickLinkBox"
                          Style="{StaticResource BaseTextBoxStyle}"
-                         Height="44"
+                         Height="40"
                          Text="{Binding QuickLinkText, UpdateSourceTrigger=PropertyChanged}"
                          ToolTip="{local:Loc ResourceKey=AiteProfiles_QuickLinkPlaceholder}"
                          GotKeyboardFocus="QuickLinkBox_GotKeyboardFocus"
@@ -597,7 +626,7 @@
                               Margin="0,0,6,0"
                               IsChecked="{Binding RememberQuickLink}"
                               ToolTip="{local:Loc ResourceKey=AiteProfiles_RememberLink}">
-                    <TextBlock Text="&#xF602;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="20">
+                    <TextBlock Text="&#xF1AA;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="20">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
                                 <Setter Property="Foreground" Value="#FFD166"/>
@@ -628,11 +657,11 @@
                 </ToggleButton>
             </StackPanel>
             <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF109;" Foreground="#5EEAD4" Command="{Binding AddQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_AddLink}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF3DD;" Foreground="#5EEAD4" Command="{Binding EditQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_EditLink}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE4DF;" Foreground="#5EEAD4" Command="{Binding ImportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ImportLinks}"/>
-                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF401;" Foreground="#5EEAD4" Command="{Binding ExportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ExportLinks}"/>
-                <Button Height="44" MinWidth="118" Style="{StaticResource PrimaryButtonStyle}" Content="{local:Loc ResourceKey=AiteProfiles_Launch}" Command="{Binding LaunchCommand}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF109;" Command="{Binding AddQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_AddLink}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF3DD;" Command="{Binding EditQuickLinkCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_EditLink}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xE4DF;" Command="{Binding ImportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ImportLinks}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}" Content="&#xF401;" Command="{Binding ExportQuickLinksCommand}" ToolTip="{local:Loc ResourceKey=AiteProfiles_ExportLinks}"/>
+                <Button Height="40" MinWidth="118" Style="{StaticResource PrimaryButtonStyle}" Content="{local:Loc ResourceKey=AiteProfiles_Launch}" Command="{Binding LaunchCommand}"/>
             </StackPanel>
         </Grid>
 

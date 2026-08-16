@@ -5,13 +5,53 @@ using System.Windows.Interop;
 
 namespace AiteBar
 {
+    public enum UtilityWindowClass
+    {
+        OverlayWidget,
+        UtilityTool,
+        Workspace
+    }
+
     public class DarkWindow : Window
     {
         private bool _isLocalizationSubscribed;
 
+        public static readonly DependencyProperty WindowClassProperty =
+            DependencyProperty.Register(nameof(WindowClass), typeof(UtilityWindowClass), typeof(DarkWindow),
+                new PropertyMetadata(UtilityWindowClass.UtilityTool));
+
+        public UtilityWindowClass WindowClass
+        {
+            get => (UtilityWindowClass)GetValue(WindowClassProperty);
+            set => SetValue(WindowClassProperty, value);
+        }
+
+        public static readonly DependencyProperty IsPinnedProperty =
+            DependencyProperty.Register(nameof(IsPinned), typeof(bool), typeof(DarkWindow),
+                new PropertyMetadata(false));
+
+        public bool IsPinned
+        {
+            get => (bool)GetValue(IsPinnedProperty);
+            set => SetValue(IsPinnedProperty, value);
+        }
+
         protected DarkWindow()
         {
             LocalizationService.EnsureAppliedCulture();
+            Deactivated += DarkWindow_Deactivated;
+        }
+
+        private void DarkWindow_Deactivated(object? sender, EventArgs e)
+        {
+            if (WindowClass == UtilityWindowClass.OverlayWidget && !IsPinned)
+            {
+                OnDeactivatedAutoDismiss();
+            }
+        }
+
+        protected virtual void OnDeactivatedAutoDismiss()
+        {
         }
 
         [DllImport("dwmapi.dll")]

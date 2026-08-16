@@ -27,22 +27,45 @@ internal static class QuickNoteDocumentHelper
             return document.ContentEnd;
         }
 
+        // Collect all insertion positions to avoid O(N^2) allocations/regex in the traversal loop
+        var positions = new System.Collections.Generic.List<TextPointer>();
         TextPointer? pointer = document.ContentStart.GetInsertionPosition(LogicalDirection.Forward);
-        TextPointer? best = pointer ?? document.ContentStart;
-
         while (pointer != null && pointer.CompareTo(document.ContentEnd) <= 0)
         {
-            int currentOffset = GetTextOffset(document, pointer);
-            if (currentOffset >= offset)
-            {
-                return pointer;
-            }
-
-            best = pointer;
+            positions.Add(pointer);
             pointer = pointer.GetNextInsertionPosition(LogicalDirection.Forward);
         }
 
-        return best ?? document.ContentEnd;
+        if (positions.Count == 0)
+        {
+            return document.ContentEnd;
+        }
+
+        // Binary search to reduce the number of O(N) GetTextOffset calls to O(log N)
+        int low = 0;
+        int high = positions.Count - 1;
+        TextPointer best = positions[high];
+
+        while (low <= high)
+        {
+            int mid = low + (high - low) / 2;
+            int currentOffset = GetTextOffset(document, positions[mid]);
+            if (currentOffset == offset)
+            {
+                return positions[mid];
+            }
+            if (currentOffset < offset)
+            {
+                low = mid + 1;
+            }
+            else
+            {
+                best = positions[mid];
+                high = mid - 1;
+            }
+        }
+
+        return best;
     }
 
     private static TextPointer GetTextStartPointer(FlowDocument document)

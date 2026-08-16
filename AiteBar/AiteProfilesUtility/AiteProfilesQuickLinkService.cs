@@ -118,27 +118,94 @@ internal sealed class AiteProfilesQuickLinkService
             return false;
         }
 
-        string[] parts = raw.Split(':', 3, StringSplitOptions.None);
-        if (parts.Length != 3)
+        int firstPipe = raw.IndexOf('|');
+        int firstColon = raw.IndexOf(':');
+        bool isNewFormat = firstPipe != -1 && (firstColon == -1 || firstPipe < firstColon);
+
+        // 1. Try the new user-friendly format: Name | tags | URLs (using semicolon ';' as internal separator)
+        if (isNewFormat)
         {
-            return false;
+            string[] parts = raw.Split('|');
+            if (parts.Length == 3)
+            {
+                string name = NormalizePart(parts[0]);
+                List<string> tags = ParseTagsWithSemicolon(parts[1]);
+                List<string> urls = ParseUrlsWithSemicolon(parts[2]);
+                if (!string.IsNullOrWhiteSpace(name) && urls.Count > 0)
+                {
+                    snippet = new AiteProfileSnippet
+                    {
+                        Name = name,
+                        Tags = tags.Count > 0 ? tags : ["misc"],
+                        Urls = urls
+                    };
+                    return true;
+                }
+            }
+            else if (parts.Length == 2)
+            {
+                // Name | URLs
+                string name = NormalizePart(parts[0]);
+                List<string> urls = ParseUrlsWithSemicolon(parts[1]);
+                if (!string.IsNullOrWhiteSpace(name) && urls.Count > 0)
+                {
+                    snippet = new AiteProfileSnippet
+                    {
+                        Name = name,
+                        Tags = ["misc"],
+                        Urls = urls
+                    };
+                    return true;
+                }
+            }
+        }
+        // 2. Fallback to classic format for backwards compatibility: tags:Name:URLs
+        else
+        {
+            string[] colonParts = raw.Split(':', 3, StringSplitOptions.None);
+            if (colonParts.Length == 3)
+            {
+                List<string> tags = ParseTags(colonParts[0]);
+                string name = NormalizePart(colonParts[1]);
+                List<string> urls = ParseUrls(colonParts[2]);
+                if (tags.Count > 0 && !string.IsNullOrWhiteSpace(name) && urls.Count > 0)
+                {
+                    snippet = new AiteProfileSnippet
+                    {
+                        Name = name,
+                        Tags = tags,
+                        Urls = urls
+                    };
+                    return true;
+                }
+            }
         }
 
-        List<string> tags = ParseTags(parts[0]);
-        string name = NormalizePart(parts[1]);
-        List<string> urls = ParseUrls(parts[2]);
-        if (tags.Count == 0 || string.IsNullOrWhiteSpace(name) || urls.Count == 0)
-        {
-            return false;
-        }
+        return false;
+    }
 
-        snippet = new AiteProfileSnippet
+    private static List<string> ParseTagsWithSemicolon(string value)
+    {
+        return (value ?? string.Empty)
+            .Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(static tag => NormalizePart(tag).ToLowerInvariant())
+            .Where(static tag => !string.IsNullOrWhiteSpace(tag))
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+    }
+
+    private static List<string> ParseUrlsWithSemicolon(string value)
+    {
+        var list = new List<string>();
+        string[] parts = (value ?? string.Empty).Split(new[] { ';', '|' }, StringSplitOptions.RemoveEmptyEntries);
+        foreach (string part in parts)
         {
-            Name = name,
-            Tags = tags,
-            Urls = urls
-        };
-        return true;
+            if (TryNormalizeAndValidateUrl(part, out string normalizedUrl))
+            {
+                list.Add(normalizedUrl);
+            }
+        }
+        return list.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     public bool TryParseDirectUrls(string input, out List<string> urls)
@@ -227,11 +294,11 @@ internal sealed class AiteProfilesQuickLinkService
         foreach (AiteProfileSnippet snippet in NormalizeSnippets(snippets))
         {
             List<string> tags = snippet.Tags.Count > 0 ? snippet.Tags : ["misc"];
-            sb.Append(string.Join(',', tags));
-            sb.Append(':');
             sb.Append(snippet.Name);
-            sb.Append(':');
-            sb.Append(string.Join('|', snippet.Urls));
+            sb.Append(" | ");
+            sb.Append(string.Join("; ", tags));
+            sb.Append(" | ");
+            sb.Append(string.Join("; ", snippet.Urls));
             sb.AppendLine();
         }
 

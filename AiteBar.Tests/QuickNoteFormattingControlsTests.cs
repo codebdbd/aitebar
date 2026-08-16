@@ -55,19 +55,20 @@ public sealed class QuickNoteFormattingControlsTests
             .Single(element => element.Elements(PresentationNamespace + "ComboBox")
                 .Any(combo => (string?)combo.Attribute(XamlNamespace + "Name") == "CmbHeading"));
 
-        Assert.Equal(5, toolbar.Elements(PresentationNamespace + "Button").Count());
-        XElement overflow = toolbar.Elements(PresentationNamespace + "Button")
-            .Single(button => button.Element(PresentationNamespace + "Button.ContextMenu") != null);
-        string[] handlers = overflow
-            .Descendants(PresentationNamespace + "MenuItem")
-            .Select(item => (string?)item.Attribute("Click"))
+        string[] handlers = toolbar.Elements(PresentationNamespace + "Button")
+            .Select(button => (string?)button.Attribute("Click"))
             .Where(click => click != null)
             .Cast<string>()
             .ToArray();
 
-        Assert.Equal(
-            ["BtnUndo_Click", "BtnRedo_Click", "BtnUnderline_Click", "BtnCode_Click", "BtnClearFormatting_Click"],
-            handlers);
+        Assert.Equal(7, handlers.Length);
+        Assert.Contains("BtnBold_Click", handlers);
+        Assert.Contains("BtnItalic_Click", handlers);
+        Assert.Contains("BtnStrikethrough_Click", handlers);
+        Assert.Contains("BtnInsertLink_Click", handlers);
+        Assert.Contains("BtnUnderline_Click", handlers);
+        Assert.Contains("BtnCode_Click", handlers);
+        Assert.Contains("BtnClearFormatting_Click", handlers);
     }
 
     private static XElement FindCombo(string name)

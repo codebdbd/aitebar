@@ -42,6 +42,25 @@ public partial class TimerStopwatchWindow : DarkWindow
         Closed += TimerStopwatchWindow_Closed;
     }
 
+    internal void RestoreFromAiteBar()
+    {
+        WindowState = WindowState.Normal;
+        if (!IsVisible)
+        {
+            Show();
+        }
+        Activate();
+    }
+
+    protected override void OnDeactivatedAutoDismiss()
+    {
+        if (_isRunning || _isCompactMode)
+        {
+            return;
+        }
+        Hide();
+    }
+
     private async void TimerStopwatchWindow_Closed(object? sender, EventArgs e)
     {
         StopRunning();

@@ -126,6 +126,6 @@ public sealed class AiteProfilesUtilityTests
 
         string exported = service.BuildTextExport(snippets).TrimEnd();
 
-        Assert.Equal("misc:Legacy:https://example.com/", exported);
+        Assert.Equal("Legacy | misc | https://example.com/", exported);
     }
 }

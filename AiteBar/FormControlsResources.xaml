@@ -191,6 +191,7 @@
     <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}"/>
 
     <Style x:Key="BaseTextBoxStyle" TargetType="TextBox">
+        <Setter Property="ContextMenu" Value="{DynamicResource TextEditingContextMenu}"/>
         <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
         <Setter Property="Background" Value="{StaticResource FormInputBackground}"/>
         <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>

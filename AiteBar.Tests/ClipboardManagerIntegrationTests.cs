@@ -69,7 +69,7 @@ public sealed class ClipboardManagerIntegrationTests : IDisposable
         string utilityCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "ClipboardManagerUtility.cs"));
         string registryCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "UtilityRegistry.cs"));
 
-        Assert.Equal("CanMinimize", root.Attribute("ResizeMode")?.Value);
+        Assert.Equal("CanResize", root.Attribute("ResizeMode")?.Value);
         Assert.Equal("False", root.Attribute("ShowInTaskbar")?.Value);
         Assert.Equal("Window_StateChanged", root.Attribute("StateChanged")?.Value);
         Assert.Contains("Owner = owner", utilityCode, StringComparison.Ordinal);

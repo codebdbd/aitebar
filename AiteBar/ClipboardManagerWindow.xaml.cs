@@ -293,6 +293,25 @@ namespace AiteBar
                     ? LocalizationService.Get("ClipboardManager_CopiedSingleLine")
                     : LocalizationService.Get("ClipboardManager_Copied")
                 : LocalizationService.Get("ClipboardManager_CopyFailed");
+
+            if (success && !IsPinned)
+            {
+                Hide();
+                System.Threading.Tasks.Task.Delay(50).ContinueWith(_ =>
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        try
+                        {
+                            System.Windows.Forms.SendKeys.SendWait("^v");
+                        }
+                        catch
+                        {
+                            // РРіРЅРѕСЂРёСЂСѓРµРј РѕС€РёР±РєРё СЌРјСѓР»СЏС†РёРё
+                        }
+                    }));
+                });
+            }
         }
 
         private void TogglePin(ClipboardHistoryEntry entry)
@@ -544,6 +563,32 @@ namespace AiteBar
                     e.Handled = true;
                 }
             }
+        }
+
+        private void HeaderBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left)
+            {
+                DragMove();
+            }
+        }
+
+        private void Window_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            if (e.ChangedButton == MouseButton.Left && e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+            {
+                DragMove();
+            }
+        }
+
+        private void BtnClose_Click(object sender, RoutedEventArgs e)
+        {
+            Hide();
+        }
+
+        protected override void OnDeactivatedAutoDismiss()
+        {
+            Hide();
         }
     }
 

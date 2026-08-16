@@ -7,9 +7,14 @@
         Width="580" Height="430" MinWidth="460" MinHeight="320"
         WindowStartupLocation="CenterOwner" WindowStyle="None" AllowsTransparency="True"
         Background="Transparent" Foreground="White" ResizeMode="CanResize"
+        WindowClass="OverlayWidget"
         ShowInTaskbar="False" Topmost="True"
-        Loaded="Window_Loaded" Closing="Window_Closing" Deactivated="Window_Deactivated"
+        Loaded="Window_Loaded" Closing="Window_Closing"
         LocationChanged="Window_LocationChanged" SizeChanged="Window_SizeChanged">
+
+    <WindowChrome.WindowChrome>
+        <WindowChrome ResizeBorderThickness="6" CaptionHeight="0" GlassFrameThickness="0" CornerRadius="14"/>
+    </WindowChrome.WindowChrome>
 
     <Window.Resources>
         <SolidColorBrush x:Key="QuickNoteHoverBrush" Color="#303238"/>
@@ -294,27 +299,20 @@
                         <Button Content="&#xF7F4;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Italic}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnItalic_Click"/>
                         <Button Content="&#xED60;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Strikethrough}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnStrikethrough_Click"/>
                         <Button Content="&#xF4E5;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_InsertLink}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnInsertLink_Click"/>
-                        <Button Content="⋯" FontFamily="Segoe UI" FontSize="22" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_MoreFormatting}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnMenu_Click">
-                            <Button.ContextMenu>
-                                <ContextMenu Style="{StaticResource DarkContextMenu}">
-                                    <MenuItem Header="{local:Loc ResourceKey=QuickNote_Undo}" Click="BtnUndo_Click"/>
-                                    <MenuItem Header="{local:Loc ResourceKey=QuickNote_Redo}" Click="BtnRedo_Click"/>
-                                    <Separator/>
-                                    <MenuItem Header="{local:Loc ResourceKey=QuickNote_Underline}" Click="BtnUnderline_Click"/>
-                                    <MenuItem Header="{local:Loc ResourceKey=QuickNote_Code}" Click="BtnCode_Click"/>
-                                    <MenuItem Header="{local:Loc ResourceKey=QuickNote_ClearFormatting}" Click="BtnClearFormatting_Click"/>
-                                </ContextMenu>
-                            </Button.ContextMenu>
-                        </Button>
+                        <Rectangle x:Name="FormatSeparator2" Width="1" Height="18" Fill="#30FFFFFF" Margin="2,0,7,0"/>
+                        <Button Content="&#xF80A;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Underline}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnUnderline_Click"/>
+                        <Button Content="&#xF2EF;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Code}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnCode_Click"/>
+                        <Rectangle x:Name="FormatSeparator3" Width="1" Height="18" Fill="#30FFFFFF" Margin="2,0,7,0"/>
+                        <Button Content="&#xF7BD;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_ClearFormatting}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnClearFormatting_Click"/>
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                         <ToggleButton x:Name="BtnPin"
-                          Content="&#xF602;"
-                          Style="{StaticResource IconToggleButtonStyle}"
-                          ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
-                          Checked="BtnPin_Checked"
-                          Unchecked="BtnPin_Checked"/>
+                                      Style="{StaticResource WindowPinToggleButtonStyle}"
+                                      ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
+                                      IsChecked="{Binding IsPinned, RelativeSource={RelativeSource AncestorType=local:DarkWindow}, Mode=TwoWay}"
+                                      Checked="BtnPin_Checked"
+                                      Unchecked="BtnPin_Checked"/>
                         <Button Content="⋯" FontFamily="Segoe UI" FontSize="22" Style="{StaticResource QuickNoteIconButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Menu}" Click="BtnMenu_Click">
                             <Button.ContextMenu>
                                 <ContextMenu Style="{StaticResource DarkContextMenu}">
@@ -341,7 +339,7 @@
                                 </ContextMenu>
                             </Button.ContextMenu>
                         </Button>
-                        <Button Content="&#xF36A;" Style="{StaticResource QuickNoteIconButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
+                        <Button Style="{StaticResource WindowCloseButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
                     </StackPanel>
                 </Grid>
             </Border>

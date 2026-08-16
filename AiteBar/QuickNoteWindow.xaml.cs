@@ -113,12 +113,15 @@ namespace AiteBar
             TxtNote.CaretPosition = TxtNote.Document.ContentEnd;
             ResetCaretFormatting();
             ScheduleDocumentStylesUpdate();
+
+            ClearCaches();
+            ApplyTheme(_theme);
         }
 
-        private async void Window_Deactivated(object? sender, EventArgs e)
+        protected override async void OnDeactivatedAutoDismiss()
         {
             await Dispatcher.Yield(DispatcherPriority.Background);
-            if (!_settingsService.Settings.QuickNotePinned && !IsTransientUiOpen())
+            if (!IsTransientUiOpen())
             {
                 Close();
             }
@@ -1309,11 +1312,8 @@ namespace AiteBar
                 (start, end) = (end, start);
             }
 
-            int selectionStartOffset = GetTextOffset(start);
-            int selectionEndOffset = GetTextOffset(end);
-
             var selectedLists = GetAllListsRecursively(TxtNote.Document.Blocks)
-                .Select(list => (List: list, Items: GetSelectedListItems(list, start, end, selectionStartOffset, selectionEndOffset).ToList()))
+                .Select(list => (List: list, Items: GetSelectedListItems(list, start, end).ToList()))
                 .Where(selection => selection.Items.Count > 0)
                 .ToList();
 
@@ -1350,27 +1350,11 @@ namespace AiteBar
         private IEnumerable<ListItem> GetSelectedListItems(
             FlowList list,
             TextPointer selectionStart,
-            TextPointer selectionEnd,
-            int selectionStartOffset,
-            int selectionEndOffset)
+            TextPointer selectionEnd)
         {
-            bool collapsedSelection = selectionStart.CompareTo(selectionEnd) == 0;
             foreach (ListItem item in list.ListItems)
             {
                 if (TextRangesIntersect(selectionStart, selectionEnd, item.ContentStart, item.ContentEnd))
-                {
-                    yield return item;
-                    continue;
-                }
-
-                if (collapsedSelection)
-                {
-                    continue;
-                }
-
-                int itemStartOffset = GetTextOffset(item.ContentStart);
-                int itemEndOffset = GetTextOffset(item.ContentEnd);
-                if (itemStartOffset < selectionEndOffset && itemEndOffset > selectionStartOffset)
                 {
                     yield return item;
                 }

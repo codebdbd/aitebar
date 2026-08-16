@@ -86,13 +86,26 @@ public partial class AiteProfilesWindow : DarkWindow
         await _viewModel.InitializeAsync().ConfigureAwait(true);
     }
 
-    private void Window_Deactivated(object sender, EventArgs e)
+    protected override void OnDeactivatedAutoDismiss()
     {
         if (_suppressAutoHideRefCount > 0)
         {
             return;
         }
 
+        Hide();
+    }
+
+    private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == System.Windows.Input.MouseButton.Left && e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
+        {
+            DragMove();
+        }
+    }
+
+    private void BtnClose_Click(object sender, RoutedEventArgs e)
+    {
         Hide();
     }
 

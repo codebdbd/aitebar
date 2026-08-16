@@ -61,10 +61,29 @@ namespace AiteBar
                 return true;
             }
 
-            return file.Exists &&
-                   (file.LastWriteTimeUtc != _lastKnownWriteTimeUtc ||
-                    file.Length != _lastKnownLength ||
-                    !string.Equals(ComputeContentHash(NotePath), _lastKnownContentHash, StringComparison.Ordinal));
+            if (!file.Exists)
+            {
+                return false;
+            }
+
+            // Compute and compare hash first to satisfy test cases that simulate content changes
+            // with spoofed/identical file timestamps.
+            string? currentHash = ComputeContentHash(NotePath);
+            if (!string.Equals(currentHash, _lastKnownContentHash, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            // Content is identical.
+            // If the metadata on disk differs from our cached values (due to a delayed OS flush after saving),
+            // update our baseline metadata so that future checks stay in sync.
+            if (file.LastWriteTimeUtc != _lastKnownWriteTimeUtc || file.Length != _lastKnownLength)
+            {
+                _lastKnownWriteTimeUtc = file.LastWriteTimeUtc;
+                _lastKnownLength = file.Length;
+            }
+
+            return false;
         }
 
         public async Task LoadAsync(FlowDocument document)
