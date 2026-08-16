@@ -23,12 +23,7 @@
                 <ResourceDictionary Source="/AiteBar;component/UtilityWindowResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
 
-            <Style x:Key="AiteProfilesTabButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
-                <Setter Property="Height" Value="34"/>
-                <Setter Property="MinWidth" Value="92"/>
-                <Setter Property="Padding" Value="12,0"/>
-                <Setter Property="Margin" Value="0,0,6,0"/>
-            </Style>
+
 
             <Style x:Key="AiteProfilesIconButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
                 <Setter Property="Width" Value="44"/>
@@ -91,8 +86,8 @@
                                         SnapsToDevicePixels="True"/>
                                 <Border x:Name="RowBorder"
                                         Background="{TemplateBinding Background}"
-                                        BorderBrush="#303034"
-                                        BorderThickness="0,0,0,1">
+                                        BorderBrush="Transparent"
+                                        BorderThickness="0">
                                     <ContentPresenter HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
                                 </Border>
                             </Grid>
@@ -279,64 +274,34 @@
 
         <Grid Grid.Row="0" Margin="0,0,0,8">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal">
-                <Button Content="{local:Loc ResourceKey=AiteProfiles_AllTab}"
-                        Command="{Binding SetAllTabCommand}">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource AiteProfilesTabButtonStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsAllTabActive}" Value="True">
-                                    <Setter Property="BorderBrush" Value="#007ACC"/>
-                                    <Setter Property="Background" Value="#16324A"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                <Button Content="{local:Loc ResourceKey=AiteProfiles_FavoritesTab}"
-                        Command="{Binding SetFavoritesTabCommand}">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource AiteProfilesTabButtonStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsFavoritesTabActive}" Value="True">
-                                    <Setter Property="BorderBrush" Value="#007ACC"/>
-                                    <Setter Property="Background" Value="#16324A"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
-                <Button Content="{local:Loc ResourceKey=AiteProfiles_FarmTab}"
-                        Command="{Binding SetFarmTabCommand}">
-                    <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource AiteProfilesTabButtonStyle}">
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsFarmTabActive}" Value="True">
-                                    <Setter Property="BorderBrush" Value="#007ACC"/>
-                                    <Setter Property="Background" Value="#16324A"/>
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </Button.Style>
-                </Button>
+            <TabControl x:Name="CategoryTabs"
+                        Height="42"
+                        Style="{StaticResource UnderlineTabControlStyle}"
+                        SelectedIndex="{Binding ActiveCategoryIndex, Mode=TwoWay}">
+                <TabItem Header="{local:Loc ResourceKey=AiteProfiles_AllTab}"
+                         Style="{StaticResource UnderlineTabItemStyle}"/>
+                <TabItem Header="{local:Loc ResourceKey=AiteProfiles_FavoritesTab}"
+                         Style="{StaticResource UnderlineTabItemStyle}"/>
+                <TabItem Header="{local:Loc ResourceKey=AiteProfiles_FarmTab}"
+                         Style="{StaticResource UnderlineTabItemStyle}"/>
+            </TabControl>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <TextBox x:Name="SearchBox"
+                         Width="200"
+                         Height="34"
+                         Margin="8,0"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         ToolTip="{local:Loc ResourceKey=AiteProfiles_SearchPlaceholder}"/>
+                <Button Style="{StaticResource AiteProfilesIconButtonStyle}"
+                        Content="&#xF191;"
+                        Foreground="#93C5FD"
+                        Command="{Binding RefreshCommand}"
+                        ToolTip="{local:Loc ResourceKey=AiteProfiles_Scan}"
+                        Margin="0,0,0,0"/>
             </StackPanel>
-            <TextBox x:Name="SearchBox"
-                     Grid.Column="1"
-                     Height="34"
-                     Margin="8,0"
-                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                     ToolTip="{local:Loc ResourceKey=AiteProfiles_SearchPlaceholder}"/>
-            <Button Grid.Column="2"
-                    Style="{StaticResource AiteProfilesIconButtonStyle}"
-                    Content="&#xF191;"
-                    Foreground="#93C5FD"
-                    Command="{Binding RefreshCommand}"
-                    ToolTip="{local:Loc ResourceKey=AiteProfiles_Scan}"
-                    Margin="0,0,0,0"/>
         </Grid>
 
         <Grid Grid.Row="1">

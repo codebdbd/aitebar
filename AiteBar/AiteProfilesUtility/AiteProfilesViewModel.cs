@@ -212,6 +212,12 @@ internal sealed class AiteProfilesViewModel : NotifyObject
     public bool IsFavoritesTabActive => ActiveCategory == AiteProfilesCategoryTab.Favorites;
     public bool IsFarmTabActive => ActiveCategory == AiteProfilesCategoryTab.Farm;
 
+    public int ActiveCategoryIndex
+    {
+        get => (int)ActiveCategory;
+        set => SetActiveCategory((AiteProfilesCategoryTab)value);
+    }
+
     public AiteProfileListItemViewModel? CurrentProfile
     {
         get => _currentProfile;
