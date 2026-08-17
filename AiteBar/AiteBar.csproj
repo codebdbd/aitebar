@@ -27,7 +27,7 @@
     <PackageReference Include="Sentry" Version="6.8.0" />
     <PackageReference Include="SkiaSharp" Version="4.150.1" />
     <PackageReference Include="SkiaSharp.NativeAssets.Win32" Version="4.150.1" />
-    <PackageReference Include="Svg.Skia" Version="5.1.1" />
+    <PackageReference Include="Svg.Skia" Version="5.2.1" />
   </ItemGroup>
 
   <ItemGroup>
