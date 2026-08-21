@@ -31,14 +31,15 @@ public partial class AppSettingsWindow : DarkWindow
     private sealed record ContextRowDraft(string ContextId, string Name, bool IsEnabled, bool IsNameCustomized);
     private sealed record ContextRow(
         string ContextId,
+        Grid RowGrid,
         CheckBox EnabledCheckBox,
         TextBox NameTextBox,
         Border BadgeBorder,
         Button ClearButton,
         Border DragHandle,
         Border RowSurface,
-        Border InsertBeforeIndicator,
-        Border InsertAfterIndicator);
+        FrameworkElement InsertBeforeIndicator,
+        FrameworkElement InsertAfterIndicator);
 
     private readonly MainWindow _mainWindow;
     private readonly AppSettings _settings;
@@ -467,7 +468,8 @@ public partial class AppSettingsWindow : DarkWindow
 
     private void BtnAiAddConnection_Click(object sender, RoutedEventArgs e)
     {
-        var dialog = new AiConnectionDialog { Owner = this };
+        var existingNames = _aiConnections.Select(c => c.DisplayName);
+        var dialog = new AiConnectionDialog(existingNames) { Owner = this };
         if (dialog.ShowDialog() != true)
         {
             return;
@@ -1057,6 +1059,7 @@ public partial class AppSettingsWindow : DarkWindow
             checkBox.IsChecked = definition.IsVisible(_settings);
         }
         ChkClipboardManagerPersistHistory.IsChecked = _settings.ClipboardManagerPersistHistory;
+        ChkSaveTextProcessingDraft.IsChecked = _settings.SaveTextProcessingDraft;
         ChkSavePromptBuilderDrafts.IsChecked = _settings.SavePromptBuilderDrafts;
         ChkShowPanelOnMouseHover.IsChecked = _settings.ShowPanelOnMouseHover;
         ChkShowTaskbarPositionIndicator.IsChecked = _settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
@@ -1301,6 +1304,7 @@ public partial class AppSettingsWindow : DarkWindow
 
             var contextRow = new ContextRow(
                 context.Id,
+                row,
                 enabledCheckBox,
                 nameTextBox,
                 badge,
@@ -1324,22 +1328,35 @@ public partial class AppSettingsWindow : DarkWindow
         }
     }
 
-    private Border CreateContextDropIndicator(VerticalAlignment alignment) => new()
+    private FrameworkElement CreateContextDropIndicator(VerticalAlignment alignment)
     {
-        Height = 2,
-        Margin = new Thickness(32, 0, 8, 0),
-        CornerRadius = new CornerRadius(1),
-        Background = (System.Windows.Media.Brush)FindResource("AccentColor"),
-        VerticalAlignment = alignment,
-        Visibility = Visibility.Collapsed,
-        IsHitTestVisible = false,
-        Effect = new System.Windows.Media.Effects.DropShadowEffect
+        var grid = new Grid
         {
-            Color = System.Windows.Media.Color.FromArgb(0x80, 0x00, 0x7A, 0xCC),
-            BlurRadius = 4,
-            ShadowDepth = 0
-        }
-    };
+            Height = 6,
+            VerticalAlignment = alignment,
+            Visibility = Visibility.Collapsed,
+            IsHitTestVisible = false
+        };
+        grid.Children.Add(new Border
+        {
+            Height = 2,
+            Margin = new Thickness(36, 0, 8, 0),
+            Background = (System.Windows.Media.Brush)FindResource("AccentColor"),
+            VerticalAlignment = System.Windows.VerticalAlignment.Center,
+            CornerRadius = new CornerRadius(1)
+        });
+        grid.Children.Add(new Border
+        {
+            Width = 6,
+            Height = 6,
+            Margin = new Thickness(30, 0, 0, 0),
+            Background = (System.Windows.Media.Brush)FindResource("AccentColor"),
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Left,
+            VerticalAlignment = System.Windows.VerticalAlignment.Center,
+            CornerRadius = new CornerRadius(3)
+        });
+        return grid;
+    }
 
     private async void BtnClearContext_Click(object sender, RoutedEventArgs e)
     {
@@ -1562,23 +1579,21 @@ public partial class AppSettingsWindow : DarkWindow
 
             if (isSource)
             {
-                row.RowSurface.Background = BrushFromHex("#203548");
-                row.RowSurface.BorderBrush = BrushFromHex("#2F78C4");
-                row.DragHandle.Background = BrushFromHex("#0F5EA8");
-                row.DragHandle.BorderBrush = System.Windows.Media.Brushes.Transparent;
-                row.DragHandle.BorderThickness = new Thickness(0);
+                row.RowGrid.Opacity = 0.35;
+                row.RowSurface.Background = System.Windows.Media.Brushes.Transparent;
+                row.RowSurface.BorderBrush = System.Windows.Media.Brushes.Transparent;
+                row.DragHandle.Background = BrushFromHex("#242A30");
                 if (row.DragHandle.Child is TextBlock sourceGlyph)
                 {
-                    sourceGlyph.Foreground = System.Windows.Media.Brushes.White;
+                    sourceGlyph.Foreground = BrushFromHex("#8A95A3");
                 }
             }
             else
             {
-                row.RowSurface.Background = isTarget ? BrushFromHex("#222A34") : System.Windows.Media.Brushes.Transparent;
-                row.RowSurface.BorderBrush = isTarget ? BrushFromHex("#3C9EFF") : System.Windows.Media.Brushes.Transparent;
+                row.RowGrid.Opacity = 1.0;
+                row.RowSurface.Background = System.Windows.Media.Brushes.Transparent;
+                row.RowSurface.BorderBrush = System.Windows.Media.Brushes.Transparent;
                 row.DragHandle.Background = BrushFromHex("#242A30");
-                row.DragHandle.BorderBrush = System.Windows.Media.Brushes.Transparent;
-                row.DragHandle.BorderThickness = new Thickness(0);
                 if (row.DragHandle.Child is TextBlock otherGlyph)
                 {
                     otherGlyph.Foreground = BrushFromHex("#8A95A3");
@@ -1597,11 +1612,6 @@ public partial class AppSettingsWindow : DarkWindow
         {
             row.InsertBeforeIndicator.Visibility = Visibility.Collapsed;
             row.InsertAfterIndicator.Visibility = Visibility.Collapsed;
-            if (row.RowSurface.Background != BrushFromHex("#203548"))
-            {
-                row.RowSurface.Background = System.Windows.Media.Brushes.Transparent;
-                row.RowSurface.BorderBrush = System.Windows.Media.Brushes.Transparent;
-            }
         }
     }
 
@@ -1611,11 +1621,10 @@ public partial class AppSettingsWindow : DarkWindow
         _dragOverAfter = false;
         foreach (ContextRow row in _contextRows)
         {
+            row.RowGrid.Opacity = 1.0;
             row.RowSurface.Background = System.Windows.Media.Brushes.Transparent;
             row.RowSurface.BorderBrush = System.Windows.Media.Brushes.Transparent;
             row.DragHandle.Background = BrushFromHex("#242A30");
-            row.DragHandle.BorderBrush = System.Windows.Media.Brushes.Transparent;
-            row.DragHandle.BorderThickness = new Thickness(0);
             if (row.DragHandle.Child is TextBlock glyph)
             {
                 glyph.Foreground = BrushFromHex("#8A95A3");
@@ -1730,6 +1739,9 @@ public partial class AppSettingsWindow : DarkWindow
 
     private async void BtnSave_Click(object sender, RoutedEventArgs e)
     {
+        bool clearSensitiveDraftBackups =
+            ChkSaveTextProcessingDraft.IsChecked != true ||
+            ChkSavePromptBuilderDrafts.IsChecked != true;
         HotkeyBinding nextBinding = HotkeyNextContext.GetBinding();
         HotkeyBinding previousBinding = HotkeyPreviousContext.GetBinding();
         HotkeyBinding addButtonBinding = HotkeyAddButton.GetBinding();
@@ -1774,7 +1786,12 @@ public partial class AppSettingsWindow : DarkWindow
                 definition.SetVisible(settings, checkBox.IsChecked ?? false);
             }
             settings.ClipboardManagerPersistHistory = ChkClipboardManagerPersistHistory.IsChecked ?? true;
-            settings.SavePromptBuilderDrafts = ChkSavePromptBuilderDrafts.IsChecked ?? true;
+            settings.SaveTextProcessingDraft = ChkSaveTextProcessingDraft.IsChecked ?? false;
+            if (!settings.SaveTextProcessingDraft)
+            {
+                settings.TextProcessingLastText = null;
+            }
+            settings.SavePromptBuilderDrafts = ChkSavePromptBuilderDrafts.IsChecked ?? false;
             if (!settings.SavePromptBuilderDrafts)
             {
                 settings.PromptBuilderDrafts = [];
@@ -1800,6 +1817,10 @@ public partial class AppSettingsWindow : DarkWindow
             settings.MonitorIndex = AppSettingsSelectionHelper.ResolveMonitorIndex(
                 settings.MonitorIndex,
                 ChkSecondaryMonitor.IsChecked == true);
+            System.Windows.Forms.Screen[] screens = System.Windows.Forms.Screen.AllScreens;
+            settings.MonitorDeviceName = settings.MonitorIndex >= 0 && settings.MonitorIndex < screens.Length
+                ? screens[settings.MonitorIndex].DeviceName
+                : System.Windows.Forms.Screen.PrimaryScreen?.DeviceName ?? string.Empty;
 
             settings.ActivationZoneSizePercent = AppSettingsSelectionHelper.ResolveSegmentedValue(
                 settings.ActivationZoneSizePercent,
@@ -1831,6 +1852,10 @@ public partial class AppSettingsWindow : DarkWindow
         try
         {
             failedHotkeys = await _mainWindow.SaveAppSettings();
+            if (clearSensitiveDraftBackups)
+            {
+                _mainWindow.GetSettingsService().ClearSettingsBackups();
+            }
         }
         catch (Exception ex)
         {

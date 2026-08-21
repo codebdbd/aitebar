@@ -4,6 +4,7 @@ using System.Windows.Documents;
 
 namespace AiteBar;
 
+[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 internal interface IQuickNotePersistence
 {
     string? LastConflictCopyPath { get; }
@@ -15,6 +16,7 @@ internal interface IQuickNotePersistence
     void OpenConflictCopy();
 }
 
+[System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
 internal sealed class QuickNotePersistence(QuickNoteService service) : IQuickNotePersistence
 {
     private readonly QuickNoteService _service = service ?? throw new ArgumentNullException(nameof(service));

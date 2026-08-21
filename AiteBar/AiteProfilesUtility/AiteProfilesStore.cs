@@ -84,19 +84,19 @@ internal sealed class AiteProfilesStore
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            var updatedFavorites = new HashSet<string>(_favorites, StringComparer.Ordinal);
             if (value)
             {
-                _favorites.Add(key);
+                updatedFavorites.Add(key);
             }
             else
             {
-                _favorites.Remove(key);
+                updatedFavorites.Remove(key);
             }
 
-            _profiles = _profiles.Select(profile => string.Equals(AiteProfileKey.Build(profile.Folder, profile.Path), key, StringComparison.Ordinal)
-                ? profile with { IsFavorite = value }
-                : profile).ToList();
-            await AiteProfilesJsonStore.WriteAsync(_favoritesPath, _favorites.Order(StringComparer.Ordinal).ToArray(), cancellationToken).ConfigureAwait(false);
+            await AiteProfilesJsonStore.WriteAsync(_favoritesPath, updatedFavorites.Order(StringComparer.Ordinal).ToArray(), cancellationToken).ConfigureAwait(false);
+            _favorites = updatedFavorites;
+            UpdateProfile(key, profile => profile with { IsFavorite = value });
         }
         finally
         {
@@ -110,19 +110,19 @@ internal sealed class AiteProfilesStore
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            var updatedFarm = new HashSet<string>(_farm, StringComparer.Ordinal);
             if (value)
             {
-                _farm.Add(key);
+                updatedFarm.Add(key);
             }
             else
             {
-                _farm.Remove(key);
+                updatedFarm.Remove(key);
             }
 
-            _profiles = _profiles.Select(profile => string.Equals(AiteProfileKey.Build(profile.Folder, profile.Path), key, StringComparison.Ordinal)
-                ? profile with { IsFarm = value }
-                : profile).ToList();
-            await AiteProfilesJsonStore.WriteAsync(_farmPath, _farm.Order(StringComparer.Ordinal).ToArray(), cancellationToken).ConfigureAwait(false);
+            await AiteProfilesJsonStore.WriteAsync(_farmPath, updatedFarm.Order(StringComparer.Ordinal).ToArray(), cancellationToken).ConfigureAwait(false);
+            _farm = updatedFarm;
+            UpdateProfile(key, profile => profile with { IsFarm = value });
         }
         finally
         {
@@ -137,19 +137,19 @@ internal sealed class AiteProfilesStore
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            var updatedTags = new Dictionary<string, string>(_tags, StringComparer.Ordinal);
             if (string.IsNullOrWhiteSpace(normalized))
             {
-                _tags.Remove(key);
+                updatedTags.Remove(key);
             }
             else
             {
-                _tags[key] = normalized;
+                updatedTags[key] = normalized;
             }
 
-            _profiles = _profiles.Select(profile => string.Equals(AiteProfileKey.Build(profile.Folder, profile.Path), key, StringComparison.Ordinal)
-                ? profile with { TagsText = normalized }
-                : profile).ToList();
-            await AiteProfilesJsonStore.WriteAsync(_tagsPath, _tags.OrderBy(static pair => pair.Key, StringComparer.Ordinal).ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal), cancellationToken).ConfigureAwait(false);
+            await AiteProfilesJsonStore.WriteAsync(_tagsPath, updatedTags.OrderBy(static pair => pair.Key, StringComparer.Ordinal).ToDictionary(static pair => pair.Key, static pair => pair.Value, StringComparer.Ordinal), cancellationToken).ConfigureAwait(false);
+            _tags = updatedTags;
+            UpdateProfile(key, profile => profile with { TagsText = normalized });
         }
         finally
         {
@@ -164,15 +164,12 @@ internal sealed class AiteProfilesStore
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
-            _profiles = _profiles.Select(profile => string.Equals(AiteProfileKey.Build(profile.Folder, profile.Path), key, StringComparison.Ordinal)
-                ? profile with { LastTs = ts }
-                : profile).ToList();
-
             AiteProfilesCacheDocument cache = await LoadCacheAsync(cancellationToken).ConfigureAwait(false);
             if (cache.Profiles.TryGetValue(key, out AiteProfileCacheEntry? entry))
             {
                 cache.Profiles[key] = entry with { LastTs = ts };
                 await AiteProfilesJsonStore.WriteAsync(_cachePath, cache, cancellationToken).ConfigureAwait(false);
+                UpdateProfile(key, profile => profile with { LastTs = ts });
             }
 
             return ts;
@@ -180,6 +177,15 @@ internal sealed class AiteProfilesStore
         finally
         {
             _gate.Release();
+        }
+    }
+
+    private void UpdateProfile(string key, Func<AiteProfile, AiteProfile> update)
+    {
+        int index = _profiles.FindIndex(profile => string.Equals(AiteProfileKey.Build(profile.Folder, profile.Path), key, StringComparison.Ordinal));
+        if (index >= 0)
+        {
+            _profiles[index] = update(_profiles[index]);
         }
     }
 

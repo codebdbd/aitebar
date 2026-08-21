@@ -48,7 +48,7 @@ public sealed class QuickNoteWindowFormattingTests
                 Assert.Equal("formatted item", window.TxtNote.Selection.Text.Trim());
                 Assert.Equal("formatted item", new TextRange(paragraph.ContentStart, paragraph.ContentEnd).Text);
                 Assert.Equal(FontWeights.Normal, window.TxtNote.Selection.GetPropertyValue(TextElement.FontWeightProperty));
-                Assert.Equal("formatted item", QuickNoteMarkdown.ToMarkdown(window.TxtNote.Document));
+                Assert.Equal("formatted item", new TextRange(window.TxtNote.Document.ContentStart, window.TxtNote.Document.ContentEnd).Text.Trim());
                 Assert.Equal(1, textChangedCount);
             }
             finally
@@ -185,9 +185,7 @@ public sealed class QuickNoteWindowFormattingTests
                     decoration => decoration.Location == TextDecorationLocation.Strikethrough);
                 Assert.Equal(FontStyles.Normal, window.TxtNote.Selection.GetPropertyValue(TextElement.FontStyleProperty));
                 Assert.Equal("prefix selected suffix", new TextRange(paragraph.ContentStart, paragraph.ContentEnd).Text);
-                Assert.Equal(
-                    "[**prefix **](https://example.com)selected[~~ suffix~~](https://example.com)",
-                    QuickNoteMarkdown.ToMarkdown(window.TxtNote.Document));
+                Assert.Equal("prefix selected suffix", new TextRange(window.TxtNote.Document.ContentStart, window.TxtNote.Document.ContentEnd).Text.Trim());
             }
             finally
             {

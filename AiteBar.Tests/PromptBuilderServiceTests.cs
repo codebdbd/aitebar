@@ -106,7 +106,7 @@ public sealed class PromptBuilderServiceTests
     }
 
     [Fact]
-    public void BuildRequest_ImagesPhotographersAppliesSelectedPhotographerReference()
+    public void BuildRequest_ImagesPhotographersUsesGenericVisualQualities()
     {
         AiChatRequest request = _service.BuildRequest(
             PromptBuilderCategory.Images,
@@ -115,7 +115,8 @@ public sealed class PromptBuilderServiceTests
             photoStyle: PhotoStyle.AnnieLeibovitz);
 
         Assert.Contains("photographic author references", request.Messages[0].Content);
-        Assert.Contains("Annie Leibovitz", request.Messages[0].Content);
+        Assert.Contains("staged portraiture", request.Messages[0].Content);
+        Assert.DoesNotContain("Annie Leibovitz", request.Messages[0].Content);
         Assert.DoesNotContain("{photoStyle}", request.Messages[0].Content);
     }
 
@@ -330,9 +331,33 @@ public sealed class PromptBuilderServiceTests
 
         Assert.Contains("square icon asset", request.Messages[0].Content);
         Assert.Contains("flat icon design", request.Messages[0].Content);
-        Assert.Contains("95-98% of the square canvas", request.Messages[0].Content);
+        Assert.Contains("95-98% of the available composition", request.Messages[0].Content);
         Assert.Contains("no rounded app-tile container", request.Messages[0].Content);
         Assert.DoesNotContain("photo direction", request.Messages[0].Content);
+    }
+
+    [Theory]
+    [InlineData(PromptBuilderCategory.Images)]
+    [InlineData(PromptBuilderCategory.Paintings)]
+    [InlineData(PromptBuilderCategory.Animation)]
+    [InlineData(PromptBuilderCategory.Ideas)]
+    [InlineData(PromptBuilderCategory.Graphics)]
+    public void BuildRequest_GrokImagine_DoesNotAddInterfaceFormatParameters(PromptBuilderCategory category)
+    {
+        AiChatRequest request = _service.BuildRequest(
+            category,
+            "A red fox in a snowy forest",
+            visualTarget: VisualTargetModel.GrokImagine,
+            graphicType: GraphicType.Poster);
+
+        string prompt = request.Messages[0].Content;
+
+        Assert.Contains("creative scene and editing constraints", prompt);
+        Assert.Contains("interface supplies those settings", prompt);
+        Assert.DoesNotContain("--ar", prompt, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("4:5", prompt, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("16:9", prompt, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("1:1", prompt, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -398,11 +423,11 @@ public sealed class PromptBuilderServiceTests
     }
 
     [Fact]
-    public void CleanResponse_RemovesReasoningWithoutChangingPromptFormatting()
+    public void CleanResponse_PreservesPromptMarkupExactly()
     {
-        string result = _service.CleanResponse("<think>analysis</think>\n```text\nReady prompt\n```");
+        string result = _service.CleanResponse("<analysis><field>value</field></analysis>\n```text\nReady prompt\n```");
 
-        Assert.Equal("```text\nReady prompt\n```", result);
+        Assert.Equal("<analysis><field>value</field></analysis>\n```text\nReady prompt\n```", result);
     }
 
     [Fact]
@@ -416,7 +441,8 @@ public sealed class PromptBuilderServiceTests
             paintingArtist: PaintingArtist.Monet);
 
         Assert.Contains("Impressionist oil painting", request.Messages[0].Content);
-        Assert.Contains("Use Claude Monet as a stylistic orientation", request.Messages[0].Content);
+        Assert.Contains("luminous broken brushwork", request.Messages[0].Content);
+        Assert.DoesNotContain("Claude Monet", request.Messages[0].Content);
         Assert.Contains("This is a retry", request.Messages[0].Content);
         Assert.Equal("a woman by a stream", request.Messages[1].Content);
         Assert.Equal(0.65, request.Temperature);

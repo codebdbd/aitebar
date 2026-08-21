@@ -295,7 +295,7 @@ public enum ProgrammingPromptStyle
     CrossPlatformDesktop
 }
 
-public enum VisualTargetModel { Universal, GptImage, Flux, NanoBanana, Midjourney, StableDiffusion }
+public enum VisualTargetModel { Universal, GptImage, Flux, NanoBanana, Midjourney, StableDiffusion, GrokImagine }
 
 public enum AnalysisDirection
 {
@@ -1131,12 +1131,13 @@ public sealed class PromptBuilderService
 
     public static readonly IReadOnlyList<VisualTargetModelDefinition> VisualTargetModels =
     [
+        new(VisualTargetModel.GrokImagine, "VisualTarget_GrokImagine", "Use one direct, fluent English description of the requested visual result. Include only creative scene and editing constraints. Do not mention aspect ratio, resolution, dimensions, output format, quality tiers, command flags, negative prompts, or API parameters; the interface supplies those settings."),
         new(VisualTargetModel.Universal, "VisualTarget_Universal", "Use a compact, fluent natural-language visual prompt that is compatible with modern image models."),
         new(VisualTargetModel.GptImage, "VisualTarget_GptImage", "Use direct natural language with clear subject, composition, and lighting. Avoid keyword lists, negative prompts, and implementation commentary."),
         new(VisualTargetModel.Flux, "VisualTarget_Flux", "Use a precise, visually specific natural-language description with clear subject relationships, composition, material detail, lighting, and style. Avoid negative prompts and empty quality tags."),
-        new(VisualTargetModel.NanoBanana, "VisualTarget_NanoBanana", "Use direct natural language that prioritizes the requested subject, action, spatial relationships, and preservation of unmentioned elements for editing tasks. Avoid negative prompts and irrelevant stylistic filler.")
-        ,new(VisualTargetModel.Midjourney, "VisualTarget_Midjourney", "Use one concise, vivid visual phrase. Keep only image-defining details, use concrete nouns and modifiers, avoid explanations and long instructions, and append only a suitable --ar aspect-ratio parameter.")
-        ,new(VisualTargetModel.StableDiffusion, "VisualTarget_StableDiffusion", "Use a compact, precise positive image prompt with concrete subjects, composition, lighting, materials, and style terms. Do not add a negative prompt unless the user explicitly asks for one.")
+        new(VisualTargetModel.NanoBanana, "VisualTarget_NanoBanana", "Use direct natural language that prioritizes the requested subject, action, spatial relationships, and preservation of unmentioned elements for editing tasks. Avoid negative prompts and irrelevant stylistic filler."),
+        new(VisualTargetModel.Midjourney, "VisualTarget_Midjourney", "Use one concise, vivid visual phrase. Keep only image-defining details, use concrete nouns and modifiers, and avoid explanations, command flags, and long instructions."),
+        new(VisualTargetModel.StableDiffusion, "VisualTarget_StableDiffusion", "Use a compact, precise positive image prompt with concrete subjects, composition, lighting, materials, and style terms. Do not add a negative prompt unless the user explicitly asks for one.")
     ];
 
     public static readonly IReadOnlyList<AnimationStyleDefinition> AnimationStyles =
@@ -1292,7 +1293,7 @@ public sealed class PromptBuilderService
         """;
 
     private const string ImagesInstruction = """
-        Turn the user's brief into one polished English prompt for Flux, GPT-Image, Nano Banana, or another modern image generation or editing model.
+        Turn the user's brief into one polished English prompt for Grok Imagine, Flux, GPT-Image, Nano Banana, or another modern image generation or editing model.
 
         Return only one finished prompt as a natural-language paragraph. Never add headings, lists, a negative-prompt section, placeholders, explanations, questions, role-play, or instructions about reasoning.
 
@@ -1323,10 +1324,9 @@ public sealed class PromptBuilderService
         - color palette;
         - materials and textures;
         - atmosphere;
-        - visual style;
-        - aspect ratio.
+        - visual style.
 
-        Arrange the description in a logical visual order: main subject, action, composition, environment, lighting, style, and visual finish. Include one suitable aspect ratio: choose 4:5 for a portrait-oriented subject, 16:9 for a wide scene, and 1:1 for a logo, icon, product, or balanced composition unless the brief specifies one.
+        Arrange the description in a logical visual order: main subject, action, composition, environment, lighting, style, and visual finish. Never add aspect ratio, resolution, dimensions, output format, or command flags: these are configured in the target interface.
 
         For image editing, make the requested change prominent and preserve the unmentioned identity, proportions, pose, composition, and scene continuity.
 
@@ -1344,13 +1344,13 @@ public sealed class PromptBuilderService
 
         Preserve the brief's non-negotiable subject, action, objects, and setting. Translate the working prompt into fluent English. Never invent a phrase, sentence, caption, label, slogan, quote, lettering, or a "text" clause; mention visible text only when the user explicitly supplied the exact wording.
 
-        Act as an exceptional painter and art director. Expand a short idea into a complete, emotionally resonant painted scene with deliberate composition, hierarchy, gesture, setting, light, palette, atmosphere, material texture, brushwork, and a suitable aspect ratio. Add coherent artistic details freely, but never invent brands, celebrities, copyrighted characters, factual claims, or unrequested visible wording.
+        Act as an exceptional painter and art director. Expand a short idea into a complete, emotionally resonant painted scene with deliberate composition, hierarchy, gesture, setting, light, palette, atmosphere, material texture, and brushwork. Add coherent artistic details freely, but never invent brands, celebrities, copyrighted characters, factual claims, or unrequested visible wording.
 
         Apply this chosen style direction: {paintingStyle}
         Apply this chosen artist orientation: {paintingArtist}
         Apply this target-model profile: {visualTarget}
 
-        Keep the result unmistakably painterly. Treat artist references as strong stylistic orientation only; do not promise or imply an exact identity match. Respect an explicitly requested medium, period, or artist direction when it conflicts with the selected default. Select 4:5 for portrait-oriented scenes, 16:9 for broad narratives, and 1:1 for a balanced composition unless the user specifies another ratio.
+        Keep the result unmistakably painterly. Treat artist references as strong stylistic orientation only; do not promise or imply an exact identity match. Respect an explicitly requested medium, period, or artist direction when it conflicts with the selected default. Never add aspect ratio, resolution, dimensions, output format, or command flags: these are configured in the target interface.
 
         Generate the depicted scene itself as artwork, not a photograph of an artwork or a decorative object. Do not add a frame, border, mat, canvas edge, easel, gallery wall, museum display, caption, signature, or any presentation context unless the user explicitly requests it.
         """;
@@ -1366,7 +1366,7 @@ public sealed class PromptBuilderService
         Apply this graphic style: {graphicStyle}
         Apply this target-model profile: {visualTarget}
 
-        Produce the requested graphic asset itself, not a photograph of it or a scene containing it. Use the format best suited to the asset: 1:1 for stickers, logos, UI elements, and icons; 16:9 for banners; 4:5 for posters; otherwise infer from the brief. Prioritize clear hierarchy, scalable shape design, and practical readability. When the selected type is an icon, require one dominant symbol that fills roughly 95-98% of the square canvas, a full-bleed solid background when a background is present, no rounded app-tile container unless the user explicitly asks for it, and no tiny centered glyph floating inside excessive padding.
+        Produce the requested graphic asset itself, not a photograph of it or a scene containing it. Prioritize clear hierarchy, scalable shape design, and practical readability. When the selected type is an icon, require one dominant symbol that fills roughly 95-98% of the available composition, a full-bleed solid background when a background is present, no rounded app-tile container unless the user explicitly asks for it, and no tiny centered glyph floating inside excessive padding. Never add aspect ratio, resolution, dimensions, output format, or command flags: these are configured in the target interface.
         """;
 
     private const string AnimationInstruction = """
@@ -1376,12 +1376,12 @@ public sealed class PromptBuilderService
 
         Preserve the brief's non-negotiable subject, action, objects, and setting. Translate the working prompt into fluent English. Never invent a phrase, sentence, caption, label, slogan, quote, lettering, or a "text" clause; mention visible text only when the user explicitly supplied the exact wording.
 
-        Act as an animation director and production designer. Expand a short idea into a complete, highly readable image with expressive character design, pose, gesture, composition, scene design, color script, lighting, materials, atmosphere, and a suitable aspect ratio. Add coherent details freely, but never invent brands, celebrities, copyrighted characters, factual claims, or unrequested visible wording.
+        Act as an animation director and production designer. Expand a short idea into a complete, highly readable image with expressive character design, pose, gesture, composition, scene design, color script, lighting, materials, and atmosphere. Add coherent details freely, but never invent brands, celebrities, copyrighted characters, factual claims, or unrequested visible wording.
 
         Apply this chosen animation direction: {animationStyle}
         Apply this target-model profile: {visualTarget}
 
-        Keep the result clearly animated or sequential-art rather than photorealistic. Respect an explicitly requested medium or style when it conflicts with the selected default. Select 4:5 for a character portrait, 16:9 for a wide cinematic scene, and 1:1 for a balanced composition unless the user specifies another ratio.
+        Keep the result clearly animated or sequential-art rather than photorealistic. Respect an explicitly requested medium or style when it conflicts with the selected default. Never add aspect ratio, resolution, dimensions, output format, or command flags: these are configured in the target interface.
         """;
 
     private const string TextsInstruction = """
@@ -1459,7 +1459,6 @@ public sealed class PromptBuilderService
         - visual style;
         - pacing;
         - duration;
-        - aspect ratio;
         - transitions;
         - final state;
         - continuity requirements.
@@ -1479,6 +1478,8 @@ public sealed class PromptBuilderService
         Avoid excessive motion. Do not animate every object unless the user explicitly requests it.
 
         When visible text is required, reproduce it exactly as supplied.
+
+        Never add aspect ratio, resolution, dimensions, output format, or command flags: these are configured in the target interface.
 
         Do not add generic quality filler or a generic negative prompt.
 
@@ -1570,7 +1571,7 @@ public sealed class PromptBuilderService
 
         Preserve the brief's non-negotiable subject, action, objects, and setting. Translate the working prompt into fluent English. Never invent visible text, captions, signage, slogans, or lettering unless the user explicitly supplied the exact wording.
 
-        Act as an experienced visual director. Expand a short idea into a coherent scene with clear subject hierarchy, environment, atmosphere, lighting, composition, material detail, and a suitable aspect ratio.
+        Act as an experienced visual director. Expand a short idea into a coherent scene with clear subject hierarchy, environment, atmosphere, lighting, composition, and material detail.
 
         Apply this selected thematic section: {themeSection}
         Apply this selected thematic style: {themeStyle}
@@ -1588,10 +1589,11 @@ public sealed class PromptBuilderService
         - lighting;
         - palette;
         - materials and surface detail;
-        - visual finish;
-        - aspect ratio.
+        - visual finish.
 
         For image editing, make the requested change clear while preserving every unmentioned important element of the original image.
+
+        Never add aspect ratio, resolution, dimensions, output format, or command flags: these are configured in the target interface.
 
         Do not add generic filler such as "masterpiece", "award-winning", "best quality", "8K", or "trending". Do not write a separate negative prompt.
         """;
@@ -1789,6 +1791,7 @@ public sealed class PromptBuilderService
                     ? "Select the most fitting photographer reference for the brief."
                     : $"Select the most fitting style within {section.PromptDescriptor}."
                 : style.PromptDescriptor;
+            styleDescriptor = SanitizeVisualDescriptor(styleDescriptor);
             systemPrompt = systemPrompt.Replace("{photoSection}", section.PromptDescriptor, StringComparison.Ordinal)
                 .Replace("{photoStyle}", styleDescriptor, StringComparison.Ordinal);
         }
@@ -1841,8 +1844,11 @@ public sealed class PromptBuilderService
             string descriptor = style.Style == PaintingStyle.Auto && paintingSection != PaintingStyleSection.All
                 ? $"Select the most fitting style within {PaintingStyleSections.First(item => item.Section == paintingSection).PromptDescriptor}."
                 : style.PromptDescriptor;
-            systemPrompt = systemPrompt.Replace("{paintingStyle}", descriptor, StringComparison.Ordinal);
-            systemPrompt = systemPrompt.Replace("{paintingArtist}", artist.PromptDescriptor, StringComparison.Ordinal);
+            artist = paintingSection == PaintingStyleSection.Artists
+                ? artist
+                : PaintingArtists[0];
+            systemPrompt = systemPrompt.Replace("{paintingStyle}", SanitizeVisualDescriptor(descriptor), StringComparison.Ordinal);
+            systemPrompt = systemPrompt.Replace("{paintingArtist}", SanitizeVisualDescriptor(artist.PromptDescriptor), StringComparison.Ordinal);
         }
         if (category == PromptBuilderCategory.Animation)
         {
@@ -1850,7 +1856,7 @@ public sealed class PromptBuilderService
             string descriptor = style.Style == AnimationStyle.Auto && animationSection != AnimationStyleSection.All
                 ? $"Select the most fitting style within {AnimationStyleSections.First(item => item.Section == animationSection).PromptDescriptor}."
                 : style.PromptDescriptor;
-            systemPrompt = systemPrompt.Replace("{animationStyle}", descriptor, StringComparison.Ordinal);
+            systemPrompt = systemPrompt.Replace("{animationStyle}", SanitizeVisualDescriptor(descriptor), StringComparison.Ordinal);
         }
         if (category is PromptBuilderCategory.Icons or PromptBuilderCategory.Graphics)
         {
@@ -1872,7 +1878,7 @@ public sealed class PromptBuilderService
             }
 
             systemPrompt = systemPrompt.Replace("{graphicType}", type.PromptDescriptor, StringComparison.Ordinal)
-                .Replace("{graphicStyle}", styleDescriptor, StringComparison.Ordinal);
+                .Replace("{graphicStyle}", SanitizeVisualDescriptor(styleDescriptor), StringComparison.Ordinal);
         }
         if (createAlternative)
         {
@@ -1930,8 +1936,35 @@ public sealed class PromptBuilderService
         };
     }
 
-    public string CleanResponse(string rawResponse) =>
-        _responseCleaner.CleanResponse(rawResponse);
+    private static string SanitizeVisualDescriptor(string descriptor)
+    {
+        string result = System.Text.RegularExpressions.Regex.Replace(
+            descriptor,
+            @"^Use [^:]+ as a (?:stylistic|photographic) orientation:\s*",
+            string.Empty,
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        result = System.Text.RegularExpressions.Regex.Replace(
+            result,
+            @", inspired by [^.]+(?=\.|$)",
+            string.Empty,
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        return result
+            .Replace("Pixar-style", "family-friendly 3D", StringComparison.OrdinalIgnoreCase)
+            .Replace("Disney-style", "storybook feature-animation", StringComparison.OrdinalIgnoreCase)
+            .Replace("Adventure Time-style", "whimsical fantasy-cartoon", StringComparison.OrdinalIgnoreCase)
+            .Replace("Arcane-style", "painterly dramatic 3D", StringComparison.OrdinalIgnoreCase)
+            .Replace("Family Guy-style", "flat adult-sitcom", StringComparison.OrdinalIgnoreCase)
+            .Replace("Gravity Falls-style", "mystery-adventure cartoon", StringComparison.OrdinalIgnoreCase)
+            .Replace("Looney Tunes-style", "classic theatrical-cartoon", StringComparison.OrdinalIgnoreCase)
+            .Replace("Rick and Morty-style", "adult sci-fi cartoon", StringComparison.OrdinalIgnoreCase)
+            .Replace("The Simpsons-style", "flat suburban-sitcom", StringComparison.OrdinalIgnoreCase)
+            .Replace("South Park-style", "paper-cutout", StringComparison.OrdinalIgnoreCase)
+            .Replace("Spider-Verse-style", "comic-book 3D", StringComparison.OrdinalIgnoreCase)
+            .Replace("Tom and Jerry-style", "classic slapstick-cartoon", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public string CleanResponse(string rawResponse) => (rawResponse ?? string.Empty).Trim();
 
     internal static string HideReasoningFromStreamingPreview(string rawResponse) =>
         TextProcessingService.HideReasoningFromStreamingPreview(rawResponse);

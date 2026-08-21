@@ -5,30 +5,20 @@ namespace AiteBar.Tests;
 public sealed class PromptBuilderIntegrationTests
 {
     [Fact]
-    public void Window_UsesAnalyticsCategoryAndFixedStatusArea()
+    public void Window_UsesCreativeCategoriesAndFixedStatusArea()
     {
         string xaml = Read("AiteBar", "PromptBuilderWindow.xaml");
 
         Assert.Contains("Width=\"1280\" Height=\"840\"", xaml);
         Assert.Contains("<Grid Margin=\"32,16,32,24\">", xaml);
-        Assert.Contains("x:Name=\"ModeProgramming\"", xaml);
         Assert.Contains("x:Name=\"ModeImages\"", xaml);
         Assert.Contains("x:Name=\"ModePaintings\"", xaml);
         Assert.Contains("x:Name=\"ModeAnimation\"", xaml);
         Assert.Contains("x:Name=\"ModeIdeas\"", xaml);
         Assert.Contains("x:Name=\"ModeGraphics\"", xaml);
-        Assert.Contains("x:Name=\"TextOptionsHost\"", xaml);
-        Assert.Contains("x:Name=\"CmbTextType\"", xaml);
-        Assert.Contains("x:Name=\"CmbTextTone\"", xaml);
         Assert.Contains("x:Name=\"VideoDirectionHost\"", xaml);
         Assert.Contains("x:Name=\"CmbVideoDirection\"", xaml);
-        Assert.Contains("x:Name=\"ProgrammingTaskHost\"", xaml);
-        Assert.Contains("x:Name=\"CmbProgrammingProjectType\"", xaml);
-        Assert.Contains("x:Name=\"CmbProgrammingStyle\"", xaml);
-        Assert.Contains("ProgrammingProjectType_Label", xaml);
-        Assert.Contains("ProgrammingStyle_Label", xaml);
         Assert.Contains("x:Name=\"TxtVideoDirectionOutcome\"", xaml);
-        Assert.Contains("x:Name=\"TxtTextOptionsOutcome\"", xaml);
         Assert.Contains("x:Name=\"VisualOptionsHost\"", xaml);
         Assert.Contains("x:Name=\"CmbVisualTarget\"", xaml);
         Assert.Contains("x:Name=\"GraphicOptionsHost\"", xaml);
@@ -52,13 +42,8 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("ThemeSection_Sports", Read("AiteBar", "Resources", "Strings.uk.resx"));
         Assert.DoesNotContain("new(ThemeSection.Professions", Read("AiteBar", "PromptBuilderService.cs"));
         Assert.DoesNotContain("ThemeStyle_PilotCockpit", Read("AiteBar", "PromptBuilderService.cs"));
-        Assert.Contains("x:Name=\"AnalysisDirectionHost\"", xaml);
-        Assert.Contains("x:Name=\"CmbAnalysisDirection\"", xaml);
-        Assert.Contains("x:Name=\"TxtAnalysisDirectionOutcome\"", xaml);
-        Assert.Contains("x:Name=\"ModeTexts\"", xaml);
         Assert.Contains("x:Name=\"ModeVideo\"", xaml);
         Assert.Contains("x:Name=\"ModeMusic\"", xaml);
-        Assert.Contains("x:Name=\"ModeAnalytics\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModeAnalysis\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModeIcons\"", xaml);
         Assert.DoesNotContain("x:Name=\"IconOptionsHost\"", xaml);
@@ -67,6 +52,28 @@ public sealed class PromptBuilderIntegrationTests
         Assert.DoesNotContain("x:Name=\"ModeAnalysisIdeas\"", xaml);
         Assert.DoesNotContain("Panel.ZIndex=\"10\"", xaml);
         Assert.DoesNotContain("Grid.ColumnSpan=\"3\"", xaml);
+    }
+
+    [Fact]
+    public void Window_ExposesOnlyCreativePromptCategories()
+    {
+        string xaml = Read("AiteBar", "PromptBuilderWindow.xaml");
+
+        Assert.DoesNotContain("x:Name=\"ModeProgramming\"", xaml);
+        Assert.DoesNotContain("x:Name=\"ModeTexts\"", xaml);
+        Assert.DoesNotContain("x:Name=\"ModeAnalytics\"", xaml);
+        Assert.Contains("x:Name=\"ModeImages\" Tag=\"Images\" IsSelected=\"True\"", xaml);
+    }
+
+    [Fact]
+    public void PaintingSectionChange_ClearsHiddenArtistSelection()
+    {
+        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+        int start = code.IndexOf("private void CmbPaintingSection_SelectionChanged", StringComparison.Ordinal);
+        int end = code.IndexOf("private void RefreshVideoDirections", start, StringComparison.Ordinal);
+
+        Assert.True(start >= 0 && end > start);
+        Assert.Contains("_paintingArtist = PaintingArtist.Auto;", code[start..end]);
     }
 
     [Fact]
@@ -91,13 +98,29 @@ public sealed class PromptBuilderIntegrationTests
     }
 
     [Fact]
-    public void ClearAndNewVariant_DoNotShowConfirmationDialogs()
+    public void ClearRequiresConfirmationButNewVariantDoesNot()
     {
         string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
 
-        Assert.DoesNotContain("TextProcessing_ConfirmClear", code);
+        int start = code.IndexOf("private void BtnClear_Click", StringComparison.Ordinal);
+        int end = code.IndexOf("private void BtnPaste_Click", start, StringComparison.Ordinal);
+
+        Assert.True(start >= 0 && end > start);
+        string clearHandler = code[start..end];
+        Assert.Contains("TextProcessing_ConfirmClear", clearHandler);
+        Assert.Contains("new DarkDialog", clearHandler);
         Assert.DoesNotContain("TextProcessing_ConfirmRepeat", code);
-        Assert.DoesNotContain("new DarkDialog", code);
+    }
+
+    [Fact]
+    public void ClosingDuringStreaming_PersistsOriginalBriefInsteadOfPreview()
+    {
+        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
+
+        Assert.Contains("private string? _processingSourceText;", code);
+        Assert.Contains("_processingSourceText = input;", code);
+        Assert.Contains("_isProcessing ? _processingSourceText ?? TxtEditor.Text ?? string.Empty", code);
+        Assert.Contains("_processingCts?.Cancel();\n        _loadModelsCts?.Cancel();\n        SaveEditorText();", code.ReplaceLineEndings("\n"));
     }
 
     [Fact]
@@ -170,7 +193,7 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("OrderAutoFirst(PromptBuilderService.GetAnimationStyles(_animationSection)", code);
         Assert.Contains("OrderAutoFirst(PromptBuilderService.PaintingArtists", code);
         Assert.Contains("OrderAutoFirst(PromptBuilderService.GetThemeStyles(_themeSection)", code);
-        Assert.Contains("OrderAutoFirst(PromptBuilderService.GetProgrammingStyles(_programmingProjectType)", code);
+        Assert.DoesNotContain("CmbProgrammingProjectType", code);
         Assert.DoesNotContain("ProgrammingTaskType", code);
         Assert.Contains("PaintingStyleSection.Artists", code);
         Assert.Contains("OrderAutoFirst(definitions", code);
@@ -249,24 +272,17 @@ public sealed class PromptBuilderIntegrationTests
     }
 
     [Fact]
-    public void ProgrammingMode_UsesTypeAndStyleInsteadOfEngineeringTaskKinds()
+    public void LegacyModes_AreNotPresentInThePromptBuilderWindow()
     {
         string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
-        string models = Read("AiteBar", "Models.cs");
-        string settings = Read("AiteBar", "AppSettingsService.cs");
-        string service = Read("AiteBar", "PromptBuilderService.cs");
+        string xaml = Read("AiteBar", "PromptBuilderWindow.xaml");
 
-        Assert.Contains("private ProgrammingProjectType _programmingProjectType = ProgrammingProjectType.Auto;", code);
-        Assert.Contains("private ProgrammingPromptStyle _programmingStyle = ProgrammingPromptStyle.Auto;", code);
-        Assert.Contains("settings.PromptBuilderProgrammingProjectType = _programmingProjectType;", code);
-        Assert.Contains("settings.PromptBuilderProgrammingStyle = _programmingStyle;", code);
-        Assert.Contains("_programmingProjectType = _settingsService.Settings.PromptBuilderProgrammingProjectType;", code);
-        Assert.Contains("PromptBuilderService.GetProgrammingStyles(_programmingProjectType)", code);
-        Assert.Contains("public ProgrammingProjectType PromptBuilderProgrammingProjectType { get; set; } = ProgrammingProjectType.Auto;", models);
-        Assert.Contains("public ProgrammingPromptStyle PromptBuilderProgrammingStyle { get; set; } = ProgrammingPromptStyle.Auto;", models);
-        Assert.Contains("PromptBuilderProgrammingProjectType = original.PromptBuilderProgrammingProjectType", settings);
-        Assert.Contains("public enum ProgrammingProjectType", service);
-        Assert.DoesNotContain("TxtProgrammingTaskOutcome", Read("AiteBar", "PromptBuilderWindow.xaml"));
+        Assert.DoesNotContain("CmbProgrammingProjectType", code);
+        Assert.DoesNotContain("CmbTextType", code);
+        Assert.DoesNotContain("CmbAnalysisDirection", code);
+        Assert.DoesNotContain("ProgrammingTaskHost", xaml);
+        Assert.DoesNotContain("TextOptionsHost", xaml);
+        Assert.DoesNotContain("AnalysisDirectionHost", xaml);
     }
 
     [Fact]

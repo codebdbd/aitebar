@@ -23,7 +23,7 @@ public sealed class SettingsWindowValidationHelperTests
     [Theory]
     [InlineData("not a url")]
     [InlineData("ftp://example.com")]
-    [InlineData("localhost")]
+    [InlineData("https://")]
     public void Validate_RejectsInvalidWebUrls(string actionValue)
     {
         var state = SettingsWindowValidationHelper.Validate("Open site", ActionType.Web, actionValue, "None");

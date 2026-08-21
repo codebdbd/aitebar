@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
 using System.Windows.Media.Imaging;
@@ -27,9 +29,12 @@ namespace AiteBar
         private const int MaxEntries = 50;
         private const int MaxTextLength = 10 * 1024;
         private const int MaxImageBytes = 5 * 1024 * 1024;
+        private const long MaxImagePixels = 16L * 1024 * 1024;
 
         private readonly List<ClipboardHistoryEntry> _entries = [];
         private readonly string _historyFile;
+        private readonly object _deferredSaveSync = new();
+        private readonly SemaphoreSlim _deferredSaveGate = new(1, 1);
         private HwndSource? _hwndSource;
         private IntPtr? _hwnd;
         private bool _suppressNextChange;
@@ -39,8 +44,13 @@ namespace AiteBar
         private int _suppressedClipboardNotificationBudget;
         private bool _disposed;
         private bool _persistHistory;
+        private long _clipboardSequence;
+        private long _deferredSaveVersion;
+        private Task _lastDeferredSave = Task.CompletedTask;
 
         public static ClipboardHistoryService Instance => _instance ??= new ClipboardHistoryService();
+
+        internal static void FlushInstancePersistence(TimeSpan timeout) => _instance?.FlushDeferredPersistence(timeout);
 
         public event EventHandler? HistoryChanged;
         public IReadOnlyList<ClipboardHistoryEntry> Entries => _entries.AsReadOnly();
@@ -82,12 +92,14 @@ namespace AiteBar
             }
 
             _persistHistory = persistHistory;
+            Interlocked.Increment(ref _deferredSaveVersion);
             if (_persistHistory)
             {
                 SaveHistory();
             }
             else
             {
+                FlushDeferredPersistence(TimeSpan.FromSeconds(2));
                 DeletePersistedHistoryFile();
             }
 
@@ -240,7 +252,7 @@ namespace AiteBar
             return entry != null && CopyEntryToClipboard(entry, ClipboardCopyMode.SingleLine);
         }
 
-        internal bool RecordClipboardData(string? text, byte[]? imageBytes, DateTime? timestamp = null)
+        internal bool RecordClipboardData(string? text, byte[]? imageBytes, DateTime? timestamp = null, bool deferPersistence = false)
         {
             string? normalizedText = NormalizeClipboardText(text);
             byte[]? normalizedImage = NormalizeClipboardImage(imageBytes);
@@ -276,7 +288,14 @@ namespace AiteBar
 
             ReorderEntries();
             TrimEntriesToLimit();
-            SaveHistory();
+            if (deferPersistence)
+            {
+                QueueSaveHistory();
+            }
+            else
+            {
+                SaveHistory();
+            }
             HistoryChanged?.Invoke(this, EventArgs.Empty);
             return true;
         }
@@ -478,6 +497,100 @@ namespace AiteBar
             }
         }
 
+        private void QueueSaveHistory()
+        {
+            if (!_persistHistory)
+            {
+                DeletePersistedHistoryFile();
+                return;
+            }
+
+            ClipboardHistoryEntry[] snapshot = _entries.Take(MaxEntries).ToArray();
+            long version = Interlocked.Increment(ref _deferredSaveVersion);
+            Task saveTask = SaveHistorySnapshotAsync(snapshot, version);
+            lock (_deferredSaveSync)
+            {
+                _lastDeferredSave = saveTask;
+            }
+        }
+
+        internal bool FlushDeferredPersistence(TimeSpan timeout)
+        {
+            Task pendingSave;
+            lock (_deferredSaveSync)
+            {
+                pendingSave = _lastDeferredSave;
+            }
+
+            try
+            {
+                return pendingSave.Wait(timeout);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                return false;
+            }
+        }
+
+        private async Task SaveHistorySnapshotAsync(IReadOnlyList<ClipboardHistoryEntry> entries, long version)
+        {
+            await _deferredSaveGate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                if (version != Volatile.Read(ref _deferredSaveVersion) || !_persistHistory)
+                {
+                    return;
+                }
+
+                await Task.Run(() => SaveHistorySnapshot(entries)).ConfigureAwait(false);
+            }
+            finally
+            {
+                _deferredSaveGate.Release();
+            }
+        }
+
+        private void SaveHistorySnapshot(IReadOnlyList<ClipboardHistoryEntry> entries)
+        {
+            try
+            {
+                if (!_persistHistory)
+                {
+                    return;
+                }
+
+                PathHelper.EnsureDirectories();
+                if (entries.Count == 0)
+                {
+                    DeletePersistedHistoryFile();
+                    return;
+                }
+
+                var document = new PersistedClipboardHistoryDocument
+                {
+                    Version = StorageSchemaVersion,
+                    Entries = entries.Select(entry => new PersistedClipboardEntry
+                    {
+                        Id = entry.Id,
+                        Text = entry.Text,
+                        ImageBase64 = entry.ImageBytes != null ? Convert.ToBase64String(entry.ImageBytes) : null,
+                        Timestamp = entry.Timestamp,
+                        IsPinned = entry.IsPinned
+                    }).ToList()
+                };
+
+                string json = JsonSerializer.Serialize(document, _jsonOptions);
+                string tempFile = _historyFile + ".tmp";
+                File.WriteAllText(tempFile, json);
+                File.Move(tempFile, _historyFile, overwrite: true);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+        }
+
         private void DeletePersistedHistoryFile()
         {
             try
@@ -514,10 +627,17 @@ namespace AiteBar
 
         private void OnClipboardChanged()
         {
+            long sequence = Interlocked.Increment(ref _clipboardSequence);
+            _ = CaptureClipboardAsync(sequence);
+        }
+
+        private async Task CaptureClipboardAsync(long sequence)
+        {
             try
             {
                 string? text = null;
                 byte[]? imageBytes = null;
+                BitmapSource? image = null;
 
                 if (Clipboard.ContainsText())
                 {
@@ -528,14 +648,15 @@ namespace AiteBar
                 {
                     try
                     {
-                        BitmapSource? image = Clipboard.GetImage();
-                        if (image != null)
+                        image = Clipboard.GetImage();
+                        if (image != null && (long)image.PixelWidth * image.PixelHeight <= MaxImagePixels)
                         {
-                            using var stream = new MemoryStream();
-                            var encoder = new PngBitmapEncoder();
-                            encoder.Frames.Add(BitmapFrame.Create(image));
-                            encoder.Save(stream);
-                            imageBytes = stream.ToArray();
+                            if (image.CanFreeze)
+                            {
+                                image.Freeze();
+                            }
+
+                            imageBytes = await Task.Run(() => EncodeImage(image)).ConfigureAwait(true);
                         }
                     }
                     catch
@@ -543,16 +664,32 @@ namespace AiteBar
                     }
                 }
 
-                if (ShouldIgnoreClipboardPayload(text, imageBytes))
+                if (sequence != Volatile.Read(ref _clipboardSequence) || ShouldIgnoreClipboardPayload(text, imageBytes))
                 {
                     return;
                 }
 
-                RecordClipboardData(text, imageBytes);
+                RecordClipboardData(text, imageBytes, deferPersistence: true);
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
+            }
+        }
+
+        private static byte[]? EncodeImage(BitmapSource image)
+        {
+            try
+            {
+                using var stream = new MemoryStream();
+                var encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(image));
+                encoder.Save(stream);
+                return stream.Length <= MaxImageBytes ? stream.ToArray() : null;
+            }
+            catch
+            {
+                return null;
             }
         }
 
@@ -612,6 +749,7 @@ namespace AiteBar
                 return;
             }
 
+            FlushDeferredPersistence(TimeSpan.FromSeconds(2));
             SaveHistory();
 
             if (_hwnd.HasValue && _hwndSource != null)
@@ -635,11 +773,11 @@ namespace AiteBar
                 }
 
                 JsonNode? node = JsonNode.Parse(File.ReadAllText(PathHelper.SettingsFile));
-                return node?["ClipboardManagerPersistHistory"]?.GetValue<bool>() ?? true;
+                return node?["ClipboardManagerPersistHistory"]?.GetValue<bool>() ?? false;
             }
             catch
             {
-                return true;
+                return false;
             }
         }
     }

@@ -18,7 +18,7 @@ public sealed class QuickNoteServiceTests : IDisposable
     {
         _tempDir = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_tempDir);
-        _service = new QuickNoteService(Path.Combine(_tempDir, "QuickNote.md"));
+        _service = new QuickNoteService(Path.Combine(_tempDir, "QuickNote.rtf"));
     }
 
     public void Dispose()
@@ -35,7 +35,7 @@ public sealed class QuickNoteServiceTests : IDisposable
     {
         var path = _service.NotePath;
         Assert.NotNull(path);
-        Assert.EndsWith("QuickNote.md", path);
+        Assert.EndsWith("QuickNote.rtf", path);
         Assert.StartsWith(_tempDir, path);
     }
 
@@ -47,9 +47,9 @@ public sealed class QuickNoteServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ReadMarkdownAsync_WhenNoFile_ReturnsEmpty()
+    public async Task LoadAsync_WhenNoFile_CreatesEmptyVisualDocument()
     {
-        var content = await _service.ReadMarkdownAsync();
+        string content = await LoadTextAsync(_service);
 
         Assert.Equal(string.Empty, content);
     }
@@ -57,7 +57,7 @@ public sealed class QuickNoteServiceTests : IDisposable
     [Fact]
     public async Task HasExternalChanges_WhenFileIsCreatedAfterMissingBaseline_ReturnsTrue()
     {
-        await _service.ReadMarkdownAsync();
+        await LoadTextAsync(_service);
         await File.WriteAllTextAsync(_service.NotePath, "external");
 
         Assert.True(_service.HasExternalChanges());
@@ -66,9 +66,8 @@ public sealed class QuickNoteServiceTests : IDisposable
     [Fact]
     public async Task HasExternalChanges_AfterLoad_ReturnsFalse()
     {
-        await File.WriteAllTextAsync(_service.NotePath, "initial");
-
-        await _service.ReadMarkdownAsync();
+        await SaveTextAsync(_service, "initial");
+        await LoadTextAsync(_service);
 
         var result = _service.HasExternalChanges();
 
@@ -76,11 +75,10 @@ public sealed class QuickNoteServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task ReadMarkdownAsync_LoadsExistingFileAndTracksExternalChanges()
+    public async Task LoadAsync_LoadsExistingVisualDocumentAndTracksExternalChanges()
     {
-        await File.WriteAllTextAsync(_service.NotePath, "initial");
-
-        string content = await _service.ReadMarkdownAsync();
+        await SaveTextAsync(_service, "initial");
+        string content = await LoadTextAsync(_service);
         await WaitForDistinctFileTimestampAsync();
         await File.WriteAllTextAsync(_service.NotePath, "external");
 
@@ -91,8 +89,8 @@ public sealed class QuickNoteServiceTests : IDisposable
     [Fact]
     public async Task HasExternalChanges_DetectsSameLengthContentWithRestoredTimestamp()
     {
-        await File.WriteAllTextAsync(_service.NotePath, "first");
-        await _service.ReadMarkdownAsync();
+        await SaveTextAsync(_service, "first");
+        await LoadTextAsync(_service);
         DateTime baselineTimestamp = File.GetLastWriteTimeUtc(_service.NotePath);
 
         await File.WriteAllTextAsync(_service.NotePath, "other");
@@ -102,10 +100,10 @@ public sealed class QuickNoteServiceTests : IDisposable
     }
 
     [Fact]
-    public async Task SaveAsync_WritesMarkdownAndClearsExternalChangeState()
+    public async Task SaveAsync_WritesVisualFormattingAndClearsExternalChangeState()
     {
-        await File.WriteAllTextAsync(_service.NotePath, "old");
-        await _service.ReadMarkdownAsync();
+        await SaveTextAsync(_service, "old");
+        await LoadTextAsync(_service);
         await WaitForDistinctFileTimestampAsync();
 
         await RunStaAsync(async () =>
@@ -114,29 +112,68 @@ public sealed class QuickNoteServiceTests : IDisposable
             await _service.SaveAsync(document);
         });
 
-        Assert.Equal("**bold**", await File.ReadAllTextAsync(_service.NotePath));
+        Assert.Equal("bold", await LoadTextAsync(_service));
         Assert.False(_service.HasExternalChanges());
     }
 
     [Fact]
-    public async Task LoadAsync_PopulatesFlowDocumentFromMarkdown()
+    public async Task LoadAsync_PopulatesFlowDocumentFromRtf()
     {
-        await File.WriteAllTextAsync(_service.NotePath, "plain **bold**");
+        await RunStaAsync(async () =>
+        {
+            var paragraph = new Paragraph(new Run("plain "));
+            paragraph.Inlines.Add(new Bold(new Run("bold")));
+            var source = new FlowDocument(paragraph);
+            await _service.SaveAsync(source);
+        });
 
-        string markdown = await RunStaAsync(async () =>
+        string text = await RunStaAsync(async () =>
         {
             var document = new FlowDocument();
             await _service.LoadAsync(document);
-            return QuickNoteMarkdown.ToMarkdown(document);
+            return new TextRange(document.ContentStart, document.ContentEnd).Text.TrimEnd('\r', '\n');
         });
 
-        Assert.Equal("plain **bold**", markdown);
+        Assert.Equal("plain bold", text);
+    }
+
+    [Fact]
+    public async Task LoadAsync_PreservesNativeCodeBlockTextInVisualDocument()
+    {
+        await RunStaAsync(async () =>
+        {
+            var document = new FlowDocument();
+            document.Blocks.Add(QuickNoteDocumentFormatting.CreateCodeBlockElement("var answer = 42;", QuickNoteThemeCatalog.Find(null)));
+            await _service.SaveAsync(document);
+        });
+
+        string text = await LoadTextAsync(_service);
+        bool hasSection = await RunStaAsync(async () =>
+        {
+            var document = new FlowDocument();
+            await _service.LoadAsync(document);
+            return document.Blocks.FirstBlock is Section;
+        });
+
+        Assert.Equal("var answer = 42;", text);
+        Assert.True(hasSection);
+    }
+
+    [Fact]
+    public async Task HasExternalChanges_WhenFileIsExclusivelyLocked_ReturnsTrue()
+    {
+        await SaveTextAsync(_service, "tracked");
+        await LoadTextAsync(_service);
+
+        using var lockStream = new FileStream(_service.NotePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None);
+
+        Assert.True(_service.HasExternalChanges());
     }
 
     [Fact]
     public async Task SaveConflictCopyAsync_WritesConflictFileNextToNoteWithoutChangingOriginal()
     {
-        await File.WriteAllTextAsync(_service.NotePath, "original");
+        await SaveTextAsync(_service, "original");
 
         string conflictPath = await RunStaAsync(async () =>
         {
@@ -147,8 +184,8 @@ public sealed class QuickNoteServiceTests : IDisposable
         Assert.True(File.Exists(conflictPath));
         Assert.StartsWith(_tempDir, conflictPath);
         Assert.Contains("QuickNote.conflict-", Path.GetFileName(conflictPath));
-        Assert.Equal("conflict text", await File.ReadAllTextAsync(conflictPath));
-        Assert.Equal("original", await File.ReadAllTextAsync(_service.NotePath));
+        Assert.Equal("conflict text", await LoadTextAsync(new QuickNoteService(conflictPath)));
+        Assert.Equal("original", await LoadTextAsync(_service));
         Assert.Equal(conflictPath, _service.LastConflictCopyPath);
     }
 
@@ -167,22 +204,22 @@ public sealed class QuickNoteServiceTests : IDisposable
         });
 
         Assert.NotEqual(paths[0], paths[1]);
-        Assert.Equal("first", await File.ReadAllTextAsync(paths[0]));
-        Assert.Equal("second", await File.ReadAllTextAsync(paths[1]));
+        Assert.Equal("first", await LoadTextAsync(new QuickNoteService(paths[0])));
+        Assert.Equal("second", await LoadTextAsync(new QuickNoteService(paths[1])));
     }
 
     [Fact]
-    public async Task ReadMarkdownAsync_RestoresLatestConflictCopyAfterServiceRestart()
+    public async Task LoadAsync_RestoresLatestConflictCopyAfterServiceRestart()
     {
-        string older = Path.Combine(_tempDir, "QuickNote.conflict-older.md");
-        string latest = Path.Combine(_tempDir, "QuickNote.conflict-latest.md");
-        await File.WriteAllTextAsync(older, "older");
-        await File.WriteAllTextAsync(latest, "latest");
+        string older = Path.Combine(_tempDir, "QuickNote.conflict-older.rtf");
+        string latest = Path.Combine(_tempDir, "QuickNote.conflict-latest.rtf");
+        await SaveTextAsync(new QuickNoteService(older), "older");
+        await SaveTextAsync(new QuickNoteService(latest), "latest");
         File.SetLastWriteTimeUtc(older, DateTime.UtcNow.AddMinutes(-1));
         File.SetLastWriteTimeUtc(latest, DateTime.UtcNow);
         var restarted = new QuickNoteService(_service.NotePath);
 
-        await restarted.ReadMarkdownAsync();
+        await LoadTextAsync(restarted);
 
         Assert.Equal(latest, restarted.LastConflictCopyPath);
     }
@@ -196,7 +233,7 @@ public sealed class QuickNoteServiceTests : IDisposable
             await _service.SaveAsync(document);
         });
 
-        Assert.Equal("atomic", await File.ReadAllTextAsync(_service.NotePath));
+        Assert.Equal("atomic", await LoadTextAsync(_service));
         Assert.Empty(Directory.GetFiles(_tempDir, "*.tmp"));
     }
 
@@ -204,7 +241,7 @@ public sealed class QuickNoteServiceTests : IDisposable
     public async Task OpenConflictCopy_OpensLastConflictCopy()
     {
         var dispatcher = new FakeQuickNoteProcessStartDispatcher();
-        var service = new QuickNoteService(Path.Combine(_tempDir, "QuickNote.md"), dispatcher);
+        var service = new QuickNoteService(Path.Combine(_tempDir, "QuickNote.rtf"), dispatcher);
 
         string conflictPath = await RunStaAsync(async () =>
         {
@@ -223,7 +260,7 @@ public sealed class QuickNoteServiceTests : IDisposable
     public void OpenConflictCopy_WhenNoConflictCopyExists_Throws()
     {
         var dispatcher = new FakeQuickNoteProcessStartDispatcher();
-        var service = new QuickNoteService(Path.Combine(_tempDir, "QuickNote.md"), dispatcher);
+        var service = new QuickNoteService(Path.Combine(_tempDir, "QuickNote.rtf"), dispatcher);
 
         Assert.Throws<FileNotFoundException>(service.OpenConflictCopy);
         Assert.Empty(dispatcher.StartCalls);
@@ -232,8 +269,8 @@ public sealed class QuickNoteServiceTests : IDisposable
     [Fact]
     public async Task HasExternalChanges_WhenTrackedFileIsDeleted_ReturnsTrue()
     {
-        File.WriteAllText(_service.NotePath, "tracked");
-        await _service.ReadMarkdownAsync();
+        await SaveTextAsync(_service, "tracked");
+        await LoadTextAsync(_service);
         File.Delete(_service.NotePath);
 
         bool result = _service.HasExternalChanges();
@@ -245,7 +282,7 @@ public sealed class QuickNoteServiceTests : IDisposable
     public void OpenInEditor_CreatesMissingFileAndStartsShellProcess()
     {
         var dispatcher = new FakeQuickNoteProcessStartDispatcher();
-        string notePath = Path.Combine(_tempDir, "nested", "QuickNote.md");
+        string notePath = Path.Combine(_tempDir, "nested", "QuickNote.rtf");
         var service = new QuickNoteService(notePath, dispatcher);
 
         service.OpenInEditor();
@@ -259,7 +296,7 @@ public sealed class QuickNoteServiceTests : IDisposable
     [Fact]
     public void OpenInEditor_PathWithoutDirectory_UsesPathHelperDirectories()
     {
-        string fileNameOnly = "QuickNoteStandalone.md";
+        string fileNameOnly = "QuickNoteStandalone.rtf";
         string appDataFile = Path.Combine(PathHelper.AppDataFolder, fileNameOnly);
         var dispatcher = new FakeQuickNoteProcessStartDispatcher();
         var service = new QuickNoteService(fileNameOnly, dispatcher);
@@ -299,6 +336,20 @@ public sealed class QuickNoteServiceTests : IDisposable
     {
         await Task.Delay(1100);
     }
+
+    private static Task SaveTextAsync(QuickNoteService service, string text) =>
+        RunStaAsync(async () =>
+        {
+            await service.SaveAsync(new FlowDocument(new Paragraph(new Run(text))));
+        });
+
+    private static Task<string> LoadTextAsync(QuickNoteService service) =>
+        RunStaAsync(async () =>
+        {
+            var document = new FlowDocument();
+            await service.LoadAsync(document);
+            return new TextRange(document.ContentStart, document.ContentEnd).Text.TrimEnd('\r', '\n');
+        });
 
     private static Task<T> RunStaAsync<T>(Func<Task<T>> action)
     {

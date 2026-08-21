@@ -13,7 +13,7 @@ public sealed class AiProviderTests
     {
         string[] ids = AiProviderCatalog.All.Select(provider => provider.Id).ToArray();
 
-        Assert.Equal(["cerebras", "gemini", "groq", "mistral"], ids);
+        Assert.Equal(["cerebras", "groq", "mistral"], ids);
         Assert.DoesNotContain("deepinfra", ids);
         Assert.DoesNotContain("openrouter", ids);
         Assert.DoesNotContain("github", ids);
@@ -870,6 +870,19 @@ public sealed class AiProviderTests
         Assert.Contains("ResourceKey=AiSettings_GetApiKey", xaml);
         Assert.Contains("LinkGetApiKey_Click", xaml);
         Assert.Contains("provider.DocumentationUri.AbsoluteUri", code);
+    }
+
+    [Fact]
+    public void ConnectionDialog_GeneratesUniqueNumberedConnectionNames()
+    {
+        string repoRoot = FindRepoRoot();
+        string code = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "AiConnectionDialog.xaml.cs"));
+
+        Assert.Contains("GenerateUniqueConnectionName", code);
+        Assert.Contains("new HashSet<string>(existingNames", code);
+        Assert.Contains("current.StartsWith(p.DisplayName + \" \", StringComparison.OrdinalIgnoreCase)", code);
+        Assert.Contains("int counter = 2;", code);
+        Assert.Contains("while (_existingNames.Contains($\"{baseName} {counter}\"))", code);
     }
 
     private static AiConnectionSettings Connection(

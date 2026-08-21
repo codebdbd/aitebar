@@ -294,24 +294,6 @@ namespace AiteBar
                     : LocalizationService.Get("ClipboardManager_Copied")
                 : LocalizationService.Get("ClipboardManager_CopyFailed");
 
-            if (success && !IsPinned)
-            {
-                Hide();
-                System.Threading.Tasks.Task.Delay(50).ContinueWith(_ =>
-                {
-                    Dispatcher.BeginInvoke(new Action(() =>
-                    {
-                        try
-                        {
-                            System.Windows.Forms.SendKeys.SendWait("^v");
-                        }
-                        catch
-                        {
-                            // РРіРЅРѕСЂРёСЂСѓРµРј РѕС€РёР±РєРё СЌРјСѓР»СЏС†РёРё
-                        }
-                    }));
-                });
-            }
         }
 
         private void TogglePin(ClipboardHistoryEntry entry)
@@ -485,6 +467,18 @@ namespace AiteBar
             _historyService.ClearUnpinnedHistory();
             _selectedEntryId = _historyService.Entries.FirstOrDefault(entry => entry.IsPinned)?.Id;
             TxtStatus.Text = LocalizationService.Get("ClipboardManager_Cleared");
+        }
+
+        private void BtnWipeAll_Click(object sender, RoutedEventArgs e)
+        {
+            if (!Confirm("ClipboardManager_WipeAllConfirm"))
+            {
+                return;
+            }
+
+            _historyService.ClearAllHistory();
+            _selectedEntryId = null;
+            TxtStatus.Text = LocalizationService.Get("ClipboardManager_WipedAll");
         }
 
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)

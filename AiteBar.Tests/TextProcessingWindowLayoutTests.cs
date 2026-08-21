@@ -11,6 +11,17 @@ namespace AiteBar.Tests;
 public sealed class TextProcessingWindowLayoutTests
 {
     [Fact]
+    public void ClosingDuringStreaming_PersistsOriginalInputInsteadOfPreview()
+    {
+        string code = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "AiteBar", "TextProcessingWindow.xaml.cs"));
+
+        Assert.Contains("private string? _processingSourceText;", code);
+        Assert.Contains("_processingSourceText = input;", code);
+        Assert.Contains("_isProcessing ? _processingSourceText ?? TxtEditor.Text ?? string.Empty", code);
+        Assert.Contains("_processingCts?.Cancel();\n        _loadModelsCts?.Cancel();\n        SaveEditorText();", code.ReplaceLineEndings("\n"));
+    }
+
+    [Fact]
     public async Task Window_LoadsReleaseXamlAndKeepsEditorWidthWhileHeightExpands()
     {
         await RunStaAsync(() =>

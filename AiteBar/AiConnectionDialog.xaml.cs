@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -11,9 +13,16 @@ public partial class AiConnectionDialog : DarkWindow
         public override string ToString() => Name;
     }
 
-    public AiConnectionDialog()
+    private readonly HashSet<string> _existingNames;
+
+    public AiConnectionDialog() : this(Enumerable.Empty<string>())
+    {
+    }
+
+    public AiConnectionDialog(IEnumerable<string> existingNames)
     {
         InitializeComponent();
+        _existingNames = new HashSet<string>(existingNames ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);
         foreach (AiProviderDefinition provider in AiProviderCatalog.All)
         {
             CmbProvider.Items.Add(new ProviderOption(provider.Id, provider.DisplayName));
@@ -28,11 +37,33 @@ public partial class AiConnectionDialog : DarkWindow
 
     private void CmbProvider_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (CmbProvider.SelectedItem is ProviderOption provider && string.IsNullOrWhiteSpace(TxtDisplayName.Text))
+        if (CmbProvider.SelectedItem is ProviderOption provider)
         {
-            TxtDisplayName.Text = provider.Name;
+            string current = TxtDisplayName.Text.Trim();
+            bool isDefaultName = string.IsNullOrWhiteSpace(current) ||
+                                 AiProviderCatalog.All.Any(p => string.Equals(current, p.DisplayName, StringComparison.OrdinalIgnoreCase)) ||
+                                 AiProviderCatalog.All.Any(p => current.StartsWith(p.DisplayName + " ", StringComparison.OrdinalIgnoreCase));
+
+            if (isDefaultName)
+            {
+                TxtDisplayName.Text = GenerateUniqueConnectionName(provider.Name);
+            }
         }
         UpdateAddState();
+    }
+
+    private string GenerateUniqueConnectionName(string baseName)
+    {
+        if (!_existingNames.Contains(baseName))
+        {
+            return baseName;
+        }
+        int counter = 2;
+        while (_existingNames.Contains($"{baseName} {counter}"))
+        {
+            counter++;
+        }
+        return $"{baseName} {counter}";
     }
 
     private void Input_TextChanged(object sender, TextChangedEventArgs e) => UpdateAddState();

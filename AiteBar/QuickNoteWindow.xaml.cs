@@ -44,7 +44,6 @@ namespace AiteBar
         private bool _saveAgainAfterCurrent;
         private long _changeVersion;
         private bool _isModalDialogOpen;
-        private bool _updatingFormatComboSelection;
         private bool _documentLoaded;
         private TextRange? _preservedFormatSelection;
         private bool _footerStatsDirty = true;
@@ -60,6 +59,7 @@ namespace AiteBar
         private bool _closeSaveInProgress;
         private bool _closeAfterSave;
         private bool _disposed;
+        private int _saveSuppressionCount;
 
         public QuickNoteWindow(QuickNoteService noteService, AppSettingsService settingsService)
             : this(new QuickNotePersistence(noteService), settingsService)
@@ -207,7 +207,10 @@ namespace AiteBar
 
             _changeVersion++;
             _hasPendingChanges = true;
-            ScheduleSave();
+            if (_saveSuppressionCount == 0)
+            {
+                ScheduleSave();
+            }
         }
 
         private void TxtNote_SelectionChanged(object sender, RoutedEventArgs e)
@@ -235,6 +238,31 @@ namespace AiteBar
             else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.K)
             {
                 InsertLinkFromDialog();
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.B)
+            {
+                ToggleFormatting(TextElement.FontWeightProperty, FontWeights.Bold, FontWeights.Normal);
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.I)
+            {
+                ToggleFormatting(TextElement.FontStyleProperty, FontStyles.Italic, FontStyles.Normal);
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt) && e.Key == Key.C)
+            {
+                BtnCode_Click(this, new RoutedEventArgs());
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.D8)
+            {
+                ApplyListFormatting(numbered: false);
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.D7)
+            {
+                ApplyListFormatting(numbered: true);
                 e.Handled = true;
             }
             else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.X)
@@ -489,69 +517,69 @@ namespace AiteBar
 
         private void BtnStrikethrough_Click(object sender, RoutedEventArgs e) => ToggleTextDecoration(TextDecorationLocation.Strikethrough);
 
-        private void BtnCode_Click(object sender, RoutedEventArgs e) => ToggleFormatting(TextElement.FontFamilyProperty, QuickNoteFonts.Code, QuickNoteFonts.Default);
+        private void BtnCode_Click(object sender, RoutedEventArgs e)
+        {
+            string text = TxtNote.Selection.Text;
+            Section codeBlock = QuickNoteDocumentFormatting.CreateCodeBlockElement(text, _theme);
+
+            TxtNote.BeginChange();
+            try
+            {
+                var range = TxtNote.Selection;
+                if (!range.IsEmpty)
+                {
+                    range.Text = string.Empty;
+                }
+
+                TextPointer insertionPointer = range.Start.GetInsertionPosition(LogicalDirection.Forward);
+                Paragraph? parentParagraph = insertionPointer.Paragraph;
+                if (parentParagraph != null)
+                {
+                    BlockCollection siblingBlocks = parentParagraph.SiblingBlocks;
+                    siblingBlocks.InsertAfter(parentParagraph, codeBlock);
+                    siblingBlocks.InsertAfter(codeBlock, new Paragraph(new Run(string.Empty)));
+
+                    if (new TextRange(parentParagraph.ContentStart, parentParagraph.ContentEnd).Text.Trim().Length == 0)
+                    {
+                        siblingBlocks.Remove(parentParagraph);
+                    }
+                }
+                else
+                {
+                    TxtNote.Document.Blocks.Add(codeBlock);
+                    TxtNote.Document.Blocks.Add(new Paragraph(new Run(string.Empty)));
+                }
+            }
+            finally
+            {
+                TxtNote.EndChange();
+            }
+
+            MarkChangedAndScheduleSave();
+            ScheduleFooterStatsUpdate();
+            Dispatcher.BeginInvoke(() =>
+            {
+                TxtNote.Focus();
+                if (codeBlock.Blocks.LastBlock is Paragraph codeParagraph)
+                {
+                    TxtNote.CaretPosition = codeParagraph.ContentEnd;
+                }
+            }, DispatcherPriority.Input);
+        }
 
         private void BtnBullet_Click(object sender, RoutedEventArgs e) => ApplyListFormatting(numbered: false);
 
         private void BtnNumbered_Click(object sender, RoutedEventArgs e) => ApplyListFormatting(numbered: true);
+
+        private void BtnDecreaseFontSize_Click(object sender, RoutedEventArgs e) => ChangeSelectionFontSize(-2);
+
+        private void BtnIncreaseFontSize_Click(object sender, RoutedEventArgs e) => ChangeSelectionFontSize(2);
 
         private void BtnInsertLink_Click(object sender, RoutedEventArgs e) => InsertLinkFromDialog();
 
         private void FormatButton_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
             _preservedFormatSelection = new TextRange(TxtNote.Selection.Start, TxtNote.Selection.End);
-        }
-
-        private void FormatCombo_DropDownOpened(object sender, EventArgs e)
-        {
-            _preservedFormatSelection = new TextRange(TxtNote.Selection.Start, TxtNote.Selection.End);
-            Dispatcher.BeginInvoke(() =>
-            {
-                if (_preservedFormatSelection is { } selection)
-                {
-                    RestoreFormatSelection(selection);
-                }
-            }, DispatcherPriority.Input);
-        }
-
-        private void CmbHeading_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (!_loaded || _updatingFormatComboSelection || sender is not ComboBox comboBox || comboBox.SelectedItem is not ComboBoxItem item)
-            {
-                return;
-            }
-
-            RestoreFormatSelection(_preservedFormatSelection);
-            var selection = GetSelectionOffsets();
-            if (int.TryParse(item.Tag?.ToString(), out int headingLevel))
-            {
-                ApplyHeadingToSelectedLines(headingLevel, selection.Start, selection.End);
-            }
-
-            ResetFormatCombo(comboBox, -1);
-            _preservedFormatSelection = null;
-        }
-
-        private void CmbList_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (!_loaded || _updatingFormatComboSelection || sender is not ComboBox comboBox || comboBox.SelectedItem is not ComboBoxItem item)
-            {
-                return;
-            }
-
-            RestoreFormatSelection(_preservedFormatSelection);
-            string? listKind = item.Tag?.ToString();
-            if (string.Equals(listKind, "bullet", StringComparison.Ordinal))
-            {
-                ApplyListFormatting(numbered: false);
-            }
-            else if (string.Equals(listKind, "numbered", StringComparison.Ordinal))
-            {
-                ApplyListFormatting(numbered: true);
-            }
-
-            ResetFormatCombo(comboBox, -1);
-            _preservedFormatSelection = null;
         }
 
         private void RestoreFormatSelection(TextRange? selection)
@@ -568,19 +596,6 @@ namespace AiteBar
             catch (InvalidOperationException)
             {
                 _preservedFormatSelection = null;
-            }
-        }
-
-        private void ResetFormatCombo(ComboBox comboBox, int selectedIndex)
-        {
-            _updatingFormatComboSelection = true;
-            try
-            {
-                comboBox.SelectedIndex = selectedIndex;
-            }
-            finally
-            {
-                _updatingFormatComboSelection = false;
             }
         }
 
@@ -623,6 +638,17 @@ namespace AiteBar
         {
             object current = TxtNote.Selection.GetPropertyValue(property);
             TxtNote.Selection.ApplyPropertyValue(property, IsFormattingEnabled(current, enabledValue) ? disabledValue : enabledValue);
+            MarkChangedAndScheduleSave();
+            TxtNote.Focus();
+        }
+
+        private void ChangeSelectionFontSize(double delta)
+        {
+            RestoreFormatSelection(_preservedFormatSelection);
+            object value = TxtNote.Selection.GetPropertyValue(TextElement.FontSizeProperty);
+            double current = value is double size ? size : QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0);
+            TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, Math.Clamp(current + delta, 10, 36));
+            _preservedFormatSelection = null;
             MarkChangedAndScheduleSave();
             TxtNote.Focus();
         }
@@ -684,14 +710,22 @@ namespace AiteBar
                 ? EditingCommands.ToggleNumbering
                 : EditingCommands.ToggleBullets;
 
-            TxtNote.BeginChange();
+            _saveSuppressionCount++;
             try
             {
-                command.Execute(null, TxtNote);
+                TxtNote.BeginChange();
+                try
+                {
+                    command.Execute(null, TxtNote);
+                }
+                finally
+                {
+                    TxtNote.EndChange();
+                }
             }
             finally
             {
-                TxtNote.EndChange();
+                _saveSuppressionCount--;
             }
 
             MarkChangedAndScheduleSave();
@@ -701,7 +735,15 @@ namespace AiteBar
 
         private void ApplyHeadingToSelectedLines(int headingLevel, int selectionStart, int selectionEnd)
         {
-            ApplyHeadingFormattingToLineRange(selectionStart, selectionEnd, headingLevel);
+            _saveSuppressionCount++;
+            try
+            {
+                ApplyHeadingFormattingToLineRange(selectionStart, selectionEnd, headingLevel);
+            }
+            finally
+            {
+                _saveSuppressionCount--;
+            }
             SelectEditorRange(selectionStart, selectionEnd);
             MarkChangedAndScheduleSave();
             ScheduleFooterStatsUpdate();
@@ -756,7 +798,7 @@ namespace AiteBar
 
             var range = new TextRange(start, end);
             range.ApplyPropertyValue(TextElement.FontFamilyProperty, QuickNoteFonts.Default);
-            range.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteMarkdown.GetHeadingFontSizeForLevel(headingLevel));
+            range.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(headingLevel));
             range.ApplyPropertyValue(TextElement.FontWeightProperty, headingLevel == 0 ? FontWeights.Normal : FontWeights.SemiBold);
             range.ApplyPropertyValue(TextElement.FontStyleProperty, FontStyles.Normal);
         }
@@ -801,7 +843,7 @@ namespace AiteBar
                     return;
                 }
 
-                InsertHyperlinkAtPointer(insertionPointer, QuickNoteMarkdown.CreateHyperlink(linkText, url));
+                InsertHyperlinkAtPointer(insertionPointer, QuickNoteDocumentFormatting.CreateHyperlink(linkText, url));
             }
             finally
             {
@@ -968,35 +1010,43 @@ namespace AiteBar
         {
             var (selectionStart, selectionEnd) = GetSelectionOffsets();
 
-            TxtNote.BeginChange();
+            _saveSuppressionCount++;
             try
             {
-                var markerEdit = ClearSelectedTextMarkers(selectionStart, selectionEnd);
-                selectionStart = markerEdit.Start;
-                selectionEnd = markerEdit.End;
-                if (markerEdit.Changed)
+                TxtNote.BeginChange();
+                try
                 {
-                    SelectEditorRange(selectionStart, selectionEnd);
-                }
+                    var markerEdit = ClearSelectedTextMarkers(selectionStart, selectionEnd);
+                    selectionStart = markerEdit.Start;
+                    selectionEnd = markerEdit.End;
+                    if (markerEdit.Changed)
+                    {
+                        SelectEditorRange(selectionStart, selectionEnd);
+                    }
 
-                string textBeforeListUnwrap = GetEditorText();
-                string selectedTextBeforeListUnwrap = QuickNoteDocumentHelper.RemoveVisualListMarkers(TxtNote.Selection.Text);
-                RemoveSelectedListFormatting(TxtNote.Selection);
-                string textAfterListUnwrap = GetEditorText();
-                (selectionStart, selectionEnd) = QuickNoteDocumentHelper.RemapSelection(
-                    textBeforeListUnwrap,
-                    textAfterListUnwrap,
-                    selectionStart,
-                    selectionEnd,
-                    selectedTextBeforeListUnwrap);
-                SelectEditorRange(selectionStart, selectionEnd);
-                UnwrapHyperlinksInSelection();
-                SelectEditorRange(selectionStart, selectionEnd);
-                ResetSelectionFormatting();
+                    string textBeforeListUnwrap = GetEditorText();
+                    string selectedTextBeforeListUnwrap = QuickNoteDocumentHelper.RemoveVisualListMarkers(TxtNote.Selection.Text);
+                    RemoveSelectedListFormatting(TxtNote.Selection);
+                    string textAfterListUnwrap = GetEditorText();
+                    (selectionStart, selectionEnd) = QuickNoteDocumentHelper.RemapSelection(
+                        textBeforeListUnwrap,
+                        textAfterListUnwrap,
+                        selectionStart,
+                        selectionEnd,
+                        selectedTextBeforeListUnwrap);
+                    SelectEditorRange(selectionStart, selectionEnd);
+                    UnwrapHyperlinksInSelection();
+                    SelectEditorRange(selectionStart, selectionEnd);
+                    ResetSelectionFormatting();
+                }
+                finally
+                {
+                    TxtNote.EndChange();
+                }
             }
             finally
             {
-                TxtNote.EndChange();
+                _saveSuppressionCount--;
             }
 
             SelectEditorRange(selectionStart, selectionEnd);
@@ -1253,7 +1303,7 @@ namespace AiteBar
         private (int Start, int End, bool Changed) ClearSelectedTextMarkers(int selectionStart, int selectionEnd)
         {
             string text = GetEditorText();
-            QuickNoteRangeEdit edit = QuickNoteMarkdown.GetClearLineMarkerRangeEdit(text, selectionStart, selectionEnd);
+            QuickNoteRangeEdit edit = QuickNoteDocumentFormatting.GetClearLineMarkerRangeEdit(text, selectionStart, selectionEnd);
             if (!(edit.RemoveLength == edit.InsertText.Length &&
                   string.Equals(text.Substring(edit.StartOffset, edit.RemoveLength), edit.InsertText, StringComparison.Ordinal)))
             {
@@ -1268,7 +1318,7 @@ namespace AiteBar
         {
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Normal);
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontStyleProperty, FontStyles.Normal);
-            TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteMarkdown.GetHeadingFontSizeForLevel(0));
+            TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0));
             TxtNote.Selection.ApplyPropertyValue(Inline.TextDecorationsProperty, null);
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, QuickNoteFonts.Default);
             TxtNote.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
@@ -1439,13 +1489,13 @@ namespace AiteBar
         {
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Normal);
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontStyleProperty, FontStyles.Normal);
-            TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteMarkdown.GetHeadingFontSizeForLevel(0));
+            TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0));
             TxtNote.Selection.ApplyPropertyValue(Inline.TextDecorationsProperty, null);
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, QuickNoteFonts.Default);
             TxtNote.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
         }
 
-        private void MarkChangedAndScheduleSave()
+        internal void MarkChangedAndScheduleSave()
         {
             if (!_loaded)
             {
@@ -1522,7 +1572,7 @@ namespace AiteBar
 
         private bool IsTransientUiOpen()
         {
-            if (_isModalDialogOpen || ThemePopup.IsOpen || TxtNote.ContextMenu?.IsOpen == true || CmbHeading.IsDropDownOpen || CmbList.IsDropDownOpen)
+            if (_isModalDialogOpen || ThemePopup.IsOpen || TxtNote.ContextMenu?.IsOpen == true)
             {
                 return true;
             }
@@ -1609,8 +1659,8 @@ namespace AiteBar
             var text = Brush(theme.Text);
             var muted = Brush(theme.MutedText);
             var accent = Brush(theme.Accent);
-            var codeBackground = Brush(theme.CodeBackground);
-            var codeText = Brush(theme.CodeText);
+            var codeBackground = Brush(QuickNoteDocumentFormatting.GetCodeBackground(theme));
+            var codeText = Brush(QuickNoteDocumentFormatting.GetCodeText(theme));
             var link = Brush(theme.Link);
             var iconColor = theme.IsDark ? Brush("#AFAFB7") : Brush("#000000");
 
@@ -1663,8 +1713,8 @@ namespace AiteBar
         {
             Dispatcher.BeginInvoke(() =>
             {
-                var codeBackground = Brush(_theme.CodeBackground);
-                var codeText = Brush(_theme.CodeText);
+                var codeBackground = Brush(QuickNoteDocumentFormatting.GetCodeBackground(_theme));
+                var codeText = Brush(QuickNoteDocumentFormatting.GetCodeText(_theme));
                 var link = Brush(_theme.Link);
                 ApplyDocumentStyles(TxtNote.Document, codeBackground, codeText, link);
             }, DispatcherPriority.Background);
@@ -1700,11 +1750,19 @@ namespace AiteBar
 
             if (block is Section section)
             {
+                section.Background = codeBackground;
+                section.Foreground = codeText;
+                section.BorderBrush = Brush(_theme.Border);
+                section.FontFamily = QuickNoteFonts.Code;
+                section.FontSize = 13;
+
                 foreach (Block childBlock in section.Blocks)
                 {
                     ApplyBlockStyles(childBlock, codeBackground, codeText, linkBrush);
                 }
+                return;
             }
+
         }
 
         private void ApplyInlineStyles(InlineCollection inlines, System.Windows.Media.Brush codeBackground, System.Windows.Media.Brush codeText, System.Windows.Media.Brush linkBrush)
@@ -1859,7 +1917,12 @@ namespace AiteBar
 
         private bool TryOpenUrlAtMouse(MouseButtonEventArgs e)
         {
-            (string Link, QuickNoteMarkdown.LinkType Type)? link = FindLinkAtMouse(e.GetPosition(TxtNote));
+            if (TryCopyCodeBlockAtMouse(e.GetPosition(TxtNote)))
+            {
+                return true;
+            }
+
+            (string Link, QuickNoteDocumentFormatting.LinkType Type)? link = FindLinkAtMouse(e.GetPosition(TxtNote));
             if (link == null)
             {
                 return false;
@@ -1867,8 +1930,8 @@ namespace AiteBar
 
             try
             {
-                string normalized = QuickNoteMarkdown.NormalizeLinkForOpen(link.Value.Link, link.Value.Type);
-                if (!QuickNoteMarkdown.IsSafeLinkForOpen(normalized, link.Value.Type))
+                string normalized = QuickNoteDocumentFormatting.NormalizeLinkForOpen(link.Value.Link, link.Value.Type);
+                if (!QuickNoteDocumentFormatting.IsSafeLinkForOpen(normalized, link.Value.Type))
                 {
                     SetStatus(QuickNoteStatusKind.OpenFailed);
                     return false;
@@ -1885,7 +1948,30 @@ namespace AiteBar
             return true;
         }
 
-        private (string Link, QuickNoteMarkdown.LinkType Type)? FindLinkAtMouse(System.Windows.Point position)
+        private bool TryCopyCodeBlockAtMouse(System.Windows.Point position)
+        {
+            TextPointer? pointer = TxtNote.GetPositionFromPoint(position, true);
+            if (pointer == null || FindHyperlink(pointer) is not { } hyperlink ||
+                !string.Equals(QuickNoteDocumentFormatting.GetHyperlinkUrl(hyperlink), "aitebar://copy-code", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            Section? section = FindAncestorSection(hyperlink);
+            if (section == null)
+            {
+                return false;
+            }
+
+            string code = string.Join(Environment.NewLine, section.Blocks
+                .OfType<Paragraph>()
+                .Skip(1)
+                .Select(static paragraph => new TextRange(paragraph.ContentStart, paragraph.ContentEnd).Text.TrimEnd('\r', '\n')));
+            System.Windows.Clipboard.SetText(code);
+            return true;
+        }
+
+        private (string Link, QuickNoteDocumentFormatting.LinkType Type)? FindLinkAtMouse(System.Windows.Point position)
         {
             TextPointer? pointer = TxtNote.GetPositionFromPoint(position, true);
             if (pointer == null)
@@ -1895,10 +1981,10 @@ namespace AiteBar
 
             if (FindHyperlink(pointer) is { } hyperlink)
             {
-                string url = QuickNoteMarkdown.GetHyperlinkUrl(hyperlink);
+                string url = QuickNoteDocumentFormatting.GetHyperlinkUrl(hyperlink);
                 if (!string.IsNullOrWhiteSpace(url))
                 {
-                    return (url, QuickNoteMarkdown.LinkType.Url);
+                    return (url, QuickNoteDocumentFormatting.LinkType.Url);
                 }
             }
 
@@ -1907,7 +1993,7 @@ namespace AiteBar
                 return null;
             }
 
-            foreach (var (match, type) in QuickNoteMarkdown.MatchLinks(paragraphText))
+            foreach (var (match, type) in QuickNoteDocumentFormatting.MatchLinks(paragraphText))
             {
                 if (indexInParagraph < match.Index || indexInParagraph >= match.Index + match.Length)
                 {
@@ -1969,6 +2055,23 @@ namespace AiteBar
                 if (current is Paragraph paragraph)
                 {
                     return paragraph;
+                }
+
+                current = current is FrameworkContentElement contentElement
+                    ? contentElement.Parent
+                    : LogicalTreeHelper.GetParent(current);
+            }
+
+            return null;
+        }
+
+        private static Section? FindAncestorSection(DependencyObject? current)
+        {
+            while (current != null)
+            {
+                if (current is Section section)
+                {
+                    return section;
                 }
 
                 current = current is FrameworkContentElement contentElement

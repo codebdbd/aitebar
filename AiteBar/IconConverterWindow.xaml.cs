@@ -19,6 +19,7 @@ public partial class IconConverterWindow : DarkWindow
     private readonly IconConverterService _converterService = new();
     private CancellationTokenSource? _previewRequestCts;
     private CancellationTokenSource? _previewCts;
+    private CancellationTokenSource? _saveCts;
     private string? _sourcePath;
     private bool _canSave;
     private bool _isInitialized;
@@ -291,11 +292,19 @@ public partial class IconConverterWindow : DarkWindow
 
         try
         {
+            _saveCts?.Cancel();
+            _saveCts?.Dispose();
+            _saveCts = new CancellationTokenSource();
+            CancellationToken saveToken = _saveCts.Token;
             BtnSave.IsEnabled = false;
             SetStatus(LocalizationService.Get("IconConverter_Generating"));
-            IconConversionResult result = await _converterService.ConvertAsync(_sourcePath, BuildOptions());
-            File.WriteAllBytes(dialog.FileName, result.IcoBytes);
+            IconConversionResult result = await _converterService.ConvertAsync(_sourcePath, BuildOptions(), saveToken);
+            await IconConverterService.WriteIcoAtomicallyAsync(dialog.FileName, result.IcoBytes, saveToken);
             SetStatus(LocalizationService.Format("IconConverter_SavedFormat", dialog.FileName));
+        }
+        catch (OperationCanceledException)
+        {
+            SetStatus(LocalizationService.Get("IconConverter_Ready"));
         }
         catch (Exception ex)
         {
@@ -373,6 +382,8 @@ public partial class IconConverterWindow : DarkWindow
             _previewCts?.Dispose();
             _previewRequestCts?.Cancel();
             _previewRequestCts?.Dispose();
+            _saveCts?.Cancel();
+            _saveCts?.Dispose();
             base.OnClosed(e);
         }
 

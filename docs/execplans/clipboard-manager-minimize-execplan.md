@@ -1,4 +1,4 @@
-# Add recoverable Clipboard Manager minimization
+# Harden Clipboard Manager reliability, privacy, and accessibility
 
 This ExecPlan is a living document. The sections `Progress`, `Surprises & Discoveries`, `Decision Log`, and `Outcomes & Retrospective` must be kept up to date as work proceeds.
 
@@ -6,7 +6,7 @@ This document must be maintained in accordance with `PLANS.md` at the repository
 
 ## Purpose / Big Picture
 
-The Clipboard Manager must be dismissible without closing or losing its current search, filter, and selection state. The title-bar minimize command must hide the window back into AiteBar, not create a Windows taskbar entry. Pressing Clipboard Manager on the AiteBar panel again must restore the same live window, and the owned window must not outlive AiteBar.
+The Clipboard Manager must remain a lightweight history picker without surprising side effects, UI freezes, or silent persistence of sensitive clipboard content. Users can copy entries without automatically pasting them, explicitly opt into history across sessions, clear every entry when needed, and use every action by keyboard or assistive technology. The existing hide-to-AiteBar minimization behavior remains unchanged.
 
 ## Progress
 
@@ -18,6 +18,12 @@ The Clipboard Manager must be dismissible without closing or losing its current 
 - [x] (2026-07-15 06:24Z) Replaced taskbar minimization with hide-to-AiteBar behavior, restored window ownership, and implemented same-instance restoration.
 - [x] (2026-07-15 06:26Z) Added a real WPF lifecycle test and updated structural coverage; the combined focused suite passed 7/7.
 - [x] (2026-07-15 06:33Z) Completed Release build, 645-test full suite, installer rebuild with verified checksum, publish restart, and post-start log smoke.
+- [x] (2026-08-21) Audited capture, storage, WPF interaction, privacy defaults, localization, and focused tests; identified auto-paste, UI-thread image/persistence work, default persistence, missing full clear, and inaccessible icon actions.
+- [x] (2026-08-21) Removed auto-paste, moved clipboard PNG encoding and capture-triggered persistence off the UI path, and rejected images over a 16-megapixel budget before encoding.
+- [x] (2026-08-21) Made persistent history opt-in, exposed full wipe, and restored tab/screen-reader access to entry actions.
+- [x] (2026-08-21) Added contract coverage for default privacy, no auto-paste, full wipe, and accessible actions; focused Clipboard tests passed 39/39.
+- [x] (2026-08-21) Completed Release build with 0 warnings and 0 errors, full test suite with 1343 passed tests, and installer rebuild with SHA-256 `F797E7BB1EB02254F912A839B0E16D4168811A4D3B1F91ACFC51F22191B80520`.
+- [x] (2026-08-21) Serialized deferred persistence, discarded stale snapshots, added bounded flush on persistence disable, service disposal, and application exit; focused tests passed 40/40 and the full suite passed 1344/1344.
 
 ## Surprises & Discoveries
 
@@ -32,6 +38,12 @@ The Clipboard Manager must be dismissible without closing or losing its current 
 
 - Observation: hiding the window without changing the launcher would create a second Clipboard Manager instance on the next panel action.
   Evidence: the shared launcher reused `_window` only while `IsVisible` was true; a targeted restoration hook is required before that branch.
+
+- Observation: the `WM_CLIPBOARDUPDATE` handler currently PNG-encodes images and rewrites the complete JSON history on the WPF UI thread.
+  Evidence: `ClipboardHistoryService.OnClipboardChanged` calls `RecordClipboardData`, which directly calls `SaveHistory`; the configured maximum permits 50 images of 5 MB each.
+
+- Observation: selecting an unpinned item sends `Ctrl+V` after the window hides despite the action being labelled Copy.
+  Evidence: `ClipboardManagerWindow.CopyEntry` calls `SendKeys.SendWait("^v")` after successful copy.
 
 ## Decision Log
 
@@ -55,6 +67,14 @@ The Clipboard Manager must be dismissible without closing or losing its current 
   Rationale: the hidden live instance must be reused with its UI state intact, while other utilities retain their current behavior.
   Date/Author: 2026-07-15 / Codex
 
+- Decision: copy only, never paste automatically.
+  Rationale: global key injection is unsafe and contradicts the visible Copy action. Pasting remains an explicit user action in the destination application.
+  Date/Author: 2026-08-21 / Codex
+
+- Decision: persistent clipboard history is opt-in and capture persistence is deferred to a background task.
+  Rationale: clipboard data often contains secrets. The UI must remain responsive when an application places a large image on the clipboard, while a short deferred save still protects data on normal shutdown.
+  Date/Author: 2026-08-21 / Codex
+
 ## Outcomes & Retrospective
 
 The earlier taskbar outcome was rejected and has been superseded. Clipboard Manager now exposes the standard minimize command but converts it into hiding back into AiteBar; it has no Windows taskbar entry, remains owned by the main application, and restores the same live window from the panel. Clipboard history ownership remains in `ClipboardHistoryService.Instance`.
@@ -62,6 +82,14 @@ The earlier taskbar outcome was rejected and has been superseded. Clipboard Mana
 The updated focused suite passed 7/7, including a real STA/WPF lifecycle test that shows the window, minimizes it, verifies it is hidden and normalized, and restores the same instance. The Release build completed with zero warnings and errors, and the final full suite passed 645/645. Installer `1.11.1` was rebuilt; SHA-256 `2414F9DE3E580AA66540A22CBCC5508430F33FE60DBF721C7CEBC93D41A4E38A` matches the generated `SHA256SUMS.txt`. The updated publish is running as PID 25192, and `error.log` retained its pre-start timestamp and size, so startup added no exception.
 
 The focused integration tests passed 3/3. The Release build completed with zero warnings and errors, and the full suite passed 640/640. `installer/Build-Installer.ps1` rebuilt version `1.11.1`; its SHA-256 is `46A134A3311ABD0C3E9D6470FD186BE32520ADCE5D7FE6DB06A47DA62C6BD6CB`. The updated publish restarted as PID 16356, and the production error log retained its old last-write timestamp `2026-07-15 06:05:00`, showing no new startup exception.
+
+The 2026-08-21 reliability audit is in progress. No code has yet been changed for the audit findings; the remaining milestones above are the source of truth for the hardening work.
+
+The reliability implementation now removes global key injection, makes history persistence opt-in, captures only the latest clipboard notification, encodes bounded images on a background task, and saves capture-triggered history on a background task. The UI exposes separate clear-unpinned and wipe-all commands, and its action buttons participate in keyboard navigation with automation names. Focused verification is complete; Release and full validation remain.
+
+Release validation is complete: Clipboard-focused tests passed 39/39, the full suite passed 1343/1343, and the installer was rebuilt. The only remaining verification is manual interaction with a real large clipboard image and an assistive technology client.
+
+The final persistence pass removes concurrent use of the shared temporary file and flushes the latest queued history snapshot during normal shutdown. Clipboard-focused tests now pass 40/40 and the full suite passes 1344/1344. The existing installer should be rebuilt again before distribution because this final source change occurred after its previous build.
 
 ## Context and Orientation
 
@@ -109,3 +137,9 @@ Plan revision note (2026-07-15 06:20Z): marked implementation and automated vali
 Plan revision note (2026-07-15 06:26Z): replaced the rejected taskbar workflow with hide-to-AiteBar semantics, recorded the superseded decision, and added focused WPF evidence.
 
 Plan revision note (2026-07-15 06:33Z): recorded final Release, full-suite, installer checksum, publish restart, and clean log evidence.
+
+Plan revision note (2026-08-21): expanded this plan from minimization-only behavior to the clipboard reliability audit. Recorded the discovery and implementation of privacy, performance, interaction, and accessibility fixes; retained Release validation as the final checkpoint.
+
+Plan revision note (2026-08-21, final): recorded focused/full test results, clean Release build, and the rebuilt installer checksum.
+
+Plan revision note (2026-08-21, persistence closeout): recorded serialized deferred persistence, shutdown flushing, and the 40/40 focused plus 1344/1344 full test results.

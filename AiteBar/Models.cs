@@ -190,7 +190,7 @@ public class AppSettings
         public bool ShowPresetPromptBuilder { get; set; } = false;
         public bool ShowPresetZenEditor { get; set; } = true;
         public bool ShowPresetAiteProfiles { get; set; } = true;
-    public bool ClipboardManagerPersistHistory { get; set; } = true;
+    public bool ClipboardManagerPersistHistory { get; set; } = false;
     public string QuickNoteThemeId { get; set; } = "dark";
     public bool QuickNotePinned { get; set; } = false;
     public double? QuickNoteLeft { get; set; }
@@ -203,6 +203,7 @@ public class AppSettings
 
     public DockEdge Edge { get; set; } = DockEdge.Top;
     public int MonitorIndex { get; set; } = 0; // 0 = Primary, 1, 2...
+    public string MonitorDeviceName { get; set; } = "";
     public double ActivationZoneSizePercent { get; set; } = 30; // % от ширины/высоты края
     public double PanelSizePercent { get; set; } = 80; // % от ширины/высоты экрана
     public int ActivationDelayMs { get; set; } = 150;
@@ -238,6 +239,7 @@ public class AppSettings
     public string? TextProcessingSelectedProviderId { get; set; }
     public bool TextProcessingIsAutoModel { get; set; } = true;
     public string? TextProcessingLastText { get; set; }
+    public bool SaveTextProcessingDraft { get; set; } = false;
 
     public double? PromptBuilderLeft { get; set; }
     public double? PromptBuilderTop { get; set; }
@@ -245,7 +247,7 @@ public class AppSettings
     public double? PromptBuilderHeight { get; set; }
     public string? PromptBuilderWindowState { get; set; }
     public bool PromptBuilderWindowPlacementInitialized { get; set; }
-    public int PromptBuilderLastMode { get; set; } = (int)PromptBuilderCategory.Programming;
+    public int PromptBuilderLastMode { get; set; } = (int)PromptBuilderCategory.Images;
     public PaintingStyle PromptBuilderPaintingStyle { get; set; } = PaintingStyle.Auto;
     public PaintingStyleSection PromptBuilderPaintingSection { get; set; } = PaintingStyleSection.All;
     public PaintingArtist PromptBuilderPaintingArtist { get; set; } = PaintingArtist.Auto;
@@ -261,7 +263,7 @@ public class AppSettings
     public VideoDirection PromptBuilderVideoDirection { get; set; } = VideoDirection.Auto;
     public ProgrammingProjectType PromptBuilderProgrammingProjectType { get; set; } = ProgrammingProjectType.Auto;
     public ProgrammingPromptStyle PromptBuilderProgrammingStyle { get; set; } = ProgrammingPromptStyle.Auto;
-    public VisualTargetModel PromptBuilderVisualTarget { get; set; } = VisualTargetModel.Universal;
+    public VisualTargetModel PromptBuilderVisualTarget { get; set; } = VisualTargetModel.GrokImagine;
     public IconStyle PromptBuilderIconStyle { get; set; } = IconStyle.Auto;
     public GraphicType PromptBuilderGraphicType { get; set; } = GraphicType.Auto;
     public GraphicStyle PromptBuilderGraphicStyle { get; set; } = GraphicStyle.Auto;
@@ -271,7 +273,7 @@ public class AppSettings
     public bool PromptBuilderIsAutoModel { get; set; } = true;
     public string? PromptBuilderLastText { get; set; }
     public Dictionary<string, PromptBuilderDraft> PromptBuilderDrafts { get; set; } = [];
-    public bool SavePromptBuilderDrafts { get; set; } = true;
+    public bool SavePromptBuilderDrafts { get; set; } = false;
 
     public List<CustomElement> Elements { get; set; } = new();
     public List<string> UtilityButtonOrder { get; set; } = new();

@@ -378,6 +378,21 @@ public sealed class ClipboardHistoryServiceTests : IDisposable
     }
 
     [Fact]
+    public void DeferredPersistence_FlushesLatestSnapshot()
+    {
+        string path = Path.Combine(_root, "clipboard.json");
+        var service = new ClipboardHistoryService(path, persistHistory: true);
+
+        service.RecordClipboardData("first", null, deferPersistence: true);
+        service.RecordClipboardData("second", null, deferPersistence: true);
+
+        Assert.True(service.FlushDeferredPersistence(TimeSpan.FromSeconds(2)));
+
+        var restored = new ClipboardHistoryService(path, persistHistory: true);
+        Assert.Equal(["second", "first"], restored.Entries.Select(entry => entry.Text).ToArray());
+    }
+
+    [Fact]
     public void TogglePin_NonexistentId_ReturnsFalse()
     {
         string path = Path.Combine(_root, "clipboard.json");

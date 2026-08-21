@@ -166,6 +166,45 @@ internal static class TaskbarGeometryHelper
             : new Rect(primary.Bounds.Left, primary.Bounds.Top, primary.Bounds.Width, primary.Bounds.Height);
     }
 
+    internal static double PixelsToDips(double pixels, double dpiScale) =>
+        pixels / (dpiScale > 0 ? dpiScale : 1.0);
+
+    public static double GetMonitorDpiScale(System.Windows.Forms.Screen? screen, double fallbackScale)
+    {
+        double fallback = fallbackScale > 0 ? fallbackScale : 1.0;
+        if (screen is null)
+        {
+            return fallback;
+        }
+
+        try
+        {
+            var bounds = screen.Bounds;
+            var center = new NativeMethods.Win32Point
+            {
+                X = bounds.Left + (bounds.Width / 2),
+                Y = bounds.Top + (bounds.Height / 2)
+            };
+            IntPtr monitor = NativeMethods.MonitorFromPoint(center, NativeMethods.MONITOR_DEFAULTTONEAREST);
+            if (monitor != IntPtr.Zero &&
+                NativeMethods.GetDpiForMonitor(monitor, NativeMethods.MDT_EFFECTIVE_DPI, out uint dpiX, out _) == 0 &&
+                dpiX > 0)
+            {
+                return dpiX / 96.0;
+            }
+        }
+        catch (DllNotFoundException)
+        {
+            // Windows 7 does not provide shcore.dll; retain the WPF window scale.
+        }
+        catch (EntryPointNotFoundException)
+        {
+            // Retain compatibility when the monitor DPI API is unavailable.
+        }
+
+        return fallback;
+    }
+
     public static string GetArrowGlyph(DockEdge edge)
     {
         return edge switch

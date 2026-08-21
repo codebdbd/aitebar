@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -386,7 +385,7 @@ internal sealed class AiteProfilesQuickLinkService
         return map.Values.OrderBy(static x => x.Name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
-    private static List<string> ParseTags(string value) =>
+    internal static List<string> ParseTags(string value) =>
         (value ?? string.Empty)
             .Split([',', ';', '|', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(NormalizePart)
@@ -418,9 +417,17 @@ internal sealed class AiteProfilesQuickLinkService
             return false;
         }
 
-        if (!candidate.StartsWith("http://", StringComparison.OrdinalIgnoreCase) &&
-            !candidate.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        bool hasHttpScheme = candidate.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                             candidate.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+        if (!hasHttpScheme)
         {
+            // Do not reinterpret a non-web URI (for example file://) as an HTTPS host.
+            if (candidate.Contains("://", StringComparison.Ordinal) ||
+                candidate.StartsWith("file:", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
             candidate = $"https://{candidate}";
         }
 
@@ -436,7 +443,7 @@ internal sealed class AiteProfilesQuickLinkService
         }
 
         string host = uri.Host ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(host) || (!string.Equals(host, "localhost", StringComparison.OrdinalIgnoreCase) && !IPAddress.TryParse(host, out _) && !host.Contains('.', StringComparison.Ordinal)))
+        if (string.IsNullOrWhiteSpace(host) || Uri.CheckHostName(host) == UriHostNameType.Unknown)
         {
             return false;
         }

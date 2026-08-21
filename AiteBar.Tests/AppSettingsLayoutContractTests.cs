@@ -115,7 +115,7 @@ public sealed class AppSettingsLayoutContractTests
         Assert.Equal("960", root.Attribute("MinWidth")?.Value);
         Assert.Equal("600", root.Attribute("MinHeight")?.Value);
         Assert.Equal("CanResize", root.Attribute("ResizeMode")?.Value);
-        Assert.Equal("False", root.Attribute("Topmost")?.Value);
+        Assert.Equal("True", root.Attribute("Topmost")?.Value);
         Assert.Equal("True", root.Attribute("ShowInTaskbar")?.Value);
         Assert.Equal("CenterScreen", root.Attribute("WindowStartupLocation")?.Value);
         Assert.Empty(window.Descendants(PresentationNamespace + "TabControl"));
@@ -199,7 +199,7 @@ public sealed class AppSettingsLayoutContractTests
         Assert.DoesNotContain(save, scrollViewer.Descendants());
         Assert.DoesNotContain(keepOnTop, scrollViewer.Descendants());
         Assert.Equal("1", footer.Attribute("Grid.Row")?.Value);
-        Assert.Equal("False", keepOnTop.Attribute("IsChecked")?.Value);
+        Assert.Equal("True", keepOnTop.Attribute("IsChecked")?.Value);
         Assert.Contains(keepOnTop, footer.Descendants());
         Assert.Contains(cancel, footer.Descendants());
         Assert.Contains(save, footer.Descendants());

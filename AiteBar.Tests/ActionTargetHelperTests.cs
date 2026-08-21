@@ -60,6 +60,14 @@ public sealed class ActionTargetHelperTests
     }
 
     [Fact]
+    public void NormalizePersistedActionType_PreservesUnknownValue()
+    {
+        string normalized = ActionTargetHelper.NormalizePersistedActionType("FutureAction", "value");
+
+        Assert.Equal("FutureAction", normalized);
+    }
+
+    [Fact]
     public void IsRegularFilePath_ReturnsTrue_ForNonExecutableFile()
     {
         string tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid():N}.txt");

@@ -27,9 +27,20 @@ public sealed partial class TextProcessingService
 
     public AiChatRequest BuildRequest(TextProcessingMode mode, string text, int? maxOutputTokens = null)
     {
+        ArgumentNullException.ThrowIfNull(text);
+        if (text.Length > MaxInputLength)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(text),
+                text.Length,
+                $"The text cannot exceed {MaxInputLength} characters.");
+        }
+
         string systemPrompt = GetSystemPrompt(mode);
         int estimated = EstimateTokens(systemPrompt) + EstimateTokens(text);
-        int outputBudget = Math.Max(estimated, text.Length / 2);
+        // Corrected text is close to the input size; estimate it in tokens rather
+        // than reserving half the character count, which overstates Cyrillic output.
+        int outputBudget = Math.Max(1024, (int)Math.Ceiling(EstimateTokens(text) * 1.25));
         if (maxOutputTokens.HasValue)
         {
             outputBudget = Math.Min(outputBudget, maxOutputTokens.Value);

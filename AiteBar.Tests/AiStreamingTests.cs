@@ -24,14 +24,7 @@ public sealed class AiStreamingTests
         Assert.Null(AiProviderClient.ParseOpenAiStreamData("data: [DONE]"));
     }
 
-    [Fact]
-    public void ParseGeminiStreamData_ReturnsCandidateParts()
-    {
-        string? content = AiProviderClient.ParseGeminiStreamData(
-            "data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"ис\"},{\"text\":\"прав\"}]}}]}");
 
-        Assert.Equal("исправ", content);
-    }
 
     [Fact]
     public void StreamingPreview_HidesPartialMarkerAndRestoresCompleteMarker()
@@ -76,31 +69,7 @@ public sealed class AiStreamingTests
         Assert.Equal("исправ", await CollectAsync(stream.Chunks));
     }
 
-    [Fact]
-    public async Task GeminiStreaming_UsesSseEndpointAndReadsCompleteHttpBody()
-    {
-        var credentials = new MemoryCredentialStore();
-        credentials.Write("AiteBar/AI/test", "secret");
-        var handler = new DelegateHandler(async request =>
-        {
-            Assert.Contains(":streamGenerateContent", request.RequestUri!.AbsoluteUri, StringComparison.Ordinal);
-            Assert.Contains("alt=sse", request.RequestUri.Query, StringComparison.Ordinal);
-            string payload = await request.Content!.ReadAsStringAsync();
-            Assert.Contains("\"systemInstruction\"", payload, StringComparison.Ordinal);
-            return Sse(
-                "data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"ис\"}]}}]}\n\n" +
-                "data: {\"candidates\":[{\"content\":{\"parts\":[{\"text\":\"прав\"}]}}]}\n\n");
-        });
-        var client = new AiProviderClient(new HttpClient(handler), credentials);
 
-        AiProviderStream stream = await client.GenerateStreamingAsync(
-            Connection("gemini"),
-            Model("gemini"),
-            Request(),
-            CancellationToken.None);
-
-        Assert.Equal("исправ", await CollectAsync(stream.Chunks));
-    }
 
     [Fact]
     public async Task Gateway_MarksConnectionSuccessfulOnlyAfterStreamCompletes()

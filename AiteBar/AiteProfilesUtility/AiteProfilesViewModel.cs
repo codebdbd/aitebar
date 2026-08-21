@@ -40,6 +40,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         _launcher = launcher;
         _quickLinks = quickLinks;
         _rotation = rotation;
+        _rotation.PersistenceFailed += HandleRotationPersistenceFailure;
         _rotationEnabled = _rotation.GetEnabled();
         _rememberQuickLink = _quickLinks.GetRememberEnabled();
         Profiles = [];
@@ -241,6 +242,9 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         try
         {
             await _store.InitializeAsync(cancellationToken).ConfigureAwait(true);
+            await _rotation.InitializeAsync(cancellationToken).ConfigureAwait(true);
+            _rotationEnabled = _rotation.GetEnabled();
+            OnPropertyChanged(nameof(RotationEnabled));
             _snippets = await _quickLinks.LoadAsync(cancellationToken).ConfigureAwait(true);
             RebuildQuickLinkSuggestions();
             QuickLinkText = _quickLinks.GetPreparedText();
@@ -271,6 +275,12 @@ internal sealed class AiteProfilesViewModel : NotifyObject
                 await ReloadFromStoreAsync(cancellationToken).ConfigureAwait(true);
                 StatusText = LocalizationService.Format("AiteProfiles_StatusProfiles", Profiles.Count);
             }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            StatusText = Profiles.Count > 0
+                ? LocalizationService.Format("AiteProfiles_StatusProfiles", Profiles.Count)
+                : LocalizationService.Get("AiteProfiles_StatusNoCachedProfiles");
         }
         catch (Exception ex)
         {
@@ -320,7 +330,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
     {
         await _store.SetTagsAsync(item.Folder, item.Path, tagsText).ConfigureAwait(true);
         item.TagsText = AiteProfilesStore.NormalizeTags(tagsText);
-        await ReloadFromStoreAsync().ConfigureAwait(true);
+        ApplyFilterAndSort();
     }
 
     public async Task SaveQuickLinkAsync(AiteProfileSnippet? original, AiteProfileSnippet updated)
@@ -333,8 +343,9 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         }
 
         list.Add(updated);
-        _snippets = AiteProfilesQuickLinkService.NormalizeSnippets(list);
-        await _quickLinks.SaveAsync(_snippets).ConfigureAwait(true);
+        IReadOnlyList<AiteProfileSnippet> normalizedSnippets = AiteProfilesQuickLinkService.NormalizeSnippets(list);
+        await _quickLinks.SaveAsync(normalizedSnippets).ConfigureAwait(true);
+        _snippets = normalizedSnippets;
         RebuildQuickLinkSuggestions(QuickLinkText, updated);
         _quickLinks.SetActiveSnippet(updated);
         SetQuickLinkTextFromSelection(updated.Urls.FirstOrDefault() ?? string.Join('|', updated.Urls));
@@ -354,6 +365,8 @@ internal sealed class AiteProfilesViewModel : NotifyObject
     public string ExportQuickLinksText() => _quickLinks.BuildTextExport(_snippets);
 
     public IReadOnlyList<AiteProfileSnippet> GetSnippets() => _snippets;
+
+    internal Task<bool> FlushPersistenceAsync(TimeSpan timeout) => _rotation.FlushAsync(timeout);
 
     private async Task ReloadFromStoreAsync(CancellationToken cancellationToken = default)
     {
@@ -387,14 +400,49 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         };
 
         string? currentKey = CurrentProfile?.ProfileKey;
-        Profiles.Clear();
-        foreach (AiteProfileListItemViewModel item in source)
-        {
-            Profiles.Add(item);
-        }
+        SynchronizeProfiles(source.ToList());
 
         CurrentProfile = currentKey is null ? Profiles.FirstOrDefault() : Profiles.FirstOrDefault(item => item.ProfileKey == currentKey) ?? Profiles.FirstOrDefault();
         RaiseCommandStates();
+    }
+
+    private void HandleRotationPersistenceFailure(Exception exception)
+    {
+        Logger.Log(exception);
+        if (Application.Current?.Dispatcher is { } dispatcher && !dispatcher.CheckAccess())
+        {
+            _ = dispatcher.InvokeAsync(() => HandleRotationPersistenceFailure(exception));
+            return;
+        }
+
+        StatusText = LocalizationService.Get("AiteProfiles_StatusRotationSaveFailed");
+    }
+
+    private void SynchronizeProfiles(IReadOnlyList<AiteProfileListItemViewModel> items)
+    {
+        for (int index = 0; index < items.Count; index++)
+        {
+            AiteProfileListItemViewModel item = items[index];
+            if (index < Profiles.Count && ReferenceEquals(Profiles[index], item))
+            {
+                continue;
+            }
+
+            int existingIndex = Profiles.IndexOf(item);
+            if (existingIndex >= 0)
+            {
+                Profiles.Move(existingIndex, index);
+            }
+            else
+            {
+                Profiles.Insert(index, item);
+            }
+        }
+
+        while (Profiles.Count > items.Count)
+        {
+            Profiles.RemoveAt(Profiles.Count - 1);
+        }
     }
 
     private void UpdateQuickLinkFromInput()

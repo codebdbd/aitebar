@@ -16,7 +16,7 @@ public sealed class IconConverterService
 {
     private const long MaxInputFileBytes = 50L * 1024 * 1024;
     private const long MaxSvgFileBytes = 10L * 1024 * 1024;
-    private const long MaxInputPixels = 80L * 1000 * 1000;
+    internal const long MaxInputPixels = 20L * 1000 * 1000;
     private static readonly XNamespace SvgNamespace = "http://www.w3.org/2000/svg";
     private static readonly XNamespace XLinkNamespace = "http://www.w3.org/1999/xlink";
 
@@ -179,6 +179,39 @@ public sealed class IconConverterService
                 SourceHeight = context.SourceHeight
             };
         }, cancellationToken);
+    }
+
+    internal static async Task WriteIcoAtomicallyAsync(string destinationPath, byte[] icoBytes, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(destinationPath);
+        ArgumentNullException.ThrowIfNull(icoBytes);
+
+        string? directory = Path.GetDirectoryName(destinationPath);
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            throw new InvalidOperationException("ICO output requires a destination directory.");
+        }
+
+        Directory.CreateDirectory(directory);
+        string temporaryPath = Path.Combine(directory, $"{Path.GetFileName(destinationPath)}.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            await using (var stream = new FileStream(temporaryPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, FileOptions.Asynchronous))
+            {
+                await stream.WriteAsync(icoBytes, cancellationToken).ConfigureAwait(false);
+                await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+            File.Move(temporaryPath, destinationPath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporaryPath))
+            {
+                File.Delete(temporaryPath);
+            }
+        }
     }
 
     public Task<IReadOnlyList<IconPreviewImage>> GeneratePreviewsAsync(

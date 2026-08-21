@@ -74,16 +74,18 @@ public partial class TextProcessingWindow : DarkWindow
     private DateTimeOffset _processingStartedAt;
     private bool _isProgressStatusVisible;
     private int _infoStatusVersion;
+    private string? _processingSourceText;
 
     public TextProcessingWindow(
         TextProcessingService service,
         AppSettingsService settingsService,
-        MainWindow? mainWindow = null)
+        MainWindow? mainWindow = null,
+        AiGateway? gateway = null)
     {
         _service = service ?? throw new ArgumentNullException(nameof(service));
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _mainWindow = mainWindow;
-        _gateway = new AiGateway(settingsService);
+        _gateway = gateway ?? new AiGateway(settingsService);
         _currentMode = TextProcessingMode.Proofread;
         InitializeComponent();
         SourceInitialized += OnSourceInitialized;
@@ -142,10 +144,11 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void SaveEditorText()
     {
-        string text = TxtEditor.Text ?? string.Empty;
         _settingsService.UpdateSettings(settings =>
         {
-            settings.TextProcessingLastText = text;
+            settings.TextProcessingLastText = settings.SaveTextProcessingDraft
+                ? _isProcessing ? _processingSourceText ?? TxtEditor.Text ?? string.Empty : TxtEditor.Text ?? string.Empty
+                : null;
         });
     }
 
@@ -201,10 +204,10 @@ public partial class TextProcessingWindow : DarkWindow
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
-        SaveEditorText();
-        SaveWindowState();
         _processingCts?.Cancel();
         _loadModelsCts?.Cancel();
+        SaveEditorText();
+        SaveWindowState();
     }
 
     private void Window_StateChanged(object? sender, EventArgs e)
@@ -610,6 +613,7 @@ public partial class TextProcessingWindow : DarkWindow
         _isShowingOriginal = false;
         _isShowingDiff = false;
         _isProcessing = true;
+        _processingSourceText = input;
         _isModifiedManually = false;
         _processingCts = new CancellationTokenSource();
         StartProcessingProgress();
@@ -726,6 +730,7 @@ public partial class TextProcessingWindow : DarkWindow
         {
             StopProcessingProgress();
             _isProcessing = false;
+            _processingSourceText = null;
             _processingCts?.Dispose();
             _processingCts = null;
             RefreshUiState();

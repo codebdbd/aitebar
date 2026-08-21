@@ -1037,6 +1037,7 @@ public sealed class AppSettingsServiceTests
 
             Edge = DockEdge.Right,
             MonitorIndex = 2,
+            MonitorDeviceName = "\\\\.\\DISPLAY3",
             ActivationZoneSizePercent = 50,
             PanelSizePercent = 65,
             ActivationDelayMs = 300,
@@ -1179,6 +1180,7 @@ public sealed class AppSettingsServiceTests
 
         Assert.Equal(DockEdge.Right, clone.Edge);
         Assert.Equal(2, clone.MonitorIndex);
+        Assert.Equal("\\\\.\\DISPLAY3", clone.MonitorDeviceName);
         Assert.Equal(50, clone.ActivationZoneSizePercent);
         Assert.Equal(65, clone.PanelSizePercent);
         Assert.Equal(300, clone.ActivationDelayMs);
@@ -1309,6 +1311,93 @@ public sealed class AppSettingsServiceTests
         Assert.Equal("Original", original.Elements[0].Name);
         Assert.Equal(["a"], original.Elements[0].RotationProfilePaths);
         Assert.Equal("dsn", original.Sentry.Dsn);
+    }
+
+    [Fact]
+    public async Task DeleteElementAsync_LastElement_PersistsAfterServiceRestart()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string settingsPath = Path.Combine(root, "settings.json");
+        string configPath = Path.Combine(root, "custom_buttons.json");
+
+        try
+        {
+            var service = new AppSettingsService(configPath, settingsPath);
+            await service.AddElementsAsync([new CustomElement { Id = "only", Name = "Only", ContextId = "context-0" }]);
+
+            await service.DeleteElementAsync("only");
+
+            var restarted = new AppSettingsService(configPath, settingsPath);
+            await restarted.LoadAsync();
+            Assert.Empty(restarted.Elements);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task Elements_ReturnsDeepSnapshotThatCannotMutateServiceState()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            var service = new AppSettingsService(Path.Combine(root, "custom_buttons.json"), Path.Combine(root, "settings.json"));
+            await service.AddElementsAsync([new CustomElement { Id = "link", Name = "Original", RotationProfilePaths = ["a"] }]);
+
+            CustomElement snapshot = Assert.Single(service.Elements);
+            snapshot.Name = "Mutated";
+            snapshot.RotationProfilePaths.Add("b");
+
+            CustomElement stored = Assert.Single(service.Elements);
+            Assert.Equal("Original", stored.Name);
+            Assert.Equal(["a"], stored.RotationProfilePaths);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void DraftPersistence_DefaultsToDisabled()
+    {
+        var settings = new AppSettings();
+
+        Assert.False(settings.SaveTextProcessingDraft);
+        Assert.False(settings.SavePromptBuilderDrafts);
+    }
+
+    [Fact]
+    public void ClearSettingsBackups_RemovesAllExistingBackupFiles()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        string settingsPath = Path.Combine(root, "settings.json");
+        string configPath = Path.Combine(root, "custom_buttons.json");
+
+        try
+        {
+            var service = new AppSettingsService(configPath, settingsPath);
+            for (int index = 0; index < AppSettingsService.MaxBackupCount; index++)
+            {
+                File.WriteAllText(service.GetBackupFilePath(index), "sensitive draft");
+            }
+
+            service.ClearSettingsBackups();
+
+            for (int index = 0; index < AppSettingsService.MaxBackupCount; index++)
+            {
+                Assert.False(File.Exists(service.GetBackupFilePath(index)));
+            }
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
     }
 
     [Fact]

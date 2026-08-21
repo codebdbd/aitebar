@@ -357,6 +357,7 @@ public sealed class ZenEditorStore
                 continue;
             }
 
+            PreserveCorruptDocument(GetDocumentPath(id));
             await WriteJsonAtomicAsync(GetDocumentPath(id), backup, cancellationToken).ConfigureAwait(false);
             return (backup, true);
         }
@@ -447,7 +448,40 @@ public sealed class ZenEditorStore
                      .OrderByDescending(File.GetLastWriteTimeUtc)
                      .Skip(MaximumBackupsPerDocument))
         {
-            File.Delete(obsolete);
+            try
+            {
+                File.Delete(obsolete);
+            }
+            catch (IOException)
+            {
+                // Backup retention must not prevent the current document from being saved.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // A locked or protected old backup can be cleaned up on a later save.
+            }
+        }
+    }
+
+    private static void PreserveCorruptDocument(string documentPath)
+    {
+        if (!File.Exists(documentPath))
+        {
+            return;
+        }
+
+        string corruptPath = documentPath + ".corrupt-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fffffff");
+        try
+        {
+            File.Copy(documentPath, corruptPath, overwrite: false);
+        }
+        catch (IOException)
+        {
+            // Recovery remains more valuable than retaining a diagnostic copy.
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // Recovery remains more valuable than retaining a diagnostic copy.
         }
     }
 

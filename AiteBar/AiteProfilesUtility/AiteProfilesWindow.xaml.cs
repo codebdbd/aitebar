@@ -37,7 +37,13 @@ public partial class AiteProfilesWindow : DarkWindow
         var quickLinks = new AiteProfilesQuickLinkService(root);
         var rotation = new AiteProfilesRotationStateService(root);
         _viewModel = new AiteProfilesViewModel(store, launcher, quickLinks, rotation);
-        _viewModel.HideWindowRequested += Hide;
+        _viewModel.HideWindowRequested += () =>
+        {
+            if (!IsPinned)
+            {
+                Hide();
+            }
+        };
         _viewModel.MessageRequested += ShowMessage;
         _viewModel.EditTagsRequested += EditTagsAsync;
         _viewModel.EditQuickLinkRequested += EditQuickLinkAsync;
@@ -96,6 +102,12 @@ public partial class AiteProfilesWindow : DarkWindow
         Hide();
     }
 
+    protected override void OnClosed(EventArgs e)
+    {
+        _viewModel.FlushPersistenceAsync(TimeSpan.FromSeconds(2)).GetAwaiter().GetResult();
+        base.OnClosed(e);
+    }
+
     private void Window_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
     {
         if (e.ChangedButton == System.Windows.Input.MouseButton.Left && e.LeftButton == System.Windows.Input.MouseButtonState.Pressed)
@@ -118,7 +130,7 @@ public partial class AiteProfilesWindow : DarkWindow
     private void ContextMenu_Closed(object sender, RoutedEventArgs e)
     {
         PopSuppressAutoHide();
-        if (_suppressAutoHideRefCount == 0 && !IsActive)
+        if (_suppressAutoHideRefCount == 0 && !IsActive && !IsPinned)
         {
             Hide();
         }
@@ -132,10 +144,10 @@ public partial class AiteProfilesWindow : DarkWindow
         OpenSelectedMenuItem.Visibility = multipleSelected ? Visibility.Visible : Visibility.Collapsed;
 
         bool isFavorite = profile?.IsFavorite ?? false;
-        ToggleFavoriteMenuItem.Header = isFavorite ? "Удалить из избранного" : "Добавить в избранное";
+        ToggleFavoriteMenuItem.Header = LocalizationService.Get(isFavorite ? "AiteProfiles_RemoveFavorite" : "AiteProfiles_AddFavorite");
 
         bool isFarm = profile?.IsFarm ?? false;
-        ToggleFarmMenuItem.Header = isFarm ? "Удалить из \"Ферма\"" : "Добавить в \"Ферма\"";
+        ToggleFarmMenuItem.Header = LocalizationService.Get(isFarm ? "AiteProfiles_RemoveFarm" : "AiteProfiles_AddFarm");
     }
 
     private void ProfilesGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -388,7 +400,19 @@ public partial class AiteProfilesWindow : DarkWindow
             };
             if (dialog.ShowDialog() == true && dialog.ResultSnippet is not null)
             {
-                await _viewModel.SaveQuickLinkAsync(original, dialog.ResultSnippet).ConfigureAwait(true);
+                try
+                {
+                    await _viewModel.SaveQuickLinkAsync(original, dialog.ResultSnippet).ConfigureAwait(true);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                    System.Windows.MessageBox.Show(this,
+                        LocalizationService.Get("AiteProfiles_SaveLinkFailed"),
+                        LocalizationService.Get("AiteProfiles_QuickLinkDialogTitle"),
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Error);
+                }
             }
         }
         finally

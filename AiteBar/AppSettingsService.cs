@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Versioning;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -73,7 +74,7 @@ namespace AiteBar
             {
                 lock (_stateLock)
                 {
-                    return [.. _elements];
+                    return _elements.Select(CloneElement).ToList();
                 }
             }
         }
@@ -119,6 +120,7 @@ namespace AiteBar
                 TimerDuration = original.TimerDuration,
                 Edge = original.Edge,
                 MonitorIndex = original.MonitorIndex,
+                MonitorDeviceName = original.MonitorDeviceName,
                 ActivationZoneSizePercent = original.ActivationZoneSizePercent,
                 PanelSizePercent = original.PanelSizePercent,
                 ActivationDelayMs = original.ActivationDelayMs,
@@ -302,6 +304,7 @@ namespace AiteBar
                 TextProcessingSelectedProviderId = original.TextProcessingSelectedProviderId,
                 TextProcessingIsAutoModel = original.TextProcessingIsAutoModel,
                 TextProcessingLastText = original.TextProcessingLastText,
+                SaveTextProcessingDraft = original.SaveTextProcessingDraft,
                 PromptBuilderLeft = original.PromptBuilderLeft,
                 PromptBuilderTop = original.PromptBuilderTop,
                 PromptBuilderWidth = original.PromptBuilderWidth,
@@ -480,6 +483,25 @@ namespace AiteBar
             return $"{_settingsFile}.backup.{backupIndex}";
         }
 
+        public void ClearSettingsBackups()
+        {
+            for (int index = 0; index < MaxBackupCount; index++)
+            {
+                try
+                {
+                    string backupFile = GetBackupFilePath(index);
+                    if (File.Exists(backupFile))
+                    {
+                        File.Delete(backupFile);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                }
+            }
+        }
+
         internal void RotateBackups()
         {
             try
@@ -590,28 +612,6 @@ namespace AiteBar
 
             try
             {
-                // Safety check: don't overwrite with empty elements if we previously had elements
-                if (File.Exists(_settingsFile))
-                {
-                    try
-                    {
-                        string oldJson = await File.ReadAllTextAsync(_settingsFile);
-                        var oldSettings = JsonSerializer.Deserialize<AppSettings>(oldJson, _jsonOptions);
-                        var newSettings = JsonSerializer.Deserialize<AppSettings>(json, _jsonOptions);
-                        
-                        // If old settings had elements and new don't, keep old and log error
-                        if ((oldSettings?.Elements?.Count ?? 0) > 0 && (newSettings?.Elements?.Count ?? 0) == 0)
-                        {
-                            Logger.Log(new Exception("Attempted to save empty elements list, keeping old settings"));
-                            return;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logger.Log(ex);
-                    }
-                }
-
                 // First create backup of current file before rotating
                 if (File.Exists(_settingsFile))
                 {
@@ -626,7 +626,19 @@ namespace AiteBar
                 // Now replace the main file
                 if (File.Exists(_settingsFile))
                 {
-                    File.Replace(tempFile, _settingsFile, null);
+                    try
+                    {
+                        File.Replace(tempFile, _settingsFile, null);
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        // Some managed folders deny Replace despite allowing an overwrite move.
+                        File.Move(tempFile, _settingsFile, overwrite: true);
+                    }
+                    catch (PlatformNotSupportedException)
+                    {
+                        File.Move(tempFile, _settingsFile, overwrite: true);
+                    }
                 }
                 else
                 {
@@ -719,6 +731,29 @@ namespace AiteBar
                 }
                 _appSettings.Contexts = normalizedContexts;
 
+                if (OperatingSystem.IsWindows())
+                {
+                    string monitorDeviceName = _appSettings.MonitorDeviceName ?? string.Empty;
+                    int resolvedMonitorIndex = FindMonitorIndex(monitorDeviceName);
+                    if (resolvedMonitorIndex >= 0)
+                    {
+                        if (_appSettings.MonitorIndex != resolvedMonitorIndex)
+                        {
+                            _appSettings.MonitorIndex = resolvedMonitorIndex;
+                            changed = true;
+                        }
+                    }
+                    else if (string.IsNullOrWhiteSpace(monitorDeviceName))
+                    {
+                        string detectedMonitorDeviceName = GetMonitorDeviceName(_appSettings.MonitorIndex);
+                        if (!string.IsNullOrWhiteSpace(detectedMonitorDeviceName))
+                        {
+                            _appSettings.MonitorDeviceName = detectedMonitorDeviceName;
+                            changed = true;
+                        }
+                    }
+                }
+
                 AiSettings normalizedAi = AiSettingsNormalizer.Normalize(_appSettings.Ai, out bool aiChanged);
                 if (aiChanged)
                 {
@@ -741,17 +776,20 @@ namespace AiteBar
                     changed = true;
                 }
 
-                // Миграция категорий PromptBuilder:
-                // Старый VideoAudio (3) -> новый Video (3)
-                // Старый AnalysisIdeas (4) -> новый Analysis (4)
-                // Значения 0,1,2 остаются без изменений
-                // Недопустимые значения сбрасываем в Programming
+                // Prompt Builder now supports only creative categories. Migrate
+                // removed Code, Text, and Analytics modes to Images.
                 int oldPromptBuilderMode = _appSettings.PromptBuilderLastMode;
                 int normalizedPromptBuilderMode = oldPromptBuilderMode switch
                 {
-                    0 or 1 or 2 or 3 or 4 or 5 or 7 or 8 or 9 or 10 => oldPromptBuilderMode,
-                    (int)PromptBuilderCategory.Ideas => oldPromptBuilderMode,
-                    _ => (int)PromptBuilderCategory.Programming
+                    (int)PromptBuilderCategory.Images or
+                    (int)PromptBuilderCategory.Video or
+                    (int)PromptBuilderCategory.Music or
+                    (int)PromptBuilderCategory.Ideas or
+                    (int)PromptBuilderCategory.Paintings or
+                    (int)PromptBuilderCategory.Animation or
+                    (int)PromptBuilderCategory.Graphics => oldPromptBuilderMode,
+                    (int)PromptBuilderCategory.Icons => (int)PromptBuilderCategory.Graphics,
+                    _ => (int)PromptBuilderCategory.Images
                 };
                 if (oldPromptBuilderMode != normalizedPromptBuilderMode)
                 {
@@ -834,9 +872,11 @@ namespace AiteBar
                 }
 
                 string contextId = string.IsNullOrWhiteSpace(item.ContextId) ? defaultContextId : item.ContextId;
+                string actionType = ActionTargetHelper.NormalizePersistedActionType(item.ActionType, item.ActionValue);
                 bool needsChange = !string.Equals(item.Id, id, StringComparison.Ordinal) ||
-                                   !string.Equals(item.ContextId, contextId, StringComparison.Ordinal) ||
-                                   item.RotationProfilePaths == null;
+                                    !string.Equals(item.ContextId, contextId, StringComparison.Ordinal) ||
+                                   !string.Equals(item.ActionType, actionType, StringComparison.Ordinal) ||
+                                    item.RotationProfilePaths == null;
 
                 if (needsChange)
                 {
@@ -851,7 +891,7 @@ namespace AiteBar
                     Icon = item.Icon,
                     IconFont = item.IconFont,
                     Color = item.Color,
-                    ActionType = item.ActionType,
+                    ActionType = actionType,
                     ActionValue = item.ActionValue,
                     Browser = item.Browser,
                     ChromeProfile = item.ChromeProfile,
@@ -901,6 +941,35 @@ namespace AiteBar
                    left.Key == right.Key &&
                    left.ImagePath == right.ImagePath &&
                    left.ContextId == right.ContextId;
+        }
+
+        [SupportedOSPlatform("windows")]
+        private static int FindMonitorIndex(string deviceName)
+        {
+            if (string.IsNullOrWhiteSpace(deviceName))
+            {
+                return -1;
+            }
+
+            System.Windows.Forms.Screen[] screens = System.Windows.Forms.Screen.AllScreens;
+            for (int index = 0; index < screens.Length; index++)
+            {
+                if (string.Equals(screens[index].DeviceName, deviceName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return index;
+                }
+            }
+
+            return -1;
+        }
+
+        [SupportedOSPlatform("windows")]
+        private static string GetMonitorDeviceName(int monitorIndex)
+        {
+            System.Windows.Forms.Screen[] screens = System.Windows.Forms.Screen.AllScreens;
+            return monitorIndex >= 0 && monitorIndex < screens.Length
+                ? screens[monitorIndex].DeviceName
+                : System.Windows.Forms.Screen.PrimaryScreen?.DeviceName ?? string.Empty;
         }
 
         public string GetPrimaryContextId()

@@ -59,7 +59,7 @@ public partial class PromptBuilderWindow : DarkWindow
     private bool _isShowingDiff;
     private string _lastUsedModelDisplay = string.Empty;
     private string _inlineInfoStatus = string.Empty;
-    private PromptBuilderCategory _currentMode = PromptBuilderCategory.Programming;
+    private PromptBuilderCategory _currentMode = PromptBuilderCategory.Images;
     private PaintingStyle _paintingStyle = PaintingStyle.Auto;
     private PaintingStyleSection _paintingSection = PaintingStyleSection.All;
     private PaintingArtist _paintingArtist = PaintingArtist.Auto;
@@ -69,13 +69,8 @@ public partial class PromptBuilderWindow : DarkWindow
     private PhotoStyle _photoStyle = PhotoStyle.Auto;
     private ThemeSection _themeSection = ThemeSection.All;
     private ThemeStyle _themeStyle = ThemeStyle.Auto;
-    private TextPromptType _textType = TextPromptType.Auto;
-    private TextPromptTone _textTone = TextPromptTone.Neutral;
-    private AnalysisDirection _analysisDirection = AnalysisDirection.Auto;
     private VideoDirection _videoDirection = VideoDirection.Auto;
-    private ProgrammingProjectType _programmingProjectType = ProgrammingProjectType.Auto;
-    private ProgrammingPromptStyle _programmingStyle = ProgrammingPromptStyle.Auto;
-    private VisualTargetModel _visualTarget = VisualTargetModel.Universal;
+    private VisualTargetModel _visualTarget = VisualTargetModel.GrokImagine;
     private IconStyle _iconStyle = IconStyle.Auto;
     private GraphicType _graphicType = GraphicType.Auto;
     private GraphicStyle _graphicStyle = GraphicStyle.Auto;
@@ -93,6 +88,7 @@ public partial class PromptBuilderWindow : DarkWindow
     private DateTimeOffset _processingStartedAt;
     private bool _isProgressStatusVisible;
     private int _infoStatusVersion;
+    private string? _processingSourceText;
 
     public PromptBuilderWindow(
         PromptBuilderService service,
@@ -104,7 +100,7 @@ public partial class PromptBuilderWindow : DarkWindow
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _mainWindow = mainWindow;
         _gateway = gateway ?? new AiGateway(settingsService);
-        _currentMode = PromptBuilderCategory.Programming;
+        _currentMode = PromptBuilderCategory.Images;
         InitializeComponent();
         SourceInitialized += OnSourceInitialized;
         _progressTimer = new DispatcherTimer(TimeSpan.FromSeconds(1), DispatcherPriority.Background, (_, _) =>
@@ -189,7 +185,7 @@ public partial class PromptBuilderWindow : DarkWindow
         }
         PromptBuilderDraft draft = new()
         {
-            Input = _hasSuccessfulResult ? _originalText : TxtEditor.Text ?? string.Empty,
+            Input = _hasSuccessfulResult ? _originalText : _isProcessing ? _processingSourceText ?? TxtEditor.Text ?? string.Empty : TxtEditor.Text ?? string.Empty,
             Result = _hasSuccessfulResult ? _processedText : string.Empty,
             HasResult = _hasSuccessfulResult,
             ShowOriginal = _hasSuccessfulResult && _isShowingOriginal
@@ -266,11 +262,11 @@ public partial class PromptBuilderWindow : DarkWindow
 
     private void Window_Closing(object? sender, CancelEventArgs e)
     {
+        _processingCts?.Cancel();
+        _loadModelsCts?.Cancel();
         SaveEditorText();
         SaveCurrentMode();
         SaveWindowState();
-        _processingCts?.Cancel();
-        _loadModelsCts?.Cancel();
     }
 
     private void SaveCurrentMode()
@@ -287,12 +283,7 @@ public partial class PromptBuilderWindow : DarkWindow
             settings.PromptBuilderPhotoStyle = _photoStyle;
             settings.PromptBuilderThemeSection = _themeSection;
             settings.PromptBuilderThemeStyle = _themeStyle;
-            settings.PromptBuilderTextType = _textType;
-            settings.PromptBuilderTextTone = _textTone;
-            settings.PromptBuilderAnalysisDirection = _analysisDirection;
             settings.PromptBuilderVideoDirection = _videoDirection;
-            settings.PromptBuilderProgrammingProjectType = _programmingProjectType;
-            settings.PromptBuilderProgrammingStyle = _programmingStyle;
             settings.PromptBuilderVisualTarget = _visualTarget;
             settings.PromptBuilderIconStyle = _iconStyle;
             settings.PromptBuilderGraphicType = _graphicType;
@@ -305,18 +296,15 @@ public partial class PromptBuilderWindow : DarkWindow
         int storedMode = _settingsService.Settings.PromptBuilderLastMode;
         PromptBuilderCategory restoredMode = storedMode switch
         {
-            (int)PromptBuilderCategory.Programming => PromptBuilderCategory.Programming,
             (int)PromptBuilderCategory.Images => PromptBuilderCategory.Images,
-            (int)PromptBuilderCategory.Texts => PromptBuilderCategory.Texts,
             (int)PromptBuilderCategory.Video => PromptBuilderCategory.Video,
-            (int)PromptBuilderCategory.Analysis => PromptBuilderCategory.Analysis,
             (int)PromptBuilderCategory.Music => PromptBuilderCategory.Music,
             (int)PromptBuilderCategory.Ideas => PromptBuilderCategory.Ideas,
             (int)PromptBuilderCategory.Paintings => PromptBuilderCategory.Paintings,
             (int)PromptBuilderCategory.Animation => PromptBuilderCategory.Animation,
             (int)PromptBuilderCategory.Icons => PromptBuilderCategory.Graphics,
             (int)PromptBuilderCategory.Graphics => PromptBuilderCategory.Graphics,
-            _ => PromptBuilderCategory.Programming
+            _ => PromptBuilderCategory.Images
         };
         _currentMode = restoredMode;
         _paintingStyle = _settingsService.Settings.PromptBuilderPaintingStyle;
@@ -339,20 +327,10 @@ public partial class PromptBuilderWindow : DarkWindow
         if (!PromptBuilderService.ThemeSections.Any(section => section.Section == _themeSection)) _themeSection = ThemeSection.All;
         _themeStyle = _settingsService.Settings.PromptBuilderThemeStyle;
         if (!PromptBuilderService.GetThemeStyles(_themeSection).Any(style => style.Style == _themeStyle)) _themeStyle = ThemeStyle.Auto;
-        _textType = _settingsService.Settings.PromptBuilderTextType;
-        if (!PromptBuilderService.TextPromptTypes.Any(style => style.Type == _textType)) _textType = TextPromptType.Auto;
-        _textTone = _settingsService.Settings.PromptBuilderTextTone;
-        if (!PromptBuilderService.TextPromptTones.Any(style => style.Tone == _textTone)) _textTone = TextPromptTone.Neutral;
-        _analysisDirection = _settingsService.Settings.PromptBuilderAnalysisDirection;
-        if (!PromptBuilderService.AnalysisDirections.Any(item => item.Direction == _analysisDirection)) _analysisDirection = AnalysisDirection.Auto;
         _videoDirection = _settingsService.Settings.PromptBuilderVideoDirection;
         if (!PromptBuilderService.VideoDirections.Any(item => item.Direction == _videoDirection)) _videoDirection = VideoDirection.Auto;
-        _programmingProjectType = _settingsService.Settings.PromptBuilderProgrammingProjectType;
-        if (!PromptBuilderService.ProgrammingProjectTypes.Any(item => item.Type == _programmingProjectType)) _programmingProjectType = ProgrammingProjectType.Auto;
-        _programmingStyle = _settingsService.Settings.PromptBuilderProgrammingStyle;
-        if (!PromptBuilderService.GetProgrammingStyles(_programmingProjectType).Any(item => item.Style == _programmingStyle)) _programmingStyle = ProgrammingPromptStyle.Auto;
         _visualTarget = _settingsService.Settings.PromptBuilderVisualTarget;
-        if (!PromptBuilderService.VisualTargetModels.Any(item => item.Model == _visualTarget)) _visualTarget = VisualTargetModel.Universal;
+        if (!PromptBuilderService.VisualTargetModels.Any(item => item.Model == _visualTarget)) _visualTarget = VisualTargetModel.GrokImagine;
         _iconStyle = _settingsService.Settings.PromptBuilderIconStyle;
         if (!PromptBuilderService.IconStyles.Any(item => item.Style == _iconStyle)) _iconStyle = IconStyle.Auto;
         _graphicType = _settingsService.Settings.PromptBuilderGraphicType;
@@ -445,16 +423,13 @@ public partial class PromptBuilderWindow : DarkWindow
         }
         PromptBuilderCategory selectedMode = tag switch
         {
-            "Programming" => PromptBuilderCategory.Programming,
             "Images" => PromptBuilderCategory.Images,
             "Paintings" => PromptBuilderCategory.Paintings,
             "Animation" => PromptBuilderCategory.Animation,
             "Ideas" => PromptBuilderCategory.Ideas,
             "Graphics" => PromptBuilderCategory.Graphics,
-            "Texts" => PromptBuilderCategory.Texts,
             "Video" => PromptBuilderCategory.Video,
             "Music" => PromptBuilderCategory.Music,
-            "Analytics" => PromptBuilderCategory.Analysis,
             _ => _currentMode
         };
 
@@ -532,6 +507,14 @@ public partial class PromptBuilderWindow : DarkWindow
 
     private void BtnClear_Click(object sender, RoutedEventArgs e)
     {
+        if (!string.IsNullOrWhiteSpace(TxtEditor.Text) &&
+            new DarkDialog(LocalizationService.Get("TextProcessing_ConfirmClear"), isConfirm: true)
+            {
+                Owner = this
+            }.ShowDialog() != true)
+        {
+            return;
+        }
         Clear();
     }
 
@@ -724,7 +707,7 @@ public partial class PromptBuilderWindow : DarkWindow
             }
         }
 
-        AiChatRequest request = _service.BuildRequest(mode, input, createAlternative: repeatLast, photoSection: _photoSection, paintingStyle: _paintingStyle, paintingArtist: _paintingArtist, animationStyle: _animationStyle, photoStyle: _photoStyle, textType: _textType, textTone: _textTone, analysisDirection: _analysisDirection, videoDirection: _videoDirection, programmingProjectType: _programmingProjectType, programmingStyle: _programmingStyle, visualTarget: _visualTarget, themeSection: _themeSection, themeStyle: _themeStyle, iconStyle: _iconStyle, graphicType: _graphicType, graphicStyle: _graphicStyle, animationSection: _animationSection, paintingSection: _paintingSection);
+        AiChatRequest request = _service.BuildRequest(mode, input, createAlternative: repeatLast, photoSection: _photoSection, paintingStyle: _paintingStyle, paintingArtist: _paintingArtist, animationStyle: _animationStyle, photoStyle: _photoStyle, videoDirection: _videoDirection, visualTarget: _visualTarget, themeSection: _themeSection, themeStyle: _themeStyle, iconStyle: _iconStyle, graphicType: _graphicType, graphicStyle: _graphicStyle, animationSection: _animationSection, paintingSection: _paintingSection);
         ModelItem? selected = null;
         if (!useAutoModel)
         {
@@ -751,6 +734,7 @@ public partial class PromptBuilderWindow : DarkWindow
         _isShowingOriginal = false;
         _isShowingDiff = false;
         _isProcessing = true;
+        _processingSourceText = input;
         _processingCts = new CancellationTokenSource();
         StartProcessingProgress();
         RefreshUiState();
@@ -849,6 +833,7 @@ public partial class PromptBuilderWindow : DarkWindow
         {
             StopProcessingProgress();
             _isProcessing = false;
+            _processingSourceText = null;
             _processingCts?.Dispose();
             _processingCts = null;
             RefreshUiState();
@@ -1092,16 +1077,13 @@ public partial class PromptBuilderWindow : DarkWindow
         TxtEditor.IsReadOnly = _isShowingOriginal;
         TxtEditor.Visibility = _isShowingDiff ? Visibility.Collapsed : Visibility.Visible;
         DiffViewer.Visibility = _isShowingDiff ? Visibility.Visible : Visibility.Collapsed;
-        ModeProgramming.IsEnabled = visibleState.CanSelectMode;
         ModeImages.IsEnabled = visibleState.CanSelectMode;
         ModePaintings.IsEnabled = visibleState.CanSelectMode;
         ModeAnimation.IsEnabled = visibleState.CanSelectMode;
         ModeIdeas.IsEnabled = visibleState.CanSelectMode;
         ModeGraphics.IsEnabled = visibleState.CanSelectMode;
-        ModeTexts.IsEnabled = visibleState.CanSelectMode;
         ModeVideo.IsEnabled = visibleState.CanSelectMode;
         ModeMusic.IsEnabled = visibleState.CanSelectMode;
-        ModeAnalytics.IsEnabled = visibleState.CanSelectMode;
         CmbModels.IsEnabled = !_isProcessing && !_isLoadingModels && _hasSelectableModel;
         BtnRefreshModels.IsEnabled = !_isProcessing && !_isLoadingModels;
         BtnPaste.IsEnabled = visibleState.CanPaste;
@@ -1277,16 +1259,13 @@ public partial class PromptBuilderWindow : DarkWindow
         _isApplyingMode = true;
         try
         {
-            ModeProgramming.IsSelected = _currentMode == PromptBuilderCategory.Programming;
             ModeImages.IsSelected = _currentMode == PromptBuilderCategory.Images;
             ModePaintings.IsSelected = _currentMode == PromptBuilderCategory.Paintings;
             ModeAnimation.IsSelected = _currentMode == PromptBuilderCategory.Animation;
             ModeIdeas.IsSelected = _currentMode == PromptBuilderCategory.Ideas;
             ModeGraphics.IsSelected = _currentMode == PromptBuilderCategory.Graphics;
-            ModeTexts.IsSelected = _currentMode == PromptBuilderCategory.Texts;
             ModeVideo.IsSelected = _currentMode == PromptBuilderCategory.Video;
             ModeMusic.IsSelected = _currentMode == PromptBuilderCategory.Music;
-            ModeAnalytics.IsSelected = _currentMode == PromptBuilderCategory.Analysis;
         }
         finally
         {
@@ -1294,29 +1273,20 @@ public partial class PromptBuilderWindow : DarkWindow
         }
         TxtModeDescription.Text = _currentMode switch
         {
-            PromptBuilderCategory.Programming => LocalizationService.Get("PromptBuilder_ModeProgrammingDesc"),
             PromptBuilderCategory.Images => LocalizationService.Get("PromptBuilder_ModeImagesDesc"),
             PromptBuilderCategory.Paintings => LocalizationService.Get("PromptBuilder_ModePaintingsDesc"),
             PromptBuilderCategory.Animation => LocalizationService.Get("PromptBuilder_ModeAnimationDesc"),
             PromptBuilderCategory.Ideas => LocalizationService.Get("PromptBuilder_ModeIdeasDesc"),
             PromptBuilderCategory.Graphics => LocalizationService.Get("PromptBuilder_ModeGraphicsDesc"),
-            PromptBuilderCategory.Texts => LocalizationService.Get("PromptBuilder_ModeTextsDesc"),
             PromptBuilderCategory.Video => LocalizationService.Get("PromptBuilder_ModeVideoDesc"),
             PromptBuilderCategory.Music => LocalizationService.Get("PromptBuilder_ModeMusicDesc"),
-            PromptBuilderCategory.Analysis => LocalizationService.Get("PromptBuilder_ModeAnalyticsDesc"),
             _ => string.Empty
         };
         VisualOptionsHost.Visibility = _currentMode is PromptBuilderCategory.Images or PromptBuilderCategory.Paintings or PromptBuilderCategory.Animation or PromptBuilderCategory.Ideas ? Visibility.Visible : Visibility.Collapsed;
         GraphicOptionsHost.Visibility = _currentMode == PromptBuilderCategory.Graphics ? Visibility.Visible : Visibility.Collapsed;
-        TextOptionsHost.Visibility = _currentMode == PromptBuilderCategory.Texts ? Visibility.Visible : Visibility.Collapsed;
-        AnalysisDirectionHost.Visibility = _currentMode == PromptBuilderCategory.Analysis ? Visibility.Visible : Visibility.Collapsed;
         VideoDirectionHost.Visibility = _currentMode == PromptBuilderCategory.Video ? Visibility.Visible : Visibility.Collapsed;
-        ProgrammingTaskHost.Visibility = _currentMode == PromptBuilderCategory.Programming ? Visibility.Visible : Visibility.Collapsed;
         RefreshVisualStyleOptions();
-        RefreshTextOptions();
-        RefreshAnalysisDirections();
         RefreshVideoDirections();
-        RefreshProgrammingOptions();
         RefreshVisualTargets();
         RefreshGraphicOptions();
     }
@@ -1365,32 +1335,6 @@ public partial class PromptBuilderWindow : DarkWindow
         }
 
         CmbVisualStyle.SelectionChanged += CmbVisualStyle_SelectionChanged;
-    }
-
-    private void RefreshTextOptions()
-    {
-        CmbTextType.SelectionChanged -= CmbTextType_SelectionChanged;
-        CmbTextTone.SelectionChanged -= CmbTextTone_SelectionChanged;
-        CmbTextType.Items.Clear();
-        CmbTextTone.Items.Clear();
-        foreach (TextPromptTypeDefinition item in OrderAutoFirst(PromptBuilderService.TextPromptTypes, item => item.Type == TextPromptType.Auto, item => item.LocalizationKey))
-            CmbTextType.Items.Add(new ComboBoxItem { Tag = item.Type, Content = LocalizationService.Get(item.LocalizationKey) });
-        foreach (TextPromptToneDefinition item in PromptBuilderService.TextPromptTones.OrderBy(item => LocalizationService.Get(item.LocalizationKey), StringComparer.CurrentCultureIgnoreCase))
-            CmbTextTone.Items.Add(new ComboBoxItem { Tag = item.Tone, Content = LocalizationService.Get(item.LocalizationKey) });
-        CmbTextType.SelectedItem = CmbTextType.Items.Cast<ComboBoxItem>().First(item => (TextPromptType)item.Tag == _textType);
-        CmbTextTone.SelectedItem = CmbTextTone.Items.Cast<ComboBoxItem>().First(item => (TextPromptTone)item.Tag == _textTone);
-        CmbTextType.SelectionChanged += CmbTextType_SelectionChanged;
-        CmbTextTone.SelectionChanged += CmbTextTone_SelectionChanged;
-    }
-
-    private void CmbTextType_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (CmbTextType.SelectedItem is ComboBoxItem { Tag: TextPromptType type } && _textType != type) { _textType = type; SaveCurrentMode(); UpdateTextOptionsOutcome(); }
-    }
-
-    private void CmbTextTone_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (CmbTextTone.SelectedItem is ComboBoxItem { Tag: TextPromptTone tone } && _textTone != tone) { _textTone = tone; SaveCurrentMode(); UpdateTextOptionsOutcome(); }
     }
 
     private void CmbVisualStyle_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1516,42 +1460,11 @@ public partial class PromptBuilderWindow : DarkWindow
         }
         else
         {
+            _paintingArtist = PaintingArtist.Auto;
             if (!PromptBuilderService.GetPaintingStyles(section).Any(style => style.Style == _paintingStyle)) _paintingStyle = PaintingStyle.Auto;
         }
         RefreshVisualStyleOptions();
         SaveCurrentMode();
-    }
-
-    private void RefreshAnalysisDirections()
-    {
-        CmbAnalysisDirection.SelectionChanged -= CmbAnalysisDirection_SelectionChanged;
-        CmbAnalysisDirection.Items.Clear();
-        foreach (AnalysisDirectionDefinition item in OrderAutoFirst(PromptBuilderService.AnalysisDirections, item => item.Direction == AnalysisDirection.Auto, item => item.LocalizationKey))
-        {
-            CmbAnalysisDirection.Items.Add(new ComboBoxItem { Tag = item.Direction, Content = LocalizationService.Get(item.LocalizationKey) });
-        }
-        CmbAnalysisDirection.SelectedItem = CmbAnalysisDirection.Items.Cast<ComboBoxItem>().First(item => (AnalysisDirection)item.Tag == _analysisDirection);
-        CmbAnalysisDirection.SelectionChanged += CmbAnalysisDirection_SelectionChanged;
-        UpdateAnalysisDirectionOutcome();
-    }
-
-    private void CmbAnalysisDirection_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (CmbAnalysisDirection.SelectedItem is ComboBoxItem { Tag: AnalysisDirection direction } && _analysisDirection != direction)
-        {
-            _analysisDirection = direction;
-            SaveCurrentMode();
-            UpdateAnalysisDirectionOutcome();
-        }
-    }
-
-    private void UpdateAnalysisDirectionOutcome()
-    {
-        AnalysisDirectionDefinition definition = PromptBuilderService.AnalysisDirections.FirstOrDefault(item => item.Direction == _analysisDirection)
-            ?? PromptBuilderService.AnalysisDirections[0];
-        string outcome = $"{LocalizationService.Get("PromptBuilder_AnalysisInputHint")} {LocalizationService.Get(definition.OutcomeLocalizationKey)}";
-        TxtAnalysisDirectionOutcome.Text = outcome;
-        TxtAnalysisDirectionOutcome.ToolTip = outcome;
     }
 
     private void RefreshVideoDirections()
@@ -1577,56 +1490,11 @@ public partial class PromptBuilderWindow : DarkWindow
         }
     }
 
-    private void RefreshProgrammingOptions()
-    {
-        CmbProgrammingProjectType.SelectionChanged -= CmbProgrammingProjectType_SelectionChanged;
-        CmbProgrammingStyle.SelectionChanged -= CmbProgrammingStyle_SelectionChanged;
-        CmbProgrammingProjectType.Items.Clear();
-        CmbProgrammingStyle.Items.Clear();
-        foreach (ProgrammingProjectTypeDefinition item in OrderAutoFirst(PromptBuilderService.ProgrammingProjectTypes, item => item.Type == ProgrammingProjectType.Auto, item => item.LocalizationKey))
-        {
-            CmbProgrammingProjectType.Items.Add(new ComboBoxItem { Tag = item.Type, Content = LocalizationService.Get(item.LocalizationKey) });
-        }
-        foreach (ProgrammingPromptStyleDefinition item in OrderAutoFirst(PromptBuilderService.GetProgrammingStyles(_programmingProjectType), item => item.Style == ProgrammingPromptStyle.Auto, item => item.LocalizationKey))
-        {
-            CmbProgrammingStyle.Items.Add(new ComboBoxItem { Tag = item.Style, Content = LocalizationService.Get(item.LocalizationKey) });
-        }
-        CmbProgrammingProjectType.SelectedItem = CmbProgrammingProjectType.Items.Cast<ComboBoxItem>().First(item => (ProgrammingProjectType)item.Tag == _programmingProjectType);
-        CmbProgrammingStyle.SelectedItem = CmbProgrammingStyle.Items.Cast<ComboBoxItem>().First(item => (ProgrammingPromptStyle)item.Tag == _programmingStyle);
-        CmbProgrammingProjectType.SelectionChanged += CmbProgrammingProjectType_SelectionChanged;
-        CmbProgrammingStyle.SelectionChanged += CmbProgrammingStyle_SelectionChanged;
-    }
-
-    private void CmbProgrammingProjectType_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (CmbProgrammingProjectType.SelectedItem is ComboBoxItem { Tag: ProgrammingProjectType type } && _programmingProjectType != type)
-        {
-            _programmingProjectType = type;
-            if (!PromptBuilderService.GetProgrammingStyles(type).Any(item => item.Style == _programmingStyle)) _programmingStyle = ProgrammingPromptStyle.Auto;
-            RefreshProgrammingOptions();
-            SaveCurrentMode();
-        }
-    }
-
-    private void CmbProgrammingStyle_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (CmbProgrammingStyle.SelectedItem is ComboBoxItem { Tag: ProgrammingPromptStyle style } && _programmingStyle != style)
-        {
-            _programmingStyle = style;
-            SaveCurrentMode();
-        }
-    }
-
     private static string FormatOptionOutcome(string resourceKey, string option) =>
         string.Format(CultureInfo.CurrentCulture, LocalizationService.Get(resourceKey), option);
 
     private void UpdateVideoDirectionOutcome() =>
         TxtVideoDirectionOutcome.Text = FormatOptionOutcome("PromptBuilder_VideoOutcome", LocalizationService.Get((PromptBuilderService.VideoDirections.First(item => item.Direction == _videoDirection)).LocalizationKey));
-
-    private void UpdateTextOptionsOutcome() =>
-        TxtTextOptionsOutcome.Text = string.Format(CultureInfo.CurrentCulture, LocalizationService.Get("PromptBuilder_TextOutcome"),
-            LocalizationService.Get((PromptBuilderService.TextPromptTypes.First(item => item.Type == _textType)).LocalizationKey),
-            LocalizationService.Get((PromptBuilderService.TextPromptTones.First(item => item.Tone == _textTone)).LocalizationKey));
 
     private void RefreshVisualTargets()
     {

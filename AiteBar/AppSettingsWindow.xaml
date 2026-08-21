@@ -16,7 +16,7 @@
 
         WindowStyle="SingleBorderWindow" ResizeMode="CanResize" ShowInTaskbar="True"
 
-        Topmost="False" Loaded="Window_Loaded">
+        Topmost="True" WindowState="Maximized" Loaded="Window_Loaded">
 
 
 
@@ -872,6 +872,7 @@
                                 <Grid Margin="0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_CheckForUpdates}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_CheckForUpdatesHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkCheckForUpdatesEnabled" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
                                 <Border Style="{StaticResource ModernDividerStyle}"/>
                                 <Grid Margin="0,12,0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=ClipboardManager_PersistHistorySetting}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=ClipboardManager_PersistHistoryHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkClipboardManagerPersistHistory" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}" Content="{local:Loc ResourceKey=ClipboardManager_PersistHistorySetting}"/></Grid>
+                                <Grid Margin="0,12,0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=TextProcessing_SaveDraft}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=TextProcessing_SaveDraftHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkSaveTextProcessingDraft" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
                                 <Grid Margin="0,12,0,2"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions><StackPanel Margin="0,0,20,0"><TextBlock Text="{local:Loc ResourceKey=PromptBuilder_SaveDrafts}" Style="{StaticResource ModernSettingTitleStyle}"/><TextBlock Text="{local:Loc ResourceKey=PromptBuilder_SaveDraftsHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/></StackPanel><CheckBox x:Name="ChkSavePromptBuilderDrafts" Grid.Column="1" Style="{StaticResource ModernSwitchStyle}"/></Grid>
                             </StackPanel>
                         </Border>
@@ -1206,7 +1207,7 @@
             <ToggleButton x:Name="BtnKeepOnTop"
                           Grid.Column="0"
                           Style="{StaticResource SettingsTopmostToggleStyle}"
-                          IsChecked="False"
+                          IsChecked="True"
                           Click="BtnKeepOnTop_Click"
                           ToolTip="{local:Loc ResourceKey=AppSettingsWindow_KeepOnTopHint}"
                           AutomationProperties.Name="{local:Loc ResourceKey=AppSettingsWindow_KeepOnTop}">

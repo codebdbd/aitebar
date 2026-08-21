@@ -29,6 +29,16 @@ The new utility is not a pixel-perfect port of the old WinUI application. It is 
 - [x] (2026-08-13 12:42Z) Ran `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release --filter "FullyQualifiedName~AiteProfiles"` successfully with 7 passed tests.
 - [x] (2026-08-13 12:43Z) Ran full `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release` successfully with 1334 passed tests.
 - [x] (2026-08-13 12:40Z) Built the installer at `artifacts\installer\AiteBar-Setup-1.15.11.exe`.
+- [x] (2026-08-21) Hardened profile metadata persistence: cancellation is propagated and atomic replacement no longer deletes the current JSON file before the replacement is ready.
+- [x] (2026-08-21) Reduced local-update churn: favorite, farm, tags, and launch timestamps now replace only the affected cached profile; the visible list is synchronized rather than cleared and recreated.
+- [x] (2026-08-21) Localized stateful favorite/farm context actions for all supported languages and added accessibility names for search, scan, and quick-link icon commands.
+- [x] (2026-08-21) Ran focused Aite Profiles tests successfully with 9 passed tests and the full test suite successfully with 1337 passed tests.
+- [x] (2026-08-21) Made favorite, farm, tags, and last-launch changes commit to memory only after their JSON write succeeds; added regression coverage for a rejected metadata write.
+- [x] (2026-08-21) Replaced synchronous rotation-state file access on the UI path with asynchronous initialization and serialized background persistence; added persistence/reload coverage.
+- [x] (2026-08-21) Treated user-requested scan cancellation as a normal state rather than a scan failure; added cancellation coverage for both JSON persistence and refresh.
+- [x] (2026-08-21) Ran focused Aite Profiles tests successfully with 13 passed tests and the full test suite successfully with 1341 passed tests.
+- [x] (2026-08-21) Made failed rotation-state writes visible to the utility, added a bounded final flush when its window closes, and covered the reported failure plus unsuccessful flush path.
+- [x] (2026-08-21) Ran focused Aite Profiles tests successfully with 14 passed tests and the full test suite successfully with 1342 passed tests.
 - [ ] Manually validate the utility window and AiteBar panel behavior on all four panel sides.
 
 ## Surprises & Discoveries
@@ -84,11 +94,33 @@ The new utility is not a pixel-perfect port of the old WinUI application. It is 
   Rationale: Chrome owns actual profile creation. This preserves the original user workflow without adding browser automation or unsafe profile directory fabrication.
   Date/Author: 2026-08-13 / Codex
 
+- Decision: Reconcile the visible profile collection in place after filtering and sorting.
+  Rationale: Local metadata changes should retain item identity and avoid a complete `ObservableCollection` reset, which otherwise discards selection and causes unnecessary WPF layout work.
+  Date/Author: 2026-08-21 / Codex
+
+- Decision: Commit profile metadata in memory only after atomic persistence succeeds.
+  Rationale: A failed disk write must leave both the current UI state and the next-start state consistent; candidate collections make this possible without a compensating write or reload.
+  Date/Author: 2026-08-21 / Codex
+
+- Decision: Persist rotation state asynchronously and serialize writes through a service-owned gate.
+  Rationale: Rotation controls are bound to the UI and must never synchronously wait on filesystem I/O. Each queued save snapshots the latest in-memory state, preventing obsolete state from overwriting a newer interaction.
+  Date/Author: 2026-08-21 / Codex
+
+- Decision: Surface rotation-state persistence failures and retry once during a bounded window-close flush.
+  Rationale: Background persistence must not silently lose user settings. The normal UI path remains non-blocking, while the closing path has a short bounded opportunity to commit the latest state safely.
+  Date/Author: 2026-08-21 / Codex
+
 ## Outcomes & Retrospective
 
 Implemented a first complete AiteBar-native Aite Profiles utility. It scans local Chrome profile metadata without reading password databases, stores AiteBar-owned favorites/farm/tags/snippets/rotation/cache data, launches Chrome profiles and Google actions, supports multi-selection, search, sorting, quick-link import/export/edit/selection, remembered quick links, rotation mode, context actions, and focus-loss hiding. Automated Release build and tests pass; remaining validation is manual UI exercise from the live AiteBar panel on all four panel sides.
 
 After user validation feedback, corrected two major mismatches with the standalone program: the profile list now follows the original row structure instead of a WPF `DataGrid`, and quick-link launch behavior now follows the standalone terminal algorithm. Refresh now follows the standalone two-phase model without reintroducing password count logic.
+
+The post-audit hardening preserves valid JSON during writes, respects cancellation, reduces profile-list churn after local updates, localizes dynamic context actions, and exposes icon-only controls to accessibility tools. Automated verification passed with 9 focused Aite Profiles tests and 1337 tests across the full suite. Manual validation on every panel side remains the only unchecked acceptance item.
+
+The final reliability pass adds transactional metadata commits, asynchronous rotation-state persistence, normal cancellation handling, and focused failure-path coverage. The current automated result is 13 focused Aite Profiles tests and 1341 tests across the full suite. Manual validation on every panel side remains required because it exercises WPF window interaction and the live Chrome environment.
+
+The final persistence closeout makes a failed rotation write visible in the utility and retries the latest state during a bounded window-close flush. Automated verification now passes 14 focused Aite Profiles tests and 1342 tests across the full suite. Manual validation remains required for the live Chrome and WPF interaction matrix.
 
 ## Context and Orientation
 

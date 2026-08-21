@@ -377,7 +377,8 @@
 
                          LostFocus="TxtSearch_LostFocus"
 
-                         FontSize="12"/>
+                         FontSize="12"
+                         AutomationProperties.Name="{local:Loc ResourceKey=ClipboardManager_SearchPlaceholder}"/>
 
                 <TextBlock x:Name="TxtSearchPlaceholder"
 
@@ -395,13 +396,8 @@
 
             </Grid>
 
-            <Button x:Name="BtnClearHistory"
-
-                    Grid.Column="2"
-
-                    Margin="10,0,0,0"
-
-                    HorizontalAlignment="Right"
+             <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,0,0,0">
+             <Button x:Name="BtnClearHistory"
 
                     Content="&#xF202;"
 
@@ -411,7 +407,17 @@
 
                     ToolTip="{local:Loc ResourceKey=ClipboardManager_ClearHistory}"
 
+                    AutomationProperties.Name="{local:Loc ResourceKey=ClipboardManager_ClearHistory}"
+
                     Click="BtnClearHistory_Click"/>
+             <Button x:Name="BtnWipeAll"
+                    Content="&#xE74D;"
+                    FontFamily="Segoe MDL2 Assets"
+                    Style="{StaticResource ClipboardFooterIconButtonStyle}"
+                    ToolTip="{local:Loc ResourceKey=ClipboardManager_WipeAll}"
+                    AutomationProperties.Name="{local:Loc ResourceKey=ClipboardManager_WipeAll}"
+                    Click="BtnWipeAll_Click"/>
+             </StackPanel>
 
         </Grid>
 
@@ -589,11 +595,9 @@
 
                                                 Style="{StaticResource ClipboardActionButtonStyle}"
 
-                                                Focusable="False"
-
-                                                IsTabStop="False"
-
                                                 ToolTip="{Binding CopyLabel}"
+
+                                                AutomationProperties.Name="{Binding CopyLabel}"
 
                                                 Tag="{Binding Id}"
 
@@ -606,11 +610,9 @@
 
                                                 Style="{StaticResource ClipboardActionButtonStyle}"
 
-                                                Focusable="False"
-
-                                                IsTabStop="False"
-
                                                 ToolTip="{Binding PinLabel}"
+
+                                                AutomationProperties.Name="{Binding PinLabel}"
 
                                                 Tag="{Binding Id}"
 
@@ -622,11 +624,9 @@
 
                                                 Style="{StaticResource ClipboardActionButtonStyle}"
 
-                                                Focusable="False"
-
-                                                IsTabStop="False"
-
                                                 ToolTip="{Binding DeleteLabel}"
+
+                                                AutomationProperties.Name="{Binding DeleteLabel}"
 
                                                 Tag="{Binding Id}"
 

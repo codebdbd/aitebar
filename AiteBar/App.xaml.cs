@@ -69,6 +69,7 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        ClipboardHistoryService.FlushInstancePersistence(TimeSpan.FromSeconds(2));
         DisposeInstanceMutex(_mutex, _ownsMutex);
         _mutex = null;
         _ownsMutex = false;

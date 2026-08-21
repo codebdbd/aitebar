@@ -59,29 +59,31 @@ public class ActionService
                 await onBeforeExecute().ConfigureAwait(false);
             }
 
-            if (Enum.TryParse<ActionType>(el.ActionType, out ActionType actionType))
+            if (!Enum.TryParse<ActionType>(el.ActionType, out ActionType actionType))
             {
-                switch (actionType)
-                {
-                    case ActionType.Hotkey:
-                        return await ExecuteHotkeyAsync(el).ConfigureAwait(false);
-                    case ActionType.Web:
-                        await ExecuteWebActionAsync(el).ConfigureAwait(false);
+                return ActionExecutionResult.Failed(LocalizationService.Get("Action_LaunchFailed"));
+            }
+
+            switch (actionType)
+            {
+                case ActionType.Hotkey:
+                    return await ExecuteHotkeyAsync(el).ConfigureAwait(false);
+                case ActionType.Web:
+                    await ExecuteWebActionAsync(el).ConfigureAwait(false);
+                    break;
+                case ActionType.Program:
+                case ActionType.File:
+                case ActionType.Folder:
+                    using (var _ = _runtime.StartProcess(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true }))
+                    {
                         break;
-                    case ActionType.Program:
-                    case ActionType.File:
-                    case ActionType.Folder:
-                        {
-                            using var _ = _runtime.StartProcess(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true });
-                            break;
-                        }
-                    case ActionType.ScriptFile:
-                        await StartScriptFileAsync(el.ActionValue).ConfigureAwait(false);
-                        break;
-                    case ActionType.Command:
-                        ExecuteCommand(el.ActionValue);
-                        break;
-                }
+                    }
+                case ActionType.ScriptFile:
+                    await StartScriptFileAsync(el.ActionValue).ConfigureAwait(false);
+                    break;
+                case ActionType.Command:
+                    ExecuteCommand(el.ActionValue);
+                    break;
             }
 
             return ActionExecutionResult.Ok;
@@ -243,13 +245,34 @@ public class ActionService
 
     private async Task ExecuteWebActionAsync(CustomElement el)
     {
-        string prof = el.UseRotation ? AdvanceRotationProfile(el) : el.ChromeProfile;
-        el.LastUsedProfile = prof;
-        await _settingsService.SaveAsync().ConfigureAwait(false);
+        if (!ActionTargetHelper.TryNormalizeWebUrl(el.ActionValue, out string normalizedUrl))
+        {
+            throw new InvalidOperationException("The web action URL must use HTTP or HTTPS and have a valid host.");
+        }
 
-        ProcessStartInfo psi = BuildWebActionProcessStartInfo(el, prof);
+        CustomElement launchElement = _settingsService.CloneElement(el);
+        string enteredUrl = el.ActionValue.Trim();
+        launchElement.ActionValue = enteredUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                                  enteredUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            ? enteredUrl
+            : normalizedUrl;
+        string prof = launchElement.UseRotation ? AdvanceRotationProfile(launchElement) : launchElement.ChromeProfile;
+        // Keep the active instance in sync with the persisted launch state.
+        el.LastUsedProfile = prof;
+        bool isPersistedElement = _settingsService.Elements.Any(element =>
+            string.Equals(element.Id, el.Id, StringComparison.Ordinal));
+        if (!isPersistedElement)
+        {
+            await _settingsService.SaveAsync().ConfigureAwait(false);
+        }
+        else
+        {
+            await _settingsService.UpdateElementAsync(el.Id, element => element.LastUsedProfile = prof).ConfigureAwait(false);
+        }
+
+        ProcessStartInfo psi = BuildWebActionProcessStartInfo(launchElement, prof);
         using var proc = _runtime.StartProcess(psi);
-        if (proc != null && el.OpenFullscreen)
+        if (proc != null && launchElement.OpenFullscreen)
         {
             await TryEnterFullscreenAsync(proc).ConfigureAwait(false);
         }

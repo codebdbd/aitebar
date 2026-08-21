@@ -8,6 +8,7 @@ internal readonly record struct ZenEditorTextChange(int Offset, int AddedLength,
 internal sealed class ZenEditorUndoHistory
 {
     private static readonly TimeSpan GroupingInterval = TimeSpan.FromMilliseconds(750);
+    private const int MaximumPayloadBytes = 8 * 1024 * 1024;
     private readonly int _capacity;
     private readonly List<EditOperation> _undo = [];
     private readonly List<EditOperation> _redo = [];
@@ -24,6 +25,7 @@ internal sealed class ZenEditorUndoHistory
 
     public bool CanUndo => _undo.Count > 0;
     public bool CanRedo => _redo.Count > 0;
+    internal int EstimatedPayloadBytes => _undo.Sum(EstimateSize) + _redo.Sum(EstimateSize);
 
     public void Record(
         string previousText,
@@ -72,10 +74,7 @@ internal sealed class ZenEditorUndoHistory
         else
         {
             _undo.Add(operation);
-            if (_undo.Count > _capacity)
-            {
-                _undo.RemoveAt(0);
-            }
+            TrimUndo();
         }
 
         _redo.Clear();
@@ -257,6 +256,23 @@ internal sealed class ZenEditorUndoHistory
         EditOperation result = operations[^1];
         operations.RemoveAt(operations.Count - 1);
         return result;
+    }
+
+    private void TrimUndo()
+    {
+        while (_undo.Count > _capacity ||
+               (_undo.Count > 1 && EstimatedPayloadBytes > MaximumPayloadBytes))
+        {
+            _undo.RemoveAt(0);
+        }
+    }
+
+    private static int EstimateSize(EditOperation operation)
+    {
+        const int styleBytes = 24;
+        long size = ((long)operation.Removed.Length + operation.Added.Length) * sizeof(char);
+        size += ((long)operation.BeforeStyles.Count + operation.AfterStyles.Count) * styleBytes;
+        return (int)Math.Min(int.MaxValue, size);
     }
 
     private sealed record EditOperation(

@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Documents;
 
 namespace AiteBar
@@ -22,6 +23,7 @@ namespace AiteBar
         }
     }
 
+    [System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
     public sealed class QuickNoteService
     {
         private readonly string _notePath;
@@ -40,7 +42,7 @@ namespace AiteBar
         internal QuickNoteService(string? notePath, IQuickNoteProcessStartDispatcher processStartDispatcher)
         {
             _notePath = string.IsNullOrWhiteSpace(notePath)
-                ? Path.Combine(PathHelper.AppDataFolder, "QuickNote.md")
+                ? Path.Combine(PathHelper.AppDataFolder, "QuickNote.rtf")
                 : notePath;
             _processStartDispatcher = processStartDispatcher;
         }
@@ -68,7 +70,22 @@ namespace AiteBar
 
             // Compute and compare hash first to satisfy test cases that simulate content changes
             // with spoofed/identical file timestamps.
-            string? currentHash = ComputeContentHash(NotePath);
+            string? currentHash;
+            try
+            {
+                currentHash = ComputeContentHash(NotePath);
+            }
+            catch (IOException ex)
+            {
+                Logger.Log(ex);
+                return true;
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Logger.Log(ex);
+                return true;
+            }
+
             if (!string.Equals(currentHash, _lastKnownContentHash, StringComparison.Ordinal))
             {
                 return true;
@@ -88,59 +105,42 @@ namespace AiteBar
 
         public async Task LoadAsync(FlowDocument document)
         {
-            string markdown = await ReadMarkdownAsync();
-            LoadMarkdown(document, markdown);
+            EnsureNoteDirectory();
+            if (File.Exists(NotePath))
+            {
+                await using var stream = new FileStream(NotePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                new TextRange(document.ContentStart, document.ContentEnd).Load(stream, DataFormats.Rtf);
+            }
+            else
+            {
+                LoadEmptyDocument(document);
+            }
+
+            RecordBaseline();
+            RefreshLastConflictCopy();
         }
 
         public void Load(FlowDocument document)
         {
-            string markdown = ReadMarkdown();
-            LoadMarkdown(document, markdown);
-        }
-
-        public string ReadMarkdown()
-        {
             EnsureNoteDirectory();
-            if (!File.Exists(NotePath))
+            if (File.Exists(NotePath))
             {
-                RecordBaseline();
-                RefreshLastConflictCopy();
-                return string.Empty;
+                using var stream = new FileStream(NotePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                new TextRange(document.ContentStart, document.ContentEnd).Load(stream, DataFormats.Rtf);
+            }
+            else
+            {
+                LoadEmptyDocument(document);
             }
 
-            string markdown = File.ReadAllText(NotePath);
             RecordBaseline();
             RefreshLastConflictCopy();
-            return markdown;
-        }
-
-        public async Task<string> ReadMarkdownAsync()
-        {
-            EnsureNoteDirectory();
-            if (!File.Exists(NotePath))
-            {
-                RecordBaseline();
-                RefreshLastConflictCopy();
-                return string.Empty;
-            }
-
-            string markdown = await File.ReadAllTextAsync(NotePath);
-            RecordBaseline();
-            RefreshLastConflictCopy();
-            return markdown;
-        }
-
-        public void LoadMarkdown(FlowDocument document, string markdown)
-        {
-            document.Blocks.Clear();
-            QuickNoteMarkdown.LoadMarkdown(document, markdown);
         }
 
         public async Task SaveAsync(FlowDocument document)
         {
             EnsureNoteDirectory();
-            string markdown = QuickNoteMarkdown.ToMarkdown(document);
-            await WriteAtomicallyAsync(NotePath, markdown);
+            await WriteAtomicallyAsync(NotePath, document);
             RecordBaseline();
         }
 
@@ -149,9 +149,8 @@ namespace AiteBar
             EnsureNoteDirectory();
             string conflictPath = Path.Combine(
                 Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder,
-                $"QuickNote.conflict-{DateTime.Now:yyyyMMdd-HHmmss-fff}-{Guid.NewGuid():N}.md");
-            string markdown = QuickNoteMarkdown.ToMarkdown(document);
-            await WriteNewFileAsync(conflictPath, markdown);
+                $"QuickNote.conflict-{DateTime.Now:yyyyMMdd-HHmmss-fff}-{Guid.NewGuid():N}.rtf");
+            await WriteNewFileAsync(conflictPath, document);
             LastConflictCopyPath = conflictPath;
             CleanupOldConflictCopies();
             return conflictPath;
@@ -164,7 +163,7 @@ namespace AiteBar
                 string directory = Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder;
                 Directory.CreateDirectory(directory);
 
-                List<string> conflictFiles = Directory.GetFiles(directory, "QuickNote.conflict-*.md")
+                List<string> conflictFiles = Directory.GetFiles(directory, "QuickNote.conflict-*.rtf")
                     .OrderByDescending(File.GetLastWriteTimeUtc)
                     .ToList();
 
@@ -196,7 +195,12 @@ namespace AiteBar
             EnsureNoteDirectory();
             if (!File.Exists(NotePath))
             {
-                File.WriteAllText(NotePath, string.Empty);
+                using (var stream = new FileStream(NotePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                {
+                    var document = new FlowDocument();
+                    new TextRange(document.ContentStart, document.ContentEnd).Save(stream, DataFormats.Rtf);
+                }
+
                 RecordBaseline();
             }
 
@@ -240,7 +244,7 @@ namespace AiteBar
             try
             {
                 string directory = Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder;
-                LastConflictCopyPath = Directory.GetFiles(directory, "QuickNote.conflict-*.md")
+                LastConflictCopyPath = Directory.GetFiles(directory, "QuickNote.conflict-*.rtf")
                     .OrderByDescending(File.GetLastWriteTimeUtc)
                     .FirstOrDefault();
             }
@@ -256,13 +260,23 @@ namespace AiteBar
             return Convert.ToHexString(SHA256.HashData(stream));
         }
 
-        private static async Task WriteAtomicallyAsync(string path, string content)
+        private static void LoadEmptyDocument(FlowDocument document)
+        {
+            document.Blocks.Clear();
+            document.Blocks.Add(new Paragraph(new Run(string.Empty)));
+        }
+
+        private static async Task WriteAtomicallyAsync(string path, FlowDocument document)
         {
             string directory = Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
             string tempPath = Path.Combine(directory, $".{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
             try
             {
-                await File.WriteAllTextAsync(tempPath, content);
+                await using (var stream = new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                {
+                    new TextRange(document.ContentStart, document.ContentEnd).Save(stream, DataFormats.Rtf);
+                }
+
                 File.Move(tempPath, path, overwrite: true);
             }
             finally
@@ -274,11 +288,10 @@ namespace AiteBar
             }
         }
 
-        private static async Task WriteNewFileAsync(string path, string content)
+        private static async Task WriteNewFileAsync(string path, FlowDocument document)
         {
             await using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-            await using var writer = new StreamWriter(stream);
-            await writer.WriteAsync(content);
+            new TextRange(document.ContentStart, document.ContentEnd).Save(stream, DataFormats.Rtf);
         }
     }
 }

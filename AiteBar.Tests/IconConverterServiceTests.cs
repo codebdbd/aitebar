@@ -11,6 +11,52 @@ namespace AiteBar.Tests;
 public sealed class IconConverterServiceTests
 {
     [Fact]
+    public async Task WriteIcoAtomicallyAsync_ReplacesDestinationOnlyAfterSuccessfulWrite()
+    {
+        string path = Path.ChangeExtension(Path.GetTempFileName(), ".ico");
+        try
+        {
+            File.WriteAllBytes(path, [1, 2, 3]);
+
+            await IconConverterService.WriteIcoAtomicallyAsync(path, [4, 5, 6]);
+
+            Assert.Equal([4, 5, 6], File.ReadAllBytes(path));
+            Assert.Empty(Directory.GetFiles(Path.GetDirectoryName(path)!, $"{Path.GetFileName(path)}.*.tmp"));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public async Task WriteIcoAtomicallyAsync_CancellationKeepsExistingDestination()
+    {
+        string path = Path.ChangeExtension(Path.GetTempFileName(), ".ico");
+        using var cancellationSource = new CancellationTokenSource();
+        cancellationSource.Cancel();
+        try
+        {
+            File.WriteAllBytes(path, [1, 2, 3]);
+
+            await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+                IconConverterService.WriteIcoAtomicallyAsync(path, [4, 5, 6], cancellationSource.Token));
+
+            Assert.Equal([1, 2, 3], File.ReadAllBytes(path));
+        }
+        finally
+        {
+            File.Delete(path);
+        }
+    }
+
+    [Fact]
+    public void MaxInputPixels_StaysWithinInteractiveMemoryBudget()
+    {
+        Assert.Equal(20L * 1000 * 1000, IconConverterService.MaxInputPixels);
+    }
+
+    [Fact]
     public void NormalizeOptions_SortsAndDeduplicatesSizes()
     {
         var options = IconConverterService.NormalizeOptions(new IconConversionOptions

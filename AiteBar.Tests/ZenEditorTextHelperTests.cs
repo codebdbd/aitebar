@@ -61,22 +61,22 @@ public sealed class ZenEditorTextHelperTests
     }
 
     [Fact]
-    public void NormalizeExportText_AddsOneBlankLineBetweenParagraphs()
+    public void NormalizeExportText_PreservesParagraphBreaks()
     {
         Assert.Equal(
-            "a\r\n\r\nb\r\n\r\nc",
+            "a\r\nb\r\nc",
             ZenEditorTextHelper.NormalizeExportText("a\nb\rc"));
     }
 
     [Theory]
     [InlineData("a\n\nb", "a\r\n\r\nb")]
-    [InlineData("a\n\n\nb", "a\r\n\r\nb")]
-    [InlineData("a\n   \nb", "a\r\n\r\nb")]
+    [InlineData("a\n\n\nb", "a\r\n\r\n\r\nb")]
+    [InlineData("a\n   \nb", "a\r\n   \r\nb")]
     [InlineData("\na\n", "\r\na\r\n")]
-    [InlineData(" \n\t", "\r\n")]
+    [InlineData(" \n\t", " \r\n\t")]
     [InlineData("одна строка", "одна строка")]
     [InlineData("", "")]
-    public void NormalizeExportText_DoesNotDuplicateExistingBlankLines(
+    public void NormalizeExportText_PreservesAllUserText(
         string input,
         string expected)
     {

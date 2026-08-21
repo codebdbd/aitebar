@@ -64,11 +64,7 @@ internal sealed class AiProviderClient
             cancellationToken).ConfigureAwait(false);
         using JsonDocument document = await ReadJsonResponseAsync(response, cancellationToken).ConfigureAwait(false);
 
-        return provider.Protocol switch
-        {
-            AiProviderProtocol.Gemini => ParseGeminiModels(provider, document.RootElement),
-            _ => ParseOpenAiModels(provider, document.RootElement)
-        };
+        return ParseOpenAiModels(provider, document.RootElement);
     }
 
     public async Task<AiProviderResponse> GenerateAsync(
@@ -85,9 +81,7 @@ internal sealed class AiProviderClient
         }
 
         (AiProviderDefinition provider, string apiKey) = ResolveConnection(connection);
-        return provider.Protocol == AiProviderProtocol.Gemini
-            ? await GenerateGeminiAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false)
-            : await GenerateOpenAiCompatibleAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false);
+        return await GenerateOpenAiCompatibleAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<AiProviderStream> GenerateStreamingAsync(
@@ -104,9 +98,7 @@ internal sealed class AiProviderClient
         }
 
         (AiProviderDefinition provider, string apiKey) = ResolveConnection(connection);
-        return provider.Protocol == AiProviderProtocol.Gemini
-            ? await StartGeminiStreamAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false)
-            : await StartOpenAiStreamAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false);
+        return await StartOpenAiStreamAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<AiProviderStream> StartOpenAiStreamAsync(
@@ -157,59 +149,6 @@ internal sealed class AiProviderClient
             ReadOpenAiStreamAsync(response, cancellationToken));
     }
 
-    private async Task<AiProviderStream> StartGeminiStreamAsync(
-        AiProviderDefinition provider,
-        string apiKey,
-        AiModelDescriptor model,
-        AiChatRequest request,
-        CancellationToken cancellationToken)
-    {
-        string modelId = Uri.EscapeDataString(model.ModelId);
-        var uri = new Uri($"https://generativelanguage.googleapis.com/v1beta/models/{modelId}:streamGenerateContent?alt=sse&key={Uri.EscapeDataString(apiKey)}");
-        var contents = request.Messages
-            .Where(message => !string.Equals(message.Role, "system", StringComparison.OrdinalIgnoreCase))
-            .Select(message => new
-            {
-                role = string.Equals(message.Role, "assistant", StringComparison.OrdinalIgnoreCase) ? "model" : "user",
-                parts = new[] { new { text = message.Content } }
-            })
-            .ToArray();
-        string systemText = string.Join("\n\n", request.Messages
-            .Where(message => string.Equals(message.Role, "system", StringComparison.OrdinalIgnoreCase))
-            .Select(message => message.Content));
-        var generationConfig = new Dictionary<string, object?>
-        {
-            ["maxOutputTokens"] = Math.Clamp(request.MaxOutputTokens, 1, 32768)
-        };
-        if (request.Temperature is double temperature)
-        {
-            generationConfig["temperature"] = Math.Clamp(temperature, 0d, 2d);
-        }
-        var payload = new Dictionary<string, object?>
-        {
-            ["contents"] = contents,
-            ["generationConfig"] = generationConfig
-        };
-        if (!string.IsNullOrWhiteSpace(systemText))
-        {
-            payload["systemInstruction"] = new { parts = new[] { new { text = systemText } } };
-        }
-
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, uri)
-        {
-            Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
-        };
-        HttpResponseMessage response = await _httpClient.SendAsync(
-            httpRequest,
-            HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken).ConfigureAwait(false);
-        await EnsureSuccessfulResponseAsync(response, cancellationToken).ConfigureAwait(false);
-        return new AiProviderStream(
-            provider.Id,
-            model.ModelId,
-            ReadGeminiStreamAsync(response, cancellationToken));
-    }
-
     private static async IAsyncEnumerable<string> ReadOpenAiStreamAsync(
         HttpResponseMessage response,
         [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -224,28 +163,6 @@ internal sealed class AiProviderClient
                        cancellationToken).ConfigureAwait(false) is string line)
             {
                 string? content = ParseOpenAiStreamData(line);
-                if (!string.IsNullOrEmpty(content))
-                {
-                    yield return content;
-                }
-            }
-        }
-    }
-
-    private static async IAsyncEnumerable<string> ReadGeminiStreamAsync(
-        HttpResponseMessage response,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
-    {
-        using (response)
-        await using (Stream stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false))
-        using (var reader = new StreamReader(stream))
-        {
-            while (await ReadLineWithInactivityTimeoutAsync(
-                       reader,
-                       StreamInactivityTimeout,
-                       cancellationToken).ConfigureAwait(false) is string line)
-            {
-                string? content = ParseGeminiStreamData(line);
                 if (!string.IsNullOrEmpty(content))
                 {
                     yield return content;
@@ -274,33 +191,6 @@ internal sealed class AiProviderClient
                delta.TryGetProperty("content", out JsonElement content)
             ? ReadTextContent(content)
             : null;
-    }
-
-    internal static string? ParseGeminiStreamData(string line)
-    {
-        if (!line.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
-        {
-            return null;
-        }
-        string data = line[5..].TrimStart();
-        if (data.Length == 0)
-        {
-            return null;
-        }
-        using JsonDocument document = JsonDocument.Parse(data);
-        JsonElement root = document.RootElement;
-        if (!root.TryGetProperty("candidates", out JsonElement candidates) ||
-            candidates.ValueKind != JsonValueKind.Array ||
-            candidates.GetArrayLength() == 0 ||
-            !candidates[0].TryGetProperty("content", out JsonElement candidateContent) ||
-            !candidateContent.TryGetProperty("parts", out JsonElement parts) ||
-            parts.ValueKind != JsonValueKind.Array)
-        {
-            return null;
-        }
-        return string.Concat(parts.EnumerateArray()
-            .Where(part => part.TryGetProperty("text", out _))
-            .Select(part => part.GetProperty("text").GetString() ?? string.Empty));
     }
 
     internal static async Task<string?> ReadLineWithInactivityTimeoutAsync(
@@ -381,80 +271,6 @@ internal sealed class AiProviderClient
         return new AiProviderResponse(content, provider.Id, model.ModelId, promptTokens, completionTokens);
     }
 
-    private async Task<AiProviderResponse> GenerateGeminiAsync(
-        AiProviderDefinition provider,
-        string apiKey,
-        AiModelDescriptor model,
-        AiChatRequest request,
-        CancellationToken cancellationToken)
-    {
-        string modelId = Uri.EscapeDataString(model.ModelId);
-        // Note: Gemini API requires passing the key in the query string.
-        // This is a known limitation of their API and may result in the key being logged in server access logs.
-        var uri = new Uri($"https://generativelanguage.googleapis.com/v1beta/models/{modelId}:generateContent?key={Uri.EscapeDataString(apiKey)}");
-        var contents = request.Messages
-            .Where(message => !string.Equals(message.Role, "system", StringComparison.OrdinalIgnoreCase))
-            .Select(message => new
-            {
-                role = string.Equals(message.Role, "assistant", StringComparison.OrdinalIgnoreCase) ? "model" : "user",
-                parts = new[] { new { text = message.Content } }
-            })
-            .ToArray();
-        string? systemText = string.Join("\n\n", request.Messages
-            .Where(message => string.Equals(message.Role, "system", StringComparison.OrdinalIgnoreCase))
-            .Select(message => message.Content));
-        var generationConfig = new Dictionary<string, object?>
-        {
-            ["maxOutputTokens"] = Math.Clamp(request.MaxOutputTokens, 1, 32768)
-        };
-        if (request.Temperature is double temperature)
-        {
-            generationConfig["temperature"] = Math.Clamp(temperature, 0d, 2d);
-        }
-
-        var payload = new Dictionary<string, object?>
-        {
-            ["contents"] = contents,
-            ["generationConfig"] = generationConfig
-        };
-        if (!string.IsNullOrWhiteSpace(systemText))
-        {
-            payload["systemInstruction"] = new { parts = new[] { new { text = systemText } } };
-        }
-
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, uri)
-        {
-            Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
-        };
-        using HttpResponseMessage response = await _httpClient.SendAsync(
-            httpRequest,
-            HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken).ConfigureAwait(false);
-        using JsonDocument document = await ReadJsonResponseAsync(response, cancellationToken).ConfigureAwait(false);
-        JsonElement root = document.RootElement;
-
-        string content = string.Empty;
-        if (root.TryGetProperty("candidates", out JsonElement candidates) &&
-            candidates.ValueKind == JsonValueKind.Array && candidates.GetArrayLength() > 0 &&
-            candidates[0].TryGetProperty("content", out JsonElement candidateContent) &&
-            candidateContent.TryGetProperty("parts", out JsonElement parts) &&
-            parts.ValueKind == JsonValueKind.Array)
-        {
-            content = string.Join(string.Empty, parts.EnumerateArray()
-                .Where(part => part.TryGetProperty("text", out _))
-                .Select(part => part.GetProperty("text").GetString() ?? string.Empty));
-        }
-
-        int? promptTokens = null;
-        int? completionTokens = null;
-        if (root.TryGetProperty("usageMetadata", out JsonElement usage))
-        {
-            promptTokens = ReadNullableInt(usage, "promptTokenCount");
-            completionTokens = ReadNullableInt(usage, "candidatesTokenCount");
-        }
-
-        return new AiProviderResponse(content, provider.Id, model.ModelId, promptTokens, completionTokens);
-    }
 
     internal static IReadOnlyList<AiModelDescriptor> ParseOpenAiModels(
         AiProviderDefinition provider,
@@ -485,44 +301,6 @@ internal sealed class AiProviderClient
             .ToArray();
     }
 
-    internal static IReadOnlyList<AiModelDescriptor> ParseGeminiModels(
-        AiProviderDefinition provider,
-        JsonElement root)
-    {
-        if (!root.TryGetProperty("models", out JsonElement models) || models.ValueKind != JsonValueKind.Array)
-        {
-            return [];
-        }
-
-        var result = new List<AiModelDescriptor>();
-        foreach (JsonElement item in models.EnumerateArray())
-        {
-            if (!SupportsGeminiGeneration(item))
-            {
-                continue;
-            }
-            string? rawName = ReadString(item, "name");
-            if (string.IsNullOrWhiteSpace(rawName))
-            {
-                continue;
-            }
-            string id = rawName.StartsWith("models/", StringComparison.Ordinal) ? rawName[7..] : rawName;
-            AiCapabilities capabilities = AiCapabilities.Text;
-            if (ReadBoolean(item, "thinking"))
-            {
-                capabilities |= AiCapabilities.Reasoning;
-            }
-            result.Add(new AiModelDescriptor(
-                provider.Id,
-                id,
-                ReadString(item, "displayName") ?? id,
-                capabilities,
-                ReadNullableInt(item, "inputTokenLimit"),
-                provider.DefaultCostStatus));
-        }
-        return result;
-    }
-
     private (AiProviderDefinition Provider, string ApiKey) ResolveConnection(AiConnectionSettings connection)
     {
         ArgumentNullException.ThrowIfNull(connection);
@@ -540,12 +318,7 @@ internal sealed class AiProviderClient
 
     private static Uri BuildModelsUri(AiProviderDefinition provider, string apiKey)
     {
-        if (provider.Protocol == AiProviderProtocol.Gemini)
-        {
-            // Note: Gemini API requires passing the key in the query string.
-            // This is a known limitation of their API and may result in the key being logged in server access logs.
-            return new Uri($"{provider.ModelsUri}?pageSize=1000&key={Uri.EscapeDataString(apiKey)}");
-        }
+        _ = apiKey;
         return provider.ModelsUri;
     }
 
@@ -664,9 +437,6 @@ internal sealed class AiProviderClient
         return capabilities;
     }
 
-    private static bool SupportsGeminiGeneration(JsonElement item) =>
-        ContainsString(item, "supportedGenerationMethods", "generateContent") ||
-        ContainsString(item, "supportedActions", "generateContent");
 
     private static bool ContainsString(JsonElement item, string propertyName, string value)
     {

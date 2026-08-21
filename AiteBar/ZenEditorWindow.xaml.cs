@@ -39,12 +39,12 @@ public partial class ZenEditorWindow : DarkWindow
         public const int NewDocument = 58586; // ic_fluent_document_add_16_regular
         public const int Open = 62849; // ic_fluent_open_16_regular
         public const int Export = 62465; // ic_fluent_document_arrow_up_16_regular
-        public const int Undo = 0x21B6; // same Segoe UI glyph as Quick Note
-        public const int Redo = 0x21B7; // same Segoe UI glyph as Quick Note
-        public const int Cut = 0xE14E; // same Material glyph as TextEditingContextMenu
-        public const int Copy = 0xF381; // same Fluent glyph as TextEditingContextMenu
-        public const int Paste = 0xE14F; // same Material glyph as TextEditingContextMenu
-        public const int SelectAll = 0xE162; // same Material glyph as TextEditingContextMenu
+        public const int Undo = 0xF199; // ic_fluent_arrow_undo_20_regular
+        public const int Redo = 0xF16E; // ic_fluent_arrow_redo_20_regular
+        public const int Cut = 0xF33A; // ic_fluent_cut_20_regular
+        public const int Copy = 0xF381; // ic_fluent_copy_20_regular
+        public const int Paste = 0xF2D5; // ic_fluent_clipboard_paste_20_regular
+        public const int SelectAll = 0xEA86; // ic_fluent_select_all_on_20_regular
         public const int Theme = 0xF2F5; // same Fluent glyph as Quick Note
         public const int ThemeChoice = 58300; // ic_fluent_color_16_regular
         public const int Search = 63119; // ic_fluent_search_20_regular
@@ -59,6 +59,7 @@ public partial class ZenEditorWindow : DarkWindow
     private readonly MainWindow? _mainWindow;
     private readonly DispatcherTimer _saveTimer;
     private readonly SemaphoreSlim _saveGate = new(1, 1);
+    private readonly SemaphoreSlim _snapshotGate = new(1, 1);
     private readonly Dictionary<Guid, ZenEditorUndoHistory> _undoHistories = [];
     private ZenEditorStoreIndex _index = new();
     private ZenEditorDocument? _document;
@@ -192,6 +193,7 @@ public partial class ZenEditorWindow : DarkWindow
         }
         _saveTimer.Stop();
         _saveGate.Dispose();
+        _snapshotGate.Dispose();
     }
 
     private void Window_Activated(object sender, EventArgs e)
@@ -392,9 +394,17 @@ public partial class ZenEditorWindow : DarkWindow
             preEditSnapshot.HasEverContainedText |= previousText.Length > 0;
             try
             {
-                await _store.SaveSnapshotAsync(preEditSnapshot);
-                _lastSnapshotUtc = DateTime.UtcNow;
-                await SaveNowAsync(force: true);
+                await _snapshotGate.WaitAsync();
+                try
+                {
+                    await _store.SaveSnapshotAsync(preEditSnapshot);
+                    _lastSnapshotUtc = DateTime.UtcNow;
+                    await SaveNowAsync(force: true);
+                }
+                finally
+                {
+                    _snapshotGate.Release();
+                }
             }
             catch (Exception ex)
             {
@@ -828,23 +838,20 @@ public partial class ZenEditorWindow : DarkWindow
             "ZenEditor_Undo",
             Undo,
             history.CanUndo,
-            "Ctrl+Z",
-            iconFont: SegoeMenuIconFont));
+            "Ctrl+Z"));
         menu.Items.Add(CreateMenuItem(
             MenuIcons.Redo,
             "ZenEditor_Redo",
             Redo,
             history.CanRedo,
-            "Ctrl+Y",
-            iconFont: SegoeMenuIconFont));
+            "Ctrl+Y"));
         menu.Items.Add(CreateMenuSeparator());
         menu.Items.Add(CreateMenuItem(
             MenuIcons.Cut,
             "ZenEditor_Cut",
             () => Editor.Cut(),
             Editor.SelectionLength > 0,
-            "Ctrl+X",
-            iconFont: MaterialMenuIconFont));
+            "Ctrl+X"));
         menu.Items.Add(CreateMenuItem(
             MenuIcons.Copy,
             "ZenEditor_Copy",
@@ -856,15 +863,13 @@ public partial class ZenEditorWindow : DarkWindow
             "ZenEditor_Paste",
             PastePlainText,
             CanPastePlainText(),
-            "Ctrl+V",
-            iconFont: MaterialMenuIconFont));
+            "Ctrl+V"));
         menu.Items.Add(CreateMenuItem(
             MenuIcons.SelectAll,
             "ZenEditor_SelectAll",
             Editor.SelectAll,
             Editor.Text.Length > 0,
-            "Ctrl+A",
-            iconFont: MaterialMenuIconFont));
+            "Ctrl+A"));
         menu.Items.Add(CreateMenuSeparator());
 
         MenuItem formatting = CreateSubmenuItem(

@@ -9,6 +9,9 @@ public sealed class ActionTargetHelperUrlTests
     [InlineData("example.com", "https://example.com/")]
     [InlineData("https://example.com", "https://example.com/")]
     [InlineData("http://example.com", "http://example.com/")]
+    [InlineData("localhost:5000", "https://localhost:5000/")]
+    [InlineData("http://192.168.1.10", "http://192.168.1.10/")]
+    [InlineData("intranet", "https://intranet/")]
     public void TryNormalizeWebUrl_AcceptsHttpHttpsAndBareDomains(string input, string expected)
     {
         bool ok = ActionTargetHelper.TryNormalizeWebUrl(input, out string normalized);
@@ -20,7 +23,7 @@ public sealed class ActionTargetHelperUrlTests
     [Theory]
     [InlineData("ftp://example.com")]
     [InlineData("not a url")]
-    [InlineData("localhost")]
+    [InlineData("https://")]
     [InlineData("")]
     public void TryNormalizeWebUrl_RejectsUnsupportedOrInvalidValues(string input)
     {

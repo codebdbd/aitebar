@@ -52,6 +52,12 @@ namespace AiteBar
         internal static extern IntPtr MonitorFromWindow(IntPtr hwnd, uint dwFlags);
 
         [DllImport("user32.dll")]
+        internal static extern IntPtr MonitorFromPoint(Win32Point pt, uint dwFlags);
+
+        [DllImport("shcore.dll")]
+        internal static extern int GetDpiForMonitor(IntPtr hMonitor, int dpiType, out uint dpiX, out uint dpiY);
+
+        [DllImport("user32.dll")]
         internal static extern bool GetMonitorInfo(IntPtr hMonitor, MONITORINFO lpmi);
 
         [DllImport("user32.dll")]
@@ -204,6 +210,7 @@ namespace AiteBar
         // Constants for MonitorFromWindow
         internal const uint MONITOR_DEFAULTTONEAREST = 0x00000002;
         internal const uint MONITOR_DEFAULTTOPRIMARY = 0x00000001;
+        internal const int MDT_EFFECTIVE_DPI = 0;
 
         // Taskbar edges
         internal const uint ABE_LEFT = 0;

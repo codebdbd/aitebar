@@ -91,12 +91,18 @@ public sealed class ZenEditorWindowBehaviorTests
                     Assert.Same(window.FindResource("DarkMenuItem"), command.Style);
                     Assert.IsType<CenteredGlyphTextBlock>(command.Icon);
                 });
-                AssertIconFont(commands, "Ctrl+Z", "Segoe UI");
-                AssertIconFont(commands, "Ctrl+Y", "Segoe UI");
+                AssertIconFont(
+                    commands,
+                    "Ctrl+Z",
+                    FontHelper.Resolve(FontHelper.FluentKey).Source);
+                AssertIconFont(
+                    commands,
+                    "Ctrl+Y",
+                    FontHelper.Resolve(FontHelper.FluentKey).Source);
                 AssertIconFont(
                     commands,
                     "Ctrl+X",
-                    FontHelper.Resolve(FontHelper.MaterialKey).Source);
+                    FontHelper.Resolve(FontHelper.FluentKey).Source);
                 AssertIconFont(
                     commands,
                     "Ctrl+C",
@@ -104,11 +110,11 @@ public sealed class ZenEditorWindowBehaviorTests
                 AssertIconFont(
                     commands,
                     "Ctrl+V",
-                    FontHelper.Resolve(FontHelper.MaterialKey).Source);
+                    FontHelper.Resolve(FontHelper.FluentKey).Source);
                 AssertIconFont(
                     commands,
                     "Ctrl+A",
-                    FontHelper.Resolve(FontHelper.MaterialKey).Source);
+                    FontHelper.Resolve(FontHelper.FluentKey).Source);
 
                 MenuItem themes = commands.Single(command => command.Items.Count == 5);
                 Assert.Equal(5, themes.Items.Count);

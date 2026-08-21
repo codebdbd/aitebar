@@ -31,6 +31,11 @@ The result is observable by using combinations such as bold plus italic or under
 - [x] (2026-07-28) Expanded focused coverage to 107 passing tests; the mixed development solution passes 943/943 with a zero-warning Release build.
 - [x] (2026-07-28) Applied the safe cleanup from the second factual review: centralized tag/font contracts, reused one newline normalizer, and replaced resize string fallback with validated enum parsing.
 - [x] (2026-07-28) Expanded focused coverage to 129 passing tests; the mixed development solution passes 965/965 with a zero-warning Release build.
+- [x] (2026-08-21) Re-audited Quick Note after block-code support was added and confirmed nested code-block loss, a persistence race, incomplete conflict recovery, keyboard inaccessibility, and Markdown/performance gaps.
+- [ ] (2026-08-21) Make Markdown serialization preserve code blocks in list items and use CommonMark-compatible inline-code delimiters.
+- [ ] (2026-08-21) Replace split file reads with one baseline snapshot and revalidate it before normal saves; expose reload and overwrite conflict recovery.
+- [ ] (2026-08-21) Make every visible command keyboard reachable and provide shortcuts for the formatting commands.
+- [ ] (2026-08-21) Add regression tests, rebuild Release, execute the full suite, and rebuild the installer.
 
 ## Surprises & Discoveries
 
@@ -73,6 +78,12 @@ The result is observable by using combinations such as bold plus italic or under
 - Observation: The resize handler treated every unknown XAML `Tag` as `BottomRight`.
   Evidence: The default switch arm returned `WMSZ_BOTTOMRIGHT`; the handler now accepts only the eight values in `QuickNoteResizeEdge` and ignores invalid tags. Tests cover all eight valid names plus empty, case-mismatched, unknown, and null values.
 
+- Observation: A code block can be inserted into a `ListItem`, but list serialization ignores `BlockUIContainer` blocks.
+  Evidence: `QuickNoteWindow.BtnCode_Click` inserts into `parentParagraph.SiblingBlocks`, while `AppendListItemMarkdown` handles only `FlowList` and `Paragraph`.
+
+- Observation: The file shown to the user and the baseline used for later conflict detection can come from different reads.
+  Evidence: `ReadMarkdown` calls `File.ReadAllText`, then `RecordBaseline` reopens and hashes the path. A write between those operations is treated as already known even though the editor displays the older text.
+
 - Observation: The second review's remaining God-object, synchronous-first-load, and persistence-adapter findings are architectural tradeoffs rather than demonstrated user defects.
   Evidence: The adapter is the test seam used by WPF close/formatting tests, and loading before the first paint avoids presenting an empty note. Both changes would require separate UX/performance acceptance work.
 
@@ -102,6 +113,14 @@ The result is observable by using combinations such as bold plus italic or under
   Rationale: The safety and lifecycle improvements are independently testable. Splitting the WPF window into several services would be a separate high-risk refactor and is not required to correct the reported behavior.
   Date/Author: 2026-07-28 / Codex
 
+- Decision: Preserve the existing one-file Markdown contract and add explicit reload and overwrite recovery actions instead of automatic merging.
+  Rationale: Automatic text merging can silently corrupt formatting and code blocks. Presenting the external file as the source of truth or requiring an explicit overwrite makes the consequence observable and keeps the recovery model understandable.
+  Date/Author: 2026-08-21 / Codex
+
+- Decision: Treat a file snapshot as the baseline, containing the exact content hash and metadata obtained from one read.
+  Rationale: The prior two-read baseline could acknowledge an external change that was never loaded into the document. A snapshot prevents that false acknowledgement; save will compare against it immediately before the atomic replacement.
+  Date/Author: 2026-08-21 / Codex
+
 ## Outcomes & Retrospective
 
 Implementation is complete and the final review validation is green. Quick Note now retains nested formatting, avoids redundant close writes, writes atomically, detects file creation and same-metadata content edits after its baseline, creates and rediscovers unique conflict copies, safely handles settings failures and the clear dialog, preserves unselected rich hyperlink fragments, restores the correct monitor, and keeps every formatting command repeatable and reachable in the compact toolbar.
@@ -109,6 +128,8 @@ Implementation is complete and the final review validation is green. Quick Note 
 Focused Quick Note tests pass 129/129. The Release solution build completes with zero warnings and zero errors, and the complete mixed-development suite passes 965/965. `installer/Build-Installer.ps1` rebuilt publish output and `artifacts/installer/AiteBar-Setup.exe`; code signing was skipped because no signing certificate was supplied. The final local installer is 77,606,670 bytes and its SHA-256 is `4E040E9388E4AF8E935FDA6AA857867B9386F56FFBAB62CD8406DEAA578A2CCF`, matching `SHA256SUMS.txt`.
 
 A separate launch smoke test was not performed because an installed AiteBar instance (PID 27144) was already running and the application uses a single-instance workflow. That user process was deliberately left untouched; compilation, publish, installer generation, focused WPF tests, and the full suite provide the final automated evidence.
+
+This plan was reopened on 2026-08-21 for the post-audit reliability and accessibility work. Outcomes will be updated after its regression tests and release verification complete.
 
 ## Context and Orientation
 
@@ -139,6 +160,12 @@ Fifth, select the work area from saved coordinates before showing the window. Ad
 Sixth, make the header responsive without increasing the minimum or default window size. Keep primary formatting commands visible and place overflow commands in a compact menu or use adaptive visibility according to existing visual conventions. Add a XAML contract test that calculates or asserts the responsive structure at the minimum width.
 
 Finally, run the focused Quick Note tests, `dotnet build .\AiteBar.sln -c Release`, and `dotnet test .\AiteBar.Tests\AiteBar.Tests.csproj -c Release`. If the documented WPF host issue occurs, run `dotnet vstest .\AiteBar.Tests\bin\Release\net10.0-windows\AiteBar.Tests.dll`. Rebuild the installer with `.\installer\Build-Installer.ps1` and verify `artifacts\installer\AiteBar-Setup.exe` plus its SHA-256 file.
+
+Seventh, preserve every block type allowed by the editor when serializing list items. `BlockUIContainer` code blocks must be emitted as an indented fenced block and must round-trip through the parser. Inline code must choose a backtick fence longer than any backtick run in its text, rather than relying on backslash escaping which external Markdown renderers do not interpret inside code spans.
+
+Eighth, move file identity into a single snapshot operation and preserve it as the service baseline. A normal save must compare the current source snapshot to that baseline immediately before replacing the destination. If it differs, it must create a conflict copy and report the conflict rather than writing the original. The window must offer an explicit reload action, which discards the current document only after confirmation, and an explicit overwrite action, which saves the current document only after confirmation.
+
+Ninth, make all toolbar, menu, pin, and close controls focusable and reachable with Tab. Add documented keyboard handlers for bold, italic, strikethrough, code, list commands, heading command, clear formatting, and opening the menu. Keep the existing shortcuts intact.
 
 ## Concrete Steps
 
@@ -234,3 +261,5 @@ Revision note (2026-07-28): Closed the final review after rebuilding the install
 Revision note (2026-07-28): Reopened to triage the attached third-party review; recorded which findings were reachable, applied targeted hardening, and added security/lifecycle regression tests.
 
 Revision note (2026-07-28): Applied the low-risk contract cleanup from the factual re-review and documented the architectural items intentionally left outside this corrective release.
+
+Revision note (2026-08-21): Reopened after a new end-to-end audit. Added the confirmed code-block data-loss path, split-read baseline race, conflict-resolution, keyboard accessibility, Markdown delimiter, and large-note performance scope; implementation is in progress.

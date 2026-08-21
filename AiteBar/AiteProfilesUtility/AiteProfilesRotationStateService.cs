@@ -3,21 +3,57 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace AiteBar.AiteProfilesUtility;
 
 internal sealed class AiteProfilesRotationStateService
 {
     private readonly object _sync = new();
+    private readonly SemaphoreSlim _persistGate = new(1, 1);
     private readonly string _statePath;
     private bool _enabled;
     private string _lastProfileKey = string.Empty;
     private List<string> _rotationOrder = [];
+    private bool _hasLocalChanges;
+
+    public event Action<Exception>? PersistenceFailed;
 
     public AiteProfilesRotationStateService(string rootDirectory)
     {
         _statePath = Path.Combine(rootDirectory, "rotation_state.json");
-        Restore();
+    }
+
+    public async Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            RotationStateRecord? state = await AiteProfilesJsonStore.ReadAsync<RotationStateRecord>(_statePath, cancellationToken).ConfigureAwait(false);
+            if (state is null)
+            {
+                return;
+            }
+
+            lock (_sync)
+            {
+                if (_hasLocalChanges)
+                {
+                    return;
+                }
+
+                _enabled = state.Enabled;
+                _lastProfileKey = state.LastProfileKey ?? string.Empty;
+                _rotationOrder = NormalizeRotationOrder(state.RotationOrder);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
     }
 
     public bool GetEnabled()
@@ -49,8 +85,10 @@ internal sealed class AiteProfilesRotationStateService
         lock (_sync)
         {
             _enabled = enabled;
-            Persist();
+            _hasLocalChanges = true;
         }
+
+        QueuePersist();
     }
 
     public void SetLastProfileKey(string profileKey)
@@ -58,8 +96,10 @@ internal sealed class AiteProfilesRotationStateService
         lock (_sync)
         {
             _lastProfileKey = (profileKey ?? string.Empty).Trim();
-            Persist();
+            _hasLocalChanges = true;
         }
+
+        QueuePersist();
     }
 
     public void SetRotationOrder(IEnumerable<string>? rotationOrder)
@@ -67,52 +107,69 @@ internal sealed class AiteProfilesRotationStateService
         lock (_sync)
         {
             _rotationOrder = NormalizeRotationOrder(rotationOrder);
-            Persist();
+            _hasLocalChanges = true;
         }
+
+        QueuePersist();
     }
 
-    private void Restore()
+    internal async Task<bool> FlushAsync(TimeSpan timeout)
     {
-        lock (_sync)
+        using var cancellationSource = new CancellationTokenSource(timeout);
+        try
         {
-            try
-            {
-                var state = AiteProfilesJsonStore.ReadAsync<RotationStateRecord>(_statePath, CancellationToken.None)
-                    .GetAwaiter()
-                    .GetResult();
-                if (state is null)
-                {
-                    return;
-                }
-
-                _enabled = state.Enabled;
-                _lastProfileKey = state.LastProfileKey ?? string.Empty;
-                _rotationOrder = NormalizeRotationOrder(state.RotationOrder);
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(ex);
-                _enabled = false;
-                _lastProfileKey = string.Empty;
-                _rotationOrder = [];
-            }
+            await PersistLatestAsync(cancellationSource.Token, suppressFailure: false).ConfigureAwait(false);
+            return true;
+        }
+        catch (OperationCanceledException) when (cancellationSource.IsCancellationRequested)
+        {
+            return false;
+        }
+        catch (Exception)
+        {
+            return false;
         }
     }
 
-    private void Persist()
+    private void QueuePersist() => _ = PersistLatestAsync(CancellationToken.None, suppressFailure: true);
+
+    private async Task PersistLatestAsync(CancellationToken cancellationToken, bool suppressFailure)
     {
         try
         {
-            AiteProfilesJsonStore.WriteAsync(_statePath, new RotationStateRecord
+            await _persistGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
             {
-                Enabled = _enabled,
-                LastProfileKey = _lastProfileKey,
-                RotationOrder = _rotationOrder
-            }).GetAwaiter().GetResult();
+                RotationStateRecord state;
+                lock (_sync)
+                {
+                    state = new RotationStateRecord
+                    {
+                        Enabled = _enabled,
+                        LastProfileKey = _lastProfileKey,
+                        RotationOrder = [.. _rotationOrder]
+                    };
+                }
+
+                await AiteProfilesJsonStore.WriteAsync(_statePath, state, cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                _persistGate.Release();
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
         }
         catch (Exception ex)
         {
             Logger.Log(ex);
+            PersistenceFailed?.Invoke(ex);
+            if (!suppressFailure)
+            {
+                throw;
+            }
         }
     }
 

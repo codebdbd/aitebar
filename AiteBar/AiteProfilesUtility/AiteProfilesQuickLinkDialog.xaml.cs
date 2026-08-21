@@ -23,7 +23,7 @@ public partial class AiteProfilesQuickLinkDialog : DarkWindow
         }
         else
         {
-            TagsBox.Text = knownSnippets.SelectMany(static snippet => snippet.Tags).Distinct(StringComparer.OrdinalIgnoreCase).FirstOrDefault() ?? "misc";
+            TagsBox.Text = knownSnippets.SelectMany(static snippet => snippet.Tags).Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(static tag => tag, StringComparer.OrdinalIgnoreCase).FirstOrDefault() ?? "misc";
         }
 
         Loaded += (_, _) =>
@@ -65,7 +65,6 @@ public partial class AiteProfilesQuickLinkDialog : DarkWindow
     {
         if (!TryBuildSnippet(out AiteProfileSnippet? snippet))
         {
-            UpdateState();
             return;
         }
 
@@ -77,30 +76,42 @@ public partial class AiteProfilesQuickLinkDialog : DarkWindow
 
     private void UpdateState()
     {
-        SaveButton.IsEnabled = TryBuildSnippet(out _);
+        bool isValid = TryBuildSnippet(out _, out string validationError);
+        SaveButton.IsEnabled = isValid;
+        ValidationText.Text = validationError;
+        ValidationText.Visibility = string.IsNullOrWhiteSpace(validationError) ? Visibility.Collapsed : Visibility.Visible;
     }
 
     private bool TryBuildSnippet(out AiteProfileSnippet? snippet)
     {
+        return TryBuildSnippet(out snippet, out _);
+    }
+
+    private bool TryBuildSnippet(out AiteProfileSnippet? snippet, out string validationError)
+    {
         snippet = null;
+        validationError = string.Empty;
         string name = (NameBox.Text ?? string.Empty).Trim();
-        List<string> tags = (TagsBox.Text ?? string.Empty)
-            .Split([',', ';', '|', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-            .Select(static tag => tag.ToLowerInvariant())
-            .Distinct(StringComparer.Ordinal)
-            .ToList();
+        List<string> tags = AiteProfilesQuickLinkService.ParseTags(TagsBox.Text ?? string.Empty);
         List<string> urls = [];
+        var invalidUrls = new List<string>();
         foreach (string rawUrl in (UrlsBox.Text ?? string.Empty).Split(["\r\n", "\n", "|"], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
             if (AiteProfilesQuickLinkService.TryNormalizeUrlInput(rawUrl, out string normalizedUrl))
             {
                 urls.Add(normalizedUrl);
             }
+            else
+            {
+                invalidUrls.Add(rawUrl);
+            }
         }
 
-        if (string.IsNullOrWhiteSpace(name) || urls.Count == 0)
+        if (string.IsNullOrWhiteSpace(name) || urls.Count == 0 || invalidUrls.Count > 0)
         {
-            StatusText.Text = LocalizationService.Get("AiteProfiles_LinkValidation");
+            validationError = invalidUrls.Count > 0
+                ? LocalizationService.Format("AiteProfiles_LinkInvalidUrls", string.Join(", ", invalidUrls))
+                : LocalizationService.Get("AiteProfiles_LinkValidation");
             return false;
         }
 
@@ -110,7 +121,6 @@ public partial class AiteProfilesQuickLinkDialog : DarkWindow
             Tags = tags.Count == 0 ? ["misc"] : tags,
             Urls = urls.Distinct(StringComparer.OrdinalIgnoreCase).ToList()
         };
-        StatusText.Text = string.Empty;
         return true;
     }
 }

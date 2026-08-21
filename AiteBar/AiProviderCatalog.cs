@@ -2,8 +2,7 @@ namespace AiteBar;
 
 internal enum AiProviderProtocol
 {
-    OpenAiCompatible,
-    Gemini
+    OpenAiCompatible
 }
 
 internal sealed record AiProviderDefinition(
@@ -30,15 +29,6 @@ internal static class AiProviderCatalog
             new Uri("https://cloud.cerebras.ai/"),
             AiProviderProtocol.OpenAiCompatible,
             AiCostStatus.FreeTierAvailable),
-        new(
-            "gemini",
-            "Google Gemini",
-            new Uri("https://generativelanguage.googleapis.com/v1beta/models"),
-            null,
-            new Uri("https://aistudio.google.com/app/apikey"),
-            AiProviderProtocol.Gemini,
-            AiCostStatus.FreeTierAvailable,
-            ApiKeyInQuery: true),
         new(
             "groq",
             "Groq",

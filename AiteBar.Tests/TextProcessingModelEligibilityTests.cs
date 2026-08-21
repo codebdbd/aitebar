@@ -7,8 +7,8 @@ public sealed class TextProcessingModelEligibilityTests
     [InlineData("provider/prompt-guard", "Prompt Guard")]
     [InlineData("provider/text-embedding-3", "Text Embedding 3")]
     [InlineData("provider/safety-gpt", "Safety GPT")]
-    [InlineData("gemini-2.5-flash-image", "Nano Banana")]
-    [InlineData("gemini-3-pro-image-preview", "Gemini 3 Pro Image Preview")]
+    [InlineData("openai/gpt-4-image", "GPT-4 Image")]
+    [InlineData("openai/gpt-5-image-preview", "GPT-5 Image Preview")]
     [InlineData("imagen-3.0-generate-002", "Imagen 3")]
     [InlineData("veo-3.0-generate-preview", "Veo 3")]
     [InlineData("provider/generate-image", "Image Generation")]
@@ -50,8 +50,8 @@ public sealed class TextProcessingModelEligibilityTests
     {
         var model = new AiModelDescriptor(
             "provider",
-            "gemini-2.5-flash",
-            "Gemini 2.5 Flash Vision",
+            "gpt-4o-mini",
+            "GPT-4o Mini",
             AiCapabilities.Text | AiCapabilities.Vision,
             128_000,
             AiCostStatus.VerifiedFree);
@@ -60,7 +60,6 @@ public sealed class TextProcessingModelEligibilityTests
     }
 
     [Theory]
-    [InlineData("gemini", "gemini-2.5-flash", TextProcessingModelTier.CertifiedAutomatic)]
     [InlineData("groq", "llama-3.3-70b-versatile", TextProcessingModelTier.CertifiedAutomatic)]
     [InlineData("cerebras", "qwen-3-32b", TextProcessingModelTier.CertifiedAutomatic)]
     [InlineData("mistral", "mistral-small-latest", TextProcessingModelTier.CertifiedAutomatic)]

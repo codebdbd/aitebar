@@ -29,6 +29,10 @@ internal static class AiteProfilesJsonStore
             await using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
             return await JsonSerializer.DeserializeAsync<T>(stream, Options, cancellationToken).ConfigureAwait(false);
         }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
         catch (Exception ex)
         {
             Logger.Log(ex);
@@ -54,12 +58,7 @@ internal static class AiteProfilesJsonStore
                 await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
 
-            if (File.Exists(path))
-            {
-                File.Delete(path);
-            }
-
-            File.Move(tempPath, path);
+            File.Move(tempPath, path, overwrite: true);
         }
         finally
         {

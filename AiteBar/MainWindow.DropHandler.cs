@@ -146,10 +146,9 @@ public partial class MainWindow
                     if (!string.IsNullOrWhiteSpace(urlLine))
                     {
                         string url = urlLine[4..].Trim();
-                        if (Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
-                            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+                        if (ActionTargetHelper.TryNormalizeWebUrl(url, out string normalizedUrl))
                         {
-                            value = url;
+                            value = normalizedUrl;
                             type = ActionType.Web;
                             return true;
                         }
@@ -192,10 +191,9 @@ public partial class MainWindow
             return false;
         }
 
-        if (Uri.TryCreate(text, UriKind.Absolute, out var textUri) &&
-            (textUri.Scheme == Uri.UriSchemeHttp || textUri.Scheme == Uri.UriSchemeHttps))
+        if (ActionTargetHelper.TryNormalizeWebUrl(text, out string normalizedTextUrl))
         {
-            value = text;
+            value = normalizedTextUrl;
             type = ActionType.Web;
             return true;
         }
@@ -217,9 +215,7 @@ public partial class MainWindow
             if (!string.IsNullOrEmpty(val))
             {
                 string? iconPath = null;
-                bool isWeb = val.StartsWith("http", StringComparison.OrdinalIgnoreCase) || val.StartsWith("www.", StringComparison.OrdinalIgnoreCase);
-
-                if (isWeb && !val.StartsWith("http", StringComparison.OrdinalIgnoreCase)) val = "https://" + val;
+                bool isWeb = type == ActionType.Web;
 
                 if (type == ActionType.Program || type == ActionType.ScriptFile || type == ActionType.File)
                     iconPath = IconHelper.ExtractAndSaveIcon(val);

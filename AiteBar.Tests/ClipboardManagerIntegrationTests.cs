@@ -27,11 +27,13 @@ public sealed class ClipboardManagerIntegrationTests : IDisposable
         string settingsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "AppSettingsWindow.xaml.cs"));
         string modelsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "Models.cs"));
         string clipboardUtilityCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "ClipboardManagerUtility.cs"));
+        string clipboardWindowCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "ClipboardManagerWindow.xaml.cs"));
 
         Assert.Contains("RegisterAllFromAssembly", appXaml);
         Assert.Contains("[Utility]", clipboardUtilityCode);
         Assert.Contains("public bool ShowPresetClipboardManager { get; set; } = false;", modelsCode);
-        Assert.Contains("public bool ClipboardManagerPersistHistory { get; set; } = true;", modelsCode);
+        Assert.Contains("public bool ClipboardManagerPersistHistory { get; set; } = false;", modelsCode);
+        Assert.DoesNotContain("SendKeys.SendWait", clipboardWindowCode, StringComparison.Ordinal);
         Assert.Contains("case \"ClipboardManager\":", mainWindowCode);
         Assert.Contains("LaunchUtilityAsync(\"ClipboardManager\", HideDock)", mainWindowCode);
         Assert.Contains("ChkClipboardManagerPersistHistory.IsChecked = _settings.ClipboardManagerPersistHistory", settingsCode);
@@ -58,6 +60,21 @@ public sealed class ClipboardManagerIntegrationTests : IDisposable
 
         XElement persistenceCheckbox = FindNamedElement(settingsWindow, "ChkClipboardManagerPersistHistory");
         Assert.Equal("{local:Loc ResourceKey=ClipboardManager_PersistHistorySetting}", persistenceCheckbox.Attribute("Content")?.Value);
+    }
+
+    [Fact]
+    public void ClipboardManager_ExposesAccessibleFullWipeAction()
+    {
+        string repoRoot = FindRepoRoot();
+        XDocument clipboardWindow = XDocument.Load(Path.Combine(repoRoot, "AiteBar", "ClipboardManagerWindow.xaml"));
+
+        XElement wipeAllButton = FindNamedElement(clipboardWindow, "BtnWipeAll");
+        Assert.Equal("BtnWipeAll_Click", wipeAllButton.Attribute("Click")?.Value);
+        Assert.Equal("{local:Loc ResourceKey=ClipboardManager_WipeAll}", wipeAllButton.Attribute("AutomationProperties.Name")?.Value);
+
+        XElement copyButton = Assert.Single(clipboardWindow.Descendants(), element => string.Equals(element.Attribute(XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml"))?.Value, "CopyButton", StringComparison.Ordinal));
+        Assert.Null(copyButton.Attribute("Focusable"));
+        Assert.Equal("{Binding CopyLabel}", copyButton.Attribute("AutomationProperties.Name")?.Value);
     }
 
     [Fact]

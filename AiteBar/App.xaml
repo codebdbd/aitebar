@@ -46,7 +46,7 @@
         <!-- ContextMenu Style -->
         <Style x:Key="DarkContextMenu" TargetType="ContextMenu">
             <Setter Property="Background" Value="#2C2C2C"/>
-            <Setter Property="BorderBrush" Value="#2C2C2C"/>
+            <Setter Property="BorderBrush" Value="#46464F"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Foreground" Value="#EAEAEA"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
@@ -273,11 +273,22 @@
         <Style TargetType="Separator" BasedOn="{StaticResource DarkMenuSeparator}"/>
 
         <ContextMenu x:Key="TextEditingContextMenu" x:Shared="False" Style="{StaticResource DarkContextMenu}"
-                     TextBlock.LineHeight="NaN"
-                     TextBlock.LineStackingStrategy="MaxHeight">
+                      TextBlock.LineHeight="NaN"
+                      TextBlock.LineStackingStrategy="MaxHeight">
+            <MenuItem Header="{local:Loc ResourceKey=QuickNote_Undo}" Command="ApplicationCommands.Undo" InputGestureText="Ctrl+Z">
+                <MenuItem.Icon>
+                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF199;"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="{local:Loc ResourceKey=QuickNote_Redo}" Command="ApplicationCommands.Redo" InputGestureText="Ctrl+Y">
+                <MenuItem.Icon>
+                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF16E;"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <Separator Style="{StaticResource DarkMenuSeparator}"/>
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_Cut}" Command="ApplicationCommands.Cut" InputGestureText="Ctrl+X">
                 <MenuItem.Icon>
-                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14E;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
+                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF33A;"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_Copy}" Command="ApplicationCommands.Copy" InputGestureText="Ctrl+C">
@@ -287,12 +298,12 @@
             </MenuItem>
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_Paste}" Command="ApplicationCommands.Paste" InputGestureText="Ctrl+V">
                 <MenuItem.Icon>
-                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE14F;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
+                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF2D5;"/>
                 </MenuItem.Icon>
             </MenuItem>
             <MenuItem Header="{local:Loc ResourceKey=QuickNote_SelectAll}" Command="ApplicationCommands.SelectAll" InputGestureText="Ctrl+A">
                 <MenuItem.Icon>
-                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE162;" FontFamily="pack://application:,,,/Resources/#Material Icons"/>
+                    <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xEA86;"/>
                 </MenuItem.Icon>
             </MenuItem>
         </ContextMenu>

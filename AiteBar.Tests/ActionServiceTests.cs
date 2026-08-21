@@ -348,7 +348,7 @@ public sealed class ActionServiceTests
     }
 
     [Fact]
-    public async Task ExecuteCustomActionAsync_UnknownActionType_ReturnsOkAfterCallback()
+    public async Task ExecuteCustomActionAsync_UnknownActionType_ReturnsFailureAfterCallback()
     {
         var service = new ActionService(new AppSettingsService());
         var element = new CustomElement { ActionType = "NotARealActionType" };
@@ -361,7 +361,7 @@ public sealed class ActionServiceTests
         });
 
         Assert.True(callbackInvoked);
-        Assert.True(result.Success);
+        Assert.False(result.Success);
     }
 
     [Fact]

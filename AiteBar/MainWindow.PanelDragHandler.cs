@@ -104,6 +104,7 @@ public partial class MainWindow
             _settingsService.UpdateSettings(s =>
             {
                 s.MonitorIndex = nextMonitorIndex;
+                s.MonitorDeviceName = targetScreen.DeviceName;
                 s.Edge = nextEdge;
             });
 

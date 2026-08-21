@@ -67,48 +67,7 @@ internal static partial class ZenEditorTextHelper
     public static string NormalizeExportText(string? text)
     {
         string normalized = (text ?? string.Empty).Replace("\r\n", "\n").Replace('\r', '\n');
-        if (normalized.Length == 0)
-        {
-            return string.Empty;
-        }
-
-        string[] lines = normalized.Split('\n', StringSplitOptions.None);
-        int firstTextLine = Array.FindIndex(lines, line => !string.IsNullOrWhiteSpace(line));
-        if (firstTextLine < 0)
-        {
-            return string.Join("\r\n", Enumerable.Repeat(string.Empty, lines.Length));
-        }
-
-        int lastTextLine = Array.FindLastIndex(lines, line => !string.IsNullOrWhiteSpace(line));
-        var result = new StringBuilder(normalized.Length + 16);
-        for (int index = 0; index < firstTextLine; index++)
-        {
-            result.Append("\r\n");
-        }
-
-        bool wroteTextLine = false;
-        for (int index = firstTextLine; index <= lastTextLine; index++)
-        {
-            if (string.IsNullOrWhiteSpace(lines[index]))
-            {
-                continue;
-            }
-
-            if (wroteTextLine)
-            {
-                result.Append("\r\n\r\n");
-            }
-
-            result.Append(lines[index]);
-            wroteTextLine = true;
-        }
-
-        for (int index = lastTextLine + 1; index < lines.Length; index++)
-        {
-            result.Append("\r\n");
-        }
-
-        return result.ToString();
+        return normalized.Replace("\n", "\r\n");
     }
 
     public static (int Caret, int SelectionStart, int SelectionLength) ClampSelection(

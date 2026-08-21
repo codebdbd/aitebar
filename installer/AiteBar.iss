@@ -4,7 +4,7 @@
 #define AppExeName "AiteBar.exe"
 #define AppURL "https://github.com/codebdbd/aitebar"
 #ifndef AppVersion
-  #define AppVersion "1.15.12"
+  #define AppVersion "1.15.14"
 #endif
 #define PublishDir "..\artifacts\publish\win-x64"
 

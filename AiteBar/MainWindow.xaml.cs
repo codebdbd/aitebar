@@ -716,12 +716,23 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private Screen? GetTargetScreen()
     {
-        return GetTargetScreen(AppSettings.MonitorIndex);
+        AppSettings settings = AppSettings;
+        return GetTargetScreen(settings.MonitorIndex, settings.MonitorDeviceName);
     }
 
-    private static Screen? GetTargetScreen(int monitorIndex)
+    private static Screen? GetTargetScreen(int monitorIndex, string? monitorDeviceName = null)
     {
         Screen[] screens = Screen.AllScreens;
+        if (!string.IsNullOrWhiteSpace(monitorDeviceName))
+        {
+            Screen? byDeviceName = screens.FirstOrDefault(screen =>
+                string.Equals(screen.DeviceName, monitorDeviceName, StringComparison.OrdinalIgnoreCase));
+            if (byDeviceName is not null)
+            {
+                return byDeviceName;
+            }
+        }
+
         return (monitorIndex >= 0 && monitorIndex < screens.Length)
             ? screens[monitorIndex]
             : Screen.PrimaryScreen;
@@ -729,18 +740,20 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private (double AvailableWidth, double AvailableHeight) CalculateAvailableSize()
     {
-        return CalculateAvailableSize(AppSettings.MonitorIndex);
+        AppSettings settings = AppSettings;
+        return CalculateAvailableSize(settings.MonitorIndex, settings.MonitorDeviceName);
     }
 
-    private (double AvailableWidth, double AvailableHeight) CalculateAvailableSize(int monitorIndex)
+    private (double AvailableWidth, double AvailableHeight) CalculateAvailableSize(int monitorIndex, string? monitorDeviceName = null)
     {
-        Screen? screen = GetTargetScreen(monitorIndex);
+        Screen? screen = GetTargetScreen(monitorIndex, monitorDeviceName);
         Rectangle? workArea = screen?.WorkingArea;
+        double targetDpi = TaskbarGeometryHelper.GetMonitorDpiScale(screen, _cachedDpi);
         double availableWidth = workArea.HasValue
-            ? Math.Max(150, (workArea.Value.Width / _cachedDpi) - PanelScreenPadding)
+            ? Math.Max(150, TaskbarGeometryHelper.PixelsToDips(workArea.Value.Width, targetDpi) - PanelScreenPadding)
             : 150;
         double availableHeight = workArea.HasValue
-            ? Math.Max(150, (workArea.Value.Height / _cachedDpi) - PanelScreenPadding)
+            ? Math.Max(150, TaskbarGeometryHelper.PixelsToDips(workArea.Value.Height, targetDpi) - PanelScreenPadding)
             : 150;
 
         return (availableWidth, availableHeight);
@@ -1104,12 +1117,13 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private (Rect WorkArea, Rect Bounds) GetTargetScreenMetrics()
     {
-        return GetTargetScreenMetrics(AppSettings.MonitorIndex);
+        AppSettings settings = AppSettings;
+        return GetTargetScreenMetrics(settings.MonitorIndex, settings.MonitorDeviceName);
     }
 
-    private (Rect WorkArea, Rect Bounds) GetTargetScreenMetrics(int monitorIndex)
+    private (Rect WorkArea, Rect Bounds) GetTargetScreenMetrics(int monitorIndex, string? monitorDeviceName = null)
     {
-        var screen = GetTargetScreen(monitorIndex);
+        var screen = GetTargetScreen(monitorIndex, monitorDeviceName);
 
         // Если экран не найден, используем PrimaryScreen. Если и его нет, используем системные параметры.
         var primary = Screen.PrimaryScreen;
@@ -1119,11 +1133,21 @@ public partial class MainWindow : Window, ISettingsWindowContext
         // Если мы упали в fallback через SystemParameters, то значения уже в DIP-ах, и делить на DPI не нужно.
         // Если же мы взяли значения из Screen (System.Drawing), то они в пикселях и требуют деления.
         bool isFromSystemParameters = (screen == null && primary == null);
-        double dpi = (isFromSystemParameters || _cachedDpi <= 0) ? 1.0 : _cachedDpi;
+        double dpi = isFromSystemParameters
+            ? 1.0
+            : TaskbarGeometryHelper.GetMonitorDpiScale(screen, _cachedDpi);
 
         return (
-            new Rect(drawingWorkArea.Left / dpi, drawingWorkArea.Top / dpi, drawingWorkArea.Width / dpi, drawingWorkArea.Height / dpi),
-            new Rect(drawingBounds.Left / dpi, drawingBounds.Top / dpi, drawingBounds.Width / dpi, drawingBounds.Height / dpi)
+            new Rect(
+                TaskbarGeometryHelper.PixelsToDips(drawingWorkArea.Left, dpi),
+                TaskbarGeometryHelper.PixelsToDips(drawingWorkArea.Top, dpi),
+                TaskbarGeometryHelper.PixelsToDips(drawingWorkArea.Width, dpi),
+                TaskbarGeometryHelper.PixelsToDips(drawingWorkArea.Height, dpi)),
+            new Rect(
+                TaskbarGeometryHelper.PixelsToDips(drawingBounds.Left, dpi),
+                TaskbarGeometryHelper.PixelsToDips(drawingBounds.Top, dpi),
+                TaskbarGeometryHelper.PixelsToDips(drawingBounds.Width, dpi),
+                TaskbarGeometryHelper.PixelsToDips(drawingBounds.Height, dpi))
         );
     }
 
@@ -1134,7 +1158,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private (double X, double Y) GetDockCoordinates(bool hide, AppSettings settings)
     {
-        var metrics = GetTargetScreenMetrics(settings.MonitorIndex);
+        var metrics = GetTargetScreenMetrics(settings.MonitorIndex, settings.MonitorDeviceName);
         var workArea = metrics.WorkArea;
         var bounds = metrics.Bounds;
 
@@ -1496,7 +1520,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         if (applySizeConstraints)
         {
-            var (availableWidth, availableHeight) = CalculateAvailableSize(settings.MonitorIndex);
+            var (availableWidth, availableHeight) = CalculateAvailableSize(settings.MonitorIndex, settings.MonitorDeviceName);
             _lastMetrics = ComputeStablePrimaryPanelMetrics(
                 isVertical,
                 availableWidth,
@@ -1611,7 +1635,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         List<UnifiedButton> allUnifiedButtons = _unifiedButtonService.BuildUnifiedList(activeContextId, settings, elements);
 
         bool isVertical = settings.Edge == DockEdge.Left || settings.Edge == DockEdge.Right;
-        var (availableWidth, availableHeight) = CalculateAvailableSize(settings.MonitorIndex);
+        var (availableWidth, availableHeight) = CalculateAvailableSize(settings.MonitorIndex, settings.MonitorDeviceName);
 
         _lastMetrics = ComputeStablePrimaryPanelMetrics(
             isVertical,
@@ -2270,7 +2294,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         {
             if (_appSettingsWindow.WindowState == WindowState.Minimized)
             {
-                _appSettingsWindow.WindowState = WindowState.Normal;
+                _appSettingsWindow.WindowState = WindowState.Maximized;
             }
 
             _appSettingsWindow.NavigateToSection(section);

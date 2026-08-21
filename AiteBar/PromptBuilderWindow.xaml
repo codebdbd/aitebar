@@ -130,11 +130,7 @@
                 <TabControl x:Name="ModeTabs" Height="42"
                             Style="{StaticResource UnderlineTabControlStyle}"
                             SelectionChanged="ModeTabs_SelectionChanged">
-                    <TabItem x:Name="ModeProgramming" Tag="Programming" IsSelected="True"
-                             Header="{local:Loc ResourceKey=PromptBuilder_ModeProgramming}"
-                             Style="{StaticResource PromptBuilderTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeProgramming}"/>
-                    <TabItem x:Name="ModeImages" Tag="Images"
+                    <TabItem x:Name="ModeImages" Tag="Images" IsSelected="True"
                              Header="{local:Loc ResourceKey=PromptBuilder_ModeImages}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
                              AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeImages}"/>
@@ -154,10 +150,6 @@
                              Header="{local:Loc ResourceKey=PromptBuilder_ModeGraphics}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
                              AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeGraphics}"/>
-                    <TabItem x:Name="ModeTexts" Tag="Texts"
-                             Header="{local:Loc ResourceKey=PromptBuilder_ModeTexts}"
-                             Style="{StaticResource PromptBuilderTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeTexts}"/>
                     <TabItem x:Name="ModeVideo" Tag="Video"
                              Header="{local:Loc ResourceKey=PromptBuilder_ModeVideo}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
@@ -166,10 +158,6 @@
                              Header="{local:Loc ResourceKey=PromptBuilder_ModeMusic}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
                              AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeMusic}"/>
-                    <TabItem x:Name="ModeAnalytics" Tag="Analytics"
-                             Header="{local:Loc ResourceKey=PromptBuilder_ModeAnalytics}"
-                             Style="{StaticResource PromptBuilderTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeAnalytics}"/>
                 </TabControl>
             </Border>
 
@@ -197,20 +185,6 @@
                 </Grid>
             </Border>
 
-            <Border x:Name="ProgrammingTaskHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="0"
-                    Background="Transparent" BorderBrush="Transparent"
-                    BorderThickness="0" CornerRadius="0" Visibility="Collapsed">
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="10"/><ColumnDefinition Width="250"/><ColumnDefinition Width="22"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="10"/><ColumnDefinition Width="250"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="{local:Loc ResourceKey=ProgrammingProjectType_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="CmbProgrammingProjectType" Grid.Column="2" Height="34" SelectionChanged="CmbProgrammingProjectType_SelectionChanged"
-                              AutomationProperties.Name="{local:Loc ResourceKey=ProgrammingProjectType_Label}"/>
-                    <TextBlock Grid.Column="4" Text="{local:Loc ResourceKey=ProgrammingStyle_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="CmbProgrammingStyle" Grid.Column="6" Height="34" SelectionChanged="CmbProgrammingStyle_SelectionChanged"
-                              AutomationProperties.Name="{local:Loc ResourceKey=ProgrammingStyle_Label}"/>
-                </Grid>
-            </Border>
-
             <Border x:Name="VideoDirectionHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="0"
                     Background="Transparent" BorderBrush="Transparent"
                     BorderThickness="0" CornerRadius="0" Visibility="Collapsed">
@@ -220,34 +194,6 @@
                     <ComboBox x:Name="CmbVideoDirection" Grid.Column="2" Height="34" SelectionChanged="CmbVideoDirection_SelectionChanged"
                               AutomationProperties.Name="{local:Loc ResourceKey=VideoDirection_Label}"/>
                     <TextBlock x:Name="TxtVideoDirectionOutcome" Grid.Column="3" Visibility="Collapsed"/>
-                </Grid>
-            </Border>
-
-            <Border x:Name="AnalysisDirectionHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="0"
-                    Background="Transparent" BorderBrush="Transparent"
-                    BorderThickness="0" CornerRadius="0" Visibility="Collapsed">
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="12"/><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="{local:Loc ResourceKey=AnalysisDirection_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="CmbAnalysisDirection" Grid.Column="2" Height="34" SelectionChanged="CmbAnalysisDirection_SelectionChanged"
-                              AutomationProperties.Name="{local:Loc ResourceKey=AnalysisDirection_Label}"/>
-                    <TextBlock x:Name="TxtAnalysisDirectionOutcome" Grid.Column="3" Margin="16,0,0,0"
-                               FontSize="12" Foreground="{DynamicResource MutedText}"
-                               TextWrapping="Wrap" LineHeight="16" MaxHeight="32"
-                               VerticalAlignment="Center"/>
-                </Grid>
-            </Border>
-
-            <Border x:Name="TextOptionsHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="0"
-                    Background="Transparent" BorderBrush="Transparent"
-                    BorderThickness="0" CornerRadius="0" Visibility="Collapsed">
-                <Grid>
-                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="10"/><ColumnDefinition Width="260"/><ColumnDefinition Width="22"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="10"/><ColumnDefinition Width="220"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-                    <TextBlock Text="{local:Loc ResourceKey=TextType_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="CmbTextType" Grid.Column="2" Height="34" SelectionChanged="CmbTextType_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=TextType_Label}"/>
-                    <TextBlock Grid.Column="4" Text="{local:Loc ResourceKey=TextTone_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
-                    <ComboBox x:Name="CmbTextTone" Grid.Column="6" Height="34" SelectionChanged="CmbTextTone_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=TextTone_Label}"/>
-                    <TextBlock x:Name="TxtTextOptionsOutcome" Grid.Column="7" Visibility="Collapsed"/>
                 </Grid>
             </Border>
 

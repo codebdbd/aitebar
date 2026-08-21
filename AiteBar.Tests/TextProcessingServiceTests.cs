@@ -6,6 +6,16 @@ public sealed class TextProcessingServiceTests
 {
     private readonly TextProcessingService _service = new();
 
+    [Fact]
+    public void BuildRequest_CyrillicInputUsesTokenBasedOutputBudget()
+    {
+        string text = new('я', TextProcessingService.MaxInputLength);
+
+        AiChatRequest request = _service.BuildRequest(TextProcessingMode.Proofread, text);
+
+        Assert.True(request.MaxOutputTokens < text.Length / 2);
+    }
+
     [Theory]
     [InlineData("Силиконовые соски болтались возле пупа Анастасии и теребонькали.", "Silicon nipples chattered near Anastasiya's belly button.", true)]
     [InlineData("Silicon nipples chattered near Anastasiya's belly button.", "Силиконовые соски болтались возле пупа Анастасии.", true)]
@@ -282,6 +292,17 @@ public sealed class TextProcessingServiceTests
     public void MaxInputLength_Is50000()
     {
         Assert.Equal(50_000, TextProcessingService.MaxInputLength);
+    }
+
+    [Fact]
+    public void BuildRequest_RejectsTextOverServiceLimit()
+    {
+        string oversizedText = new('я', TextProcessingService.MaxInputLength + 1);
+
+        ArgumentOutOfRangeException error = Assert.Throws<ArgumentOutOfRangeException>(() =>
+            _service.BuildRequest(TextProcessingMode.Proofread, oversizedText));
+
+        Assert.Equal("text", error.ParamName);
     }
 
     [Fact]

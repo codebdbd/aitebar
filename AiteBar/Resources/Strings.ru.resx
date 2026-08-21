@@ -472,7 +472,7 @@
     <value>Выделено: {0} символов с пробелами - {1} символов без пробелов</value>
   </data>
   <data name="QuickNote_FooterFile" xml:space="preserve">
-    <value>QuickNote.md</value>
+    <value>QuickNote.rtf</value>
   </data>
   <data name="QuickNote_Menu" xml:space="preserve">
     <value>Меню заметки</value>
@@ -1398,6 +1398,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="PromptBuilder_Title" xml:space="preserve"><value>Конструктор промптов</value></data>
   <data name="PromptBuilder_SaveDrafts" xml:space="preserve"><value>Сохранять черновики Конструктора промптов</value></data>
   <data name="PromptBuilder_SaveDraftsHint" xml:space="preserve"><value>При отключении сохранённые задачи и результаты будут удалены.</value></data>
+  <data name="TextProcessing_SaveDraft" xml:space="preserve"><value>Сохранять черновик Корректора текста</value></data>
+  <data name="TextProcessing_SaveDraftHint" xml:space="preserve"><value>При отключении сохранённый текст и его резервные копии настроек будут удалены.</value></data>
   <data name="PromptBuilder_TargetModelHint" xml:space="preserve"><value>Модель, в которую вы вставите готовый визуальный промпт.</value></data>
   <data name="PromptBuilder_GeneratorLabel" xml:space="preserve"><value>Генератор</value></data>
   <data name="PromptBuilder_GeneratorHint" xml:space="preserve"><value>Модель внутри AiteBar, которая создаёт готовый промпт.</value></data>
@@ -1639,7 +1641,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="PromptBuilder_PhotoOutcome" xml:space="preserve"><value>Создаст англоязычный фотореалистичный промпт в стиле «{0}».</value></data>
   <data name="PromptBuilder_AnimationOutcome" xml:space="preserve"><value>Создаст англоязычный промпт анимации или комикса в стиле «{0}».</value></data>
   <data name="PromptBuilder_TextOutcome" xml:space="preserve"><value>Создаст промпт для формата «{0}» в тоне «{1}» с подходящей структурой.</value></data>
-  <data name="VisualTarget_Label" xml:space="preserve"><value>Нейросеть</value></data><data name="VisualTarget_Universal" xml:space="preserve"><value>Универсальный</value></data><data name="VisualTarget_GptImage" xml:space="preserve"><value>GPT Image</value></data><data name="VisualTarget_Flux" xml:space="preserve"><value>FLUX</value></data><data name="VisualTarget_NanoBanana" xml:space="preserve"><value>Nano Banana</value></data><data name="VisualTarget_Midjourney" xml:space="preserve"><value>Midjourney</value></data><data name="VisualTarget_StableDiffusion" xml:space="preserve"><value>Stable Diffusion</value></data><data name="PromptBuilder_VisualTargetOutcome" xml:space="preserve"><value>Адаптирует готовый визуальный промпт под «{0}», сохраняя идею пользователя.</value></data><data name="PromptBuilder_StyleLabel" xml:space="preserve"><value>Стиль</value></data>
+  <data name="VisualTarget_Label" xml:space="preserve"><value>Нейросеть</value></data><data name="VisualTarget_Universal" xml:space="preserve"><value>Универсальный</value></data><data name="VisualTarget_GptImage" xml:space="preserve"><value>GPT Image</value></data><data name="VisualTarget_Flux" xml:space="preserve"><value>FLUX</value></data><data name="VisualTarget_NanoBanana" xml:space="preserve"><value>Nano Banana</value></data><data name="VisualTarget_Midjourney" xml:space="preserve"><value>Midjourney</value></data><data name="VisualTarget_StableDiffusion" xml:space="preserve"><value>Stable Diffusion</value></data><data name="VisualTarget_GrokImagine" xml:space="preserve"><value>Grok Imagine</value></data><data name="PromptBuilder_VisualTargetOutcome" xml:space="preserve"><value>Адаптирует готовый визуальный промпт под «{0}», сохраняя идею пользователя.</value></data><data name="PromptBuilder_StyleLabel" xml:space="preserve"><value>Стиль</value></data>
   <data name="PromptBuilder_ModeIcons" xml:space="preserve"><value>Иконки</value></data>
   <data name="PromptBuilder_ModeIconsDesc" xml:space="preserve"><value>Создаёт понятные промпты иконок приложений для выбранной платформы и стиля.</value></data>
   <data name="PromptBuilder_ModeGraphics" xml:space="preserve"><value>Графика</value></data>
@@ -1690,6 +1692,10 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiteProfiles_EditTags" xml:space="preserve"><value>Редактировать теги</value></data>
   <data name="AiteProfiles_ToggleFavorite" xml:space="preserve"><value>Переключить избранное</value></data>
   <data name="AiteProfiles_ToggleFarm" xml:space="preserve"><value>В группу «Ферма»</value></data>
+  <data name="AiteProfiles_AddFavorite" xml:space="preserve"><value>Добавить в избранное</value></data>
+  <data name="AiteProfiles_RemoveFavorite" xml:space="preserve"><value>Удалить из избранного</value></data>
+  <data name="AiteProfiles_AddFarm" xml:space="preserve"><value>Добавить в «Ферму»</value></data>
+  <data name="AiteProfiles_RemoveFarm" xml:space="preserve"><value>Удалить из «Фермы»</value></data>
   <data name="AiteProfiles_Gemini" xml:space="preserve"><value>Gemini</value></data>
   <data name="AiteProfiles_Gmail" xml:space="preserve"><value>Gmail</value></data>
   <data name="AiteProfiles_Drive" xml:space="preserve"><value>Google Drive</value></data>
@@ -1703,14 +1709,17 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiteProfiles_StatusProfiles" xml:space="preserve"><value>Показано профилей: {0}</value></data>
   <data name="AiteProfiles_StatusNoCachedProfiles" xml:space="preserve"><value>Кэша профилей нет. Нажмите Сканировать.</value></data>
   <data name="AiteProfiles_StatusScanFailed" xml:space="preserve"><value>Не удалось просканировать профили</value></data>
+  <data name="AiteProfiles_StatusRotationSaveFailed" xml:space="preserve"><value>Не удалось сохранить настройки ротации</value></data>
   <data name="AiteProfiles_StatusEmailCopied" xml:space="preserve"><value>Email скопирован</value></data>
   <data name="AiteProfiles_StatusLinksImported" xml:space="preserve"><value>Импортировано ссылок: {0}</value></data>
   <data name="AiteProfiles_ChromeMissing" xml:space="preserve"><value>Не найден исполняемый файл Google Chrome.</value></data>
-  <data name="AiteProfiles_QuickLinkDialogTitle" xml:space="preserve"><value>Quick link</value></data>
+  <data name="AiteProfiles_QuickLinkDialogTitle" xml:space="preserve"><value>Быстрая ссылка</value></data>
   <data name="AiteProfiles_LinkName" xml:space="preserve"><value>Название</value></data>
   <data name="AiteProfiles_LinkTags" xml:space="preserve"><value>Теги</value></data>
   <data name="AiteProfiles_LinkUrls" xml:space="preserve"><value>URL</value></data>
   <data name="AiteProfiles_LinkValidation" xml:space="preserve"><value>Укажите название и хотя бы один HTTP или HTTPS URL.</value></data>
+  <data name="AiteProfiles_LinkInvalidUrls" xml:space="preserve"><value>Исправьте или удалите недопустимые URL: {0}</value></data>
+  <data name="AiteProfiles_SaveLinkFailed" xml:space="preserve"><value>Не удалось сохранить быструю ссылку. Изменения не применены.</value></data>
   <data name="AiteProfiles_LinkImportFilter" xml:space="preserve"><value>Текст или JSON (*.txt;*.json)|*.txt;*.json|Все файлы (*.*)|*.*</value></data>
   <data name="AiteProfiles_LinkExportFilter" xml:space="preserve"><value>Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*</value></data>
   <data name="AiteProfiles_LinkNamePlaceholder" xml:space="preserve"><value>Например: Документы, Рабочая почта...</value></data>

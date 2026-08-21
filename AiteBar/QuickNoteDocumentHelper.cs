@@ -27,45 +27,151 @@ internal static class QuickNoteDocumentHelper
             return document.ContentEnd;
         }
 
-        // Collect all insertion positions to avoid O(N^2) allocations/regex in the traversal loop
-        var positions = new System.Collections.Generic.List<TextPointer>();
-        TextPointer? pointer = document.ContentStart.GetInsertionPosition(LogicalDirection.Forward);
-        while (pointer != null && pointer.CompareTo(document.ContentEnd) <= 0)
-        {
-            positions.Add(pointer);
-            pointer = pointer.GetNextInsertionPosition(LogicalDirection.Forward);
-        }
-
-        if (positions.Count == 0)
+        var leafInlines = GetLeafInlines(document);
+        if (leafInlines.Count == 0)
         {
             return document.ContentEnd;
         }
 
-        // Binary search to reduce the number of O(N) GetTextOffset calls to O(log N)
+        var startOffsetsCache = new System.Collections.Generic.Dictionary<Inline, int>();
+        int GetStartOffset(Inline inline)
+        {
+            if (!startOffsetsCache.TryGetValue(inline, out int val))
+            {
+                val = GetTextOffset(document, inline.ContentStart);
+                startOffsetsCache[inline] = val;
+            }
+            return val;
+        }
+
+        // Binary search to find the first inline that ends at or after the target offset
         int low = 0;
-        int high = positions.Count - 1;
-        TextPointer best = positions[high];
+        int high = leafInlines.Count - 1;
+        int targetIndex = -1;
 
         while (low <= high)
         {
             int mid = low + (high - low) / 2;
-            int currentOffset = GetTextOffset(document, positions[mid]);
-            if (currentOffset == offset)
+            Inline inline = leafInlines[mid];
+            int startOffset = GetStartOffset(inline);
+            int len = GetLeafInlineLength(inline);
+
+            if (startOffset + len >= offset)
             {
-                return positions[mid];
-            }
-            if (currentOffset < offset)
-            {
-                low = mid + 1;
+                targetIndex = mid;
+                high = mid - 1;
             }
             else
             {
-                best = positions[mid];
-                high = mid - 1;
+                low = mid + 1;
             }
         }
 
-        return best;
+        if (targetIndex == -1)
+        {
+            return document.ContentEnd;
+        }
+
+        Inline targetInline = leafInlines[targetIndex];
+        int targetStartOffset = GetStartOffset(targetInline);
+
+        if (offset <= targetStartOffset)
+        {
+            return targetInline.ContentStart;
+        }
+
+        int lenOfTarget = GetLeafInlineLength(targetInline);
+        int localOffset = Math.Clamp(offset - targetStartOffset, 0, lenOfTarget);
+
+        if (targetInline is Run run)
+        {
+            int rawOffset = MapNormalizedOffsetToRaw(run.Text, localOffset);
+            return run.ContentStart.GetPositionAtOffset(rawOffset, LogicalDirection.Forward);
+        }
+
+        return targetInline.ContentStart.GetPositionAtOffset(localOffset, LogicalDirection.Forward);
+    }
+
+    private static System.Collections.Generic.List<Inline> GetLeafInlines(FlowDocument document)
+    {
+        var list = new System.Collections.Generic.List<Inline>();
+        AccumulateLeafInlines(document.Blocks, list);
+        return list;
+    }
+
+    private static void AccumulateLeafInlines(BlockCollection blocks, System.Collections.Generic.List<Inline> list)
+    {
+        foreach (var block in blocks)
+        {
+            if (block is Paragraph p)
+            {
+                AccumulateLeafInlines(p.Inlines, list);
+            }
+            else if (block is System.Windows.Documents.List fl)
+            {
+                foreach (var item in fl.ListItems)
+                {
+                    AccumulateLeafInlines(item.Blocks, list);
+                }
+            }
+            else if (block is Section s)
+            {
+                AccumulateLeafInlines(s.Blocks, list);
+            }
+        }
+    }
+
+    private static void AccumulateLeafInlines(InlineCollection inlines, System.Collections.Generic.List<Inline> list)
+    {
+        foreach (var inline in inlines)
+        {
+            if (inline is Span span)
+            {
+                AccumulateLeafInlines(span.Inlines, list);
+            }
+            else
+            {
+                list.Add(inline);
+            }
+        }
+    }
+
+    private static int GetLeafInlineLength(Inline inline)
+    {
+        if (inline is Run run)
+        {
+            return NormalizeLineEndings(run.Text).Length;
+        }
+        if (inline is LineBreak)
+        {
+            return 1;
+        }
+        return 0;
+    }
+
+    private static int MapNormalizedOffsetToRaw(string text, int normalizedOffset)
+    {
+        int rawIdx = 0;
+        int normIdx = 0;
+        while (normIdx < normalizedOffset && rawIdx < text.Length)
+        {
+            if (rawIdx <= text.Length - 2 && text[rawIdx] == '\r' && text[rawIdx + 1] == '\n')
+            {
+                rawIdx += 2;
+                normIdx += 1;
+            }
+            else if (text[rawIdx] == '\r' || text[rawIdx] == '\n')
+            {
+                rawIdx += 1;
+                normIdx += 1;
+            }
+            else
+            {
+                rawIdx += 1;
+                normIdx += 1;
+            }
+        }
+        return rawIdx;
     }
 
     private static TextPointer GetTextStartPointer(FlowDocument document)

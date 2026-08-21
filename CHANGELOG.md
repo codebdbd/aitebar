@@ -9,6 +9,24 @@
 
 ## [Unreleased]
 
+## [1.15.14] - 2026-08-18
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Быстрые заметки (производительность)**: полностью переписан алгоритм `GetTextPointerAtOffset` на бинарный поиск по листовым inline-элементам вместо посимвольного O(N^2) обхода с постоянной сериализацией всего текста документа, что полностью устранило зависания при очистке форматирования.
+- **QuickNote performance**: fully refactored `GetTextPointerAtOffset` algorithm to use binary search over leaf inline elements instead of O(N^2) character-by-character symbol collection and full-document string serializations, completely eliminating lag/hangs when clearing formatting.
+- **Перетаскивание контекстов панелей**: обновлен визуал перетаскивания в окне настроек — добавлен эффект ghost-прозрачности (0.35) для перетаскиваемой строки, убрано лишнее двойное выделение рамкой цели вставки, а индикатор вставки заменен на аккуратную линию с точкой-указателем слева.
+- **Panel context drag-and-drop**: redesigned drag-and-drop visuals in settings — added a ghost opacity effect (0.35) for the dragged row, removed redundant highlight borders on the target row, and replaced insertion indicators with a clean line and dot pointer on the left.
+
+## [1.15.13] - 2026-08-17
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+- **Быстрые заметки (форматирование)**: убрано двойное планирование сохранения при очистке форматирования, применении списков и заголовков, которое вызывало мгновенный статус «Сохранение» и подвисание интерфейса.
+- **QuickNote formatting save scheduling**: removed double save scheduling when clearing formatting, applying lists, or headings that caused an immediate “Saving” status and UI freezes.
+- **Менеджер профилей / диалог быстрой ссылки**: контекстное меню полей ввода теперь тёмное (как в других утилитах); локализован заголовок окна в RU/UK/DE; убрано красное предупреждение о валидации — состояние через `IsEnabled` кнопки Сохранить.
+- **AiteProfiles / Quick link dialog**: input context menus now use the dark style (consistent with other utilities); window title localized in RU/UK/DE; removed the red validation warning — state is communicated via the Save button `IsEnabled`.
+- **Глобальное контекстное меню `DarkContextMenu`**: добавлен контрастный 1px бордер `#46464F` для разделения с панелью при одинаковом тёмном фоне; фон `#2C2C2C` и скругления углов не изменены.
+- **Global `DarkContextMenu`**: added a contrasting 1px `#46464F` border to separate it from panels on the same dark background; `#2C2C2C` background and corner radius are unchanged.
+
 ## [1.15.12] - 2026-08-15
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed

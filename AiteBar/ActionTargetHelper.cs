@@ -41,7 +41,17 @@ internal static class ActionTargetHelper
         if (string.Equals(actionType, "Exe", StringComparison.OrdinalIgnoreCase))
             return NormalizeLegacyExecutableType(actionValue);
 
-        return NormalizeLegacyExecutableType(actionValue);
+        return nameof(ActionType.Program);
+    }
+
+    public static string NormalizePersistedActionType(string actionType, string actionValue)
+    {
+        if (Enum.TryParse<ActionType>(actionType, out ActionType parsed))
+            return parsed.ToString();
+
+        return string.Equals(actionType, "Exe", StringComparison.OrdinalIgnoreCase)
+            ? NormalizeLegacyExecutableType(actionValue)
+            : actionType;
     }
 
     private static string NormalizeLegacyExecutableType(string actionValue)
@@ -82,7 +92,7 @@ internal static class ActionTargetHelper
         if (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
             return false;
 
-        if (string.IsNullOrWhiteSpace(uri.Host) || !uri.Host.Contains('.', StringComparison.Ordinal))
+        if (string.IsNullOrWhiteSpace(uri.Host) || Uri.CheckHostName(uri.Host) == UriHostNameType.Unknown)
             return false;
 
         normalized = uri.ToString();

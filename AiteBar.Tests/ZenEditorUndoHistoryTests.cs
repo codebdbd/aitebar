@@ -61,6 +61,19 @@ public sealed class ZenEditorUndoHistoryTests
     }
 
     [Fact]
+    public void PayloadBudget_DropsOldestLargeOperations()
+    {
+        var history = new ZenEditorUndoHistory();
+        string first = new('a', 3_000_000);
+        string second = first + new string('b', 3_000_000);
+        history.Record(first, second, [new(first.Length, 3_000_000, 0)], DateTime.UtcNow);
+        history.Record(second, second + new string('c', 3_000_000), [new(second.Length, 3_000_000, 0)], DateTime.UtcNow.AddSeconds(1));
+
+        Assert.True(history.EstimatedPayloadBytes <= 8 * 1024 * 1024);
+        Assert.True(history.CanUndo);
+    }
+
+    [Fact]
     public void FormattingOnlyEdit_RoundTripsStyles()
     {
         var history = new ZenEditorUndoHistory();
