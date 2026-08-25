@@ -39,6 +39,10 @@ namespace AiteBar
         {
             if (d is QuickNoteImage quickImage && e.NewValue is string base64 && !string.IsNullOrEmpty(base64))
             {
+                if (quickImage.Source != null)
+                {
+                    return;
+                }
                 try
                 {
                     byte[] bytes = Convert.FromBase64String(base64);

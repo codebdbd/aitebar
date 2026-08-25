@@ -237,20 +237,16 @@ namespace AiteBar
             {
                 try
                 {
-                    Logger.Log($"SelectionChanged: image is selected, selection starts at {TxtNote.Selection.Start.GetOffsetToPosition(TxtNote.Document.ContentStart)}");
                     if (!image.ElementStart.IsInSameDocument(TxtNote.Selection.Start))
                     {
-                        Logger.Log("SelectionChanged: selected image is no longer in the same document. Clearing selection.");
                         _imageInteraction.ClearSelection();
                     }
                     else
                     {
                         bool isImageSelected = TxtNote.Selection.Start.CompareTo(image.ElementStart) == 0 &&
                                                TxtNote.Selection.End.CompareTo(image.ElementEnd) == 0;
-                        Logger.Log($"SelectionChanged: isImageSelected = {isImageSelected}");
                         if (!isImageSelected)
                         {
-                            Logger.Log("SelectionChanged: selection moved away from the image. Clearing selection.");
                             _imageInteraction.ClearSelection();
                         }
                     }
@@ -344,18 +340,15 @@ namespace AiteBar
 
         private void TxtNote_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            Logger.Log($"PreviewMouseDown: ChangedButton = {e.ChangedButton}, OriginalSource = {e.OriginalSource?.GetType().Name}");
             if (e.ChangedButton == MouseButton.Left)
             {
                 if (_imageInteraction.TrySelectFromMouseInput(e.OriginalSource as DependencyObject))
                 {
-                    Logger.Log("PreviewMouseDown Left: Image detected, handling selection.");
                     e.Handled = true;
                     TxtNote.Focus();
                     if (_imageInteraction.SelectedImage is { } selectedContainer)
                     {
                         TxtNote.Selection.Select(selectedContainer.ElementStart, selectedContainer.ElementEnd);
-                        Logger.Log("PreviewMouseDown Left: Range selected for image container.");
                     }
                     return;
                 }
@@ -364,7 +357,6 @@ namespace AiteBar
                     e.ClickCount == 1 &&
                     TryOpenUrlAtMouse(e))
                 {
-                    Logger.Log("PreviewMouseDown Left: URL click handled.");
                     e.Handled = true;
                 }
             }
@@ -372,12 +364,10 @@ namespace AiteBar
             {
                 if (_imageInteraction.TrySelectFromMouseInput(e.OriginalSource as DependencyObject))
                 {
-                    Logger.Log("PreviewMouseDown Right: Image detected, handling selection (non-handled to open ContextMenu).");
                     TxtNote.Focus();
                     if (_imageInteraction.SelectedImage is { } selectedContainer)
                     {
                         TxtNote.Selection.Select(selectedContainer.ElementStart, selectedContainer.ElementEnd);
-                        Logger.Log("PreviewMouseDown Right: Range selected for image container.");
                     }
                 }
             }
@@ -399,16 +389,10 @@ namespace AiteBar
 
         private void TxtNote_Pasting(object sender, DataObjectPastingEventArgs e)
         {
-            Logger.Log("TxtNote_Pasting triggered.");
             if (_clipboard.TryGetImage(out BitmapSource? image) && image != null)
             {
-                Logger.Log("TxtNote_Pasting: Image retrieved from clipboard, inserting.");
                 e.CancelCommand();
                 InsertImage(image);
-            }
-            else
-            {
-                Logger.Log("TxtNote_Pasting: Clipboard does not contain an image.");
             }
         }
 
@@ -416,7 +400,6 @@ namespace AiteBar
         {
             if ((e.Command == ApplicationCommands.Copy || e.Command == ApplicationCommands.Cut || e.Command == ApplicationCommands.Delete) && _imageInteraction.HasSelectedImage)
             {
-                Logger.Log($"OnPreviewCanExecuteCommand: Command = {e.Command}, image is selected. Forcing CanExecute = true.");
                 e.CanExecute = true;
                 e.Handled = true;
             }
@@ -424,14 +407,12 @@ namespace AiteBar
 
         private void OnPreviewExecutedCommand(object sender, ExecutedRoutedEventArgs e)
         {
-            Logger.Log($"OnPreviewExecutedCommand: Command = {e.Command}, image is selected = {_imageInteraction.HasSelectedImage}");
             if (e.Command == ApplicationCommands.Copy && _imageInteraction.HasSelectedImage)
             {
                 if (_imageInteraction.SelectedImage != null &&
                     QuickNoteImageHelper.TryGetImageControl(_imageInteraction.SelectedImage, out Image? imageControl) &&
                     imageControl != null && imageControl.Source is BitmapSource source)
                 {
-                    Logger.Log("OnPreviewExecutedCommand: Copying image source to clipboard.");
                     _clipboard.TrySetImage(source);
                     e.Handled = true;
                 }
@@ -442,7 +423,6 @@ namespace AiteBar
                     QuickNoteImageHelper.TryGetImageControl(_imageInteraction.SelectedImage, out Image? imageControl) &&
                     imageControl != null && imageControl.Source is BitmapSource source)
                 {
-                    Logger.Log("OnPreviewExecutedCommand: Cutting image, copying to clipboard and deleting.");
                     if (_clipboard.TrySetImage(source))
                     {
                         _imageInteraction.TryDeleteSelected();
@@ -454,7 +434,6 @@ namespace AiteBar
             }
             else if (e.Command == ApplicationCommands.Delete && _imageInteraction.HasSelectedImage)
             {
-                Logger.Log("OnPreviewExecutedCommand: Deleting image.");
                 _imageInteraction.TryDeleteSelected();
                 MarkChangedAndScheduleSave();
                 ScheduleFooterStatsUpdate();

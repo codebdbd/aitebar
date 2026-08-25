@@ -314,11 +314,9 @@ namespace AiteBar
             }
         }
 
-        private static SolidColorBrush Brush(string color)
+        private static Brush Brush(string color)
         {
-            var brush = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
-            brush.Freeze();
-            return brush;
+            return QuickNoteBrush.FromHex(color);
         }
 
         private static IEnumerable<T> FindVisualChildren<T>(DependencyObject parent) where T : DependencyObject

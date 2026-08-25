@@ -141,10 +141,10 @@ namespace AiteBar
             var section = new Section
             {
                 Tag = QuickNoteTags.Code,
-                Background = Brush(background),
-                Foreground = Brush(foreground),
+                Background = QuickNoteBrush.FromHex(background),
+                Foreground = QuickNoteBrush.FromHex(foreground),
                 BorderThickness = new Thickness(1),
-                BorderBrush = Brush(CodeBorder),
+                BorderBrush = QuickNoteBrush.FromHex(CodeBorder),
                 Margin = new Thickness(0, 6, 0, 6),
                 Padding = new Thickness(0),
                 FontFamily = QuickNoteFonts.Code,
@@ -160,7 +160,7 @@ namespace AiteBar
                     Margin = new Thickness(8, 0, 8, 0),
                     FontFamily = QuickNoteFonts.Code,
                     FontSize = 13,
-                    Foreground = Brush(CodeForeground),
+                    Foreground = QuickNoteBrush.FromHex(CodeForeground),
                     LineHeight = 18
                 });
             }
@@ -181,7 +181,7 @@ namespace AiteBar
             var label = new TextBlock
             {
                 Text = "code",
-                Foreground = Brush(CodeForeground),
+                Foreground = QuickNoteBrush.FromHex(CodeForeground),
                 FontFamily = QuickNoteFonts.Code,
                 FontSize = 12,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -212,7 +212,7 @@ namespace AiteBar
 
             var grid = new Grid
             {
-                Background = Brush(CodeHeaderBackground),
+                Background = QuickNoteBrush.FromHex(CodeHeaderBackground),
                 Height = 20
             };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -287,12 +287,7 @@ namespace AiteBar
             }
         }
 
-        private static SolidColorBrush Brush(string color)
-        {
-            var brush = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
-            brush.Freeze();
-            return brush;
-        }
+
 
         public static string GetCodeBackground(QuickNoteTheme theme) => theme?.CodeBackground ?? CodeBackground;
 

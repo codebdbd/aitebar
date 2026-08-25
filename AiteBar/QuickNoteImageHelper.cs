@@ -258,6 +258,7 @@ internal static class QuickNoteImageHelper
         
         var quickImage = new QuickNoteImage
         {
+            Source = source,
             Width = width,
             Height = height,
             Stretch = System.Windows.Media.Stretch.Uniform,

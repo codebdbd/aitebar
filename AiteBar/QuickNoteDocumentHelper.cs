@@ -105,24 +105,26 @@ internal static class QuickNoteDocumentHelper
 
     private static TextPointer AdvanceToTextOffset(FlowDocument document, TextPointer pointer, int targetOffset)
     {
-        var sb = new System.Text.StringBuilder();
         int initialOffset = GetTextOffset(document, pointer);
-        sb.AppendLine($"AdvanceToTextOffset: Target={targetOffset}, InitialPointerOffset={initialOffset}");
-        
+        if (initialOffset == targetOffset)
+        {
+            return pointer;
+        }
+
         int currentOffset = initialOffset;
         int step = 0;
-        while (pointer.CompareTo(document.ContentEnd) < 0 && currentOffset < targetOffset)
+        const int maxSteps = 2000;
+
+        while (pointer.CompareTo(document.ContentEnd) < 0 && currentOffset < targetOffset && step < maxSteps)
         {
             TextPointer? next = pointer.GetNextInsertionPosition(LogicalDirection.Forward)
                 ?? pointer.GetNextContextPosition(LogicalDirection.Forward);
-            if (next == null)
+            if (next == null || next.CompareTo(pointer) <= 0)
             {
-                sb.AppendLine($"  Step {step}: next is null");
                 break;
             }
+
             int diff = NormalizeLineEndings(new TextRange(pointer, next).Text).Length;
-            int nextOffsetDirect = GetTextOffset(document, next);
-            sb.AppendLine($"  Step {step}: pointerOffset={currentOffset} -> nextOffsetDirect={nextOffsetDirect}, diff={diff}, text='{new TextRange(pointer, next).Text}'");
             currentOffset += diff;
             pointer = next;
             step++;
@@ -131,7 +133,7 @@ internal static class QuickNoteDocumentHelper
         int finalOffset = GetTextOffset(document, pointer);
         if (finalOffset != targetOffset)
         {
-            throw new Exception($"AdvanceToTextOffset Mismatch! Target={targetOffset}, FinalOffset={finalOffset}. Trace:\n{sb.ToString()}");
+            Logger.Log($"AdvanceToTextOffset Mismatch! Target={targetOffset}, FinalOffset={finalOffset}, Steps={step}, InitialOffset={initialOffset}");
         }
 
         return pointer;

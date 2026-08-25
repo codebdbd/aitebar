@@ -422,10 +422,8 @@ namespace AiteBar
 
         private bool InsertImage(InlineUIContainer? container)
         {
-            Logger.Log("InsertImage called, container: " + (container != null ? "not null" : "null"));
             if (container == null || !QuickNoteImageHelper.CanAddToDocument(TxtNote.Document, container))
             {
-                Logger.Log("InsertImage failed CanAddToDocument validation");
                 SetStatus(QuickNoteStatusKind.ImageInsertFailed);
                 return false;
             }
@@ -448,7 +446,6 @@ namespace AiteBar
                 }
                 MarkChangedAndScheduleSave();
                 TxtNote.Focus();
-                Logger.Log("InsertImage successfully completed");
                 return true;
             }
             catch (Exception ex)

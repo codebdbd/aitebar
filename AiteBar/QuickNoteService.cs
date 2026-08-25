@@ -78,6 +78,23 @@ namespace AiteBar
                 return false;
             }
 
+            try
+            {
+                using (var fs = new FileStream(NotePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                {
+                }
+            }
+            catch (IOException ex)
+            {
+                Logger.Log(ex);
+                return true;
+            }
+
+            if (file.LastWriteTimeUtc == _lastKnownWriteTimeUtc && file.Length == _lastKnownLength)
+            {
+                return false;
+            }
+
             string? currentHash;
             try
             {

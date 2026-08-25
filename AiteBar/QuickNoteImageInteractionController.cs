@@ -13,6 +13,21 @@ namespace AiteBar;
 internal sealed class QuickNoteImageInteractionController : IDisposable
 {
     private static readonly System.Windows.Media.Color SelectionColor = System.Windows.Media.Color.FromRgb(0, 122, 204);
+    private static readonly DropShadowEffect SelectionEffect = CreateSelectionEffect();
+
+    private static DropShadowEffect CreateSelectionEffect()
+    {
+        var effect = new DropShadowEffect
+        {
+            Color = SelectionColor,
+            BlurRadius = 7,
+            ShadowDepth = 0,
+            Opacity = 1
+        };
+        effect.Freeze();
+        return effect;
+    }
+
     private readonly System.Windows.Controls.RichTextBox _editor;
     private InlineUIContainer? _selectedImage;
 
@@ -103,13 +118,7 @@ internal sealed class QuickNoteImageInteractionController : IDisposable
         _selectedImage = image;
         if (QuickNoteImageHelper.TryGetImageControl(image, out Image? imageControl) && imageControl != null)
         {
-            imageControl.Effect = new DropShadowEffect
-            {
-                Color = SelectionColor,
-                BlurRadius = 7,
-                ShadowDepth = 0,
-                Opacity = 1
-            };
+            imageControl.Effect = SelectionEffect;
         }
     }
 
@@ -117,14 +126,24 @@ internal sealed class QuickNoteImageInteractionController : IDisposable
     {
         while (current != null)
         {
-            if (current is Image image)
+            if (current is InlineUIContainer container)
             {
-                return QuickNoteImageHelper.EnumerateImageContainers(_editor.Document.Blocks)
-                    .FirstOrDefault(container =>
-                        QuickNoteImageHelper.TryGetImageControl(container, out Image? candidate) && ReferenceEquals(candidate, image));
+                return container;
             }
 
-            current = current is Visual ? VisualTreeHelper.GetParent(current) : LogicalTreeHelper.GetParent(current);
+            DependencyObject? logicalParent = LogicalTreeHelper.GetParent(current);
+            if (logicalParent != null)
+            {
+                current = logicalParent;
+            }
+            else if (current is Visual visual)
+            {
+                current = VisualTreeHelper.GetParent(visual);
+            }
+            else
+            {
+                break;
+            }
         }
 
         return null;
