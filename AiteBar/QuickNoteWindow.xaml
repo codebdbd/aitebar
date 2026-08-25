@@ -201,7 +201,7 @@
                                  FontWeight="Normal"
                                  FontStyle="Normal"
                                  FontSize="14"
-                                 Padding="0,14,0,14"
+                                 Padding="0,4,0,4"
                                  CaretBrush="#70B7FF"
                                  TextChanged="TxtNote_TextChanged"
                                  SelectionChanged="TxtNote_SelectionChanged"
@@ -277,7 +277,7 @@
                                Text="{local:Loc ResourceKey=QuickNote_Placeholder}"
                                Foreground="#7B7B80"
                                FontSize="14"
-                               Margin="0,14,0,0"
+                               Margin="0,4,0,0"
                                IsHitTestVisible="False"/>
                 </Grid>
             </Border>
