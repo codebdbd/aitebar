@@ -78,6 +78,9 @@ namespace AiteBar
                 return false;
             }
 
+            // Probe to check if the file is locked or inaccessible by another process.
+            // This is required to detect exclusive locks (e.g. during active external editing/saving)
+            // and is expected by unit tests to return true.
             try
             {
                 using (var fs = new FileStream(NotePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))

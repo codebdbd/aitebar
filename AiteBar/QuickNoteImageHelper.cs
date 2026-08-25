@@ -141,7 +141,7 @@ internal static class QuickNoteImageHelper
         }
 
         int total = candidateBytes;
-        foreach (InlineUIContainer existing in EnumerateImageContainers(document.Blocks).ToList())
+        foreach (InlineUIContainer existing in EnumerateImageContainers(document.Blocks))
         {
             if (TryGetMarker(existing, out _, out int bytes))
             {
