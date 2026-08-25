@@ -1740,7 +1740,7 @@ plain-text содержимого. Экспорт создаёт независ�
 
 ### Назначение
 
-Открывает локальную быструю заметку с Markdown-сохранением и базовым форматированием.
+Открывает локальную быструю заметку с визуальным RTF-сохранением и форматированием.
 
 ### Где находится
 
@@ -1760,7 +1760,9 @@ plain-text содержимого. Экспорт создаёт независ�
 
 ### Результат
 
-Заметка автосохраняется в `%AppData%\Codebdbd\Aite Bar\QuickNote.md`.
+Заметка автосохраняется в `%AppData%\Codebdbd\Aite Bar\QuickNote.aite-note`; фото хранятся внутри этого переносимого package. Команда открытия файла формирует `QuickNote.rtf` для внешнего редактора.
+
+Контекстное меню поддерживает импорт Markdown/TXT и экспорт Markdown/TXT. Markdown-экспорт пишет PNG в соседнюю папку `*-assets` и использует относительные ссылки.
 
 ### Ограничения
 
@@ -1772,7 +1774,7 @@ plain-text содержимого. Экспорт создаёт независ�
 
 ### Подтверждение в коде
 
-`AiteBar/QuickNoteWindow.xaml`, `AiteBar/QuickNoteWindow.xaml.cs`, `AiteBar/QuickNoteService.cs`, `AiteBar/QuickNoteMarkdown.cs`.
+`AiteBar/QuickNoteWindow.xaml`, `AiteBar/QuickNoteWindow.xaml.cs`, `AiteBar/QuickNoteService.cs`, `AiteBar/QuickNoteDocumentFormatting.cs`.
 
 ## Форматирование Quick Note
 
@@ -1795,19 +1797,19 @@ plain-text содержимого. Экспорт создаёт независ�
 
 ### Результат
 
-Применяется жирный, курсив, подчеркивание, code-font, маркированный список, нумерованный список или очистка форматирования.
+Применяется жирный, курсив, подчеркивание, зачёркивание, размер текста, кодовый блок, маркированный список, нумерованный список или очистка форматирования.
 
 ### Ограничения
 
-Списки работают через операции над строковыми маркерами Markdown.
+Списки представлены визуальными строковыми маркерами в едином FlowDocument-редакторе.
 
 ### Связанные функции
 
-Автосохранение, Markdown-сериализация.
+Автосохранение RTF, кодовые блоки, ссылки и темы.
 
 ### Подтверждение в коде
 
-`AiteBar/QuickNoteWindow.xaml`, `AiteBar/QuickNoteWindow.xaml.cs`, `AiteBar/QuickNoteMarkdown.cs`.
+`AiteBar/QuickNoteWindow.xaml`, `AiteBar/QuickNoteWindow.xaml.cs`, `AiteBar/QuickNoteDocumentFormatting.cs`.
 
 ## Меню Quick Note
 
@@ -1879,7 +1881,7 @@ Quick Note, автосохранение.
 
 ### Подтверждение в коде
 
-`AiteBar/QuickNoteWindow.xaml.cs`, `AiteBar/QuickNoteMarkdown.cs`.
+`AiteBar/QuickNoteWindow.xaml.cs`, `AiteBar/QuickNoteDocumentFormatting.cs`.
 
 ## Выбор иконки из библиотеки
 
@@ -2605,11 +2607,11 @@ Tray-меню.
 
 Ссылки в Quick Note открываются через Ctrl+клик; при удержании Ctrl курсор меняется на hand.
 
-Подтверждение: `AiteBar/QuickNoteWindow.xaml.cs`, `AiteBar/QuickNoteMarkdown.cs`.
+Подтверждение: `AiteBar/QuickNoteWindow.xaml.cs`, `AiteBar/QuickNoteDocumentFormatting.cs`.
 
 ## Конфликтные копии Quick Note
 
-Если `QuickNote.md` изменился извне, AiteBar сохраняет текущий текст в `QuickNote.conflict-yyyyMMdd-HHmmss.md`.
+Если основной package `QuickNote.aite-note` изменился извне, AiteBar сохраняет текущую версию в уникальную конфликтную копию `QuickNote.conflict-yyyyMMdd-HHmmss-fff-<id>.aite-note`.
 
 Подтверждение: `AiteBar/QuickNoteService.cs`, `AiteBar/QuickNoteWindow.xaml.cs`.
 
@@ -2701,7 +2703,7 @@ Tray-меню.
 - Открепить quick tool.
 - Редактировать Quick Note.
 - Автосохранить Quick Note.
-- Открыть QuickNote.md.
+- Экспортировать и открыть QuickNote.rtf.
 - Очистить Quick Note.
 - Закрыть Quick Note.
 - Переместить Quick Note.
