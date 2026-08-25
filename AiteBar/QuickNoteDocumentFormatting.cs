@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
 
@@ -13,8 +14,12 @@ namespace AiteBar
     [System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
     internal static class QuickNoteDocumentFormatting
     {
-        private const string LightThemeCodeBackground = "#2A2C30";
-        private const string LightThemeCodeText = "#F6F0E6";
+        public const string CodeCopyLink = "aitebar://copy-code/";
+        public const string CodeBackground = "#101316";
+        public const string CodeHeaderBackground = "#5E666D";
+        public const string CodeForeground = "#F4F6F8";
+        public const string CodeBorder = "#101316";
+        public const double ListMarkerOffset = 28;
         private const RegexOptions LinkRegexOptions = RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking;
         private static readonly Regex UrlRegex = new(@"\b(?:https?://|www\.)[^\s<>()""']+", LinkRegexOptions);
         private static readonly Regex EmailRegex = new(@"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", LinkRegexOptions);
@@ -132,44 +137,165 @@ namespace AiteBar
         {
             string background = GetCodeBackground(theme);
             string foreground = GetCodeText(theme);
+            string[] lines = QuickNoteDocumentHelper.NormalizeLineEndings(codeText).Split('\n');
             var section = new Section
             {
-                Background = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(background)),
-                Foreground = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(foreground)),
+                Tag = QuickNoteTags.Code,
+                Background = Brush(background),
+                Foreground = Brush(foreground),
                 BorderThickness = new Thickness(1),
-                BorderBrush = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(theme.Border)),
+                BorderBrush = Brush(CodeBorder),
                 Margin = new Thickness(0, 6, 0, 6),
-                Padding = new Thickness(10),
+                Padding = new Thickness(0),
                 FontFamily = QuickNoteFonts.Code,
                 FontSize = 13
             };
 
-            var copy = new Hyperlink(new Run(LocalizationService.Get("QuickNote_Copy")))
-            {
-                NavigateUri = new Uri("aitebar://copy-code"),
-                Tag = "aitebar://copy-code",
-                Foreground = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#FFFFFF")),
-                Background = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString("#4A5568")),
-                TextDecorations = null
-            };
-            section.Blocks.Add(new Paragraph(copy)
-            {
-                TextAlignment = TextAlignment.Right,
-                Margin = new Thickness(0, 0, 0, 6),
-                FontFamily = QuickNoteFonts.Default,
-                FontSize = 11
-            });
+            section.Blocks.Add(CreateCodeHeader());
 
-            foreach (string line in QuickNoteDocumentHelper.NormalizeLineEndings(codeText).Split('\n'))
+            foreach (string line in lines)
             {
-                section.Blocks.Add(new Paragraph(new Run(line)) { Margin = new Thickness(0) });
+                section.Blocks.Add(new Paragraph(new Run(line))
+                {
+                    Margin = new Thickness(8, 0, 8, 0),
+                    FontFamily = QuickNoteFonts.Code,
+                    FontSize = 13,
+                    Foreground = Brush(CodeForeground),
+                    LineHeight = 18
+                });
             }
 
             return section;
         }
 
-        public static string GetCodeBackground(QuickNoteTheme theme) => theme.IsDark ? theme.CodeBackground : LightThemeCodeBackground;
+        public static void NormalizeListLayout(FlowDocument document)
+        {
+            foreach (System.Windows.Documents.List list in EnumerateLists(document.Blocks))
+            {
+                list.MarkerOffset = ListMarkerOffset;
+            }
+        }
 
-        public static string GetCodeText(QuickNoteTheme theme) => theme.IsDark ? theme.CodeText : LightThemeCodeText;
+        private static BlockUIContainer CreateCodeHeader()
+        {
+            var label = new TextBlock
+            {
+                Text = "code",
+                Foreground = Brush(CodeForeground),
+                FontFamily = QuickNoteFonts.Code,
+                FontSize = 12,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(8, 0, 0, 0)
+            };
+
+            var copy = new Button
+            {
+                Content = "\uE8C8",
+                Tag = CodeCopyLink,
+                Foreground = Brushes.White,
+                Background = Brushes.Transparent,
+                BorderThickness = new Thickness(0),
+                OverridesDefaultStyle = true,
+                Template = CreateTransparentGlyphButtonTemplate(),
+                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontSize = 12,
+                Width = 24,
+                Height = 18,
+                Padding = new Thickness(0),
+                HorizontalContentAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalContentAlignment = VerticalAlignment.Center,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Center,
+                Cursor = System.Windows.Input.Cursors.Hand,
+                ToolTip = LocalizationService.Get("QuickNote_Copy")
+            };
+
+            var grid = new Grid
+            {
+                Background = Brush(CodeHeaderBackground),
+                Height = 20
+            };
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+            Grid.SetColumn(label, 0);
+            Grid.SetColumn(copy, 1);
+            grid.Children.Add(label);
+            grid.Children.Add(copy);
+
+            return new BlockUIContainer(grid)
+            {
+                Tag = QuickNoteTags.CodeHeader,
+                Margin = new Thickness(0),
+                Padding = new Thickness(0)
+            };
+        }
+
+        private static ControlTemplate CreateTransparentGlyphButtonTemplate()
+        {
+            var border = new FrameworkElementFactory(typeof(Border));
+            border.SetValue(Border.BackgroundProperty, Brushes.Transparent);
+
+            var content = new FrameworkElementFactory(typeof(ContentPresenter));
+            content.SetValue(FrameworkElement.HorizontalAlignmentProperty, System.Windows.HorizontalAlignment.Center);
+            content.SetValue(FrameworkElement.VerticalAlignmentProperty, System.Windows.VerticalAlignment.Center);
+            border.AppendChild(content);
+
+            return new ControlTemplate(typeof(Button)) { VisualTree = border };
+        }
+
+        public static bool IsCodeBlock(Block block) =>
+            block is Section section &&
+            (Equals(section.Tag, QuickNoteTags.Code) ||
+             string.Equals(section.FontFamily?.Source, QuickNoteFonts.Code.Source, StringComparison.Ordinal));
+
+        public static bool IsCodeHeader(Block block) =>
+            Equals(block.Tag, QuickNoteTags.CodeHeader);
+
+        public static string GetCodeBlockText(Section section) =>
+            string.Join(Environment.NewLine, section.Blocks
+                .OfType<Paragraph>()
+                .Select(GetCodeParagraphText)
+                .SkipWhile(string.IsNullOrWhiteSpace));
+
+        private static string GetCodeParagraphText(Paragraph paragraph) =>
+            string.Concat(paragraph.Inlines
+                    .Select(static inline => new TextRange(inline.ContentStart, inline.ContentEnd).Text))
+                .TrimEnd('\r', '\n');
+
+        private static IEnumerable<System.Windows.Documents.List> EnumerateLists(BlockCollection blocks)
+        {
+            foreach (Block block in blocks)
+            {
+                if (block is System.Windows.Documents.List list)
+                {
+                    yield return list;
+                    foreach (ListItem item in list.ListItems)
+                    {
+                        foreach (System.Windows.Documents.List nestedList in EnumerateLists(item.Blocks))
+                        {
+                            yield return nestedList;
+                        }
+                    }
+                }
+                else if (block is Section section)
+                {
+                    foreach (System.Windows.Documents.List nestedList in EnumerateLists(section.Blocks))
+                    {
+                        yield return nestedList;
+                    }
+                }
+            }
+        }
+
+        private static SolidColorBrush Brush(string color)
+        {
+            var brush = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
+            brush.Freeze();
+            return brush;
+        }
+
+        public static string GetCodeBackground(QuickNoteTheme theme) => theme?.CodeBackground ?? CodeBackground;
+
+        public static string GetCodeText(QuickNoteTheme theme) => theme?.CodeText ?? CodeForeground;
     }
 }

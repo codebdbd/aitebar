@@ -39,6 +39,7 @@
     <Resource Include="Resources\FluentSystemIcons-Regular.ttf" />
     <Resource Include="Resources\FluentSystemIcons.json" />
     <Resource Include="Resources\ZenEditor\Fonts\*.ttf" />
+    <Resource Include="Resources\Fonts\JetBrainsMono\*.ttf" />
   </ItemGroup>
 
   <ItemGroup>
@@ -47,6 +48,14 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>
     <Content Include="Resources\ZenEditor\Licenses\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Resources\Fonts\JetBrainsMono\OFL.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+    <Content Include="Resources\Fonts\JetBrainsMono\*.ttf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </Content>

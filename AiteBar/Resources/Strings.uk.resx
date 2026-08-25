@@ -50,7 +50,7 @@
   <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Очистити швидку нотатку?</value></data>
   <data name="QuickNote_Stats" xml:space="preserve"><value>{0} символів - {1} рядків</value></data>
   <data name="QuickNote_SelectedStats" xml:space="preserve"><value>Виділено: {0} символів з пробілами - {1} символів без пробілів</value></data>
-  <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.rtf</value></data>
+  <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.aite-note</value></data>
   <data name="QuickNote_Menu" xml:space="preserve"><value>Меню нотатки</value></data>
   <data name="QuickNote_Theme" xml:space="preserve"><value>Колір нотатки</value></data>
   <data name="QuickNote_Pin" xml:space="preserve"><value>Тримати нотатку відкритою</value></data>
@@ -58,6 +58,17 @@
   <data name="QuickNote_Redo" xml:space="preserve"><value>Повторити</value></data>
   <data name="QuickNote_Cut" xml:space="preserve"><value>Вирізати</value></data>
   <data name="QuickNote_Copy" xml:space="preserve"><value>Копіювати</value></data>
+  <data name="QuickNote_Copied" xml:space="preserve"><value>Скопійовано</value></data>
+  <data name="QuickNote_CopyFailed" xml:space="preserve"><value>Не вдалося скопіювати</value></data>
+  <data name="QuickNote_InsertImage" xml:space="preserve"><value>Вставити зображення</value></data>
+  <data name="QuickNote_ImageInsertFailed" xml:space="preserve"><value>Не вдалося вставити зображення</value></data>
+  <data name="QuickNote_ImportMarkdown" xml:space="preserve"><value>Імпортувати Markdown або текст</value></data>
+  <data name="QuickNote_ExportMarkdown" xml:space="preserve"><value>Експортувати Markdown</value></data>
+  <data name="QuickNote_ExportText" xml:space="preserve"><value>Експортувати текст</value></data>
+  <data name="QuickNote_ImportConfirm" xml:space="preserve"><value>Замінити поточну нотатку? Спочатку буде створено резервну копію.</value></data>
+  <data name="QuickNote_ImportResult" xml:space="preserve"><value>Імпортовано зображень: {0}; пропущено: {1}</value></data>
+  <data name="QuickNote_DecreaseFont" xml:space="preserve"><value>Зменшити шрифт</value></data>
+  <data name="QuickNote_IncreaseFont" xml:space="preserve"><value>Збільшити шрифт</value></data>
   <data name="QuickNote_Paste" xml:space="preserve"><value>Вставити</value></data>
   <data name="QuickNote_SelectAll" xml:space="preserve"><value>Виділити все</value></data>
   <data name="QuickNote_Bold" xml:space="preserve"><value>Жирний</value></data>
@@ -1144,6 +1155,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiteProfiles_LinkNamePlaceholder" xml:space="preserve"><value>Наприклад: Документи, Робоча пошта...</value></data>
   <data name="AiteProfiles_LinkTagsPlaceholder" xml:space="preserve"><value>work, mail, ai...</value></data>
   <data name="AiteProfiles_LinkUrlsPlaceholder" xml:space="preserve"><value>https://example.com/&#10;По одному URL на рядок або через |</value></data>
+  <data name="AiteProfiles_GuestMode" xml:space="preserve"><value>Гостьовий режим (--guest)</value></data>
 </root>
 
 

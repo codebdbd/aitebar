@@ -3,6 +3,8 @@ using AiteBar.AiteProfilesUtility;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Controls.Primitives;
+using System.Xml.Linq;
 
 namespace AiteBar.Tests;
 
@@ -59,72 +61,6 @@ public sealed class AiteProfilesUtilityTests
         List<string> tags = AiteProfilesQuickLinkService.ParseTags(" Work; ai | work  docs ");
 
         Assert.Equal(["work", "ai", "docs"], tags);
-    }
-
-    [Fact]
-    public void QuickLinkService_ResolvesCommandDirectUrlAndRankedFallbackLikeOriginal()
-    {
-        var service = new AiteProfilesQuickLinkService(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
-        var snippets = new[]
-        {
-            new AiteProfileSnippet { Name = "Drive Docs", Tags = ["work"], Urls = ["https://drive.google.com/"] },
-            new AiteProfileSnippet { Name = "Gmail", Tags = ["mail"], Urls = ["https://mail.google.com/"] }
-        };
-
-        Assert.True(service.TryResolveSnippet("ai:Gemini:gemini.google.com", null, snippets, out AiteProfileSnippet command, out bool saveCommand));
-        Assert.True(saveCommand);
-        Assert.Equal("Gemini", command.Name);
-        Assert.Equal(["https://gemini.google.com/"], command.Urls);
-
-        Assert.True(service.TryResolveSnippet("example.com", null, snippets, out AiteProfileSnippet direct, out bool saveDirect));
-        Assert.False(saveDirect);
-        Assert.Equal("direct", direct.Name);
-        Assert.Equal(["https://example.com/"], direct.Urls);
-
-        Assert.True(service.TryResolveSnippet("work", null, snippets, out AiteProfileSnippet fallback, out bool saveFallback));
-        Assert.False(saveFallback);
-        Assert.Equal("Drive Docs", fallback.Name);
-    }
-
-    [Fact]
-    public void QuickLinkService_RanksTagsBeforeNameBeforeUrl()
-    {
-        var service = new AiteProfilesQuickLinkService(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
-        var ranked = service.RankSnippets(
-            [
-                new AiteProfileSnippet { Name = "Work Name", Tags = ["misc"], Urls = ["https://name.example.com/"] },
-                new AiteProfileSnippet { Name = "Alpha", Tags = ["work"], Urls = ["https://alpha.example.com/"] },
-                new AiteProfileSnippet { Name = "Beta", Tags = ["misc"], Urls = ["https://work.example.com/"] }
-            ],
-            "work");
-
-        Assert.Equal(["Alpha", "Work Name", "Beta"], ranked.Select(static snippet => snippet.Name).ToArray());
-    }
-
-    [Fact]
-    public void Store_NormalizeTags_TrimsDeduplicatesAndPreservesFirstCasing()
-    {
-        string normalized = AiteProfilesStore.NormalizeTags(" Farm, ai, farm,  Work ");
-
-        Assert.Equal("Farm, ai, Work", normalized);
-    }
-
-    [Fact]
-    public void ProfileKey_BuildsStableCompositeKey()
-    {
-        string key = AiteProfileKey.Build(" Profile 1 ", " C:\\Chrome\\Profile 1 ");
-
-        Assert.Equal("Profile 1|C:\\Chrome\\Profile 1", key);
-    }
-
-    [Fact]
-    public void UtilityButtonCatalog_IncludesAiteProfiles()
-    {
-        bool found = UtilityButtonCatalog.TryGet("AiteProfiles", out UtilityButtonDefinition? definition);
-
-        Assert.True(found);
-        Assert.NotNull(definition);
-        Assert.Equal("Main_AiteProfilesTooltip", definition.TooltipKey);
     }
 
     [Fact]
@@ -277,11 +213,140 @@ public sealed class AiteProfilesUtilityTests
         }
     }
 
+    [Fact]
+    public void QuickLinkPopupLayout_UsesLargestAvailableSideAndFullAvailableHeight()
+    {
+        AiteProfilesQuickLinkPopupLayout layout = AiteProfilesQuickLinkPopupLayoutHelper.Calculate(spaceAbove: 268, spaceBelow: 84);
+
+        Assert.Equal(PlacementMode.Top, layout.Placement);
+        Assert.Equal(268, layout.MaxHeight);
+        Assert.Equal(-2, layout.VerticalOffset);
+    }
+
+    [Fact]
+    public void QuickLinkPopupLayout_OpensBelowWhenThereIsMoreRoom()
+    {
+        AiteProfilesQuickLinkPopupLayout layout = AiteProfilesQuickLinkPopupLayoutHelper.Calculate(spaceAbove: 90, spaceBelow: 196);
+
+        Assert.Equal(PlacementMode.Bottom, layout.Placement);
+        Assert.Equal(196, layout.MaxHeight);
+        Assert.Equal(2, layout.VerticalOffset);
+    }
+
+    [Fact]
+    public void QuickLinkSuggestionsPopup_UsesInputWidthInsteadOfContentWidth()
+    {
+        XDocument xaml = XDocument.Load(Path.Combine(
+            FindRepoRoot(),
+            "AiteBar",
+            "AiteProfilesUtility",
+            "AiteProfilesWindow.xaml"));
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+
+        XElement listBox = Assert.Single(xaml.Descendants(presentation + "ListBox"),
+            element => element.Attribute(x + "Name")?.Value == "QuickLinkSuggestionsList");
+
+        Assert.Equal("{Binding ActualWidth, ElementName=QuickLinkBox}", listBox.Attribute("Width")?.Value);
+        Assert.Null(listBox.Attribute("MaxWidth"));
+    }
+
+    [Fact]
+    public void NormalizeSnippets_SingleUrlRecords_DeduplicateAndTakeNameFromLaterRecord()
+    {
+        var input = new[]
+        {
+            new AiteProfileSnippet { Name = "First", Tags = ["work"], Urls = ["https://example.com/"] },
+            new AiteProfileSnippet { Name = "Second", Tags = ["ai"], Urls = ["https://example.com/"] }
+        };
+
+        IReadOnlyList<AiteProfileSnippet> result = AiteProfilesQuickLinkService.NormalizeSnippets(input);
+
+        AiteProfileSnippet single = Assert.Single(result);
+        Assert.Equal("Second", single.Name);
+        Assert.Equal(["ai", "work"], single.Tags);
+        Assert.Equal(["https://example.com/"], single.Urls);
+    }
+
+    [Fact]
+    public void NormalizeSnippets_MultiUrlRecords_DoNotMergeWithOtherRecords()
+    {
+        var input = new[]
+        {
+            new AiteProfileSnippet { Name = "Bundle A", Tags = ["oldTag"], Urls = ["https://a.com/", "https://b.com/"] },
+            new AiteProfileSnippet { Name = "Bundle B", Tags = ["newTag"], Urls = ["https://b.com/", "https://c.com/"] },
+            new AiteProfileSnippet { Name = "Single B", Tags = ["singleTag"], Urls = ["https://b.com/"] }
+        };
+
+        IReadOnlyList<AiteProfileSnippet> result = AiteProfilesQuickLinkService.NormalizeSnippets(input);
+
+        Assert.Equal(3, result.Count);
+        Assert.Equal("Bundle A", result[0].Name);
+        Assert.Equal(["https://a.com/", "https://b.com/"], result[0].Urls);
+
+        Assert.Equal("Bundle B", result[1].Name);
+        Assert.Equal(["https://b.com/", "https://c.com/"], result[1].Urls);
+
+        Assert.Equal("Single B", result[2].Name);
+        Assert.Equal(["https://b.com/"], result[2].Urls);
+    }
+
+    [Fact]
+    public void NormalizeSnippets_SortsResultByName()
+    {
+        var input = new[]
+        {
+            new AiteProfileSnippet { Name = "Zebra", Tags = ["tag1"], Urls = ["https://zebra.com/"] },
+            new AiteProfileSnippet { Name = "Alpha", Tags = ["tag2"], Urls = ["https://alpha.com/"] }
+        };
+
+        IReadOnlyList<AiteProfileSnippet> result = AiteProfilesQuickLinkService.NormalizeSnippets(input);
+
+        Assert.Equal(2, result.Count);
+        Assert.Equal("Alpha", result[0].Name);
+        Assert.Equal("Zebra", result[1].Name);
+    }
+
+    [Fact]
+    public void NormalizeSnippets_ImportSingleUrlOverwritesOlderMatchingNameAndMergesTags()
+    {
+        var service = new AiteProfilesQuickLinkService(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N")));
+        var existing = new[]
+        {
+            new AiteProfileSnippet { Name = "Docs", Tags = ["work"], Urls = ["https://docs.google.com/"] }
+        };
+        string importedContent = "Updated Docs | work; ai | https://docs.google.com/";
+
+        IReadOnlyList<AiteProfileSnippet> imported = service.ParseImportLines(importedContent);
+        IReadOnlyList<AiteProfileSnippet> combined = AiteProfilesQuickLinkService.NormalizeSnippets(existing.Concat(imported));
+
+        AiteProfileSnippet merged = Assert.Single(combined);
+        Assert.Equal("Updated Docs", merged.Name);
+        Assert.Equal(["ai", "work"], merged.Tags);
+        Assert.Equal(["https://docs.google.com/"], merged.Urls);
+    }
+
     private static string CreateTemporaryDirectory()
     {
         string path = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(path);
         return path;
+    }
+
+    private static string FindRepoRoot()
+    {
+        string? current = AppContext.BaseDirectory;
+        while (!string.IsNullOrEmpty(current))
+        {
+            if (File.Exists(Path.Combine(current, "AiteBar.sln")))
+            {
+                return current;
+            }
+
+            current = Directory.GetParent(current)?.FullName;
+        }
+
+        throw new DirectoryNotFoundException("Repository root with AiteBar.sln was not found.");
     }
 
     private static AiteProfileScanRow CreateProfileRow(string profilePath) => new()

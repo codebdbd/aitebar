@@ -517,7 +517,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
             {
                 if (snippet is not null && snippet.Urls.Count > 0)
                 {
-                    _launcher.OpenUrlsInProfile(profile.Folder, snippet.Urls);
+                    _launcher.OpenUrlsInProfile(profile.Folder, snippet.Urls, snippet.GuestMode);
                 }
                 else
                 {

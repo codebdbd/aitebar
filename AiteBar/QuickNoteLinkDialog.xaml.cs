@@ -36,7 +36,7 @@ namespace AiteBar
 
         private void UpdateSaveState()
         {
-            BtnSave.IsEnabled = IsValidHttpUrl(Url) && !string.IsNullOrWhiteSpace(LinkText);
+            BtnSave.IsEnabled = QuickNoteUrlValidator.IsSafeHttpUrl(Url) && !string.IsNullOrWhiteSpace(LinkText);
         }
 
         private void BtnSave_Click(object sender, RoutedEventArgs e)
@@ -50,12 +50,6 @@ namespace AiteBar
         private void BtnCancel_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
-        }
-
-        private static bool IsValidHttpUrl(string value)
-        {
-            return Uri.TryCreate(value, UriKind.Absolute, out var uri) &&
-                   (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
         }
 
         internal static string PreserveLinkText(string? value) => value ?? string.Empty;

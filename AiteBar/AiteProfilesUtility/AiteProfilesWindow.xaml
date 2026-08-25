@@ -615,7 +615,7 @@
                        StaysOpen="True"
                        PopupAnimation="Fade">
                     <ListBox x:Name="QuickLinkSuggestionsList"
-                             MaxWidth="{Binding ActualWidth, ElementName=QuickLinkBox}"
+                             Width="{Binding ActualWidth, ElementName=QuickLinkBox}"
                              ItemsSource="{Binding QuickLinkSuggestions}"
                              DisplayMemberPath="DisplayText"
                              Style="{StaticResource AiteProfilesSuggestionListStyle}"

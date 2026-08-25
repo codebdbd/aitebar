@@ -10,6 +10,14 @@ using System.Windows.Documents;
 
 namespace AiteBar
 {
+    internal sealed class QuickNoteExternalChangeException : IOException
+    {
+        public QuickNoteExternalChangeException()
+            : base("Quick Note changed externally while saving.")
+        {
+        }
+    }
+
     internal interface IQuickNoteProcessStartDispatcher
     {
         void Start(ProcessStartInfo startInfo);
@@ -34,6 +42,8 @@ namespace AiteBar
         private long _lastKnownLength;
         private string? _lastKnownContentHash;
 
+        private readonly record struct FileSnapshot(bool Exists, DateTime LastWriteTimeUtc, long Length, string? ContentHash);
+
         public QuickNoteService(string? notePath = null)
             : this(notePath, new QuickNoteProcessStartDispatcher())
         {
@@ -42,7 +52,7 @@ namespace AiteBar
         internal QuickNoteService(string? notePath, IQuickNoteProcessStartDispatcher processStartDispatcher)
         {
             _notePath = string.IsNullOrWhiteSpace(notePath)
-                ? Path.Combine(PathHelper.AppDataFolder, "QuickNote.rtf")
+                ? Path.Combine(PathHelper.AppDataFolder, "QuickNote.aite-note")
                 : notePath;
             _processStartDispatcher = processStartDispatcher;
         }
@@ -68,8 +78,6 @@ namespace AiteBar
                 return false;
             }
 
-            // Compute and compare hash first to satisfy test cases that simulate content changes
-            // with spoofed/identical file timestamps.
             string? currentHash;
             try
             {
@@ -91,57 +99,67 @@ namespace AiteBar
                 return true;
             }
 
-            // Content is identical.
-            // If the metadata on disk differs from our cached values (due to a delayed OS flush after saving),
-            // update our baseline metadata so that future checks stay in sync.
-            if (file.LastWriteTimeUtc != _lastKnownWriteTimeUtc || file.Length != _lastKnownLength)
-            {
-                _lastKnownWriteTimeUtc = file.LastWriteTimeUtc;
-                _lastKnownLength = file.Length;
-            }
+            _lastKnownWriteTimeUtc = file.LastWriteTimeUtc;
+            _lastKnownLength = file.Length;
 
             return false;
         }
 
+        public Task<bool> HasExternalChangesAsync() => Task.Run(HasExternalChanges);
+
         public async Task LoadAsync(FlowDocument document)
         {
             EnsureNoteDirectory();
-            if (File.Exists(NotePath))
+            FileSnapshot baseline = await Task.Run(() => CaptureSnapshot(NotePath));
+            if (baseline.Exists)
             {
                 await using var stream = new FileStream(NotePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                new TextRange(document.ContentStart, document.ContentEnd).Load(stream, DataFormats.Rtf);
+                LoadDocument(stream, document);
+            }
+            else if (TryLoadLegacyDocument(document))
+            {
+                await SaveAsync(document);
+                RefreshLastConflictCopy();
+                return;
             }
             else
             {
                 LoadEmptyDocument(document);
             }
 
-            RecordBaseline();
+            RecordBaseline(baseline);
             RefreshLastConflictCopy();
         }
 
         public void Load(FlowDocument document)
         {
             EnsureNoteDirectory();
-            if (File.Exists(NotePath))
+            FileSnapshot baseline = CaptureSnapshot(NotePath);
+            if (baseline.Exists)
             {
                 using var stream = new FileStream(NotePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
-                new TextRange(document.ContentStart, document.ContentEnd).Load(stream, DataFormats.Rtf);
+                LoadDocument(stream, document);
+            }
+            else if (TryLoadLegacyDocument(document))
+            {
+                SaveAsync(document).GetAwaiter().GetResult();
+                RefreshLastConflictCopy();
+                return;
             }
             else
             {
                 LoadEmptyDocument(document);
             }
 
-            RecordBaseline();
+            RecordBaseline(baseline);
             RefreshLastConflictCopy();
         }
 
         public async Task SaveAsync(FlowDocument document)
         {
             EnsureNoteDirectory();
-            await WriteAtomicallyAsync(NotePath, document);
-            RecordBaseline();
+            FileSnapshot baseline = await WriteAtomicallyAsync(NotePath, document);
+            RecordBaseline(baseline);
         }
 
         public async Task<string> SaveConflictCopyAsync(FlowDocument document)
@@ -149,7 +167,7 @@ namespace AiteBar
             EnsureNoteDirectory();
             string conflictPath = Path.Combine(
                 Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder,
-                $"QuickNote.conflict-{DateTime.Now:yyyyMMdd-HHmmss-fff}-{Guid.NewGuid():N}.rtf");
+                $"QuickNote.conflict-{DateTime.Now:yyyyMMdd-HHmmss-fff}-{Guid.NewGuid():N}{Path.GetExtension(NotePath)}");
             await WriteNewFileAsync(conflictPath, document);
             LastConflictCopyPath = conflictPath;
             CleanupOldConflictCopies();
@@ -163,7 +181,7 @@ namespace AiteBar
                 string directory = Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder;
                 Directory.CreateDirectory(directory);
 
-                List<string> conflictFiles = Directory.GetFiles(directory, "QuickNote.conflict-*.rtf")
+                List<string> conflictFiles = Directory.GetFiles(directory, $"QuickNote.conflict-*{Path.GetExtension(NotePath)}")
                     .OrderByDescending(File.GetLastWriteTimeUtc)
                     .ToList();
 
@@ -195,16 +213,34 @@ namespace AiteBar
             EnsureNoteDirectory();
             if (!File.Exists(NotePath))
             {
-                using (var stream = new FileStream(NotePath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                using (var stream = new FileStream(NotePath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
                 {
                     var document = new FlowDocument();
-                    new TextRange(document.ContentStart, document.ContentEnd).Save(stream, DataFormats.Rtf);
+                    SaveDocument(stream, document);
                 }
 
                 RecordBaseline();
             }
 
-            _processStartDispatcher.Start(new ProcessStartInfo(NotePath) { UseShellExecute = true });
+            if (!IsPackagePath)
+            {
+                _processStartDispatcher.Start(new ProcessStartInfo(NotePath) { UseShellExecute = true });
+                return;
+            }
+
+            string exportPath = Path.ChangeExtension(NotePath, ".rtf");
+            var documentToExport = new FlowDocument();
+            using (var input = new FileStream(NotePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete))
+            {
+                LoadPackage(input, documentToExport);
+            }
+
+            using (var output = new FileStream(exportPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+            {
+                SaveRtf(output, documentToExport);
+            }
+
+            _processStartDispatcher.Start(new ProcessStartInfo(exportPath) { UseShellExecute = true });
         }
 
         public void OpenConflictCopy()
@@ -231,12 +267,24 @@ namespace AiteBar
 
         private void RecordBaseline()
         {
-            var file = new FileInfo(NotePath);
+            RecordBaseline(CaptureSnapshot(NotePath));
+        }
+
+        private void RecordBaseline(FileSnapshot snapshot)
+        {
             _baselineEstablished = true;
-            _lastKnownExists = file.Exists;
-            _lastKnownWriteTimeUtc = file.Exists ? file.LastWriteTimeUtc : DateTime.MinValue;
-            _lastKnownLength = file.Exists ? file.Length : 0;
-            _lastKnownContentHash = file.Exists ? ComputeContentHash(NotePath) : null;
+            _lastKnownExists = snapshot.Exists;
+            _lastKnownWriteTimeUtc = snapshot.LastWriteTimeUtc;
+            _lastKnownLength = snapshot.Length;
+            _lastKnownContentHash = snapshot.ContentHash;
+        }
+
+        private static FileSnapshot CaptureSnapshot(string path)
+        {
+            var file = new FileInfo(path);
+            return file.Exists
+                ? new FileSnapshot(true, file.LastWriteTimeUtc, file.Length, ComputeContentHash(path))
+                : new FileSnapshot(false, DateTime.MinValue, 0, null);
         }
 
         private void RefreshLastConflictCopy()
@@ -244,7 +292,7 @@ namespace AiteBar
             try
             {
                 string directory = Path.GetDirectoryName(NotePath) ?? PathHelper.AppDataFolder;
-                LastConflictCopyPath = Directory.GetFiles(directory, "QuickNote.conflict-*.rtf")
+                LastConflictCopyPath = Directory.GetFiles(directory, $"QuickNote.conflict-*{Path.GetExtension(NotePath)}")
                     .OrderByDescending(File.GetLastWriteTimeUtc)
                     .FirstOrDefault();
             }
@@ -266,32 +314,162 @@ namespace AiteBar
             document.Blocks.Add(new Paragraph(new Run(string.Empty)));
         }
 
-        private static async Task WriteAtomicallyAsync(string path, FlowDocument document)
+        private async Task<FileSnapshot> WriteAtomicallyAsync(string path, FlowDocument document)
         {
             string directory = Path.GetDirectoryName(path) ?? Directory.GetCurrentDirectory();
             string tempPath = Path.Combine(directory, $".{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
             try
             {
-                await using (var stream = new FileStream(tempPath, FileMode.CreateNew, FileAccess.Write, FileShare.None))
+                await using (var stream = new FileStream(tempPath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
                 {
-                    new TextRange(document.ContentStart, document.ContentEnd).Save(stream, DataFormats.Rtf);
+                    SaveDocument(stream, document);
+                }
+
+                FileSnapshot snapshot = await Task.Run(() => CaptureSnapshot(tempPath));
+
+                // Do not truncate the target when another process blocks replacement. Reporting the
+                // failure lets the window retain the unsaved document or create a conflict copy.
+                if (HasExternalChanges())
+                {
+                    throw new QuickNoteExternalChangeException();
                 }
 
                 File.Move(tempPath, path, overwrite: true);
+                return snapshot;
             }
             finally
             {
                 if (File.Exists(tempPath))
                 {
-                    File.Delete(tempPath);
+                    try
+                    {
+                        File.Delete(tempPath);
+                    }
+                    catch
+                    {
+                    }
                 }
             }
         }
 
-        private static async Task WriteNewFileAsync(string path, FlowDocument document)
+        private async Task WriteNewFileAsync(string path, FlowDocument document)
         {
-            await using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-            new TextRange(document.ContentStart, document.ContentEnd).Save(stream, DataFormats.Rtf);
+            await using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None);
+            SaveDocument(stream, document);
+        }
+
+        private static void SaveRtf(Stream stream, FlowDocument document)
+        {
+            FlowDocument exportDocument = QuickNoteRtfAdapter.CreateExportDocument(document);
+            new TextRange(exportDocument.ContentStart, exportDocument.ContentEnd)
+                .Save(stream, DataFormats.Rtf, preserveTextElements: true);
+        }
+
+        private bool IsPackagePath => string.Equals(Path.GetExtension(NotePath), ".aite-note", StringComparison.OrdinalIgnoreCase);
+
+        private void SaveDocument(Stream stream, FlowDocument document)
+        {
+            if (IsPackagePath)
+            {
+                new TextRange(document.ContentStart, document.ContentEnd)
+                    .Save(stream, DataFormats.XamlPackage, preserveTextElements: true);
+                return;
+            }
+
+            SaveRtf(stream, document);
+        }
+
+        private void LoadDocument(Stream stream, FlowDocument document)
+        {
+            if (IsPackagePath)
+            {
+                LoadPackage(stream, document);
+                return;
+            }
+
+            LoadRtf(stream, document);
+        }
+
+        private static void LoadPackage(Stream stream, FlowDocument document)
+        {
+            try
+            {
+                new TextRange(document.ContentStart, document.ContentEnd).Load(stream, DataFormats.XamlPackage);
+                QuickNoteRtfAdapter.RestoreCodeBlocksFromFences(document);
+                QuickNoteRtfAdapter.NormalizeCodeBlocks(document);
+                QuickNoteRtfAdapter.RestoreEmbeddedImages(document);
+            }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or ArgumentException or FormatException or System.Windows.Markup.XamlParseException)
+            {
+                Logger.Log(ex);
+                LoadEmptyDocument(document);
+            }
+        }
+
+        private static void LoadRtf(Stream stream, FlowDocument document)
+        {
+            try
+            {
+                EnsureRtfStream(stream);
+                new TextRange(document.ContentStart, document.ContentEnd).Load(stream, DataFormats.Rtf);
+                QuickNoteRtfAdapter.RestoreCodeBlocksFromFences(document);
+                QuickNoteRtfAdapter.RestoreEmbeddedImages(document);
+            }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or ArgumentException or FormatException or System.Windows.Markup.XamlParseException)
+            {
+                Logger.Log(ex);
+                LoadEmptyDocument(document);
+            }
+        }
+
+        private static void EnsureRtfStream(Stream stream)
+        {
+            if (!stream.CanSeek)
+            {
+                return;
+            }
+
+            long originalPosition = stream.Position;
+            Span<byte> buffer = stackalloc byte[5];
+            int bytesRead = stream.Read(buffer);
+            stream.Position = originalPosition;
+
+            if (bytesRead < 5 ||
+                buffer[0] != (byte)'{' ||
+                buffer[1] != (byte)'\\' ||
+                buffer[2] != (byte)'r' ||
+                buffer[3] != (byte)'t' ||
+                buffer[4] != (byte)'f')
+            {
+                throw new InvalidDataException("Quick Note file is not a valid RTF document.");
+            }
+        }
+
+        private bool TryLoadLegacyDocument(FlowDocument document)
+        {
+            if (!IsPackagePath)
+            {
+                return false;
+            }
+
+            string legacyPath = Path.ChangeExtension(NotePath, ".rtf");
+            if (!File.Exists(legacyPath))
+            {
+                return false;
+            }
+
+            try
+            {
+                using var stream = new FileStream(legacyPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+                LoadRtf(stream, document);
+                return true;
+            }
+            catch (Exception ex) when (ex is IOException or InvalidDataException or ArgumentException or FormatException or System.Windows.Markup.XamlParseException)
+            {
+                Logger.Log(ex);
+                LoadEmptyDocument(document);
+                return false;
+            }
         }
     }
 }

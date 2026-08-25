@@ -420,7 +420,7 @@ public sealed partial class TextProcessingService
         string[] excludedTerms =
         [
             "whisper", "speech", "audio", "transcrib", "tts",
-            "embedding", "rerank", "moderation", "prompt-guard", "prompt guard",
+            "embedding", "embed", "ocr", "leanstral", "rerank", "moderation", "prompt-guard", "prompt guard",
             "safety gpt",
             "nano banana", "imagen", "veo",
             "image generation", "image-generation", "image_generation",

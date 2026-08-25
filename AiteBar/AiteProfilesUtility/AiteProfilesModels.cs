@@ -60,13 +60,15 @@ internal sealed class AiteProfileSnippet
     public string Name { get; set; } = string.Empty;
     public List<string> Urls { get; set; } = [];
     public List<string> Tags { get; set; } = [];
+    public bool GuestMode { get; set; } = false;
     public string DisplayText => string.IsNullOrWhiteSpace(Name) ? string.Join(" | ", Urls) : Name;
 
     public AiteProfileSnippet Clone() => new()
     {
         Name = Name,
         Urls = [.. Urls],
-        Tags = [.. Tags]
+        Tags = [.. Tags],
+        GuestMode = GuestMode
     };
 }
 

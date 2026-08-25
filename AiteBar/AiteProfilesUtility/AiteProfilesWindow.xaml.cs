@@ -8,6 +8,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Controls.Primitives;
 
 namespace AiteBar.AiteProfilesUtility;
 
@@ -52,6 +53,8 @@ public partial class AiteProfilesWindow : DarkWindow
         DataContext = _viewModel;
         _ = settingsService;
         Loaded += OnLoaded;
+        SizeChanged += (_, _) => UpdateQuickLinkSuggestionsLayout();
+        LocationChanged += (_, _) => UpdateQuickLinkSuggestionsLayout();
     }
 
     public void ShowNearPanel(AppSettingsService settingsService)
@@ -349,6 +352,8 @@ public partial class AiteProfilesWindow : DarkWindow
 
     private void UpdateQuickLinkSuggestionsPopup()
     {
+        UpdateQuickLinkSuggestionsLayout();
+
         if (!QuickLinkBox.IsKeyboardFocusWithin)
         {
             QuickLinkSuggestionsPopup.IsOpen = false;
@@ -362,6 +367,22 @@ public partial class AiteProfilesWindow : DarkWindow
         {
             QuickLinkSuggestionsList.SelectedIndex = 0;
         }
+    }
+
+    private void UpdateQuickLinkSuggestionsLayout()
+    {
+        if (!IsLoaded || QuickLinkBox.ActualHeight <= 0)
+        {
+            return;
+        }
+
+        Point topLeft = QuickLinkBox.TranslatePoint(new Point(0, 0), this);
+        double spaceAbove = topLeft.Y - 12;
+        double spaceBelow = ActualHeight - topLeft.Y - QuickLinkBox.ActualHeight - 12;
+        AiteProfilesQuickLinkPopupLayout layout = AiteProfilesQuickLinkPopupLayoutHelper.Calculate(spaceAbove, spaceBelow);
+        QuickLinkSuggestionsPopup.Placement = layout.Placement;
+        QuickLinkSuggestionsPopup.VerticalOffset = layout.VerticalOffset;
+        QuickLinkSuggestionsList.MaxHeight = layout.MaxHeight;
     }
 
     private async Task EditTagsAsync(AiteProfileListItemViewModel? profile)

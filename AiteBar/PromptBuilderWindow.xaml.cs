@@ -84,6 +84,7 @@ public partial class PromptBuilderWindow : DarkWindow
     private bool _lastWasAutoModel = true;
     private string? _lastProviderId;
     private string? _lastModelId;
+    private int _repeatAttemptCount;
     private double _requiredMinWidth = PreferredMinWidth;
     private DateTimeOffset _processingStartedAt;
     private bool _isProgressStatusVisible;
@@ -662,6 +663,7 @@ public partial class PromptBuilderWindow : DarkWindow
             {
                 return;
             }
+            _repeatAttemptCount++;
             input = _lastOriginalText;
             mode = _lastMode;
             useAutoModel = _lastWasAutoModel;
@@ -684,6 +686,7 @@ public partial class PromptBuilderWindow : DarkWindow
         }
         else
         {
+            _repeatAttemptCount = 0;
             input = GetEffectiveProcessInputText();
             mode = _currentMode;
             useAutoModel = _isAutoModel;
@@ -707,7 +710,7 @@ public partial class PromptBuilderWindow : DarkWindow
             }
         }
 
-        AiChatRequest request = _service.BuildRequest(mode, input, createAlternative: repeatLast, photoSection: _photoSection, paintingStyle: _paintingStyle, paintingArtist: _paintingArtist, animationStyle: _animationStyle, photoStyle: _photoStyle, videoDirection: _videoDirection, visualTarget: _visualTarget, themeSection: _themeSection, themeStyle: _themeStyle, iconStyle: _iconStyle, graphicType: _graphicType, graphicStyle: _graphicStyle, animationSection: _animationSection, paintingSection: _paintingSection);
+        AiChatRequest request = _service.BuildRequest(mode, input, createAlternative: repeatLast, photoSection: _photoSection, paintingStyle: _paintingStyle, paintingArtist: _paintingArtist, animationStyle: _animationStyle, photoStyle: _photoStyle, videoDirection: _videoDirection, visualTarget: _visualTarget, themeSection: _themeSection, themeStyle: _themeStyle, iconStyle: _iconStyle, graphicType: _graphicType, graphicStyle: _graphicStyle, animationSection: _animationSection, paintingSection: _paintingSection, rotationOffset: _repeatAttemptCount);
         ModelItem? selected = null;
         if (!useAutoModel)
         {

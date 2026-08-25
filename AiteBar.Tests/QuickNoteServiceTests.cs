@@ -55,6 +55,24 @@ public sealed class QuickNoteServiceTests : IDisposable
     }
 
     [Fact]
+    public void DefaultNotePath_UsesPortablePackage()
+    {
+        var service = new QuickNoteService();
+
+        Assert.EndsWith("QuickNote.aite-note", service.NotePath);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenRtfIsInvalid_RecoversWithEmptyDocument()
+    {
+        await File.WriteAllTextAsync(_service.NotePath, "not-a-rtf-document");
+
+        string content = await LoadTextAsync(_service);
+
+        Assert.Equal(string.Empty, content);
+    }
+
+    [Fact]
     public async Task HasExternalChanges_WhenFileIsCreatedAfterMissingBaseline_ReturnsTrue()
     {
         await LoadTextAsync(_service);
@@ -117,6 +135,16 @@ public sealed class QuickNoteServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task SaveAsync_DetectsChangesMadeAfterTheSavedSnapshot()
+    {
+        await SaveTextAsync(_service, "saved");
+
+        await File.WriteAllTextAsync(_service.NotePath, "external");
+
+        Assert.True(_service.HasExternalChanges());
+    }
+
+    [Fact]
     public async Task LoadAsync_PopulatesFlowDocumentFromRtf()
     {
         await RunStaAsync(async () =>
@@ -135,6 +163,7 @@ public sealed class QuickNoteServiceTests : IDisposable
         });
 
         Assert.Equal("plain bold", text);
+        Assert.StartsWith(@"{\rtf", await File.ReadAllTextAsync(_service.NotePath));
     }
 
     [Fact]
@@ -147,15 +176,15 @@ public sealed class QuickNoteServiceTests : IDisposable
             await _service.SaveAsync(document);
         });
 
-        string text = await LoadTextAsync(_service);
-        bool hasSection = await RunStaAsync(async () =>
+        (bool hasSection, string code) = await RunStaAsync(async () =>
         {
             var document = new FlowDocument();
             await _service.LoadAsync(document);
-            return document.Blocks.FirstBlock is Section;
+            Section section = Assert.IsType<Section>(document.Blocks.FirstBlock);
+            return (true, QuickNoteDocumentFormatting.GetCodeBlockText(section));
         });
 
-        Assert.Equal("var answer = 42;", text);
+        Assert.Equal("var answer = 42;", code);
         Assert.True(hasSection);
     }
 
@@ -184,6 +213,7 @@ public sealed class QuickNoteServiceTests : IDisposable
         Assert.True(File.Exists(conflictPath));
         Assert.StartsWith(_tempDir, conflictPath);
         Assert.Contains("QuickNote.conflict-", Path.GetFileName(conflictPath));
+        Assert.EndsWith(".rtf", conflictPath);
         Assert.Equal("conflict text", await LoadTextAsync(new QuickNoteService(conflictPath)));
         Assert.Equal("original", await LoadTextAsync(_service));
         Assert.Equal(conflictPath, _service.LastConflictCopyPath);
@@ -235,6 +265,48 @@ public sealed class QuickNoteServiceTests : IDisposable
 
         Assert.Equal("atomic", await LoadTextAsync(_service));
         Assert.Empty(Directory.GetFiles(_tempDir, "*.tmp"));
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenTargetCannotBeAtomicallyReplaced_PreservesExistingNote()
+    {
+        await SaveTextAsync(_service, "original");
+
+        using (var lockStream = new FileStream(_service.NotePath, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite))
+        {
+            Exception? exception = await Record.ExceptionAsync(() => RunStaAsync(async () =>
+            {
+                await _service.SaveAsync(new FlowDocument(new Paragraph(new Run("replacement"))));
+            }));
+            Assert.True(exception is IOException or UnauthorizedAccessException);
+        }
+
+        Assert.Equal("original", await LoadTextAsync(_service));
+        Assert.Empty(Directory.GetFiles(_tempDir, "*.tmp"));
+    }
+
+    [Fact]
+    public async Task QuickNotePersistence_PersistsWindowNoteContents()
+    {
+        await SaveTextAsync(_service, "old persisted text");
+        var persistence = new QuickNotePersistence(_service);
+
+        string loadedText = await RunStaAsync(() =>
+        {
+            var document = new FlowDocument();
+            persistence.Load(document);
+            return Task.FromResult(new TextRange(document.ContentStart, document.ContentEnd).Text.TrimEnd('\r', '\n'));
+        });
+
+        await RunStaAsync(async () =>
+        {
+            var document = new FlowDocument(new Paragraph(new Run("new window text")));
+            await persistence.SaveAsync(document);
+        });
+
+        Assert.Equal("old persisted text", loadedText);
+        Assert.Equal("new window text", await LoadTextAsync(_service));
+        Assert.False(persistence.HasExternalChanges());
     }
 
     [Fact]

@@ -1,13 +1,22 @@
 using System;
-using System.Windows.Documents;
 using System.Text.RegularExpressions;
+using System.Windows.Documents;
 
 namespace AiteBar;
 
 internal static class QuickNoteDocumentHelper
 {
     private static readonly Regex VisualListMarkerRegex =
-        new(@"^(?:[•◦▪]|\d+[.)])\t", RegexOptions.Compiled | RegexOptions.Multiline);
+        new(@"^(?:(?:[•◦▪])|\d+[.)])(?:\t|\s+)", RegexOptions.Compiled | RegexOptions.Multiline);
+
+    private static readonly Regex BulletListMarkerRegex =
+        new(@"^\s*(?:[•◦▪])(?:\t|\s+)", RegexOptions.Compiled);
+
+    private static readonly Regex NumberedListMarkerRegex =
+        new(@"^\s*\d+[.)](?:\t|\s+)", RegexOptions.Compiled);
+
+    private static readonly Regex PlainListMarkerRegex =
+        new(@"^\s*(?:(?:[•◦▪])|\d+[.)])(?:\t|\s+)", RegexOptions.Compiled);
 
     public static int GetTextOffset(FlowDocument document, TextPointer pointer)
     {
@@ -33,15 +42,16 @@ internal static class QuickNoteDocumentHelper
             return document.ContentEnd;
         }
 
-        var startOffsetsCache = new System.Collections.Generic.Dictionary<Inline, int>();
-        int GetStartOffset(Inline inline)
+        var startOffsets = new int[leafInlines.Count];
+        int currentOffset = 0;
+        TextPointer currentPointer = GetTextStartPointer(document);
+        for (int i = 0; i < leafInlines.Count; i++)
         {
-            if (!startOffsetsCache.TryGetValue(inline, out int val))
-            {
-                val = GetTextOffset(document, inline.ContentStart);
-                startOffsetsCache[inline] = val;
-            }
-            return val;
+            Inline inline = leafInlines[i];
+            currentOffset += NormalizeLineEndings(new TextRange(currentPointer, inline.ContentStart).Text).Length;
+            startOffsets[i] = currentOffset;
+            currentOffset += GetLeafInlineLength(inline);
+            currentPointer = inline.ContentEnd;
         }
 
         // Binary search to find the first inline that ends at or after the target offset
@@ -52,9 +62,8 @@ internal static class QuickNoteDocumentHelper
         while (low <= high)
         {
             int mid = low + (high - low) / 2;
-            Inline inline = leafInlines[mid];
-            int startOffset = GetStartOffset(inline);
-            int len = GetLeafInlineLength(inline);
+            int startOffset = startOffsets[mid];
+            int len = GetLeafInlineLength(leafInlines[mid]);
 
             if (startOffset + len >= offset)
             {
@@ -73,7 +82,7 @@ internal static class QuickNoteDocumentHelper
         }
 
         Inline targetInline = leafInlines[targetIndex];
-        int targetStartOffset = GetStartOffset(targetInline);
+        int targetStartOffset = startOffsets[targetIndex];
 
         if (offset <= targetStartOffset)
         {
@@ -86,10 +95,46 @@ internal static class QuickNoteDocumentHelper
         if (targetInline is Run run)
         {
             int rawOffset = MapNormalizedOffsetToRaw(run.Text, localOffset);
-            return run.ContentStart.GetPositionAtOffset(rawOffset, LogicalDirection.Forward);
+            TextPointer candidate = run.ContentStart.GetPositionAtOffset(rawOffset, LogicalDirection.Forward);
+            return AdvanceToTextOffset(document, candidate, offset);
         }
 
-        return targetInline.ContentStart.GetPositionAtOffset(localOffset, LogicalDirection.Forward);
+        TextPointer inlineCandidate = targetInline.ContentStart.GetPositionAtOffset(localOffset, LogicalDirection.Forward);
+        return AdvanceToTextOffset(document, inlineCandidate, offset);
+    }
+
+    private static TextPointer AdvanceToTextOffset(FlowDocument document, TextPointer pointer, int targetOffset)
+    {
+        var sb = new System.Text.StringBuilder();
+        int initialOffset = GetTextOffset(document, pointer);
+        sb.AppendLine($"AdvanceToTextOffset: Target={targetOffset}, InitialPointerOffset={initialOffset}");
+        
+        int currentOffset = initialOffset;
+        int step = 0;
+        while (pointer.CompareTo(document.ContentEnd) < 0 && currentOffset < targetOffset)
+        {
+            TextPointer? next = pointer.GetNextInsertionPosition(LogicalDirection.Forward)
+                ?? pointer.GetNextContextPosition(LogicalDirection.Forward);
+            if (next == null)
+            {
+                sb.AppendLine($"  Step {step}: next is null");
+                break;
+            }
+            int diff = NormalizeLineEndings(new TextRange(pointer, next).Text).Length;
+            int nextOffsetDirect = GetTextOffset(document, next);
+            sb.AppendLine($"  Step {step}: pointerOffset={currentOffset} -> nextOffsetDirect={nextOffsetDirect}, diff={diff}, text='{new TextRange(pointer, next).Text}'");
+            currentOffset += diff;
+            pointer = next;
+            step++;
+        }
+
+        int finalOffset = GetTextOffset(document, pointer);
+        if (finalOffset != targetOffset)
+        {
+            throw new Exception($"AdvanceToTextOffset Mismatch! Target={targetOffset}, FinalOffset={finalOffset}. Trace:\n{sb.ToString()}");
+        }
+
+        return pointer;
     }
 
     private static System.Collections.Generic.List<Inline> GetLeafInlines(FlowDocument document)
@@ -142,7 +187,7 @@ internal static class QuickNoteDocumentHelper
         {
             return NormalizeLineEndings(run.Text).Length;
         }
-        if (inline is LineBreak)
+        if (inline is LineBreak || inline is InlineUIContainer)
         {
             return 1;
         }
@@ -158,11 +203,6 @@ internal static class QuickNoteDocumentHelper
             if (rawIdx <= text.Length - 2 && text[rawIdx] == '\r' && text[rawIdx + 1] == '\n')
             {
                 rawIdx += 2;
-                normIdx += 1;
-            }
-            else if (text[rawIdx] == '\r' || text[rawIdx] == '\n')
-            {
-                rawIdx += 1;
                 normIdx += 1;
             }
             else
@@ -239,7 +279,8 @@ internal static class QuickNoteDocumentHelper
             int closestRight = FindClosestMatch(newText, rightContext, start);
             if (rightContext.Length > 0 && closestRight >= 0)
             {
-                return (closestRight, closestRight);
+                int caret = closestRight;
+                return (caret, caret);
             }
         }
 
@@ -283,4 +324,16 @@ internal static class QuickNoteDocumentHelper
 
     public static string RemoveVisualListMarkers(string text) =>
         VisualListMarkerRegex.Replace(NormalizeLineEndings(text), string.Empty);
+
+    public static bool HasBulletListMarker(string text) =>
+        BulletListMarkerRegex.IsMatch(NormalizeLineEndings(text).TrimEnd('\n'));
+
+    public static bool HasNumberedListMarker(string text) =>
+        NumberedListMarkerRegex.IsMatch(NormalizeLineEndings(text).TrimEnd('\n'));
+
+    public static bool HasPlainListMarker(string text) =>
+        PlainListMarkerRegex.IsMatch(NormalizeLineEndings(text).TrimEnd('\n'));
+
+    public static string RemovePlainListMarker(string text) =>
+        PlainListMarkerRegex.Replace(NormalizeLineEndings(text).TrimEnd('\n'), string.Empty);
 }

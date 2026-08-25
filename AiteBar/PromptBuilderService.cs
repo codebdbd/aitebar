@@ -1767,7 +1767,8 @@ public sealed class PromptBuilderService
         GraphicType graphicType = GraphicType.Auto,
         GraphicStyle graphicStyle = GraphicStyle.Auto,
         AnimationStyleSection animationSection = AnimationStyleSection.All,
-        PaintingStyleSection paintingSection = PaintingStyleSection.All)
+        PaintingStyleSection paintingSection = PaintingStyleSection.All,
+        int rotationOffset = 0)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(brief);
 
@@ -1930,6 +1931,8 @@ public sealed class PromptBuilderService
             RequiredCapabilities = AiCapabilities.Text,
             RequireFreeModel = true,
             RequireWritingModel = true,
+            IsAlternative = createAlternative,
+            RotationOffset = rotationOffset,
             RequiredContextTokens = requiredContextTokens,
             MaxOutputTokens = outputBudget,
             Temperature = profile.Temperature

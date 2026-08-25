@@ -139,7 +139,6 @@ public sealed class FormControlHeightTests
     [InlineData("SettingsResources.xaml", "SegmentedRadioButtonStyle")]
     [InlineData("AppSettingsWindow.xaml", "HotkeyModifierButtonStyle")]
     [InlineData("QRCodeGeneratorWindow.xaml", "CompactComboStyle")]
-    [InlineData("QuickNoteWindow.xaml", "FormatComboStyle")]
     [InlineData("IconPickerWindow.xaml", "SearchTextBoxStyle")]
     [InlineData("IconConverterWindow.xaml", "OptionRadioButtonStyle")]
     [InlineData("TimerStopwatchWindow.xaml", "ModeButtonStyle")]

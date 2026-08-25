@@ -31,6 +31,14 @@ public sealed class QuickNoteThemeTests
     }
 
     [Fact]
+    public void HeaderBackground_IsSlightlyDarkerThanTheCurrentThemeBackground()
+    {
+        Assert.Equal("#B5C7B1", QuickNoteThemeCatalog.GetHeaderBackground(QuickNoteThemeCatalog.Find("sage")));
+        Assert.Equal("#232323", QuickNoteThemeCatalog.GetHeaderBackground(QuickNoteThemeCatalog.Find("dark")));
+        Assert.NotEqual(QuickNoteThemeCatalog.Find("sage").Accent, QuickNoteThemeCatalog.GetHeaderBackground(QuickNoteThemeCatalog.Find("sage")));
+    }
+
+    [Fact]
     public void Themes_HaveUniqueIdsAndValidHexColors()
     {
         Assert.Equal(QuickNoteThemeCatalog.Themes.Count, QuickNoteThemeCatalog.Themes.Select(theme => theme.Id).Distinct().Count());
@@ -41,6 +49,24 @@ public sealed class QuickNoteThemeTests
             AssertColor(theme.Text);
             AssertColor(theme.MutedText);
             AssertColor(theme.Accent);
+        });
+    }
+
+    [Fact]
+    public void Themes_OnlyVaryBackgroundAndSharedForeground()
+    {
+        QuickNoteTheme baseline = QuickNoteThemeCatalog.Themes[0];
+
+        Assert.All(QuickNoteThemeCatalog.Themes, theme =>
+        {
+            string expectedForeground = theme.IsDark ? "#F1F1F1" : "#000000";
+            Assert.Equal(expectedForeground, theme.Text);
+            Assert.Equal(expectedForeground, theme.MutedText);
+            Assert.Equal(expectedForeground, theme.Link);
+            Assert.Equal(baseline.Border, theme.Border);
+            Assert.Equal(baseline.Accent, theme.Accent);
+            Assert.Equal(QuickNoteDocumentFormatting.CodeBackground, theme.CodeBackground);
+            Assert.Equal(QuickNoteDocumentFormatting.CodeForeground, theme.CodeText);
         });
     }
 

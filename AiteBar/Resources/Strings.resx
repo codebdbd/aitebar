@@ -211,7 +211,7 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Clear the quick note?</value></data>
   <data name="QuickNote_Stats" xml:space="preserve"><value>{0} chars - {1} lines</value></data>
   <data name="QuickNote_SelectedStats" xml:space="preserve"><value>Selected: {0} characters with spaces - {1} characters without spaces</value></data>
-  <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.rtf</value></data>
+  <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.aite-note</value></data>
   <data name="QuickNote_Menu" xml:space="preserve"><value>Note menu</value></data>
   <data name="QuickNote_Theme" xml:space="preserve"><value>Note color</value></data>
   <data name="QuickNote_Pin" xml:space="preserve"><value>Keep note open</value></data>
@@ -219,6 +219,17 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_Redo" xml:space="preserve"><value>Redo</value></data>
   <data name="QuickNote_Cut" xml:space="preserve"><value>Cut</value></data>
   <data name="QuickNote_Copy" xml:space="preserve"><value>Copy</value></data>
+  <data name="QuickNote_Copied" xml:space="preserve"><value>Copied</value></data>
+  <data name="QuickNote_CopyFailed" xml:space="preserve"><value>Could not copy</value></data>
+  <data name="QuickNote_InsertImage" xml:space="preserve"><value>Insert image</value></data>
+  <data name="QuickNote_ImageInsertFailed" xml:space="preserve"><value>Could not insert image</value></data>
+  <data name="QuickNote_ImportMarkdown" xml:space="preserve"><value>Import Markdown or text</value></data>
+  <data name="QuickNote_ExportMarkdown" xml:space="preserve"><value>Export Markdown</value></data>
+  <data name="QuickNote_ExportText" xml:space="preserve"><value>Export text</value></data>
+  <data name="QuickNote_ImportConfirm" xml:space="preserve"><value>Replace the current note? A backup copy will be created first.</value></data>
+  <data name="QuickNote_ImportResult" xml:space="preserve"><value>Imported images: {0}; skipped: {1}</value></data>
+  <data name="QuickNote_DecreaseFont" xml:space="preserve"><value>Decrease font size</value></data>
+  <data name="QuickNote_IncreaseFont" xml:space="preserve"><value>Increase font size</value></data>
   <data name="QuickNote_Paste" xml:space="preserve"><value>Paste</value></data>
   <data name="QuickNote_SelectAll" xml:space="preserve"><value>Select all</value></data>
   <data name="QuickNote_Bold" xml:space="preserve"><value>Bold</value></data>
@@ -1093,6 +1104,7 @@ Open the GitHub release page?</value></data>
   <data name="AiteProfiles_LinkNamePlaceholder" xml:space="preserve"><value>Example: Docs, Work mail...</value></data>
   <data name="AiteProfiles_LinkTagsPlaceholder" xml:space="preserve"><value>work, mail, ai...</value></data>
   <data name="AiteProfiles_LinkUrlsPlaceholder" xml:space="preserve"><value>https://example.com/&#10;One URL per line, or separated by |</value></data>
+  <data name="AiteProfiles_GuestMode" xml:space="preserve"><value>Guest mode (--guest)</value></data>
 </root>
 
 

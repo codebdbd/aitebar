@@ -542,7 +542,7 @@ internal sealed class AiteProfilesChromeLauncher
 
     public void OpenGoogleAccountSettings(string folder) => OpenUrlInProfile(folder, "https://myaccount.google.com/");
 
-    public void OpenUrlsInProfile(string folder, IReadOnlyList<string> urls)
+    public void OpenUrlsInProfile(string folder, IReadOnlyList<string> urls, bool guestMode = false)
     {
         if (urls.Count == 0)
         {
@@ -550,7 +550,14 @@ internal sealed class AiteProfilesChromeLauncher
             return;
         }
 
-        StartChrome([ $"--profile-directory={folder}", "--start-maximized", .. urls ]);
+        if (guestMode)
+        {
+            StartChrome([ "--guest", "--start-maximized", .. urls ]);
+        }
+        else
+        {
+            StartChrome([ $"--profile-directory={folder}", "--start-maximized", .. urls ]);
+        }
     }
 
     public void OpenFolder(string path)

@@ -472,7 +472,7 @@
     <value>Выделено: {0} символов с пробелами - {1} символов без пробелов</value>
   </data>
   <data name="QuickNote_FooterFile" xml:space="preserve">
-    <value>QuickNote.rtf</value>
+    <value>QuickNote.aite-note</value>
   </data>
   <data name="QuickNote_Menu" xml:space="preserve">
     <value>Меню заметки</value>
@@ -494,6 +494,39 @@
   </data>
   <data name="QuickNote_Copy" xml:space="preserve">
     <value>Копировать</value>
+  </data>
+  <data name="QuickNote_Copied" xml:space="preserve">
+    <value>Скопировано</value>
+  </data>
+  <data name="QuickNote_CopyFailed" xml:space="preserve">
+    <value>Не удалось скопировать</value>
+  </data>
+  <data name="QuickNote_InsertImage" xml:space="preserve">
+    <value>Вставить изображение</value>
+  </data>
+  <data name="QuickNote_ImageInsertFailed" xml:space="preserve">
+    <value>Не удалось вставить изображение</value>
+  </data>
+  <data name="QuickNote_ImportMarkdown" xml:space="preserve">
+    <value>Импортировать Markdown или текст</value>
+  </data>
+  <data name="QuickNote_ExportMarkdown" xml:space="preserve">
+    <value>Экспортировать Markdown</value>
+  </data>
+  <data name="QuickNote_ExportText" xml:space="preserve">
+    <value>Экспортировать текст</value>
+  </data>
+  <data name="QuickNote_ImportConfirm" xml:space="preserve">
+    <value>Заменить текущую заметку? Сначала будет создана резервная копия.</value>
+  </data>
+  <data name="QuickNote_ImportResult" xml:space="preserve">
+    <value>Импортировано изображений: {0}; пропущено: {1}</value>
+  </data>
+  <data name="QuickNote_DecreaseFont" xml:space="preserve">
+    <value>Уменьшить шрифт</value>
+  </data>
+  <data name="QuickNote_IncreaseFont" xml:space="preserve">
+    <value>Увеличить шрифт</value>
   </data>
   <data name="QuickNote_Paste" xml:space="preserve">
     <value>Вставить</value>
@@ -1725,6 +1758,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiteProfiles_LinkNamePlaceholder" xml:space="preserve"><value>Например: Документы, Рабочая почта...</value></data>
   <data name="AiteProfiles_LinkTagsPlaceholder" xml:space="preserve"><value>work, mail, ai...</value></data>
   <data name="AiteProfiles_LinkUrlsPlaceholder" xml:space="preserve"><value>https://example.com/&#10;По одному URL на строку или через |</value></data>
+  <data name="AiteProfiles_GuestMode" xml:space="preserve"><value>Гостевой режим (--guest)</value></data>
 </root>
 
 

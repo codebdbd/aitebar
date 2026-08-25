@@ -241,6 +241,13 @@ internal sealed class AiteProfilesQuickLinkService
             return true;
         }
 
+        AiteProfileSnippet? fallback = RankSnippets(snippets, normalized).FirstOrDefault();
+        if (fallback is not null)
+        {
+            snippet = fallback.Clone();
+            return true;
+        }
+
         if (TryParseDirectUrls(normalized, out List<string> urls))
         {
             snippet = new AiteProfileSnippet
@@ -252,14 +259,7 @@ internal sealed class AiteProfilesQuickLinkService
             return true;
         }
 
-        AiteProfileSnippet? fallback = RankSnippets(snippets, normalized).FirstOrDefault();
-        if (fallback is null)
-        {
-            return false;
-        }
-
-        snippet = fallback.Clone();
-        return true;
+        return false;
     }
 
     public bool TryNormalizeUrl(string rawInput, out string normalizedUrl) =>
@@ -322,10 +322,14 @@ internal sealed class AiteProfilesQuickLinkService
                 .ToList();
         }
 
+        string[] queryTerms = normalizedQuery.Split([' ', ',', ';', '|'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
         var ranked = new List<(AiteProfileSnippet Snippet, int Rank)>();
         foreach (AiteProfileSnippet snippet in normalizedSnippets)
         {
-            bool tagHit = snippet.Tags.Any(tag => tag.Contains(normalizedQuery, StringComparison.Ordinal));
+            bool tagHit = snippet.Tags.Any(tag => tag.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase))
+                       || string.Join(" ", snippet.Tags).Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase)
+                       || (queryTerms.Length > 0 && queryTerms.All(term => snippet.Tags.Any(tag => tag.Contains(term, StringComparison.OrdinalIgnoreCase))));
             bool nameHit = snippet.Name.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase);
             bool urlHit = snippet.Urls.Any(url => url.Contains(normalizedQuery, StringComparison.OrdinalIgnoreCase));
 
@@ -357,32 +361,179 @@ internal sealed class AiteProfilesQuickLinkService
 
     public static IReadOnlyList<AiteProfileSnippet> NormalizeSnippets(IEnumerable<AiteProfileSnippet> snippets)
     {
-        var map = new Dictionary<string, AiteProfileSnippet>(StringComparer.OrdinalIgnoreCase);
+        if (snippets is null)
+        {
+            return [];
+        }
+
+        var singleUrlPrepared = new List<(int Index, AiteProfileSnippet Snippet)>();
+        var result = new List<AiteProfileSnippet>();
+        int index = 0;
+
         foreach (AiteProfileSnippet item in snippets)
         {
+            if (item is null)
+            {
+                index++;
+                continue;
+            }
+
             string name = NormalizePart(item.Name);
             List<string> tags = ParseTags(string.Join(',', item.Tags ?? []));
             List<string> urls = ParseUrls(string.Join('|', item.Urls ?? []));
             if (string.IsNullOrWhiteSpace(name) || urls.Count == 0)
             {
+                index++;
                 continue;
             }
 
-            if (tags.Count == 0)
+            if (urls.Count > 1)
             {
-                tags = ["misc"];
+                var tagSet = new HashSet<string>(tags, StringComparer.OrdinalIgnoreCase);
+                if (tagSet.Count > 1)
+                {
+                    tagSet.Remove("misc");
+                }
+
+                List<string> finalTags = tagSet.OrderBy(static t => t, StringComparer.Ordinal).ToList();
+                if (finalTags.Count == 0)
+                {
+                    finalTags = ["misc"];
+                }
+
+                result.Add(new AiteProfileSnippet
+                {
+                    Name = name,
+                    Tags = finalTags,
+                    Urls = urls
+                });
+            }
+            else
+            {
+                singleUrlPrepared.Add((index, new AiteProfileSnippet
+                {
+                    Name = name,
+                    Tags = tags,
+                    Urls = urls
+                }));
             }
 
-            var normalized = new AiteProfileSnippet
-            {
-                Name = name,
-                Tags = tags,
-                Urls = urls
-            };
-            map[$"{normalized.Name}|{string.Join('|', normalized.Urls)}"] = normalized;
+            index++;
         }
 
-        return map.Values.OrderBy(static x => x.Name, StringComparer.OrdinalIgnoreCase).ToList();
+        if (singleUrlPrepared.Count > 0)
+        {
+            var urlToOwner = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var parent = new int[singleUrlPrepared.Count];
+            for (int i = 0; i < parent.Length; i++)
+            {
+                parent[i] = i;
+            }
+
+            static int Find(int[] p, int x)
+            {
+                while (p[x] != x)
+                {
+                    p[x] = p[p[x]];
+                    x = p[x];
+                }
+
+                return x;
+            }
+
+            static void Union(int[] p, int a, int b)
+            {
+                int ra = Find(p, a);
+                int rb = Find(p, b);
+                if (ra != rb)
+                {
+                    if (ra < rb)
+                    {
+                        p[ra] = rb;
+                    }
+                    else
+                    {
+                        p[rb] = ra;
+                    }
+                }
+            }
+
+            for (int i = 0; i < singleUrlPrepared.Count; i++)
+            {
+                string url = singleUrlPrepared[i].Snippet.Urls[0];
+                if (urlToOwner.TryGetValue(url, out int owner))
+                {
+                    Union(parent, i, owner);
+                }
+                else
+                {
+                    urlToOwner[url] = i;
+                }
+            }
+
+            var groups = new Dictionary<int, List<int>>();
+            for (int i = 0; i < singleUrlPrepared.Count; i++)
+            {
+                int root = Find(parent, i);
+                if (!groups.TryGetValue(root, out var members))
+                {
+                    members = [];
+                    groups[root] = members;
+                }
+
+                members.Add(i);
+            }
+
+            foreach ((_, List<int> members) in groups)
+            {
+                int lastIndex = -1;
+                string finalName = string.Empty;
+                var tagSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                string singleUrl = singleUrlPrepared[members[0]].Snippet.Urls[0];
+
+                foreach (int memberIndex in members)
+                {
+                    (int idx, AiteProfileSnippet snip) = singleUrlPrepared[memberIndex];
+                    if (idx > lastIndex)
+                    {
+                        lastIndex = idx;
+                        finalName = snip.Name;
+                    }
+
+                    foreach (string tag in snip.Tags)
+                    {
+                        if (!string.IsNullOrWhiteSpace(tag))
+                        {
+                            tagSet.Add(tag.ToLowerInvariant().Trim());
+                        }
+                    }
+                }
+
+                if (tagSet.Count > 1)
+                {
+                    tagSet.Remove("misc");
+                }
+
+                List<string> finalTags = tagSet
+                    .OrderBy(static t => t, StringComparer.Ordinal)
+                    .ToList();
+                if (finalTags.Count == 0)
+                {
+                    finalTags = ["misc"];
+                }
+
+                result.Add(new AiteProfileSnippet
+                {
+                    Name = finalName,
+                    Tags = finalTags,
+                    Urls = [singleUrl]
+                });
+            }
+        }
+
+        return result
+            .OrderBy(static x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     internal static List<string> ParseTags(string value) =>

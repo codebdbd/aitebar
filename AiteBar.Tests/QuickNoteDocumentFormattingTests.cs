@@ -1,5 +1,6 @@
 using System.Threading;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using AiteBar;
 
@@ -14,11 +15,28 @@ public sealed class QuickNoteDocumentFormattingTests
         {
             Section section = QuickNoteDocumentFormatting.CreateCodeBlockElement("first\nsecond", QuickNoteThemeCatalog.Find(null));
             Assert.Equal(2, section.Blocks.OfType<Paragraph>().Count());
-            Assert.DoesNotContain(section.Blocks, static block => block is BlockUIContainer);
+            Assert.Equal(new Thickness(0), section.Padding);
+            Assert.Equal(QuickNoteDocumentFormatting.CodeBackground, ((System.Windows.Media.SolidColorBrush)section.Background).Color.ToString().Replace("#FF", "#"));
 
-            Paragraph line = Assert.IsType<Paragraph>(section.Blocks.FirstBlock);
-            line.Inlines.Add(new Run(" edited"));
-            Assert.Equal("first edited", new TextRange(line.ContentStart, line.ContentEnd).Text.Trim());
+            BlockUIContainer header = Assert.IsType<BlockUIContainer>(section.Blocks.FirstBlock);
+            Assert.True(QuickNoteDocumentFormatting.IsCodeHeader(header));
+            Grid grid = Assert.IsType<Grid>(header.Child);
+            Assert.Equal(20, grid.Height);
+            Assert.Equal(QuickNoteDocumentFormatting.CodeHeaderBackground, ((System.Windows.Media.SolidColorBrush)grid.Background).Color.ToString().Replace("#FF", "#"));
+            TextBlock label = Assert.IsType<TextBlock>(grid.Children[0]);
+            Assert.Equal("code", label.Text);
+            Button copyButton = Assert.IsType<Button>(grid.Children[1]);
+            Assert.Equal(QuickNoteDocumentFormatting.CodeCopyLink, copyButton.Tag);
+            Assert.True(copyButton.OverridesDefaultStyle);
+            Assert.Equal(System.Windows.Media.Colors.Transparent, ((System.Windows.Media.SolidColorBrush)copyButton.Background).Color);
+            Assert.NotNull(copyButton.Template);
+
+            Paragraph firstLine = Assert.IsType<Paragraph>(header.NextBlock);
+            Assert.Equal(QuickNoteFonts.Code.Source, firstLine.FontFamily.Source);
+            firstLine.Inlines.Add(new Run(" edited"));
+            Assert.Equal(
+                "first edited\nsecond",
+                QuickNoteDocumentHelper.NormalizeLineEndings(QuickNoteDocumentFormatting.GetCodeBlockText(section)));
         });
     }
 
@@ -33,6 +51,25 @@ public sealed class QuickNoteDocumentFormattingTests
     {
         Assert.True(QuickNoteDocumentFormatting.IsSafeLinkForOpen("https://example.com", QuickNoteDocumentFormatting.LinkType.Url));
         Assert.False(QuickNoteDocumentFormatting.IsSafeLinkForOpen("file:///C:/note.txt", QuickNoteDocumentFormatting.LinkType.Url));
+    }
+
+    [Fact]
+    public void RtfAdapter_LeavesPlainMarkdownFencesAsPlainText()
+    {
+        RunSta(() =>
+        {
+            var source = new FlowDocument();
+            source.Blocks.Add(new Paragraph(new Run("```code")));
+            source.Blocks.Add(new Paragraph(new Run("var answer = 42;")));
+            source.Blocks.Add(new Paragraph(new Run("```")));
+
+            FlowDocument exported = QuickNoteRtfAdapter.CreateExportDocument(source);
+            QuickNoteRtfAdapter.RestoreCodeBlocksFromFences(exported);
+
+            Assert.DoesNotContain(exported.Blocks, QuickNoteDocumentFormatting.IsCodeBlock);
+            Assert.Equal("```code\nvar answer = 42;\n```", QuickNoteDocumentHelper.NormalizeLineEndings(
+                new TextRange(exported.ContentStart, exported.ContentEnd).Text).Trim());
+        });
     }
 
     [Fact]

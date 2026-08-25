@@ -60,6 +60,6 @@ public sealed class QuickNoteContractsTests
     public void FontContract_UsesExpectedFamilies()
     {
         Assert.Equal(QuickNoteFonts.DefaultFamilyName, QuickNoteFonts.Default.Source);
-        Assert.Equal(QuickNoteFonts.CodeFamilyName, QuickNoteFonts.Code.Source);
+        Assert.EndsWith($"#{QuickNoteFonts.CodeFamilyName}", QuickNoteFonts.Code.Source);
     }
 }

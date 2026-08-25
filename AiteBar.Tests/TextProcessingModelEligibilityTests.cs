@@ -16,6 +16,9 @@ public sealed class TextProcessingModelEligibilityTests
     [InlineData("ALLaM-2-7b", "ALLaM 2 7B")]
     [InlineData("jais-30b-chat", "Jais 30B Chat")]
     [InlineData("lyria-3-clip", "Lyria 3 Clip")]
+    [InlineData("mistral-embed", "Mistral Embed")]
+    [InlineData("mistral-ocr-latest", "Mistral OCR")]
+    [InlineData("labs/leanstral-2402", "Labs Leanstral")]
     [InlineData("\u200B", "\u200B")]
     [InlineData("   ", "   ")]
     public void IsEligibleModel_RejectsModelsNotIntendedForWriting(string modelId, string displayName)
@@ -128,6 +131,41 @@ public sealed class TextProcessingModelEligibilityTests
             preferredIdentities);
 
         Assert.Equal(["z-model", "a-model"], items.Select(item => item.ModelId));
+    }
+
+    [Fact]
+    public void GetCertifiedModelRank_RanksLlama33BeforeGptOss120b()
+    {
+        AiModelDescriptor llama = Model("cerebras", "llama-3.3-70b", "Llama 3.3", 128_000);
+        AiModelDescriptor gptOss = Model("cerebras", "gpt-oss-120b", "GPT OSS", 128_000);
+
+        int llamaRank = TextProcessingModelPolicy.GetCertifiedModelRank(llama);
+        int gptOssRank = TextProcessingModelPolicy.GetCertifiedModelRank(gptOss);
+
+        Assert.True(llamaRank < gptOssRank, $"Expected llamaRank ({llamaRank}) < gptOssRank ({gptOssRank})");
+    }
+
+    [Fact]
+    public void OrderRoutes_PrioritizesLlama33OverGptOssAndRotatesOnRotationOffset()
+    {
+        var conn = new AiConnectionSettings { Id = "conn1", ProviderId = "cerebras", IsEnabled = true };
+        var settings = new AiSettings { Connections = [conn] };
+
+        AiModelDescriptor llama = Model("cerebras", "llama-3.3-70b", "Llama 3.3", 128_000);
+        AiModelDescriptor gptOss = Model("cerebras", "gpt-oss-120b", "GPT OSS", 128_000);
+        AiModelDescriptor qwen = Model("cerebras", "qwen3-32b", "Qwen 3", 128_000);
+
+        var candidateLlama = new AiRouteCandidate(conn, llama, 0);
+        var candidateGptOss = new AiRouteCandidate(conn, gptOss, 1);
+        var candidateQwen = new AiRouteCandidate(conn, qwen, 2);
+
+        var requestBase = new AiChatRequest();
+        var ordered0 = AiModelSelectionPolicy.OrderRoutes(settings, requestBase, [candidateGptOss, candidateQwen, candidateLlama]);
+        Assert.Equal("llama-3.3-70b", ordered0[0].Model.ModelId);
+
+        var requestRepeat = new AiChatRequest { RotationOffset = 1 };
+        var ordered1 = AiModelSelectionPolicy.OrderRoutes(settings, requestRepeat, [candidateGptOss, candidateQwen, candidateLlama]);
+        Assert.NotEqual("llama-3.3-70b", ordered1[0].Model.ModelId);
     }
 
     private static AiModelDescriptor Model(

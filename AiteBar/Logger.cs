@@ -31,6 +31,19 @@ namespace AiteBar
             }
         }
 
+        public static void Log(string message)
+        {
+            try
+            {
+                _logQueue.Enqueue($"[{DateTime.Now:yyyy-MM-dd HH:mm:ss}] {message}\n\n");
+                FlushQueue();
+            }
+            catch (Exception logEx)
+            {
+                Debug.WriteLine(logEx);
+            }
+        }
+
         public static Task LogAsync(Exception ex) =>
             Task.Run(() => Log(ex));
 

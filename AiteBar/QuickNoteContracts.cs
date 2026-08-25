@@ -1,16 +1,40 @@
 using System;
 using System.Globalization;
+using System.IO;
 using System.Windows.Media;
 
 namespace AiteBar;
 
+internal static class QuickNoteBrush
+{
+    public static Brush FromHex(string color)
+    {
+        var brush = (Brush)new BrushConverter().ConvertFromInvariantString(color)!;
+        if (brush.CanFreeze)
+        {
+            brush.Freeze();
+        }
+        return brush;
+    }
+}
+
+internal static class QuickNoteUrlValidator
+{
+    public static bool IsSafeHttpUrl(string? url) =>
+        !string.IsNullOrWhiteSpace(url) &&
+        Uri.TryCreate(url, UriKind.Absolute, out Uri? uri) &&
+        (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+}
+
 internal static class QuickNoteFonts
 {
     public const string DefaultFamilyName = "Segoe UI";
-    public const string CodeFamilyName = "Consolas";
+    public const string CodeFamilyName = "JetBrains Mono";
 
     public static FontFamily Default { get; } = new(DefaultFamilyName);
-    public static FontFamily Code { get; } = new(CodeFamilyName);
+    public static FontFamily Code { get; } = new(
+        new Uri(Path.Combine(AppContext.BaseDirectory, "Resources", "Fonts", "JetBrainsMono") + Path.DirectorySeparatorChar, UriKind.Absolute),
+        "./#" + CodeFamilyName);
 }
 
 internal static class QuickNoteTags
@@ -20,6 +44,7 @@ internal static class QuickNoteTags
     private const string LinkPrefix = "link:";
 
     public const string Code = "code";
+    public const string CodeHeader = "code-header";
 
     public static string Heading(int level) =>
         HeadingPrefix + level.ToString(CultureInfo.InvariantCulture);

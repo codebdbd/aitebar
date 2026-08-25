@@ -13,7 +13,7 @@
         LocationChanged="Window_LocationChanged" SizeChanged="Window_SizeChanged">
 
     <WindowChrome.WindowChrome>
-        <WindowChrome ResizeBorderThickness="6" CaptionHeight="0" GlassFrameThickness="0" CornerRadius="14"/>
+        <WindowChrome ResizeBorderThickness="6" CaptionHeight="0" GlassFrameThickness="0" CornerRadius="0"/>
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
@@ -39,6 +39,10 @@
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#70B7FF"/>
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="1"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -86,9 +90,9 @@
         </Style>
 
         <Style x:Key="FormatButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="32"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="Margin" Value="0,0,5,0"/>
+            <Setter Property="Width" Value="30"/>
+            <Setter Property="Height" Value="28"/>
+            <Setter Property="Margin" Value="0,0,2,0"/>
             <Setter Property="Padding" Value="0"/>
             <Setter Property="Foreground" Value="#AFAFB7"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -112,113 +116,9 @@
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
                             </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="FormatComboStyle" TargetType="ComboBox">
-            <Setter Property="Width" Value="44"/>
-            <Setter Property="Height" Value="{StaticResource FormControlHeight}"/>
-            <Setter Property="Margin" Value="0,0,5,0"/>
-            <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize" Value="12"/>
-            <Setter Property="Foreground" Value="#AFAFB7"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderBrush" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Focusable" Value="False"/>
-            <Setter Property="IsTabStop" Value="False"/>
-            <Setter Property="SnapsToDevicePixels" Value="True"/>
-            <Setter Property="UseLayoutRounding" Value="True"/>
-            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ComboBox">
-                        <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
-                            <Border x:Name="Chrome"
-                                    Background="{TemplateBinding Background}"
-                                    CornerRadius="8"
-                                    SnapsToDevicePixels="True">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="14"/>
-                                    </Grid.ColumnDefinitions>
-
-                                    <ToggleButton x:Name="PART_DropDownToggle"
-                                                  Grid.ColumnSpan="2"
-                                                  Background="Transparent"
-                                                  BorderThickness="0"
-                                                  Focusable="False"
-                                                  ClickMode="Press"
-                                                  IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
-                                        <ToggleButton.Template>
-                                            <ControlTemplate TargetType="ToggleButton">
-                                                <Border Background="Transparent"/>
-                                            </ControlTemplate>
-                                        </ToggleButton.Template>
-                                    </ToggleButton>
-
-                                    <TextBlock Text="{TemplateBinding Tag}"
-                                               FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-                                               FontSize="18"
-                                               Foreground="{TemplateBinding Foreground}"
-                                               HorizontalAlignment="Center"
-                                               VerticalAlignment="Center"
-                                               IsHitTestVisible="False"/>
-
-                                    <Path x:Name="Arrow"
-                                          Grid.Column="1"
-                                          Width="6"
-                                          Height="4"
-                                          HorizontalAlignment="Left"
-                                          VerticalAlignment="Center"
-                                          Fill="{TemplateBinding Foreground}"
-                                          Data="M 0 0 L 3 4 L 6 0 Z"
-                                          IsHitTestVisible="False"/>
-                                </Grid>
-                            </Border>
-
-                            <Popup x:Name="PART_Popup"
-                                   Placement="Bottom"
-                                   IsOpen="{TemplateBinding IsDropDownOpen}"
-                                   AllowsTransparency="True"
-                                   Focusable="False"
-                                   PopupAnimation="Fade">
-                                <Border x:Name="DropDownBorder"
-                                        MinWidth="188"
-                                        MaxHeight="300"
-                                        Background="{StaticResource FormControlBackground}"
-                                        BorderBrush="{StaticResource FormControlBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="6"
-                                        SnapsToDevicePixels="True">
-                                    <ScrollViewer Margin="3"
-                                                  CanContentScroll="True"
-                                                  SnapsToDevicePixels="True">
-                                        <ItemsPresenter/>
-                                    </ScrollViewer>
-                                </Border>
-                            </Popup>
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsDropDownOpen" Value="True">
-                                <Setter TargetName="Chrome" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
-                            </Trigger>
-                            <Trigger Property="HasItems" Value="False">
-                                <Setter TargetName="DropDownBorder" Property="MinHeight" Value="40"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="#777777"/>
-                                <Setter TargetName="Chrome" Property="Opacity" Value="0.55"/>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="#70B7FF"/>
+                                <Setter TargetName="Bd" Property="BorderThickness" Value="1"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -231,7 +131,6 @@
                BasedOn="{StaticResource DarkScrollBarStyle}"/>
 
         <Style x:Key="QuickNoteEditorStyle" TargetType="RichTextBox">
-            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="BorderBrush" Value="Transparent"/>
             <Setter Property="Background" Value="Transparent"/>
@@ -255,86 +154,40 @@
     </Window.Resources>
 
     <Grid>
-        <Border Margin="8" CornerRadius="14" Background="#383838" BorderBrush="#3A3B40" BorderThickness="1">
-            <Border.Effect>
-                <DropShadowEffect Color="#000000" BlurRadius="16" ShadowDepth="3" Direction="270" Opacity="0.14"/>
-            </Border.Effect>
+        <Border Margin="0" CornerRadius="0" Background="#383838" BorderBrush="#3A3B40" BorderThickness="1">
 
             <Grid>
             <Grid.RowDefinitions>
-                <RowDefinition Height="52"/>
+                <RowDefinition Height="36"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="34"/>
                 <RowDefinition Height="36"/>
             </Grid.RowDefinitions>
 
             <Border x:Name="HeaderBar" Grid.Row="0" BorderThickness="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
-                <Grid Margin="24,6,18,0" Background="Transparent">
+                <Grid Margin="6,2" Background="Transparent">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Height="{StaticResource FormControlHeight}">
-                        <Button Content="A−" Style="{StaticResource FormatButtonStyle}" ToolTip="Decrease font size" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnDecreaseFontSize_Click"/>
-                        <Button Content="A+" Style="{StaticResource FormatButtonStyle}" ToolTip="Increase font size" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnIncreaseFontSize_Click"/>
-                        <Button Content="&#xE8FD;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_BulletList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnBullet_Click"/>
-                        <Button Content="&#xE8D0;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_NumberedList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnNumbered_Click"/>
-                        <Rectangle x:Name="FormatSeparator1" Width="1" Height="18" Fill="#30FFFFFF" Margin="2,0,7,0"/>
-                        <Button Content="&#xF7A5;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Bold}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnBold_Click"/>
-                        <Button Content="&#xF7F4;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Italic}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnItalic_Click"/>
-                        <Button Content="&#xED60;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Strikethrough}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnStrikethrough_Click"/>
-                        <Button Content="&#xF4E5;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_InsertLink}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnInsertLink_Click"/>
-                        <Rectangle x:Name="FormatSeparator2" Width="1" Height="18" Fill="#30FFFFFF" Margin="2,0,7,0"/>
-                        <Button Content="&#xF80A;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Underline}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnUnderline_Click"/>
-                        <Button Content="&#xF2EF;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Code}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnCode_Click"/>
-                        <Rectangle x:Name="FormatSeparator3" Width="1" Height="18" Fill="#30FFFFFF" Margin="2,0,7,0"/>
-                        <Button Content="&#xF7BD;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_ClearFormatting}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnClearFormatting_Click"/>
-                    </StackPanel>
-
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                        <ToggleButton x:Name="BtnPin"
-                                      Style="{StaticResource WindowPinToggleButtonStyle}"
-                                      ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
-                                      IsChecked="{Binding IsPinned, RelativeSource={RelativeSource AncestorType=local:DarkWindow}, Mode=TwoWay}"
-                                      Checked="BtnPin_Checked"
-                                      Unchecked="BtnPin_Checked"/>
-                        <Button Content="⋯" FontFamily="Segoe UI" FontSize="22" Style="{StaticResource QuickNoteIconButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Menu}" Click="BtnMenu_Click">
-                            <Button.ContextMenu>
-                                <ContextMenu Style="{StaticResource DarkContextMenu}">
-                                    <MenuItem Header="{local:Loc ResourceKey=QuickNote_Theme}" Click="BtnTheme_Click">
-                                        <MenuItem.Icon>
-                                            <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF2F5;"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    <MenuItem Header="{local:Loc ResourceKey=QuickNote_OpenFile}" Click="BtnOpenFile_Click">
-                                        <MenuItem.Icon>
-                                            <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF42E;"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    <MenuItem x:Name="MenuOpenConflictCopy" Header="{local:Loc ResourceKey=QuickNote_OpenConflictCopy}" Click="BtnOpenConflictCopy_Click" IsEnabled="False">
-                                        <MenuItem.Icon>
-                                            <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE7BA;"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                    <MenuItem Header="{local:Loc ResourceKey=QuickNote_Clear}" Click="BtnClear_Click">
-                                        <MenuItem.Icon>
-                                            <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF201;"/>
-                                        </MenuItem.Icon>
-                                    </MenuItem>
-                                </ContextMenu>
-                            </Button.ContextMenu>
-                        </Button>
-                        <Button Style="{StaticResource WindowCloseButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
-                    </StackPanel>
+                    <ToggleButton x:Name="BtnPin"
+                                  HorizontalAlignment="Left"
+                                  Style="{StaticResource WindowPinToggleButtonStyle}"
+                                  ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
+                                  AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Pin}"
+                                  IsChecked="{Binding IsPinned, RelativeSource={RelativeSource AncestorType=local:DarkWindow}, Mode=TwoWay}"
+                                  Checked="BtnPin_Checked"
+                                  Unchecked="BtnPin_Checked"/>
+                    <Button Grid.Column="1" Style="{StaticResource WindowCloseButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" AutomationProperties.Name="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
                 </Grid>
             </Border>
 
-            <Border Grid.Row="1" Margin="24,2,24,0" CornerRadius="0" Background="Transparent" BorderThickness="0">
+
+            <Border Grid.Row="1" Margin="8,2,4,0" CornerRadius="0" Background="Transparent" BorderThickness="0">
                 <Grid>
                     <RichTextBox x:Name="TxtNote"
                                  Style="{StaticResource QuickNoteEditorStyle}"
-                                 ContextMenu="{DynamicResource TextEditingContextMenu}"
-                                 FocusVisualStyle="{x:Null}"
                                  Margin="0"
                                  Background="Transparent"
                                  Foreground="#F6F0E6"
@@ -353,8 +206,64 @@
                                  TextChanged="TxtNote_TextChanged"
                                  SelectionChanged="TxtNote_SelectionChanged"
                                  PreviewKeyDown="TxtNote_PreviewKeyDown"
-                                 PreviewMouseLeftButtonDown="TxtNote_PreviewMouseLeftButtonDown"
-                                 PreviewMouseMove="TxtNote_PreviewMouseMove">
+                                 PreviewMouseDown="TxtNote_PreviewMouseDown"
+                                 PreviewMouseMove="TxtNote_PreviewMouseMove"
+                                 AllowDrop="True"
+                                 DragOver="TxtNote_DragOver"
+                                 Drop="TxtNote_Drop">
+                        <RichTextBox.ContextMenu>
+                            <ContextMenu Style="{StaticResource DarkContextMenu}"
+                                         TextBlock.LineHeight="NaN"
+                                         TextBlock.LineStackingStrategy="MaxHeight">
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Undo}" Command="ApplicationCommands.Undo" InputGestureText="Ctrl+Z">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF199;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Redo}" Command="ApplicationCommands.Redo" InputGestureText="Ctrl+Y">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF16E;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator Style="{StaticResource DarkMenuSeparator}"/>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Cut}" Command="ApplicationCommands.Cut" InputGestureText="Ctrl+X">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF33A;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Copy}" Command="ApplicationCommands.Copy" InputGestureText="Ctrl+C">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF381;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Paste}" Command="ApplicationCommands.Paste" InputGestureText="Ctrl+V">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF2D5;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_SelectAll}" Command="ApplicationCommands.SelectAll" InputGestureText="Ctrl+A">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xEA86;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                 <Separator Style="{StaticResource DarkMenuSeparator}"/>
+                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_Theme}" Click="BtnTheme_Click">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF2F5;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_OpenFile}" Click="BtnOpenFile_Click">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF42E;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Clear}" Click="BtnClear_Click">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF201;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </RichTextBox.ContextMenu>
                         <RichTextBox.Resources>
                             <Style TargetType="Paragraph">
                                  <Setter Property="Margin" Value="0"/>
@@ -373,7 +282,24 @@
                 </Grid>
             </Border>
 
-            <Border x:Name="FooterBar" Grid.Row="2" BorderThickness="0">
+            <Border Grid.Row="2" BorderThickness="0" Background="Transparent">
+                <StackPanel Orientation="Horizontal" Margin="8,0,4,0" VerticalAlignment="Center" Height="30">
+                    <Button Content="A-" FontFamily="Segoe UI" FontSize="14" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_DecreaseFont}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_DecreaseFont}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnDecreaseFontSize_Click"/>
+                    <Button Content="A+" FontFamily="Segoe UI" FontSize="14" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_IncreaseFont}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_IncreaseFont}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnIncreaseFontSize_Click"/>
+                    <Button Content="&#xE241;" FontFamily="pack://application:,,,/Resources/#Material Icons" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_BulletList}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_BulletList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnBullet_Click"/>
+                    <Button Content="&#xF7FA;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_NumberedList}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_NumberedList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnNumbered_Click"/>
+                    <Button Content="&#xF7A5;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Bold}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Bold}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnBold_Click"/>
+                    <Button Content="&#xF7F4;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Italic}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Italic}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnItalic_Click"/>
+                    <Button Content="&#xED60;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Strikethrough}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Strikethrough}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnStrikethrough_Click"/>
+                    <Button Content="&#xF4E5;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_InsertLink}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_InsertLink}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnInsertLink_Click"/>
+                    <Button Content="&#xE91B;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_InsertImage}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_InsertImage}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnInsertImage_Click"/>
+                    <Button Content="&#xF80A;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Underline}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Underline}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnUnderline_Click"/>
+                    <Button Content="&#xF2EF;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Code}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Code}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnCode_Click"/>
+                    <Button Content="&#xF7BD;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_ClearFormatting}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_ClearFormatting}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnClearFormatting_Click"/>
+                </StackPanel>
+            </Border>
+
+            <Border x:Name="FooterBar" Grid.Row="3" BorderThickness="0">
                 <Grid Margin="24,0,24,4">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto"/>

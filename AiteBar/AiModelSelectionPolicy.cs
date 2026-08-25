@@ -30,14 +30,29 @@ internal static class AiModelSelectionPolicy
         IReadOnlyDictionary<string, IReadOnlyDictionary<string, int>> preferredModelRanks =
             BuildPreferredModelRanks(settings, candidates);
 
-        return candidates
+        AiRouteCandidate[] ordered = candidates
             .OrderBy(candidate => providerRanks.GetValueOrDefault(
                 candidate.Connection.ProviderId,
                 int.MaxValue))
             .ThenBy(candidate => GetPreferredModelRank(preferredModelRanks, candidate))
+            .ThenBy(candidate => TextProcessingModelPolicy.GetCertifiedModelRank(candidate.Model))
             .ThenBy(candidate => candidate.Model.ModelId, StringComparer.OrdinalIgnoreCase)
             .ThenBy(candidate => candidate.ConnectionOrder)
             .ToArray();
+
+        int rotationOffset = request.RotationOffset;
+        if (rotationOffset <= 0 && request.IsAlternative)
+        {
+            rotationOffset = 1;
+        }
+
+        if (rotationOffset > 0 && ordered.Length > 1)
+        {
+            int offset = rotationOffset % ordered.Length;
+            return ordered.Skip(offset).Concat(ordered.Take(offset)).ToArray();
+        }
+
+        return ordered;
     }
 
     internal static void ValidateRequestContract(AiChatRequest request)

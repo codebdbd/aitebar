@@ -68,6 +68,8 @@ public sealed class AiChatRequest
     public bool RequireFreeModel { get; init; }
     public bool RequireWritingModel { get; init; }
     public bool RequireExactModel { get; init; }
+    public bool IsAlternative { get; init; }
+    public int RotationOffset { get; init; }
     public string? PreferredConnectionId { get; init; }
     public string? PreferredProviderId { get; init; }
     public string? PreferredModelId { get; init; }

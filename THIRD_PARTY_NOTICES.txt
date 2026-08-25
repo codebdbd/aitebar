@@ -44,6 +44,13 @@ Application license: MIT License (see LICENSE file)
    Notes: Unmodified font files are bundled as private Zen Editor resources.
    Complete license texts are distributed in Resources/ZenEditor/Licenses.
 
+7. JetBrains Mono
+   Copyright 2020 The JetBrains Mono Project Authors
+   Project: https://github.com/JetBrains/JetBrainsMono
+   License: SIL Open Font License 1.1
+   Notes: Unmodified Regular and Bold TTF files are bundled for Quick Note code blocks.
+   The complete license text is distributed in Resources/Fonts/JetBrainsMono/OFL.txt.
+
 This notice file is provided for informational purposes.
 Please review the upstream projects for the full and current license texts and any
 additional notice requirements that may apply to your distribution model.

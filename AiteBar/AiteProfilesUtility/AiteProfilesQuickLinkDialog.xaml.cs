@@ -20,6 +20,7 @@ public partial class AiteProfilesQuickLinkDialog : DarkWindow
             NameBox.Text = initialSnippet.Name;
             TagsBox.Text = string.Join(", ", initialSnippet.Tags);
             UrlsBox.Text = string.Join(Environment.NewLine, initialSnippet.Urls);
+            ChkGuestMode.IsChecked = initialSnippet.GuestMode;
         }
         else
         {
@@ -36,6 +37,8 @@ public partial class AiteProfilesQuickLinkDialog : DarkWindow
     }
 
     internal AiteProfileSnippet? ResultSnippet { get; private set; }
+
+    public bool GuestMode => ChkGuestMode.IsChecked ?? false;
 
     private void Input_TextChanged(object sender, TextChangedEventArgs e)
     {
@@ -119,7 +122,8 @@ public partial class AiteProfilesQuickLinkDialog : DarkWindow
         {
             Name = name,
             Tags = tags.Count == 0 ? ["misc"] : tags,
-            Urls = urls.Distinct(StringComparer.OrdinalIgnoreCase).ToList()
+            Urls = urls.Distinct(StringComparer.OrdinalIgnoreCase).ToList(),
+            GuestMode = ChkGuestMode.IsChecked ?? false
         };
         return true;
     }

@@ -123,7 +123,7 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Schnellnotiz leeren?</value></data>
   <data name="QuickNote_Stats" xml:space="preserve"><value>{0} Zeichen - {1} Zeilen</value></data>
   <data name="QuickNote_SelectedStats" xml:space="preserve"><value>Ausgewählt: {0} Zeichen mit Leerzeichen - {1} Zeichen ohne Leerzeichen</value></data>
-  <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.rtf</value></data>
+  <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.aite-note</value></data>
   <data name="QuickNote_Menu" xml:space="preserve"><value>Notizmenü</value></data>
   <data name="QuickNote_Theme" xml:space="preserve"><value>Notizfarbe</value></data>
   <data name="QuickNote_Pin" xml:space="preserve"><value>Notiz geöffnet halten</value></data>
@@ -131,6 +131,17 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="QuickNote_Redo" xml:space="preserve"><value>Wiederholen</value></data>
   <data name="QuickNote_Cut" xml:space="preserve"><value>Ausschneiden</value></data>
   <data name="QuickNote_Copy" xml:space="preserve"><value>Kopieren</value></data>
+  <data name="QuickNote_Copied" xml:space="preserve"><value>Kopiert</value></data>
+  <data name="QuickNote_CopyFailed" xml:space="preserve"><value>Kopieren fehlgeschlagen</value></data>
+  <data name="QuickNote_InsertImage" xml:space="preserve"><value>Bild einfugen</value></data>
+  <data name="QuickNote_ImageInsertFailed" xml:space="preserve"><value>Bild konnte nicht eingefugt werden</value></data>
+  <data name="QuickNote_ImportMarkdown" xml:space="preserve"><value>Markdown oder Text importieren</value></data>
+  <data name="QuickNote_ExportMarkdown" xml:space="preserve"><value>Markdown exportieren</value></data>
+  <data name="QuickNote_ExportText" xml:space="preserve"><value>Text exportieren</value></data>
+  <data name="QuickNote_ImportConfirm" xml:space="preserve"><value>Aktuelle Notiz ersetzen? Zuerst wird eine Sicherungskopie erstellt.</value></data>
+  <data name="QuickNote_ImportResult" xml:space="preserve"><value>Importierte Bilder: {0}; ubersprungen: {1}</value></data>
+  <data name="QuickNote_DecreaseFont" xml:space="preserve"><value>Schrift verkleinern</value></data>
+  <data name="QuickNote_IncreaseFont" xml:space="preserve"><value>Schrift vergrößern</value></data>
   <data name="QuickNote_Paste" xml:space="preserve"><value>Einfügen</value></data>
   <data name="QuickNote_SelectAll" xml:space="preserve"><value>Alles auswählen</value></data>
   <data name="QuickNote_Bold" xml:space="preserve"><value>Fett</value></data>
@@ -1041,6 +1052,7 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="AiteProfiles_LinkNamePlaceholder" xml:space="preserve"><value>Example: Docs, Work mail...</value></data>
   <data name="AiteProfiles_LinkTagsPlaceholder" xml:space="preserve"><value>work, mail, ai...</value></data>
   <data name="AiteProfiles_LinkUrlsPlaceholder" xml:space="preserve"><value>https://example.com/&#10;One URL per line, or separated by |</value></data>
+  <data name="AiteProfiles_GuestMode" xml:space="preserve"><value>Gastmodus (--guest)</value></data>
 </root>
 
 
