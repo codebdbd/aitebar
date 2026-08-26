@@ -44,7 +44,7 @@ public sealed class QuickNoteWindowFormattingTests
                 int textChangedCount = 0;
                 window.TxtNote.TextChanged += (_, _) => textChangedCount++;
 
-                window.ClearSelectedFormatting();
+                window.ClearSelectedFormatting(ClearFormattingScope.All);
 
                 var paragraph = Assert.IsType<Paragraph>(window.TxtNote.Document.Blocks.FirstBlock);
                 Assert.Empty(paragraph.Inlines.OfType<Hyperlink>());
@@ -87,7 +87,7 @@ public sealed class QuickNoteWindowFormattingTests
                     "first\nsecond",
                     QuickNoteDocumentHelper.RemoveVisualListMarkers(window.TxtNote.Selection.Text).Trim());
 
-                window.ClearSelectedFormatting();
+                window.ClearSelectedFormatting(ClearFormattingScope.All);
 
                 Assert.Equal(2, window.TxtNote.Document.Blocks.OfType<Paragraph>().Count());
                 Assert.Equal(
@@ -128,7 +128,7 @@ public sealed class QuickNoteWindowFormattingTests
                     run.ContentStart.GetPositionAtOffset("prefix ".Length)!,
                     run.ContentStart.GetPositionAtOffset("prefix selected".Length)!);
 
-                window.ClearSelectedFormatting();
+                window.ClearSelectedFormatting(ClearFormattingScope.All);
 
                 Hyperlink[] links = paragraph.Inlines.OfType<Hyperlink>().ToArray();
                 Assert.Equal(2, links.Length);
@@ -177,7 +177,7 @@ public sealed class QuickNoteWindowFormattingTests
                 window.TxtNote.Document.Blocks.Add(paragraph);
                 window.TxtNote.Selection.Select(selected.ContentStart, selected.ContentEnd);
 
-                window.ClearSelectedFormatting();
+                window.ClearSelectedFormatting(ClearFormattingScope.All);
 
                 Hyperlink[] links = paragraph.Inlines.OfType<Hyperlink>().ToArray();
                 Assert.Equal(2, links.Length);
@@ -216,7 +216,7 @@ public sealed class QuickNoteWindowFormattingTests
                 window.TxtNote.Document.Blocks.Add(codeBlock);
                 window.TxtNote.Selection.Select(codeBlock.ContentStart, codeBlock.ContentEnd);
 
-                window.ClearSelectedFormatting();
+                window.ClearSelectedFormatting(ClearFormattingScope.All);
 
                 Assert.DoesNotContain(window.TxtNote.Document.Blocks, QuickNoteDocumentFormatting.IsCodeBlock);
                 Paragraph[] paragraphs = window.TxtNote.Document.Blocks.OfType<Paragraph>().ToArray();

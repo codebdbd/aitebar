@@ -25,6 +25,7 @@ public sealed class QuickNoteFormattingControlsTests
                 "BtnIncreaseFontSize_Click",
                 "BtnBullet_Click",
                 "BtnNumbered_Click",
+                "BtnTaskList_Click",
                 "BtnBold_Click",
                 "BtnItalic_Click",
                 "BtnStrikethrough_Click",
@@ -32,6 +33,8 @@ public sealed class QuickNoteFormattingControlsTests
                 "BtnInsertImage_Click",
                 "BtnUnderline_Click",
                 "BtnCode_Click",
+                "BtnQuote_Click",
+                "BtnDivider_Click",
                 "BtnClearFormatting_Click"
             ],
             handlers);
@@ -106,6 +109,7 @@ public sealed class QuickNoteFormattingControlsTests
 
             Assert.Equal(
             [
+                "BtnTaskList_Click",
                 "BtnTheme_Click",
                 "BtnOpenFile_Click",
                 "BtnClear_Click"

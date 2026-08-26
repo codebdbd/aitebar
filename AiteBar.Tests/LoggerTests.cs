@@ -95,7 +95,7 @@ public sealed class LoggerTests
         Assert.Contains(backups, path => new FileInfo(path).Length > 1024 * 1024);
     }
 
-    private sealed class LogArtifactScope : IDisposable
+    internal sealed class LogArtifactScope : IDisposable
     {
         private readonly string _tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
 

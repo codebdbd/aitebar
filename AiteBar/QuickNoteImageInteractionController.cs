@@ -60,8 +60,7 @@ internal sealed class QuickNoteImageInteractionController : IDisposable
     internal bool TryDeleteSelected()
     {
         InlineUIContainer? image = _selectedImage;
-        if (image == null || !QuickNoteImageHelper.EnumerateImageContainers(_editor.Document.Blocks)
-                .Any(candidate => ReferenceEquals(candidate, image)))
+        if (image == null || image.Parent == null || !image.ElementStart.IsInSameDocument(_editor.Document.ContentStart))
         {
             ClearSelection();
             return false;

@@ -552,6 +552,9 @@
   <data name="QuickNote_NumberedList" xml:space="preserve">
     <value>Нумерованный список</value>
   </data>
+  <data name="QuickNote_TaskList" xml:space="preserve">
+    <value>Список задач</value>
+  </data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve">
     <value>Очистить форматирование</value>
   </data>
@@ -659,6 +662,9 @@
   </data>
   <data name="Menu_Panels" xml:space="preserve">
     <value>Панели</value>
+  </data>
+  <data name="Menu_AddButton" xml:space="preserve">
+    <value>Добавить кнопку</value>
   </data>
   <data name="Menu_ImportCurrentPanel" xml:space="preserve">
     <value>Импорт в панель</value>

@@ -325,6 +325,61 @@ public sealed class QuickNoteImageHelperTests : IDisposable
         });
     }
 
+    [Fact]
+    public void TryGetMarker_RejectsOversizedBase64Payload_WithoutCachePollution()
+    {
+        RunSta(() =>
+        {
+            byte[] largeBytes = new byte[QuickNoteImageHelper.MaxEncodedBytes + 1];
+            largeBytes[0] = 1;
+            string largeBase64 = Convert.ToBase64String(largeBytes);
+
+            var quickImage = new QuickNoteImage
+            {
+                Source = CreateBitmap(),
+                PngBase64 = largeBase64
+            };
+
+            var container = new InlineUIContainer(quickImage);
+
+            Assert.False(QuickNoteImageHelper.TryGetMarker(container, out _, out _));
+
+            var field = typeof(QuickNoteImageHelper).GetField("PngPayloadProperty", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            Assert.NotNull(field);
+            var dp = (DependencyProperty)field.GetValue(null)!;
+
+            var cachedPayload = container.GetValue(dp) as byte[];
+            Assert.Null(cachedPayload);
+        });
+    }
+
+    [Fact]
+    public void TryGetMarker_LogsAndRecoversFromMalformedBase64Payload()
+    {
+        RunSta(() =>
+        {
+            using var scope = new LoggerTests.LogArtifactScope();
+
+            var quickImage = new QuickNoteImage
+            {
+                Source = CreateBitmap(),
+                PngBase64 = "this-is-not-valid-base64-string!!!"
+            };
+
+            var container = new InlineUIContainer(quickImage);
+
+            Assert.True(QuickNoteImageHelper.TryGetMarker(container, out string marker, out int payloadBytes));
+            Assert.NotEmpty(marker);
+            Assert.True(payloadBytes > 0);
+
+            Logger.WaitForFlushAsync().GetAwaiter().GetResult();
+
+            Assert.True(File.Exists(PathHelper.LogFile));
+            string logContent = File.ReadAllText(PathHelper.LogFile);
+            Assert.Contains("Failed to decode QuickNoteImage.PngBase64", logContent, StringComparison.Ordinal);
+        });
+    }
+
     private class FakeClipboard : IQuickNoteClipboard
     {
         public BitmapSource? CopiedImage { get; private set; }

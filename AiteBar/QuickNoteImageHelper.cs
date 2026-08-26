@@ -41,7 +41,19 @@ internal static class QuickNoteImageHelper
                 return false;
             }
 
-            return TryCreateInlineImage(frame, out container);
+            if (frame.PixelWidth <= MaxLongestSide && frame.PixelHeight <= MaxLongestSide)
+            {
+                return CreateContainer(frame, bytes, out container);
+            }
+
+            BitmapSource normalized = ResizeIfNeeded(frame);
+            byte[] png = EncodePng(normalized);
+            if (png.Length == 0 || png.Length > MaxEncodedBytes)
+            {
+                return false;
+            }
+
+            return CreateContainer(normalized, png, out container);
         }
         catch (Exception ex) when (ex is ArgumentException or NotSupportedException or InvalidOperationException or IOException)
         {
@@ -86,7 +98,20 @@ internal static class QuickNoteImageHelper
 
         try
         {
-            byte[] png = container.GetValue(PngPayloadProperty) as byte[] ?? EncodePng(source);
+            byte[]? png = container.GetValue(PngPayloadProperty) as byte[];
+            if (png == null && image is QuickNoteImage quickImage && !string.IsNullOrEmpty(quickImage.PngBase64))
+            {
+                try
+                {
+                    png = Convert.FromBase64String(quickImage.PngBase64);
+                }
+                catch (FormatException ex)
+                {
+                    Logger.Log(new InvalidOperationException("Failed to decode QuickNoteImage.PngBase64", ex));
+                }
+            }
+
+            png ??= EncodePng(source);
             if (png.Length == 0 || png.Length > MaxEncodedBytes)
             {
                 return false;
@@ -116,8 +141,9 @@ internal static class QuickNoteImageHelper
             png = Convert.FromBase64String(marker[MarkerPrefix.Length..^MarkerSuffix.Length]);
             return true;
         }
-        catch (FormatException)
+        catch (FormatException ex)
         {
+            Logger.Log(new InvalidOperationException("Failed to decode PNG payload from image marker", ex));
             return false;
         }
     }
@@ -228,8 +254,9 @@ internal static class QuickNoteImageHelper
             totalPayloadBytes += png.Length;
             return true;
         }
-        catch (FormatException)
+        catch (FormatException ex)
         {
+            Logger.Log(new InvalidOperationException("Failed to decode image marker payload", ex));
             return false;
         }
     }

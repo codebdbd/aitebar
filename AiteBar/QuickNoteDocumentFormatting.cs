@@ -292,5 +292,267 @@ namespace AiteBar
         public static string GetCodeBackground(QuickNoteTheme theme) => theme?.CodeBackground ?? CodeBackground;
 
         public static string GetCodeText(QuickNoteTheme theme) => theme?.CodeText ?? CodeForeground;
+
+        public static Section CreateDividerElement(QuickNoteTheme theme)
+        {
+            var section = new Section
+            {
+                Margin = new Thickness(0, 6, 0, 6),
+                Padding = new Thickness(0),
+                BorderThickness = new Thickness(0)
+            };
+
+            var line = new Paragraph
+            {
+                Margin = new Thickness(0),
+                Padding = new Thickness(0),
+                BorderBrush = QuickNoteBrush.FromHex(theme?.MutedText ?? "#555559"),
+                BorderThickness = new Thickness(0, 1, 0, 0)
+            };
+            section.Blocks.Add(line);
+            return section;
+        }
+
+        public static Section CreateQuoteBlockElement(string quoteText, QuickNoteTheme theme)
+        {
+            string[] lines = QuickNoteDocumentHelper.NormalizeLineEndings(quoteText).Split('\n');
+            string accentColor = theme?.Accent ?? "#007ACC";
+            string bgColor = theme?.IsDark is true ? "#22263A" : "#EEF4FC";
+            string textColor = theme?.Text ?? "#F6F0E6";
+
+            var section = new Section
+            {
+                BorderBrush = QuickNoteBrush.FromHex(accentColor),
+                BorderThickness = new Thickness(3, 0, 0, 0),
+                Background = QuickNoteBrush.FromHex(bgColor),
+                Margin = new Thickness(0, 6, 0, 6),
+                Padding = new Thickness(0)
+            };
+
+            foreach (string line in lines)
+            {
+                section.Blocks.Add(new Paragraph(new Run(line))
+                {
+                    Margin = new Thickness(10, 0, 8, 0),
+                    FontFamily = QuickNoteFonts.Default,
+                    FontSize = GetHeadingFontSizeForLevel(0),
+                    FontStyle = FontStyles.Italic,
+                    Foreground = QuickNoteBrush.FromHex(textColor),
+                    LineHeight = 20
+                });
+            }
+
+            return section;
+        }
+
+        public static InlineUIContainer CreateTaskCheckbox(bool isChecked, Action<bool>? onToggled, QuickNoteTheme? theme)
+        {
+            var checkBox = new CheckBox
+            {
+                IsChecked = isChecked,
+                Focusable = false,
+                Cursor = System.Windows.Input.Cursors.Hand,
+                VerticalAlignment = VerticalAlignment.Center,
+                Margin = new Thickness(0, 0, 6, 0),
+                Tag = QuickNoteTags.Task(isChecked),
+                Template = CreateTaskCheckboxTemplate(theme)
+            };
+
+            if (onToggled != null)
+            {
+                checkBox.Click += (_, _) =>
+                {
+                    bool state = checkBox.IsChecked == true;
+                    checkBox.Tag = QuickNoteTags.Task(state);
+                    onToggled(state);
+                };
+            }
+
+            return new InlineUIContainer(checkBox)
+            {
+                Tag = QuickNoteTags.Task(isChecked),
+                BaselineAlignment = BaselineAlignment.Center
+            };
+        }
+
+        public static ControlTemplate CreateTaskCheckboxTemplate(QuickNoteTheme? theme)
+        {
+            var template = new ControlTemplate(typeof(CheckBox));
+
+            var gridFactory = new FrameworkElementFactory(typeof(Grid));
+            gridFactory.SetValue(FrameworkElement.WidthProperty, 16.0);
+            gridFactory.SetValue(FrameworkElement.HeightProperty, 16.0);
+            gridFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+            gridFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, System.Windows.HorizontalAlignment.Center);
+            gridFactory.SetValue(UIElement.SnapsToDevicePixelsProperty, true);
+
+            var borderFactory = new FrameworkElementFactory(typeof(Border), "BoxBorder");
+            borderFactory.SetValue(FrameworkElement.WidthProperty, 15.0);
+            borderFactory.SetValue(FrameworkElement.HeightProperty, 15.0);
+            borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(3));
+            borderFactory.SetValue(Border.BorderThicknessProperty, new Thickness(1.5));
+            borderFactory.SetValue(Border.BorderBrushProperty, QuickNoteBrush.FromHex(theme?.MutedText ?? "#74757A"));
+            borderFactory.SetValue(Border.BackgroundProperty, Brushes.Transparent);
+
+            var pathFactory = new FrameworkElementFactory(typeof(System.Windows.Shapes.Path), "CheckGlyph");
+            pathFactory.SetValue(System.Windows.Shapes.Path.DataProperty, Geometry.Parse("M 3 7.5 L 6 10.5 L 12 3.5"));
+            pathFactory.SetValue(System.Windows.Shapes.Path.StrokeProperty, Brushes.White);
+            pathFactory.SetValue(System.Windows.Shapes.Path.StrokeThicknessProperty, 1.8);
+            pathFactory.SetValue(System.Windows.Shapes.Path.StrokeStartLineCapProperty, PenLineCap.Round);
+            pathFactory.SetValue(System.Windows.Shapes.Path.StrokeEndLineCapProperty, PenLineCap.Round);
+            pathFactory.SetValue(System.Windows.Shapes.Path.StrokeLineJoinProperty, PenLineJoin.Round);
+            pathFactory.SetValue(UIElement.VisibilityProperty, Visibility.Collapsed);
+            pathFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, System.Windows.HorizontalAlignment.Center);
+            pathFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
+
+            borderFactory.AppendChild(pathFactory);
+            gridFactory.AppendChild(borderFactory);
+            template.VisualTree = gridFactory;
+
+            var checkedTrigger = new Trigger { Property = System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty, Value = true };
+            checkedTrigger.Setters.Add(new Setter(Border.BackgroundProperty, QuickNoteBrush.FromHex(theme?.Accent ?? "#007ACC"), "BoxBorder"));
+            checkedTrigger.Setters.Add(new Setter(Border.BorderBrushProperty, QuickNoteBrush.FromHex(theme?.Accent ?? "#007ACC"), "BoxBorder"));
+            checkedTrigger.Setters.Add(new Setter(UIElement.VisibilityProperty, Visibility.Visible, "CheckGlyph"));
+            template.Triggers.Add(checkedTrigger);
+
+            var hoverTrigger = new Trigger { Property = UIElement.IsMouseOverProperty, Value = true };
+            hoverTrigger.Setters.Add(new Setter(Border.BorderBrushProperty, QuickNoteBrush.FromHex(theme?.Accent ?? "#007ACC"), "BoxBorder"));
+            template.Triggers.Add(hoverTrigger);
+
+            return template;
+        }
+
+        public static bool IsTaskParagraph(Paragraph? paragraph, out bool isChecked, out InlineUIContainer? container, out CheckBox? checkBox)
+        {
+            isChecked = false;
+            container = null;
+            checkBox = null;
+
+            if (paragraph?.Inlines.FirstInline is InlineUIContainer uiContainer &&
+                uiContainer.Child is CheckBox cb)
+            {
+                if (QuickNoteTags.TryGetTaskState(uiContainer.Tag, out isChecked) ||
+                    QuickNoteTags.TryGetTaskState(cb.Tag, out isChecked) ||
+                    cb.IsChecked == true)
+                {
+                    if (cb.IsChecked == true)
+                    {
+                        isChecked = true;
+                    }
+                    container = uiContainer;
+                    checkBox = cb;
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static void ApplyTaskFormattingToParagraph(Paragraph paragraph, bool isChecked, QuickNoteTheme? theme)
+        {
+            if (paragraph.Inlines.FirstInline is InlineUIContainer container)
+            {
+                container.Tag = QuickNoteTags.Task(isChecked);
+                if (container.Child is CheckBox checkBox)
+                {
+                    checkBox.Tag = QuickNoteTags.Task(isChecked);
+                    if (checkBox.IsChecked != isChecked)
+                    {
+                        checkBox.IsChecked = isChecked;
+                    }
+                }
+            }
+
+            Brush textBrush = QuickNoteBrush.FromHex(isChecked ? (theme?.MutedText ?? "#74757A") : (theme?.Text ?? "#F6F0E6"));
+
+            foreach (Inline inline in paragraph.Inlines)
+            {
+                if (inline is InlineUIContainer)
+                {
+                    continue;
+                }
+
+                ApplyStrikethroughAndColor(inline, isChecked, textBrush);
+            }
+        }
+
+        public static bool RemoveTaskCheckbox(Paragraph paragraph, QuickNoteTheme? theme)
+        {
+            if (!IsTaskParagraph(paragraph, out _, out InlineUIContainer? container, out _))
+            {
+                return false;
+            }
+
+            if (container != null)
+            {
+                paragraph.Inlines.Remove(container);
+            }
+
+            Brush defaultBrush = QuickNoteBrush.FromHex(theme?.Text ?? "#F6F0E6");
+            foreach (Inline inline in paragraph.Inlines)
+            {
+                if (inline is not InlineUIContainer)
+                {
+                    ApplyStrikethroughAndColor(inline, false, defaultBrush);
+                }
+            }
+            return true;
+        }
+
+        public static void ToggleTaskParagraph(Paragraph paragraph, Action<bool>? onToggled, QuickNoteTheme? theme)
+        {
+            if (IsTaskParagraph(paragraph, out bool currentChecked, out InlineUIContainer? container, out CheckBox? checkBox))
+            {
+                RemoveTaskCheckbox(paragraph, theme);
+            }
+            else
+            {
+                var newContainer = CreateTaskCheckbox(false, onToggled, theme);
+                if (paragraph.Inlines.FirstInline != null)
+                {
+                    paragraph.Inlines.InsertBefore(paragraph.Inlines.FirstInline, newContainer);
+                }
+                else
+                {
+                    paragraph.Inlines.Add(newContainer);
+                    paragraph.Inlines.Add(new Run(string.Empty));
+                }
+                ApplyTaskFormattingToParagraph(paragraph, false, theme);
+            }
+        }
+
+        private static void ApplyStrikethroughAndColor(Inline inline, bool strikethrough, Brush foreground)
+        {
+            if (inline is Run run)
+            {
+                run.Foreground = foreground;
+                TextDecorationCollection decorations = run.TextDecorations != null ? run.TextDecorations.Clone() : [];
+                bool hasStrikethrough = decorations.Any(d => d.Location == TextDecorationLocation.Strikethrough);
+                if (strikethrough && !hasStrikethrough)
+                {
+                    foreach (var dec in TextDecorations.Strikethrough)
+                    {
+                        decorations.Add(dec);
+                    }
+                    run.TextDecorations = decorations;
+                }
+                else if (!strikethrough && hasStrikethrough)
+                {
+                    foreach (var dec in decorations.Where(d => d.Location == TextDecorationLocation.Strikethrough).ToList())
+                    {
+                        decorations.Remove(dec);
+                    }
+                    run.TextDecorations = decorations.Count > 0 ? decorations : null;
+                }
+            }
+            else if (inline is Span span)
+            {
+                span.Foreground = foreground;
+                foreach (Inline child in span.Inlines)
+                {
+                    ApplyStrikethroughAndColor(child, strikethrough, foreground);
+                }
+            }
+        }
     }
 }

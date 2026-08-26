@@ -238,6 +238,7 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_Code" xml:space="preserve"><value>Code</value></data>
   <data name="QuickNote_BulletList" xml:space="preserve"><value>Bullet list</value></data>
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Numbered list</value></data>
+  <data name="QuickNote_TaskList" xml:space="preserve"><value>Checklist</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Clear formatting</value></data>
   <data name="QuickNote_Heading" xml:space="preserve"><value>Heading</value></data>
   <data name="QuickNote_MoreFormatting" xml:space="preserve"><value>More formatting</value></data>
@@ -278,6 +279,7 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="Menu_ProgramSettings" xml:space="preserve"><value>Program settings</value></data>
   <data name="Menu_ImportPanel" xml:space="preserve"><value>Import panel...</value></data>
   <data name="Menu_Panels" xml:space="preserve"><value>Panels</value></data>
+  <data name="Menu_AddButton" xml:space="preserve"><value>Add button</value></data>
   <data name="Menu_ImportCurrentPanel" xml:space="preserve"><value>Import into current panel...</value></data>
   <data name="Menu_ExportCurrentPanel" xml:space="preserve"><value>Export current panel...</value></data>
   <data name="Menu_About" xml:space="preserve"><value>About</value></data>

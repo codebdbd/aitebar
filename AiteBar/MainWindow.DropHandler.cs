@@ -14,6 +14,20 @@ public partial class MainWindow
         }
     }
 
+    private async void RootBorder_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        DependencyObject? source = e.OriginalSource as DependencyObject;
+        bool isOverButton = source is Button || (source != null && FindParent<Button>(source) != null);
+        bool isOverDragHandle = source != null && (source == DragHandle || DragHandle.IsAncestorOf(source));
+        if (!PanelInteractionHelper.IsBackgroundDoubleClick(e.ClickCount, isOverButton, isOverDragHandle))
+        {
+            return;
+        }
+
+        e.Handled = true;
+        await OpenAddButtonWindowAsync();
+    }
+
     private async void RootBorder_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
         try

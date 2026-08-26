@@ -42,6 +42,22 @@ namespace AiteBar
                     continue;
                 }
 
+                if (block is Paragraph taskParagraph && QuickNoteDocumentFormatting.IsTaskParagraph(taskParagraph, out bool isChecked, out _, out _))
+                {
+                    var exportParagraph = CreateParagraphShell(taskParagraph);
+                    exportParagraph.Inlines.Add(new Run(isChecked ? "[x] " : "[ ] "));
+                    foreach (Inline inline in taskParagraph.Inlines.Skip(1))
+                    {
+                        exportParagraph.Inlines.Add(CloneInlineOrPlainText(inline));
+                    }
+                    if (exportParagraph.Inlines.Count == 1)
+                    {
+                        exportParagraph.Inlines.Add(new Run(string.Empty));
+                    }
+                    exportDocument.Blocks.Add(exportParagraph);
+                    continue;
+                }
+
                 exportDocument.Blocks.Add(CloneBlockOrPlainText(block));
             }
 
@@ -352,5 +368,100 @@ namespace AiteBar
 
         private static string GetParagraphText(Block block) =>
             new TextRange(block.ContentStart, block.ContentEnd).Text.TrimEnd('\r', '\n');
+
+        public static void RestoreTaskItems(FlowDocument document, QuickNoteTheme? theme = null)
+        {
+            theme ??= QuickNoteThemeCatalog.Find(null);
+            foreach (Block block in document.Blocks.ToList())
+            {
+                if (block is Paragraph paragraph)
+                {
+                    RestoreTaskItemInParagraph(paragraph, theme);
+                }
+                else if (block is Section section)
+                {
+                    foreach (Block child in section.Blocks.ToList())
+                    {
+                        if (child is Paragraph childParagraph)
+                        {
+                            RestoreTaskItemInParagraph(childParagraph, theme);
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void RestoreTaskItemInParagraph(Paragraph paragraph, QuickNoteTheme theme)
+        {
+            if (QuickNoteDocumentFormatting.IsTaskParagraph(paragraph, out bool isChecked, out InlineUIContainer? container, out CheckBox? checkBox))
+            {
+                if (checkBox != null)
+                {
+                    checkBox.Template = QuickNoteDocumentFormatting.CreateTaskCheckboxTemplate(theme);
+                    checkBox.Tag = QuickNoteTags.Task(isChecked);
+                }
+                if (container != null)
+                {
+                    container.Tag = QuickNoteTags.Task(isChecked);
+                }
+                QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(paragraph, isChecked, theme);
+                return;
+            }
+
+            if (paragraph.Inlines.FirstInline is Run firstRun)
+            {
+                string text = firstRun.Text;
+                if (TryExtractTaskPrefix(text, out bool checkedState, out string remainingText))
+                {
+                    firstRun.Text = remainingText;
+                    var newContainer = QuickNoteDocumentFormatting.CreateTaskCheckbox(checkedState, null, theme);
+                    paragraph.Inlines.InsertBefore(firstRun, newContainer);
+                    QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(paragraph, checkedState, theme);
+                }
+            }
+        }
+
+        private static bool TryExtractTaskPrefix(string text, out bool isChecked, out string remaining)
+        {
+            isChecked = false;
+            remaining = text;
+
+            if (string.IsNullOrEmpty(text))
+            {
+                return false;
+            }
+
+            if (text.StartsWith("[ ] ", StringComparison.Ordinal))
+            {
+                isChecked = false;
+                remaining = text[4..];
+                return true;
+            }
+
+            if (text.StartsWith("[x] ", StringComparison.OrdinalIgnoreCase) ||
+                text.StartsWith("[X] ", StringComparison.Ordinal))
+            {
+                isChecked = true;
+                remaining = text[4..];
+                return true;
+            }
+
+            if (text.Equals("[ ]", StringComparison.Ordinal))
+            {
+                isChecked = false;
+                remaining = string.Empty;
+                return true;
+            }
+
+            if (text.Equals("[x]", StringComparison.OrdinalIgnoreCase) ||
+                text.Equals("[X]", StringComparison.Ordinal))
+            {
+                isChecked = true;
+                remaining = string.Empty;
+                return true;
+            }
+
+            return false;
+        }
     }
 }

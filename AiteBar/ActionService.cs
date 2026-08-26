@@ -98,16 +98,23 @@ public class ActionService
                 ["open_fullscreen"] = el.OpenFullscreen.ToString()
             });
             if (Enum.TryParse<ActionType>(el.ActionType, out var failedActionType) &&
-                failedActionType == ActionType.Web &&
                 ex is Win32Exception { NativeErrorCode: 2 })
             {
-                string browserName = LocalizationService.Get($"Browser_{el.Browser}");
-                if (browserName.StartsWith("Browser_", StringComparison.Ordinal))
+                if (failedActionType == ActionType.Web)
                 {
-                    browserName = el.Browser.ToString();
+                    string browserName = LocalizationService.Get($"Browser_{el.Browser}");
+                    if (browserName.StartsWith("Browser_", StringComparison.Ordinal))
+                    {
+                        browserName = el.Browser.ToString();
+                    }
+
+                    return ActionExecutionResult.Failed(LocalizationService.Format("Action_BrowserNotFound", browserName));
                 }
 
-                return ActionExecutionResult.Failed(LocalizationService.Format("Action_BrowserNotFound", browserName));
+                if (failedActionType is ActionType.Program or ActionType.File or ActionType.Folder or ActionType.ScriptFile)
+                {
+                    return ActionExecutionResult.Failed(LocalizationService.Format("Action_TargetNotFound", el.ActionValue));
+                }
             }
 
             return ActionExecutionResult.Failed(LocalizationService.Get("Action_LaunchFailed"));
@@ -164,16 +171,23 @@ public class ActionService
             Logger.Log(ex);
             TelemetryService.CaptureException(ex, "hotkey_execution");
             if (Enum.TryParse<ActionType>(el.ActionType, out var failedActionType) &&
-                failedActionType == ActionType.Web &&
                 ex is Win32Exception { NativeErrorCode: 2 })
             {
-                string browserName = LocalizationService.Get($"Browser_{el.Browser}");
-                if (browserName.StartsWith("Browser_", StringComparison.Ordinal))
+                if (failedActionType == ActionType.Web)
                 {
-                    browserName = el.Browser.ToString();
+                    string browserName = LocalizationService.Get($"Browser_{el.Browser}");
+                    if (browserName.StartsWith("Browser_", StringComparison.Ordinal))
+                    {
+                        browserName = el.Browser.ToString();
+                    }
+
+                    return ActionExecutionResult.Failed(LocalizationService.Format("Action_BrowserNotFound", browserName));
                 }
 
-                return ActionExecutionResult.Failed(LocalizationService.Format("Action_BrowserNotFound", browserName));
+                if (failedActionType is ActionType.Program or ActionType.File or ActionType.Folder or ActionType.ScriptFile)
+                {
+                    return ActionExecutionResult.Failed(LocalizationService.Format("Action_TargetNotFound", el.ActionValue));
+                }
             }
 
             return ActionExecutionResult.Failed(LocalizationService.Get("Action_LaunchFailed"));

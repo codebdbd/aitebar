@@ -45,6 +45,28 @@ internal static class QuickNoteTags
 
     public const string Code = "code";
     public const string CodeHeader = "code-header";
+    public const string TaskChecked = "task:checked";
+    public const string TaskUnchecked = "task:unchecked";
+
+    public static string Task(bool isChecked) => isChecked ? TaskChecked : TaskUnchecked;
+
+    public static bool TryGetTaskState(object? tag, out bool isChecked)
+    {
+        isChecked = false;
+        if (Equals(tag, TaskChecked))
+        {
+            isChecked = true;
+            return true;
+        }
+
+        if (Equals(tag, TaskUnchecked))
+        {
+            isChecked = false;
+            return true;
+        }
+
+        return false;
+    }
 
     public static string Heading(int level) =>
         HeadingPrefix + level.ToString(CultureInfo.InvariantCulture);
@@ -98,4 +120,27 @@ internal static class QuickNoteResizeEdges
     public static bool TryParse(string? value, out QuickNoteResizeEdge edge) =>
         Enum.TryParse(value, ignoreCase: false, out edge) &&
         Enum.IsDefined(edge);
+}
+
+internal enum ClearFormattingScope
+{
+    InlineOnly,
+    All,
+    PreserveLinks
+}
+
+// Find & Replace options used by Quick Note editor
+internal struct FindReplaceOptions
+{
+    public bool CaseSensitive;
+    public bool WholeWord;
+    public bool UseRegex;
+    public bool SearchSelectionOnly;
+}
+
+// Result information for Find & Replace operations
+internal struct FindReplaceResult
+{
+    public int MatchesFound;
+    public int ReplacementsMade;
 }

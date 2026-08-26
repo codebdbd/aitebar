@@ -106,7 +106,7 @@
     <Border x:Name="RootBorder" Background="Transparent" CornerRadius="9" BorderThickness="0" Margin="10"
             SnapsToDevicePixels="True"
             TextOptions.TextFormattingMode="Ideal"
-            AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel" PreviewMouseDown="RootBorder_PreviewMouseDown">
+            AllowDrop="True" DragOver="Border_DragOver" Drop="Border_Drop" PreviewMouseWheel="RootBorder_PreviewMouseWheel" PreviewMouseDown="RootBorder_PreviewMouseDown" PreviewMouseLeftButtonDown="RootBorder_PreviewMouseLeftButtonDown">
         <Grid ClipToBounds="False">
             <Border Background="#FF1689E8" CornerRadius="8" SnapsToDevicePixels="True">
                 <Border.Effect>

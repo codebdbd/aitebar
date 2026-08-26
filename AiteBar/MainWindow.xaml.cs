@@ -32,6 +32,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         public const int Clipboard = 58178; // ic_fluent_clipboard_16_regular
         public const int Delete = 58491; // ic_fluent_delete_16_regular
         public const int Update = 59548; // ic_fluent_arrow_sync_16_regular
+        public const int Add = 61706; // ic_fluent_add_16_filled
     }
 
     private readonly AppSettingsService _settingsService;
@@ -51,7 +52,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
 
     private const string DonatePageUrl = "https://codebdbd.github.io/";
-    private const double TopPanelVisibleOffset = 0;
+    private const double TopPanelVisibleOffset = 5;
     private bool _isPanelDragging = false;
     private bool _panelDragChanged = false;
     private DockEdge _dragStartEdge;
@@ -394,6 +395,10 @@ public partial class MainWindow : Window, ISettingsWindowContext
         }
 
         menu.Items.Add(panelsMenu);
+        menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Add), LocalizationService.Get("Menu_AddButton"), async (s, e) =>
+        {
+            await OpenAddButtonWindowAsync();
+        }));
         menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Import), LocalizationService.Get("Menu_ImportCurrentPanel"), async (s, e) =>
         {
             await RunPanelInteractionAsync(ImportIntoCurrentPanelAsync);

@@ -109,6 +109,11 @@ namespace AiteBar
             _cachedButtons ??= FindVisualChildren<System.Windows.Controls.Button>(this).ToList();
             foreach (var button in _cachedButtons)
             {
+                if (IsDescendantOf(button, TxtNote))
+                {
+                    continue;
+                }
+
                 if (string.Equals(button.Tag as string, QuickNoteDocumentFormatting.CodeCopyLink, StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
@@ -160,6 +165,16 @@ namespace AiteBar
         {
             if (block is Paragraph paragraph)
             {
+                if (QuickNoteDocumentFormatting.IsTaskParagraph(paragraph, out bool isChecked, out InlineUIContainer? container, out CheckBox? checkBox))
+                {
+                    if (checkBox != null)
+                    {
+                        checkBox.Template = QuickNoteDocumentFormatting.CreateTaskCheckboxTemplate(_theme);
+                    }
+                    QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(paragraph, isChecked, _theme);
+                    return;
+                }
+
                 paragraph.Foreground = normalText;
                 ApplyInlineStyles(paragraph.Inlines, normalText, codeBackground, codeText, linkBrush);
                 return;
@@ -302,14 +317,24 @@ namespace AiteBar
                     italic.Foreground = normalText;
                     ApplyInlineStyles(italic.Inlines, normalText, codeBackground, codeText, linkBrush);
                 }
-                else if (inline is Run run && run.FontFamily?.Source == QuickNoteFonts.CodeFamilyName)
+                else if (inline is Run run)
                 {
-                    run.Background = codeBackground;
-                    run.Foreground = codeText;
-                }
-                else if (inline is Run textRun)
-                {
-                    textRun.Foreground = normalText;
+                    if (normalText == codeText)
+                    {
+                        run.ClearValue(TextElement.FontFamilyProperty);
+                        run.ClearValue(TextElement.FontSizeProperty);
+                        run.Background = codeBackground;
+                        run.Foreground = codeText;
+                    }
+                    else if (run.FontFamily?.Source == QuickNoteFonts.CodeFamilyName)
+                    {
+                        run.Background = codeBackground;
+                        run.Foreground = codeText;
+                    }
+                    else
+                    {
+                        run.Foreground = normalText;
+                    }
                 }
             }
         }
@@ -532,8 +557,8 @@ namespace AiteBar
 
             if (!_linkMatchCache.TryGetValue(paragraph!, out var cache) || !string.Equals(cache.Text, paragraphText, StringComparison.Ordinal))
             {
-                cache = (paragraphText, QuickNoteDocumentFormatting.MatchLinks(paragraphText).ToList());
-                _linkMatchCache[paragraph!] = cache;
+                cache = new LinkMatchCacheEntry(paragraphText, QuickNoteDocumentFormatting.MatchLinks(paragraphText).ToList());
+                _linkMatchCache.AddOrUpdate(paragraph!, cache);
             }
 
             foreach (var (match, type) in cache.Matches)
@@ -688,5 +713,35 @@ namespace AiteBar
             return null;
         }
 
+        private sealed class LinkMatchCacheEntry
+        {
+            public string Text { get; }
+            public List<(Match Match, QuickNoteDocumentFormatting.LinkType Type)> Matches { get; }
+
+            public LinkMatchCacheEntry(string text, List<(Match Match, QuickNoteDocumentFormatting.LinkType Type)> matches)
+            {
+                Text = text;
+                Matches = matches;
+            }
+        }
+
+        private static bool IsDescendantOf(DependencyObject child, DependencyObject parent)
+        {
+            DependencyObject? current = child;
+            while (current != null)
+            {
+                if (ReferenceEquals(current, parent))
+                {
+                    return true;
+                }
+                DependencyObject? next = current is Visual ? VisualTreeHelper.GetParent(current) : null;
+                if (next == null)
+                {
+                    next = LogicalTreeHelper.GetParent(current);
+                }
+                current = next;
+            }
+            return false;
+        }
     }
 }

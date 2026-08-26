@@ -236,14 +236,24 @@
                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF381;"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Paste}" Command="ApplicationCommands.Paste" InputGestureText="Ctrl+V">
-                                    <MenuItem.Icon>
-                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF2D5;"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_SelectAll}" Command="ApplicationCommands.SelectAll" InputGestureText="Ctrl+A">
+                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_Paste}" Command="ApplicationCommands.Paste" InputGestureText="Ctrl+V">
+                                     <MenuItem.Icon>
+                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF2D5;"/>
+                                     </MenuItem.Icon>
+                                 </MenuItem>
+                                 <MenuItem Header="{local:Loc ResourceKey=Common_Delete}" Command="ApplicationCommands.Delete" InputGestureText="Del">
+                                     <MenuItem.Icon>
+                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE74D;"/>
+                                     </MenuItem.Icon>
+                                 </MenuItem>
+                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_SelectAll}" Command="ApplicationCommands.SelectAll" InputGestureText="Ctrl+A">
                                     <MenuItem.Icon>
                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xEA86;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_TaskList}" Click="BtnTaskList_Click" InputGestureText="Ctrl+Shift+C">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF28D;"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
                                  <Separator Style="{StaticResource DarkMenuSeparator}"/>
@@ -288,14 +298,37 @@
                     <Button Content="A+" FontFamily="Segoe UI" FontSize="14" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_IncreaseFont}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_IncreaseFont}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnIncreaseFontSize_Click"/>
                     <Button Content="&#xE241;" FontFamily="pack://application:,,,/Resources/#Material Icons" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_BulletList}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_BulletList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnBullet_Click"/>
                     <Button Content="&#xF7FA;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_NumberedList}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_NumberedList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnNumbered_Click"/>
+                    <Button Content="&#xF28D;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_TaskList}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_TaskList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnTaskList_Click"/>
                     <Button Content="&#xF7A5;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Bold}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Bold}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnBold_Click"/>
                     <Button Content="&#xF7F4;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Italic}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Italic}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnItalic_Click"/>
                     <Button Content="&#xED60;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Strikethrough}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Strikethrough}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnStrikethrough_Click"/>
                     <Button Content="&#xF4E5;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_InsertLink}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_InsertLink}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnInsertLink_Click"/>
-                    <Button Content="&#xE91B;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_InsertImage}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_InsertImage}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnInsertImage_Click"/>
+                    <Button Content="&#xF48C;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_InsertImage}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_InsertImage}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnInsertImage_Click"/>
                     <Button Content="&#xF80A;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Underline}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Underline}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnUnderline_Click"/>
                     <Button Content="&#xF2EF;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Code}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Code}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnCode_Click"/>
-                    <Button Content="&#xF7BD;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_ClearFormatting}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_ClearFormatting}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnClearFormatting_Click"/>
+                    <Button Content="&#xF4BA;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Quote}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Quote}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnQuote_Click"/>
+                    <Button Content="&#xF4B8;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Divider}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Divider}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnDivider_Click"/>
+                    <Button x:Name="BtnClearFormatting" Content="&#xF7BD;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_ClearFormatting}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_ClearFormatting}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnClearFormatting_Click">
+                        <Button.ContextMenu>
+                            <ContextMenu Style="{StaticResource DarkContextMenu}">
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_ClearFormatting_InlineOnly}" Click="BtnClearFormattingInlineOnly_Click">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF7BD;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_ClearFormatting_PreserveLinks}" Click="BtnClearFormattingPreserveLinks_Click">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF4E5;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_ClearFormatting_All}" Click="BtnClearFormattingAll_Click">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF201;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
                 </StackPanel>
             </Border>
 

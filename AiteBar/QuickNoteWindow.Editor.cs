@@ -85,6 +85,433 @@ namespace AiteBar
 
         private void BtnNumbered_Click(object sender, RoutedEventArgs e) => ApplyListFormatting(numbered: true);
 
+        private void BtnTaskList_Click(object sender, RoutedEventArgs e) => ToggleTaskList();
+
+        private void ToggleTaskList()
+        {
+            _saveSuppressionCount++;
+            try
+            {
+                TxtNote.BeginChange();
+                try
+                {
+                    List<Paragraph> paragraphs = GetSelectedParagraphs();
+                    if (paragraphs.Count == 0 && TxtNote.CaretPosition?.Paragraph is Paragraph single)
+                    {
+                        paragraphs.Add(single);
+                    }
+                    if (paragraphs.Count == 0 && TxtNote.Document.Blocks.FirstBlock is Paragraph firstP)
+                    {
+                        paragraphs.Add(firstP);
+                    }
+
+                    bool allAreTasks = paragraphs.Count > 0 && paragraphs.All(static p => QuickNoteDocumentFormatting.IsTaskParagraph(p, out _, out _, out _));
+
+                    foreach (Paragraph p in paragraphs)
+                    {
+                        if (allAreTasks)
+                        {
+                            QuickNoteDocumentFormatting.RemoveTaskCheckbox(p, _theme);
+                        }
+                        else
+                        {
+                            if (!QuickNoteDocumentFormatting.IsTaskParagraph(p, out _, out _, out _))
+                            {
+                                var container = QuickNoteDocumentFormatting.CreateTaskCheckbox(false, isChecked => OnTaskItemToggled(p, isChecked), _theme);
+                                if (p.Inlines.FirstInline != null)
+                                {
+                                    p.Inlines.InsertBefore(p.Inlines.FirstInline, container);
+                                }
+                                else
+                                {
+                                    p.Inlines.Add(container);
+                                    p.Inlines.Add(new Run(string.Empty));
+                                }
+                                QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(p, false, _theme);
+                            }
+                        }
+                    }
+                }
+                finally
+                {
+                    TxtNote.EndChange();
+                }
+            }
+            finally
+            {
+                _saveSuppressionCount--;
+            }
+
+            MarkChangedAndScheduleSave();
+            ScheduleFooterStatsUpdate();
+            TxtNote.Focus();
+        }
+
+        internal void OnTaskItemToggled(Paragraph paragraph, bool isChecked)
+        {
+            _saveSuppressionCount++;
+            try
+            {
+                TxtNote.BeginChange();
+                try
+                {
+                    QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(paragraph, isChecked, _theme);
+                }
+                finally
+                {
+                    TxtNote.EndChange();
+                }
+            }
+            finally
+            {
+                _saveSuppressionCount--;
+            }
+
+            MarkChangedAndScheduleSave();
+            ScheduleFooterStatsUpdate();
+        }
+
+        internal void ConnectTaskItemEvents(FlowDocument document)
+        {
+            foreach (Block block in document.Blocks)
+            {
+                if (block is Paragraph paragraph)
+                {
+                    ConnectTaskItemInParagraph(paragraph);
+                }
+                else if (block is Section section)
+                {
+                    foreach (Block child in section.Blocks)
+                    {
+                        if (child is Paragraph childParagraph)
+                        {
+                            ConnectTaskItemInParagraph(childParagraph);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ConnectTaskItemInParagraph(Paragraph paragraph)
+        {
+            if (QuickNoteDocumentFormatting.IsTaskParagraph(paragraph, out bool isChecked, out InlineUIContainer? container, out CheckBox? checkBox))
+            {
+                if (checkBox != null)
+                {
+                    checkBox.Click -= OnTaskCheckBoxClicked;
+                    checkBox.Click += OnTaskCheckBoxClicked;
+                    checkBox.Tag = paragraph;
+                }
+            }
+        }
+
+        private void OnTaskCheckBoxClicked(object sender, RoutedEventArgs e)
+        {
+            if (sender is CheckBox cb && cb.Tag is Paragraph paragraph)
+            {
+                bool isChecked = cb.IsChecked == true;
+                OnTaskItemToggled(paragraph, isChecked);
+            }
+            else if (sender is CheckBox cb2)
+            {
+                DependencyObject? current = cb2;
+                while (current != null && current is not Paragraph)
+                {
+                    current = LogicalTreeHelper.GetParent(current);
+                }
+                if (current is Paragraph p)
+                {
+                    OnTaskItemToggled(p, cb2.IsChecked == true);
+                }
+            }
+        }
+
+        private List<Paragraph> GetSelectedParagraphs()
+        {
+            var list = new List<Paragraph>();
+            TextPointer start = TxtNote.Selection.Start;
+            TextPointer end = TxtNote.Selection.End;
+
+            Paragraph? startP = start.Paragraph;
+            Paragraph? endP = end.Paragraph;
+
+            if (startP == null || endP == null)
+            {
+                return list;
+            }
+
+            if (startP == endP)
+            {
+                list.Add(startP);
+                return list;
+            }
+
+            TextPointer current = start;
+            while (current != null && current.CompareTo(end) <= 0)
+            {
+                Paragraph? p = current.Paragraph;
+                if (p != null && !list.Contains(p))
+                {
+                    list.Add(p);
+                }
+
+                TextPointer next = current.GetNextContextPosition(LogicalDirection.Forward);
+                if (next == null || next.CompareTo(current) <= 0)
+                {
+                    break;
+                }
+                current = next;
+            }
+
+            return list;
+        }
+
+        private bool HandleTaskItemEnterKey()
+        {
+            Paragraph? currentParagraph = TxtNote.CaretPosition?.Paragraph;
+            if (currentParagraph == null || !QuickNoteDocumentFormatting.IsTaskParagraph(currentParagraph, out _, out _, out _))
+            {
+                return false;
+            }
+
+            string itemText = new TextRange(currentParagraph.ContentStart, currentParagraph.ContentEnd).Text.Trim();
+            if (string.IsNullOrEmpty(itemText))
+            {
+                _saveSuppressionCount++;
+                try
+                {
+                    TxtNote.BeginChange();
+                    try
+                    {
+                        QuickNoteDocumentFormatting.RemoveTaskCheckbox(currentParagraph, _theme);
+                    }
+                    finally
+                    {
+                        TxtNote.EndChange();
+                    }
+                }
+                finally
+                {
+                    _saveSuppressionCount--;
+                }
+
+                MarkChangedAndScheduleSave();
+                ScheduleFooterStatsUpdate();
+                return true;
+            }
+
+            _saveSuppressionCount++;
+            try
+            {
+                TxtNote.BeginChange();
+                try
+                {
+                    if (!TxtNote.Selection.IsEmpty)
+                    {
+                        TxtNote.Selection.Text = string.Empty;
+                    }
+
+                    TextPointer? caret = TxtNote.CaretPosition;
+                    if (caret == null)
+                    {
+                        return false;
+                    }
+                    TextRange tailRange = new TextRange(caret, currentParagraph.ContentEnd);
+                    string tailText = tailRange.Text.TrimEnd('\r', '\n');
+                    tailRange.Text = string.Empty;
+
+                    var newParagraph = new Paragraph();
+                    var newContainer = QuickNoteDocumentFormatting.CreateTaskCheckbox(false, isChecked => OnTaskItemToggled(newParagraph, isChecked), _theme);
+                    newParagraph.Inlines.Add(newContainer);
+                    if (!string.IsNullOrEmpty(tailText))
+                    {
+                        newParagraph.Inlines.Add(new Run(tailText)
+                        {
+                            Foreground = QuickNoteBrush.FromHex(_theme?.Text ?? "#F6F0E6")
+                        });
+                    }
+                    else
+                    {
+                        newParagraph.Inlines.Add(new Run(string.Empty));
+                    }
+
+                    currentParagraph.SiblingBlocks.InsertAfter(currentParagraph, newParagraph);
+                    TxtNote.CaretPosition = newParagraph.ContentEnd;
+                }
+                finally
+                {
+                    TxtNote.EndChange();
+                }
+            }
+            finally
+            {
+                _saveSuppressionCount--;
+            }
+
+            MarkChangedAndScheduleSave();
+            ScheduleFooterStatsUpdate();
+            return true;
+        }
+
+        private bool HandleTaskItemBackspaceKey()
+        {
+            if (!TxtNote.Selection.IsEmpty)
+            {
+                return false;
+            }
+
+            Paragraph? currentParagraph = TxtNote.CaretPosition?.Paragraph;
+            if (currentParagraph == null || !QuickNoteDocumentFormatting.IsTaskParagraph(currentParagraph, out _, out _, out _))
+            {
+                return false;
+            }
+
+            TextPointer? caret = TxtNote.CaretPosition;
+            if (caret == null)
+            {
+                return false;
+            }
+            TextRange headRange = new TextRange(currentParagraph.ContentStart, caret);
+            if (string.IsNullOrWhiteSpace(headRange.Text))
+            {
+                _saveSuppressionCount++;
+                try
+                {
+                    TxtNote.BeginChange();
+                    try
+                    {
+                        QuickNoteDocumentFormatting.RemoveTaskCheckbox(currentParagraph, _theme);
+                    }
+                    finally
+                    {
+                        TxtNote.EndChange();
+                    }
+                }
+                finally
+                {
+                    _saveSuppressionCount--;
+                }
+
+                MarkChangedAndScheduleSave();
+                ScheduleFooterStatsUpdate();
+                return true;
+            }
+
+            return false;
+        }
+
+        private void TryAutoConvertTaskPrefix()
+        {
+            if (_saveSuppressionCount > 0 || !_loaded)
+            {
+                return;
+            }
+
+            Paragraph? paragraph = TxtNote.CaretPosition?.Paragraph;
+            if (paragraph == null || QuickNoteDocumentFormatting.IsTaskParagraph(paragraph, out _, out _, out _))
+            {
+                return;
+            }
+
+            if (paragraph.Inlines.FirstInline is Run run)
+            {
+                string text = run.Text;
+                if (text.StartsWith("[ ] ", StringComparison.Ordinal) ||
+                    text.StartsWith("[x] ", StringComparison.OrdinalIgnoreCase) ||
+                    text.StartsWith("[X] ", StringComparison.Ordinal))
+                {
+                    bool isChecked = text.StartsWith("[x] ", StringComparison.OrdinalIgnoreCase) ||
+                                     text.StartsWith("[X] ", StringComparison.Ordinal);
+                    string remainder = text[4..];
+
+                    _saveSuppressionCount++;
+                    try
+                    {
+                        TxtNote.BeginChange();
+                        try
+                        {
+                            run.Text = remainder;
+                            var container = QuickNoteDocumentFormatting.CreateTaskCheckbox(isChecked, state => OnTaskItemToggled(paragraph, state), _theme);
+                            paragraph.Inlines.InsertBefore(run, container);
+                            QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(paragraph, isChecked, _theme);
+                            TxtNote.CaretPosition = run.ContentStart;
+                        }
+                        finally
+                        {
+                            TxtNote.EndChange();
+                        }
+                    }
+                    finally
+                    {
+                        _saveSuppressionCount--;
+                    }
+
+                    MarkChangedAndScheduleSave();
+                    ScheduleFooterStatsUpdate();
+                }
+            }
+        }
+
+        private void BtnQuote_Click(object sender, RoutedEventArgs e)
+        {
+            string text = TxtNote.Selection.Text;
+            Section quoteBlock = QuickNoteDocumentFormatting.CreateQuoteBlockElement(text, _theme);
+            InsertBlockElement(quoteBlock);
+        }
+
+        private void BtnDivider_Click(object sender, RoutedEventArgs e)
+        {
+            Section divider = QuickNoteDocumentFormatting.CreateDividerElement(_theme);
+            InsertBlockElement(divider);
+        }
+
+        private void InsertBlockElement(Section block)
+        {
+            TxtNote.BeginChange();
+            try
+            {
+                var range = TxtNote.Selection;
+                if (!range.IsEmpty)
+                {
+                    range.Text = string.Empty;
+                }
+
+                TextPointer insertionPointer = range.Start.GetInsertionPosition(LogicalDirection.Forward);
+                Paragraph? parentParagraph = insertionPointer.Paragraph;
+                if (parentParagraph != null)
+                {
+                    BlockCollection siblingBlocks = parentParagraph.SiblingBlocks;
+                    siblingBlocks.InsertAfter(parentParagraph, block);
+                    siblingBlocks.InsertAfter(block, new Paragraph(new Run(string.Empty)));
+
+                    if (new TextRange(parentParagraph.ContentStart, parentParagraph.ContentEnd).Text.Trim().Length == 0)
+                    {
+                        siblingBlocks.Remove(parentParagraph);
+                    }
+                }
+                else
+                {
+                    TxtNote.Document.Blocks.Add(block);
+                    TxtNote.Document.Blocks.Add(new Paragraph(new Run(string.Empty)));
+                }
+            }
+            finally
+            {
+                TxtNote.EndChange();
+            }
+
+            MarkChangedAndScheduleSave();
+            ScheduleFooterStatsUpdate();
+            Dispatcher.BeginInvoke(() =>
+            {
+                TxtNote.Focus();
+                if (block.Blocks.LastBlock is Paragraph lastParagraph)
+                {
+                    TxtNote.CaretPosition = lastParagraph.ContentEnd;
+                }
+            }, DispatcherPriority.Input);
+        }
+
         private void BtnDecreaseFontSize_Click(object sender, RoutedEventArgs e) => ChangeSelectionFontSize(-2);
 
         private void BtnIncreaseFontSize_Click(object sender, RoutedEventArgs e) => ChangeSelectionFontSize(2);
@@ -144,6 +571,27 @@ namespace AiteBar
         {
             RestoreFormatSelection(_preservedFormatSelection);
             ClearSelectedFormatting();
+            _preservedFormatSelection = null;
+        }
+
+        private void BtnClearFormattingInlineOnly_Click(object sender, RoutedEventArgs e)
+        {
+            RestoreFormatSelection(_preservedFormatSelection);
+            ClearSelectedFormatting(ClearFormattingScope.InlineOnly);
+            _preservedFormatSelection = null;
+        }
+
+        private void BtnClearFormattingPreserveLinks_Click(object sender, RoutedEventArgs e)
+        {
+            RestoreFormatSelection(_preservedFormatSelection);
+            ClearSelectedFormatting(ClearFormattingScope.PreserveLinks);
+            _preservedFormatSelection = null;
+        }
+
+        private void BtnClearFormattingAll_Click(object sender, RoutedEventArgs e)
+        {
+            RestoreFormatSelection(_preservedFormatSelection);
+            ClearSelectedFormatting(ClearFormattingScope.All);
             _preservedFormatSelection = null;
         }
 
@@ -641,7 +1089,7 @@ namespace AiteBar
             }
         }
 
-        internal void ClearSelectedFormatting()
+        internal void ClearSelectedFormatting(ClearFormattingScope scope = ClearFormattingScope.All)
         {
             if (TryConvertSelectedCodeBlocksToPlainText())
             {
@@ -669,18 +1117,26 @@ namespace AiteBar
                         SelectEditorRange(selectionStart, selectionEnd);
                     }
 
-                    string textBeforeListUnwrap = GetEditorText();
-                    RemoveSelectedListFormatting(TxtNote.Selection);
-                    string textAfterListUnwrap = GetEditorText();
-                    (selectionStart, selectionEnd) = QuickNoteDocumentHelper.RemapSelection(
-                        textBeforeListUnwrap,
-                        textAfterListUnwrap,
-                        selectionStart,
-                        selectionEnd,
-                        selectedTextToRestore);
-                    SelectEditorRangeByText(selectionStart, selectionEnd, selectedTextToRestore);
-                    UnwrapHyperlinksInSelection();
-                    SelectEditorRangeByText(selectionStart, selectionEnd, selectedTextToRestore);
+                    if (scope != ClearFormattingScope.InlineOnly)
+                    {
+                        string textBeforeListUnwrap = GetEditorText();
+                        RemoveSelectedListFormatting(TxtNote.Selection);
+                        string textAfterListUnwrap = GetEditorText();
+                        (selectionStart, selectionEnd) = QuickNoteDocumentHelper.RemapSelection(
+                            textBeforeListUnwrap,
+                            textAfterListUnwrap,
+                            selectionStart,
+                            selectionEnd,
+                            selectedTextToRestore);
+                        SelectEditorRangeByText(selectionStart, selectionEnd, selectedTextToRestore);
+                    }
+
+                    if (scope != ClearFormattingScope.PreserveLinks)
+                    {
+                        UnwrapHyperlinksInSelection();
+                        SelectEditorRangeByText(selectionStart, selectionEnd, selectedTextToRestore);
+                    }
+
                     ResetSelectionFormatting();
                 }
                 finally

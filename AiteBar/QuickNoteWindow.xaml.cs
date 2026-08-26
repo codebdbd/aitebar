@@ -53,6 +53,7 @@ namespace AiteBar
         private bool _cachedEditorIsEmpty = true;
         private int _cachedEditorCharacterCount;
         private int _cachedEditorLineCount;
+        private int _cachedEditorWordCount;
         private QuickNoteStatusKind _statusKind;
         private string? _statusArgument;
         private List<TextBlock>? _cachedTextBlocks;
@@ -65,7 +66,7 @@ namespace AiteBar
         private readonly QuickNoteImageInteractionController _imageInteraction;
         internal QuickNoteImageInteractionController ImageInteractionController => _imageInteraction;
         private const int MaxLinkScanParagraphLength = 10_000;
-        private readonly Dictionary<Paragraph, (string Text, List<(Match Match, QuickNoteDocumentFormatting.LinkType Type)> Matches)> _linkMatchCache = [];
+        private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Paragraph, LinkMatchCacheEntry> _linkMatchCache = [];
 
         public QuickNoteWindow(QuickNoteService noteService, AppSettingsService settingsService)
             : this(new QuickNotePersistence(noteService), settingsService, new QuickNoteClipboard())
@@ -215,13 +216,14 @@ namespace AiteBar
 
         private void TxtNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
-            _linkMatchCache.Clear();
             _footerStatsDirty = true;
             ScheduleFooterStatsUpdate();
             if (!_loaded)
             {
                 return;
             }
+
+            TryAutoConvertTaskPrefix();
 
             _changeVersion++;
             _hasPendingChanges = true;
@@ -326,9 +328,52 @@ namespace AiteBar
                 ToggleTextDecoration(TextDecorationLocation.Strikethrough);
                 e.Handled = true;
             }
-            else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.C)
+            else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && (e.Key == Key.C || e.Key == Key.L || e.Key == Key.D9))
             {
-                TryCopyText(GetEditorText());
+                ToggleTaskList();
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.None && e.Key == Key.Enter)
+            {
+                if (HandleTaskItemEnterKey())
+                {
+                    e.Handled = true;
+                }
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.None && e.Key == Key.Back)
+            {
+                if (HandleTaskItemBackspaceKey())
+                {
+                    e.Handled = true;
+                }
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.U)
+            {
+                ToggleTextDecoration(TextDecorationLocation.Underline);
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.D1)
+            {
+                var (s, end) = GetSelectionOffsets();
+                ApplyHeadingToSelectedLines(1, s, end);
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.D2)
+            {
+                var (s, end) = GetSelectionOffsets();
+                ApplyHeadingToSelectedLines(2, s, end);
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.D3)
+            {
+                var (s, end) = GetSelectionOffsets();
+                ApplyHeadingToSelectedLines(3, s, end);
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.D0)
+            {
+                var (s, end) = GetSelectionOffsets();
+                ApplyHeadingToSelectedLines(0, s, end);
                 e.Handled = true;
             }
             else if (_imageInteraction.HasSelectedImage &&
@@ -587,11 +632,12 @@ namespace AiteBar
                 _cachedEditorIsEmpty = string.IsNullOrWhiteSpace(text);
                 _cachedEditorCharacterCount = text.Length;
                 _cachedEditorLineCount = string.IsNullOrEmpty(text) ? 0 : text.Count(c => c == '\n') + 1;
+                _cachedEditorWordCount = string.IsNullOrEmpty(text) ? 0 : text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
                 _footerStatsDirty = false;
             }
 
             TxtPlaceholder.Visibility = _cachedEditorIsEmpty ? Visibility.Visible : Visibility.Collapsed;
-            TxtStats.Text = LocalizationService.Format("QuickNote_Stats", _cachedEditorCharacterCount, _cachedEditorLineCount);
+            TxtStats.Text = LocalizationService.Format("QuickNote_Stats", _cachedEditorCharacterCount, _cachedEditorWordCount, _cachedEditorLineCount);
         }
 
         private async void BtnOpenFile_Click(object sender, RoutedEventArgs e)
@@ -726,6 +772,7 @@ namespace AiteBar
             {
                 _noteService.Load(TxtNote.Document);
                 QuickNoteDocumentFormatting.NormalizeListLayout(TxtNote.Document);
+                ConnectTaskItemEvents(TxtNote.Document);
                 _imageInteraction.ClearSelection();
             }
             catch (Exception ex)
