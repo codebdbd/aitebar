@@ -209,6 +209,14 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_OpenConflictCopy" xml:space="preserve"><value>Open conflict copy</value></data>
   <data name="QuickNote_Clear" xml:space="preserve"><value>Clear note</value></data>
   <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Clear the quick note?</value></data>
+  <data name="QuickNote_Find" xml:space="preserve"><value>Find</value></data>
+  <data name="QuickNote_FindPrevious" xml:space="preserve"><value>Previous</value></data>
+  <data name="QuickNote_FindNext" xml:space="preserve"><value>Next</value></data>
+  <data name="QuickNote_FindMatchCase" xml:space="preserve"><value>Match case</value></data>
+  <data name="QuickNote_FindWholeWord" xml:space="preserve"><value>Whole word</value></data>
+  <data name="QuickNote_ResetTasks" xml:space="preserve"><value>Reset task checkboxes</value></data>
+  <data name="QuickNote_ToggleAllTasks" xml:space="preserve"><value>Invert task checkboxes</value></data>
+  <data name="QuickNote_MarkAllTasksCompleted" xml:space="preserve"><value>Mark all tasks completed</value></data>
   <data name="QuickNote_Stats" xml:space="preserve"><value>{0} chars - {1} lines</value></data>
   <data name="QuickNote_SelectedStats" xml:space="preserve"><value>Selected: {0} characters with spaces - {1} characters without spaces</value></data>
   <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.aite-note</value></data>
@@ -236,10 +244,15 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_Italic" xml:space="preserve"><value>Italic</value></data>
   <data name="QuickNote_Underline" xml:space="preserve"><value>Underline</value></data>
   <data name="QuickNote_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="QuickNote_Quote" xml:space="preserve"><value>Quote</value></data>
+  <data name="QuickNote_Divider" xml:space="preserve"><value>Horizontal line</value></data>
   <data name="QuickNote_BulletList" xml:space="preserve"><value>Bullet list</value></data>
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Numbered list</value></data>
   <data name="QuickNote_TaskList" xml:space="preserve"><value>Checklist</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Clear formatting</value></data>
+  <data name="QuickNote_ClearFormatting_InlineOnly" xml:space="preserve"><value>Clear text formatting only</value></data>
+  <data name="QuickNote_ClearFormatting_PreserveLinks" xml:space="preserve"><value>Clear formatting (keep links)</value></data>
+  <data name="QuickNote_ClearFormatting_All" xml:space="preserve"><value>Clear all formatting</value></data>
   <data name="QuickNote_Heading" xml:space="preserve"><value>Heading</value></data>
   <data name="QuickNote_MoreFormatting" xml:space="preserve"><value>More formatting</value></data>
   <data name="QuickNote_BodyText" xml:space="preserve"><value>Body Text</value></data>

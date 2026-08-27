@@ -109,7 +109,11 @@ public sealed class QuickNoteFormattingControlsTests
 
             Assert.Equal(
             [
+                "BtnFind_Click",
                 "BtnTaskList_Click",
+                "BtnResetTasks_Click",
+                "BtnToggleAllTasks_Click",
+                "BtnMarkAllTasksCompleted_Click",
                 "BtnTheme_Click",
                 "BtnOpenFile_Click",
                 "BtnClear_Click"

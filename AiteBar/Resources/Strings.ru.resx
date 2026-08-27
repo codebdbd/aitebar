@@ -465,6 +465,30 @@
   <data name="QuickNote_ClearConfirm" xml:space="preserve">
     <value>Очистить быструю заметку?</value>
   </data>
+  <data name="QuickNote_Find" xml:space="preserve">
+    <value>Поиск</value>
+  </data>
+  <data name="QuickNote_FindPrevious" xml:space="preserve">
+    <value>Предыдущее</value>
+  </data>
+  <data name="QuickNote_FindNext" xml:space="preserve">
+    <value>Следующее</value>
+  </data>
+  <data name="QuickNote_FindMatchCase" xml:space="preserve">
+    <value>Учитывать регистр</value>
+  </data>
+  <data name="QuickNote_FindWholeWord" xml:space="preserve">
+    <value>Только слово целиком</value>
+  </data>
+  <data name="QuickNote_ResetTasks" xml:space="preserve">
+    <value>Сбросить все отметки</value>
+  </data>
+  <data name="QuickNote_ToggleAllTasks" xml:space="preserve">
+    <value>Инвертировать все отметки</value>
+  </data>
+  <data name="QuickNote_MarkAllTasksCompleted" xml:space="preserve">
+    <value>Отметить все выполненными</value>
+  </data>
   <data name="QuickNote_Stats" xml:space="preserve">
     <value>{0} символов - {1} строк</value>
   </data>
@@ -546,6 +570,12 @@
   <data name="QuickNote_Code" xml:space="preserve">
     <value>Код</value>
   </data>
+  <data name="QuickNote_Quote" xml:space="preserve">
+    <value>Цитата</value>
+  </data>
+  <data name="QuickNote_Divider" xml:space="preserve">
+    <value>Горизонтальная линия</value>
+  </data>
   <data name="QuickNote_BulletList" xml:space="preserve">
     <value>Маркированный список</value>
   </data>
@@ -557,6 +587,15 @@
   </data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve">
     <value>Очистить форматирование</value>
+  </data>
+  <data name="QuickNote_ClearFormatting_InlineOnly" xml:space="preserve">
+    <value>Очистить только форматирование текста</value>
+  </data>
+  <data name="QuickNote_ClearFormatting_PreserveLinks" xml:space="preserve">
+    <value>Очистить форматирование (сохранить ссылки)</value>
+  </data>
+  <data name="QuickNote_ClearFormatting_All" xml:space="preserve">
+    <value>Очистить всё форматирование</value>
   </data>
   <data name="QuickNote_Heading" xml:space="preserve">
     <value>Заголовок</value>

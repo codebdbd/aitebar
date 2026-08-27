@@ -400,6 +400,214 @@ namespace AiteBar
             return false;
         }
 
+        private bool TryAutoConvertMarkdownOnSpace()
+        {
+            if (_saveSuppressionCount > 0 || !_loaded || !TxtNote.Selection.IsEmpty)
+            {
+                return false;
+            }
+
+            Paragraph? paragraph = TxtNote.CaretPosition?.Paragraph;
+            if (paragraph == null || QuickNoteDocumentFormatting.IsTaskParagraph(paragraph, out _, out _, out _))
+            {
+                return false;
+            }
+
+            TextPointer? caret = TxtNote.CaretPosition;
+            if (caret == null)
+            {
+                return false;
+            }
+
+            TextRange rangeBeforeCaret = new TextRange(paragraph.ContentStart, caret);
+            string textBeforeCaret = rangeBeforeCaret.Text.Trim();
+
+            if (textBeforeCaret is "[ ]" or "[x]" or "[X]")
+            {
+                bool isChecked = textBeforeCaret is "[x]" or "[X]";
+                _saveSuppressionCount++;
+                try
+                {
+                    TxtNote.BeginChange();
+                    try
+                    {
+                        rangeBeforeCaret.Text = string.Empty;
+                        var container = QuickNoteDocumentFormatting.CreateTaskCheckbox(isChecked, state => OnTaskItemToggled(paragraph, state), _theme);
+                        if (paragraph.Inlines.FirstInline != null)
+                        {
+                            paragraph.Inlines.InsertBefore(paragraph.Inlines.FirstInline, container);
+                        }
+                        else
+                        {
+                            paragraph.Inlines.Add(container);
+                            paragraph.Inlines.Add(new Run(string.Empty));
+                        }
+                        QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(paragraph, isChecked, _theme);
+                        TxtNote.CaretPosition = paragraph.ContentEnd;
+                    }
+                    finally
+                    {
+                        TxtNote.EndChange();
+                    }
+                }
+                finally
+                {
+                    _saveSuppressionCount--;
+                }
+
+                MarkChangedAndScheduleSave();
+                ScheduleFooterStatsUpdate();
+                return true;
+            }
+
+            if (textBeforeCaret is "-" or "*")
+            {
+                _saveSuppressionCount++;
+                try
+                {
+                    TxtNote.BeginChange();
+                    try
+                    {
+                        rangeBeforeCaret.Text = string.Empty;
+                        ApplyListFormatting(numbered: false);
+                    }
+                    finally
+                    {
+                        TxtNote.EndChange();
+                    }
+                }
+                finally
+                {
+                    _saveSuppressionCount--;
+                }
+
+                MarkChangedAndScheduleSave();
+                ScheduleFooterStatsUpdate();
+                return true;
+            }
+
+            if (textBeforeCaret is "1.")
+            {
+                _saveSuppressionCount++;
+                try
+                {
+                    TxtNote.BeginChange();
+                    try
+                    {
+                        rangeBeforeCaret.Text = string.Empty;
+                        ApplyListFormatting(numbered: true);
+                    }
+                    finally
+                    {
+                        TxtNote.EndChange();
+                    }
+                }
+                finally
+                {
+                    _saveSuppressionCount--;
+                }
+
+                MarkChangedAndScheduleSave();
+                ScheduleFooterStatsUpdate();
+                return true;
+            }
+
+            if (textBeforeCaret is "#" or "##" or "###")
+            {
+                int level = textBeforeCaret.Length;
+                _saveSuppressionCount++;
+                try
+                {
+                    TxtNote.BeginChange();
+                    try
+                    {
+                        rangeBeforeCaret.Text = string.Empty;
+                        paragraph.FontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(level);
+                        paragraph.FontWeight = FontWeights.SemiBold;
+                    }
+                    finally
+                    {
+                        TxtNote.EndChange();
+                    }
+                }
+                finally
+                {
+                    _saveSuppressionCount--;
+                }
+
+                MarkChangedAndScheduleSave();
+                ScheduleFooterStatsUpdate();
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool TryAutoConvertMarkdownOnEnter()
+        {
+            if (_saveSuppressionCount > 0 || !_loaded || !TxtNote.Selection.IsEmpty)
+            {
+                return false;
+            }
+
+            Paragraph? paragraph = TxtNote.CaretPosition?.Paragraph;
+            if (paragraph == null)
+            {
+                return false;
+            }
+
+            TextRange range = new TextRange(paragraph.ContentStart, paragraph.ContentEnd);
+            string lineText = range.Text.Trim();
+
+            if (lineText is "---" or "***")
+            {
+                _saveSuppressionCount++;
+                try
+                {
+                    TxtNote.BeginChange();
+                    try
+                    {
+                        range.Text = string.Empty;
+                        BtnDivider_Click(this, new RoutedEventArgs());
+                    }
+                    finally
+                    {
+                        TxtNote.EndChange();
+                    }
+                }
+                finally
+                {
+                    _saveSuppressionCount--;
+                }
+                return true;
+            }
+
+            if (lineText is "```")
+            {
+                _saveSuppressionCount++;
+                try
+                {
+                    TxtNote.BeginChange();
+                    try
+                    {
+                        range.Text = string.Empty;
+                        BtnCode_Click(this, new RoutedEventArgs());
+                    }
+                    finally
+                    {
+                        TxtNote.EndChange();
+                    }
+                }
+                finally
+                {
+                    _saveSuppressionCount--;
+                }
+                return true;
+            }
+
+            return false;
+        }
+
         private void TryAutoConvertTaskPrefix()
         {
             if (_saveSuppressionCount > 0 || !_loaded)

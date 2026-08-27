@@ -133,13 +133,15 @@ namespace AiteBar
 
         private void ScheduleDocumentStylesUpdate()
         {
-            Dispatcher.BeginInvoke(() =>
-            {
-                var codeBackground = Brush(QuickNoteDocumentFormatting.GetCodeBackground(_theme));
-                var codeText = Brush(QuickNoteDocumentFormatting.GetCodeText(_theme));
-                var link = Brush(_theme.Link);
-                ApplyDocumentStyles(TxtNote.Document, Brush(_theme.Text), codeBackground, codeText, link);
-            }, DispatcherPriority.Background);
+            _linkHighlightController?.ScheduleUpdate();
+        }
+
+        private void ScheduleDocumentStylesUpdateImmediate()
+        {
+            var codeBackground = Brush(QuickNoteDocumentFormatting.GetCodeBackground(_theme));
+            var codeText = Brush(QuickNoteDocumentFormatting.GetCodeText(_theme));
+            var link = Brush(_theme.Link);
+            ApplyDocumentStyles(TxtNote.Document, Brush(_theme.Text), codeBackground, codeText, link);
         }
 
         private void ApplyDocumentStyles(
@@ -472,6 +474,7 @@ namespace AiteBar
                     SetStatus(QuickNoteStatusKind.OpenFailed);
                     return false;
                 }
+                SuppressAutoDismiss(TimeSpan.FromSeconds(3));
                 Process.Start(new ProcessStartInfo(normalized) { UseShellExecute = true });
             }
             catch (Exception ex)
@@ -549,16 +552,16 @@ namespace AiteBar
                 return null;
             }
 
-            if (paragraphText.Length > MaxLinkScanParagraphLength)
+            if (paragraphText.Length > QuickNoteLinkHighlightController.MaxLinkScanParagraphLength)
             {
                 SetStatus(QuickNoteStatusKind.LinkHighlightPaused);
                 return null;
             }
 
-            if (!_linkMatchCache.TryGetValue(paragraph!, out var cache) || !string.Equals(cache.Text, paragraphText, StringComparison.Ordinal))
+            if (!_linkHighlightController.Cache.TryGetValue(paragraph!, out var cache) || !string.Equals(cache.Text, paragraphText, StringComparison.Ordinal))
             {
                 cache = new LinkMatchCacheEntry(paragraphText, QuickNoteDocumentFormatting.MatchLinks(paragraphText).ToList());
-                _linkMatchCache.AddOrUpdate(paragraph!, cache);
+                _linkHighlightController.Cache.AddOrUpdate(paragraph!, cache);
             }
 
             foreach (var (match, type) in cache.Matches)
@@ -713,17 +716,7 @@ namespace AiteBar
             return null;
         }
 
-        private sealed class LinkMatchCacheEntry
-        {
-            public string Text { get; }
-            public List<(Match Match, QuickNoteDocumentFormatting.LinkType Type)> Matches { get; }
 
-            public LinkMatchCacheEntry(string text, List<(Match Match, QuickNoteDocumentFormatting.LinkType Type)> matches)
-            {
-                Text = text;
-                Matches = matches;
-            }
-        }
 
         private static bool IsDescendantOf(DependencyObject child, DependencyObject parent)
         {

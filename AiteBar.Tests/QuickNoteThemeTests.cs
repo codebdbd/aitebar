@@ -31,11 +31,14 @@ public sealed class QuickNoteThemeTests
     }
 
     [Fact]
-    public void HeaderBackground_IsSlightlyDarkerThanTheCurrentThemeBackground()
+    public void HeaderBackground_IsAdjustedBasedOnThemeDarkness()
     {
-        Assert.Equal("#B5C7B1", QuickNoteThemeCatalog.GetHeaderBackground(QuickNoteThemeCatalog.Find("sage")));
+        Assert.Equal("#D7E6D4", QuickNoteThemeCatalog.GetHeaderBackground(QuickNoteThemeCatalog.Find("sage")));
         Assert.Equal("#232323", QuickNoteThemeCatalog.GetHeaderBackground(QuickNoteThemeCatalog.Find("dark")));
         Assert.NotEqual(QuickNoteThemeCatalog.Find("sage").Accent, QuickNoteThemeCatalog.GetHeaderBackground(QuickNoteThemeCatalog.Find("sage")));
+
+        var customTheme = new QuickNoteTheme("custom", "#FFFFFF", "#8A8A8A", "#000000", "#000000", "#0067B8", "#101316", "#F4F6F8", "#000000", false, "#EAEAEA");
+        Assert.Equal("#EAEAEA", QuickNoteThemeCatalog.GetHeaderBackground(customTheme));
     }
 
     [Fact]

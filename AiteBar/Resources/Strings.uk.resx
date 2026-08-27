@@ -48,6 +48,14 @@
   <data name="QuickNote_OpenConflictCopy" xml:space="preserve"><value>Відкрити конфліктну копію</value></data>
   <data name="QuickNote_Clear" xml:space="preserve"><value>Очистити нотатку</value></data>
   <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Очистити швидку нотатку?</value></data>
+  <data name="QuickNote_Find" xml:space="preserve"><value>Пошук</value></data>
+  <data name="QuickNote_FindPrevious" xml:space="preserve"><value>Попереднє</value></data>
+  <data name="QuickNote_FindNext" xml:space="preserve"><value>Наступне</value></data>
+  <data name="QuickNote_FindMatchCase" xml:space="preserve"><value>Враховувати регістр</value></data>
+  <data name="QuickNote_FindWholeWord" xml:space="preserve"><value>Тільки слово цілком</value></data>
+  <data name="QuickNote_ResetTasks" xml:space="preserve"><value>Скинути всі прапорці завдань</value></data>
+  <data name="QuickNote_ToggleAllTasks" xml:space="preserve"><value>Інвертувати всі прапорці завдань</value></data>
+  <data name="QuickNote_MarkAllTasksCompleted" xml:space="preserve"><value>Позначити всі завдання виконаними</value></data>
   <data name="QuickNote_Stats" xml:space="preserve"><value>{0} символів - {1} рядків</value></data>
   <data name="QuickNote_SelectedStats" xml:space="preserve"><value>Виділено: {0} символів з пробілами - {1} символів без пробілів</value></data>
   <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.aite-note</value></data>
@@ -75,10 +83,15 @@
   <data name="QuickNote_Italic" xml:space="preserve"><value>Курсив</value></data>
   <data name="QuickNote_Underline" xml:space="preserve"><value>Підкреслити</value></data>
   <data name="QuickNote_Code" xml:space="preserve"><value>Код</value></data>
+  <data name="QuickNote_Quote" xml:space="preserve"><value>Цитата</value></data>
+  <data name="QuickNote_Divider" xml:space="preserve"><value>Горизонтальна лінія</value></data>
   <data name="QuickNote_BulletList" xml:space="preserve"><value>Маркований список</value></data>
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Нумерований список</value></data>
   <data name="QuickNote_TaskList" xml:space="preserve"><value>Список завдань</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Очистити форматування</value></data>
+  <data name="QuickNote_ClearFormatting_InlineOnly" xml:space="preserve"><value>Очистити тільки форматування тексту</value></data>
+  <data name="QuickNote_ClearFormatting_PreserveLinks" xml:space="preserve"><value>Очистити форматування (зберегти посилання)</value></data>
+  <data name="QuickNote_ClearFormatting_All" xml:space="preserve"><value>Очистити все форматування</value></data>
   <data name="QuickNote_Heading" xml:space="preserve"><value>Заголовок</value></data>
   <data name="QuickNote_MoreFormatting" xml:space="preserve"><value>Більше форматування</value></data>
   <data name="QuickNote_BodyText" xml:space="preserve"><value>Звичайний текст</value></data>

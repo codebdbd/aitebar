@@ -243,7 +243,7 @@
                                  </MenuItem>
                                  <MenuItem Header="{local:Loc ResourceKey=Common_Delete}" Command="ApplicationCommands.Delete" InputGestureText="Del">
                                      <MenuItem.Icon>
-                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE74D;"/>
+                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF34C;"/>
                                      </MenuItem.Icon>
                                  </MenuItem>
                                  <MenuItem Header="{local:Loc ResourceKey=QuickNote_SelectAll}" Command="ApplicationCommands.SelectAll" InputGestureText="Ctrl+A">
@@ -251,7 +251,28 @@
                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xEA86;"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Find}" Click="BtnFind_Click" InputGestureText="Ctrl+F">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF68F;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <Separator Style="{StaticResource DarkMenuSeparator}"/>
                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_TaskList}" Click="BtnTaskList_Click" InputGestureText="Ctrl+Shift+C">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF28D;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_ResetTasks}" Click="BtnResetTasks_Click">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF291;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_ToggleAllTasks}" Click="BtnToggleAllTasks_Click">
+                                    <MenuItem.Icon>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF190;"/>
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_MarkAllTasksCompleted}" Click="BtnMarkAllTasksCompleted_Click">
                                     <MenuItem.Icon>
                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF28D;"/>
                                     </MenuItem.Icon>
@@ -262,7 +283,7 @@
                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF2F5;"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_OpenFile}" Click="BtnOpenFile_Click">
+                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_OpenFile}" Click="BtnOpenFile_Click">
                                     <MenuItem.Icon>
                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF42E;"/>
                                     </MenuItem.Icon>
@@ -289,6 +310,86 @@
                                FontSize="14"
                                Margin="0,4,0,0"
                                IsHitTestVisible="False"/>
+
+                    <Border x:Name="FindPanel"
+                            VerticalAlignment="Top"
+                            HorizontalAlignment="Right"
+                            Margin="0,4,12,0"
+                            Background="#2A2A2D"
+                            BorderBrush="#454548"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="6,4"
+                            Visibility="Collapsed"
+                            Panel.ZIndex="100">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <TextBox x:Name="TxtFindQuery"
+                                     Width="140"
+                                     Height="22"
+                                     Background="#1E1E20"
+                                     Foreground="#EDEDED"
+                                     CaretBrush="#70B7FF"
+                                     BorderThickness="1"
+                                     BorderBrush="#3D3D40"
+                                     Padding="4,1"
+                                     FontSize="12"
+                                     VerticalContentAlignment="Center"
+                                     KeyDown="TxtFindQuery_KeyDown"
+                                     TextChanged="TxtFindQuery_TextChanged"/>
+                            <CheckBox x:Name="ChkFindMatchCase"
+                                      Margin="4,0,0,0"
+                                      Padding="2,0"
+                                      FontSize="11"
+                                      Foreground="#BDBDC1"
+                                      VerticalAlignment="Center"
+                                      ToolTip="{local:Loc ResourceKey=QuickNote_FindMatchCase}"
+                                      AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_FindMatchCase}"
+                                      Content="Aa"
+                                      Unchecked="ChkFindOptions_Changed"
+                                      Checked="ChkFindOptions_Changed"/>
+                            <CheckBox x:Name="ChkFindWholeWord"
+                                      Margin="2,0,0,0"
+                                      Padding="2,0"
+                                      FontSize="11"
+                                      Foreground="#BDBDC1"
+                                      VerticalAlignment="Center"
+                                      ToolTip="{local:Loc ResourceKey=QuickNote_FindWholeWord}"
+                                      AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_FindWholeWord}"
+                                      Content="&quot;ab&quot;"
+                                      Unchecked="ChkFindOptions_Changed"
+                                      Checked="ChkFindOptions_Changed"/>
+                            <TextBlock x:Name="TxtFindStats"
+                                       Margin="6,0,6,0"
+                                       Foreground="#8A8A8E"
+                                       FontSize="11"
+                                       VerticalAlignment="Center"
+                                       Text="0/0"/>
+                            <Button x:Name="BtnFindPrev"
+                                    Style="{StaticResource QuickNoteIconButtonStyle}"
+                                    Width="22" Height="22"
+                                    FontSize="10"
+                                    ToolTip="{local:Loc ResourceKey=QuickNote_FindPrevious}"
+                                    AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_FindPrevious}"
+                                    Click="BtnFindPrev_Click"
+                                    Content="▲"/>
+                            <Button x:Name="BtnFindNext"
+                                    Style="{StaticResource QuickNoteIconButtonStyle}"
+                                    Width="22" Height="22"
+                                    FontSize="10"
+                                    ToolTip="{local:Loc ResourceKey=QuickNote_FindNext}"
+                                    AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_FindNext}"
+                                    Click="BtnFindNext_Click"
+                                    Content="▼"/>
+                            <Button x:Name="BtnCloseFind"
+                                    Style="{StaticResource DangerIconButtonStyle}"
+                                    Width="22" Height="22"
+                                    FontSize="10"
+                                    ToolTip="{local:Loc ResourceKey=Common_Close}"
+                                    AutomationProperties.Name="{local:Loc ResourceKey=Common_Close}"
+                                    Click="BtnCloseFind_Click"
+                                    Content="✕"/>
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </Border>
 
@@ -306,14 +407,14 @@
                     <Button Content="&#xF48C;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_InsertImage}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_InsertImage}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnInsertImage_Click"/>
                     <Button Content="&#xF80A;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Underline}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Underline}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnUnderline_Click"/>
                     <Button Content="&#xF2EF;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Code}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Code}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnCode_Click"/>
-                    <Button Content="&#xF4BA;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Quote}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Quote}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnQuote_Click"/>
-                    <Button Content="&#xF4B8;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Divider}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Divider}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnDivider_Click"/>
-                    <Button x:Name="BtnClearFormatting" Content="&#xF7BD;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_ClearFormatting}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_ClearFormatting}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnClearFormatting_Click">
+                    <Button Content="&#xF800;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Quote}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Quote}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnQuote_Click"/>
+                    <Button Content="&#xEBD0;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Divider}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Divider}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnDivider_Click"/>
+                    <Button x:Name="BtnClearFormatting" Content="&#xE5E4;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_ClearFormatting}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_ClearFormatting}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnClearFormatting_Click">
                         <Button.ContextMenu>
                             <ContextMenu Style="{StaticResource DarkContextMenu}">
                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_ClearFormatting_InlineOnly}" Click="BtnClearFormattingInlineOnly_Click">
                                     <MenuItem.Icon>
-                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF7BD;"/>
+                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xE5E4;"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_ClearFormatting_PreserveLinks}" Click="BtnClearFormattingPreserveLinks_Click">

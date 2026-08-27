@@ -37,23 +37,16 @@ namespace AiteBar
         private readonly IQuickNotePersistence _noteService;
         private readonly IQuickNoteClipboard _clipboard;
         private readonly AppSettingsService _settingsService;
-        private readonly DispatcherTimer _saveTimer;
+        private readonly QuickNoteSaveController _saveController;
+        private readonly QuickNoteFooterStatsController _footerStatsController;
         private readonly DispatcherTimer _geometrySaveTimer;
-        private readonly DispatcherTimer _footerStatsTimer;
+        private readonly DispatcherTimer _findDebounceTimer = new() { Interval = TimeSpan.FromMilliseconds(50) };
+        private FindReplaceOptions _currentFindOptions;
         private QuickNoteTheme _theme;
         private bool _loaded;
-        private bool _hasPendingChanges;
-        private readonly System.Threading.SemaphoreSlim _saveSemaphore = new(1, 1);
-        private bool _saveAgainAfterCurrent;
-        private long _changeVersion;
         private bool _isModalDialogOpen;
         private bool _documentLoaded;
         private TextRange? _preservedFormatSelection;
-        private bool _footerStatsDirty = true;
-        private bool _cachedEditorIsEmpty = true;
-        private int _cachedEditorCharacterCount;
-        private int _cachedEditorLineCount;
-        private int _cachedEditorWordCount;
         private QuickNoteStatusKind _statusKind;
         private string? _statusArgument;
         private List<TextBlock>? _cachedTextBlocks;
@@ -65,8 +58,8 @@ namespace AiteBar
         private int _saveSuppressionCount;
         private readonly QuickNoteImageInteractionController _imageInteraction;
         internal QuickNoteImageInteractionController ImageInteractionController => _imageInteraction;
-        private const int MaxLinkScanParagraphLength = 10_000;
-        private readonly System.Runtime.CompilerServices.ConditionalWeakTable<Paragraph, LinkMatchCacheEntry> _linkMatchCache = [];
+        private readonly QuickNoteLinkHighlightController _linkHighlightController;
+        private int _suppressAutoDismissUntilTick;
 
         public QuickNoteWindow(QuickNoteService noteService, AppSettingsService settingsService)
             : this(new QuickNotePersistence(noteService), settingsService, new QuickNoteClipboard())
@@ -83,22 +76,30 @@ namespace AiteBar
             InitializeComponent();
             AddHandler(System.Windows.Controls.Primitives.ButtonBase.ClickEvent, new RoutedEventHandler(CodeBlockCopyButton_Click));
             _imageInteraction = new QuickNoteImageInteractionController(TxtNote);
+            _linkHighlightController = new QuickNoteLinkHighlightController(ScheduleDocumentStylesUpdateImmediate);
             _noteService = noteService ?? throw new ArgumentNullException(nameof(noteService));
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _clipboard = clipboard ?? throw new ArgumentNullException(nameof(clipboard));
+            _footerStatsController = new QuickNoteFooterStatsController(TxtNote, TxtPlaceholder, TxtStats);
+            _saveController = new QuickNoteSaveController(
+                _noteService,
+                getDocument: () => TxtNote.Document,
+                setStatus: SetStatus,
+                updateStatusSaved: UpdateStatusSaved,
+                isLoaded: () => _loaded);
             System.Windows.DataObject.AddPastingHandler(TxtNote, TxtNote_Pasting);
             CommandManager.AddPreviewExecutedHandler(TxtNote, OnPreviewExecutedCommand);
             CommandManager.AddPreviewCanExecuteHandler(TxtNote, OnPreviewCanExecuteCommand);
             _theme = QuickNoteThemeCatalog.Find(_settingsService.Settings.QuickNoteThemeId);
-            _saveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
-            _saveTimer.Tick += async (_, _) => await SaveNowAsync();
             _geometrySaveTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
             _geometrySaveTimer.Tick += async (_, _) => await SaveGeometryNowAsync();
-            _footerStatsTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(120) };
-            _footerStatsTimer.Tick += (_, _) =>
+            _findDebounceTimer.Tick += (_, _) =>
             {
-                _footerStatsTimer.Stop();
-                UpdatePlaceholderAndStats();
+                _findDebounceTimer.Stop();
+                if (FindPanel.Visibility == Visibility.Visible)
+                {
+                    UpdateFindStats();
+                }
             };
             BuildThemePalette();
             ApplyTheme(_theme);
@@ -109,6 +110,12 @@ namespace AiteBar
             _cachedTextBlocks = null;
             _cachedButtons = null;
             _cachedToggleButtons = null;
+            _linkHighlightController.ClearCache();
+        }
+
+        internal void SuppressAutoDismiss(TimeSpan duration)
+        {
+            _suppressAutoDismissUntilTick = Environment.TickCount + (int)duration.TotalMilliseconds;
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
@@ -138,6 +145,11 @@ namespace AiteBar
         protected override async void OnDeactivatedAutoDismiss()
         {
             await Dispatcher.Yield(DispatcherPriority.Background);
+            if (Environment.TickCount < _suppressAutoDismissUntilTick)
+            {
+                return;
+            }
+
             if (!IsTransientUiOpen())
             {
                 Close();
@@ -204,20 +216,22 @@ namespace AiteBar
             _disposed = true;
             StopTimers();
             _imageInteraction.Dispose();
-            _saveSemaphore.Dispose();
+            _linkHighlightController.Dispose();
+            _footerStatsController.Dispose();
+            _saveController.Dispose();
         }
 
         private void StopTimers()
         {
-            _saveTimer.Stop();
+            _saveController.Stop();
             _geometrySaveTimer.Stop();
-            _footerStatsTimer.Stop();
+            _footerStatsController.Stop();
+            _findDebounceTimer.Stop();
         }
 
         private void TxtNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
-            _footerStatsDirty = true;
-            ScheduleFooterStatsUpdate();
+            _footerStatsController.ScheduleUpdate();
             if (!_loaded)
             {
                 return;
@@ -225,11 +239,15 @@ namespace AiteBar
 
             TryAutoConvertTaskPrefix();
 
-            _changeVersion++;
-            _hasPendingChanges = true;
             if (_saveSuppressionCount == 0)
             {
-                ScheduleSave();
+                _saveController.MarkChangedAndSchedule();
+            }
+
+            if (FindPanel.Visibility == Visibility.Visible)
+            {
+                _findDebounceTimer.Stop();
+                _findDebounceTimer.Start();
             }
         }
 
@@ -272,7 +290,12 @@ namespace AiteBar
             }
             else if (e.Key == Key.Escape)
             {
-                if (_imageInteraction.HasSelectedImage)
+                if (FindPanel.Visibility == Visibility.Visible)
+                {
+                    CloseFindPanel();
+                    e.Handled = true;
+                }
+                else if (_imageInteraction.HasSelectedImage)
                 {
                     _imageInteraction.ClearSelection();
                     e.Handled = true;
@@ -280,6 +303,30 @@ namespace AiteBar
                 else
                 {
                     Close();
+                    e.Handled = true;
+                }
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.F)
+            {
+                OpenFindPanel();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.F3)
+            {
+                if (Keyboard.Modifiers == ModifierKeys.Shift)
+                {
+                    FindPrevious();
+                }
+                else if (Keyboard.Modifiers == ModifierKeys.None)
+                {
+                    FindNext();
+                }
+                e.Handled = true;
+            }
+            else if (Keyboard.Modifiers == ModifierKeys.None && e.Key == Key.Space)
+            {
+                if (TryAutoConvertMarkdownOnSpace())
+                {
                     e.Handled = true;
                 }
             }
@@ -335,7 +382,7 @@ namespace AiteBar
             }
             else if (Keyboard.Modifiers == ModifierKeys.None && e.Key == Key.Enter)
             {
-                if (HandleTaskItemEnterKey())
+                if (TryAutoConvertMarkdownOnEnter() || HandleTaskItemEnterKey())
                 {
                     e.Handled = true;
                 }
@@ -508,137 +555,18 @@ namespace AiteBar
             e.Handled = true;
         }
 
-        internal async Task<bool> SaveNowAsync(bool force = false)
-        {
-            _saveTimer.Stop();
-            if (!_loaded || (!_hasPendingChanges && !force))
-            {
-                return true;
-            }
-
-            if (force)
-            {
-                if (!await _saveSemaphore.WaitAsync(ForcedSaveWaitTimeout))
-                {
-                    SetStatus(QuickNoteStatusKind.SaveFailed);
-                    return false;
-                }
-            }
-            // If a timer save can't acquire the semaphore immediately, coalesce it with the current save.
-            else if (!await _saveSemaphore.WaitAsync(0))
-            {
-                _saveAgainAfterCurrent = true;
-                return true;
-            }
-
-            SetStatus(QuickNoteStatusKind.Saving);
-            try
-            {
-                if (!_hasPendingChanges)
-                {
-                    UpdateStatusSaved();
-                    return true;
-                }
-
-                do
-                {
-                    if (!_hasPendingChanges && !force)
-                    {
-                        return true;
-                    }
-
-                    if (await _noteService.HasExternalChangesAsync())
-                    {
-                        string conflictPath = await _noteService.SaveConflictCopyAsync(TxtNote.Document);
-                        _hasPendingChanges = false;
-                        _saveAgainAfterCurrent = false;
-                        SetStatus(QuickNoteStatusKind.ConflictCopySaved, System.IO.Path.GetFileName(conflictPath));
-                        return true;
-                    }
-
-                    _saveAgainAfterCurrent = false;
-                    long savedVersion = _changeVersion;
-                    try
-                    {
-                        await _noteService.SaveAsync(TxtNote.Document);
-                    }
-                    catch (QuickNoteExternalChangeException)
-                    {
-                        string conflictPath = await _noteService.SaveConflictCopyAsync(TxtNote.Document);
-                        _hasPendingChanges = false;
-                        _saveAgainAfterCurrent = false;
-                        SetStatus(QuickNoteStatusKind.ConflictCopySaved, System.IO.Path.GetFileName(conflictPath));
-                        return true;
-                    }
-                    if (_changeVersion == savedVersion)
-                    {
-                        _hasPendingChanges = false;
-                    }
-                    else
-                    {
-                        _hasPendingChanges = true;
-                        _saveAgainAfterCurrent = true;
-                    }
-                }
-                while (_saveAgainAfterCurrent || (force && _hasPendingChanges));
-
-                UpdateStatusSaved();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(ex);
-                SetStatus(QuickNoteStatusKind.SaveFailed);
-                return false;
-            }
-            finally
-            {
-                _saveSemaphore.Release();
-            }
-        }
+        internal Task<bool> SaveNowAsync(bool force = false) => _saveController.SaveNowAsync(force);
 
         private void UpdateStatusSaved()
         {
             SetStatus(QuickNoteStatusKind.SavedAt);
         }
 
-        private void ScheduleSave()
-        {
-            SetStatus(QuickNoteStatusKind.Saving);
-            _saveTimer.Stop();
-            _saveTimer.Start();
-        }
+        private void ScheduleSave() => _saveController.Schedule();
 
-        private void ScheduleFooterStatsUpdate()
-        {
-            _footerStatsTimer.Stop();
-            _footerStatsTimer.Start();
-        }
+        private void ScheduleFooterStatsUpdate() => _footerStatsController.ScheduleUpdate();
 
-        private void UpdatePlaceholderAndStats()
-        {
-            string selectedText = QuickNoteDocumentHelper.NormalizeLineEndings(TxtNote.Selection.Text);
-            if (!string.IsNullOrEmpty(selectedText))
-            {
-                TxtPlaceholder.Visibility = Visibility.Collapsed;
-                int selectedWithoutWhitespace = selectedText.Count(c => !char.IsWhiteSpace(c));
-                TxtStats.Text = LocalizationService.Format("QuickNote_SelectedStats", selectedText.Length, selectedWithoutWhitespace);
-                return;
-            }
-
-            if (_footerStatsDirty)
-            {
-                string text = GetEditorText();
-                _cachedEditorIsEmpty = string.IsNullOrWhiteSpace(text);
-                _cachedEditorCharacterCount = text.Length;
-                _cachedEditorLineCount = string.IsNullOrEmpty(text) ? 0 : text.Count(c => c == '\n') + 1;
-                _cachedEditorWordCount = string.IsNullOrEmpty(text) ? 0 : text.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Length;
-                _footerStatsDirty = false;
-            }
-
-            TxtPlaceholder.Visibility = _cachedEditorIsEmpty ? Visibility.Visible : Visibility.Collapsed;
-            TxtStats.Text = LocalizationService.Format("QuickNote_Stats", _cachedEditorCharacterCount, _cachedEditorWordCount, _cachedEditorLineCount);
-        }
+        private void UpdatePlaceholderAndStats() => _footerStatsController.UpdateUi();
 
         private async void BtnOpenFile_Click(object sender, RoutedEventArgs e)
         {
@@ -649,12 +577,147 @@ namespace AiteBar
 
             try
             {
+                SuppressAutoDismiss(TimeSpan.FromSeconds(3));
                 _noteService.OpenInEditor();
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
                 SetStatus(QuickNoteStatusKind.OpenFailed);
+            }
+        }
+
+        private void OpenFindPanel()
+        {
+            FindPanel.Visibility = Visibility.Visible;
+            ChkFindMatchCase.IsChecked = _currentFindOptions.CaseSensitive;
+            ChkFindWholeWord.IsChecked = _currentFindOptions.WholeWord;
+            string selected = TxtNote.Selection.Text;
+            if (!string.IsNullOrWhiteSpace(selected) && !selected.Contains('\n') && !selected.Contains('\r'))
+            {
+                TxtFindQuery.Text = selected.Trim();
+            }
+            TxtFindQuery.Focus();
+            TxtFindQuery.SelectAll();
+            UpdateFindStats();
+        }
+
+        private void CloseFindPanel()
+        {
+            _findDebounceTimer.Stop();
+            FindPanel.Visibility = Visibility.Collapsed;
+            TxtNote.Focus();
+        }
+
+        private void ChkFindOptions_Changed(object sender, RoutedEventArgs e)
+        {
+            _currentFindOptions.CaseSensitive = ChkFindMatchCase.IsChecked == true;
+            _currentFindOptions.WholeWord = ChkFindWholeWord.IsChecked == true;
+            UpdateFindStats();
+        }
+
+        private void BtnFind_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFindPanel();
+        }
+
+        private void BtnCloseFind_Click(object sender, RoutedEventArgs e)
+        {
+            CloseFindPanel();
+        }
+
+        private void BtnFindNext_Click(object sender, RoutedEventArgs e)
+        {
+            FindNext();
+        }
+
+        private void BtnFindPrev_Click(object sender, RoutedEventArgs e)
+        {
+            FindPrevious();
+        }
+
+        private void TxtFindQuery_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                CloseFindPanel();
+                e.Handled = true;
+            }
+            else if (e.Key == Key.Enter)
+            {
+                if (Keyboard.Modifiers == ModifierKeys.Shift)
+                {
+                    FindPrevious();
+                }
+                else
+                {
+                    FindNext();
+                }
+                e.Handled = true;
+            }
+        }
+
+        private void TxtFindQuery_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
+        {
+            _findDebounceTimer.Stop();
+            _findDebounceTimer.Start();
+        }
+
+        private void FindNext()
+        {
+            string query = TxtFindQuery.Text;
+            if (string.IsNullOrEmpty(query)) return;
+            var result = QuickNoteFindController.Find(TxtNote, query, forward: true, _currentFindOptions);
+            TxtFindStats.Text = result.TotalMatches > 0 ? $"{result.CurrentIndex}/{result.TotalMatches}" : "0/0";
+        }
+
+        private void FindPrevious()
+        {
+            string query = TxtFindQuery.Text;
+            if (string.IsNullOrEmpty(query)) return;
+            var result = QuickNoteFindController.Find(TxtNote, query, forward: false, _currentFindOptions);
+            TxtFindStats.Text = result.TotalMatches > 0 ? $"{result.CurrentIndex}/{result.TotalMatches}" : "0/0";
+        }
+
+        private void UpdateFindStats()
+        {
+            string query = TxtFindQuery.Text;
+            if (string.IsNullOrEmpty(query))
+            {
+                TxtFindStats.Text = "0/0";
+                return;
+            }
+            int total = QuickNoteFindController.CountMatches(TxtNote.Document, query, _currentFindOptions);
+            TxtFindStats.Text = total > 0 ? $"0/{total}" : "0/0";
+        }
+
+        private void BtnResetTasks_Click(object sender, RoutedEventArgs e)
+        {
+            int resetCount = QuickNoteTaskListController.ResetAllTasks(TxtNote, _theme);
+            if (resetCount > 0)
+            {
+                MarkChangedAndScheduleSave();
+                ScheduleFooterStatsUpdate();
+            }
+        }
+
+        private void BtnToggleAllTasks_Click(object sender, RoutedEventArgs e)
+        {
+            int toggledCount = QuickNoteTaskListController.ToggleAllTasks(TxtNote, _theme);
+            if (toggledCount > 0)
+            {
+                MarkChangedAndScheduleSave();
+                ScheduleFooterStatsUpdate();
+            }
+        }
+
+        private void BtnMarkAllTasksCompleted_Click(object sender, RoutedEventArgs e)
+        {
+            int completedCount = QuickNoteTaskListController.MarkAllTasksCompleted(TxtNote, _theme);
+            if (completedCount > 0)
+            {
+                MarkChangedAndScheduleSave();
+                ScheduleFooterStatsUpdate();
             }
         }
 
@@ -720,14 +783,7 @@ namespace AiteBar
 
         internal void MarkChangedAndScheduleSave()
         {
-            if (!_loaded)
-            {
-                return;
-            }
-
-            _changeVersion++;
-            _hasPendingChanges = true;
-            ScheduleSave();
+            _saveController.MarkChangedAndSchedule();
         }
 
         public void ShowSimple(AppSettings settings)
@@ -786,7 +842,7 @@ namespace AiteBar
             {
                 TxtNote.IsUndoEnabled = restoreUndoEnabled;
                 _documentLoaded = true;
-                _footerStatsDirty = true;
+                _footerStatsController.ScheduleUpdate();
             }
         }
 

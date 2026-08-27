@@ -14,7 +14,8 @@ namespace AiteBar
         string CodeBackground,
         string CodeText,
         string Link,
-        bool IsDark);
+        bool IsDark,
+        string? HeaderBackground = null);
 
     public static class QuickNoteThemeCatalog
     {
@@ -53,13 +54,29 @@ namespace AiteBar
         {
             ArgumentNullException.ThrowIfNull(theme);
 
-            return $"#{DarkenChannel(theme.Background, 1):X2}{DarkenChannel(theme.Background, 3):X2}{DarkenChannel(theme.Background, 5):X2}";
+            if (!string.IsNullOrWhiteSpace(theme.HeaderBackground))
+            {
+                return theme.HeaderBackground;
+            }
+
+            if (theme.IsDark)
+            {
+                return $"#{DarkenChannel(theme.Background, 1):X2}{DarkenChannel(theme.Background, 3):X2}{DarkenChannel(theme.Background, 5):X2}";
+            }
+
+            return $"#{LightenChannel(theme.Background, 1):X2}{LightenChannel(theme.Background, 3):X2}{LightenChannel(theme.Background, 5):X2}";
         }
 
         private static byte DarkenChannel(string color, int startIndex)
         {
             int channel = int.Parse(color.AsSpan(startIndex, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
             return (byte)Math.Round(channel * 0.9, MidpointRounding.AwayFromZero);
+        }
+
+        private static byte LightenChannel(string color, int startIndex)
+        {
+            int channel = int.Parse(color.AsSpan(startIndex, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            return (byte)Math.Clamp(Math.Round(channel + (255 - channel) * 0.25, MidpointRounding.AwayFromZero), 0, 255);
         }
     }
 }

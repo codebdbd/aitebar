@@ -122,6 +122,14 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="QuickNote_OpenConflictCopy" xml:space="preserve"><value>Konfliktkopie öffnen</value></data>
   <data name="QuickNote_Clear" xml:space="preserve"><value>Notiz leeren</value></data>
   <data name="QuickNote_ClearConfirm" xml:space="preserve"><value>Schnellnotiz leeren?</value></data>
+  <data name="QuickNote_Find" xml:space="preserve"><value>Suchen</value></data>
+  <data name="QuickNote_FindPrevious" xml:space="preserve"><value>Vorheriges</value></data>
+  <data name="QuickNote_FindNext" xml:space="preserve"><value>Nächstes</value></data>
+  <data name="QuickNote_FindMatchCase" xml:space="preserve"><value>Groß-/Kleinschreibung</value></data>
+  <data name="QuickNote_FindWholeWord" xml:space="preserve"><value>Ganzes Wort</value></data>
+  <data name="QuickNote_ResetTasks" xml:space="preserve"><value>Aufgaben-Kontrollkästchen zurücksetzen</value></data>
+  <data name="QuickNote_ToggleAllTasks" xml:space="preserve"><value>Aufgaben-Kontrollkästchen umkehren</value></data>
+  <data name="QuickNote_MarkAllTasksCompleted" xml:space="preserve"><value>Alle Aufgaben als erledigt markieren</value></data>
   <data name="QuickNote_Stats" xml:space="preserve"><value>{0} Zeichen - {1} Zeilen</value></data>
   <data name="QuickNote_SelectedStats" xml:space="preserve"><value>Ausgewählt: {0} Zeichen mit Leerzeichen - {1} Zeichen ohne Leerzeichen</value></data>
   <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.aite-note</value></data>
@@ -149,10 +157,15 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="QuickNote_Italic" xml:space="preserve"><value>Kursiv</value></data>
   <data name="QuickNote_Underline" xml:space="preserve"><value>Unterstreichen</value></data>
   <data name="QuickNote_Code" xml:space="preserve"><value>Code</value></data>
+  <data name="QuickNote_Quote" xml:space="preserve"><value>Zitat</value></data>
+  <data name="QuickNote_Divider" xml:space="preserve"><value>Trennlinie</value></data>
   <data name="QuickNote_BulletList" xml:space="preserve"><value>Aufzählung</value></data>
   <data name="QuickNote_NumberedList" xml:space="preserve"><value>Nummerierte Liste</value></data>
   <data name="QuickNote_TaskList" xml:space="preserve"><value>Checkliste</value></data>
   <data name="QuickNote_ClearFormatting" xml:space="preserve"><value>Formatierung löschen</value></data>
+  <data name="QuickNote_ClearFormatting_InlineOnly" xml:space="preserve"><value>Nur Textformatierung löschen</value></data>
+  <data name="QuickNote_ClearFormatting_PreserveLinks" xml:space="preserve"><value>Formatierung löschen (Links behalten)</value></data>
+  <data name="QuickNote_ClearFormatting_All" xml:space="preserve"><value>Gesamte Formatierung löschen</value></data>
   <data name="QuickNote_Heading" xml:space="preserve"><value>Überschrift</value></data>
   <data name="QuickNote_MoreFormatting" xml:space="preserve"><value>Weitere Formatierung</value></data>
   <data name="QuickNote_BodyText" xml:space="preserve"><value>Fließtext</value></data>

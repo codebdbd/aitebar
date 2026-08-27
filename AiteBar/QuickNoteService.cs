@@ -349,7 +349,7 @@ namespace AiteBar
 
                 // Do not truncate the target when another process blocks replacement. Reporting the
                 // failure lets the window retain the unsaved document or create a conflict copy.
-                if (HasExternalChanges())
+                if (await HasExternalChangesAsync().ConfigureAwait(true))
                 {
                     throw new QuickNoteExternalChangeException();
                 }
