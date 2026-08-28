@@ -2,8 +2,10 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
+using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Documents;
+using System.Windows.Media;
 using AiteBar;
 using Xunit;
 
@@ -13,9 +15,11 @@ public sealed class QuickNoteServiceTests : IDisposable
 {
     private readonly string _tempDir;
     private readonly QuickNoteService _service;
+    private readonly Xunit.Abstractions.ITestOutputHelper _output;
 
-    public QuickNoteServiceTests()
+    public QuickNoteServiceTests(Xunit.Abstractions.ITestOutputHelper output)
     {
+        _output = output;
         _tempDir = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_tempDir);
         _service = new QuickNoteService(Path.Combine(_tempDir, "QuickNote.rtf"));
@@ -28,6 +32,113 @@ public sealed class QuickNoteServiceTests : IDisposable
             Directory.Delete(_tempDir, recursive: true);
         }
         catch { }
+    }
+
+    [Fact]
+    public async Task HasExternalChanges_WhenLengthAndTimestampMatch_StillDetectsChangedContent()
+    {
+        await SaveTextAsync(_service, "alpha");
+        DateTime timestamp = File.GetLastWriteTimeUtc(_service.NotePath);
+        string original = await File.ReadAllTextAsync(_service.NotePath);
+        Assert.Contains("alpha", original);
+        await File.WriteAllTextAsync(_service.NotePath, original.Replace("alpha", "bravo", StringComparison.Ordinal));
+        File.SetLastWriteTimeUtc(_service.NotePath, timestamp);
+
+        Assert.True(await _service.HasExternalChangesAsync());
+        await Assert.ThrowsAsync<QuickNoteExternalChangeException>(() => SaveTextAsync(_service, "local edit"));
+    }
+
+    [Theory]
+    [InlineData(".rtf")]
+    [InlineData(".aite-note")]
+    public async Task Load_InvalidDocument_PreservesOriginalAndSavesLocalRecoveryCopy(string extension)
+    {
+        string path = Path.Combine(_tempDir, "damaged" + extension);
+        var service = new QuickNoteService(path);
+        byte[] original = System.Text.Encoding.UTF8.GetBytes("unreadable original, retain for recovery");
+        await File.WriteAllBytesAsync(path, original);
+        Assert.Equal(string.Empty, await LoadTextAsync(service));
+        Assert.True(service.HasLoadFailed);
+        await Assert.ThrowsAsync<QuickNoteExternalChangeException>(() => SaveTextAsync(service, "new text"));
+        string copy = await RunStaAsync(() => service.SaveConflictCopyAsync(new FlowDocument(new Paragraph(new Run("new text")))));
+
+        Assert.Equal(original, await File.ReadAllBytesAsync(path));
+        Assert.Equal("new text", await LoadTextAsync(new QuickNoteService(copy)));
+        Assert.Empty(Directory.GetFiles(_tempDir, "*.tmp"));
+    }
+
+    [Fact]
+    public async Task PackageSave_PreservesInlineImagePositionInsideTask()
+    {
+        await RunStaAsync(async () =>
+        {
+            var service = new QuickNoteService(Path.Combine(_tempDir, "inline.aite-note"));
+            var bitmap = System.Windows.Media.Imaging.BitmapSource.Create(1, 1, 96, 96, PixelFormats.Bgra32, null, new byte[] { 0, 0, 255, 255 }, 4);
+            Assert.True(QuickNoteImageHelper.TryCreateInlineImage(bitmap, out var image));
+            var paragraph = new Paragraph(new Run("before"));
+            paragraph.Inlines.Add(image!);
+            paragraph.Inlines.Add(new Run("after"));
+            QuickNoteDocumentFormatting.ToggleTaskParagraph(paragraph, null, QuickNoteThemeCatalog.Find("dark"));
+            var document = new FlowDocument(paragraph);
+            await service.SaveAsync(document);
+            Assert.Same(paragraph, document.Blocks.FirstBlock);
+            Assert.Contains(image!, paragraph.Inlines);
+            var restored = new FlowDocument();
+            await service.LoadAsync(restored);
+            var restoredParagraph = Assert.IsType<Paragraph>(Assert.Single(restored.Blocks));
+            Assert.True(QuickNoteDocumentFormatting.IsTaskParagraph(restoredParagraph, out _, out _, out _));
+            Assert.Single(QuickNoteImageHelper.EnumerateImageContainers(restoredParagraph.Inlines));
+            Assert.Equal("before", Assert.IsType<Run>(restoredParagraph.Inlines.Skip(1).First()).Text);
+            Assert.Equal("after", Assert.IsType<Run>(restoredParagraph.Inlines.LastInline).Text);
+        });
+    }
+
+    [Fact]
+    public async Task PackageSave_PreservesNestedTaskStateAndUserFormatting()
+    {
+        await RunStaAsync(async () =>
+        {
+            var service = new QuickNoteService(Path.Combine(_tempDir, "nested.aite-note"));
+            var paragraph = new Paragraph(new Run("nested task") { TextDecorations = TextDecorations.Underline });
+            QuickNoteDocumentFormatting.ToggleTaskParagraph(paragraph, null, QuickNoteThemeCatalog.Find("dark"));
+            QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(paragraph, true, QuickNoteThemeCatalog.Find("dark"));
+            var list = new System.Windows.Documents.List(new ListItem(paragraph));
+            var document = new FlowDocument(new Section(list));
+            await service.SaveAsync(document);
+            var restored = new FlowDocument();
+            await service.LoadAsync(restored);
+            var restoredTask = Assert.Single(QuickNoteTaskListController.EnumerateAllParagraphs(restored));
+            Assert.True(QuickNoteDocumentFormatting.IsTaskParagraph(restoredTask, out bool isChecked, out _, out _));
+            Assert.True(isChecked);
+            QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(restoredTask, false, QuickNoteThemeCatalog.Find("dark"));
+            var run = Assert.IsType<Run>(restoredTask.Inlines.Skip(1).First());
+            Assert.Contains(run.TextDecorations, d => d.Location == TextDecorationLocation.Underline);
+            Assert.DoesNotContain(run.TextDecorations, d => d.Location == TextDecorationLocation.Strikethrough);
+        });
+    }
+
+    [Fact]
+    public async Task LargePackage_RoundTripsWithoutChangingSource_RecordsSerializationCost()
+    {
+        await RunStaAsync(async () =>
+        {
+            var document = new FlowDocument();
+            for (int i = 0; i < 1000; i++)
+                document.Blocks.Add(new Paragraph(new Run($"Line {i}: " + new string('x', 100))) { Margin = new Thickness(0) });
+            Block first = document.Blocks.FirstBlock;
+            long allocated = GC.GetAllocatedBytesForCurrentThread();
+            var stopwatch = Stopwatch.StartNew();
+            byte[] bytes = QuickNoteDocumentCodec.Serialize(document, package: true);
+            long serializeMs = stopwatch.ElapsedMilliseconds;
+            long allocatedBytes = GC.GetAllocatedBytesForCurrentThread() - allocated;
+            var restored = new FlowDocument();
+            QuickNoteDocumentCodec.Deserialize(bytes, restored, package: true);
+            Assert.Equal(1000, restored.Blocks.Count);
+            Assert.Same(first, document.Blocks.FirstBlock);
+            Assert.Contains("Line 999:", new TextRange(restored.ContentStart, restored.ContentEnd).Text);
+            _output.WriteLine($"1000 paragraphs: serialize={serializeMs} ms; serialize+load={stopwatch.ElapsedMilliseconds} ms; payload={bytes.Length} bytes; UI-thread serialize allocations={allocatedBytes} bytes.");
+            await Task.CompletedTask;
+        });
     }
 
     [Fact]
@@ -189,6 +300,35 @@ public sealed class QuickNoteServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task AiteNoteRoundTrip_PreservesUserStrikethroughWhenTaskIsUnchecked()
+    {
+        var service = new QuickNoteService(Path.Combine(_tempDir, "QuickNote.aite-note"));
+        await RunStaAsync(async () =>
+        {
+            var paragraph = new Paragraph(new Run("user strike")
+            {
+                TextDecorations = TextDecorations.Strikethrough
+            });
+            QuickNoteDocumentFormatting.ToggleTaskParagraph(paragraph, null, QuickNoteThemeCatalog.Find("dark"));
+            QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(paragraph, true, QuickNoteThemeCatalog.Find("dark"));
+            await service.SaveAsync(new FlowDocument(paragraph));
+        });
+
+        await RunStaAsync(async () =>
+        {
+            var restored = new FlowDocument();
+            await service.LoadAsync(restored);
+            var paragraph = Assert.IsType<Paragraph>(restored.Blocks.FirstBlock);
+            Assert.True(QuickNoteDocumentFormatting.IsTaskParagraph(paragraph, out _, out _, out _));
+
+            QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(paragraph, false, QuickNoteThemeCatalog.Find("dark"));
+            var run = Assert.IsType<Run>(paragraph.Inlines.Skip(1).First());
+            Assert.Contains(run.TextDecorations, decoration =>
+                decoration.Location == TextDecorationLocation.Strikethrough);
+        });
+    }
+
+    [Fact]
     public async Task HasExternalChanges_WhenFileIsExclusivelyLocked_ReturnsTrue()
     {
         await SaveTextAsync(_service, "tracked");
@@ -329,6 +469,20 @@ public sealed class QuickNoteServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task RevealConflictCopy_DoesNotDependOnPackageFileAssociation()
+    {
+        var dispatcher = new FakeQuickNoteProcessStartDispatcher();
+        var service = new QuickNoteService(Path.Combine(_tempDir, "QuickNote.aite-note"), dispatcher);
+        string path = await RunStaAsync(() => service.SaveConflictCopyAsync(new FlowDocument(new Paragraph(new Run("recovery")))));
+
+        service.RevealConflictCopy();
+
+        var call = Assert.Single(dispatcher.StartCalls);
+        Assert.Equal("explorer.exe", call.FileName);
+        Assert.Equal($"/select,\"{path}\"", call.Arguments);
+    }
+
+    [Fact]
     public void OpenConflictCopy_WhenNoConflictCopyExists_Throws()
     {
         var dispatcher = new FakeQuickNoteProcessStartDispatcher();
@@ -348,51 +502,6 @@ public sealed class QuickNoteServiceTests : IDisposable
         bool result = _service.HasExternalChanges();
 
         Assert.True(result);
-    }
-
-    [Fact]
-    public void OpenInEditor_CreatesMissingFileAndStartsShellProcess()
-    {
-        var dispatcher = new FakeQuickNoteProcessStartDispatcher();
-        string notePath = Path.Combine(_tempDir, "nested", "QuickNote.rtf");
-        var service = new QuickNoteService(notePath, dispatcher);
-
-        service.OpenInEditor();
-
-        Assert.True(File.Exists(notePath));
-        Assert.Single(dispatcher.StartCalls);
-        Assert.Equal(notePath, dispatcher.StartCalls[0].FileName);
-        Assert.True(dispatcher.StartCalls[0].UseShellExecute);
-    }
-
-    [Fact]
-    public void OpenInEditor_PathWithoutDirectory_UsesPathHelperDirectories()
-    {
-        string fileNameOnly = "QuickNoteStandalone.rtf";
-        string appDataFile = Path.Combine(PathHelper.AppDataFolder, fileNameOnly);
-        var dispatcher = new FakeQuickNoteProcessStartDispatcher();
-        var service = new QuickNoteService(fileNameOnly, dispatcher);
-
-        try
-        {
-            service.OpenInEditor();
-
-            Assert.True(File.Exists(fileNameOnly));
-            Assert.Single(dispatcher.StartCalls);
-            Assert.Equal(fileNameOnly, dispatcher.StartCalls[0].FileName);
-        }
-        finally
-        {
-            if (File.Exists(fileNameOnly))
-            {
-                File.Delete(fileNameOnly);
-            }
-
-            if (File.Exists(appDataFile))
-            {
-                File.Delete(appDataFile);
-            }
-        }
     }
 
     [Fact]

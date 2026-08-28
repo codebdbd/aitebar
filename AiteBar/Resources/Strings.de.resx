@@ -109,10 +109,10 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="QuickNote_Placeholder" xml:space="preserve"><value>Text, Links, Befehle einfügen...</value></data>
   <data name="QuickNote_SavedInitial" xml:space="preserve"><value>Gespeichert</value></data>
   <data name="QuickNote_Saving" xml:space="preserve"><value>Speichern...</value></data>
-  <data name="QuickNote_SaveFailed" xml:space="preserve"><value>Speichern fehlgeschlagen</value></data>
+  <data name="QuickNote_SaveFailed" xml:space="preserve"><value>Speichern fehlgeschlagen. Mit Strg+S erneut versuchen.</value></data>
   <data name="Settings_SaveFailed" xml:space="preserve"><value>Konnte Einstellungen nicht speichern:
 {0}</value></data>
-  <data name="QuickNote_LoadFailed" xml:space="preserve"><value>Notiz konnte nicht geladen werden</value></data>
+  <data name="QuickNote_LoadFailed" xml:space="preserve"><value>Notiz konnte nicht geladen werden. Original bleibt erhalten; neue Änderungen werden separat gesichert.</value></data>
   <data name="QuickNote_OpenFailed" xml:space="preserve"><value>Öffnen fehlgeschlagen</value></data>
   <data name="QuickNote_ConflictCopySaved" xml:space="preserve"><value>Externe Änderungen erkannt. Konfliktkopie gespeichert.</value></data>
   <data name="QuickNote_ConflictCopySavedAt" xml:space="preserve"><value>Konfliktkopie gespeichert: {0}</value></data>
@@ -1068,10 +1068,65 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="AiteProfiles_LinkTagsPlaceholder" xml:space="preserve"><value>work, mail, ai...</value></data>
   <data name="AiteProfiles_LinkUrlsPlaceholder" xml:space="preserve"><value>https://example.com/&#10;One URL per line, or separated by |</value></data>
   <data name="AiteProfiles_GuestMode" xml:space="preserve"><value>Gastmodus (--guest)</value></data>
+  <data name="Tool_DiskCleaner" xml:space="preserve"><value>Datenträgerbereinigung</value></data>
+  <data name="Tool_DiskCleaner_Title" xml:space="preserve"><value>Datenträgerbereinigung</value></data>
+  <data name="Main_DiskCleanerTooltip" xml:space="preserve"><value>Sichere Datenträger- und Cache-Bereinigung</value></data>
+  <data name="QuickTool_DiskCleaner_Title" xml:space="preserve"><value>Datenträgerbereinigung</value></data>
+  <data name="QuickTool_DiskCleaner_Description" xml:space="preserve"><value>Bereinigt sicher temporäre Dateien, Browser-Cache, Papierkorb und Shader-Caches.</value></data>
+  <data name="DiskCleaner_Title" xml:space="preserve"><value>Datenträgerbereinigung</value></data>
+  <data name="DiskCleaner_Subtitle" xml:space="preserve"><value>Sichere Bereinigung temporärer Dateien, Caches und Systemmüll</value></data>
+  <data name="DiskCleaner_Category_UserTemp" xml:space="preserve"><value>Benutzer-Temp-Dateien</value></data>
+  <data name="DiskCleaner_Category_UserTemp_Desc" xml:space="preserve"><value>Temporäre Dateien aus dem %TEMP%-Verzeichnis</value></data>
+  <data name="DiskCleaner_Category_WindowsTemp" xml:space="preserve"><value>Windows-Temp-Dateien</value></data>
+  <data name="DiskCleaner_Category_WindowsTemp_Desc" xml:space="preserve"><value>System-Temp-Dateien aus C:\Windows\Temp</value></data>
+  <data name="DiskCleaner_Category_RecycleBin" xml:space="preserve"><value>Papierkorb</value></data>
+  <data name="DiskCleaner_Category_RecycleBin_Desc" xml:space="preserve"><value>Gelöschte Dateien von allen Laufwerken ($Recycle.Bin)</value></data>
+  <data name="DiskCleaner_Category_BrowserCache" xml:space="preserve"><value>Browser-Cache (Chrome, Edge)</value></data>
+  <data name="DiskCleaner_Category_BrowserCache_Desc" xml:space="preserve"><value>Web-Cache ohne Beeinträchtigung von Logins, Cookies oder Verlauf</value></data>
+  <data name="DiskCleaner_Category_GpuCache" xml:space="preserve"><value>GPU- und DirectX-Shader-Cache</value></data>
+  <data name="DiskCleaner_Category_GpuCache_Desc" xml:space="preserve"><value>Kompilierte Grafik-Shader (NVIDIA, AMD, DirectX)</value></data>
+  <data name="DiskCleaner_Category_DevCache" xml:space="preserve"><value>Entwickler-Paket-Caches</value></data>
+  <data name="DiskCleaner_Category_DevCache_Desc" xml:space="preserve"><value>Globale Paket-Caches (.NET NuGet, npm, pip)</value></data>
+  <data name="DiskCleaner_Category_CrashDumps" xml:space="preserve"><value>Absturz-Dumps und Fehlerberichte</value></data>
+  <data name="DiskCleaner_Category_CrashDumps_Desc" xml:space="preserve"><value>Anwendungsabsturz-Dumps und WER-Fehlerprotokolle</value></data>
+  <data name="DiskCleaner_Category_DnsCache" xml:space="preserve"><value>DNS-Client-Cache</value></data>
+  <data name="DiskCleaner_Category_DnsCache_Desc" xml:space="preserve"><value>Lokalen Windows-DNS-Resolver-Cache leeren</value></data>
+  <data name="DiskCleaner_Scan" xml:space="preserve"><value>Scannen</value></data>
+  <data name="DiskCleaner_Clean" xml:space="preserve"><value>Ausgewählte bereinigen</value></data>
+  <data name="DiskCleaner_SelectAll" xml:space="preserve"><value>Alle auswählen</value></data>
+  <data name="DiskCleaner_DeselectAll" xml:space="preserve"><value>Alle abwählen</value></data>
+  <data name="DiskCleaner_Status_Ready" xml:space="preserve"><value>Bereit zum Scannen und Bereinigen</value></data>
+  <data name="DiskCleaner_Status_Scanning" xml:space="preserve"><value>Kategorien werden gescannt...</value></data>
+  <data name="DiskCleaner_Status_Cleaning" xml:space="preserve"><value>Bereinigung wird durchgeführt...</value></data>
+  <data name="DiskCleaner_Status_CompletedFormat" xml:space="preserve"><value>{0} Speicherplatz freigegeben.</value></data>
+  <data name="DiskCleaner_ReclaimableFormat" xml:space="preserve"><value>Zur Bereinigung gefunden: {0}</value></data>
+  <data name="DiskCleaner_Badge_Safe" xml:space="preserve"><value>Sicher</value></data>
+  <data name="DiskCleaner_Badge_Caution" xml:space="preserve"><value>Achtung</value></data>
+  <data name="DiskCleaner_SelectSafeOnly" xml:space="preserve"><value>Nur sichere</value></data>
+  <data name="DiskCleaner_Warning_RecycleBin" xml:space="preserve"><value>Löscht alle Dateien im Papierkorb auf allen Laufwerken dauerhaft.</value></data>
+  <data name="DiskCleaner_Warning_DevCache" xml:space="preserve"><value>Bereinigt Paket-Caches (.NET NuGet, npm, pip). Nachfolgende Builds müssen Pakete erneut herunterladen.</value></data>
+  <data name="DiskCleaner_Warning_CrashDumps" xml:space="preserve"><value>Löscht Absturzabbilder und Diagnoseprotokolle.</value></data>
+  <data name="DiskCleaner_Warning_WindowsTemp" xml:space="preserve"><value>Bereinigt Windows-System-Temp-Dateien (erfordert ggf. Berechtigungen).</value></data>
+  <data name="DiskCleaner_ConfirmCautionTitle" xml:space="preserve"><value>Bestätigung erforderlich</value></data>
+  <data name="DiskCleaner_ConfirmCautionMessage" xml:space="preserve"><value>Sie haben Kategorien mit dem Hinweis 'Achtung' ausgewählt ({0}):&#10;&#10;{1}&#10;&#10;Möchten Sie mit der endgültigen Bereinigung fortfahren?</value></data>
+  <data name="DiskCleaner_Status_DetailedFormat" xml:space="preserve"><value>{0} freigegeben ({1} erfolgreich, {2} teilweise, {3} Fehler, {4} übersprungen).</value></data>
+  <data name="DiskCleaner_ResultDetails_Title" xml:space="preserve"><value>Ergebnisdetails</value></data>
+  <data name="DiskCleaner_Status_Succeeded" xml:space="preserve"><value>Erfolgreich</value></data>
+  <data name="DiskCleaner_Status_PartiallyCleaned" xml:space="preserve"><value>Teilweise</value></data>
+  <data name="DiskCleaner_Status_Failed" xml:space="preserve"><value>Fehlgeschlagen</value></data>
+  <data name="DiskCleaner_Status_Skipped" xml:space="preserve"><value>Übersprungen</value></data>
+  <data name="DiskCleaner_LockedFilesFormat" xml:space="preserve"><value>({0} gesperrt)</value></data>
+  <data name="QuickNote_Theme_dark" xml:space="preserve"><value>Dunkel</value></data>
+  <data name="QuickNote_Theme_graphite" xml:space="preserve"><value>Graphit</value></data>
+  <data name="QuickNote_Theme_rose" xml:space="preserve"><value>Rosa</value></data>
+  <data name="QuickNote_Theme_clay" xml:space="preserve"><value>Ton</value></data>
+  <data name="QuickNote_Theme_sand" xml:space="preserve"><value>Sand</value></data>
+  <data name="QuickNote_Theme_lemon" xml:space="preserve"><value>Gelb</value></data>
+  <data name="QuickNote_Theme_sage" xml:space="preserve"><value>Grün</value></data>
+  <data name="QuickNote_Theme_mist" xml:space="preserve"><value>Nebel</value></data>
+  <data name="QuickNote_Theme_sky" xml:space="preserve"><value>Blau</value></data>
+  <data name="QuickNote_Theme_lavender" xml:space="preserve"><value>Violett</value></data>
+  <data name="QuickNote_Theme_mauve" xml:space="preserve"><value>Malve</value></data>
+  <data name="QuickNote_Theme_stone" xml:space="preserve"><value>Hell</value></data>
+  <data name="QuickNote_ShowRecoveryCopy" xml:space="preserve"><value>Wiederherstellungskopie im Ordner zeigen</value></data>
 </root>
-
-
-
-
-
-

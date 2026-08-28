@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows.Documents;
 using System.Windows.Threading;
 
@@ -25,7 +24,6 @@ namespace AiteBar
         internal const int MaxLinkScanParagraphLength = 10_000;
         private readonly ConditionalWeakTable<Paragraph, LinkMatchCacheEntry> _linkMatchCache = [];
         private readonly DispatcherTimer _debounceTimer;
-        private CancellationTokenSource? _cancellationTokenSource;
         private readonly Action _onScheduledUpdate;
         private bool _disposed;
 
@@ -55,10 +53,6 @@ namespace AiteBar
                 return;
             }
 
-            _cancellationTokenSource?.Cancel();
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = new CancellationTokenSource();
-
             _onScheduledUpdate();
         }
 
@@ -78,9 +72,8 @@ namespace AiteBar
 
             _disposed = true;
             _debounceTimer.Stop();
-            _cancellationTokenSource?.Cancel();
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
+            _debounceTimer.Tick -= DebounceTimer_Tick;
+            _linkMatchCache.Clear();
         }
     }
 }

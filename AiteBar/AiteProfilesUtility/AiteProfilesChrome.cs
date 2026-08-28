@@ -18,6 +18,7 @@ internal interface IAiteProfilesScanner
     Task<IReadOnlyList<AiteProfileScanRow>> ScanAsync(
         IReadOnlyDictionary<string, AiteProfileCacheEntry>? cache = null,
         bool includeExpensiveStats = true,
+        bool forceRescan = false,
         CancellationToken cancellationToken = default);
 }
 
@@ -55,12 +56,14 @@ internal sealed class AiteProfilesChromeScanner : IAiteProfilesScanner
     public Task<IReadOnlyList<AiteProfileScanRow>> ScanAsync(
         IReadOnlyDictionary<string, AiteProfileCacheEntry>? cache = null,
         bool includeExpensiveStats = true,
+        bool forceRescan = false,
         CancellationToken cancellationToken = default) =>
-        Task.Run(() => ScanCore(cache, includeExpensiveStats, cancellationToken), cancellationToken);
+        Task.Run(() => ScanCore(cache, includeExpensiveStats, forceRescan, cancellationToken), cancellationToken);
 
     private static IReadOnlyList<AiteProfileScanRow> ScanCore(
         IReadOnlyDictionary<string, AiteProfileCacheEntry>? cache,
         bool includeExpensiveStats,
+        bool forceRescan,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -91,7 +94,7 @@ internal sealed class AiteProfilesChromeScanner : IAiteProfilesScanner
         }, dir =>
         {
             string folder = Path.GetFileName(dir) ?? string.Empty;
-            bag.Add(BuildRow(dir, folder, names, cache, includeExpensiveStats));
+            bag.Add(BuildRow(dir, folder, names, cache, includeExpensiveStats, forceRescan));
         });
 
         return bag
@@ -125,13 +128,14 @@ internal sealed class AiteProfilesChromeScanner : IAiteProfilesScanner
         string folder,
         IReadOnlyDictionary<string, string> names,
         IReadOnlyDictionary<string, AiteProfileCacheEntry>? cache,
-        bool includeExpensiveStats)
+        bool includeExpensiveStats,
+        bool forceRescan)
     {
         string key = AiteProfileKey.Build(folder, fullPath);
         AiteProfileCacheEntry? cached = null;
         cache?.TryGetValue(key, out cached);
         string sig = BuildSignature(fullPath);
-        bool cacheHit = cached is not null && string.Equals(cached.Sig, sig, StringComparison.Ordinal);
+        bool cacheHit = !forceRescan && cached is not null && string.Equals(cached.Sig, sig, StringComparison.Ordinal);
 
         try
         {
@@ -158,7 +162,7 @@ internal sealed class AiteProfilesChromeScanner : IAiteProfilesScanner
             string avatarPath = ResolveAvatarPath(fullPath);
             double diskMb = cached?.DiskMb ?? -1.0;
             double diskMbTs = cached?.DiskMbTs ?? 0;
-            if (includeExpensiveStats && (!cacheHit || diskMb < 0))
+            if (includeExpensiveStats && (forceRescan || !cacheHit || diskMb < 0))
             {
                 diskMb = GetDiskSizeMb(fullPath);
                 diskMbTs = DateTimeOffset.UtcNow.ToUnixTimeSeconds();

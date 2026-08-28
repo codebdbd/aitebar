@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Runtime.Versioning;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 using System.Windows.Threading;
@@ -15,14 +14,13 @@ namespace AiteBar
 
         private readonly IQuickNotePersistence _noteService;
         private readonly DispatcherTimer _saveTimer;
-        private readonly SemaphoreSlim _saveSemaphore = new(1, 1);
+        private TaskCompletionSource<bool>? _activeSave;
         private readonly Func<FlowDocument> _getDocument;
         private readonly Action<QuickNoteStatusKind, string?> _setStatus;
         private readonly Action _updateStatusSaved;
         private readonly Func<bool> _isLoaded;
 
         private bool _hasPendingChanges;
-        private bool _saveAgainAfterCurrent;
         private long _changeVersion;
         private bool _disposed;
 
@@ -40,7 +38,7 @@ namespace AiteBar
             _isLoaded = isLoaded ?? throw new ArgumentNullException(nameof(isLoaded));
 
             _saveTimer = new DispatcherTimer { Interval = SaveDebounceInterval };
-            _saveTimer.Tick += async (_, _) => await SaveNowAsync();
+            _saveTimer.Tick += SaveTimer_Tick;
         }
 
         public long ChangeVersion => _changeVersion;
@@ -77,106 +75,93 @@ namespace AiteBar
             if (_disposed) return false;
 
             _saveTimer.Stop();
-            if (!_isLoaded() || (!_hasPendingChanges && !force))
+            if (!_isLoaded())
             {
                 return true;
             }
 
-            TimeSpan waitTimeout = force
-                ? QuickNoteWindow.ForcedSaveWaitTimeout
-                : TimeSpan.Zero;
-            if (waitTimeout == TimeSpan.Zero)
+            if (_activeSave != null)
             {
-                if (!await _saveSemaphore.WaitAsync(0).ConfigureAwait(true))
+                if (!force)
                 {
-                    _saveAgainAfterCurrent = true;
                     return true;
                 }
-            }
-            else
-            {
-                if (!await _saveSemaphore.WaitAsync(waitTimeout).ConfigureAwait(true))
+                try
                 {
-                    _setStatus(QuickNoteStatusKind.SaveFailed, null);
+                    bool saved = await _activeSave.Task.WaitAsync(QuickNoteWindow.ForcedSaveWaitTimeout);
+                    if (!saved || _disposed) return false;
+                    // Dispatcher input may run between completion and this continuation.
+                    return !_hasPendingChanges || await SaveNowAsync(force: true);
+                }
+                catch (TimeoutException)
+                {
+                    if (!_disposed) _setStatus(QuickNoteStatusKind.SaveFailed, null);
                     return false;
                 }
             }
 
+            if (!_hasPendingChanges) return true;
+
+            // Installed before calling persistence, which may complete synchronously or re-enter.
+            var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            _activeSave = completion;
             _setStatus(QuickNoteStatusKind.Saving, null);
+            bool succeeded = false;
             try
             {
-                if (!_hasPendingChanges)
+                string? conflictPath = null;
+                while (_hasPendingChanges && !_disposed)
                 {
-                    _updateStatusSaved();
-                    return true;
-                }
-
-                do
-                {
-                    if (!_hasPendingChanges && !force)
-                    {
-                        return true;
-                    }
-
-                    if (await _noteService.HasExternalChangesAsync().ConfigureAwait(true))
-                    {
-                        FlowDocument doc = _getDocument();
-                        string conflictPath = await _noteService.SaveConflictCopyAsync(doc).ConfigureAwait(true);
-                        _hasPendingChanges = false;
-                        _saveAgainAfterCurrent = false;
-                        _setStatus(QuickNoteStatusKind.ConflictCopySaved, Path.GetFileName(conflictPath));
-                        return true;
-                    }
-
-                    _saveAgainAfterCurrent = false;
+                    bool useConflictCopy = await _noteService.HasExternalChangesAsync();
+                    if (_disposed) return false;
                     long savedVersion = _changeVersion;
                     try
                     {
-                        await _noteService.SaveAsync(_getDocument()).ConfigureAwait(true);
+                        if (useConflictCopy)
+                            conflictPath = await _noteService.SaveConflictCopyAsync(_getDocument());
+                        else
+                            await _noteService.SaveAsync(_getDocument());
                     }
                     catch (QuickNoteExternalChangeException)
                     {
-                        FlowDocument doc = _getDocument();
-                        string conflictPath = await _noteService.SaveConflictCopyAsync(doc).ConfigureAwait(true);
-                        _hasPendingChanges = false;
-                        _saveAgainAfterCurrent = false;
-                        _setStatus(QuickNoteStatusKind.ConflictCopySaved, Path.GetFileName(conflictPath));
-                        return true;
+                        if (_disposed) return false;
+                        savedVersion = _changeVersion;
+                        conflictPath = await _noteService.SaveConflictCopyAsync(_getDocument());
                     }
 
-                    if (_changeVersion == savedVersion)
-                    {
-                        _hasPendingChanges = false;
-                    }
-                    else
-                    {
-                        _hasPendingChanges = true;
-                        _saveAgainAfterCurrent = true;
-                    }
+                    _hasPendingChanges = _changeVersion != savedVersion;
                 }
-                while (_saveAgainAfterCurrent || (force && _hasPendingChanges));
 
-                _updateStatusSaved();
-                return true;
+                if (_disposed) return false;
+                _saveTimer.Stop();
+                if (conflictPath != null)
+                    _setStatus(QuickNoteStatusKind.ConflictCopySaved, Path.GetFileName(conflictPath));
+                else
+                    _updateStatusSaved();
+                succeeded = true;
+                return succeeded;
             }
             catch (Exception ex)
             {
                 Logger.Log(ex);
-                _setStatus(QuickNoteStatusKind.SaveFailed, null);
+                if (!_disposed) _setStatus(QuickNoteStatusKind.SaveFailed, null);
                 return false;
             }
             finally
             {
-                _saveSemaphore.Release();
+                _activeSave = null;
+                completion.TrySetResult(succeeded);
             }
         }
+
+        private async void SaveTimer_Tick(object? sender, EventArgs e) => await SaveNowAsync();
 
         public void Dispose()
         {
             if (_disposed) return;
             _disposed = true;
             _saveTimer.Stop();
-            _saveSemaphore.Dispose();
+            _saveTimer.Tick -= SaveTimer_Tick;
         }
     }
 }

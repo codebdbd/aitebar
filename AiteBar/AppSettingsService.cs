@@ -95,6 +95,7 @@ namespace AiteBar
                 ShowPresetExplorer = original.ShowPresetExplorer,
                 ShowPresetDownloads = original.ShowPresetDownloads,
                 ShowPresetFileSorter = original.ShowPresetFileSorter,
+                ShowPresetDiskCleaner = original.ShowPresetDiskCleaner,
                 ShowPresetIconConverter = original.ShowPresetIconConverter,
                 ShowPresetColorPicker = original.ShowPresetColorPicker,
                 ShowPresetQuickNote = original.ShowPresetQuickNote,

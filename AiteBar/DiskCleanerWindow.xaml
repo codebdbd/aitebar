@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
         Title="{local:Loc ResourceKey=DiskCleaner_Title}"
-        Width="540" SizeToContent="Height" MinWidth="540" MinHeight="360"
+        Width="560" SizeToContent="Height" MinWidth="560" MinHeight="360"
         WindowStartupLocation="CenterScreen" Background="#191919" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize"
         ShowInTaskbar="False" Topmost="True"
@@ -20,6 +20,12 @@
             <SolidColorBrush x:Key="ModernRowDivider" Color="#303945"/>
             <SolidColorBrush x:Key="BadgeBackground" Color="#2A323D"/>
             <SolidColorBrush x:Key="SafeGreenColor" Color="#4ADE80"/>
+            <SolidColorBrush x:Key="SafeBadgeBg" Color="#183424"/>
+            <SolidColorBrush x:Key="CautionAmberColor" Color="#FBBF24"/>
+            <SolidColorBrush x:Key="CautionBadgeBg" Color="#382E19"/>
+            <SolidColorBrush x:Key="FailedRedColor" Color="#F87171"/>
+            <SolidColorBrush x:Key="FailedBadgeBg" Color="#3D1C1C"/>
+            <SolidColorBrush x:Key="TextPrimary" Color="#F4F7FA"/>
 
             <Style x:Key="ModernSettingsCardStyle" TargetType="Border">
                 <Setter Property="Background" Value="{StaticResource ModernCardBackground}"/>
@@ -43,8 +49,14 @@
                 <Setter Property="Foreground" Value="#9EA9B7"/>
                 <Setter Property="FontSize" Value="10.5"/>
                 <Setter Property="Margin" Value="0,2,0,0"/>
-                <Setter Property="TextWrapping" Value="NoWrap"/>
-                <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+            </Style>
+
+            <Style x:Key="ModernSettingWarningStyle" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{StaticResource CautionAmberColor}"/>
+                <Setter Property="FontSize" Value="10"/>
+                <Setter Property="Margin" Value="0,3,0,0"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
             </Style>
 
             <Style x:Key="ModernDividerStyle" TargetType="Border">
@@ -120,7 +132,7 @@
         <Border Style="{StaticResource ModernSettingsCardStyle}">
             <ScrollViewer x:Name="CategoriesScrollViewer"
                           VerticalScrollBarVisibility="Auto"
-                          MaxHeight="330">
+                          MaxHeight="350">
                 <StackPanel x:Name="CategoriesPanel"/>
             </ScrollViewer>
         </Border>
@@ -129,28 +141,37 @@
         <Grid Margin="0,0,0,12">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="6"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="6"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
 
-            <Button x:Name="BtnSelectAll"
+            <Button x:Name="BtnSelectSafeOnly"
                     Grid.Column="0"
+                    Content="{local:Loc ResourceKey=DiskCleaner_SelectSafeOnly}"
+                    Style="{StaticResource CommandButtonStyle}"
+                    Click="BtnSelectSafeOnly_Click"
+                    Padding="10,4"/>
+
+            <Button x:Name="BtnSelectAll"
+                    Grid.Column="2"
                     Content="{local:Loc ResourceKey=DiskCleaner_SelectAll}"
                     Style="{StaticResource CommandButtonStyle}"
                     Click="BtnSelectAll_Click"
                     Padding="10,4"/>
 
             <Button x:Name="BtnDeselectAll"
-                    Grid.Column="2"
+                    Grid.Column="4"
                     Content="{local:Loc ResourceKey=DiskCleaner_DeselectAll}"
                     Style="{StaticResource CommandButtonStyle}"
                     Click="BtnDeselectAll_Click"
                     Padding="10,4"/>
 
             <Button x:Name="BtnScan"
-                    Grid.Column="4"
+                    Grid.Column="6"
                     Content="{local:Loc ResourceKey=DiskCleaner_Scan}"
                     Style="{StaticResource CommandButtonStyle}"
                     Click="BtnScan_Click"
@@ -184,5 +205,22 @@
                    TextWrapping="Wrap"
                    Margin="0,8,0,0"
                    MinHeight="18"/>
+
+        <!-- Result Details Card (Visible after clean) -->
+        <Border x:Name="ResultsCard"
+                Style="{StaticResource ModernSettingsCardStyle}"
+                Visibility="Collapsed"
+                Margin="0,10,0,0">
+            <StackPanel Margin="12,10,12,10">
+                <TextBlock Text="{local:Loc ResourceKey=DiskCleaner_ResultDetails_Title}"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           Foreground="#F4F7FA"
+                           Margin="0,0,0,8"/>
+                <ScrollViewer MaxHeight="140" VerticalScrollBarVisibility="Auto">
+                    <StackPanel x:Name="ResultsDetailsPanel"/>
+                </ScrollViewer>
+            </StackPanel>
+        </Border>
     </StackPanel>
 </local:DarkWindow>

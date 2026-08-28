@@ -9,6 +9,23 @@ public sealed class QuickNoteFormattingControlsTests
     private static readonly XNamespace XamlNamespace = "http://schemas.microsoft.com/winfx/2006/xaml";
 
     [Fact]
+    public void IconButtons_ShowFocusOutlineOnlyForKeyboardNavigation()
+    {
+        XElement style = LoadDocument().Descendants(PresentationNamespace + "Style")
+            .Single(element => (string?)element.Attribute(XamlNamespace + "Key") == "QuickNoteIconButtonStyle");
+        Assert.Contains(style.Elements(PresentationNamespace + "Setter"), setter =>
+            (string?)setter.Attribute("Property") == "FocusVisualStyle" && (string?)setter.Attribute("Value") == "{x:Null}");
+        Assert.DoesNotContain(style.Descendants(PresentationNamespace + "Trigger"), trigger =>
+            (string?)trigger.Attribute("Property") == "IsKeyboardFocused");
+        XElement focus = Assert.Single(style.Descendants(PresentationNamespace + "MultiTrigger"));
+        Assert.Contains(focus.Descendants(PresentationNamespace + "Condition"), condition =>
+            (string?)condition.Attribute("Property") == "IsKeyboardFocused" && (string?)condition.Attribute("Value") == "True");
+        Assert.Contains(focus.Descendants(PresentationNamespace + "Condition"), condition =>
+            (string?)condition.Attribute("Property") == "local:KeyboardFocusVisualService.ShowKeyboardFocusCue" &&
+            (string?)condition.Attribute("Value") == "True");
+    }
+
+    [Fact]
     public void Toolbar_ContainsDirectFormattingAndImageButtonsInOrder()
     {
         XElement toolbar = FindFormattingToolbar();
@@ -60,14 +77,14 @@ public sealed class QuickNoteFormattingControlsTests
             .Where(button => button.Attribute("Click") != null)
             .ToDictionary(button => button.Attribute("Click")!.Value);
 
-        Assert.Equal("pack://application:,,,/Resources/#Material Icons", buttonsByHandler["BtnBullet_Click"].Attribute("FontFamily")?.Value);
+        Assert.Equal("pack://application:,,,/AiteBar;component/Resources/#Material Icons", buttonsByHandler["BtnBullet_Click"].Attribute("FontFamily")?.Value);
         Assert.Equal("\uE241", buttonsByHandler["BtnBullet_Click"].Attribute("Content")?.Value);
         Assert.Null(buttonsByHandler["BtnNumbered_Click"].Attribute("FontFamily"));
         Assert.Equal("\uF7FA", buttonsByHandler["BtnNumbered_Click"].Attribute("Content")?.Value);
     }
 
     [Fact]
-    public void Window_UsesSquareEdgeToEdgeNoteBorder()
+    public void Window_LeavesOuterContourToDwmWithoutTransparentMarginsOrRegionMask()
     {
         XDocument document = LoadDocument();
         XElement chrome = document.Descendants(PresentationNamespace + "WindowChrome").Single();
@@ -76,10 +93,29 @@ public sealed class QuickNoteFormattingControlsTests
             .Elements(PresentationNamespace + "Border")
             .Single();
 
-        Assert.Equal("0", chrome.Attribute("CornerRadius")?.Value);
+        Assert.Equal("1", chrome.Attribute("GlassFrameThickness")?.Value);
+        Assert.Equal("False", document.Root!.Attribute("AllowsTransparency")?.Value);
+        Assert.Equal("False", chrome.Attribute("UseAeroCaptionButtons")?.Value);
         Assert.Equal("0", outerBorder.Attribute("Margin")?.Value);
         Assert.Equal("0", outerBorder.Attribute("CornerRadius")?.Value);
         Assert.Equal("1", outerBorder.Attribute("BorderThickness")?.Value);
+    }
+
+    [Fact]
+    public void Header_HasOnlyControlsAndNativeCaptionWithoutVisibleTitle()
+    {
+        XDocument document = LoadDocument();
+        XElement header = document.Descendants(PresentationNamespace + "Border")
+            .Single(border => (string?)border.Attribute(XamlNamespace + "Name") == "HeaderBar");
+
+        Assert.Empty(header.Descendants(PresentationNamespace + "TextBlock"));
+        Assert.Equal(4, header.Descendants(PresentationNamespace + "Button").Count());
+        Assert.Single(header.Descendants(PresentationNamespace + "ToggleButton"));
+        Assert.Null(header.Attribute("MouseLeftButtonDown"));
+        Assert.NotNull(document.Root!.Attribute("Title"));
+        Assert.NotNull(document.Descendants(PresentationNamespace + "RichTextBox").Single().Attribute("AutomationProperties.Name"));
+        Assert.DoesNotContain(document.Descendants(), element =>
+            (string?)element.Attribute("MouseLeftButtonDown") == "ResizeGrip_MouseLeftButtonDown");
     }
 
     [Fact]
@@ -109,13 +145,7 @@ public sealed class QuickNoteFormattingControlsTests
 
             Assert.Equal(
             [
-                "BtnFind_Click",
-                "BtnTaskList_Click",
-                "BtnResetTasks_Click",
-                "BtnToggleAllTasks_Click",
-                "BtnMarkAllTasksCompleted_Click",
                 "BtnTheme_Click",
-                "BtnOpenFile_Click",
                 "BtnClear_Click"
             ],
             directHandlers);
@@ -125,6 +155,9 @@ public sealed class QuickNoteFormattingControlsTests
     public void EditorContextMenu_DoesNotContainHiddenFormattingOrConflictCopyCommands()
     {
         XElement contextMenu = FindEditorContextMenu();
+
+        Assert.DoesNotContain(contextMenu.Descendants(PresentationNamespace + "MenuItem"),
+            static item => (string?)item.Attribute("Click") == "BtnTaskList_Click");
 
         Assert.DoesNotContain(contextMenu.Descendants(PresentationNamespace + "MenuItem"),
             static item => (string?)item.Attribute("Header") == "{local:Loc ResourceKey=QuickNote_MoreFormatting}");

@@ -990,6 +990,7 @@ public sealed class AppSettingsServiceTests
             ShowPresetExplorer = false,
             ShowPresetDownloads = false,
             ShowPresetFileSorter = false,
+            ShowPresetDiskCleaner = false,
             ShowPresetIconConverter = false,
             ShowPresetColorPicker = true,
             ShowPresetQuickNote = true,
@@ -1133,6 +1134,7 @@ public sealed class AppSettingsServiceTests
         Assert.False(clone.ShowPresetExplorer);
         Assert.False(clone.ShowPresetDownloads);
         Assert.False(clone.ShowPresetFileSorter);
+        Assert.False(clone.ShowPresetDiskCleaner);
         Assert.False(clone.ShowPresetIconConverter);
         Assert.True(clone.ShowPresetColorPicker);
         Assert.True(clone.ShowPresetQuickNote);

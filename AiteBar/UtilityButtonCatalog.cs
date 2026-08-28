@@ -66,6 +66,11 @@ internal static class UtilityButtonCatalog
         settings => settings.ShowPresetFileSorter,
         (settings, visible) => settings.ShowPresetFileSorter = visible);
 
+    public static UtilityButtonDefinition DiskCleaner { get; } = new(
+        "DiskCleaner", "\uF202", UtilityIconColors.FolderAccess, "Main_DiskCleanerTooltip",
+        settings => settings.ShowPresetDiskCleaner,
+        (settings, visible) => settings.ShowPresetDiskCleaner = visible);
+
     public static UtilityButtonDefinition IconConverter { get; } = new(
         "IconConverter", "\uE721", UtilityIconColors.AssetCreation, "Main_IconConverterTooltip",
         settings => settings.ShowPresetIconConverter,
@@ -140,6 +145,7 @@ internal static class UtilityButtonCatalog
         Explorer,
         Downloads,
         FileSorter,
+        DiskCleaner,
         IconConverter,
         TimerStopwatch,
         ColorPicker,

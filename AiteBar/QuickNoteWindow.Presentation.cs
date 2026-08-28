@@ -26,20 +26,32 @@ namespace AiteBar
         private void BuildThemePalette()
         {
             ThemePalette.Children.Clear();
-            foreach (var theme in QuickNoteThemeCatalog.Themes)
+            for (int index = 0; index < QuickNoteThemeCatalog.Themes.Count; index++)
             {
+                var theme = QuickNoteThemeCatalog.Themes[index];
                 var button = new System.Windows.Controls.Button
                 {
-                    Width = 36,
-                    Height = 36,
-                    Margin = new Thickness(6),
-                    Background = Brush(theme.Background),
-                    BorderBrush = Brush(theme.Id == _theme.Id ? theme.Accent : "#00000000"),
-                    BorderThickness = new Thickness(theme.Id == _theme.Id ? 2 : 0),
+                    Width = 42,
+                    Height = 48,
+                    Margin = new Thickness(0),
+                    Background = Brush(QuickNoteThemeCatalog.GetSwatchColor(theme)),
+                    Foreground = theme.IsDark ? Brushes.White : Brushes.Black,
+                    Content = theme.Id == _theme.Id ? "\uE73E" : null,
+                    FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                    FontSize = 12,
+                    BorderBrush = Brushes.Transparent,
+                    BorderThickness = new Thickness(0),
+                    FocusVisualStyle = null,
                     Cursor = System.Windows.Input.Cursors.Hand
                 };
 
-                button.Template = CreateSwatchTemplate();
+                CornerRadius corners = index == 0 ? new CornerRadius(8, 0, 0, 8)
+                    : index == QuickNoteThemeCatalog.Themes.Count - 1 ? new CornerRadius(0, 8, 8, 0)
+                    : new CornerRadius(0);
+                button.Template = CreateSwatchTemplate(corners);
+                string name = LocalizationService.Get("QuickNote_Theme_" + theme.Id);
+                button.ToolTip = name;
+                System.Windows.Automation.AutomationProperties.SetName(button, name);
                 button.Click += async (_, _) =>
                 {
                     _theme = theme;
@@ -57,14 +69,26 @@ namespace AiteBar
             }
         }
 
-        private static ControlTemplate CreateSwatchTemplate()
+        private static ControlTemplate CreateSwatchTemplate(CornerRadius corners)
         {
             var border = new FrameworkElementFactory(typeof(Border));
-            border.SetValue(Border.CornerRadiusProperty, new CornerRadius(18));
+            border.Name = "SwatchBorder";
+            border.SetValue(Border.CornerRadiusProperty, corners);
             border.SetBinding(Border.BackgroundProperty, new System.Windows.Data.Binding(nameof(Background)) { RelativeSource = System.Windows.Data.RelativeSource.TemplatedParent });
             border.SetBinding(Border.BorderBrushProperty, new System.Windows.Data.Binding(nameof(BorderBrush)) { RelativeSource = System.Windows.Data.RelativeSource.TemplatedParent });
             border.SetBinding(Border.BorderThicknessProperty, new System.Windows.Data.Binding(nameof(BorderThickness)) { RelativeSource = System.Windows.Data.RelativeSource.TemplatedParent });
-            return new ControlTemplate(typeof(System.Windows.Controls.Button)) { VisualTree = border };
+            var content = new FrameworkElementFactory(typeof(ContentPresenter));
+            content.SetValue(FrameworkElement.HorizontalAlignmentProperty, System.Windows.HorizontalAlignment.Center);
+            content.SetValue(FrameworkElement.VerticalAlignmentProperty, System.Windows.VerticalAlignment.Center);
+            border.AppendChild(content);
+            var template = new ControlTemplate(typeof(System.Windows.Controls.Button)) { VisualTree = border };
+            var focus = new MultiTrigger();
+            focus.Conditions.Add(new Condition(IsKeyboardFocusedProperty, true));
+            focus.Conditions.Add(new Condition(KeyboardFocusVisualService.ShowKeyboardFocusCueProperty, true));
+            focus.Setters.Add(new Setter(Border.BorderBrushProperty, new DynamicResourceExtension("QuickNoteFocusBrush"), "SwatchBorder"));
+            focus.Setters.Add(new Setter(Border.BorderThicknessProperty, new Thickness(2), "SwatchBorder"));
+            template.Triggers.Add(focus);
+            return template;
         }
 
         private void ApplyTheme(QuickNoteTheme theme)
@@ -77,7 +101,6 @@ namespace AiteBar
             var codeBackground = Brush(QuickNoteDocumentFormatting.GetCodeBackground(theme));
             var codeText = Brush(QuickNoteDocumentFormatting.GetCodeText(theme));
             var link = Brush(theme.Link);
-            var iconColor = text;
 
             if (Content is Grid root && root.Children.OfType<Border>().FirstOrDefault() is { } shell)
             {
@@ -98,37 +121,12 @@ namespace AiteBar
             ThemePopupBorder.BorderBrush = border;
             Resources["QuickNoteHoverBrush"] = Brush(theme.IsDark ? "#303238" : "#14000000");
             Resources["QuickNoteHoverForegroundBrush"] = text;
-            _cachedTextBlocks ??= FindVisualChildren<TextBlock>(this).ToList();
-            foreach (var textBlock in _cachedTextBlocks)
-            {
-                textBlock.Foreground = textBlock == TxtPlaceholder || textBlock == TxtSaveStatus || textBlock == TxtStats
-                    ? muted
-                    : text;
-            }
-
-            _cachedButtons ??= FindVisualChildren<System.Windows.Controls.Button>(this).ToList();
-            foreach (var button in _cachedButtons)
-            {
-                if (IsDescendantOf(button, TxtNote))
-                {
-                    continue;
-                }
-
-                if (string.Equals(button.Tag as string, QuickNoteDocumentFormatting.CodeCopyLink, StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-
-                button.Foreground = iconColor;
-            }
-
-            _cachedToggleButtons ??= FindVisualChildren<ToggleButton>(this).ToList();
-            foreach (var toggleButton in _cachedToggleButtons)
-            {
-                toggleButton.Foreground = iconColor;
-            }
+            Resources["QuickNoteFocusBrush"] = accent;
+            Foreground = text;
+            Resources["QuickNoteChromeTextBrush"] = text;
 
             ApplyDocumentStyles(TxtNote.Document, text, codeBackground, codeText, link);
+            UpdateStatusAppearance();
         }
 
         private void ScheduleDocumentStylesUpdate()
@@ -178,7 +176,7 @@ namespace AiteBar
                 }
 
                 paragraph.Foreground = normalText;
-                ApplyInlineStyles(paragraph.Inlines, normalText, codeBackground, codeText, linkBrush);
+                QuickNoteDocumentFormatting.ApplyInlineTheme(paragraph.Inlines, normalText, codeBackground, codeText, linkBrush);
                 return;
             }
 
@@ -199,26 +197,100 @@ namespace AiteBar
             {
                 if (QuickNoteDocumentFormatting.IsCodeHeader(uiContainer))
                 {
-                    ApplyCodeHeaderStyles(uiContainer);
+                    QuickNoteDocumentFormatting.ApplyCodeHeaderTheme(uiContainer, _theme);
                     return;
                 }
             }
 
             if (block is Section section)
             {
-                section.Background = codeBackground;
-                section.Foreground = codeText;
-                section.BorderBrush = Brush(QuickNoteDocumentFormatting.CodeBorder);
-                section.FontFamily = QuickNoteFonts.Code;
-                section.FontSize = 13;
+                if (QuickNoteDocumentFormatting.IsQuoteBlock(section))
+                {
+                    ApplyQuoteBlockStyles(section);
+                    return;
+                }
+
+                if (QuickNoteDocumentFormatting.IsDividerBlock(section))
+                {
+                    ApplyDividerBlockStyles(section);
+                    return;
+                }
+
+                if (QuickNoteDocumentFormatting.IsCodeBlock(section))
+                {
+                    section.Background = codeBackground;
+                    section.Foreground = codeText;
+                    section.BorderBrush = Brush(QuickNoteDocumentFormatting.CodeBorder);
+                    section.FontFamily = QuickNoteFonts.Code;
+                    section.FontSize = 13;
+                    section.Padding = new Thickness(0, 0, 0, QuickNoteDocumentFormatting.CodeContentVerticalPadding);
+
+                    foreach (Block childBlock in section.Blocks)
+                    {
+                        ApplyCodeBlockChildStyles(childBlock, codeBackground, codeText, linkBrush);
+                    }
+                    return;
+                }
 
                 foreach (Block childBlock in section.Blocks)
                 {
-                    ApplyCodeBlockChildStyles(childBlock, codeBackground, codeText, linkBrush);
+                    ApplyBlockStyles(childBlock, normalText, codeBackground, codeText, linkBrush);
                 }
                 return;
             }
+        }
 
+        private void ApplyQuoteBlockStyles(Section quoteSection)
+        {
+            string accentColor = _theme.Accent ?? "#007ACC";
+            string bgColor = QuickNoteThemeCatalog.GetQuoteBackground(_theme);
+            string textColor = _theme.Text ?? "#F6F0E6";
+
+            quoteSection.Tag = QuickNoteTags.Quote;
+            quoteSection.BorderBrush = Brush(accentColor);
+            quoteSection.BorderThickness = new Thickness(3, 0, 0, 0);
+            quoteSection.Background = Brush(bgColor);
+            quoteSection.Margin = new Thickness(0, 6, 0, 6);
+            quoteSection.Padding = new Thickness(0, QuickNoteDocumentFormatting.QuoteContentVerticalPadding, 0, QuickNoteDocumentFormatting.QuoteContentVerticalPadding);
+
+            foreach (Block childBlock in quoteSection.Blocks)
+            {
+                if (childBlock is Paragraph paragraph)
+                {
+                    paragraph.Margin = new Thickness(10, 0, 8, 0);
+                    paragraph.FontFamily = QuickNoteFonts.Default;
+                    paragraph.FontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0);
+                    paragraph.FontStyle = FontStyles.Italic;
+                    paragraph.Foreground = Brush(textColor);
+                    paragraph.LineHeight = 20;
+                    QuickNoteDocumentFormatting.ApplyInlineTheme(
+                        paragraph.Inlines,
+                        Brush(textColor),
+                        Brush(QuickNoteDocumentFormatting.GetCodeBackground(_theme)),
+                        Brush(QuickNoteDocumentFormatting.GetCodeText(_theme)),
+                        Brush(_theme.Link));
+                }
+            }
+        }
+
+        private void ApplyDividerBlockStyles(Section dividerSection)
+        {
+            dividerSection.Tag = QuickNoteTags.Divider;
+            dividerSection.Background = System.Windows.Media.Brushes.Transparent;
+            dividerSection.BorderThickness = new Thickness(0);
+            dividerSection.Margin = new Thickness(0, 6, 0, 6);
+            dividerSection.Padding = new Thickness(0);
+
+            foreach (Block childBlock in dividerSection.Blocks)
+            {
+                if (childBlock is Paragraph paragraph)
+                {
+                    paragraph.Margin = new Thickness(0);
+                    paragraph.Padding = new Thickness(0);
+                    paragraph.BorderBrush = Brush(_theme.MutedText ?? "#555559");
+                    paragraph.BorderThickness = new Thickness(0, 1, 0, 0);
+                }
+            }
         }
 
         private void ApplyCodeBlockChildStyles(
@@ -229,7 +301,7 @@ namespace AiteBar
         {
             if (block is BlockUIContainer uiContainer && QuickNoteDocumentFormatting.IsCodeHeader(uiContainer))
             {
-                ApplyCodeHeaderStyles(uiContainer);
+                QuickNoteDocumentFormatting.ApplyCodeHeaderTheme(uiContainer, _theme);
                 return;
             }
 
@@ -238,106 +310,7 @@ namespace AiteBar
                 paragraph.Foreground = codeText;
                 paragraph.FontFamily = QuickNoteFonts.Code;
                 paragraph.FontSize = 13;
-                ApplyInlineStyles(paragraph.Inlines, codeText, codeBackground, codeText, linkBrush);
-            }
-        }
-
-        private void ApplyCodeHeaderStyles(BlockUIContainer header)
-        {
-            header.Margin = new Thickness(0);
-            header.Padding = new Thickness(0);
-            if (header.Child is not Grid grid)
-            {
-                return;
-            }
-
-            grid.Height = 20;
-            grid.Background = Brush(QuickNoteDocumentFormatting.CodeHeaderBackground);
-            foreach (UIElement child in grid.Children)
-            {
-                if (child is TextBlock label)
-                {
-                    label.Foreground = Brush(QuickNoteDocumentFormatting.CodeForeground);
-                    label.FontFamily = QuickNoteFonts.Code;
-                    label.FontSize = 12;
-                }
-                else if (child is Button button)
-                {
-                    button.Foreground = Brushes.White;
-                    button.Background = Brushes.Transparent;
-                    button.BorderThickness = new Thickness(0);
-                    button.OverridesDefaultStyle = true;
-                    button.FontFamily = new FontFamily("Segoe MDL2 Assets");
-                    button.FontSize = 12;
-                    button.Width = 24;
-                    button.Height = 18;
-                }
-            }
-        }
-
-        private void ApplyInlineStyles(
-            InlineCollection inlines,
-            System.Windows.Media.Brush normalText,
-            System.Windows.Media.Brush codeBackground,
-            System.Windows.Media.Brush codeText,
-            System.Windows.Media.Brush linkBrush)
-        {
-            foreach (Inline inline in inlines.ToList())
-            {
-                if (inline is Hyperlink hyperlink)
-                {
-                    if (string.Equals(QuickNoteDocumentFormatting.GetHyperlinkUrl(hyperlink), QuickNoteDocumentFormatting.CodeCopyLink, StringComparison.OrdinalIgnoreCase))
-                    {
-                        hyperlink.Foreground = Brushes.White;
-                        hyperlink.TextDecorations = null;
-                        hyperlink.FontFamily = new FontFamily("Segoe MDL2 Assets");
-                    }
-                    else
-                    {
-                        hyperlink.Foreground = linkBrush;
-                        hyperlink.TextDecorations = TextDecorations.Underline;
-                    }
-                    ApplyInlineStyles(hyperlink.Inlines, hyperlink.Foreground, codeBackground, codeText, linkBrush);
-                }
-                else if (inline is Span span)
-                {
-                    if (Equals(span.Tag, QuickNoteTags.Code))
-                    {
-                        span.Background = codeBackground;
-                        span.Foreground = codeText;
-                        span.FontFamily = QuickNoteFonts.Code;
-                    }
-                    ApplyInlineStyles(span.Inlines, Equals(span.Tag, QuickNoteTags.Code) ? codeText : normalText, codeBackground, codeText, linkBrush);
-                }
-                else if (inline is Bold bold)
-                {
-                    bold.Foreground = normalText;
-                    ApplyInlineStyles(bold.Inlines, normalText, codeBackground, codeText, linkBrush);
-                }
-                else if (inline is Italic italic)
-                {
-                    italic.Foreground = normalText;
-                    ApplyInlineStyles(italic.Inlines, normalText, codeBackground, codeText, linkBrush);
-                }
-                else if (inline is Run run)
-                {
-                    if (normalText == codeText)
-                    {
-                        run.ClearValue(TextElement.FontFamilyProperty);
-                        run.ClearValue(TextElement.FontSizeProperty);
-                        run.Background = codeBackground;
-                        run.Foreground = codeText;
-                    }
-                    else if (run.FontFamily?.Source == QuickNoteFonts.CodeFamilyName)
-                    {
-                        run.Background = codeBackground;
-                        run.Foreground = codeText;
-                    }
-                    else
-                    {
-                        run.Foreground = normalText;
-                    }
-                }
+                QuickNoteDocumentFormatting.ApplyInlineTheme(paragraph.Inlines, codeText, codeBackground, codeText, linkBrush);
             }
         }
 

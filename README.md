@@ -22,6 +22,7 @@ AiteBar — Your Personal Command Center for Windows. Turn the edge of your scre
 - **Panel position indicator**: Draggable, DPI-safe indicator that stays inside the selected monitor and provides quick panel access
 - **Global hotkeys**: Quick access to the panel and actions
 - **Built-in tools**: Screenshot, screen recording, calculator, file explorer, downloads, timer and stopwatch, color picker, Quick Note, Zen Editor, text processing, Prompt Builder, Aite Profiles, file sorter, icon converter, QR code generator, clipboard manager, show desktop, apps folder, Copilot
+- **Quick Note**: Compact rich-text note with local autosave, undo/redo, inline images, checklists, and recovery copies that preserve externally changed or unreadable originals.
 - **Drag-and-drop**: Add files, folders, .url shortcuts and links by dragging
 
 #### Action Types
@@ -88,6 +89,7 @@ AiteBar — персональный Workflow Hub для Windows, превращ
 - **Указатель положения панели**: Перетаскиваемый DPI-безопасный индикатор, который остаётся в границах выбранного монитора и позволяет быстро открыть панель
 - **Глобальные горячие клавиши**: Быстрый доступ к панели и действиям
 - **Встроенные инструменты**: Скриншот, запись экрана, калькулятор, проводник, загрузки, таймер и секундомер, пипетка цвета, Quick Note, Дзен-редактор, обработка текста, конструктор промптов, Aite Profiles, сортировщик файлов, конвертер иконок, генератор QR-кодов, менеджер буфера обмена, показ рабочего стола, папка приложений, Copilot
+- **Quick Note**: Компактная заметка с локальным автосохранением, Undo/Redo, изображениями, чеклистами и отдельными копиями при конфликте или ошибке чтения оригинала.
 - **Drag-and-drop**: Добавляй файлы, папки, `.url` и ссылки перетаскиванием
 
 #### Типы действий

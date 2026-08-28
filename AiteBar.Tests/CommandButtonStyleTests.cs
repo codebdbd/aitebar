@@ -205,6 +205,34 @@ public sealed class CommandButtonStyleTests
     }
 
     [Fact]
+    public void ContextIndicator_UsesFullButtonHitArea_AndContentDoesNotInterceptInput()
+    {
+        XDocument window = LoadXaml("MainWindow.xaml");
+        XElement button = Assert.Single(
+            window.Descendants(PresentationNamespace + "Button"),
+            element => string.Equals(
+                element.Attribute(XamlNamespace + "Name")?.Value,
+                "ContextIndicator",
+                StringComparison.Ordinal));
+        XElement border = Assert.Single(
+            window.Descendants(PresentationNamespace + "Border"),
+            element => string.Equals(
+                element.Attribute(XamlNamespace + "Name")?.Value,
+                "ContextIndicatorCircle",
+                StringComparison.Ordinal));
+        XElement text = Assert.Single(
+            window.Descendants(PresentationNamespace + "TextBlock"),
+            element => string.Equals(
+                element.Attribute(XamlNamespace + "Name")?.Value,
+                "ContextIndicatorText",
+                StringComparison.Ordinal));
+
+        Assert.Equal("#01000000", button.Attribute("Background")?.Value);
+        Assert.Equal("False", border.Attribute("IsHitTestVisible")?.Value);
+        Assert.Equal("False", text.Attribute("IsHitTestVisible")?.Value);
+    }
+
+    [Fact]
     public async Task TimerCompactButtonTemplate_LeavesMeasuredSpaceForGlyph()
     {
         await RunStaAsync(() =>

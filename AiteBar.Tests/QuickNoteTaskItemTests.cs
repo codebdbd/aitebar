@@ -70,6 +70,7 @@ public sealed class QuickNoteTaskItemTests
             Assert.False(isChecked);
             Assert.Same(container, foundContainer);
             Assert.NotNull(foundCheckBox);
+            Assert.Same(taskParagraph, QuickNoteDocumentFormatting.GetTaskParagraph(foundCheckBox));
         });
     }
 

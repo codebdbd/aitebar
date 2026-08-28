@@ -14,6 +14,7 @@ public sealed class UtilityButtonCatalogTests
         "Explorer",
         "Downloads",
         "FileSorter",
+        "DiskCleaner",
         "IconConverter",
         "TimerStopwatch",
         "ColorPicker",
@@ -82,6 +83,7 @@ public sealed class UtilityButtonCatalogTests
             UtilityButtonCatalog.Explorer,
             UtilityButtonCatalog.Downloads,
             UtilityButtonCatalog.FileSorter,
+            UtilityButtonCatalog.DiskCleaner,
             UtilityButtonCatalog.ShowDesktop,
             UtilityButtonCatalog.AppsFolder);
 
@@ -123,6 +125,7 @@ public sealed class UtilityButtonCatalogTests
     public void UtilityImplementations_ReuseCatalogGroupColors()
     {
         Assert.Equal(UtilityButtonCatalog.FileSorter.Color, new FileSorterUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.DiskCleaner.Color, new DiskCleanerUtility().IconColor);
         Assert.Equal(UtilityButtonCatalog.IconConverter.Color, new IconConverterUtility().IconColor);
         Assert.Equal(UtilityButtonCatalog.TimerStopwatch.Color, new TimerStopwatchUtility().IconColor);
         Assert.Equal(UtilityButtonCatalog.ColorPicker.Color, new ColorPickerUtility().IconColor);

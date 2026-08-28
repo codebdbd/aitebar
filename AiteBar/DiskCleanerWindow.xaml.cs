@@ -35,6 +35,14 @@ public partial class DiskCleanerWindow : DarkWindow
         Loaded += DiskCleanerWindow_Loaded;
     }
 
+    protected override void OnClosed(EventArgs e)
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+        _cts = null;
+        base.OnClosed(e);
+    }
+
     public void ShowNearPanel(AppSettingsService settingsService)
     {
         var settings = settingsService.Settings;
@@ -53,6 +61,7 @@ public partial class DiskCleanerWindow : DarkWindow
 
     private async void DiskCleanerWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        Loaded -= DiskCleanerWindow_Loaded;
         await RunScanAsync();
     }
 
@@ -62,6 +71,7 @@ public partial class DiskCleanerWindow : DarkWindow
         _isBusy = true;
         UpdateUiState();
 
+        TxtOverallStatus.Foreground = (Brush)FindResource("MutedText");
         TxtOverallStatus.Text = LocalizationService.Get("DiskCleaner_Status_Scanning");
         ProgressBarStatus.Visibility = Visibility.Visible;
         ProgressBarStatus.Value = 0;
@@ -78,14 +88,17 @@ public partial class DiskCleanerWindow : DarkWindow
         {
             var result = await _cleanerService.ScanAsync(progress, _cts.Token);
             PopulateCategories(result.Categories);
+            TxtOverallStatus.Foreground = (Brush)FindResource("MutedText");
             TxtOverallStatus.Text = LocalizationService.Get("DiskCleaner_Status_Ready");
         }
         catch (OperationCanceledException)
         {
+            TxtOverallStatus.Foreground = (Brush)FindResource("MutedText");
             TxtOverallStatus.Text = LocalizationService.Get("DiskCleaner_Status_Ready");
         }
         catch (Exception ex)
         {
+            TxtOverallStatus.Foreground = (Brush)FindResource("CautionAmberColor");
             TxtOverallStatus.Text = ex.Message;
         }
         finally
@@ -120,18 +133,54 @@ public partial class DiskCleanerWindow : DarkWindow
             rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
             var textStack = new StackPanel { Margin = new Thickness(0, 0, 12, 0), VerticalAlignment = VerticalAlignment.Center };
+
+            // Title line with Safety Badge
+            var titleLine = new StackPanel { Orientation = Orientation.Horizontal };
             var titleBlock = new TextBlock
             {
                 Text = LocalizationService.Get(cat.TitleKey),
-                Style = (Style)FindResource("ModernSettingTitleStyle")
+                Style = (Style)FindResource("ModernSettingTitleStyle"),
+                VerticalAlignment = VerticalAlignment.Center
             };
+            titleLine.Children.Add(titleBlock);
+
+            var safetyBadge = new Border
+            {
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(5, 1, 5, 1),
+                Margin = new Thickness(8, 0, 0, 0),
+                Background = cat.IsSafe ? (Brush)FindResource("SafeBadgeBg") : (Brush)FindResource("CautionBadgeBg"),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            var safetyText = new TextBlock
+            {
+                Text = LocalizationService.Get(cat.IsSafe ? "DiskCleaner_Badge_Safe" : "DiskCleaner_Badge_Caution"),
+                FontSize = 9.5,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = cat.IsSafe ? (Brush)FindResource("SafeGreenColor") : (Brush)FindResource("CautionAmberColor")
+            };
+            safetyBadge.Child = safetyText;
+            titleLine.Children.Add(safetyBadge);
+
+            textStack.Children.Add(titleLine);
+
             var descBlock = new TextBlock
             {
                 Text = LocalizationService.Get(cat.DescriptionKey),
                 Style = (Style)FindResource("ModernSettingDescriptionStyle")
             };
-            textStack.Children.Add(titleBlock);
             textStack.Children.Add(descBlock);
+
+            if (!string.IsNullOrEmpty(cat.WarningKey))
+            {
+                var warnBlock = new TextBlock
+                {
+                    Text = "⚠️ " + LocalizationService.Get(cat.WarningKey),
+                    Style = (Style)FindResource("ModernSettingWarningStyle")
+                };
+                textStack.Children.Add(warnBlock);
+            }
+
             Grid.SetColumn(textStack, 0);
             rowGrid.Children.Add(textStack);
 
@@ -189,6 +238,7 @@ public partial class DiskCleanerWindow : DarkWindow
     private void UpdateUiState()
     {
         BtnScan.IsEnabled = !_isBusy;
+        BtnSelectSafeOnly.IsEnabled = !_isBusy;
         BtnSelectAll.IsEnabled = !_isBusy;
         BtnDeselectAll.IsEnabled = !_isBusy;
         foreach (var item in _categoryItems)
@@ -205,20 +255,35 @@ public partial class DiskCleanerWindow : DarkWindow
     private async void BtnClean_Click(object sender, RoutedEventArgs e)
     {
         if (_isBusy) return;
+
+        var selectedItems = _categoryItems
+            .Where(item => item.Switch.IsChecked == true)
+            .ToList();
+
+        if (selectedItems.Count == 0) return;
+
+        // Safety confirmation for Caution categories
+        var cautionItems = selectedItems.Where(item => !item.Category.IsSafe).ToList();
+        if (cautionItems.Count > 0)
+        {
+            string itemsList = string.Join("\n• ", cautionItems.Select(c => LocalizationService.Get(c.Category.TitleKey)));
+            string message = string.Format(
+                LocalizationService.Get("DiskCleaner_ConfirmCautionMessage"),
+                cautionItems.Count,
+                "• " + itemsList);
+            string caption = LocalizationService.Get("DiskCleaner_ConfirmCautionTitle");
+
+            var confirmResult = System.Windows.MessageBox.Show(this, message, caption, MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (confirmResult != MessageBoxResult.Yes)
+            {
+                return;
+            }
+        }
+
         _isBusy = true;
         UpdateUiState();
 
-        var selectedIds = _categoryItems
-            .Where(item => item.Switch.IsChecked == true)
-            .Select(item => item.Category.Id)
-            .ToHashSet(StringComparer.Ordinal);
-
-        if (selectedIds.Count == 0)
-        {
-            _isBusy = false;
-            UpdateUiState();
-            return;
-        }
+        var selectedIds = selectedItems.Select(item => item.Category.Id).ToHashSet(StringComparer.Ordinal);
 
         TxtOverallStatus.Text = LocalizationService.Get("DiskCleaner_Status_Cleaning");
         ProgressBarStatus.Visibility = Visibility.Visible;
@@ -236,7 +301,24 @@ public partial class DiskCleanerWindow : DarkWindow
         {
             var result = await _cleanerService.CleanAsync(selectedIds, progress, _cts.Token);
             string formattedFreed = DiskCleanerService.FormatByteSize(result.TotalFreedBytes);
-            TxtOverallStatus.Text = string.Format(LocalizationService.Get("DiskCleaner_Status_CompletedFormat"), formattedFreed);
+            TxtOverallStatus.Text = string.Format(
+                LocalizationService.Get("DiskCleaner_Status_DetailedFormat"),
+                formattedFreed,
+                result.SucceededCount,
+                result.PartialCount,
+                result.FailedCount,
+                result.SkippedCount);
+
+            if (result.FailedCount > 0)
+            {
+                TxtOverallStatus.Foreground = (Brush)FindResource("CautionAmberColor");
+            }
+            else
+            {
+                TxtOverallStatus.Foreground = (Brush)FindResource("SafeGreenColor");
+            }
+
+            PopulateResultDetails(result);
 
             // Re-run quick scan to refresh remaining sizes
             await Task.Delay(500);
@@ -258,6 +340,125 @@ public partial class DiskCleanerWindow : DarkWindow
             UpdateUiState();
             UpdateTotalReclaimable();
         }
+    }
+
+    private void PopulateResultDetails(DiskCleanResult result)
+    {
+        ResultsDetailsPanel.Children.Clear();
+
+        for (int i = 0; i < result.Reports.Count; i++)
+        {
+            var report = result.Reports[i];
+            var matchingCat = _categoryItems.FirstOrDefault(c => c.Category.Id == report.CategoryId)?.Category;
+            string title = matchingCat != null ? LocalizationService.Get(matchingCat.TitleKey) : report.CategoryId;
+
+            if (i > 0)
+            {
+                ResultsDetailsPanel.Children.Add(new Border
+                {
+                    Height = 1,
+                    Background = (Brush)FindResource("ModernRowDivider"),
+                    Margin = new Thickness(0, 4, 0, 4)
+                });
+            }
+
+            var rowGrid = new Grid { Margin = new Thickness(0, 3, 0, 3) };
+            rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            // Left: Title + Reason (if any)
+            var textStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
+            var titleBlock = new TextBlock
+            {
+                Text = title,
+                FontSize = 11.5,
+                FontWeight = FontWeights.Medium,
+                Foreground = (Brush)FindResource("TextPrimary")
+            };
+            textStack.Children.Add(titleBlock);
+
+            if (!string.IsNullOrWhiteSpace(report.FailureReason))
+            {
+                var reasonBlock = new TextBlock
+                {
+                    Text = report.FailureReason,
+                    FontSize = 9.5,
+                    Foreground = report.Status == DiskCleanCategoryStatus.Failed
+                        ? (Brush)FindResource("FailedRedColor")
+                        : (Brush)FindResource("CautionAmberColor"),
+                    TextWrapping = TextWrapping.Wrap,
+                    Margin = new Thickness(0, 1, 0, 0)
+                };
+                textStack.Children.Add(reasonBlock);
+            }
+            Grid.SetColumn(textStack, 0);
+            rowGrid.Children.Add(textStack);
+
+            // Middle: Size + Locked info
+            var sizeStack = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
+            var sizeText = new TextBlock
+            {
+                Text = DiskCleanerService.FormatByteSize(report.FreedBytes),
+                FontSize = 11,
+                Foreground = report.FreedBytes > 0 ? (Brush)FindResource("SafeGreenColor") : (Brush)FindResource("MutedText"),
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            sizeStack.Children.Add(sizeText);
+
+            if (report.LockedCount > 0)
+            {
+                var lockedText = new TextBlock
+                {
+                    Text = " " + string.Format(LocalizationService.Get("DiskCleaner_LockedFilesFormat"), report.LockedCount),
+                    FontSize = 10,
+                    Foreground = (Brush)FindResource("CautionAmberColor"),
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+                sizeStack.Children.Add(lockedText);
+            }
+            Grid.SetColumn(sizeStack, 1);
+            rowGrid.Children.Add(sizeStack);
+
+            // Right: Status Badge
+            var (badgeText, badgeFg, badgeBg) = report.Status switch
+            {
+                DiskCleanCategoryStatus.Succeeded => (LocalizationService.Get("DiskCleaner_Status_Succeeded"), (Brush)FindResource("SafeGreenColor"), (Brush)FindResource("SafeBadgeBg")),
+                DiskCleanCategoryStatus.PartiallyCleaned => (LocalizationService.Get("DiskCleaner_Status_PartiallyCleaned"), (Brush)FindResource("CautionAmberColor"), (Brush)FindResource("CautionBadgeBg")),
+                DiskCleanCategoryStatus.Failed => (LocalizationService.Get("DiskCleaner_Status_Failed"), (Brush)FindResource("FailedRedColor"), (Brush)FindResource("FailedBadgeBg")),
+                _ => (LocalizationService.Get("DiskCleaner_Status_Skipped"), (Brush)FindResource("MutedText"), (Brush)FindResource("BadgeBackground"))
+            };
+
+            var badgeBorder = new Border
+            {
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(5, 1, 5, 1),
+                Background = badgeBg,
+                VerticalAlignment = VerticalAlignment.Center
+            };
+            badgeBorder.Child = new TextBlock
+            {
+                Text = badgeText,
+                FontSize = 9.5,
+                FontWeight = FontWeights.SemiBold,
+                Foreground = badgeFg
+            };
+            Grid.SetColumn(badgeBorder, 2);
+            rowGrid.Children.Add(badgeBorder);
+
+            ResultsDetailsPanel.Children.Add(rowGrid);
+        }
+
+        ResultsCard.Visibility = result.Reports.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void BtnSelectSafeOnly_Click(object sender, RoutedEventArgs e)
+    {
+        foreach (var item in _categoryItems)
+        {
+            item.Switch.IsChecked = item.Category.IsSafe;
+        }
+        UpdateTotalReclaimable();
     }
 
     private void BtnSelectAll_Click(object sender, RoutedEventArgs e)

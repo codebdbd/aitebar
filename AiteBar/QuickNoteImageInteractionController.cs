@@ -127,7 +127,9 @@ internal sealed class QuickNoteImageInteractionController : IDisposable
         {
             if (current is InlineUIContainer container)
             {
-                return container;
+                // Task checkboxes are embedded in the same kind of container.
+                // Leave their mouse events to CheckBox instead of selecting them as images.
+                return QuickNoteImageHelper.TryGetImageControl(container, out _) ? container : null;
             }
 
             DependencyObject? logicalParent = LogicalTreeHelper.GetParent(current);

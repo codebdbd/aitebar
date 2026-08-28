@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -23,15 +21,9 @@ public sealed class DiskCleanerService
     public const string CategoryCrashDumps = "CrashDumps";
     public const string CategoryDnsCache = "DnsCache";
 
-    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
-    private static extern int SHEmptyRecycleBin(IntPtr hwnd, string? pszRootPath, uint dwFlags);
-
-    [DllImport("dnsapi.dll", EntryPoint = "DnsFlushResolverCache")]
-    private static extern int DnsFlushResolverCache();
-
-    private const uint SHERB_NOCONFIRMATION = 0x00000001;
-    private const uint SHERB_NOPROGRESSUI = 0x00000002;
-    private const uint SHERB_NOSOUND = 0x00000004;
+    private readonly IFileSystemOperations _fs;
+    private readonly IProcessRunner _processRunner;
+    private readonly IWin32DiskOperations _win32;
 
     private static readonly string[] BrowserCacheFolderNames =
     [
@@ -47,6 +39,16 @@ public sealed class DiskCleanerService
     private static readonly Regex BrowserProfileRegex =
         new(@"^(Default|Profile \d+|System Profile|Guest Profile)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    public DiskCleanerService(
+        IFileSystemOperations? fs = null,
+        IProcessRunner? processRunner = null,
+        IWin32DiskOperations? win32 = null)
+    {
+        _fs = fs ?? new WindowsFileSystemOperations();
+        _processRunner = processRunner ?? new SystemProcessRunner();
+        _win32 = win32 ?? new NativeWin32DiskOperations();
+    }
+
     public async Task<DiskCleanScanResult> ScanAsync(
         IProgress<DiskCleanProgress>? progress = null,
         CancellationToken cancellationToken = default)
@@ -55,58 +57,67 @@ public sealed class DiskCleanerService
         {
             var categories = new List<DiskCleanCategory>();
 
-            // 1. User Temp
+            // 1. User Temp (Safe, Selected)
             cancellationToken.ThrowIfCancellationRequested();
             progress?.Report(new DiskCleanProgress(CategoryUserTemp, "Scanning User Temp...", 10));
-            long userTempSize = CalculateDirectorySize(Path.GetTempPath());
+            long userTempSize = _fs.CalculateDirectorySize(Path.GetTempPath());
             categories.Add(new DiskCleanCategory(
                 CategoryUserTemp,
                 "DiskCleaner_Category_UserTemp",
                 "DiskCleaner_Category_UserTemp_Desc",
-                userTempSize));
+                userTempSize,
+                IsSelected: true,
+                IsSafe: true));
 
-            // 2. Windows Temp
+            // 2. Browser Cache (Chrome, Edge) (Safe, Selected)
             cancellationToken.ThrowIfCancellationRequested();
-            progress?.Report(new DiskCleanProgress(CategoryWindowsTemp, "Scanning Windows Temp...", 25));
-            string winTempPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Temp");
-            long winTempSize = CalculateDirectorySize(winTempPath);
-            categories.Add(new DiskCleanCategory(
-                CategoryWindowsTemp,
-                "DiskCleaner_Category_WindowsTemp",
-                "DiskCleaner_Category_WindowsTemp_Desc",
-                winTempSize));
-
-            // 3. Recycle Bin
-            cancellationToken.ThrowIfCancellationRequested();
-            progress?.Report(new DiskCleanProgress(CategoryRecycleBin, "Scanning Recycle Bin...", 40));
-            long recycleBinSize = CalculateRecycleBinSize();
-            categories.Add(new DiskCleanCategory(
-                CategoryRecycleBin,
-                "DiskCleaner_Category_RecycleBin",
-                "DiskCleaner_Category_RecycleBin_Desc",
-                recycleBinSize));
-
-            // 4. Browser Cache (Chrome, Edge)
-            cancellationToken.ThrowIfCancellationRequested();
-            progress?.Report(new DiskCleanProgress(CategoryBrowserCache, "Scanning Browser Caches...", 55));
+            progress?.Report(new DiskCleanProgress(CategoryBrowserCache, "Scanning Browser Caches...", 25));
             long browserCacheSize = CalculateBrowserCacheSize();
             categories.Add(new DiskCleanCategory(
                 CategoryBrowserCache,
                 "DiskCleaner_Category_BrowserCache",
                 "DiskCleaner_Category_BrowserCache_Desc",
-                browserCacheSize));
+                browserCacheSize,
+                IsSelected: true,
+                IsSafe: true));
 
-            // 5. GPU Cache
+            // 3. GPU Cache (Safe, Selected)
             cancellationToken.ThrowIfCancellationRequested();
-            progress?.Report(new DiskCleanProgress(CategoryGpuCache, "Scanning GPU Caches...", 70));
+            progress?.Report(new DiskCleanProgress(CategoryGpuCache, "Scanning GPU Caches...", 40));
             long gpuCacheSize = CalculateGpuCacheSize();
             categories.Add(new DiskCleanCategory(
                 CategoryGpuCache,
                 "DiskCleaner_Category_GpuCache",
                 "DiskCleaner_Category_GpuCache_Desc",
-                gpuCacheSize));
+                gpuCacheSize,
+                IsSelected: true,
+                IsSafe: true));
 
-            // 6. Dev Caches (NuGet, pip, npm)
+            // 4. DNS Cache (Safe, Selected)
+            cancellationToken.ThrowIfCancellationRequested();
+            progress?.Report(new DiskCleanProgress(CategoryDnsCache, "Scanning DNS...", 55));
+            categories.Add(new DiskCleanCategory(
+                CategoryDnsCache,
+                "DiskCleaner_Category_DnsCache",
+                "DiskCleaner_Category_DnsCache_Desc",
+                0,
+                IsSelected: true,
+                IsSafe: true));
+
+            // 5. Recycle Bin (Caution, Not Selected)
+            cancellationToken.ThrowIfCancellationRequested();
+            progress?.Report(new DiskCleanProgress(CategoryRecycleBin, "Scanning Recycle Bin...", 70));
+            long recycleBinSize = CalculateRecycleBinSize();
+            categories.Add(new DiskCleanCategory(
+                CategoryRecycleBin,
+                "DiskCleaner_Category_RecycleBin",
+                "DiskCleaner_Category_RecycleBin_Desc",
+                recycleBinSize,
+                IsSelected: false,
+                IsSafe: false,
+                WarningKey: "DiskCleaner_Warning_RecycleBin"));
+
+            // 6. Dev Caches (NuGet, pip, npm) (Caution, Not Selected)
             cancellationToken.ThrowIfCancellationRequested();
             progress?.Report(new DiskCleanProgress(CategoryDevCache, "Scanning Developer Caches...", 80));
             long devCacheSize = CalculateDevCacheSize();
@@ -114,9 +125,12 @@ public sealed class DiskCleanerService
                 CategoryDevCache,
                 "DiskCleaner_Category_DevCache",
                 "DiskCleaner_Category_DevCache_Desc",
-                devCacheSize));
+                devCacheSize,
+                IsSelected: false,
+                IsSafe: false,
+                WarningKey: "DiskCleaner_Warning_DevCache"));
 
-            // 7. Crash Dumps
+            // 7. Crash Dumps (Caution, Not Selected)
             cancellationToken.ThrowIfCancellationRequested();
             progress?.Report(new DiskCleanProgress(CategoryCrashDumps, "Scanning Crash Dumps...", 90));
             long crashDumpsSize = CalculateCrashDumpsSize();
@@ -124,16 +138,24 @@ public sealed class DiskCleanerService
                 CategoryCrashDumps,
                 "DiskCleaner_Category_CrashDumps",
                 "DiskCleaner_Category_CrashDumps_Desc",
-                crashDumpsSize));
+                crashDumpsSize,
+                IsSelected: false,
+                IsSafe: false,
+                WarningKey: "DiskCleaner_Warning_CrashDumps"));
 
-            // 8. DNS Cache (Logical flag)
+            // 8. Windows Temp (Caution, Not Selected)
             cancellationToken.ThrowIfCancellationRequested();
-            progress?.Report(new DiskCleanProgress(CategoryDnsCache, "Scanning DNS...", 100));
+            progress?.Report(new DiskCleanProgress(CategoryWindowsTemp, "Scanning Windows Temp...", 100));
+            string winTempPath = Path.Combine(_fs.GetSpecialFolderPath(Environment.SpecialFolder.Windows), "Temp");
+            long winTempSize = _fs.CalculateDirectorySize(winTempPath);
             categories.Add(new DiskCleanCategory(
-                CategoryDnsCache,
-                "DiskCleaner_Category_DnsCache",
-                "DiskCleaner_Category_DnsCache_Desc",
-                0));
+                CategoryWindowsTemp,
+                "DiskCleaner_Category_WindowsTemp",
+                "DiskCleaner_Category_WindowsTemp_Desc",
+                winTempSize,
+                IsSelected: false,
+                IsSafe: false,
+                WarningKey: "DiskCleaner_Warning_WindowsTemp"));
 
             long total = categories.Sum(c => c.SizeBytes);
             return new DiskCleanScanResult(categories, total);
@@ -145,12 +167,12 @@ public sealed class DiskCleanerService
         IProgress<DiskCleanProgress>? progress = null,
         CancellationToken cancellationToken = default)
     {
-        return await Task.Run(() =>
+        return await Task.Run(async () =>
         {
             long totalFreed = 0;
-            int cleanedCount = 0;
-            int lockedCount = 0;
-            var cleanedList = new List<string>();
+            int totalCleaned = 0;
+            int totalLocked = 0;
+            var reports = new List<DiskCleanCategoryReport>();
 
             double stepProgress = selectedCategoryIds.Count > 0 ? 100.0 / selectedCategoryIds.Count : 100.0;
             int currentStep = 0;
@@ -159,24 +181,51 @@ public sealed class DiskCleanerService
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 progress?.Report(new DiskCleanProgress(CategoryUserTemp, "Cleaning User Temp...", currentStep * stepProgress));
-                var (freed, cleaned, locked) = CleanDirectoryContents(Path.GetTempPath());
-                totalFreed += freed;
-                cleanedCount += cleaned;
-                lockedCount += locked;
-                cleanedList.Add(CategoryUserTemp);
+                var report = CleanDirectoryCategory(CategoryUserTemp, Path.GetTempPath());
+                reports.Add(report);
+                totalFreed += report.FreedBytes;
+                totalCleaned += report.CleanedCount;
+                totalLocked += report.LockedCount;
                 currentStep++;
             }
 
-            if (selectedCategoryIds.Contains(CategoryWindowsTemp))
+            if (selectedCategoryIds.Contains(CategoryBrowserCache))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                progress?.Report(new DiskCleanProgress(CategoryWindowsTemp, "Cleaning Windows Temp...", currentStep * stepProgress));
-                string winTemp = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Temp");
-                var (freed, cleaned, locked) = CleanDirectoryContents(winTemp);
-                totalFreed += freed;
-                cleanedCount += cleaned;
-                lockedCount += locked;
-                cleanedList.Add(CategoryWindowsTemp);
+                progress?.Report(new DiskCleanProgress(CategoryBrowserCache, "Cleaning Browser Caches...", currentStep * stepProgress));
+                var report = CleanBrowserCaches();
+                reports.Add(report);
+                totalFreed += report.FreedBytes;
+                totalCleaned += report.CleanedCount;
+                totalLocked += report.LockedCount;
+                currentStep++;
+            }
+
+            if (selectedCategoryIds.Contains(CategoryGpuCache))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                progress?.Report(new DiskCleanProgress(CategoryGpuCache, "Cleaning GPU Caches...", currentStep * stepProgress));
+                var report = CleanGpuCaches();
+                reports.Add(report);
+                totalFreed += report.FreedBytes;
+                totalCleaned += report.CleanedCount;
+                totalLocked += report.LockedCount;
+                currentStep++;
+            }
+
+            if (selectedCategoryIds.Contains(CategoryDnsCache))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                progress?.Report(new DiskCleanProgress(CategoryDnsCache, "Flushing DNS Resolver Cache...", currentStep * stepProgress));
+                bool dnsSuccess = _win32.FlushDnsCache();
+                reports.Add(new DiskCleanCategoryReport(
+                    CategoryDnsCache,
+                    dnsSuccess ? DiskCleanCategoryStatus.Succeeded : DiskCleanCategoryStatus.Failed,
+                    FreedBytes: 0,
+                    CleanedCount: dnsSuccess ? 1 : 0,
+                    LockedCount: 0,
+                    FailureReason: dnsSuccess ? null : "DNS resolver flush returned false."));
+                if (dnsSuccess) totalCleaned++;
                 currentStep++;
             }
 
@@ -185,43 +234,43 @@ public sealed class DiskCleanerService
                 cancellationToken.ThrowIfCancellationRequested();
                 progress?.Report(new DiskCleanProgress(CategoryRecycleBin, "Emptying Recycle Bin...", currentStep * stepProgress));
                 long before = CalculateRecycleBinSize();
-                try
-                {
-                    SHEmptyRecycleBin(IntPtr.Zero, null, SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND);
-                }
-                catch
-                {
-                    // Ignore Win32 shell errors
-                }
+                int hresult = _win32.EmptyRecycleBin(null);
                 long after = CalculateRecycleBinSize();
                 long freed = Math.Max(0, before - after);
-                totalFreed += freed;
-                cleanedCount++;
-                cleanedList.Add(CategoryRecycleBin);
-                currentStep++;
-            }
 
-            if (selectedCategoryIds.Contains(CategoryBrowserCache))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                progress?.Report(new DiskCleanProgress(CategoryBrowserCache, "Cleaning Browser Caches...", currentStep * stepProgress));
-                var (freed, cleaned, locked) = CleanBrowserCaches();
-                totalFreed += freed;
-                cleanedCount += cleaned;
-                lockedCount += locked;
-                cleanedList.Add(CategoryBrowserCache);
-                currentStep++;
-            }
-
-            if (selectedCategoryIds.Contains(CategoryGpuCache))
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                progress?.Report(new DiskCleanProgress(CategoryGpuCache, "Cleaning GPU Caches...", currentStep * stepProgress));
-                var (freed, cleaned, locked) = CleanGpuCaches();
-                totalFreed += freed;
-                cleanedCount += cleaned;
-                lockedCount += locked;
-                cleanedList.Add(CategoryGpuCache);
+                if (hresult == 0) // S_OK
+                {
+                    reports.Add(new DiskCleanCategoryReport(
+                        CategoryRecycleBin,
+                        DiskCleanCategoryStatus.Succeeded,
+                        freed,
+                        CleanedCount: 1,
+                        LockedCount: 0));
+                    totalFreed += freed;
+                    totalCleaned++;
+                }
+                else if (freed > 0)
+                {
+                    reports.Add(new DiskCleanCategoryReport(
+                        CategoryRecycleBin,
+                        DiskCleanCategoryStatus.PartiallyCleaned,
+                        freed,
+                        CleanedCount: 1,
+                        LockedCount: 0,
+                        FailureReason: $"Recycle Bin emptied partially with HRESULT 0x{hresult:X8}"));
+                    totalFreed += freed;
+                    totalCleaned++;
+                }
+                else
+                {
+                    reports.Add(new DiskCleanCategoryReport(
+                        CategoryRecycleBin,
+                        DiskCleanCategoryStatus.Failed,
+                        FreedBytes: 0,
+                        CleanedCount: 0,
+                        LockedCount: 0,
+                        FailureReason: $"Win32 EmptyRecycleBin returned HRESULT 0x{hresult:X8}"));
+                }
                 currentStep++;
             }
 
@@ -230,12 +279,11 @@ public sealed class DiskCleanerService
                 cancellationToken.ThrowIfCancellationRequested();
                 progress?.Report(new DiskCleanProgress(CategoryDevCache, "Cleaning Developer Caches...", currentStep * stepProgress));
                 long before = CalculateDevCacheSize();
-                CleanDevCaches();
-                long after = CalculateDevCacheSize();
-                long freed = Math.Max(0, before - after);
-                totalFreed += freed;
-                cleanedCount++;
-                cleanedList.Add(CategoryDevCache);
+                var report = await CleanDevCachesAsync(before, cancellationToken).ConfigureAwait(false);
+                reports.Add(report);
+                totalFreed += report.FreedBytes;
+                totalCleaned += report.CleanedCount;
+                totalLocked += report.LockedCount;
                 currentStep++;
             }
 
@@ -243,33 +291,29 @@ public sealed class DiskCleanerService
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 progress?.Report(new DiskCleanProgress(CategoryCrashDumps, "Cleaning Crash Dumps...", currentStep * stepProgress));
-                var (freed, cleaned, locked) = CleanCrashDumps();
-                totalFreed += freed;
-                cleanedCount += cleaned;
-                lockedCount += locked;
-                cleanedList.Add(CategoryCrashDumps);
+                var report = CleanCrashDumps();
+                reports.Add(report);
+                totalFreed += report.FreedBytes;
+                totalCleaned += report.CleanedCount;
+                totalLocked += report.LockedCount;
                 currentStep++;
             }
 
-            if (selectedCategoryIds.Contains(CategoryDnsCache))
+            if (selectedCategoryIds.Contains(CategoryWindowsTemp))
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                progress?.Report(new DiskCleanProgress(CategoryDnsCache, "Flushing DNS Resolver Cache...", currentStep * stepProgress));
-                try
-                {
-                    DnsFlushResolverCache();
-                }
-                catch
-                {
-                    // Ignore DNS API errors
-                }
-                cleanedCount++;
-                cleanedList.Add(CategoryDnsCache);
+                progress?.Report(new DiskCleanProgress(CategoryWindowsTemp, "Cleaning Windows Temp...", currentStep * stepProgress));
+                string winTemp = Path.Combine(_fs.GetSpecialFolderPath(Environment.SpecialFolder.Windows), "Temp");
+                var report = CleanDirectoryCategory(CategoryWindowsTemp, winTemp);
+                reports.Add(report);
+                totalFreed += report.FreedBytes;
+                totalCleaned += report.CleanedCount;
+                totalLocked += report.LockedCount;
                 currentStep++;
             }
 
             progress?.Report(new DiskCleanProgress(string.Empty, "Done", 100));
-            return new DiskCleanResult(totalFreed, cleanedCount, lockedCount, cleanedList);
+            return new DiskCleanResult(totalFreed, totalCleaned, totalLocked, reports);
         }, cancellationToken).ConfigureAwait(false);
     }
 
@@ -291,48 +335,27 @@ public sealed class DiskCleanerService
 
     #region Calculation Helpers
 
-    public static long CalculateDirectorySize(string directoryPath)
+    public long CalculateDirectorySize(string directoryPath) =>
+        _fs.CalculateDirectorySize(directoryPath);
+
+    public (long FreedBytes, int CleanedFiles, int LockedFiles) CleanDirectoryContents(string directoryPath) =>
+        _fs.CleanDirectoryContents(directoryPath);
+
+    private long CalculateRecycleBinSize()
     {
-        if (!Directory.Exists(directoryPath)) return 0;
         long total = 0;
-        try
+        foreach (var rootPath in _fs.EnumerateFixedDriveRootPaths())
         {
-            var dirInfo = new DirectoryInfo(directoryPath);
-            foreach (var file in dirInfo.EnumerateFiles("*", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true }))
-            {
-                try
-                {
-                    total += file.Length;
-                }
-                catch
-                {
-                    // Ignore inaccessible or deleted file lengths
-                }
-            }
-        }
-        catch
-        {
-            // Ignore access errors
+            string recycleBin = Path.Combine(rootPath, "$Recycle.Bin");
+            total += _fs.CalculateDirectorySize(recycleBin);
         }
         return total;
     }
 
-    private static long CalculateRecycleBinSize()
+    private long CalculateBrowserCacheSize()
     {
         long total = 0;
-        foreach (var drive in DriveInfo.GetDrives())
-        {
-            if (drive.DriveType != DriveType.Fixed) continue;
-            string recycleBin = Path.Combine(drive.RootDirectory.FullName, "$Recycle.Bin");
-            total += CalculateDirectorySize(recycleBin);
-        }
-        return total;
-    }
-
-    private static long CalculateBrowserCacheSize()
-    {
-        long total = 0;
-        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string localAppData = _fs.GetSpecialFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
         // Google Chrome
         string chromeUserData = Path.Combine(localAppData, "Google", "Chrome", "User Data");
@@ -342,31 +365,25 @@ public sealed class DiskCleanerService
         string edgeUserData = Path.Combine(localAppData, "Microsoft", "Edge", "User Data");
         total += CalculateChromiumCacheSize(edgeUserData);
 
+        // Mozilla Firefox
+        string firefoxProfiles = Path.Combine(localAppData, "Mozilla", "Firefox", "Profiles");
+        total += CalculateFirefoxCacheSize(firefoxProfiles);
+
         return total;
     }
 
-    private static long CalculateChromiumCacheSize(string userDataPath)
+    private long CalculateFirefoxCacheSize(string profilesPath)
     {
-        if (!Directory.Exists(userDataPath)) return 0;
+        if (!_fs.DirectoryExists(profilesPath)) return 0;
         long total = 0;
         try
         {
-            var dir = new DirectoryInfo(userDataPath);
-            foreach (var subDir in dir.EnumerateDirectories())
+            foreach (var subDir in _fs.EnumerateDirectories(profilesPath))
             {
-                if (BrowserProfileRegex.IsMatch(subDir.Name))
-                {
-                    foreach (string cacheName in BrowserCacheFolderNames)
-                    {
-                        string target = Path.Combine(subDir.FullName, cacheName);
-                        total += CalculateDirectorySize(target);
-                    }
-                }
+                total += _fs.CalculateDirectorySize(Path.Combine(subDir, "cache2"));
+                total += _fs.CalculateDirectorySize(Path.Combine(subDir, "startupCache"));
+                total += _fs.CalculateDirectorySize(Path.Combine(subDir, "jumpListCache"));
             }
-
-            // Root shader caches
-            total += CalculateDirectorySize(Path.Combine(userDataPath, "ShaderCache"));
-            total += CalculateDirectorySize(Path.Combine(userDataPath, "GrShaderCache"));
         }
         catch
         {
@@ -375,49 +392,79 @@ public sealed class DiskCleanerService
         return total;
     }
 
-    private static long CalculateGpuCacheSize()
+    private long CalculateChromiumCacheSize(string userDataPath)
+    {
+        if (!_fs.DirectoryExists(userDataPath)) return 0;
+        long total = 0;
+        try
+        {
+            foreach (var subDir in _fs.EnumerateDirectories(userDataPath))
+            {
+                string dirName = Path.GetFileName(subDir);
+                if (BrowserProfileRegex.IsMatch(dirName))
+                {
+                    foreach (string cacheName in BrowserCacheFolderNames)
+                    {
+                        string target = Path.Combine(subDir, cacheName);
+                        total += _fs.CalculateDirectorySize(target);
+                    }
+                }
+            }
+
+            // Root shader caches
+            total += _fs.CalculateDirectorySize(Path.Combine(userDataPath, "ShaderCache"));
+            total += _fs.CalculateDirectorySize(Path.Combine(userDataPath, "GrShaderCache"));
+        }
+        catch
+        {
+            // Ignore
+        }
+        return total;
+    }
+
+    private long CalculateGpuCacheSize()
     {
         long total = 0;
-        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string localAppData = _fs.GetSpecialFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-        total += CalculateDirectorySize(Path.Combine(localAppData, "NVIDIA", "DXCache"));
-        total += CalculateDirectorySize(Path.Combine(localAppData, "NVIDIA", "GLCache"));
-        total += CalculateDirectorySize(Path.Combine(localAppData, "AMD", "DxCache"));
-        total += CalculateDirectorySize(Path.Combine(localAppData, "D3DSCache"));
+        total += _fs.CalculateDirectorySize(Path.Combine(localAppData, "NVIDIA", "DXCache"));
+        total += _fs.CalculateDirectorySize(Path.Combine(localAppData, "NVIDIA", "GLCache"));
+        total += _fs.CalculateDirectorySize(Path.Combine(localAppData, "AMD", "DxCache"));
+        total += _fs.CalculateDirectorySize(Path.Combine(localAppData, "D3DSCache"));
 
         return total;
     }
 
-    private static long CalculateDevCacheSize()
+    private long CalculateDevCacheSize()
     {
         long total = 0;
-        string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string userProfile = _fs.GetSpecialFolderPath(Environment.SpecialFolder.UserProfile);
+        string localAppData = _fs.GetSpecialFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string appData = _fs.GetSpecialFolderPath(Environment.SpecialFolder.ApplicationData);
 
         // NuGet http-cache & global packages
-        total += CalculateDirectorySize(Path.Combine(localAppData, "NuGet", "v3-cache"));
-        total += CalculateDirectorySize(Path.Combine(localAppData, "NuGet", "plugins-cache"));
-        total += CalculateDirectorySize(Path.Combine(userProfile, ".nuget", "packages"));
+        total += _fs.CalculateDirectorySize(Path.Combine(localAppData, "NuGet", "v3-cache"));
+        total += _fs.CalculateDirectorySize(Path.Combine(localAppData, "NuGet", "plugins-cache"));
+        total += _fs.CalculateDirectorySize(Path.Combine(userProfile, ".nuget", "packages"));
 
         // pip cache
-        total += CalculateDirectorySize(Path.Combine(localAppData, "pip", "cache"));
+        total += _fs.CalculateDirectorySize(Path.Combine(localAppData, "pip", "cache"));
 
         // npm cache
-        string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        total += CalculateDirectorySize(Path.Combine(appData, "npm-cache"));
+        total += _fs.CalculateDirectorySize(Path.Combine(appData, "npm-cache"));
 
         return total;
     }
 
-    private static long CalculateCrashDumpsSize()
+    private long CalculateCrashDumpsSize()
     {
         long total = 0;
-        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string windowsDir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+        string localAppData = _fs.GetSpecialFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string windowsDir = _fs.GetSpecialFolderPath(Environment.SpecialFolder.Windows);
 
-        total += CalculateDirectorySize(Path.Combine(localAppData, "CrashDumps"));
-        total += CalculateDirectorySize(Path.Combine(localAppData, "Microsoft", "Windows", "WER"));
-        total += CalculateDirectorySize(Path.Combine(windowsDir, "Minidump"));
+        total += _fs.CalculateDirectorySize(Path.Combine(localAppData, "CrashDumps"));
+        total += _fs.CalculateDirectorySize(Path.Combine(localAppData, "Microsoft", "Windows", "WER"));
+        total += _fs.CalculateDirectorySize(Path.Combine(windowsDir, "Minidump"));
 
         return total;
     }
@@ -426,62 +473,42 @@ public sealed class DiskCleanerService
 
     #region Cleaning Helpers
 
-    public static (long FreedBytes, int CleanedFiles, int LockedFiles) CleanDirectoryContents(string directoryPath)
+    private DiskCleanCategoryReport CleanDirectoryCategory(string categoryId, string directoryPath)
     {
-        if (!Directory.Exists(directoryPath)) return (0, 0, 0);
-
-        long freed = 0;
-        int cleaned = 0;
-        int locked = 0;
-
-        var dirInfo = new DirectoryInfo(directoryPath);
-
-        // Files
-        foreach (var file in dirInfo.EnumerateFiles("*", new EnumerationOptions { IgnoreInaccessible = true }))
+        if (!_fs.DirectoryExists(directoryPath))
         {
-            try
-            {
-                long len = file.Length;
-                file.Attributes = FileAttributes.Normal;
-                file.Delete();
-                freed += len;
-                cleaned++;
-            }
-            catch
-            {
-                locked++;
-            }
+            return new DiskCleanCategoryReport(
+                categoryId,
+                DiskCleanCategoryStatus.Skipped,
+                FreedBytes: 0,
+                CleanedCount: 0,
+                LockedCount: 0,
+                FailureReason: "Directory does not exist.");
         }
 
-        // Subdirectories
-        foreach (var subDir in dirInfo.EnumerateDirectories("*", new EnumerationOptions { IgnoreInaccessible = true }))
-        {
-            try
-            {
-                long subFreed = CalculateDirectorySize(subDir.FullName);
-                subDir.Delete(true);
-                freed += subFreed;
-                cleaned++;
-            }
-            catch
-            {
-                // If directory couldn't be deleted as a whole, try inner contents
-                var (innerFreed, innerCleaned, innerLocked) = CleanDirectoryContents(subDir.FullName);
-                freed += innerFreed;
-                cleaned += innerCleaned;
-                locked += innerLocked;
-            }
-        }
+        var (freed, cleaned, locked) = _fs.CleanDirectoryContents(directoryPath);
 
-        return (freed, cleaned, locked);
+        DiskCleanCategoryStatus status = locked > 0
+            ? (cleaned > 0 ? DiskCleanCategoryStatus.PartiallyCleaned : DiskCleanCategoryStatus.Failed)
+            : DiskCleanCategoryStatus.Succeeded;
+
+        return new DiskCleanCategoryReport(
+            categoryId,
+            status,
+            freed,
+            cleaned,
+            locked,
+            locked > 0 ? $"{locked} files were locked by running processes." : null);
     }
 
-    private static (long FreedBytes, int CleanedFiles, int LockedFiles) CleanBrowserCaches()
+    private DiskCleanCategoryReport CleanBrowserCaches()
     {
         long freed = 0;
         int cleaned = 0;
         int locked = 0;
-        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        int accessErrors = 0;
+        bool anyCacheFound = false;
+        string localAppData = _fs.GetSpecialFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
         var userDatas = new[]
         {
@@ -491,46 +518,133 @@ public sealed class DiskCleanerService
 
         foreach (var userData in userDatas)
         {
-            if (!Directory.Exists(userData)) continue;
+            if (!_fs.DirectoryExists(userData)) continue;
             try
             {
-                var dir = new DirectoryInfo(userData);
-                foreach (var subDir in dir.EnumerateDirectories())
+                foreach (var subDir in _fs.EnumerateDirectories(userData))
                 {
-                    if (BrowserProfileRegex.IsMatch(subDir.Name))
+                    string dirName = Path.GetFileName(subDir);
+                    if (BrowserProfileRegex.IsMatch(dirName))
                     {
                         foreach (string cacheName in BrowserCacheFolderNames)
                         {
-                            string target = Path.Combine(subDir.FullName, cacheName);
-                            var res = CleanDirectoryContents(target);
+                            string target = Path.Combine(subDir, cacheName);
+                            if (_fs.DirectoryExists(target))
+                            {
+                                anyCacheFound = true;
+                                var res = _fs.CleanDirectoryContents(target);
+                                freed += res.FreedBytes;
+                                cleaned += res.CleanedFiles;
+                                locked += res.LockedFiles;
+                            }
+                        }
+                    }
+                }
+
+                string sc = Path.Combine(userData, "ShaderCache");
+                if (_fs.DirectoryExists(sc))
+                {
+                    anyCacheFound = true;
+                    var r1 = _fs.CleanDirectoryContents(sc);
+                    freed += r1.FreedBytes;
+                    cleaned += r1.CleanedFiles;
+                    locked += r1.LockedFiles;
+                }
+
+                string gsc = Path.Combine(userData, "GrShaderCache");
+                if (_fs.DirectoryExists(gsc))
+                {
+                    anyCacheFound = true;
+                    var r2 = _fs.CleanDirectoryContents(gsc);
+                    freed += r2.FreedBytes;
+                    cleaned += r2.CleanedFiles;
+                    locked += r2.LockedFiles;
+                }
+            }
+            catch
+            {
+                accessErrors++;
+            }
+        }
+
+        // Mozilla Firefox
+        string firefoxProfiles = Path.Combine(localAppData, "Mozilla", "Firefox", "Profiles");
+        if (_fs.DirectoryExists(firefoxProfiles))
+        {
+            try
+            {
+                foreach (var profileDir in _fs.EnumerateDirectories(firefoxProfiles))
+                {
+                    foreach (string ffCache in new[] { "cache2", "startupCache", "jumpListCache" })
+                    {
+                        string target = Path.Combine(profileDir, ffCache);
+                        if (_fs.DirectoryExists(target))
+                        {
+                            anyCacheFound = true;
+                            var res = _fs.CleanDirectoryContents(target);
                             freed += res.FreedBytes;
                             cleaned += res.CleanedFiles;
                             locked += res.LockedFiles;
                         }
                     }
                 }
-
-                var r1 = CleanDirectoryContents(Path.Combine(userData, "ShaderCache"));
-                var r2 = CleanDirectoryContents(Path.Combine(userData, "GrShaderCache"));
-                freed += r1.FreedBytes + r2.FreedBytes;
-                cleaned += r1.CleanedFiles + r2.CleanedFiles;
-                locked += r1.LockedFiles + r2.LockedFiles;
             }
             catch
             {
-                // Ignore
+                accessErrors++;
             }
         }
 
-        return (freed, cleaned, locked);
+        if (!anyCacheFound && accessErrors == 0)
+        {
+            return new DiskCleanCategoryReport(
+                CategoryBrowserCache,
+                DiskCleanCategoryStatus.Skipped,
+                0, 0, 0, "No browser cache folders were found on disk.");
+        }
+
+        if (accessErrors > 0 && cleaned == 0 && locked == 0)
+        {
+            return new DiskCleanCategoryReport(
+                CategoryBrowserCache,
+                DiskCleanCategoryStatus.Failed,
+                0, 0, 0, "Could not access browser profile directories.");
+        }
+
+        DiskCleanCategoryStatus status;
+        string? reason = null;
+
+        if (locked > 0 || accessErrors > 0)
+        {
+            status = (cleaned > 0 || freed > 0)
+                ? DiskCleanCategoryStatus.PartiallyCleaned
+                : DiskCleanCategoryStatus.Failed;
+
+            var reasons = new List<string>();
+            if (locked > 0) reasons.Add($"{locked} browser cache files were locked (close Chrome, Edge, or Firefox before cleanup).");
+            if (accessErrors > 0) reasons.Add($"{accessErrors} profile directories had access errors.");
+            reason = string.Join(" ", reasons);
+        }
+        else
+        {
+            status = DiskCleanCategoryStatus.Succeeded;
+        }
+
+        return new DiskCleanCategoryReport(
+            CategoryBrowserCache,
+            status,
+            freed,
+            cleaned,
+            locked,
+            reason);
     }
 
-    private static (long FreedBytes, int CleanedFiles, int LockedFiles) CleanGpuCaches()
+    private DiskCleanCategoryReport CleanGpuCaches()
     {
         long freed = 0;
         int cleaned = 0;
         int locked = 0;
-        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string localAppData = _fs.GetSpecialFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
         var paths = new[]
         {
@@ -540,24 +654,41 @@ public sealed class DiskCleanerService
             Path.Combine(localAppData, "D3DSCache")
         };
 
+        bool anyFound = false;
         foreach (var p in paths)
         {
-            var res = CleanDirectoryContents(p);
-            freed += res.FreedBytes;
-            cleaned += res.CleanedFiles;
-            locked += res.LockedFiles;
+            if (_fs.DirectoryExists(p))
+            {
+                anyFound = true;
+                var res = _fs.CleanDirectoryContents(p);
+                freed += res.FreedBytes;
+                cleaned += res.CleanedFiles;
+                locked += res.LockedFiles;
+            }
         }
 
-        return (freed, cleaned, locked);
+        if (!anyFound)
+        {
+            return new DiskCleanCategoryReport(
+                CategoryGpuCache,
+                DiskCleanCategoryStatus.Skipped,
+                0, 0, 0, "No GPU shader cache folders found.");
+        }
+
+        DiskCleanCategoryStatus status = locked > 0
+            ? (cleaned > 0 ? DiskCleanCategoryStatus.PartiallyCleaned : DiskCleanCategoryStatus.Failed)
+            : DiskCleanCategoryStatus.Succeeded;
+
+        return new DiskCleanCategoryReport(CategoryGpuCache, status, freed, cleaned, locked);
     }
 
-    private static (long FreedBytes, int CleanedFiles, int LockedFiles) CleanCrashDumps()
+    private DiskCleanCategoryReport CleanCrashDumps()
     {
         long freed = 0;
         int cleaned = 0;
         int locked = 0;
-        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        string windowsDir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+        string localAppData = _fs.GetSpecialFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string windowsDir = _fs.GetSpecialFolderPath(Environment.SpecialFolder.Windows);
 
         var paths = new[]
         {
@@ -566,50 +697,101 @@ public sealed class DiskCleanerService
             Path.Combine(windowsDir, "Minidump")
         };
 
+        bool anyFound = false;
         foreach (var p in paths)
         {
-            var res = CleanDirectoryContents(p);
-            freed += res.FreedBytes;
-            cleaned += res.CleanedFiles;
-            locked += res.LockedFiles;
-        }
-
-        return (freed, cleaned, locked);
-    }
-
-    private static void CleanDevCaches()
-    {
-        // dotnet nuget locals all --clear
-        TryRunSilentProcess("dotnet", "nuget locals all --clear");
-
-        // npm cache clean --force
-        TryRunSilentProcess("npm", "cache clean --force");
-
-        // pip cache purge
-        TryRunSilentProcess("pip", "cache purge");
-    }
-
-    private static void TryRunSilentProcess(string fileName, string arguments)
-    {
-        try
-        {
-            using var proc = new Process();
-            proc.StartInfo = new ProcessStartInfo
+            if (_fs.DirectoryExists(p))
             {
-                FileName = fileName,
-                Arguments = arguments,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            };
-            proc.Start();
-            proc.WaitForExit(5000);
+                anyFound = true;
+                var res = _fs.CleanDirectoryContents(p);
+                freed += res.FreedBytes;
+                cleaned += res.CleanedFiles;
+                locked += res.LockedFiles;
+            }
         }
-        catch
+
+        if (!anyFound)
         {
-            // If tool is not installed, ignore gracefully
+            return new DiskCleanCategoryReport(
+                CategoryCrashDumps,
+                DiskCleanCategoryStatus.Skipped,
+                0, 0, 0, "No crash dump folders found.");
         }
+
+        DiskCleanCategoryStatus status = locked > 0
+            ? (cleaned > 0 ? DiskCleanCategoryStatus.PartiallyCleaned : DiskCleanCategoryStatus.Failed)
+            : DiskCleanCategoryStatus.Succeeded;
+
+        return new DiskCleanCategoryReport(CategoryCrashDumps, status, freed, cleaned, locked);
+    }
+
+    private async Task<DiskCleanCategoryReport> CleanDevCachesAsync(long beforeSizeBytes, CancellationToken cancellationToken)
+    {
+        int successfulTools = 0;
+        int failedTools = 0;
+        int timedOutTools = 0;
+        var timeout = TimeSpan.FromSeconds(15);
+
+        // 1. dotnet nuget locals all --clear
+        var nugetResult = await _processRunner.RunSilentProcessAsync("dotnet", "nuget locals all --clear", timeout, cancellationToken).ConfigureAwait(false);
+        if (nugetResult.Success) successfulTools++;
+        else if (nugetResult.TimedOut) timedOutTools++;
+        else if (nugetResult.ExitCode != -1) failedTools++;
+
+        // 2. npm cache clean --force
+        var npmResult = await _processRunner.RunSilentProcessAsync("npm", "cache clean --force", timeout, cancellationToken).ConfigureAwait(false);
+        if (npmResult.Success) successfulTools++;
+        else if (npmResult.TimedOut) timedOutTools++;
+        else if (npmResult.ExitCode != -1) failedTools++;
+
+        // 3. pip cache purge
+        var pipResult = await _processRunner.RunSilentProcessAsync("pip", "cache purge", timeout, cancellationToken).ConfigureAwait(false);
+        if (pipResult.Success) successfulTools++;
+        else if (pipResult.TimedOut) timedOutTools++;
+        else if (pipResult.ExitCode != -1) failedTools++;
+
+        long after = CalculateDevCacheSize();
+        long freed = Math.Max(0, beforeSizeBytes - after);
+
+        int totalErrors = failedTools + timedOutTools;
+
+        if (successfulTools > 0)
+        {
+            DiskCleanCategoryStatus status = totalErrors > 0
+                ? DiskCleanCategoryStatus.PartiallyCleaned
+                : DiskCleanCategoryStatus.Succeeded;
+
+            string? reason = totalErrors > 0
+                ? $"{totalErrors} CLI package tools failed or timed out ({timedOutTools} timed out)."
+                : null;
+
+            return new DiskCleanCategoryReport(
+                CategoryDevCache,
+                status,
+                freed,
+                CleanedCount: successfulTools,
+                LockedCount: totalErrors,
+                reason);
+        }
+
+        if (totalErrors > 0)
+        {
+            return new DiskCleanCategoryReport(
+                CategoryDevCache,
+                DiskCleanCategoryStatus.Failed,
+                FreedBytes: freed,
+                CleanedCount: 0,
+                LockedCount: totalErrors,
+                FailureReason: timedOutTools > 0
+                    ? $"{totalErrors} package tools failed or timed out ({timedOutTools} timed out)."
+                    : "Package managers returned non-zero exit codes.");
+        }
+
+        // None of the tools are installed on this system
+        return new DiskCleanCategoryReport(
+            CategoryDevCache,
+            DiskCleanCategoryStatus.Skipped,
+            0, 0, 0, "No supported developer package CLI tools (dotnet, npm, pip) were found.");
     }
 
     #endregion

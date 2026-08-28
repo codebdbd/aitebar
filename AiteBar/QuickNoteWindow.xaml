@@ -3,9 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         xmlns:sys="clr-namespace:System;assembly=mscorlib"
+        Title="{local:Loc ResourceKey=QuickNote_Title}"
+        UseLayoutRounding="True" SnapsToDevicePixels="True"
         Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
         Width="580" Height="430" MinWidth="460" MinHeight="320"
-        WindowStartupLocation="CenterOwner" WindowStyle="None" AllowsTransparency="True"
+        WindowStartupLocation="CenterOwner" WindowStyle="SingleBorderWindow" AllowsTransparency="False"
         Background="Transparent" Foreground="White" ResizeMode="CanResize"
         WindowClass="OverlayWidget"
         ShowInTaskbar="False" Topmost="True"
@@ -13,26 +15,30 @@
         LocationChanged="Window_LocationChanged" SizeChanged="Window_SizeChanged">
 
     <WindowChrome.WindowChrome>
-        <WindowChrome ResizeBorderThickness="6" CaptionHeight="0" GlassFrameThickness="0" CornerRadius="0"/>
+        <!-- The 8px resize border + 28px caption fill the 36px header. Keep native hit testing for Snap. -->
+        <!-- A nonzero DWM frame prevents WindowChrome from installing a region that disables native rounded corners. -->
+        <WindowChrome ResizeBorderThickness="8" CaptionHeight="28" GlassFrameThickness="1" CornerRadius="0" UseAeroCaptionButtons="False"/>
     </WindowChrome.WindowChrome>
 
     <Window.Resources>
         <SolidColorBrush x:Key="QuickNoteHoverBrush" Color="#303238"/>
         <SolidColorBrush x:Key="QuickNoteHoverForegroundBrush" Color="#F4F4F6"/>
+        <SolidColorBrush x:Key="QuickNoteFocusBrush" Color="#4EA6FF"/>
         <Style x:Key="QuickNoteIconButtonStyle" TargetType="Button">
             <Setter Property="Width" Value="32"/>
             <Setter Property="Height" Value="32"/>
             <Setter Property="Margin" Value="2,0,0,0"/>
-            <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
+            <Setter Property="FontFamily" Value="pack://application:,,,/AiteBar;component/Resources/#FluentSystemIcons-Regular"/>
             <Setter Property="FontSize" Value="18"/>
-            <Setter Property="Foreground" Value="#AFAFB7"/>
+            <Setter Property="Foreground" Value="{DynamicResource QuickNoteChromeTextBrush}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
             <Setter Property="Cursor" Value="Hand"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="8">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="4" BorderThickness="1" BorderBrush="Transparent">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -40,9 +46,20 @@
                                 <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
                                 <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
                             </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#70B7FF"/>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsKeyboardFocused" Value="True"/>
+                                    <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource QuickNoteFocusBrush}"/>
                                 <Setter TargetName="Bd" Property="BorderThickness" Value="1"/>
+                            </MultiTrigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.7"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Bd" Property="Opacity" Value="0.35"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -50,82 +67,12 @@
             </Setter>
         </Style>
 
-        <Style x:Key="DangerIconButtonStyle" TargetType="Button" BasedOn="{StaticResource QuickNoteIconButtonStyle}">
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Foreground" Value="#FF7272"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-        <Style x:Key="IconToggleButtonStyle" TargetType="ToggleButton">
-            <Setter Property="Width" Value="32"/>
-            <Setter Property="Height" Value="32"/>
-            <Setter Property="Margin" Value="2,0,0,0"/>
-            <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="Foreground" Value="#AFAFB7"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="FormatButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="30"/>
+        <Style x:Key="FormatButtonStyle" TargetType="Button" BasedOn="{StaticResource QuickNoteIconButtonStyle}">
+            <Setter Property="Width" Value="26"/>
             <Setter Property="Height" Value="28"/>
             <Setter Property="Margin" Value="0,0,2,0"/>
             <Setter Property="Padding" Value="0"/>
-            <Setter Property="Foreground" Value="#AFAFB7"/>
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
-            <Setter Property="FontSize" Value="18"/>
-            <Setter Property="SnapsToDevicePixels" Value="True"/>
-            <Setter Property="UseLayoutRounding" Value="True"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center"
-                                              VerticalAlignment="Center"
-                                              RecognizesAccessKey="True"
-                                              SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
-                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Bd" Property="BorderBrush" Value="#70B7FF"/>
-                                <Setter TargetName="Bd" Property="BorderThickness" Value="1"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
-
         <Style x:Key="QuickNoteScrollBarStyle"
                TargetType="ScrollBar"
                BasedOn="{StaticResource DarkScrollBarStyle}"/>
@@ -160,11 +107,11 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="36"/>
                 <RowDefinition Height="*"/>
-                <RowDefinition Height="34"/>
-                <RowDefinition Height="36"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <Border x:Name="HeaderBar" Grid.Row="0" BorderThickness="0" Background="Transparent" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Border x:Name="HeaderBar" Grid.Row="0" BorderThickness="0" Background="Transparent">
                 <Grid Margin="6,2" Background="Transparent">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -172,14 +119,21 @@
                     </Grid.ColumnDefinitions>
 
                     <ToggleButton x:Name="BtnPin"
+                                  WindowChrome.IsHitTestVisibleInChrome="True"
                                   HorizontalAlignment="Left"
-                                  Style="{StaticResource WindowPinToggleButtonStyle}"
+                                  Style="{StaticResource WindowPinToggleButtonStyle}" Foreground="{DynamicResource QuickNoteChromeTextBrush}"
+                                  FontFamily="pack://application:,,,/AiteBar;component/Resources/#FluentSystemIcons-Regular"
                                   ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
                                   AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Pin}"
                                   IsChecked="{Binding IsPinned, RelativeSource={RelativeSource AncestorType=local:DarkWindow}, Mode=TwoWay}"
                                   Checked="BtnPin_Checked"
                                   Unchecked="BtnPin_Checked"/>
-                    <Button Grid.Column="1" Style="{StaticResource WindowCloseButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" AutomationProperties.Name="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button Content="&#xF199;" Style="{StaticResource QuickNoteIconButtonStyle}" Command="ApplicationCommands.Undo" CommandTarget="{Binding ElementName=TxtNote}" ToolTip="{local:Loc ResourceKey=QuickNote_Undo}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Undo}"/>
+                        <Button Content="&#xF16E;" Style="{StaticResource QuickNoteIconButtonStyle}" Command="ApplicationCommands.Redo" CommandTarget="{Binding ElementName=TxtNote}" ToolTip="{local:Loc ResourceKey=QuickNote_Redo}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Redo}"/>
+                        <Button Content="&#xF2F5;" Style="{StaticResource QuickNoteIconButtonStyle}" Click="BtnTheme_Click" ToolTip="{local:Loc ResourceKey=QuickNote_Theme}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Theme}"/>
+                        <Button Style="{StaticResource WindowCloseButtonStyle}" Foreground="{DynamicResource QuickNoteChromeTextBrush}" FontFamily="pack://application:,,,/AiteBar;component/Resources/#FluentSystemIcons-Regular" ToolTip="{local:Loc ResourceKey=Common_Close}" AutomationProperties.Name="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
+                    </StackPanel>
                 </Grid>
             </Border>
 
@@ -187,6 +141,7 @@
             <Border Grid.Row="1" Margin="8,2,4,0" CornerRadius="0" Background="Transparent" BorderThickness="0">
                 <Grid>
                     <RichTextBox x:Name="TxtNote"
+                                 AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Title}"
                                  Style="{StaticResource QuickNoteEditorStyle}"
                                  Margin="0"
                                  Background="Transparent"
@@ -251,41 +206,10 @@
                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xEA86;"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
-                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Find}" Click="BtnFind_Click" InputGestureText="Ctrl+F">
-                                    <MenuItem.Icon>
-                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF68F;"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
                                 <Separator Style="{StaticResource DarkMenuSeparator}"/>
-                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_TaskList}" Click="BtnTaskList_Click" InputGestureText="Ctrl+Shift+C">
-                                    <MenuItem.Icon>
-                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF28D;"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_ResetTasks}" Click="BtnResetTasks_Click">
-                                    <MenuItem.Icon>
-                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF291;"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_ToggleAllTasks}" Click="BtnToggleAllTasks_Click">
-                                    <MenuItem.Icon>
-                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF190;"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_MarkAllTasksCompleted}" Click="BtnMarkAllTasksCompleted_Click">
-                                    <MenuItem.Icon>
-                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF28D;"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                 <Separator Style="{StaticResource DarkMenuSeparator}"/>
-                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_Theme}" Click="BtnTheme_Click">
+                                <MenuItem Header="{local:Loc ResourceKey=QuickNote_Theme}" Click="BtnTheme_Click">
                                     <MenuItem.Icon>
                                         <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF2F5;"/>
-                                    </MenuItem.Icon>
-                                </MenuItem>
-                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_OpenFile}" Click="BtnOpenFile_Click">
-                                    <MenuItem.Icon>
-                                        <local:CenteredGlyphTextBlock Style="{StaticResource ContextMenuIconTextStyle}" Text="&#xF42E;"/>
                                     </MenuItem.Icon>
                                 </MenuItem>
                                 <MenuItem Header="{local:Loc ResourceKey=QuickNote_Clear}" Click="BtnClear_Click">
@@ -310,96 +234,16 @@
                                FontSize="14"
                                Margin="0,4,0,0"
                                IsHitTestVisible="False"/>
-
-                    <Border x:Name="FindPanel"
-                            VerticalAlignment="Top"
-                            HorizontalAlignment="Right"
-                            Margin="0,4,12,0"
-                            Background="#2A2A2D"
-                            BorderBrush="#454548"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="6,4"
-                            Visibility="Collapsed"
-                            Panel.ZIndex="100">
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBox x:Name="TxtFindQuery"
-                                     Width="140"
-                                     Height="22"
-                                     Background="#1E1E20"
-                                     Foreground="#EDEDED"
-                                     CaretBrush="#70B7FF"
-                                     BorderThickness="1"
-                                     BorderBrush="#3D3D40"
-                                     Padding="4,1"
-                                     FontSize="12"
-                                     VerticalContentAlignment="Center"
-                                     KeyDown="TxtFindQuery_KeyDown"
-                                     TextChanged="TxtFindQuery_TextChanged"/>
-                            <CheckBox x:Name="ChkFindMatchCase"
-                                      Margin="4,0,0,0"
-                                      Padding="2,0"
-                                      FontSize="11"
-                                      Foreground="#BDBDC1"
-                                      VerticalAlignment="Center"
-                                      ToolTip="{local:Loc ResourceKey=QuickNote_FindMatchCase}"
-                                      AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_FindMatchCase}"
-                                      Content="Aa"
-                                      Unchecked="ChkFindOptions_Changed"
-                                      Checked="ChkFindOptions_Changed"/>
-                            <CheckBox x:Name="ChkFindWholeWord"
-                                      Margin="2,0,0,0"
-                                      Padding="2,0"
-                                      FontSize="11"
-                                      Foreground="#BDBDC1"
-                                      VerticalAlignment="Center"
-                                      ToolTip="{local:Loc ResourceKey=QuickNote_FindWholeWord}"
-                                      AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_FindWholeWord}"
-                                      Content="&quot;ab&quot;"
-                                      Unchecked="ChkFindOptions_Changed"
-                                      Checked="ChkFindOptions_Changed"/>
-                            <TextBlock x:Name="TxtFindStats"
-                                       Margin="6,0,6,0"
-                                       Foreground="#8A8A8E"
-                                       FontSize="11"
-                                       VerticalAlignment="Center"
-                                       Text="0/0"/>
-                            <Button x:Name="BtnFindPrev"
-                                    Style="{StaticResource QuickNoteIconButtonStyle}"
-                                    Width="22" Height="22"
-                                    FontSize="10"
-                                    ToolTip="{local:Loc ResourceKey=QuickNote_FindPrevious}"
-                                    AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_FindPrevious}"
-                                    Click="BtnFindPrev_Click"
-                                    Content="▲"/>
-                            <Button x:Name="BtnFindNext"
-                                    Style="{StaticResource QuickNoteIconButtonStyle}"
-                                    Width="22" Height="22"
-                                    FontSize="10"
-                                    ToolTip="{local:Loc ResourceKey=QuickNote_FindNext}"
-                                    AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_FindNext}"
-                                    Click="BtnFindNext_Click"
-                                    Content="▼"/>
-                            <Button x:Name="BtnCloseFind"
-                                    Style="{StaticResource DangerIconButtonStyle}"
-                                    Width="22" Height="22"
-                                    FontSize="10"
-                                    ToolTip="{local:Loc ResourceKey=Common_Close}"
-                                    AutomationProperties.Name="{local:Loc ResourceKey=Common_Close}"
-                                    Click="BtnCloseFind_Click"
-                                    Content="✕"/>
-                        </StackPanel>
-                    </Border>
                 </Grid>
             </Border>
 
             <Border Grid.Row="2" BorderThickness="0" Background="Transparent">
-                <StackPanel Orientation="Horizontal" Margin="8,0,4,0" VerticalAlignment="Center" Height="30">
+                <StackPanel x:Name="FormattingToolbar" Orientation="Horizontal" Margin="8,0,4,0" VerticalAlignment="Center" KeyboardNavigation.TabNavigation="Continue">
                     <Button Content="A-" FontFamily="Segoe UI" FontSize="14" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_DecreaseFont}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_DecreaseFont}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnDecreaseFontSize_Click"/>
                     <Button Content="A+" FontFamily="Segoe UI" FontSize="14" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_IncreaseFont}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_IncreaseFont}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnIncreaseFontSize_Click"/>
-                    <Button Content="&#xE241;" FontFamily="pack://application:,,,/Resources/#Material Icons" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_BulletList}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_BulletList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnBullet_Click"/>
+                    <Button Content="&#xE241;" FontFamily="pack://application:,,,/AiteBar;component/Resources/#Material Icons" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_BulletList}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_BulletList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnBullet_Click"/>
                     <Button Content="&#xF7FA;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_NumberedList}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_NumberedList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnNumbered_Click"/>
-                    <Button Content="&#xF28D;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_TaskList}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_TaskList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnTaskList_Click"/>
+                    <Button Content="&#xF2A0;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_TaskList}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_TaskList}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnTaskList_Click"/>
                     <Button Content="&#xF7A5;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Bold}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Bold}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnBold_Click"/>
                     <Button Content="&#xF7F4;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Italic}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Italic}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnItalic_Click"/>
                     <Button Content="&#xED60;" Style="{StaticResource FormatButtonStyle}" ToolTip="{local:Loc ResourceKey=QuickNote_Strikethrough}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Strikethrough}" PreviewMouseDown="FormatButton_PreviewMouseDown" Click="BtnStrikethrough_Click"/>
@@ -434,33 +278,26 @@
             </Border>
 
             <Border x:Name="FooterBar" Grid.Row="3" BorderThickness="0">
-                <Grid Margin="24,0,24,4">
+                <Grid Margin="12,2,12,2">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBlock x:Name="TxtSaveStatus" Text="{local:Loc ResourceKey=QuickNote_SavedInitial}"
-                               Foreground="#74757A" FontSize="11" VerticalAlignment="Center"/>
-                    <TextBlock x:Name="TxtStats" Grid.Column="2" Foreground="#74757A" FontSize="11" VerticalAlignment="Center"/>
+                               Foreground="#74757A" FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,8,0" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" AutomationProperties.LiveSetting="Polite"/>
+                    <Button x:Name="BtnRecoveryCopy" Grid.Column="1" Content="&#xF409;" Width="20" Height="16" FontSize="14" Visibility="Collapsed" Style="{StaticResource QuickNoteIconButtonStyle}" Click="BtnRecoveryCopy_Click" ToolTip="{local:Loc ResourceKey=QuickNote_ShowRecoveryCopy}" AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_ShowRecoveryCopy}"/>
+                    <TextBlock x:Name="TxtStats" Grid.Column="2" Foreground="#74757A" FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
                 </Grid>
             </Border>
             </Grid>
         </Border>
 
         <Popup x:Name="ThemePopup" Placement="MousePoint" AllowsTransparency="True" StaysOpen="False">
-            <Border x:Name="ThemePopupBorder" CornerRadius="14" Background="#F8F8F8" BorderBrush="#DDDDDD" BorderThickness="1" Padding="14">
-                <UniformGrid x:Name="ThemePalette" Columns="6"/>
+            <Border x:Name="ThemePopupBorder" CornerRadius="8" Background="#F8F8F8" BorderBrush="#DDDDDD" BorderThickness="0" Padding="0">
+                <UniformGrid x:Name="ThemePalette" Columns="7"/>
             </Border>
         </Popup>
 
-        <Rectangle Height="8" VerticalAlignment="Top" Fill="Transparent" Cursor="SizeNS" Tag="Top" MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"/>
-        <Rectangle Height="8" VerticalAlignment="Bottom" Fill="Transparent" Cursor="SizeNS" Tag="Bottom" MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"/>
-        <Rectangle Width="8" HorizontalAlignment="Left" Fill="Transparent" Cursor="SizeWE" Tag="Left" MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"/>
-        <Rectangle Width="8" HorizontalAlignment="Right" Fill="Transparent" Cursor="SizeWE" Tag="Right" MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"/>
-        <Rectangle Width="14" Height="14" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="Transparent" Cursor="SizeNWSE" Tag="TopLeft" MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"/>
-        <Rectangle Width="14" Height="14" HorizontalAlignment="Right" VerticalAlignment="Top" Fill="Transparent" Cursor="SizeNESW" Tag="TopRight" MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"/>
-        <Rectangle Width="14" Height="14" HorizontalAlignment="Left" VerticalAlignment="Bottom" Fill="Transparent" Cursor="SizeNESW" Tag="BottomLeft" MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"/>
-        <Rectangle Width="22" Height="22" HorizontalAlignment="Right" VerticalAlignment="Bottom" Fill="Transparent" Cursor="SizeNWSE" Tag="BottomRight" MouseLeftButtonDown="ResizeGrip_MouseLeftButtonDown"/>
     </Grid>
 </local:DarkWindow>

@@ -10,13 +10,14 @@ namespace AiteBar;
 internal interface IQuickNotePersistence
 {
     string? LastConflictCopyPath { get; }
+    bool HasLoadFailed => false;
     bool HasExternalChanges();
     Task<bool> HasExternalChangesAsync() => Task.FromResult(HasExternalChanges());
     void Load(FlowDocument document);
     Task SaveAsync(FlowDocument document);
     Task<string> SaveConflictCopyAsync(FlowDocument document);
-    void OpenInEditor();
     void OpenConflictCopy();
+    void RevealConflictCopy() => OpenConflictCopy();
 }
 
 [System.Runtime.Versioning.SupportedOSPlatform("windows6.1")]
@@ -25,13 +26,14 @@ internal sealed class QuickNotePersistence(QuickNoteService service) : IQuickNot
     private readonly QuickNoteService _service = service ?? throw new ArgumentNullException(nameof(service));
 
     public string? LastConflictCopyPath => _service.LastConflictCopyPath;
+    public bool HasLoadFailed => _service.HasLoadFailed;
     public bool HasExternalChanges() => _service.HasExternalChanges();
     public Task<bool> HasExternalChangesAsync() => _service.HasExternalChangesAsync();
     public void Load(FlowDocument document) => _service.Load(document);
     public Task SaveAsync(FlowDocument document) => _service.SaveAsync(document);
     public Task<string> SaveConflictCopyAsync(FlowDocument document) => _service.SaveConflictCopyAsync(document);
-    public void OpenInEditor() => _service.OpenInEditor();
     public void OpenConflictCopy() => _service.OpenConflictCopy();
+    public void RevealConflictCopy() => _service.RevealConflictCopy();
 }
 
 internal interface IQuickNoteClipboard

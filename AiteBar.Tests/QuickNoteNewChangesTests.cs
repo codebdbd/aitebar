@@ -139,7 +139,6 @@ public sealed class QuickNoteNewChangesTests
         public void Load(FlowDocument document) { }
         public Task SaveAsync(FlowDocument document) => Task.CompletedTask;
         public Task<string> SaveConflictCopyAsync(FlowDocument document) => Task.FromResult(string.Empty);
-        public void OpenInEditor() { }
         public void OpenConflictCopy() { }
     }
 }

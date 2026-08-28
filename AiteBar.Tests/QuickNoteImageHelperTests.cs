@@ -38,6 +38,37 @@ public sealed class QuickNoteImageHelperTests : IDisposable
         });
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ImageInteraction_DoesNotSelectTaskCheckboxOrItsTemplate(bool isChecked)
+    {
+        RunSta(() =>
+        {
+            var task = QuickNoteDocumentFormatting.CreateTaskCheckbox(isChecked, null, QuickNoteThemeCatalog.Find(null));
+            var checkbox = Assert.IsType<CheckBox>(task.Child);
+            var paragraph = new Paragraph(task);
+            Assert.True(QuickNoteImageHelper.TryCreateInlineImage(CreateBitmap(), out var image));
+            paragraph.Inlines.Add(image!);
+            var editor = new RichTextBox(new FlowDocument(paragraph)) { IsDocumentEnabled = true };
+            using var controller = new QuickNoteImageInteractionController(editor);
+            checkbox.ApplyTemplate();
+            var border = Assert.IsType<Border>(checkbox.Template.FindName("BoxBorder", checkbox));
+
+            foreach (DependencyObject source in new DependencyObject[] { task, checkbox, border })
+            {
+                Assert.True(controller.TrySelectFromMouseInput(image!.Child));
+                Assert.False(controller.TrySelectFromMouseInput(source));
+                Assert.False(controller.HasSelectedImage);
+                Assert.Null(((Image)image.Child).Effect);
+                Assert.False(controller.UpdateCursorFromMouseInput(source));
+                Assert.False(controller.TryDeleteSelected());
+                Assert.Same(task, paragraph.Inlines.FirstInline);
+                Assert.Equal(isChecked, checkbox.IsChecked);
+            }
+        });
+    }
+
     [Fact]
     public void Marker_RejectsMalformedPayload()
     {
@@ -196,6 +227,8 @@ public sealed class QuickNoteImageHelperTests : IDisposable
             Section secondCode = Assert.IsType<Section>(secondReload.Blocks.FirstBlock);
             Assert.True(QuickNoteDocumentFormatting.IsCodeBlock(secondCode));
             Assert.Equal("first\nsecond", QuickNoteDocumentHelper.NormalizeLineEndings(QuickNoteDocumentFormatting.GetCodeBlockText(secondCode)));
+            Assert.Equal(new Thickness(0, 0, 0, 8), secondCode.Padding);
+            Assert.Equal(new Thickness(0, 0, 0, 8), Assert.IsType<BlockUIContainer>(secondCode.Blocks.FirstBlock).Padding);
         });
     }
 

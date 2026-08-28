@@ -15,7 +15,101 @@ namespace AiteBar
         private const string LegacyCodeFenceStart = "```code";
         private const string LegacyCodeFenceEnd = "```";
 
-        public static FlowDocument CreateExportDocument(FlowDocument source, bool convertImagesToMarkers = true)
+        public static FlowDocument CreatePackageDocument(FlowDocument source)
+        {
+            var export = new FlowDocument { PagePadding = source.PagePadding, FontFamily = source.FontFamily, FontSize = source.FontSize };
+            foreach (Block block in source.Blocks) export.Blocks.Add(ClonePackageBlock(block));
+            return export;
+        }
+
+        private static Block ClonePackageBlock(Block source)
+        {
+            if (source is Paragraph paragraph)
+            {
+                if (QuickNoteDocumentFormatting.IsTaskParagraph(paragraph, out bool isChecked, out _, out _))
+                {
+                    var projection = new FlowDocument();
+                    AddTaskParagraph(projection, paragraph, isChecked, convertImagesToMarkers: false);
+                    Block task = projection.Blocks.FirstBlock!;
+                    projection.Blocks.Remove(task);
+                    return task;
+                }
+                var clone = CreateParagraphShell(paragraph);
+                foreach (Inline inline in paragraph.Inlines) clone.Inlines.Add(QuickNoteDocumentContract.CloneInline(inline, strict: true));
+                return clone;
+            }
+            if (source is Section section)
+            {
+                var clone = new Section();
+                CopyLocalValues(section, clone);
+                foreach (Block block in section.Blocks) clone.Blocks.Add(ClonePackageBlock(block));
+                return clone;
+            }
+            if (source is System.Windows.Documents.List list)
+            {
+                var clone = new System.Windows.Documents.List();
+                CopyLocalValues(list, clone);
+                foreach (ListItem item in list.ListItems)
+                {
+                    var itemClone = new ListItem();
+                    CopyLocalValues(item, itemClone);
+                    foreach (Block block in item.Blocks) itemClone.Blocks.Add(ClonePackageBlock(block));
+                    clone.ListItems.Add(itemClone);
+                }
+                return clone;
+            }
+            if (source is Table table)
+            {
+                var clone = new Table();
+                CopyLocalValues(table, clone);
+                foreach (TableColumn column in table.Columns)
+                {
+                    var columnClone = new TableColumn();
+                    CopyLocalValues(column, columnClone);
+                    clone.Columns.Add(columnClone);
+                }
+                foreach (TableRowGroup group in table.RowGroups)
+                {
+                    var groupClone = new TableRowGroup();
+                    CopyLocalValues(group, groupClone);
+                    foreach (TableRow row in group.Rows)
+                    {
+                        var rowClone = new TableRow();
+                        CopyLocalValues(row, rowClone);
+                        foreach (TableCell cell in row.Cells)
+                        {
+                            var cellClone = new TableCell();
+                            CopyLocalValues(cell, cellClone);
+                            foreach (Block block in cell.Blocks) cellClone.Blocks.Add(ClonePackageBlock(block));
+                            rowClone.Cells.Add(cellClone);
+                        }
+                        groupClone.Rows.Add(rowClone);
+                    }
+                    clone.RowGroups.Add(groupClone);
+                }
+                return clone;
+            }
+            // Runtime headers and other native blocks retain their structure. Never silently
+            // replace a failed primary-format serialization with plain text.
+            using var reader = new StringReader(XamlWriter.Save(source));
+            return (Block)XamlReader.Load(System.Xml.XmlReader.Create(reader));
+        }
+
+        private static void CopyLocalValues(System.Windows.DependencyObject source, System.Windows.DependencyObject target)
+        {
+            var values = source.GetLocalValueEnumerator();
+            while (values.MoveNext())
+            {
+                var property = values.Current.Property;
+                if (property.ReadOnly) continue;
+                object value = source.GetValue(property);
+                target.SetValue(property, value is System.Windows.Freezable freezable ? freezable.CloneCurrentValue() : value);
+            }
+        }
+        public static FlowDocument CreateExportDocument(
+            FlowDocument source,
+            bool convertImagesToMarkers = true,
+            bool convertCodeBlocksToFences = true)
         {
             var exportDocument = new FlowDocument
             {
@@ -26,35 +120,25 @@ namespace AiteBar
 
             foreach (Block block in source.Blocks)
             {
-                if (QuickNoteDocumentFormatting.IsCodeBlock(block))
+                if (convertCodeBlocksToFences && QuickNoteDocumentFormatting.IsCodeBlock(block))
                 {
                     AddCodeFence(exportDocument, (Section)block);
                     continue;
                 }
 
-                if (QuickNoteDocumentFormatting.IsCodeHeader(block))
-                {
-                    continue;
-                }
-
-                if (convertImagesToMarkers && block is Paragraph paragraph && AddParagraphWithEmbeddedImages(exportDocument, paragraph))
+                if (convertCodeBlocksToFences && QuickNoteDocumentFormatting.IsCodeHeader(block))
                 {
                     continue;
                 }
 
                 if (block is Paragraph taskParagraph && QuickNoteDocumentFormatting.IsTaskParagraph(taskParagraph, out bool isChecked, out _, out _))
                 {
-                    var exportParagraph = CreateParagraphShell(taskParagraph);
-                    exportParagraph.Inlines.Add(new Run(isChecked ? "[x] " : "[ ] "));
-                    foreach (Inline inline in taskParagraph.Inlines.Skip(1))
-                    {
-                        exportParagraph.Inlines.Add(CloneInlineOrPlainText(inline));
-                    }
-                    if (exportParagraph.Inlines.Count == 1)
-                    {
-                        exportParagraph.Inlines.Add(new Run(string.Empty));
-                    }
-                    exportDocument.Blocks.Add(exportParagraph);
+                    AddTaskParagraph(exportDocument, taskParagraph, isChecked, convertImagesToMarkers);
+                    continue;
+                }
+
+                if (convertImagesToMarkers && block is Paragraph paragraph && AddParagraphWithEmbeddedImages(exportDocument, paragraph))
+                {
                     continue;
                 }
 
@@ -67,6 +151,40 @@ namespace AiteBar
             }
 
             return exportDocument;
+        }
+
+        private static void AddTaskParagraph(FlowDocument document, Paragraph source, bool isChecked, bool convertImagesToMarkers)
+        {
+            var exportParagraph = CreateParagraphShell(source);
+            // The task prefix restores generated strike; retain an explicitly user-authored paragraph strike.
+            exportParagraph.TextDecorations = QuickNoteDocumentFormatting.GetIsUserStrikethrough(source)
+                ? source.TextDecorations?.Clone()
+                : null;
+            exportParagraph.Inlines.Add(new Run(isChecked ? "[x] " : "[ ] "));
+
+            var imageMarkers = new List<string>();
+            foreach (Inline inline in source.Inlines.Skip(1))
+            {
+                if (convertImagesToMarkers && inline is InlineUIContainer container &&
+                    QuickNoteImageHelper.TryGetMarker(container, out string marker, out _))
+                {
+                    imageMarkers.Add(marker);
+                    continue;
+                }
+
+                exportParagraph.Inlines.Add(CloneTaskInlineForExport(inline, strict: !convertImagesToMarkers));
+            }
+
+            if (exportParagraph.Inlines.Count == 1)
+            {
+                exportParagraph.Inlines.Add(new Run(string.Empty));
+            }
+
+            document.Blocks.Add(exportParagraph);
+            foreach (string marker in imageMarkers)
+            {
+                document.Blocks.Add(CreateImageMarkerParagraph(marker));
+            }
         }
 
         public static void RestoreCodeBlocksFromFences(FlowDocument document)
@@ -274,26 +392,57 @@ namespace AiteBar
 
         private static Paragraph CreateParagraphShell(Paragraph source)
         {
-            Block clone = CloneBlockOrPlainText(source);
-            if (clone is Paragraph paragraph)
-            {
-                paragraph.Inlines.Clear();
-                return paragraph;
-            }
-
-            return new Paragraph();
+            var paragraph = new Paragraph();
+            CopyLocalValues(source, paragraph);
+            paragraph.FontFamily = source.FontFamily;
+            paragraph.FontSize = source.FontSize;
+            paragraph.FontWeight = source.FontWeight;
+            paragraph.FontStyle = source.FontStyle;
+            paragraph.FontStretch = source.FontStretch;
+            paragraph.Foreground = source.Foreground;
+            paragraph.Background = source.Background;
+            paragraph.Margin = source.Margin;
+            paragraph.Padding = source.Padding;
+            paragraph.TextAlignment = source.TextAlignment;
+            paragraph.TextDecorations = source.TextDecorations?.Clone();
+            return paragraph;
         }
 
         private static Inline CloneInlineOrPlainText(Inline inline)
         {
-            try
+            return QuickNoteDocumentContract.CloneInline(inline);
+        }
+
+        private static Inline CloneTaskInlineForExport(Inline inline, bool strict)
+        {
+            Inline cloned = QuickNoteDocumentContract.CloneInline(inline, strict);
+            StripTaskStrikethroughRecursive(inline, cloned);
+            return cloned;
+        }
+
+        private static void StripTaskStrikethroughRecursive(Inline source, Inline target)
+        {
+            if (QuickNoteDocumentFormatting.GetIsTaskStrikethrough(source) && !QuickNoteDocumentFormatting.GetIsUserStrikethrough(source))
             {
-                using var reader = new StringReader(XamlWriter.Save(inline));
-                return (Inline)XamlReader.Load(System.Xml.XmlReader.Create(reader));
+                if (target.TextDecorations != null && target.TextDecorations.Any(d => d.Location == TextDecorationLocation.Strikethrough))
+                {
+                    var decorations = target.TextDecorations.Clone();
+                    foreach (var d in decorations.Where(d => d.Location == TextDecorationLocation.Strikethrough).ToList())
+                    {
+                        decorations.Remove(d);
+                    }
+                    target.TextDecorations = decorations.Count > 0 ? decorations : null;
+                }
             }
-            catch (Exception ex) when (ex is InvalidOperationException or XamlParseException or IOException)
+
+            if (source is Span sourceSpan && target is Span targetSpan)
             {
-                return new Run(new TextRange(inline.ContentStart, inline.ContentEnd).Text);
+                var sourceChildren = sourceSpan.Inlines.ToList();
+                var targetChildren = targetSpan.Inlines.ToList();
+                for (int i = 0; i < Math.Min(sourceChildren.Count, targetChildren.Count); i++)
+                {
+                    StripTaskStrikethroughRecursive(sourceChildren[i], targetChildren[i]);
+                }
             }
         }
 
@@ -372,22 +521,9 @@ namespace AiteBar
         public static void RestoreTaskItems(FlowDocument document, QuickNoteTheme? theme = null)
         {
             theme ??= QuickNoteThemeCatalog.Find(null);
-            foreach (Block block in document.Blocks.ToList())
+            foreach (Paragraph paragraph in QuickNoteTaskListController.EnumerateAllParagraphs(document).ToArray())
             {
-                if (block is Paragraph paragraph)
-                {
-                    RestoreTaskItemInParagraph(paragraph, theme);
-                }
-                else if (block is Section section)
-                {
-                    foreach (Block child in section.Blocks.ToList())
-                    {
-                        if (child is Paragraph childParagraph)
-                        {
-                            RestoreTaskItemInParagraph(childParagraph, theme);
-                        }
-                    }
-                }
+                RestoreTaskItemInParagraph(paragraph, theme);
             }
         }
 
@@ -395,6 +531,10 @@ namespace AiteBar
         {
             if (QuickNoteDocumentFormatting.IsTaskParagraph(paragraph, out bool isChecked, out InlineUIContainer? container, out CheckBox? checkBox))
             {
+                // XamlPackage retains text decorations but not their runtime provenance.
+                // Preserve an existing decoration rather than silently removing user-authored text styling.
+                QuickNoteDocumentFormatting.MarkUserStrikethroughRecursive(paragraph);
+
                 if (checkBox != null)
                 {
                     checkBox.Template = QuickNoteDocumentFormatting.CreateTaskCheckboxTemplate(theme);
@@ -414,8 +554,13 @@ namespace AiteBar
                 if (TryExtractTaskPrefix(text, out bool checkedState, out string remainingText))
                 {
                     firstRun.Text = remainingText;
+                    QuickNoteDocumentFormatting.MarkUserStrikethroughRecursive(paragraph);
                     var newContainer = QuickNoteDocumentFormatting.CreateTaskCheckbox(checkedState, null, theme);
                     paragraph.Inlines.InsertBefore(firstRun, newContainer);
+                    if (string.IsNullOrEmpty(remainingText) && firstRun.NextInline != null)
+                    {
+                        paragraph.Inlines.Remove(firstRun);
+                    }
                     QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(paragraph, checkedState, theme);
                 }
             }

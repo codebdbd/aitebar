@@ -31,7 +31,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - Ротация профилей браузера
 - Поддержка различных браузеров (Chrome, Edge, Brave, Yandex, Opera, OperaGX, Vivaldi, Firefox)
 - Встроенная библиотека иконок (Material Symbols, Fluent System Icons, Font Awesome Brands)
-- Быстрые заметки с поддержкой Markdown
+- Быстрые заметки с визуальным форматированием
 - Локализация (ru, en, de, uk)
 
 ---
@@ -72,7 +72,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 │  │FontHelper│ │IconHelper  │ │ProfileRotation│ │ActionTargetHel│ │
 │  └──────────┘ └────────────┘ └──────────────┘ └───────────────┘ │
 │  ┌──────────────────┐ ┌──────────────────────┐                     │
-│  │QuickNoteMarkdown │ │PanelPackageMapper    │                     │
+│  │QuickNoteFileStore │ │PanelPackageMapper    │                     │
 │  └──────────────────┘ └──────────────────────┘                     │
 └───────────────────────┬───────────────────────────────────────────┘
                         │
@@ -93,7 +93,7 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `TaskbarPositionIndicatorWindow` — индикатор положения панели на панели задач
 - `SettingsWindow` — редактирование отдельной кнопки
 - `AppSettingsWindow` — общие настройки приложения и раздел «О программе»
-- `QuickNoteWindow` — быстрые заметки с Markdown
+- `QuickNoteWindow` — одна заметка с визуальным FlowDocument-редактором
 - `TimerStopwatchWindow` — таймер и секундомер
 - `ScreenColorPickerWindow` — цветовой пикер
 - `FileSorterWindow` — окно утилиты сортировки файлов
@@ -164,8 +164,10 @@ AiteBar — это скрываемая edge-панель быстрого до�
 - `ProfileRotationHelper` — ротация профилей браузера
 - `ActionTargetHelper` — валидация целей действий
 - `QuickNoteContracts` — контракты (интерфейсы, типы) и POCO-модели Quick Note, разделяемые между окном, сервисом и persistence-слоем
-- `QuickNotePersistence` — чтение/запись файла быстрой заметки на диск с round-trip сохранением Markdown, обработкой conflict-copy и резервными копиями
-- `QuickNoteMarkdown` — парсинг и генерация Markdown для быстрых заметок
+- `QuickNotePersistence` — адаптер сервиса заметки для окна и тестов; сообщает состояние загрузки и предоставляет сохранение/восстановительные копии
+- `QuickNoteDocumentCodec` — снимок FlowDocument в байты `.aite-note`/RTF и обратная загрузка на потоке документа
+- `QuickNoteFileStore` — файловые операции без WPF: хеш исходного снимка, запись через временный файл с flush и заменой, защита непрочитанного оригинала, пять конфликтных копий
+- `QuickNoteSaveController` — одна активная операция сохранения, версии правок, отложенное автосохранение и ожидание при закрытии
 - `PanelPackageMapper` — маппинг между CustomElement и PanelPackageElement
 - `ActivationZoneHelper` — проверка, находится ли курсор в зоне активации панели
 - `UtilityWindowLayoutHelper` — общий расчёт геометрии окон утилит (QuickNote, TimerStopwatch, TextProcessing, QRCodeGenerator, ClipboardManager и т. д.): clamp в рабочую область монитора, чтение/запись `Left/Top/Width/Height` из настроек, fallback-значения при первом открытии
@@ -524,7 +526,7 @@ UI Layer использует Services Layer для выполнения биз�
 
 **Входящие зависимости:**
 - PathHelper
-- QuickNoteMarkdown
+- QuickNoteFileStore
 
 **Исходящие зависимости:**
 - Нет
@@ -850,9 +852,9 @@ UI Layer использует Services Layer для выполнения биз�
 
 **Где находится:** QuickNoteWindow.xaml.cs, QuickNoteService.cs
 
-**Какие компоненты участвуют:** QuickNoteWindow, QuickNoteService, QuickNoteMarkdown
+**Какие компоненты участвуют:** QuickNoteWindow, QuickNoteService, QuickNoteFileStore
 
-**Какие файлы реализуют функцию:** QuickNoteWindow.xaml.cs, QuickNoteService.cs, QuickNoteMarkdown.cs
+**Какие файлы реализуют функцию:** QuickNoteWindow.xaml.cs, QuickNoteService.cs, QuickNoteFileStore.cs
 
 **Пошаговый сценарий выполнения:**
 1. Пользователь нажимает кнопку быстрых заметок
@@ -1380,7 +1382,7 @@ PanelPackageService → PanelPackageMapper
 PanelPackageService → PathHelper
 
 QuickNoteService → PathHelper
-QuickNoteService → QuickNoteMarkdown
+QuickNoteService → QuickNoteFileStore
 
 BrowserHelper → (нет зависимостей)
 PanelLayoutHelper → (нет зависимостей)
@@ -1390,7 +1392,7 @@ PathHelper → (нет зависимостей)
 Logger → PathHelper
 NativeMethods → (нет зависимостей, P/Invoke)
 LocalizationService → (нет зависимостей)
-QuickNoteMarkdown → (нет зависимостей)
+QuickNoteFileStore → (нет зависимостей)
 PanelPackageMapper → (нет зависимостей)
 ```
 
@@ -1419,7 +1421,7 @@ PanelPackageMapper → (нет зависимостей)
 | IconHelper.cs / FontHelper.cs | Работа с иконками | Medium |
 | NativeIntegrationService.cs | Native integration | Medium |
 | PanelPackageManifest.cs / PanelPackageMapper.cs | Импорт/экспорт панелей | Medium |
-| QuickNoteMarkdown.cs | Markdown для заметок | Medium |
+| QuickNoteFileStore.cs | Markdown для заметок | Medium |
 | Other Windows (.xaml/.cs) | Вспомогательные окна | Low |
 | AssemblyInfo.cs | Информация о сборке | Low |
 
@@ -1467,7 +1469,7 @@ PanelPackageMapper → (нет зависимостей)
 - Плавная анимация и отзывчивый UI
 - ZIP-архивирование панелей с пользовательскими иконками
 - 8 фиксированных контекстов для организации кнопок
-- Быстрые заметки с поддержкой Markdown
+- Быстрые заметки с визуальным форматированием
 
 ## Потенциальные проблемы
 - Основная логика UI и системного поведения сосредоточена в MainWindow.xaml.cs (класс очень большой, >1000 строк)

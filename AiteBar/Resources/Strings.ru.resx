@@ -429,14 +429,14 @@
     <value>Сохранение...</value>
   </data>
   <data name="QuickNote_SaveFailed" xml:space="preserve">
-    <value>Ошибка сохранения</value>
+    <value>Не удалось сохранить. Ctrl+S — повторить.</value>
   </data>
   <data name="Settings_SaveFailed" xml:space="preserve">
     <value>Не удалось сохранить настройки:
 {0}</value>
   </data>
   <data name="QuickNote_LoadFailed" xml:space="preserve">
-    <value>Не удалось загрузить заметку</value>
+    <value>Не удалось загрузить заметку. Оригинал сохранён; новые правки — в отдельной копии.</value>
   </data>
   <data name="QuickNote_OpenFailed" xml:space="preserve">
     <value>Не удалось открыть</value>
@@ -1804,10 +1804,65 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AiteProfiles_LinkTagsPlaceholder" xml:space="preserve"><value>work, mail, ai...</value></data>
   <data name="AiteProfiles_LinkUrlsPlaceholder" xml:space="preserve"><value>https://example.com/&#10;По одному URL на строку или через |</value></data>
   <data name="AiteProfiles_GuestMode" xml:space="preserve"><value>Гостевой режим (--guest)</value></data>
+  <data name="Tool_DiskCleaner" xml:space="preserve"><value>Очистка диска</value></data>
+  <data name="Tool_DiskCleaner_Title" xml:space="preserve"><value>Очистка диска</value></data>
+  <data name="Main_DiskCleanerTooltip" xml:space="preserve"><value>Безопасная очистка кэша и диска</value></data>
+  <data name="QuickTool_DiskCleaner_Title" xml:space="preserve"><value>Очистка диска</value></data>
+  <data name="QuickTool_DiskCleaner_Description" xml:space="preserve"><value>Безопасно очищает временные файлы, кэш браузеров, корзину и кэш шейдеров.</value></data>
+  <data name="DiskCleaner_Title" xml:space="preserve"><value>Очистка диска</value></data>
+  <data name="DiskCleaner_Subtitle" xml:space="preserve"><value>Безопасная очистка временных файлов, кэшей и системного мусора</value></data>
+  <data name="DiskCleaner_Category_UserTemp" xml:space="preserve"><value>Временные файлы пользователя</value></data>
+  <data name="DiskCleaner_Category_UserTemp_Desc" xml:space="preserve"><value>Временные файлы из каталога %TEMP%</value></data>
+  <data name="DiskCleaner_Category_WindowsTemp" xml:space="preserve"><value>Системные файлы Windows Temp</value></data>
+  <data name="DiskCleaner_Category_WindowsTemp_Desc" xml:space="preserve"><value>Системные временные файлы из C:\Windows\Temp</value></data>
+  <data name="DiskCleaner_Category_RecycleBin" xml:space="preserve"><value>Корзина</value></data>
+  <data name="DiskCleaner_Category_RecycleBin_Desc" xml:space="preserve"><value>Удаленные файлы на всех дисках ($Recycle.Bin)</value></data>
+  <data name="DiskCleaner_Category_BrowserCache" xml:space="preserve"><value>Кэш браузеров (Chrome, Edge)</value></data>
+  <data name="DiskCleaner_Category_BrowserCache_Desc" xml:space="preserve"><value>Кэш страниц без удаления куки, паролей и авторизаций</value></data>
+  <data name="DiskCleaner_Category_GpuCache" xml:space="preserve"><value>Шейдерный кэш GPU и DirectX</value></data>
+  <data name="DiskCleaner_Category_GpuCache_Desc" xml:space="preserve"><value>Скомпилированные графические шейдеры (NVIDIA, AMD, DirectX)</value></data>
+  <data name="DiskCleaner_Category_DevCache" xml:space="preserve"><value>Кэш пакетов разработки</value></data>
+  <data name="DiskCleaner_Category_DevCache_Desc" xml:space="preserve"><value>Глобальные кэши пакетов (.NET NuGet, npm, pip)</value></data>
+  <data name="DiskCleaner_Category_CrashDumps" xml:space="preserve"><value>Дампы сбоев и отчеты об ошибках</value></data>
+  <data name="DiskCleaner_Category_CrashDumps_Desc" xml:space="preserve"><value>Дампы падений приложений и логи отчетов WER</value></data>
+  <data name="DiskCleaner_Category_DnsCache" xml:space="preserve"><value>Сетевой кэш DNS</value></data>
+  <data name="DiskCleaner_Category_DnsCache_Desc" xml:space="preserve"><value>Сброс локального кэша разрешений DNS</value></data>
+  <data name="DiskCleaner_Scan" xml:space="preserve"><value>Анализ</value></data>
+  <data name="DiskCleaner_Clean" xml:space="preserve"><value>Очистить выбранное</value></data>
+  <data name="DiskCleaner_SelectAll" xml:space="preserve"><value>Выбрать все</value></data>
+  <data name="DiskCleaner_DeselectAll" xml:space="preserve"><value>Снять все</value></data>
+  <data name="DiskCleaner_Status_Ready" xml:space="preserve"><value>Готово к анализу и очистке</value></data>
+  <data name="DiskCleaner_Status_Scanning" xml:space="preserve"><value>Выполняется анализ категорий...</value></data>
+  <data name="DiskCleaner_Status_Cleaning" xml:space="preserve"><value>Выполняется очистка...</value></data>
+  <data name="DiskCleaner_Status_CompletedFormat" xml:space="preserve"><value>Освобождено {0} места на диске.</value></data>
+  <data name="DiskCleaner_ReclaimableFormat" xml:space="preserve"><value>Найдено для очистки: {0}</value></data>
+  <data name="DiskCleaner_Badge_Safe" xml:space="preserve"><value>Безопасно</value></data>
+  <data name="DiskCleaner_Badge_Caution" xml:space="preserve"><value>Внимание</value></data>
+  <data name="DiskCleaner_SelectSafeOnly" xml:space="preserve"><value>Только безопасные</value></data>
+  <data name="DiskCleaner_Warning_RecycleBin" xml:space="preserve"><value>Безвозвратно удаляет все файлы из Корзины на всех дисках.</value></data>
+  <data name="DiskCleaner_Warning_DevCache" xml:space="preserve"><value>Очищает кэши пакетов (.NET NuGet, npm, pip). Последующие сборки проектов потребуют повторной загрузки из сети.</value></data>
+  <data name="DiskCleaner_Warning_CrashDumps" xml:space="preserve"><value>Удаляет дампы аварийных завершений и диагностические логи.</value></data>
+  <data name="DiskCleaner_Warning_WindowsTemp" xml:space="preserve"><value>Очищает системные временные файлы Windows (могут потребоваться права).</value></data>
+  <data name="DiskCleaner_ConfirmCautionTitle" xml:space="preserve"><value>Требуется подтверждение</value></data>
+  <data name="DiskCleaner_ConfirmCautionMessage" xml:space="preserve"><value>Вы выбрали категории с пометкой «Внимание» ({0}):&#10;&#10;{1}&#10;&#10;Вы уверены, что хотите выполнить безвозвратную очистку?</value></data>
+  <data name="DiskCleaner_Status_DetailedFormat" xml:space="preserve"><value>Освобождено {0} (успешно: {1}, частично: {2}, ошибок: {3}, пропущено: {4}).</value></data>
+  <data name="DiskCleaner_ResultDetails_Title" xml:space="preserve"><value>Детали результата</value></data>
+  <data name="DiskCleaner_Status_Succeeded" xml:space="preserve"><value>Успешно</value></data>
+  <data name="DiskCleaner_Status_PartiallyCleaned" xml:space="preserve"><value>Частично</value></data>
+  <data name="DiskCleaner_Status_Failed" xml:space="preserve"><value>Ошибка</value></data>
+  <data name="DiskCleaner_Status_Skipped" xml:space="preserve"><value>Пропущено</value></data>
+  <data name="DiskCleaner_LockedFilesFormat" xml:space="preserve"><value>({0} заблокировано)</value></data>
+  <data name="QuickNote_Theme_dark" xml:space="preserve"><value>Тёмная</value></data>
+  <data name="QuickNote_Theme_graphite" xml:space="preserve"><value>Графит</value></data>
+  <data name="QuickNote_Theme_rose" xml:space="preserve"><value>Розовая</value></data>
+  <data name="QuickNote_Theme_clay" xml:space="preserve"><value>Глина</value></data>
+  <data name="QuickNote_Theme_sand" xml:space="preserve"><value>Песок</value></data>
+  <data name="QuickNote_Theme_lemon" xml:space="preserve"><value>Жёлтая</value></data>
+  <data name="QuickNote_Theme_sage" xml:space="preserve"><value>Зелёная</value></data>
+  <data name="QuickNote_Theme_mist" xml:space="preserve"><value>Туман</value></data>
+  <data name="QuickNote_Theme_sky" xml:space="preserve"><value>Голубая</value></data>
+  <data name="QuickNote_Theme_lavender" xml:space="preserve"><value>Фиолетовая</value></data>
+  <data name="QuickNote_Theme_mauve" xml:space="preserve"><value>Сирень</value></data>
+  <data name="QuickNote_Theme_stone" xml:space="preserve"><value>Светлая</value></data>
+  <data name="QuickNote_ShowRecoveryCopy" xml:space="preserve"><value>Показать резервную копию в папке</value></data>
 </root>
-
-
-
-
-
-

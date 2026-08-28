@@ -138,11 +138,14 @@
                 <StackPanel x:Name="FixedPanel" Orientation="Horizontal" DockPanel.Dock="Left" VerticalAlignment="Center">
                     <StackPanel x:Name="ControlBlock" Orientation="Horizontal">
                         <Button x:Name="ContextIndicator" Width="40" Height="40" Margin="2,2"
+                                Background="#01000000"
                                 ToolTipService.InitialShowDelay="0" Click="ContextIndicator_Click" MouseRightButtonUp="ContextIndicator_MouseRightButtonUp">
                             <Border Width="24" Height="24" Background="#2A9CFF" CornerRadius="4"
-                                    HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="ContextIndicatorCircle">
+                                    HorizontalAlignment="Center" VerticalAlignment="Center" x:Name="ContextIndicatorCircle"
+                                    IsHitTestVisible="False">
                                 <TextBlock x:Name="ContextIndicatorText" Text="1" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0"/>
+                                           HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,-3,0,0"
+                                           IsHitTestVisible="False"/>
                             </Border>
                         </Button>
                         <Button x:Name="BtnAdd" Content="&#xF10A;" Click="BtnAdd_Click" Style="{StaticResource CircleAccentButtonStyle}"/>

@@ -22,7 +22,7 @@ public sealed class AppSettingsLayoutContractTests
         "HotkeyFileSorter", "HotkeyIconConverter", "HotkeyQuickNote", "HotkeyColorPicker", "HotkeyTimerStopwatch", "HotkeyQRCodeGenerator", "HotkeyClipboardManager",
         "HotkeyTextProcessing", "HotkeyPromptBuilder", "HotkeyZenEditor", "HotkeyAiteProfiles",
         "ChkShowPresetSearch", "ChkShowPresetScreenshot", "ChkShowPresetVideo", "ChkShowPresetCalc",
-        "ChkShowPresetExplorer", "ChkShowPresetDownloads", "ChkShowPresetFileSorter", "ChkShowPresetIconConverter",
+        "ChkShowPresetExplorer", "ChkShowPresetDownloads", "ChkShowPresetFileSorter", "ChkShowPresetDiskCleaner", "ChkShowPresetIconConverter",
         "ChkShowPresetTimerStopwatch", "ChkShowPresetColorPicker", "ChkShowPresetQuickNote", "ChkShowPresetQRCodeGenerator",
         "ChkShowPresetClipboardManager", "ChkShowPresetShowDesktop", "ChkShowPresetAppsFolder", "ChkShowPresetCopilot",
         "ChkShowPresetTextProcessing", "ChkShowPresetPromptBuilder", "ChkShowPresetZenEditor", "ChkShowPresetAiteProfiles",
@@ -30,7 +30,7 @@ public sealed class AppSettingsLayoutContractTests
         "QuickToolRowQuickNote", "QuickToolRowQRCodeGenerator", "QuickToolRowDownloads", "QuickToolRowVideo",
         "QuickToolRowCopilot", "QuickToolRowCalculator", "QuickToolRowIconConverter", "QuickToolRowClipboardManager",
         "QuickToolRowColorPicker", "QuickToolRowSearch", "QuickToolRowShowDesktop", "QuickToolRowAppsFolder",
-        "QuickToolRowExplorer", "QuickToolRowScreenshot", "QuickToolRowFileSorter", "QuickToolRowTimerStopwatch",
+        "QuickToolRowExplorer", "QuickToolRowScreenshot", "QuickToolRowFileSorter", "QuickToolRowDiskCleaner", "QuickToolRowTimerStopwatch",
         "QuickToolRowTextProcessing", "QuickToolRowPromptBuilder", "QuickToolRowZenEditor", "QuickToolRowAiteProfiles"
     ];
 

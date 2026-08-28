@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Runtime.Versioning;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -22,7 +21,6 @@ namespace AiteBar
     internal sealed class QuickNoteFooterStatsController : IDisposable
     {
         private static readonly TimeSpan DebounceInterval = TimeSpan.FromMilliseconds(120);
-        private static readonly Regex WordSplitRegex = new(@"\S+", RegexOptions.Compiled);
 
         private readonly WpfRichTextBox _editor;
         private readonly TextBlock _placeholder;
@@ -51,10 +49,10 @@ namespace AiteBar
         public int WordCount => _wordCount;
         public int LineCount => _lineCount;
 
-        public void ScheduleUpdate()
+        public void ScheduleUpdate(bool documentChanged = true)
         {
             if (_disposed) return;
-            _dirty = true;
+            _dirty |= documentChanged;
             _debounceTimer.Stop();
             _debounceTimer.Start();
         }
@@ -87,17 +85,15 @@ namespace AiteBar
             if (_dirty)
             {
                 string text = GetEditorText();
-                _isEmpty = string.IsNullOrWhiteSpace(text);
+                _isEmpty = string.IsNullOrWhiteSpace(text) && !QuickNoteImageHelper.EnumerateImageContainers(_editor.Document.Blocks).Any();
                 _charCount = text.Length;
                 _lineCount = string.IsNullOrEmpty(text) ? 0 : text.Count(c => c == '\n') + 1;
-                _wordCount = string.IsNullOrEmpty(text)
-                    ? 0
-                    : WordSplitRegex.Matches(text).Count;
+                _wordCount = CountWords(text);
                 _dirty = false;
             }
 
             _placeholder.Visibility = _isEmpty ? Visibility.Visible : Visibility.Collapsed;
-            _statsText.Text = LocalizationService.Format("QuickNote_Stats", _charCount, _wordCount, _lineCount);
+            _statsText.Text = LocalizationService.Format("QuickNote_Stats", _charCount, _lineCount);
         }
 
         private string GetEditorText()
@@ -126,10 +122,23 @@ namespace AiteBar
             result.CharacterCount = normalized.Length;
             if (!result.IsEmpty)
             {
-                result.WordCount = WordSplitRegex.Matches(normalized).Count;
-                result.LineCount = normalized.Split('\n').Length;
+                result.WordCount = CountWords(normalized);
+                result.LineCount = normalized.Count(c => c == '\n') + 1;
             }
             return result;
+        }
+
+        private static int CountWords(ReadOnlySpan<char> text)
+        {
+            int count = 0;
+            bool inWord = false;
+            foreach (char character in text)
+            {
+                bool isWord = !char.IsWhiteSpace(character);
+                if (isWord && !inWord) count++;
+                inWord = isWord;
+            }
+            return count;
         }
 
         public static string FormatStatusText(QuickNoteStatusKind kind, string? argument = null)

@@ -1860,6 +1860,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
                     case "FileSorter":
                         await _actionService.LaunchUtilityAsync("FileSorter", HideDock);
                         break;
+                    case "DiskCleaner":
+                        await _actionService.LaunchUtilityAsync("DiskCleaner", HideDock);
+                        break;
                     case "IconConverter":
                         await _actionService.LaunchUtilityAsync("IconConverter", HideDock);
                         break;

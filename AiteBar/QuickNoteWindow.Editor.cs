@@ -85,63 +85,20 @@ namespace AiteBar
 
         private void BtnNumbered_Click(object sender, RoutedEventArgs e) => ApplyListFormatting(numbered: true);
 
-        private void BtnTaskList_Click(object sender, RoutedEventArgs e) => ToggleTaskList();
-
-        private void ToggleTaskList()
+        private void BtnTaskList_Click(object sender, RoutedEventArgs e)
         {
-            _saveSuppressionCount++;
+            RestoreFormatSelection(_preservedFormatSelection);
+            _preservedFormatSelection = null;
+            TxtNote.BeginChange();
             try
             {
-                TxtNote.BeginChange();
-                try
+                foreach (Paragraph paragraph in GetSelectedParagraphs())
                 {
-                    List<Paragraph> paragraphs = GetSelectedParagraphs();
-                    if (paragraphs.Count == 0 && TxtNote.CaretPosition?.Paragraph is Paragraph single)
-                    {
-                        paragraphs.Add(single);
-                    }
-                    if (paragraphs.Count == 0 && TxtNote.Document.Blocks.FirstBlock is Paragraph firstP)
-                    {
-                        paragraphs.Add(firstP);
-                    }
-
-                    bool allAreTasks = paragraphs.Count > 0 && paragraphs.All(static p => QuickNoteDocumentFormatting.IsTaskParagraph(p, out _, out _, out _));
-
-                    foreach (Paragraph p in paragraphs)
-                    {
-                        if (allAreTasks)
-                        {
-                            QuickNoteDocumentFormatting.RemoveTaskCheckbox(p, _theme);
-                        }
-                        else
-                        {
-                            if (!QuickNoteDocumentFormatting.IsTaskParagraph(p, out _, out _, out _))
-                            {
-                                var container = QuickNoteDocumentFormatting.CreateTaskCheckbox(false, isChecked => OnTaskItemToggled(p, isChecked), _theme);
-                                if (p.Inlines.FirstInline != null)
-                                {
-                                    p.Inlines.InsertBefore(p.Inlines.FirstInline, container);
-                                }
-                                else
-                                {
-                                    p.Inlines.Add(container);
-                                    p.Inlines.Add(new Run(string.Empty));
-                                }
-                                QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(p, false, _theme);
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    TxtNote.EndChange();
+                    QuickNoteDocumentFormatting.ToggleTaskParagraph(paragraph, null, _theme);
+                    ConnectTaskItemInParagraph(paragraph);
                 }
             }
-            finally
-            {
-                _saveSuppressionCount--;
-            }
-
+            finally { TxtNote.EndChange(); }
             MarkChangedAndScheduleSave();
             ScheduleFooterStatsUpdate();
             TxtNote.Focus();
@@ -173,22 +130,9 @@ namespace AiteBar
 
         internal void ConnectTaskItemEvents(FlowDocument document)
         {
-            foreach (Block block in document.Blocks)
+            foreach (Paragraph paragraph in QuickNoteTaskListController.EnumerateAllParagraphs(document).ToArray())
             {
-                if (block is Paragraph paragraph)
-                {
-                    ConnectTaskItemInParagraph(paragraph);
-                }
-                else if (block is Section section)
-                {
-                    foreach (Block child in section.Blocks)
-                    {
-                        if (child is Paragraph childParagraph)
-                        {
-                            ConnectTaskItemInParagraph(childParagraph);
-                        }
-                    }
-                }
+                ConnectTaskItemInParagraph(paragraph);
             }
         }
 
@@ -198,30 +142,43 @@ namespace AiteBar
             {
                 if (checkBox != null)
                 {
+                    checkBox.Template = QuickNoteDocumentFormatting.CreateTaskCheckboxTemplate(_theme);
+                    checkBox.Tag = QuickNoteTags.Task(isChecked);
                     checkBox.Click -= OnTaskCheckBoxClicked;
                     checkBox.Click += OnTaskCheckBoxClicked;
-                    checkBox.Tag = paragraph;
                 }
             }
         }
 
         private void OnTaskCheckBoxClicked(object sender, RoutedEventArgs e)
         {
-            if (sender is CheckBox cb && cb.Tag is Paragraph paragraph)
+            if (sender is CheckBox cb)
             {
                 bool isChecked = cb.IsChecked == true;
-                OnTaskItemToggled(paragraph, isChecked);
-            }
-            else if (sender is CheckBox cb2)
-            {
-                DependencyObject? current = cb2;
-                while (current != null && current is not Paragraph)
+                cb.Tag = QuickNoteTags.Task(isChecked);
+                Paragraph? paragraph = QuickNoteDocumentFormatting.GetTaskParagraph(cb);
+                if (paragraph != null &&
+                    (!QuickNoteDocumentFormatting.IsTaskParagraph(paragraph, out _, out _, out CheckBox? mappedCheckBox) ||
+                     mappedCheckBox != cb))
                 {
-                    current = LogicalTreeHelper.GetParent(current);
+                    paragraph = null;
                 }
-                if (current is Paragraph p)
+
+                if (paragraph == null)
                 {
-                    OnTaskItemToggled(p, cb2.IsChecked == true);
+                    foreach (Paragraph p in QuickNoteTaskListController.EnumerateAllParagraphs(TxtNote.Document))
+                    {
+                        if (QuickNoteDocumentFormatting.IsTaskParagraph(p, out _, out _, out CheckBox? foundCb) && foundCb == cb)
+                        {
+                            paragraph = p;
+                            break;
+                        }
+                    }
+                }
+
+                if (paragraph != null)
+                {
+                    OnTaskItemToggled(paragraph, isChecked);
                 }
             }
         }
@@ -316,27 +273,57 @@ namespace AiteBar
                     {
                         return false;
                     }
-                    TextRange tailRange = new TextRange(caret, currentParagraph.ContentEnd);
-                    string tailText = tailRange.Text.TrimEnd('\r', '\n');
-                    tailRange.Text = string.Empty;
 
                     var newParagraph = new Paragraph();
                     var newContainer = QuickNoteDocumentFormatting.CreateTaskCheckbox(false, isChecked => OnTaskItemToggled(newParagraph, isChecked), _theme);
                     newParagraph.Inlines.Add(newContainer);
-                    if (!string.IsNullOrEmpty(tailText))
-                    {
-                        newParagraph.Inlines.Add(new Run(tailText)
-                        {
-                            Foreground = QuickNoteBrush.FromHex(_theme?.Text ?? "#F6F0E6")
-                        });
-                    }
-                    else
+
+                    if (caret.CompareTo(currentParagraph.ContentEnd) >= 0)
                     {
                         newParagraph.Inlines.Add(new Run(string.Empty));
                     }
+                    else
+                    {
+                        TextRange tailRange = new TextRange(caret, currentParagraph.ContentEnd);
+                        using var stream = new System.IO.MemoryStream();
+                        tailRange.Save(stream, DataFormats.XamlPackage);
+                        tailRange.Text = string.Empty;
+
+                        stream.Position = 0;
+                        var tempDoc = new FlowDocument();
+                        var tempRange = new TextRange(tempDoc.ContentStart, tempDoc.ContentEnd);
+                        tempRange.Load(stream, DataFormats.XamlPackage);
+
+                        List<Inline> extractedInlines = new();
+                        foreach (Block b in tempDoc.Blocks.ToList())
+                        {
+                            if (b is Paragraph p)
+                            {
+                                foreach (Inline inline in p.Inlines.ToList())
+                                {
+                                    p.Inlines.Remove(inline);
+                                    extractedInlines.Add(inline);
+                                }
+                            }
+                        }
+
+                        if (extractedInlines.Count > 0)
+                        {
+                            foreach (var inline in extractedInlines)
+                            {
+                                newParagraph.Inlines.Add(inline);
+                            }
+                        }
+                        else
+                        {
+                            newParagraph.Inlines.Add(new Run(string.Empty));
+                        }
+                    }
 
                     currentParagraph.SiblingBlocks.InsertAfter(currentParagraph, newParagraph);
-                    TxtNote.CaretPosition = newParagraph.ContentEnd;
+                    QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(newParagraph, false, _theme);
+                    ConnectTaskItemInParagraph(newParagraph);
+                    TxtNote.CaretPosition = newParagraph.Inlines.FirstInline?.NextInline?.ContentStart ?? newParagraph.ContentEnd;
                 }
                 finally
                 {
@@ -808,29 +795,6 @@ namespace AiteBar
             Close();
         }
 
-        private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            if (e.ButtonState == MouseButtonState.Pressed && !IsHeaderInteractiveSource(e.OriginalSource as DependencyObject))
-            {
-                DragMove();
-            }
-        }
-
-        private bool IsHeaderInteractiveSource(DependencyObject? source)
-        {
-            while (source != null && source != HeaderBar)
-            {
-                if (source is System.Windows.Controls.Button or System.Windows.Controls.MenuItem)
-                {
-                    return true;
-                }
-
-                source = VisualTreeHelper.GetParent(source);
-            }
-
-            return false;
-        }
-
         private void ToggleFormatting(DependencyProperty property, object enabledValue, object? disabledValue)
         {
             object current = TxtNote.Selection.GetPropertyValue(property);
@@ -1003,7 +967,7 @@ namespace AiteBar
 
         private void InsertLinkFromDialog()
         {
-            string selectedText = TxtNote.Selection.Text.Trim();
+            string selectedText = TxtNote.Selection.Text;
             var dialog = new QuickNoteLinkDialog(selectedText, string.Empty) { Owner = this };
             bool? result;
             _isModalDialogOpen = true;
@@ -1233,17 +1197,7 @@ namespace AiteBar
 
         private static Run CloneRunWithText(Run source, string text)
         {
-            return new Run(text)
-            {
-                FontFamily = source.FontFamily,
-                FontSize = source.FontSize,
-                FontStretch = source.FontStretch,
-                FontStyle = source.FontStyle,
-                FontWeight = source.FontWeight,
-                Foreground = source.Foreground,
-                Background = source.Background,
-                TextDecorations = source.TextDecorations?.Clone()
-            };
+            return QuickNoteDocumentContract.CloneRunWithText(source, text);
         }
 
         private void SetEditorPlainText(string text)
@@ -1299,13 +1253,7 @@ namespace AiteBar
 
         internal void ClearSelectedFormatting(ClearFormattingScope scope = ClearFormattingScope.All)
         {
-            if (TryConvertSelectedCodeBlocksToPlainText())
-            {
-                MarkChangedAndScheduleSave();
-                ScheduleFooterStatsUpdate();
-                TxtNote.Focus();
-                return;
-            }
+            TryConvertSelectedSpecialBlocksToPlainText();
 
             var (selectionStart, selectionEnd) = GetSelectionOffsets();
             string selectedTextToRestore = QuickNoteDocumentHelper.NormalizeLineEndings(
@@ -1369,33 +1317,44 @@ namespace AiteBar
             TxtNote.Focus();
         }
 
-        private bool TryConvertSelectedCodeBlocksToPlainText()
+        internal bool TryConvertSelectedCodeBlocksToPlainText() => TryConvertSelectedSpecialBlocksToPlainText(codeOnly: true, quoteOnly: false);
+
+        internal bool TryConvertSelectedQuoteBlocksToPlainText() => TryConvertSelectedSpecialBlocksToPlainText(codeOnly: false, quoteOnly: true);
+
+        private bool TryConvertSelectedSpecialBlocksToPlainText(bool codeOnly = false, bool quoteOnly = false)
         {
             TextPointer selectionStart = TxtNote.Selection.Start;
             TextPointer selectionEnd = TxtNote.Selection.End;
-            List<Section> selectedCodeBlocks = TxtNote.Document.Blocks
+            List<Section> selectedSections = TxtNote.Document.Blocks
                 .OfType<Section>()
-                .Where(QuickNoteDocumentFormatting.IsCodeBlock)
+                .Where(s =>
+                {
+                    if (codeOnly) return QuickNoteDocumentFormatting.IsCodeBlock(s);
+                    if (quoteOnly) return QuickNoteDocumentFormatting.IsQuoteBlock(s);
+                    return QuickNoteDocumentFormatting.IsCodeBlock(s) || QuickNoteDocumentFormatting.IsQuoteBlock(s);
+                })
                 .Where(section => TextRangeIntersectsOrContainsCaret(selectionStart, selectionEnd, section.ContentStart, section.ContentEnd))
                 .ToList();
 
-            if (selectedCodeBlocks.Count == 0)
+            if (selectedSections.Count == 0)
             {
                 return false;
             }
 
-            TextPointer? newSelectionStart = null;
-            TextPointer? newSelectionEnd = null;
+            TextPointer? earliestStart = selectionStart;
+            TextPointer? latestEnd = selectionEnd;
 
             TxtNote.BeginChange();
             try
             {
-                foreach (Section section in selectedCodeBlocks)
+                foreach (Section section in selectedSections)
                 {
                     BlockCollection siblings = section.SiblingBlocks;
-                    string[] lines = QuickNoteDocumentHelper.NormalizeLineEndings(
-                            QuickNoteDocumentFormatting.GetCodeBlockText(section))
-                        .Split('\n');
+                    string rawText = QuickNoteDocumentFormatting.IsCodeBlock(section)
+                        ? QuickNoteDocumentFormatting.GetCodeBlockText(section)
+                        : QuickNoteDocumentFormatting.GetQuoteBlockText(section);
+
+                    string[] lines = QuickNoteDocumentHelper.NormalizeLineEndings(rawText).Split('\n');
                     var inserted = new List<Paragraph>();
 
                     foreach (string line in lines)
@@ -1415,8 +1374,14 @@ namespace AiteBar
 
                     if (inserted.Count > 0)
                     {
-                        newSelectionStart ??= inserted[0].ContentStart;
-                        newSelectionEnd = inserted[^1].ContentEnd;
+                        if (earliestStart == null || inserted[0].ContentStart.CompareTo(earliestStart) < 0)
+                        {
+                            earliestStart = inserted[0].ContentStart;
+                        }
+                        if (latestEnd == null || inserted[^1].ContentEnd.CompareTo(latestEnd) > 0)
+                        {
+                            latestEnd = inserted[^1].ContentEnd;
+                        }
                     }
                 }
             }
@@ -1425,9 +1390,9 @@ namespace AiteBar
                 TxtNote.EndChange();
             }
 
-            if (newSelectionStart != null && newSelectionEnd != null)
+            if (earliestStart != null && latestEnd != null)
             {
-                TxtNote.Selection.Select(newSelectionStart, newSelectionEnd);
+                TxtNote.Selection.Select(earliestStart, latestEnd);
             }
 
             return true;
@@ -1540,13 +1505,7 @@ namespace AiteBar
 
         private static Hyperlink CreateHyperlinkFragment(Hyperlink source, IEnumerable<Inline> inlines)
         {
-            var fragment = new Hyperlink
-            {
-                NavigateUri = source.NavigateUri,
-                Tag = source.Tag,
-                Foreground = source.Foreground,
-                TextDecorations = source.TextDecorations?.Clone()
-            };
+            Hyperlink fragment = QuickNoteDocumentContract.CloneHyperlinkShell(source);
 
             foreach (Inline inline in inlines)
             {
@@ -1619,22 +1578,7 @@ namespace AiteBar
 
         private static Span CloneSpanShell(Span source)
         {
-            Span clone = source switch
-            {
-                Bold => new Bold(),
-                Italic => new Italic(),
-                _ => new Span()
-            };
-            clone.Tag = source.Tag;
-            clone.FontFamily = source.FontFamily;
-            clone.FontSize = source.FontSize;
-            clone.FontStretch = source.FontStretch;
-            clone.FontStyle = source.FontStyle;
-            clone.FontWeight = source.FontWeight;
-            clone.Foreground = source.Foreground;
-            clone.Background = source.Background;
-            clone.TextDecorations = source.TextDecorations?.Clone();
-            return clone;
+            return QuickNoteDocumentContract.CloneSpanShell(source);
         }
 
         private static int GetInlineTextLength(Inline inline)

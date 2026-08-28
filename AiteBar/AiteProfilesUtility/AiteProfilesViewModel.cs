@@ -44,7 +44,7 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         _rotationEnabled = _rotation.GetEnabled();
         _rememberQuickLink = _quickLinks.GetRememberEnabled();
         Profiles = [];
-        RefreshCommand = new AiteProfilesAsyncCommand(_ => RefreshAsync());
+        RefreshCommand = new AiteProfilesAsyncCommand(_ => RefreshAsync(forceRescan: true));
         LaunchCommand = new AiteProfilesAsyncCommand(_ => LaunchAsync(), _ => CanLaunch);
         OpenProfileCommand = new AiteProfilesAsyncCommand(_ => OpenSelectedProfileAsync(), _ => HasActionProfile);
         OpenSelectedProfilesCommand = new AiteProfilesAsyncCommand(_ => OpenSelectedProfilesAsync(), _ => SelectedProfiles.Count > 1);
@@ -259,19 +259,19 @@ internal sealed class AiteProfilesViewModel : NotifyObject
         }
     }
 
-    public async Task RefreshAsync(bool includeExpensiveStats = true, CancellationToken cancellationToken = default)
+    public async Task RefreshAsync(bool includeExpensiveStats = true, bool forceRescan = false, CancellationToken cancellationToken = default)
     {
         IsBusy = true;
         StatusText = LocalizationService.Get("AiteProfiles_StatusScanning");
         try
         {
-            await _store.RefreshAsync(includeExpensiveStats: false, cancellationToken).ConfigureAwait(true);
+            await _store.RefreshAsync(includeExpensiveStats: false, forceRescan: forceRescan, cancellationToken).ConfigureAwait(true);
             await ReloadFromStoreAsync(cancellationToken).ConfigureAwait(true);
             StatusText = LocalizationService.Format("AiteProfiles_StatusProfiles", Profiles.Count);
 
             if (includeExpensiveStats)
             {
-                await _store.RefreshAsync(includeExpensiveStats: true, cancellationToken).ConfigureAwait(true);
+                await _store.RefreshAsync(includeExpensiveStats: true, forceRescan: forceRescan, cancellationToken).ConfigureAwait(true);
                 await ReloadFromStoreAsync(cancellationToken).ConfigureAwait(true);
                 StatusText = LocalizationService.Format("AiteProfiles_StatusProfiles", Profiles.Count);
             }

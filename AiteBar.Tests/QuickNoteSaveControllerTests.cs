@@ -13,6 +13,8 @@ public sealed class QuickNoteSaveControllerTests
         public int ConflictCopyCalls { get; private set; }
         public bool HasExternalChangesValue { get; set; }
         public bool ThrowExternalChangeExceptionOnSave { get; set; }
+        public Action? OnSave { get; set; }
+        public Action? OnConflictCopy { get; set; }
 
         public string? LastConflictCopyPath => "QuickNote-conflict.aite-note";
         public bool HasExternalChanges() => HasExternalChangesValue;
@@ -25,15 +27,60 @@ public sealed class QuickNoteSaveControllerTests
                 throw new QuickNoteExternalChangeException();
             }
             SaveCalls++;
+            OnSave?.Invoke();
             return Task.CompletedTask;
         }
         public Task<string> SaveConflictCopyAsync(FlowDocument document)
         {
             ConflictCopyCalls++;
+            OnConflictCopy?.Invoke();
             return Task.FromResult(LastConflictCopyPath!);
         }
-        public void OpenInEditor() { }
         public void OpenConflictCopy() { }
+    }
+
+    [Fact]
+    public async Task SaveNowAsync_WhenEditedDuringConflictCopy_SavesLatestVersionBeforeReturning()
+    {
+        var persistence = new MockPersistence { HasExternalChangesValue = true };
+        using var controller = new QuickNoteSaveController(persistence, () => new FlowDocument(), (_, _) => { }, () => { }, () => true);
+        persistence.OnConflictCopy = () =>
+        {
+            if (persistence.ConflictCopyCalls == 1)
+                controller.MarkChangedAndSchedule();
+        };
+        controller.MarkChangedAndSchedule();
+
+        Assert.True(await controller.SaveNowAsync(force: true));
+        Assert.Equal(2, persistence.ConflictCopyCalls);
+        Assert.False(controller.HasPendingChanges);
+    }
+
+    [Fact]
+    public async Task SaveNowAsync_WhenDisposedDuringSave_DoesNotReleaseDisposedSemaphore()
+    {
+        var persistence = new MockPersistence();
+        using var controller = new QuickNoteSaveController(persistence, () => new FlowDocument(), (_, _) => { }, () => { }, () => true);
+        persistence.OnSave = controller.Dispose;
+        controller.MarkChangedAndSchedule();
+
+        await controller.SaveNowAsync();
+        Assert.Equal(1, persistence.SaveCalls);
+        Assert.False(await controller.SaveNowAsync());
+    }
+
+    [Fact]
+    public async Task SaveNowAsync_WhenSaveFails_PreservesChangesForRetry()
+    {
+        var persistence = new MockPersistence { OnSave = () => throw new System.IO.IOException("test failure") };
+        using var controller = new QuickNoteSaveController(persistence, () => new FlowDocument(), (_, _) => { }, () => { }, () => true);
+        controller.MarkChangedAndSchedule();
+
+        Assert.False(await controller.SaveNowAsync());
+        Assert.True(controller.HasPendingChanges);
+        persistence.OnSave = null;
+        Assert.True(await controller.SaveNowAsync());
+        Assert.False(controller.HasPendingChanges);
     }
 
     [Fact]

@@ -154,7 +154,7 @@ public sealed class AiteProfilesUtilityTests
             int messages = 0;
             viewModel.MessageRequested += (_, _) => messages++;
 
-            await viewModel.RefreshAsync(includeExpensiveStats: false, cancellationSource.Token);
+            await viewModel.RefreshAsync(includeExpensiveStats: false, cancellationToken: cancellationSource.Token);
 
             Assert.Equal(0, messages);
             Assert.NotEqual(LocalizationService.Get("AiteProfiles_StatusScanFailed"), viewModel.StatusText);
@@ -358,14 +358,53 @@ public sealed class AiteProfilesUtilityTests
         Path = profilePath
     };
 
+    [Fact]
+    public async Task Refresh_ForceRescan_PassesFlagToScanner()
+    {
+        string root = CreateTemporaryDirectory();
+        string profilePath = Path.Combine(root, "Profile 1");
+        Directory.CreateDirectory(profilePath);
+        try
+        {
+            var scanner = new RescanTrackingScanner([CreateProfileRow(profilePath)]);
+            var store = new AiteProfilesStore(scanner, root);
+            await store.InitializeAsync();
+
+            await store.RefreshAsync(includeExpensiveStats: true, forceRescan: true);
+
+            Assert.True(scanner.LastForceRescan);
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     private sealed class TestScanner(IReadOnlyList<AiteProfileScanRow> rows) : IAiteProfilesScanner
     {
         public Task<IReadOnlyList<AiteProfileScanRow>> ScanAsync(
             IReadOnlyDictionary<string, AiteProfileCacheEntry>? cache = null,
             bool includeExpensiveStats = true,
+            bool forceRescan = false,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(rows);
+        }
+    }
+
+    private sealed class RescanTrackingScanner(IReadOnlyList<AiteProfileScanRow> rows) : IAiteProfilesScanner
+    {
+        public bool LastForceRescan { get; private set; }
+
+        public Task<IReadOnlyList<AiteProfileScanRow>> ScanAsync(
+            IReadOnlyDictionary<string, AiteProfileCacheEntry>? cache = null,
+            bool includeExpensiveStats = true,
+            bool forceRescan = false,
+            CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            LastForceRescan = forceRescan;
             return Task.FromResult(rows);
         }
     }

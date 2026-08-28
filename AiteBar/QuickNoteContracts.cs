@@ -45,8 +45,12 @@ internal static class QuickNoteTags
 
     public const string Code = "code";
     public const string CodeHeader = "code-header";
+    public const string Quote = "quote";
+    public const string Divider = "divider";
     public const string TaskChecked = "task:checked";
     public const string TaskUnchecked = "task:unchecked";
+    public const string UserStrikethrough = "user:strikethrough";
+    public const string TaskStrikethrough = "task:strikethrough";
 
     public static string Task(bool isChecked) => isChecked ? TaskChecked : TaskUnchecked;
 
@@ -101,25 +105,6 @@ internal static class QuickNoteTags
         value = text[prefix.Length..];
         return true;
     }
-}
-
-internal enum QuickNoteResizeEdge
-{
-    Left,
-    Right,
-    Top,
-    TopLeft,
-    TopRight,
-    Bottom,
-    BottomLeft,
-    BottomRight
-}
-
-internal static class QuickNoteResizeEdges
-{
-    public static bool TryParse(string? value, out QuickNoteResizeEdge edge) =>
-        Enum.TryParse(value, ignoreCase: false, out edge) &&
-        Enum.IsDefined(edge);
 }
 
 internal enum ClearFormattingScope

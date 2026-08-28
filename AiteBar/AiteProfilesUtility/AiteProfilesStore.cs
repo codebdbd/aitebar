@@ -62,13 +62,13 @@ internal sealed class AiteProfilesStore
         }
     }
 
-    public async Task RefreshAsync(bool includeExpensiveStats, CancellationToken cancellationToken = default)
+    public async Task RefreshAsync(bool includeExpensiveStats, bool forceRescan = false, CancellationToken cancellationToken = default)
     {
         await _gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
             AiteProfilesCacheDocument cache = await LoadCacheAsync(cancellationToken).ConfigureAwait(false);
-            IReadOnlyList<AiteProfileScanRow> rows = await _scanner.ScanAsync(cache.Profiles, includeExpensiveStats, cancellationToken).ConfigureAwait(false);
+            IReadOnlyList<AiteProfileScanRow> rows = await _scanner.ScanAsync(cache.Profiles, includeExpensiveStats, forceRescan, cancellationToken).ConfigureAwait(false);
             ReplaceProfiles(rows);
             await SaveCacheAsync(rows, cancellationToken).ConfigureAwait(false);
         }

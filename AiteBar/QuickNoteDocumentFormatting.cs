@@ -15,11 +15,14 @@ namespace AiteBar
     internal static class QuickNoteDocumentFormatting
     {
         public const string CodeCopyLink = "aitebar://copy-code/";
-        public const string CodeBackground = "#101316";
-        public const string CodeHeaderBackground = "#5E666D";
-        public const string CodeForeground = "#F4F6F8";
-        public const string CodeBorder = "#101316";
-        public const double ListMarkerOffset = 28;
+        public const string CodeBackground = QuickNoteThemeCatalog.CodeBackground;
+        public const string CodeHeaderBackground = QuickNoteThemeCatalog.CodeHeaderBackground;
+        public const string CodeForeground = QuickNoteThemeCatalog.CodeText;
+        public const string CodeBorder = QuickNoteThemeCatalog.CodeBorder;
+        public const double CodeContentVerticalPadding = 8;
+        public const double QuoteContentVerticalPadding = 8;
+        public const double ListMarkerOffset = 6;
+        public const double ListIndent = 24;
         private const RegexOptions LinkRegexOptions = RegexOptions.Compiled | RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.NonBacktracking;
         private static readonly Regex UrlRegex = new(@"\b(?:https?://|www\.)[^\s<>()""']+", LinkRegexOptions);
         private static readonly Regex EmailRegex = new(@"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", LinkRegexOptions);
@@ -146,12 +149,12 @@ namespace AiteBar
                 BorderThickness = new Thickness(1),
                 BorderBrush = QuickNoteBrush.FromHex(CodeBorder),
                 Margin = new Thickness(0, 6, 0, 6),
-                Padding = new Thickness(0),
+                Padding = new Thickness(0, 0, 0, CodeContentVerticalPadding),
                 FontFamily = QuickNoteFonts.Code,
                 FontSize = 13
             };
 
-            section.Blocks.Add(CreateCodeHeader());
+            section.Blocks.Add(CreateCodeHeader(theme));
 
             foreach (string line in lines)
             {
@@ -160,7 +163,7 @@ namespace AiteBar
                     Margin = new Thickness(8, 0, 8, 0),
                     FontFamily = QuickNoteFonts.Code,
                     FontSize = 13,
-                    Foreground = QuickNoteBrush.FromHex(CodeForeground),
+                    Foreground = QuickNoteBrush.FromHex(foreground),
                     LineHeight = 18
                 });
             }
@@ -173,15 +176,26 @@ namespace AiteBar
             foreach (System.Windows.Documents.List list in EnumerateLists(document.Blocks))
             {
                 list.MarkerOffset = ListMarkerOffset;
+                list.Margin = new Thickness(0);
+                list.Padding = new Thickness(ListIndent, 0, 0, 0);
+                foreach (ListItem item in list.ListItems)
+                {
+                    item.Margin = new Thickness(0);
+                    item.Padding = new Thickness(0);
+                    foreach (Paragraph paragraph in item.Blocks.OfType<Paragraph>())
+                    {
+                        paragraph.Margin = new Thickness(0);
+                        paragraph.Padding = new Thickness(0);
+                    }
+                }
             }
         }
 
-        private static BlockUIContainer CreateCodeHeader()
+        private static BlockUIContainer CreateCodeHeader(QuickNoteTheme theme)
         {
             var label = new TextBlock
             {
                 Text = "code",
-                Foreground = QuickNoteBrush.FromHex(CodeForeground),
                 FontFamily = QuickNoteFonts.Code,
                 FontSize = 12,
                 VerticalAlignment = VerticalAlignment.Center,
@@ -192,8 +206,6 @@ namespace AiteBar
             {
                 Content = "\uE8C8",
                 Tag = CodeCopyLink,
-                Foreground = Brushes.White,
-                Background = Brushes.Transparent,
                 BorderThickness = new Thickness(0),
                 OverridesDefaultStyle = true,
                 Template = CreateTransparentGlyphButtonTemplate(),
@@ -212,7 +224,6 @@ namespace AiteBar
 
             var grid = new Grid
             {
-                Background = QuickNoteBrush.FromHex(CodeHeaderBackground),
                 Height = 20
             };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -222,12 +233,50 @@ namespace AiteBar
             grid.Children.Add(label);
             grid.Children.Add(copy);
 
-            return new BlockUIContainer(grid)
+            var header = new BlockUIContainer(grid)
             {
                 Tag = QuickNoteTags.CodeHeader,
                 Margin = new Thickness(0),
                 Padding = new Thickness(0)
             };
+            ApplyCodeHeaderTheme(header, theme);
+            return header;
+        }
+
+        public static void ApplyCodeHeaderTheme(BlockUIContainer header, QuickNoteTheme theme)
+        {
+            ArgumentNullException.ThrowIfNull(header);
+            ArgumentNullException.ThrowIfNull(theme);
+
+            header.Margin = new Thickness(0);
+            header.Padding = new Thickness(0, 0, 0, CodeContentVerticalPadding);
+            if (header.Child is not Grid grid)
+            {
+                return;
+            }
+
+            grid.Height = 20;
+            grid.Background = QuickNoteBrush.FromHex(QuickNoteThemeCatalog.GetCodeHeaderBackground(theme));
+            foreach (UIElement child in grid.Children)
+            {
+                if (child is TextBlock label)
+                {
+                    label.Foreground = QuickNoteBrush.FromHex(GetCodeText(theme));
+                    label.FontFamily = QuickNoteFonts.Code;
+                    label.FontSize = 12;
+                }
+                else if (child is Button button)
+                {
+                    button.Foreground = QuickNoteBrush.FromHex(GetCodeText(theme));
+                    button.Background = Brushes.Transparent;
+                    button.BorderThickness = new Thickness(0);
+                    button.OverridesDefaultStyle = true;
+                    button.FontFamily = new FontFamily("Segoe MDL2 Assets");
+                    button.FontSize = 12;
+                    button.Width = 24;
+                    button.Height = 18;
+                }
+            }
         }
 
         private static ControlTemplate CreateTransparentGlyphButtonTemplate()
@@ -243,10 +292,30 @@ namespace AiteBar
             return new ControlTemplate(typeof(Button)) { VisualTree = border };
         }
 
+        public static bool IsQuoteBlock(Block block) =>
+            block is Section section &&
+            (Equals(section.Tag, QuickNoteTags.Quote) ||
+             (section.Tag == null &&
+              section.BorderThickness.Left > 0 &&
+              section.BorderThickness.Top == 0 &&
+              section.BorderThickness.Right == 0 &&
+              section.BorderThickness.Bottom == 0));
+
+        public static bool IsDividerBlock(Block block) =>
+            block is Section section &&
+            (Equals(section.Tag, QuickNoteTags.Divider) ||
+             (section.Tag == null &&
+              section.Blocks.OfType<Paragraph>().Any(static p => p.BorderThickness.Top > 0 && p.Inlines.Count == 0)));
+
         public static bool IsCodeBlock(Block block) =>
             block is Section section &&
+            !IsQuoteBlock(section) &&
+            !IsDividerBlock(section) &&
             (Equals(section.Tag, QuickNoteTags.Code) ||
-             string.Equals(section.FontFamily?.Source, QuickNoteFonts.Code.Source, StringComparison.Ordinal));
+             (section.Tag == null && (
+                 string.Equals(section.FontFamily?.Source, QuickNoteFonts.Code.Source, StringComparison.Ordinal) ||
+                 section.Blocks.OfType<BlockUIContainer>().Any(IsCodeHeader)
+             )));
 
         public static bool IsCodeHeader(Block block) =>
             Equals(block.Tag, QuickNoteTags.CodeHeader);
@@ -258,6 +327,17 @@ namespace AiteBar
                 .SkipWhile(string.IsNullOrWhiteSpace));
 
         private static string GetCodeParagraphText(Paragraph paragraph) =>
+            string.Concat(paragraph.Inlines
+                    .Select(static inline => new TextRange(inline.ContentStart, inline.ContentEnd).Text))
+                .TrimEnd('\r', '\n');
+
+        public static string GetQuoteBlockText(Section section) =>
+            string.Join(Environment.NewLine, section.Blocks
+                .OfType<Paragraph>()
+                .Select(GetQuoteParagraphText)
+                .SkipWhile(string.IsNullOrWhiteSpace));
+
+        private static string GetQuoteParagraphText(Paragraph paragraph) =>
             string.Concat(paragraph.Inlines
                     .Select(static inline => new TextRange(inline.ContentStart, inline.ContentEnd).Text))
                 .TrimEnd('\r', '\n');
@@ -287,8 +367,6 @@ namespace AiteBar
             }
         }
 
-
-
         public static string GetCodeBackground(QuickNoteTheme theme) => theme?.CodeBackground ?? CodeBackground;
 
         public static string GetCodeText(QuickNoteTheme theme) => theme?.CodeText ?? CodeForeground;
@@ -297,6 +375,7 @@ namespace AiteBar
         {
             var section = new Section
             {
+                Tag = QuickNoteTags.Divider,
                 Margin = new Thickness(0, 6, 0, 6),
                 Padding = new Thickness(0),
                 BorderThickness = new Thickness(0)
@@ -317,16 +396,17 @@ namespace AiteBar
         {
             string[] lines = QuickNoteDocumentHelper.NormalizeLineEndings(quoteText).Split('\n');
             string accentColor = theme?.Accent ?? "#007ACC";
-            string bgColor = theme?.IsDark is true ? "#22263A" : "#EEF4FC";
+            string bgColor = theme != null ? QuickNoteThemeCatalog.GetQuoteBackground(theme) : "#22263A";
             string textColor = theme?.Text ?? "#F6F0E6";
 
             var section = new Section
             {
+                Tag = QuickNoteTags.Quote,
                 BorderBrush = QuickNoteBrush.FromHex(accentColor),
                 BorderThickness = new Thickness(3, 0, 0, 0),
                 Background = QuickNoteBrush.FromHex(bgColor),
                 Margin = new Thickness(0, 6, 0, 6),
-                Padding = new Thickness(0)
+                Padding = new Thickness(0, QuoteContentVerticalPadding, 0, QuoteContentVerticalPadding)
             };
 
             foreach (string line in lines)
@@ -431,21 +511,48 @@ namespace AiteBar
             if (paragraph?.Inlines.FirstInline is InlineUIContainer uiContainer &&
                 uiContainer.Child is CheckBox cb)
             {
-                if (QuickNoteTags.TryGetTaskState(uiContainer.Tag, out isChecked) ||
-                    QuickNoteTags.TryGetTaskState(cb.Tag, out isChecked) ||
-                    cb.IsChecked == true)
+                // Tags are runtime metadata and XamlPackage may omit them. The first
+                // InlineUIContainer hosting a CheckBox is the persisted task schema.
+                if (!QuickNoteTags.TryGetTaskState(uiContainer.Tag, out isChecked) &&
+                    !QuickNoteTags.TryGetTaskState(cb.Tag, out isChecked))
                 {
-                    if (cb.IsChecked == true)
-                    {
-                        isChecked = true;
-                    }
-                    container = uiContainer;
-                    checkBox = cb;
-                    return true;
+                    isChecked = cb.IsChecked == true;
                 }
+
+                if (cb.IsChecked == true)
+                {
+                    isChecked = true;
+                }
+                container = uiContainer;
+                checkBox = cb;
+                SetTaskParagraph(cb, paragraph);
+                return true;
             }
 
             return false;
+        }
+
+        private static readonly DependencyProperty TaskParagraphProperty =
+            DependencyProperty.RegisterAttached(
+                "TaskParagraph",
+                typeof(Paragraph),
+                typeof(QuickNoteDocumentFormatting),
+                new PropertyMetadata(null));
+
+        public static Paragraph? GetTaskParagraph(CheckBox checkBox) =>
+            (Paragraph?)checkBox.GetValue(TaskParagraphProperty);
+
+        private static void SetTaskParagraph(CheckBox checkBox, Paragraph paragraph) =>
+            checkBox.SetValue(TaskParagraphProperty, paragraph);
+
+        public static void ApplyInlineTheme(
+            InlineCollection inlines,
+            Brush normalText,
+            Brush codeBackground,
+            Brush codeText,
+            Brush linkBrush)
+        {
+            QuickNoteDocumentContract.ApplyInlineTheme(inlines, normalText, codeBackground, codeText, linkBrush);
         }
 
         public static void ApplyTaskFormattingToParagraph(Paragraph paragraph, bool isChecked, QuickNoteTheme? theme)
@@ -455,6 +562,7 @@ namespace AiteBar
                 container.Tag = QuickNoteTags.Task(isChecked);
                 if (container.Child is CheckBox checkBox)
                 {
+                    SetTaskParagraph(checkBox, paragraph);
                     checkBox.Tag = QuickNoteTags.Task(isChecked);
                     if (checkBox.IsChecked != isChecked)
                     {
@@ -463,7 +571,18 @@ namespace AiteBar
                 }
             }
 
-            Brush textBrush = QuickNoteBrush.FromHex(isChecked ? (theme?.MutedText ?? "#74757A") : (theme?.Text ?? "#F6F0E6"));
+            Brush defaultTextBrush = QuickNoteBrush.FromHex(theme?.Text ?? "#F6F0E6");
+            Brush mutedTextBrush = QuickNoteBrush.FromHex(theme?.MutedText ?? "#74757A");
+            Brush linkBrush = QuickNoteBrush.FromHex(theme?.Link ?? "#4EA6FF");
+            QuickNoteTheme safeTheme = theme ?? QuickNoteThemeCatalog.Find(null);
+            Brush codeTextBrush = QuickNoteBrush.FromHex(GetCodeText(safeTheme));
+            Brush codeBackgroundBrush = QuickNoteBrush.FromHex(GetCodeBackground(safeTheme));
+
+            paragraph.Foreground = isChecked ? mutedTextBrush : defaultTextBrush;
+            paragraph.TextDecorations = isChecked || GetIsUserStrikethrough(paragraph)
+                ? TextDecorations.Strikethrough
+                : null;
+            ApplyInlineTheme(paragraph.Inlines, defaultTextBrush, codeBackgroundBrush, codeTextBrush, linkBrush);
 
             foreach (Inline inline in paragraph.Inlines)
             {
@@ -472,7 +591,7 @@ namespace AiteBar
                     continue;
                 }
 
-                ApplyStrikethroughAndColor(inline, isChecked, textBrush);
+                ApplyTaskInlineFormatting(inline, isChecked, mutedTextBrush);
             }
         }
 
@@ -488,16 +607,73 @@ namespace AiteBar
                 paragraph.Inlines.Remove(container);
             }
 
-            Brush defaultBrush = QuickNoteBrush.FromHex(theme?.Text ?? "#F6F0E6");
-            foreach (Inline inline in paragraph.Inlines)
-            {
-                if (inline is not InlineUIContainer)
-                {
-                    ApplyStrikethroughAndColor(inline, false, defaultBrush);
-                }
-            }
+            ApplyTaskFormattingToParagraph(paragraph, false, theme);
             return true;
         }
+
+        public static readonly DependencyProperty IsTaskStrikethroughProperty =
+            DependencyProperty.RegisterAttached(
+                "IsTaskStrikethrough",
+                typeof(bool),
+                typeof(QuickNoteDocumentFormatting),
+                new PropertyMetadata(false));
+
+        public static bool GetIsTaskStrikethrough(Inline inline) => (bool)inline.GetValue(IsTaskStrikethroughProperty);
+        public static void SetIsTaskStrikethrough(Inline inline, bool value) => inline.SetValue(IsTaskStrikethroughProperty, value);
+
+        public static readonly DependencyProperty IsUserStrikethroughProperty =
+            DependencyProperty.RegisterAttached(
+                "IsUserStrikethrough",
+                typeof(bool),
+                typeof(QuickNoteDocumentFormatting),
+                new PropertyMetadata(false));
+
+        public static bool GetIsUserStrikethrough(Inline inline) => (bool)inline.GetValue(IsUserStrikethroughProperty);
+        public static void SetIsUserStrikethrough(Inline inline, bool value) => inline.SetValue(IsUserStrikethroughProperty, value);
+
+        public static bool GetIsUserStrikethrough(Paragraph paragraph) => (bool)paragraph.GetValue(IsUserStrikethroughProperty);
+        public static void SetIsUserStrikethrough(Paragraph paragraph, bool value) => paragraph.SetValue(IsUserStrikethroughProperty, value);
+
+        public static void MarkUserStrikethroughRecursive(Paragraph paragraph)
+        {
+            if (paragraph.TextDecorations?.Any(d => d.Location == TextDecorationLocation.Strikethrough) == true)
+            {
+                SetIsUserStrikethrough(paragraph, true);
+                if (paragraph.Tag == null)
+                {
+                    paragraph.Tag = QuickNoteTags.UserStrikethrough;
+                }
+            }
+
+            foreach (Inline inline in paragraph.Inlines)
+            {
+                MarkUserStrikethroughRecursive(inline);
+            }
+        }
+
+        public static void MarkUserStrikethroughRecursive(Inline inline)
+        {
+            if (inline.TextDecorations?.Any(d => d.Location == TextDecorationLocation.Strikethrough) == true)
+            {
+                SetIsUserStrikethrough(inline, true);
+            }
+
+            if (inline is Span span)
+            {
+                foreach (Inline child in span.Inlines)
+                {
+                    MarkUserStrikethroughRecursive(child);
+                }
+            }
+        }
+
+        public static bool HasUserStrikethrough(Paragraph paragraph) =>
+            GetIsUserStrikethrough(paragraph) ||
+            paragraph.Inlines.Any(HasUserStrikethrough);
+
+        private static bool HasUserStrikethrough(Inline inline) =>
+            GetIsUserStrikethrough(inline) ||
+            inline is Span span && span.Inlines.Any(HasUserStrikethrough);
 
         public static void ToggleTaskParagraph(Paragraph paragraph, Action<bool>? onToggled, QuickNoteTheme? theme)
         {
@@ -507,6 +683,8 @@ namespace AiteBar
             }
             else
             {
+                MarkUserStrikethroughRecursive(paragraph);
+
                 var newContainer = CreateTaskCheckbox(false, onToggled, theme);
                 if (paragraph.Inlines.FirstInline != null)
                 {
@@ -521,36 +699,108 @@ namespace AiteBar
             }
         }
 
-        private static void ApplyStrikethroughAndColor(Inline inline, bool strikethrough, Brush foreground)
+        private static bool HasAncestorHyperlink(Inline inline)
         {
-            if (inline is Run run)
+            DependencyObject? current = inline.Parent;
+            while (current != null)
             {
-                run.Foreground = foreground;
-                TextDecorationCollection decorations = run.TextDecorations != null ? run.TextDecorations.Clone() : [];
-                bool hasStrikethrough = decorations.Any(d => d.Location == TextDecorationLocation.Strikethrough);
-                if (strikethrough && !hasStrikethrough)
+                if (current is Hyperlink) return true;
+                if (current is Paragraph or FlowDocument) break;
+                current = LogicalTreeHelper.GetParent(current) ?? (current as FrameworkContentElement)?.Parent;
+            }
+            return false;
+        }
+
+        private static void ApplyTaskInlineFormatting(Inline inline, bool isChecked, Brush mutedText)
+        {
+            if (inline is Hyperlink hyperlink)
+            {
+                if (isChecked)
+                {
+                    hyperlink.Foreground = mutedText;
+                }
+                UpdateStrikethrough(hyperlink, isChecked, isHyperlink: true);
+                foreach (Inline child in hyperlink.Inlines)
+                {
+                    ApplyTaskInlineFormatting(child, isChecked, mutedText);
+                }
+            }
+            else if (inline is Span span)
+            {
+                if (isChecked)
+                {
+                    span.Foreground = mutedText;
+                }
+                UpdateStrikethrough(span, isChecked, isHyperlink: false);
+                foreach (Inline child in span.Inlines)
+                {
+                    ApplyTaskInlineFormatting(child, isChecked, mutedText);
+                }
+            }
+            else if (inline is Run run)
+            {
+                if (isChecked)
+                {
+                    run.Foreground = mutedText;
+                }
+                UpdateStrikethrough(run, isChecked, isHyperlink: HasAncestorHyperlink(run));
+            }
+        }
+
+        private static void UpdateStrikethrough(Inline inline, bool isChecked, bool isHyperlink)
+        {
+            TextDecorationCollection decorations = inline.TextDecorations != null ? inline.TextDecorations.Clone() : [];
+            bool hasStrikethrough = decorations.Any(d => d.Location == TextDecorationLocation.Strikethrough);
+
+            if (isChecked)
+            {
+                if (!hasStrikethrough)
                 {
                     foreach (var dec in TextDecorations.Strikethrough)
                     {
                         decorations.Add(dec);
                     }
-                    run.TextDecorations = decorations;
+                    inline.TextDecorations = decorations;
+                    SetIsTaskStrikethrough(inline, true);
                 }
-                else if (!strikethrough && hasStrikethrough)
+                else if (!GetIsUserStrikethrough(inline))
                 {
-                    foreach (var dec in decorations.Where(d => d.Location == TextDecorationLocation.Strikethrough).ToList())
-                    {
-                        decorations.Remove(dec);
-                    }
-                    run.TextDecorations = decorations.Count > 0 ? decorations : null;
+                    SetIsTaskStrikethrough(inline, true);
                 }
             }
-            else if (inline is Span span)
+            else
             {
-                span.Foreground = foreground;
-                foreach (Inline child in span.Inlines)
+                if (GetIsUserStrikethrough(inline))
                 {
-                    ApplyStrikethroughAndColor(child, strikethrough, foreground);
+                    SetIsTaskStrikethrough(inline, false);
+                }
+                else
+                {
+                    if (hasStrikethrough)
+                    {
+                        foreach (var dec in decorations.Where(d => d.Location == TextDecorationLocation.Strikethrough).ToList())
+                        {
+                            decorations.Remove(dec);
+                        }
+                    }
+                    SetIsTaskStrikethrough(inline, false);
+                }
+
+                if (isHyperlink)
+                {
+                    bool hasUnderline = decorations.Any(d => d.Location == TextDecorationLocation.Underline);
+                    if (!hasUnderline)
+                    {
+                        foreach (var dec in TextDecorations.Underline)
+                        {
+                            decorations.Add(dec);
+                        }
+                    }
+                    inline.TextDecorations = decorations;
+                }
+                else
+                {
+                    inline.TextDecorations = decorations.Count > 0 ? decorations : null;
                 }
             }
         }
