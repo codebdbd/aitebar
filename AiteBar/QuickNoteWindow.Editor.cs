@@ -798,7 +798,8 @@ namespace AiteBar
         private void ToggleFormatting(DependencyProperty property, object enabledValue, object? disabledValue)
         {
             object current = TxtNote.Selection.GetPropertyValue(property);
-            TxtNote.Selection.ApplyPropertyValue(property, IsFormattingEnabled(current, enabledValue) ? disabledValue : enabledValue);
+            RunDocumentChangeWithoutAutoSave(() =>
+                TxtNote.Selection.ApplyPropertyValue(property, IsFormattingEnabled(current, enabledValue) ? disabledValue : enabledValue));
             MarkChangedAndScheduleSave();
             TxtNote.Focus();
         }
@@ -808,7 +809,8 @@ namespace AiteBar
             RestoreFormatSelection(_preservedFormatSelection);
             object value = TxtNote.Selection.GetPropertyValue(TextElement.FontSizeProperty);
             double current = value is double size ? size : QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0);
-            TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, Math.Clamp(current + delta, 10, 36));
+            RunDocumentChangeWithoutAutoSave(() =>
+                TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, Math.Clamp(current + delta, 10, 36)));
             _preservedFormatSelection = null;
             MarkChangedAndScheduleSave();
             TxtNote.Focus();
@@ -840,7 +842,8 @@ namespace AiteBar
                 }
             }
 
-            TxtNote.Selection.ApplyPropertyValue(Inline.TextDecorationsProperty, decorations.Count == 0 ? null : decorations);
+            RunDocumentChangeWithoutAutoSave(() =>
+                TxtNote.Selection.ApplyPropertyValue(Inline.TextDecorationsProperty, decorations.Count == 0 ? null : decorations));
             MarkChangedAndScheduleSave();
             TxtNote.Focus();
         }
@@ -1054,10 +1057,23 @@ namespace AiteBar
                 try
                 {
                     TxtNote.Selection.Text = string.Empty;
-                    InsertInlineAtCaret(container);
-                    TextPointer caret = container.ElementEnd.GetNextInsertionPosition(LogicalDirection.Forward)
-                        ?? container.ElementEnd.GetNextContextPosition(LogicalDirection.Forward)
-                        ?? container.ElementEnd;
+                    TextPointer insertion = TxtNote.Selection.Start;
+                    Paragraph? before = insertion.Paragraph;
+                    TextPointer caret = insertion.InsertParagraphBreak();
+                    Paragraph after = caret.Paragraph!;
+                    var imageParagraph = new Paragraph(container)
+                    {
+                        Margin = new Thickness(0),
+                        Padding = new Thickness(0),
+                        LineHeight = double.NaN,
+                        TextAlignment = TextAlignment.Left
+                    };
+                    after.SiblingBlocks.InsertBefore(after, imageParagraph);
+                    // Reuse the empty line at the caret instead of adding an unwanted blank above the image.
+                    if (before != null && new TextRange(before.ContentStart, before.ContentEnd).IsEmpty)
+                    {
+                        before.SiblingBlocks.Remove(before);
+                    }
                     TxtNote.Selection.Select(caret, caret);
                 }
                 finally
@@ -1074,38 +1090,6 @@ namespace AiteBar
                 SetStatus(QuickNoteStatusKind.ImageInsertFailed);
                 return false;
             }
-        }
-
-        private void InsertInlineAtCaret(Inline inline)
-        {
-            TextPointer pointer = TxtNote.Selection.Start;
-            if (pointer.Parent is Run run && GetInlineSiblings(run) is { } siblings)
-            {
-                int offset = new TextRange(run.ContentStart, pointer).Text.Length;
-                string after = run.Text[offset..];
-                run.Text = run.Text[..offset];
-                siblings.InsertAfter(run, inline);
-                if (!string.IsNullOrEmpty(after))
-                {
-                    siblings.InsertAfter(inline, CloneRunWithText(run, after));
-                }
-                return;
-            }
-
-            if (pointer.Paragraph is { } paragraph)
-            {
-                InsertInlineInCollection(paragraph.Inlines, pointer, inline);
-                return;
-            }
-
-            var fallbackParagraph = new Paragraph(inline)
-            {
-                Margin = new Thickness(0),
-                FontFamily = QuickNoteFonts.Default,
-                FontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0),
-                Foreground = Brush(_theme.Text)
-            };
-            TxtNote.Document.Blocks.Add(fallbackParagraph);
         }
 
         private static void InsertHyperlinkAtPointer(TextPointer pointer, Hyperlink hyperlink)
@@ -1198,37 +1182,6 @@ namespace AiteBar
         private static Run CloneRunWithText(Run source, string text)
         {
             return QuickNoteDocumentContract.CloneRunWithText(source, text);
-        }
-
-        private void SetEditorPlainText(string text)
-        {
-            TxtNote.Document.Blocks.Clear();
-            var paragraph = new Paragraph
-            {
-                Margin = new Thickness(0),
-                FontFamily = QuickNoteFonts.Default,
-                FontSize = 14,
-                FontWeight = FontWeights.Normal,
-                FontStyle = FontStyles.Normal
-            };
-
-            string[] lines = QuickNoteDocumentHelper.NormalizeLineEndings(text).Split('\n');
-            for (int i = 0; i < lines.Length; i++)
-            {
-                if (i > 0)
-                {
-                    paragraph.Inlines.Add(new LineBreak());
-                }
-
-                paragraph.Inlines.Add(new Run(lines[i])
-                {
-                    FontFamily = QuickNoteFonts.Default,
-                    FontWeight = FontWeights.Normal,
-                    FontStyle = FontStyles.Normal
-                });
-            }
-
-            TxtNote.Document.Blocks.Add(paragraph);
         }
 
         private void ApplyRangeEdit(QuickNoteRangeEdit edit)

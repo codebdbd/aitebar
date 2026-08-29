@@ -45,6 +45,7 @@ namespace AiteBar
         internal QuickNoteImageInteractionController ImageInteractionController => _imageInteraction;
         private readonly QuickNoteLinkHighlightController _linkHighlightController;
         private long _suppressAutoDismissUntilTick;
+        private QuickNoteWindowInteraction? _windowInteraction;
 
         public QuickNoteWindow(QuickNoteService noteService, AppSettingsService settingsService)
             : this(new QuickNotePersistence(noteService), settingsService, new QuickNoteClipboard())
@@ -65,7 +66,7 @@ namespace AiteBar
             _noteService = noteService ?? throw new ArgumentNullException(nameof(noteService));
             _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
             _clipboard = clipboard ?? throw new ArgumentNullException(nameof(clipboard));
-            _footerStatsController = new QuickNoteFooterStatsController(TxtNote, TxtPlaceholder, TxtStats);
+            _footerStatsController = new QuickNoteFooterStatsController(TxtNote, TxtStats);
             _saveController = new QuickNoteSaveController(
                 _noteService,
                 getDocument: () => TxtNote.Document,
@@ -95,6 +96,8 @@ namespace AiteBar
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);
+            _windowInteraction = new QuickNoteWindowInteraction(
+                System.Windows.Interop.HwndSource.FromHwnd(new System.Windows.Interop.WindowInteropHelper(this).Handle));
             if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000)) return;
 
             // Let DWM round the HWND, including its contents, border and shadow. The shell
@@ -118,7 +121,7 @@ namespace AiteBar
             {
                 pinButton.IsChecked = _settingsService.Settings.QuickNotePinned;
             }
-            UpdatePlaceholderAndStats();
+            UpdateFooterStats();
             if (_statusKind != QuickNoteStatusKind.LoadFailed)
             {
                 UpdateStatusSaved();
@@ -135,8 +138,13 @@ namespace AiteBar
 
         protected override async void OnDeactivatedAutoDismiss()
         {
+            if (_disposed) return;
+            // Capture the cause before yielding: Snap Assist can transfer focus again while
+            // the dispatcher is pending. It is part of arranging this note, not leaving it.
+            if (_windowInteraction?.IsArrangingWindow == true) return;
             await Dispatcher.Yield(DispatcherPriority.Background);
-            if (_disposed || IsPinned || IsActive || Environment.TickCount64 < _suppressAutoDismissUntilTick)
+            if (_disposed || IsPinned || IsActive || Environment.TickCount64 < _suppressAutoDismissUntilTick ||
+                _windowInteraction?.IsArrangingWindow == true)
             {
                 return;
             }
@@ -207,6 +215,7 @@ namespace AiteBar
             }
 
             _disposed = true;
+            _windowInteraction?.Dispose();
             StopTimers();
             _imageInteraction.Dispose();
             _linkHighlightController.Dispose();
@@ -418,8 +427,14 @@ namespace AiteBar
                     return;
                 }
 
-                if ((Keyboard.Modifiers == ModifierKeys.Control || Keyboard.Modifiers == ModifierKeys.None) &&
-                    e.ClickCount == 1 &&
+                if (e.ClickCount == 1 && TryCopyCodeBlockAtMouse(e.GetPosition(TxtNote)))
+                {
+                    e.Handled = true;
+                    return;
+                }
+
+                if (e.ClickCount == 1 &&
+                    ShouldActivateLink(Keyboard.Modifiers) &&
                     TryOpenUrlAtMouse(e))
                 {
                     e.Handled = true;
@@ -445,11 +460,14 @@ namespace AiteBar
                 return;
             }
 
-            TxtNote.Cursor = (Keyboard.Modifiers == ModifierKeys.Control || Keyboard.Modifiers == ModifierKeys.None) &&
+            TxtNote.Cursor = ShouldActivateLink(Keyboard.Modifiers) &&
                              FindLinkAtMouse(e.GetPosition(TxtNote)) != null
                 ? System.Windows.Input.Cursors.Hand
                 : System.Windows.Input.Cursors.IBeam;
         }
+
+        internal static bool ShouldActivateLink(ModifierKeys modifiers) =>
+            modifiers == ModifierKeys.Control;
 
 
         private void TxtNote_Pasting(object sender, DataObjectPastingEventArgs e)
@@ -539,7 +557,7 @@ namespace AiteBar
 
         private void ScheduleFooterStatsUpdate() => _footerStatsController.ScheduleUpdate();
 
-        private void UpdatePlaceholderAndStats() => _footerStatsController.UpdateUi();
+        private void UpdateFooterStats() => _footerStatsController.UpdateUi();
 
         private void BtnTheme_Click(object sender, RoutedEventArgs e)
         {
@@ -582,8 +600,11 @@ namespace AiteBar
 
             if (result == true)
             {
-                TxtNote.Document.Blocks.Clear();
-                TxtNote.Document.Blocks.Add(new Paragraph(new Run(string.Empty)));
+                RunDocumentChangeWithoutAutoSave(() =>
+                {
+                    TxtNote.Document.Blocks.Clear();
+                    TxtNote.Document.Blocks.Add(new Paragraph(new Run(string.Empty)));
+                });
                 MarkChangedAndScheduleSave();
                 ScheduleFooterStatsUpdate();
             }
@@ -603,12 +624,32 @@ namespace AiteBar
 
         private void ResetCaretFormatting()
         {
-            TxtNote.Selection.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Normal);
-            TxtNote.Selection.ApplyPropertyValue(TextElement.FontStyleProperty, FontStyles.Normal);
-            TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0));
-            TxtNote.Selection.ApplyPropertyValue(Inline.TextDecorationsProperty, null);
-            TxtNote.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, QuickNoteFonts.Default);
-            TxtNote.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
+            RunDocumentChangeWithoutAutoSave(() =>
+            {
+                TxtNote.Selection.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Normal);
+                TxtNote.Selection.ApplyPropertyValue(TextElement.FontStyleProperty, FontStyles.Normal);
+                TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0));
+                TxtNote.Selection.ApplyPropertyValue(Inline.TextDecorationsProperty, null);
+                TxtNote.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, QuickNoteFonts.Default);
+                TxtNote.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
+            });
+        }
+
+        private void RunDocumentChangeWithoutAutoSave(Action change)
+        {
+            ArgumentNullException.ThrowIfNull(change);
+
+            _saveSuppressionCount++;
+            TxtNote.BeginChange();
+            try
+            {
+                change();
+            }
+            finally
+            {
+                TxtNote.EndChange();
+                _saveSuppressionCount--;
+            }
         }
 
         internal void MarkChangedAndScheduleSave()
@@ -656,18 +697,24 @@ namespace AiteBar
             TxtNote.IsUndoEnabled = false;
             try
             {
-                _noteService.Load(TxtNote.Document);
-                if (_noteService.HasLoadFailed) SetStatus(QuickNoteStatusKind.LoadFailed);
-                QuickNoteDocumentFormatting.NormalizeListLayout(TxtNote.Document);
-                ConnectTaskItemEvents(TxtNote.Document);
-                _imageInteraction.ClearSelection();
-            }
-            catch (Exception ex)
-            {
-                Logger.Log(ex);
-                TxtNote.Document.Blocks.Clear();
-                TxtNote.Document.Blocks.Add(new Paragraph(new Run(string.Empty)));
-                SetStatus(QuickNoteStatusKind.LoadFailed);
+                RunDocumentChangeWithoutAutoSave(() =>
+                {
+                    try
+                    {
+                        _noteService.Load(TxtNote.Document);
+                        if (_noteService.HasLoadFailed) SetStatus(QuickNoteStatusKind.LoadFailed);
+                        QuickNoteDocumentFormatting.NormalizeListLayout(TxtNote.Document);
+                        ConnectTaskItemEvents(TxtNote.Document);
+                        _imageInteraction.ClearSelection();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.Log(ex);
+                        TxtNote.Document.Blocks.Clear();
+                        TxtNote.Document.Blocks.Add(new Paragraph(new Run(string.Empty)));
+                        SetStatus(QuickNoteStatusKind.LoadFailed);
+                    }
+                });
             }
             finally
             {
@@ -803,7 +850,7 @@ namespace AiteBar
 
         protected override void OnLocalizationChanged()
         {
-            UpdatePlaceholderAndStats();
+            UpdateFooterStats();
             SetStatus(_statusKind, _statusArgument);
         }
 

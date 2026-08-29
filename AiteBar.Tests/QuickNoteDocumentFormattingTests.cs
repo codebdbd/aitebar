@@ -9,6 +9,42 @@ namespace AiteBar.Tests;
 
 public sealed class QuickNoteDocumentFormattingTests
 {
+    [Theory]
+    [InlineData("lemon")]
+    [InlineData("dark")]
+    public void TaskCheckmark_VisibleStrokeIsCenteredInsideBox(string themeId)
+    {
+        RunSta(() =>
+        {
+            var checkbox = (CheckBox)QuickNoteDocumentFormatting.CreateTaskCheckbox(true, null, QuickNoteThemeCatalog.Find(themeId)).Child;
+            checkbox.Measure(new Size(40, 30));
+            checkbox.Arrange(new Rect(0, 0, 40, 30));
+            checkbox.UpdateLayout();
+            var border = Assert.IsType<Border>(checkbox.Template.FindName("BoxBorder", checkbox));
+            var glyph = Assert.IsType<System.Windows.Shapes.Path>(checkbox.Template.FindName("CheckGlyph", checkbox));
+            var pen = new Pen(glyph.Stroke, glyph.StrokeThickness)
+            {
+                StartLineCap = glyph.StrokeStartLineCap, EndLineCap = glyph.StrokeEndLineCap,
+                LineJoin = glyph.StrokeLineJoin
+            };
+            Rect stroke = glyph.RenderedGeometry.GetRenderBounds(pen);
+            Rect bounds = glyph.TransformToAncestor(border).TransformBounds(stroke);
+            Assert.InRange(Math.Abs(bounds.Left + bounds.Width / 2 - border.ActualWidth / 2), 0, 0.55);
+            Assert.InRange(Math.Abs(bounds.Top + bounds.Height / 2 - border.ActualHeight / 2), 0, 0.55);
+            Assert.True(bounds.Left >= 0 && bounds.Top >= 0 && bounds.Right <= border.ActualWidth && bounds.Bottom <= border.ActualHeight);
+            string? directory = Environment.GetEnvironmentVariable("AITEBAR_QUICKNOTE_RENDER_DIR");
+            if (!string.IsNullOrWhiteSpace(directory))
+            {
+                System.IO.Directory.CreateDirectory(directory);
+                var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap(160, 120, 384, 384, PixelFormats.Pbgra32);
+                bitmap.Render(checkbox);
+                var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+                using var stream = System.IO.File.Create(System.IO.Path.Combine(directory, $"quicknote-checkmark-{themeId}.png"));
+                encoder.Save(stream);
+            }
+        });
+    }
     [Fact]
     public void CodeBlock_IsNativeEditableFlowDocumentSection()
     {

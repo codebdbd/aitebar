@@ -62,7 +62,7 @@ Perform this against the Release build or the built installer, not only a Debug 
 
 7. In each available theme, verify normal text, muted status text, links, inline code, code blocks, quotes, dividers, completed tasks, and toolbar icons. Check that a theme switch updates existing content without turning links or quote children into stale colors.
 
-8. Test Markdown-compatible behavior: URLs open with an ordinary click, unsafe URLs are rejected, link highlighting has a sensible fallback on long notes, and underline survives the relevant save/reload path.
+8. Test Markdown-compatible behavior: a normal click on recognized URL/e-mail/phone text places the caret, Ctrl+click opens it, unsafe URLs are rejected, link highlighting has a sensible fallback on long notes, and underline survives the relevant save/reload path.
 
 9. Test editing behavior: `Ctrl+Z`, `Ctrl+Y`, Enter in the middle and at the end of a task, Enter on an empty task, Backspace task-prefix conversion, list conversion, and Clear Formatting across text, links, code blocks, and quotes.
 
@@ -73,6 +73,10 @@ Perform this against the Release build or the built installer, not only a Debug 
 12. On Windows 11, confirm a floating note has system-rounded corners and only controls in the top strip, no visible utility title. Drag the empty strip; double-click to maximize/restore; right-click for the system menu. Windows should remove rounding when snapped/maximized and restore it when floating. Resize from all four edges and all four corners, and verify pin, Undo/Redo, palette and Close still respond to clicks. A WPF RenderTargetBitmap shows only client content, not the DWM contour; it is not evidence that the desktop window has rounded corners.
 
 13. On Windows with Snap enabled, pin the note so it remains open, snap it beside another resizable window using Snap Assist, and drag their shared boundary in both directions. Both windows should resize together, subject to their minimum widths. Repeat with the note on the other side, then detach and re-snap it. Native HWND hit-test tests verify resize/caption routing, but do not replace this shell-level scenario or change the user's multitasking settings.
+
+The separate opt-in `QuickNoteSnapIntegrationTests` runs a real shared-boundary drag for the note on either side and compares against ordinary WPF windows. Set `AITEBAR_QUICKNOTE_TEST_SNAP=1` and `AITEBAR_QUICKNOTE_RENDER_DIR` before running its filter in an interactive desktop session. It clicks only synthetic windows, uses Win+Arrow to form the pair, drags the common edge, checks both widths and stationary outside edges, closes its windows and restores the cursor. Do not use the mouse during this approximately 20-second check. The normal suite explicitly skips these interactive cases; record their separate test report. The note must have its own taskbar button, no panel owner and no forced topmost state. Check pin/unpin auto-dismiss separately.
+
+14. Insert an image into empty text, at the beginning/end, in the middle of styled text and over a selection. Confirm the picture occupies its own paragraph, the caret is below it, surrounding text is preserved, and Undo/Redo and save/reload retain the picture. Verify the completed task glyph is centered in both light and dark themes.
 
 For an opt-in desktop corner check in an interactive Windows 11 session, set `AITEBAR_QUICKNOTE_RENDER_DIR` to a writable output folder and `AITEBAR_QUICKNOTE_CAPTURE_DESKTOP=1`, then run the test filter `FullyQualifiedName~NativeChrome_ExposesAllResizeEdgesAndCaptionButKeepsButtonsInteractive`. It briefly shows synthetic notes over a solid test backdrop, saves `quicknote-desktop-rounded-<theme>.png`, checks that the backdrop is visible through all four corners, and closes both test windows. It does not load or modify the user's note. The normal test run stays offscreen and verifies DWM corner preference, absence of a custom window region, native resize/caption hit tests, and button interaction. Windows VM/remote-session policies may suppress DWM rounding; do not claim a desktop visual pass in such an environment without the screenshots. See [Microsoft's corner policy](https://learn.microsoft.com/en-us/windows/apps/desktop/modernize/ui/apply-rounded-corners).
 
@@ -94,6 +98,14 @@ For an opt-in desktop corner check in an interactive Windows 11 session, set `AI
 
 2. With pin on, click outside and confirm it remains open. Toggle pin off again and confirm auto-dismiss returns.
 
+Run `QuickNoteSnapIntegrationTests` with `AITEBAR_QUICKNOTE_TEST_SNAP=1` on an idle interactive desktop. Do not move the mouse during the run. Cover unpinned notes dragged to both edges and snapped with Win+Left/Right: the note must survive Snap Assist without silently enabling pin. Return to the note, then activate an ordinary window and verify dismissal still works. Keep the four shared-boundary reference/note cases too; pinned-only Snap tests do not cover the unpinned auto-dismiss regression.
+
+With `AITEBAR_QUICKNOTE_RENDER_DIR` set, the shared-boundary tests capture actual desktop frames before, during and after resizing. Compare with `NativeForms_SharedResize_CapturesShellPreview`, which uses WinForms/GDI rather than WPF. Windows may replace the adjacent window with a gray blurred preview while the border is held; this was reproduced in both reference frameworks. After release, the real note content must return. Do not treat an unchanged-size drag as evidence that rendering during resize passed.
+
+`NoteEdge_KeepsNoteContentVisibleDuringSharedResize` checks the supported interaction workaround: click inside the note first, then drag its own border on the common edge. It verifies foreground text pixels on actual desktop captures while the mouse remains down and requires both windows' widths to change. Run on both sides. This is not evidence that resizing another application can keep the note visible or that the shell preview was disabled.
+
+`InactiveNoteEdge_ResizesWithVisibleTextWithoutPreclick` starts with the peer active and grabs the note's inner side grip directly. Both note-left and note-right cases must retain readable text during the drag and resize both windows. The test uses the production WindowChrome without changing its settings. Native hit-test coverage also checks all edges/corners, the first text character, header/toolbar buttons, and the visible vertical scrollbar; their client hit targets must not become resize targets. This fixes access to the note's own resize operation, not Windows' preview of an inactive neighbor when another app owns the drag.
+
 3. Resize and move the window near every edge of the current monitor, close it, and reopen it. Confirm saved bounds are restored and clamped to the usable monitor work area.
 
 4. Repeat the bounds check on a second monitor if available, including disconnecting that monitor before reopening. The window must remain visible on an available display.
@@ -101,6 +113,8 @@ For an opt-in desktop corner check in an interactive Windows 11 session, set `AI
 5. Open theme, link, context, and image menus. Verify they do not cause auto-dismiss, focus loss, accidental saves, or stuck keyboard input.
 
 ## Release Evidence
+
+For compact-scroll changes, run `NativeChrome_ExposesAllResizeEdgesAndCaptionButKeepsButtonsInteractive` with `AITEBAR_QUICKNOTE_RENDER_DIR` set. It measures the actual 2-DIP indicator, 2-DIP edge gap, 6-DIP reserved column, native resize/control hit targets, thumb-drag and wheel scrolling, and removal of the column for a short note. Inspect the lavender, lemon and dark client PNGs; these are actual WPF client renders, not desktop/DWM captures.
 
 Record the following before approving the release:
 

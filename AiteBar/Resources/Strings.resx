@@ -193,7 +193,6 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="ColorPicker_Brightness" xml:space="preserve"><value>Brightness</value></data>
   <data name="ColorPicker_Palette" xml:space="preserve"><value>Palette</value></data>
   <data name="QuickNote_Title" xml:space="preserve"><value>Quick Note</value></data>
-  <data name="QuickNote_Placeholder" xml:space="preserve"><value>Paste text, links, commands...</value></data>
   <data name="QuickNote_SavedInitial" xml:space="preserve"><value>Saved</value></data>
   <data name="QuickNote_Saving" xml:space="preserve"><value>Saving...</value></data>
   <data name="QuickNote_SaveFailed" xml:space="preserve"><value>Could not save. Press Ctrl+S to retry.</value></data>

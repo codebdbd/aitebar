@@ -13,6 +13,62 @@ namespace AiteBar.Tests;
 [Collection("WpfTestCollection")]
 public sealed class QuickNoteWindowFormattingTests
 {
+    [Fact]
+    public Task Formatting_IsOneUndoUnitAndPreservesTheSelectedTextAndCaretRange() =>
+        QuickNoteWindowCloseTests.RunStaAsync(async () =>
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+            try
+            {
+                var settings = new AppSettingsService(Path.Combine(tempRoot, "buttons.json"), Path.Combine(tempRoot, "settings.json"));
+                settings.UpdateSettings(s => s.QuickNotePinned = true);
+                using var window = new QuickNoteWindow(new NoOpQuickNotePersistence(), settings)
+                {
+                    WindowStartupLocation = WindowStartupLocation.Manual,
+                    Left = -2000,
+                    Top = -2000,
+                    ShowActivated = false
+                };
+                var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                window.Closed += (_, _) => closed.TrySetResult();
+                try
+                {
+                    window.Show();
+                    await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+                    window.TxtNote.IsUndoEnabled = false;
+                    var run = new Run("alpha beta gamma");
+                    window.TxtNote.Document.Blocks.Clear();
+                    window.TxtNote.Document.Blocks.Add(new Paragraph(run));
+                    window.TxtNote.IsUndoEnabled = true;
+                    TextPointer start = run.ContentStart.GetPositionAtOffset(6)!;
+                    TextPointer end = run.ContentStart.GetPositionAtOffset(10)!;
+                    window.TxtNote.Selection.Select(start, end);
+
+                    typeof(QuickNoteWindow).GetMethod("ToggleFormatting", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                        .Invoke(window, [TextElement.FontWeightProperty, FontWeights.Bold, FontWeights.Normal]);
+
+                    Assert.Equal("beta", window.TxtNote.Selection.Text);
+                    Assert.Equal(FontWeights.Bold, window.TxtNote.Selection.GetPropertyValue(TextElement.FontWeightProperty));
+                    Assert.True(window.TxtNote.CanUndo);
+                    window.TxtNote.Undo();
+                    Assert.Equal(FontWeights.Normal, new TextRange(start, end).GetPropertyValue(TextElement.FontWeightProperty));
+                    Assert.False(window.TxtNote.CanUndo);
+                    window.TxtNote.Redo();
+                    Assert.Equal(FontWeights.Bold, new TextRange(start, end).GetPropertyValue(TextElement.FontWeightProperty));
+                }
+                finally
+                {
+                    window.Close();
+                    await closed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                }
+            }
+            finally
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        });
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
@@ -208,15 +264,14 @@ public sealed class QuickNoteWindowFormattingTests
     }
 
     [Fact]
-    public void Footer_ReportsLineCountAndDoesNotOverlayImageWithPlaceholder()
+    public void Footer_ReportsLineCountForTextAndImageOnlyDocuments()
     {
         RunSta(() =>
         {
             const string text = "one two three\nfour five";
             var editor = new System.Windows.Controls.RichTextBox(new FlowDocument(new Paragraph(new Run(text))));
-            var placeholder = new System.Windows.Controls.TextBlock();
             var stats = new System.Windows.Controls.TextBlock();
-            using var controller = new QuickNoteFooterStatsController(editor, placeholder, stats);
+            using var controller = new QuickNoteFooterStatsController(editor, stats);
             controller.UpdateUi();
             Assert.Equal(LocalizationService.Format("QuickNote_Stats", text.Length, 2), stats.Text);
             var bitmap = BitmapSource.Create(1, 1, 96, 96, PixelFormats.Bgra32, null, new byte[] { 0, 0, 0, 255 }, 4);
@@ -224,7 +279,7 @@ public sealed class QuickNoteWindowFormattingTests
             editor.Document = new FlowDocument(new Paragraph(image!));
             controller.ScheduleUpdate();
             controller.UpdateUi();
-            Assert.Equal(Visibility.Collapsed, placeholder.Visibility);
+            Assert.Equal(LocalizationService.Format("QuickNote_Stats", 1, 1), stats.Text);
         });
     }
 
@@ -656,8 +711,13 @@ public sealed class QuickNoteWindowFormattingTests
         });
     }
 
-    [Fact]
-    public void InsertImage_LeavesCollapsedCaretAndPreservesSurroundingText()
+    [Theory]
+    [InlineData("before after", 7, 0, "before ", "after")]
+    [InlineData("after", 0, 0, "", "after")]
+    [InlineData("before", 6, 0, "before", "")]
+    [InlineData("", 0, 0, "", "")]
+    [InlineData("before REPLACEafter", 7, 7, "before ", "after")]
+    public void InsertImage_IsolatesImageAndPreservesTextAcrossUndoAndReload(string text, int offset, int count, string before, string after)
     {
         RunSta(() =>
         {
@@ -670,13 +730,27 @@ public sealed class QuickNoteWindowFormattingTests
                     Path.Combine(tempRoot, "buttons.json"),
                     Path.Combine(tempRoot, "settings.json"));
                 using var window = new QuickNoteWindow(new NoOpQuickNotePersistence(), settingsService);
-                var run = new Run("before after");
+                var run = new Run(text) { FontWeight = FontWeights.Bold };
+                window.TxtNote.IsUndoEnabled = false;
                 window.TxtNote.Document.Blocks.Clear();
                 window.TxtNote.Document.Blocks.Add(new Paragraph(run));
-                TextPointer caret = run.ContentStart.GetPositionAtOffset("before ".Length)!;
-                window.TxtNote.Selection.Select(caret, caret);
+                var root = (FrameworkElement)window.Content;
+                root.Measure(new Size(460, 320));
+                root.Arrange(new Rect(0, 0, 460, 320));
+                root.UpdateLayout();
+                TextPointer caret = run.ContentStart.GetPositionAtOffset(offset)!;
+                window.TxtNote.Selection.Select(caret, caret.GetPositionAtOffset(count)!);
+                window.TxtNote.IsUndoEnabled = true;
 
-                BitmapSource bitmap = BitmapSource.Create(1, 1, 96, 96, PixelFormats.Bgra32, null, new byte[] { 0, 128, 255, 255 }, 4);
+                var pixels = new byte[80 * 48 * 4];
+                for (int i = 0; i < pixels.Length; i += 4)
+                {
+                    pixels[i] = 180;
+                    pixels[i + 1] = 140;
+                    pixels[i + 2] = 40;
+                    pixels[i + 3] = 255;
+                }
+                BitmapSource bitmap = BitmapSource.Create(80, 48, 96, 96, PixelFormats.Bgra32, null, pixels, 80 * 4);
                 Assert.True(QuickNoteImageHelper.TryCreateInlineImage(bitmap, out InlineUIContainer? image));
                 bool inserted = (bool)typeof(QuickNoteWindow)
                     .GetMethods(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
@@ -685,8 +759,48 @@ public sealed class QuickNoteWindowFormattingTests
 
                 Assert.True(inserted);
                 Assert.True(window.TxtNote.Selection.IsEmpty);
-                Assert.Equal("before  after", new TextRange(window.TxtNote.Document.ContentStart, window.TxtNote.Document.ContentEnd).Text.Trim());
-                Assert.Contains(window.TxtNote.Document.Blocks.OfType<Paragraph>().SelectMany(paragraph => paragraph.Inlines.OfType<InlineUIContainer>()), static _ => true);
+                Verify(window.TxtNote.Document);
+                Assert.NotSame(image!.Parent, window.TxtNote.CaretPosition.Paragraph);
+                // This offscreen test has no dispatcher loop to run the debounced footer update.
+                typeof(QuickNoteWindow).GetMethod("UpdateFooterStats", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)!
+                    .Invoke(window, null);
+                root.UpdateLayout();
+                string? directory = Environment.GetEnvironmentVariable("AITEBAR_QUICKNOTE_RENDER_DIR");
+                if (!string.IsNullOrWhiteSpace(directory) && text == "before after")
+                {
+                    Directory.CreateDirectory(directory);
+                    var preview = new RenderTargetBitmap(460, 320, 96, 96, PixelFormats.Pbgra32);
+                    preview.Render(root);
+                    var encoder = new PngBitmapEncoder();
+                    encoder.Frames.Add(BitmapFrame.Create(preview));
+                    using var stream = File.Create(Path.Combine(directory, "quicknote-image-block.png"));
+                    encoder.Save(stream);
+                }
+                Assert.True(window.TxtNote.CanUndo);
+                window.TxtNote.Undo();
+                Assert.Empty(QuickNoteImageHelper.EnumerateImageContainers(window.TxtNote.Document.Blocks));
+                Assert.Equal(text, new TextRange(window.TxtNote.Document.ContentStart, window.TxtNote.Document.ContentEnd).Text.TrimEnd('\r', '\n'));
+                window.TxtNote.Redo();
+                Verify(window.TxtNote.Document);
+                var reloaded = new FlowDocument();
+                QuickNoteDocumentCodec.Deserialize(QuickNoteDocumentCodec.Serialize(window.TxtNote.Document, true), reloaded, true);
+                Verify(reloaded);
+
+                void Verify(FlowDocument document)
+                {
+                    var paragraphs = document.Blocks.Cast<Paragraph>().ToArray();
+                    int imageIndex = before.Length == 0 ? 0 : 1;
+                    Assert.Equal(imageIndex + 2, paragraphs.Length);
+                    var embedded = Assert.Single(QuickNoteImageHelper.EnumerateImageContainers(document.Blocks));
+                    Assert.Same(paragraphs[imageIndex], embedded.Parent);
+                    Assert.Single(paragraphs[imageIndex].Inlines);
+                    Assert.Equal(after, new TextRange(paragraphs[^1].ContentStart, paragraphs[^1].ContentEnd).Text);
+                    if (before.Length != 0)
+                    {
+                        Assert.Equal(before, new TextRange(paragraphs[0].ContentStart, paragraphs[0].ContentEnd).Text);
+                        Assert.Equal(FontWeights.Bold, new TextRange(paragraphs[0].ContentStart, paragraphs[0].ContentEnd).GetPropertyValue(TextElement.FontWeightProperty));
+                    }
+                }
             }
             finally
             {

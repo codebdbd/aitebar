@@ -106,7 +106,6 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="Main_TimerStopwatchTooltip" xml:space="preserve"><value>Timer und Stoppuhr</value></data>
   <data name="Main_QuickNoteTooltip" xml:space="preserve"><value>Schnellnotiz</value></data>
   <data name="QuickNote_Title" xml:space="preserve"><value>Schnellnotiz</value></data>
-  <data name="QuickNote_Placeholder" xml:space="preserve"><value>Text, Links, Befehle einfügen...</value></data>
   <data name="QuickNote_SavedInitial" xml:space="preserve"><value>Gespeichert</value></data>
   <data name="QuickNote_Saving" xml:space="preserve"><value>Speichern...</value></data>
   <data name="QuickNote_SaveFailed" xml:space="preserve"><value>Speichern fehlgeschlagen. Mit Strg+S erneut versuchen.</value></data>

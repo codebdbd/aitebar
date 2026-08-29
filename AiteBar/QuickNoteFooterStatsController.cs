@@ -23,7 +23,6 @@ namespace AiteBar
         private static readonly TimeSpan DebounceInterval = TimeSpan.FromMilliseconds(120);
 
         private readonly WpfRichTextBox _editor;
-        private readonly TextBlock _placeholder;
         private readonly TextBlock _statsText;
         private readonly DispatcherTimer _debounceTimer;
 
@@ -34,10 +33,9 @@ namespace AiteBar
         private int _lineCount;
         private bool _disposed;
 
-        public QuickNoteFooterStatsController(WpfRichTextBox editor, TextBlock placeholder, TextBlock statsText)
+        public QuickNoteFooterStatsController(WpfRichTextBox editor, TextBlock statsText)
         {
             _editor = editor ?? throw new ArgumentNullException(nameof(editor));
-            _placeholder = placeholder ?? throw new ArgumentNullException(nameof(placeholder));
             _statsText = statsText ?? throw new ArgumentNullException(nameof(statsText));
 
             _debounceTimer = new DispatcherTimer { Interval = DebounceInterval };
@@ -76,7 +74,6 @@ namespace AiteBar
             string selectedText = QuickNoteDocumentHelper.NormalizeLineEndings(_editor.Selection.Text);
             if (!string.IsNullOrEmpty(selectedText))
             {
-                _placeholder.Visibility = Visibility.Collapsed;
                 int selectedWithoutWs = selectedText.Count(c => !char.IsWhiteSpace(c));
                 _statsText.Text = LocalizationService.Format("QuickNote_SelectedStats", selectedText.Length, selectedWithoutWs);
                 return;
@@ -92,7 +89,6 @@ namespace AiteBar
                 _dirty = false;
             }
 
-            _placeholder.Visibility = _isEmpty ? Visibility.Visible : Visibility.Collapsed;
             _statsText.Text = LocalizationService.Format("QuickNote_Stats", _charCount, _lineCount);
         }
 

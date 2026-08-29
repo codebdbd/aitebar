@@ -124,7 +124,17 @@ public sealed class QuickNoteServiceTests : IDisposable
         {
             var document = new FlowDocument();
             for (int i = 0; i < 1000; i++)
-                document.Blocks.Add(new Paragraph(new Run($"Line {i}: " + new string('x', 100))) { Margin = new Thickness(0) });
+            {
+                var paragraph = new Paragraph(new Run($"Line {i}: " + new string('x', 100))) { Margin = new Thickness(0) };
+                if (i % 50 == 0)
+                {
+                    var bitmap = System.Windows.Media.Imaging.BitmapSource.Create(
+                        1, 1, 96, 96, PixelFormats.Bgra32, null, new byte[] { 20, 40, 80, 255 }, 4);
+                    Assert.True(QuickNoteImageHelper.TryCreateInlineImage(bitmap, out InlineUIContainer? image));
+                    paragraph.Inlines.Add(image!);
+                }
+                document.Blocks.Add(paragraph);
+            }
             Block first = document.Blocks.FirstBlock;
             long allocated = GC.GetAllocatedBytesForCurrentThread();
             var stopwatch = Stopwatch.StartNew();
@@ -134,12 +144,23 @@ public sealed class QuickNoteServiceTests : IDisposable
             var restored = new FlowDocument();
             QuickNoteDocumentCodec.Deserialize(bytes, restored, package: true);
             Assert.Equal(1000, restored.Blocks.Count);
+            Assert.Equal(20, QuickNoteImageHelper.EnumerateImageContainers(restored.Blocks).Count());
             Assert.Same(first, document.Blocks.FirstBlock);
             Assert.Contains("Line 999:", new TextRange(restored.ContentStart, restored.ContentEnd).Text);
+            Assert.True(allocatedBytes < 256L * 1024 * 1024, $"Serialization allocated {allocatedBytes} bytes.");
             _output.WriteLine($"1000 paragraphs: serialize={serializeMs} ms; serialize+load={stopwatch.ElapsedMilliseconds} ms; payload={bytes.Length} bytes; UI-thread serialize allocations={allocatedBytes} bytes.");
             await Task.CompletedTask;
         });
     }
+
+    [Fact]
+    public Task Serialization_RejectsAccessOutsideTheDocumentDispatcherThread() =>
+        RunStaAsync(async () =>
+        {
+            var document = new FlowDocument(new Paragraph(new Run("dispatcher-owned")));
+            await Assert.ThrowsAsync<InvalidOperationException>(() =>
+                Task.Run(() => QuickNoteDocumentCodec.Serialize(document, package: true)));
+        });
 
     [Fact]
     public void NotePath_ReturnsExpectedPath()
@@ -405,6 +426,24 @@ public sealed class QuickNoteServiceTests : IDisposable
 
         Assert.Equal("atomic", await LoadTextAsync(_service));
         Assert.Empty(Directory.GetFiles(_tempDir, "*.tmp"));
+    }
+
+    [Fact]
+    public async Task SaveConflictCopyAsync_RetainsOnlyFiveNewestPortableCopies()
+    {
+        string notePath = Path.Combine(_tempDir, "QuickNote.aite-note");
+        var service = new QuickNoteService(notePath);
+        string? newest = null;
+        for (int index = 0; index < 7; index++)
+        {
+            int copyIndex = index;
+            newest = await RunStaAsync(() => service.SaveConflictCopyAsync(
+                new FlowDocument(new Paragraph(new Run($"conflict {copyIndex}")))));
+        }
+
+        string[] copies = Directory.GetFiles(_tempDir, "QuickNote.conflict-*.aite-note");
+        Assert.Equal(5, copies.Length);
+        Assert.Contains(newest, copies);
     }
 
     [Fact]

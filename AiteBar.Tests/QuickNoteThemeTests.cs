@@ -135,6 +135,7 @@ public sealed class QuickNoteThemeTests
             Assert.Equal("#25213B", theme.CodeBackground);
             Assert.Equal("#E3DFF2", theme.CodeText);
             Assert.Equal("#302B49", headerBackground);
+            Assert.Equal("#433C61", QuickNoteThemeCatalog.CodeBorder);
         });
     }
 

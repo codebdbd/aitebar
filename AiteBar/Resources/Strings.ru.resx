@@ -419,9 +419,6 @@
   <data name="QuickNote_Title" xml:space="preserve">
     <value>Быстрая заметка</value>
   </data>
-  <data name="QuickNote_Placeholder" xml:space="preserve">
-    <value>Вставьте текст, ссылки, команды...</value>
-  </data>
   <data name="QuickNote_SavedInitial" xml:space="preserve">
     <value>Сохранено</value>
   </data>

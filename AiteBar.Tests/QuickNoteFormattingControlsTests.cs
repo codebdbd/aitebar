@@ -88,8 +88,8 @@ public sealed class QuickNoteFormattingControlsTests
     {
         XDocument document = LoadDocument();
         XElement chrome = document.Descendants(PresentationNamespace + "WindowChrome").Single();
-        XElement outerBorder = document.Descendants(PresentationNamespace + "Grid")
-            .First()
+        XElement outerBorder = document.Root!.Elements(PresentationNamespace + "Grid")
+            .Single()
             .Elements(PresentationNamespace + "Border")
             .Single();
 
@@ -173,7 +173,7 @@ public sealed class QuickNoteFormattingControlsTests
             .Descendants(PresentationNamespace + "Border")
             .Single(border => (string?)border.Attribute("Grid.Row") == "1");
 
-        Assert.Equal("8,2,4,0", (string?)editorContainer.Attribute("Margin"));
+        Assert.Equal("8,2,0,0", (string?)editorContainer.Attribute("Margin"));
     }
 
     [Fact]
@@ -194,6 +194,31 @@ public sealed class QuickNoteFormattingControlsTests
             .Attribute("HorizontalAlignment"));
         Assert.DoesNotContain(document.Descendants(PresentationNamespace + "Rectangle"),
             rectangle => ((string?)rectangle.Attribute(XamlNamespace + "Name"))?.StartsWith("FormatSeparator", StringComparison.Ordinal) == true);
+    }
+
+    [Fact]
+    public void ReleaseInputContracts_KeepNativeTextPasteThreeImageRoutesShortcutsAndNoPlaceholder()
+    {
+        XDocument document = LoadDocument();
+        XElement editor = document.Descendants(PresentationNamespace + "RichTextBox").Single();
+        string sourcePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "AiteBar", "QuickNoteWindow.xaml.cs");
+        string editorSourcePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "AiteBar", "QuickNoteWindow.Editor.cs");
+        string source = File.ReadAllText(sourcePath);
+        string editorSource = File.ReadAllText(editorSourcePath);
+
+        Assert.DoesNotContain("TxtPlaceholder", document.ToString());
+        Assert.Equal("True", editor.Attribute("AllowDrop")?.Value);
+        Assert.Equal("TxtNote_Drop", editor.Attribute("Drop")?.Value);
+        Assert.Contains("AddPastingHandler(TxtNote, TxtNote_Pasting)", source);
+        Assert.Contains("if (_clipboard.TryGetImage", source);
+        Assert.Contains("e.CancelCommand();", source);
+        Assert.Contains("TryInsertImageFile(path)", source);
+        Assert.Contains("TryInsertImageFile(dialog.FileName)", editorSource);
+        Assert.Contains("ModifierKeys.Control && e.Key == Key.S", source);
+        Assert.Contains("ModifierKeys.Control && e.Key == Key.K", source);
+        Assert.Contains("ModifierKeys.Control | ModifierKeys.Alt", source);
+        foreach (string key in new[] { "Key.B", "Key.I", "Key.U", "Key.D1", "Key.D2", "Key.D3", "Key.D0", "Key.Escape" })
+            Assert.Contains(key, source);
     }
 
     private static XElement FindFormattingToolbar()

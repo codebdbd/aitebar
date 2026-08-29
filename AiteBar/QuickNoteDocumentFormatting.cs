@@ -469,13 +469,18 @@ namespace AiteBar
             var borderFactory = new FrameworkElementFactory(typeof(Border), "BoxBorder");
             borderFactory.SetValue(FrameworkElement.WidthProperty, 15.0);
             borderFactory.SetValue(FrameworkElement.HeightProperty, 15.0);
+            borderFactory.SetValue(FrameworkElement.HorizontalAlignmentProperty, System.Windows.HorizontalAlignment.Center);
+            borderFactory.SetValue(FrameworkElement.VerticalAlignmentProperty, VerticalAlignment.Center);
             borderFactory.SetValue(Border.CornerRadiusProperty, new CornerRadius(3));
             borderFactory.SetValue(Border.BorderThicknessProperty, new Thickness(1.5));
             borderFactory.SetValue(Border.BorderBrushProperty, QuickNoteBrush.FromHex(theme?.MutedText ?? "#74757A"));
             borderFactory.SetValue(Border.BackgroundProperty, Brushes.Transparent);
 
             var pathFactory = new FrameworkElementFactory(typeof(System.Windows.Shapes.Path), "CheckGlyph");
-            pathFactory.SetValue(System.Windows.Shapes.Path.DataProperty, Geometry.Parse("M 3 7.5 L 6 10.5 L 12 3.5"));
+            pathFactory.SetValue(System.Windows.Shapes.Path.DataProperty, Geometry.Parse("M 0 4 L 3 7 L 9 0"));
+            pathFactory.SetValue(FrameworkElement.WidthProperty, 11.0);
+            pathFactory.SetValue(FrameworkElement.HeightProperty, 9.0);
+            pathFactory.SetValue(System.Windows.Shapes.Path.StretchProperty, Stretch.Uniform);
             pathFactory.SetValue(System.Windows.Shapes.Path.StrokeProperty, Brushes.White);
             pathFactory.SetValue(System.Windows.Shapes.Path.StrokeThicknessProperty, 1.8);
             pathFactory.SetValue(System.Windows.Shapes.Path.StrokeStartLineCapProperty, PenLineCap.Round);

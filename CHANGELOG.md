@@ -9,6 +9,43 @@
 
 ## [Unreleased]
 
+## [1.15.19] - 2026-08-29
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+
+- **Быстрая заметка — стабильность редактирования**: все изменения документа при загрузке, очистке, форматировании и применении темы выполняются внутри WPF change-групп. Сериализация остаётся на UI-потоке, атомарная запись — в фоновом потоке.
+- **Быстрая заметка — выпускная проверка**: добавлены регрессии для 700 мс autosave, единого Undo форматирования, лимитов изображений, пяти conflict-копий и нагрузки 1000 абзацев с 20 изображениями.
+- **Quick Note editing stability**: load, clear, formatting and theme mutations now execute inside WPF change groups. Serialization remains on the UI thread and atomic file writing stays off it.
+- **Quick Note release verification**: added regressions for the 700 ms autosave, single-step formatting Undo, image limits, five conflict copies and a 1000-paragraph/20-image workload.
+
+## [1.15.18] - 2026-08-29
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+
+- **Быстрая заметка — пустой редактор**: полностью удалена подсказка «Вставьте текст, ссылки, команды…» и связанная с ней логика видимости. Пустая заметка открывается как чистое поле ввода.
+- **Quick Note empty editor**: removed the “Paste text, links, commands…” placeholder and its visibility plumbing. An empty note is now a clean editing surface.
+
+## [1.15.17] - 2026-08-29
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+
+- **Быстрая заметка — редактирование после вставки**: обычный клик по автоматически распознанному URL, e-mail или номеру телефона теперь ставит каретку и не запускает системное окно выбора приложения. Для открытия ссылки используется `Ctrl+клик`. Тонкий скролл у правого края сохранён без замены внутреннего текстового контейнера.
+- **Quick Note editing after paste**: a normal click on an automatically recognized URL, e-mail address or phone number now places the caret instead of launching the shell application chooser. Links open with `Ctrl+click`. The compact right-edge scrollbar remains without replacing WPF's internal text host.
+
+## [1.15.16] - 2026-08-28
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+
+- **Быстрая заметка — прокрутка**: тонкий ползунок у правого края вместо широкой полосы с лишним отступом. Видимая ширина — 2 единицы, область захвата — 6; при наведении ползунок расширяется без сдвига текста. Сохранены прокрутка колёсиком, перетаскивание и доступ к краю изменения размера окна.
+- **Quick Note scrollbar**: a slim indicator near the right edge with a compact six-unit input track. Hover/drag expansion does not move the text; wheel scrolling, thumb dragging and native resize grips remain available.
+
+## [1.15.15] - 2026-08-28
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+
+- **Быстрая заметка — захват края**: расширена внутренняя боковая зона изменения размера. Можно захватить край самой неактивной заметки без предварительного клика в текст; операцией по-прежнему управляет Windows Snap. Кнопки и полоса прокрутки сохраняют приоритет обработки нажатий. Системная плашка при изменении размера со стороны другого приложения не отключается.
+- **Quick Note edge capture**: widened the inner side resize grip so the note can initiate native shared resizing without a preliminary content click. Toolbar and scrollbar hit targets remain interactive. This does not disable Windows' preview when another application initiates the resize.
+
 ## [1.15.14] - 2026-08-18
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed

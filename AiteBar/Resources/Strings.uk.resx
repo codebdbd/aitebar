@@ -32,7 +32,6 @@
   <data name="Main_TimerStopwatchTooltip" xml:space="preserve"><value>Таймер і секундомір</value></data>
   <data name="Main_QuickNoteTooltip" xml:space="preserve"><value>Швидка нотатка</value></data>
   <data name="QuickNote_Title" xml:space="preserve"><value>Швидка нотатка</value></data>
-  <data name="QuickNote_Placeholder" xml:space="preserve"><value>Вставте текст, посилання, команди...</value></data>
   <data name="QuickNote_SavedInitial" xml:space="preserve"><value>Збережено</value></data>
   <data name="QuickNote_Saving" xml:space="preserve"><value>Збереження...</value></data>
   <data name="QuickNote_SaveFailed" xml:space="preserve"><value>Не вдалося зберегти. Ctrl+S — повторити.</value></data>

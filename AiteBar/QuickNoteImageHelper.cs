@@ -55,7 +55,7 @@ internal static class QuickNoteImageHelper
 
             return CreateContainer(normalized, png, out container);
         }
-        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or InvalidOperationException or IOException)
+        catch (Exception ex) when (ex is ArgumentException or NotSupportedException or InvalidOperationException or IOException or System.Windows.Markup.XamlParseException)
         {
             return false;
         }
@@ -81,7 +81,7 @@ internal static class QuickNoteImageHelper
 
             return CreateContainer(normalized, png, out container);
         }
-        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException)
+        catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException or IOException or System.Windows.Markup.XamlParseException)
         {
             return false;
         }
@@ -283,17 +283,27 @@ internal static class QuickNoteImageHelper
         double width = Math.Max(1, source.PixelWidth * scale);
         double height = Math.Max(1, source.PixelHeight * scale);
         
-        var quickImage = new QuickNoteImage
+        var imageControl = new Image
         {
             Source = source,
             Width = width,
             Height = height,
             Stretch = System.Windows.Media.Stretch.Uniform,
-            ToolTip = "Embedded image",
-            PngBase64 = Convert.ToBase64String(png)
+            ToolTip = "Embedded image"
         };
 
-        container = new InlineUIContainer(quickImage);
+        // WPF's Undo reader accepts native Image but not arbitrary custom controls. Its Source
+        // must also have a package URI; a raw in-memory CachedBitmap cannot be reconstructed.
+        // Use WPF's own image packaging so its cache/undo units own the resource lifetime.
+        var packageDocument = new FlowDocument(new Paragraph(new InlineUIContainer(imageControl)));
+        using var package = new MemoryStream();
+        new TextRange(packageDocument.ContentStart, packageDocument.ContentEnd).Save(package, DataFormats.XamlPackage);
+        package.Position = 0;
+        var restored = new FlowDocument();
+        new TextRange(restored.ContentStart, restored.ContentEnd).Load(package, DataFormats.XamlPackage);
+        var paragraph = (Paragraph)restored.Blocks.FirstBlock;
+        container = (InlineUIContainer)paragraph.Inlines.FirstInline;
+        paragraph.Inlines.Remove(container);
         container.SetValue(PngPayloadProperty, png);
         return true;
     }

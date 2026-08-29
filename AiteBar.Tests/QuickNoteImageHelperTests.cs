@@ -13,6 +13,58 @@ namespace AiteBar.Tests;
 [Collection("WpfTestCollection")]
 public sealed class QuickNoteImageHelperTests : IDisposable
 {
+    [Fact]
+    public void Limits_EnforceEightMegabytesSixteenMegapixelsAndTwentyFourMegabytesPerDocument()
+    {
+        RunSta(() =>
+        {
+            Assert.Equal(8 * 1024 * 1024, QuickNoteImageHelper.MaxEncodedBytes);
+            Assert.Equal(16_000_000, QuickNoteImageHelper.MaxPixels);
+            Assert.Equal(24 * 1024 * 1024, QuickNoteImageHelper.MaxTotalEmbeddedBytes);
+
+            var oversizedPixels = new byte[4001 * 4000 * 4];
+            BitmapSource oversized = BitmapSource.Create(4001, 4000, 96, 96, PixelFormats.Bgra32, null, oversizedPixels, 4001 * 4);
+            Assert.False(QuickNoteImageHelper.TryCreateInlineImage(oversized, out _));
+
+            var payloadProperty = (DependencyProperty)typeof(QuickNoteImageHelper)
+                .GetField("PngPayloadProperty", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static)!
+                .GetValue(null)!;
+            var document = new FlowDocument();
+            for (int index = 0; index < 4; index++)
+            {
+                Assert.True(QuickNoteImageHelper.TryCreateInlineImage(CreateBitmap(), out InlineUIContainer? image));
+                image!.SetValue(payloadProperty, new byte[6 * 1024 * 1024]);
+                if (index < 3)
+                {
+                    document.Blocks.Add(new Paragraph(image));
+                }
+                else
+                {
+                    Assert.True(QuickNoteImageHelper.CanAddToDocument(document, image));
+                    document.Blocks.Add(new Paragraph(image));
+                }
+            }
+
+            Assert.True(QuickNoteImageHelper.TryCreateInlineImage(CreateBitmap(), out InlineUIContainer? rejected));
+            rejected!.SetValue(payloadProperty, new byte[1]);
+            Assert.False(QuickNoteImageHelper.CanAddToDocument(document, rejected));
+        });
+    }
+
+    [Fact]
+    public void ImageControl_XamlRoundTripKeepsPixelsForUndo()
+    {
+        RunSta(() =>
+        {
+            Assert.True(QuickNoteImageHelper.TryCreateInlineImage(CreateBitmap(), out var image));
+            string xml = System.Windows.Markup.XamlWriter.Save(image!.Child);
+            object? restored = null;
+            Exception? error = Record.Exception(() => restored = System.Windows.Markup.XamlReader.Parse(xml));
+            Assert.True(error == null, xml + "\n" + error);
+            Assert.IsAssignableFrom<BitmapSource>(Assert.IsAssignableFrom<Image>(restored).Source);
+        });
+    }
+
     private readonly string _tempDir = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
 
     public QuickNoteImageHelperTests()

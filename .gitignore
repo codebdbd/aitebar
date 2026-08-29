@@ -17,6 +17,8 @@ artifacts/
 _installer_test/
 
 startup_log.txt
+build-release.log
+*.log
 
 
 

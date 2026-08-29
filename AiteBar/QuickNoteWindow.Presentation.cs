@@ -110,7 +110,6 @@ namespace AiteBar
 
             TxtNote.Foreground = text;
             TxtNote.CaretBrush = accent;
-            TxtPlaceholder.Foreground = muted;
             TxtSaveStatus.Foreground = muted;
             TxtStats.Foreground = muted;
             HeaderBar.BorderBrush = System.Windows.Media.Brushes.Transparent;
@@ -149,11 +148,14 @@ namespace AiteBar
             System.Windows.Media.Brush codeText,
             System.Windows.Media.Brush linkBrush)
         {
-            document.Foreground = normalText;
-            foreach (Block block in document.Blocks)
+            RunDocumentChangeWithoutAutoSave(() =>
             {
-                ApplyBlockStyles(block, normalText, codeBackground, codeText, linkBrush);
-            }
+                document.Foreground = normalText;
+                foreach (Block block in document.Blocks)
+                {
+                    ApplyBlockStyles(block, normalText, codeBackground, codeText, linkBrush);
+                }
+            });
         }
 
         private void ApplyBlockStyles(
@@ -503,7 +505,7 @@ namespace AiteBar
             }, DispatcherPriority.Background);
         }
 
-        private (string Link, QuickNoteDocumentFormatting.LinkType Type)? FindLinkAtMouse(System.Windows.Point position)
+        internal (string Link, QuickNoteDocumentFormatting.LinkType Type)? FindLinkAtMouse(System.Windows.Point position)
         {
             TextPointer? pointer = TxtNote.GetPositionFromPoint(position, true);
             if (pointer == null)

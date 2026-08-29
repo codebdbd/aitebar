@@ -5,6 +5,7 @@ using AiteBar;
 
 namespace AiteBar.Tests;
 
+[Collection("WpfTestCollection")]
 public sealed class QuickNoteSaveControllerTests
 {
     private sealed class MockPersistence : IQuickNotePersistence
@@ -114,6 +115,31 @@ public sealed class QuickNoteSaveControllerTests
         Assert.Equal(1, persistence.SaveCalls);
         Assert.True(statusSavedCalled);
     }
+
+    [Fact]
+    public Task MarkChangedAndSchedule_SavesAfterSevenHundredMillisecondDebounce() =>
+        QuickNoteWindowCloseTests.RunStaAsync(async () =>
+        {
+            var persistence = new MockPersistence();
+            var saved = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            persistence.OnSave = () => saved.TrySetResult();
+            using var controller = new QuickNoteSaveController(
+                persistence,
+                () => new FlowDocument(),
+                (_, _) => { },
+                () => { },
+                () => true);
+
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            controller.MarkChangedAndSchedule();
+            await Task.Delay(500);
+            Assert.Equal(0, persistence.SaveCalls);
+            await saved.Task.WaitAsync(TimeSpan.FromSeconds(2));
+
+            Assert.InRange(stopwatch.ElapsedMilliseconds, 650, 1800);
+            Assert.Equal(1, persistence.SaveCalls);
+            Assert.False(controller.HasPendingChanges);
+        });
 
     [Fact]
     public async Task SaveNowAsync_WhenExternalChangesPresent_SavesConflictCopy()

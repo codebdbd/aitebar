@@ -16,7 +16,8 @@ public class QuickNoteUtility : UtilityBase<QuickNoteWindow>
 
     protected override QuickNoteWindow CreateWindow(AppSettingsService settingsService, Window? owner)
     {
-        return new QuickNoteWindow(_noteService, settingsService) { Owner = owner };
+        // A Snap participant is an independent application window, not an owned panel overlay.
+        return new QuickNoteWindow(_noteService, settingsService);
     }
 
     protected override void ShowWindow(QuickNoteWindow window, AppSettingsService settingsService)
