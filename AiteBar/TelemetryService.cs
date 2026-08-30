@@ -59,6 +59,7 @@ internal static class TelemetryService
         }
         catch (Exception ex)
         {
+            Logger.Log(ex);
             lock (SyncRoot)
             {
                 if (ReferenceEquals(_initializationTask, completionSource.Task))
@@ -69,7 +70,7 @@ internal static class TelemetryService
             }
 
             cancellationSource.Dispose();
-            completionSource.TrySetException(ex);
+            completionSource.TrySetResult();
         }
     }
 

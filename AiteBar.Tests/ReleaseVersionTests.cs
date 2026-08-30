@@ -50,6 +50,22 @@ public sealed class ReleaseVersionTests
         Assert.True(checksumWrite > signingBlock);
     }
 
+    [Fact]
+    public void BuildInstaller_ExcludesLargeThirdPartyNativeSymbolsBeforePackaging()
+    {
+        string repoRoot = FindRepoRoot();
+        string script = File.ReadAllText(Path.Combine(repoRoot, "installer", "Build-Installer.ps1"));
+
+        int skiaSymbol = script.IndexOf("libSkiaSharp.pdb", StringComparison.Ordinal);
+        int harfBuzzSymbol = script.IndexOf("libHarfBuzzSharp.pdb", StringComparison.Ordinal);
+        int installerCompilation = script.IndexOf("Push-Location $PSScriptRoot", StringComparison.Ordinal);
+
+        Assert.True(skiaSymbol >= 0);
+        Assert.True(harfBuzzSymbol >= 0);
+        Assert.True(installerCompilation > skiaSymbol);
+        Assert.True(installerCompilation > harfBuzzSymbol);
+    }
+
     private static string FindRepoRoot()
     {
         string? current = AppContext.BaseDirectory;

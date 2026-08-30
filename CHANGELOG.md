@@ -9,6 +9,13 @@
 
 ## [Unreleased]
 
+## [1.15.20] - 2026-08-31
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+
+- **Стабилизация релиза**: устранены гонка сохранения Clipboard History и пропуск cleanup при закрытии; укреплены multi-monitor hover, no-activate показ, Sentry startup и update-check timeout.
+- **Release stabilization**: fixed the Clipboard History persistence race and skipped shutdown cleanup; hardened multi-monitor hover, no-activate panel show, Sentry startup, and the update-check timeout.
+
 ## [1.15.19] - 2026-08-29
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed

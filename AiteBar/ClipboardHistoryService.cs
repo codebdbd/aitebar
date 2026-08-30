@@ -34,6 +34,7 @@ namespace AiteBar
         private readonly List<ClipboardHistoryEntry> _entries = [];
         private readonly string _historyFile;
         private readonly object _deferredSaveSync = new();
+        private readonly object _persistenceSync = new();
         private readonly SemaphoreSlim _deferredSaveGate = new(1, 1);
         private HwndSource? _hwndSource;
         private IntPtr? _hwnd;
@@ -460,36 +461,39 @@ namespace AiteBar
         {
             try
             {
-                if (!_persistHistory)
+                lock (_persistenceSync)
                 {
-                    DeletePersistedHistoryFile();
-                    return;
-                }
-
-                PathHelper.EnsureDirectories();
-                if (_entries.Count == 0)
-                {
-                    DeletePersistedHistoryFile();
-                    return;
-                }
-
-                var document = new PersistedClipboardHistoryDocument
-                {
-                    Version = StorageSchemaVersion,
-                    Entries = _entries.Take(MaxEntries).Select(entry => new PersistedClipboardEntry
+                    if (!_persistHistory)
                     {
-                        Id = entry.Id,
-                        Text = entry.Text,
-                        ImageBase64 = entry.ImageBytes != null ? Convert.ToBase64String(entry.ImageBytes) : null,
-                        Timestamp = entry.Timestamp,
-                        IsPinned = entry.IsPinned
-                    }).ToList()
-                };
+                        DeletePersistedHistoryFile();
+                        return;
+                    }
 
-                string json = JsonSerializer.Serialize(document, _jsonOptions);
-                string tempFile = _historyFile + ".tmp";
-                File.WriteAllText(tempFile, json);
-                File.Move(tempFile, _historyFile, overwrite: true);
+                    PathHelper.EnsureDirectories();
+                    if (_entries.Count == 0)
+                    {
+                        DeletePersistedHistoryFile();
+                        return;
+                    }
+
+                    var document = new PersistedClipboardHistoryDocument
+                    {
+                        Version = StorageSchemaVersion,
+                        Entries = _entries.Take(MaxEntries).Select(entry => new PersistedClipboardEntry
+                        {
+                            Id = entry.Id,
+                            Text = entry.Text,
+                            ImageBase64 = entry.ImageBytes != null ? Convert.ToBase64String(entry.ImageBytes) : null,
+                            Timestamp = entry.Timestamp,
+                            IsPinned = entry.IsPinned
+                        }).ToList()
+                    };
+
+                    string json = JsonSerializer.Serialize(document, _jsonOptions);
+                    string tempFile = _historyFile + ".tmp";
+                    File.WriteAllText(tempFile, json);
+                    File.Move(tempFile, _historyFile, overwrite: true);
+                }
             }
             catch (Exception ex)
             {
@@ -555,35 +559,38 @@ namespace AiteBar
         {
             try
             {
-                if (!_persistHistory)
+                lock (_persistenceSync)
                 {
-                    return;
-                }
-
-                PathHelper.EnsureDirectories();
-                if (entries.Count == 0)
-                {
-                    DeletePersistedHistoryFile();
-                    return;
-                }
-
-                var document = new PersistedClipboardHistoryDocument
-                {
-                    Version = StorageSchemaVersion,
-                    Entries = entries.Select(entry => new PersistedClipboardEntry
+                    if (!_persistHistory)
                     {
-                        Id = entry.Id,
-                        Text = entry.Text,
-                        ImageBase64 = entry.ImageBytes != null ? Convert.ToBase64String(entry.ImageBytes) : null,
-                        Timestamp = entry.Timestamp,
-                        IsPinned = entry.IsPinned
-                    }).ToList()
-                };
+                        return;
+                    }
 
-                string json = JsonSerializer.Serialize(document, _jsonOptions);
-                string tempFile = _historyFile + ".tmp";
-                File.WriteAllText(tempFile, json);
-                File.Move(tempFile, _historyFile, overwrite: true);
+                    PathHelper.EnsureDirectories();
+                    if (entries.Count == 0)
+                    {
+                        DeletePersistedHistoryFile();
+                        return;
+                    }
+
+                    var document = new PersistedClipboardHistoryDocument
+                    {
+                        Version = StorageSchemaVersion,
+                        Entries = entries.Select(entry => new PersistedClipboardEntry
+                        {
+                            Id = entry.Id,
+                            Text = entry.Text,
+                            ImageBase64 = entry.ImageBytes != null ? Convert.ToBase64String(entry.ImageBytes) : null,
+                            Timestamp = entry.Timestamp,
+                            IsPinned = entry.IsPinned
+                        }).ToList()
+                    };
+
+                    string json = JsonSerializer.Serialize(document, _jsonOptions);
+                    string tempFile = _historyFile + ".tmp";
+                    File.WriteAllText(tempFile, json);
+                    File.Move(tempFile, _historyFile, overwrite: true);
+                }
             }
             catch (Exception ex)
             {
@@ -595,9 +602,12 @@ namespace AiteBar
         {
             try
             {
-                if (File.Exists(_historyFile))
+                lock (_persistenceSync)
                 {
-                    File.Delete(_historyFile);
+                    if (File.Exists(_historyFile))
+                    {
+                        File.Delete(_historyFile);
+                    }
                 }
             }
             catch (Exception ex)
@@ -756,7 +766,6 @@ namespace AiteBar
             {
                 NativeMethods.RemoveClipboardFormatListener(_hwnd.Value);
                 _hwndSource.RemoveHook(WndProc);
-                _hwndSource.Dispose();
                 _hwndSource = null;
             }
 

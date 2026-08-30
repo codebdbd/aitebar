@@ -74,6 +74,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         private int _lastElementsVersion = -1;
         private int _mouseWheelCaptureToken = 0;
     private readonly CancellationTokenSource _startupCts = new();
+    private System.Windows.Interop.HwndSource? _windowHwndSource;
     private PanelLayoutHelper.PanelLayoutMetrics _lastMetrics;
     private DateTime _lastContextWheelSwitchUtc = DateTime.MinValue;
     private readonly Dictionary<string, CachedButtonImage> _buttonImageCache = new(StringComparer.OrdinalIgnoreCase);
@@ -1051,7 +1052,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private void Window_SourceInitialized(object sender, EventArgs e)
     {
         IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-        System.Windows.Interop.HwndSource.FromHwnd(hwnd).AddHook(WndProc);
+        _windowHwndSource = System.Windows.Interop.HwndSource.FromHwnd(hwnd);
+        _windowHwndSource?.AddHook(WndProc);
         ClipboardHistoryService.Instance.Initialize(hwnd);
     }
 
@@ -1295,10 +1297,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             NativeMethods.Win32Point pt = new();
             if (NativeMethods.GetCursorPos(ref pt))
             {
-                var screens = Screen.AllScreens;
-                var screen = (settings.MonitorIndex >= 0 && settings.MonitorIndex < screens.Length)
-                    ? screens[settings.MonitorIndex]
-                    : Screen.PrimaryScreen;
+                Screen? screen = GetTargetScreen(settings.MonitorIndex, settings.MonitorDeviceName);
 
                 if (screen == null) return;
 
@@ -1505,10 +1504,6 @@ public partial class MainWindow : Window, ISettingsWindowContext
         catch (Exception ex)
         {
             _ = Logger.LogAsync(ex);
-        }
-        finally
-        {
-            _startupCts.Dispose();
         }
     }
 
@@ -2157,7 +2152,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
         {
             this.Topmost = false;
             var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-            NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0, NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOMOVE);
+            NativeMethods.SetWindowPos(hwnd, NativeMethods.HWND_TOPMOST, 0, 0, 0, 0,
+                NativeMethods.SWP_NOSIZE | NativeMethods.SWP_NOMOVE | NativeMethods.SWP_NOACTIVATE);
             this.Topmost = true;
         }
 
@@ -2352,6 +2348,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         {
             UnsubscribeFromPowerEvents();
             _startupCts.Cancel();
+            _timer.Stop();
             try
             {
                 _nativeService?.Dispose();
@@ -2399,10 +2396,13 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 _isLocalizationSubscribed = false;
             }
 
+            _windowHwndSource?.RemoveHook(WndProc);
+            _windowHwndSource = null;
             UnregisterGlobalHotkey();
         }
         finally
         {
+            _startupCts.Dispose();
             base.OnClosed(e);
         }
     }

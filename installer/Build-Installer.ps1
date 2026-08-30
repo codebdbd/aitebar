@@ -35,6 +35,7 @@ if (-not $SkipPublish) {
         --self-contained true `
         -p:PublishSingleFile=false `
         -p:PublishReadyToRun=false `
+        -p:RestoreLockedMode=true `
         -o $publishDir
 
     if ($LASTEXITCODE -ne 0) {
@@ -44,6 +45,14 @@ if (-not $SkipPublish) {
 
 if (-not (Test-Path $publishDir)) {
     throw "Publish output not found: $publishDir"
+}
+
+# Native third-party PDB files are not required at runtime and add more than
+# 100 MiB to the win-x64 payload. Keep AiteBar.pdb for first-party diagnostics.
+$excludedNativeSymbols = @("libSkiaSharp.pdb", "libHarfBuzzSharp.pdb")
+foreach ($symbolName in $excludedNativeSymbols) {
+    Get-ChildItem -LiteralPath $publishDir -Filter $symbolName -File -Recurse -ErrorAction SilentlyContinue |
+        Remove-Item -Force
 }
 
 $isccCandidates = @(
@@ -58,6 +67,10 @@ if (-not $iscc) {
 }
 
 New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
+
+# Installer outputs are generated artifacts. Remove an older version so the
+# directory and release workflow always contain exactly one installer.
+Get-ChildItem -Path $installerDir -Filter "AiteBar-Setup-*.exe" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 
 # Cleanup any temporary files left by previous Inno Setup runs (before)
 Get-ChildItem -Path $installerDir -Filter "*.tmp" -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue

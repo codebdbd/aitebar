@@ -210,7 +210,7 @@ public sealed class UpdateCheckService
 
     private static HttpClient CreateHttpClient()
     {
-        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(15) };
+        var client = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("AiteBar", FormatVersion(GetCurrentVersion())));
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         return client;
