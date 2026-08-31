@@ -71,7 +71,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private int _panelRefreshVersion;
         private int _panelFocusRequestVersion;
         private int _contextWheelDelta;
-        private int _lastElementsVersion = -1;
+        private IReadOnlyList<ButtonVisualState> _lastButtonVisualStates = [];
         private int _mouseWheelCaptureToken = 0;
     private readonly CancellationTokenSource _startupCts = new();
     private System.Windows.Interop.HwndSource? _windowHwndSource;
@@ -1612,17 +1612,14 @@ public partial class MainWindow : Window, ISettingsWindowContext
         AppSettings settings = _settingsService.Settings;
         IReadOnlyList<CustomElement> elements = _settingsService.Elements;
 
-        // Calculate a simple hash of current elements to detect changes
-        int currentElementsVersion = 0;
-        foreach (var element in elements)
-        {
-            currentElementsVersion = unchecked(currentElementsVersion * 397 + (element.Id?.GetHashCode() ?? 0));
-        }
-        
-        if (currentElementsVersion != _lastElementsVersion)
+        // The image cache is part of a button's visual state. Comparing only IDs leaves
+        // stale favicons/custom images behind when an existing button changes its icon.
+        IReadOnlyList<ButtonVisualState> currentButtonVisualStates =
+            ButtonVisualStateHelper.CreateSnapshot(elements);
+        if (!currentButtonVisualStates.SequenceEqual(_lastButtonVisualStates))
         {
             _buttonImageCache.Clear();
-            _lastElementsVersion = currentElementsVersion;
+            _lastButtonVisualStates = currentButtonVisualStates;
         }
 
         BuildPanelContextMenu(settings.ActiveContextId);

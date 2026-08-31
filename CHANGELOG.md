@@ -9,6 +9,13 @@
 
 ## [Unreleased]
 
+## [1.15.22] - 2026-08-31
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+
+- **Иконки кнопок — обновление панели**: изменение Fluent-глифа, шрифта или изображения существующей кнопки теперь инвалидирует её визуальное состояние; панель сразу показывает выбранную иконку, включая переход с favicon на глиф.
+- **Button icons — panel refresh**: changing an existing button's Fluent glyph, font, or image now invalidates its visual state; the panel immediately shows the selected icon, including favicon-to-glyph changes.
+
 ## [1.15.21] - 2026-08-31
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
