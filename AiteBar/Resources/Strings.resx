@@ -446,7 +446,6 @@ Open the GitHub release page?</value></data>
   <data name="FileSorter_UndoPartial" xml:space="preserve"><value>Restored {0} files, skipped {1}.</value></data>
   <data name="FileSorter_ErrorFormat" xml:space="preserve"><value>Could not complete sorting.
 {0}</value></data>
-  <data name="IconPicker_MaterialIcons" xml:space="preserve"><value>Material Icons</value></data>
   <data name="IconPicker_FluentSystem" xml:space="preserve"><value>Fluent System</value></data>
   <data name="IconPicker_Brands" xml:space="preserve"><value>Brands</value></data>
   <data name="TimerStopwatch_Compact" xml:space="preserve"><value>Compact</value></data>

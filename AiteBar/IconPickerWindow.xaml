@@ -105,11 +105,6 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="10,8,10,2">
-            <Button x:Name="BtnTabMaterial"
-                    Content="{local:Loc ResourceKey=IconPicker_MaterialIcons}"
-                    Margin="0,0,18,0"
-                    Style="{StaticResource TabButtonStyle}"
-                    Click="BtnTabMaterial_Click"/>
             <Button x:Name="BtnTabFluent"
                     Content="{local:Loc ResourceKey=IconPicker_FluentSystem}"
                     Margin="0,0,18,0"
@@ -127,7 +122,9 @@
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <TextBlock Text="🔍" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#AAAAAA"/>
+            <TextBlock Text="&#xF68F;"
+                       FontFamily="pack://application:,,,/AiteBar;component/Resources/#FluentSystemIcons-Regular"
+                       FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0" Foreground="#AAAAAA"/>
             <TextBox x:Name="TxtSearch" Grid.Column="1"
                      Style="{StaticResource SearchTextBoxStyle}"
                      VerticalContentAlignment="Center"

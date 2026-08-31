@@ -8,9 +8,9 @@ using System.Resources;
 [assembly: AssemblyTitle("AiteBar")]
 [assembly: AssemblyProduct("AiteBar")]
 [assembly: AssemblyCompany("Codebdbd")]
-[assembly: AssemblyVersion("1.15.20.0")]
-[assembly: AssemblyFileVersion("1.15.20.0")]
-[assembly: AssemblyInformationalVersion("1.15.20")]
+[assembly: AssemblyVersion("1.15.21.0")]
+[assembly: AssemblyFileVersion("1.15.21.0")]
+[assembly: AssemblyInformationalVersion("1.15.21")]
 
 [assembly: ThemeInfo(
     ResourceDictionaryLocation.None,            //where theme specific resource dictionaries are located

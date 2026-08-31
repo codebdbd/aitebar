@@ -99,7 +99,7 @@ public sealed class TimerStopwatchLayoutHelperTests
     [Fact]
     public void CompactToggleGlyph_UsesRestoreStyleGlyph()
     {
-        Assert.Equal("\uE923", TimerStopwatchLayoutHelper.CompactToggleGlyph);
+        Assert.Equal("\uEA1A", TimerStopwatchLayoutHelper.CompactToggleGlyph);
     }
     [Fact]
     public void TimerCompletionFeedback_IsWiredForCompactMode()

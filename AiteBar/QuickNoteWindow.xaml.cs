@@ -117,10 +117,7 @@ namespace AiteBar
             EnsureDocumentLoadedForFirstPaint();
 
             _loaded = true;
-            if (FindName("BtnPin") is System.Windows.Controls.Primitives.ToggleButton pinButton)
-            {
-                pinButton.IsChecked = _settingsService.Settings.QuickNotePinned;
-            }
+            IsPinned = _settingsService.Settings.QuickNotePinned;
             UpdateFooterStats();
             if (_statusKind != QuickNoteStatusKind.LoadFailed)
             {
@@ -128,7 +125,9 @@ namespace AiteBar
             }
 
             TxtNote.Focus();
-            TxtNote.CaretPosition = TxtNote.Document.ContentEnd;
+            TxtNote.CaretPosition = TxtNote.Document.ContentStart.GetInsertionPosition(LogicalDirection.Forward)
+                ?? TxtNote.Document.ContentStart;
+            TxtNote.ScrollToHome();
             ResetCaretFormatting();
             ScheduleDocumentStylesUpdate();
 
@@ -576,9 +575,11 @@ namespace AiteBar
 
         private async void BtnPin_Checked(object sender, RoutedEventArgs e)
         {
+            bool isPinned = sender is System.Windows.Controls.Primitives.ToggleButton { IsChecked: true };
+            IsPinned = isPinned;
             _settingsService.UpdateSettings(s =>
             {
-                s.QuickNotePinned = sender is System.Windows.Controls.Primitives.ToggleButton { IsChecked: true };
+                s.QuickNotePinned = isPinned;
             });
             await SaveSettingsSafelyAsync();
             TxtNote.Focus();

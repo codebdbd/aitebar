@@ -1,5 +1,3 @@
-using System.Text.Json;
-
 namespace AiteBar
 {
     public partial class IconPickerWindow : DarkWindow
@@ -10,49 +8,7 @@ namespace AiteBar
 
         private readonly List<(Button btn, string searchKey)> _allButtons = [];
         private string _activeFont = FontHelper.FluentKey;
-        private static Dictionary<int, string>? _fluentMap;
-        private static Dictionary<int, string>? _materialMap;
-
-        // Маппинг для Font Awesome Brands из старого кода остаётся:
-        private static readonly Dictionary<int, string[]> FontAwesomeNameAliases = new()
-        {
-            [0xF099] = ["twitter"],
-            [0xE61B] = ["twitter", "x", "x-twitter"],
-            [0xF09A] = ["facebook", "meta"],
-            [0xF09B] = ["github"],
-            [0xF113] = ["github-alt"],
-            [0xF296] = ["gitlab"],
-            [0xF0E1] = ["linkedin", "linkedin-in"],
-            [0xF16D] = ["instagram"],
-            [0xF167] = ["youtube"],
-            [0xF1A0] = ["google"],
-            [0xF179] = ["apple", "ios"],
-            [0xF17A] = ["windows", "microsoft"],
-            [0xF232] = ["whatsapp"],
-            [0xF2C6] = ["telegram"],
-            [0xF3FE] = ["telegram"],
-            [0xF392] = ["discord"],
-            [0xF395] = ["docker"],
-            [0xF375] = ["aws", "amazon-web-services"],
-            [0xF3D3] = ["node", "node-js"],
-            [0xF419] = ["node"],
-            [0xF841] = ["git", "git-alt"],
-            [0xF198] = ["slack"],
-            [0xF3EF] = ["slack"],
-            [0xF413] = ["yandex"],
-            [0xF414] = ["yandex-international"],
-            [0xF1E8] = ["twitch"],
-            [0xF1A1] = ["reddit"],
-            [0xF281] = ["reddit-alien"],
-            [0xF1BC] = ["spotify"],
-            [0xF189] = ["vk", "vkontakte"],
-            [0xF263] = ["odnoklassniki", "ok"],
-            [0xF799] = ["figma"],
-            [0xE7D9] = ["notion"],
-            [0xE671] = ["bluesky"],
-            [0xE618] = ["threads"],
-            [0xE07B] = ["tiktok"]
-        };
+        private static readonly IconCatalogService Catalog = new(OpenResourceStream);
 
         public IconPickerWindow()
         {
@@ -63,12 +19,8 @@ namespace AiteBar
 
         internal static void WarmupCatalogMetadata()
         {
-            _ = LoadFluentMap();
-            _ = LoadMaterialMap();
+            Catalog.Warmup();
         }
-
-        private void BtnTabMaterial_Click(object sender, RoutedEventArgs e)
-            => SetActiveTab(FontHelper.MaterialKey);
 
         private void BtnTabFluent_Click(object sender, RoutedEventArgs e)
             => SetActiveTab(FontHelper.FluentKey);
@@ -91,14 +43,11 @@ namespace AiteBar
             _activeFont = fontName;
             TxtSearch.Text = "";
 
-            BtnTabMaterial.Foreground = fontName == FontHelper.MaterialKey
-                ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
             BtnTabFluent.Foreground = fontName == FontHelper.FluentKey
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
             BtnTabBrands.Foreground = fontName == FontHelper.BrandsKey
                 ? Brushes.White : new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xAA, 0xAA, 0xAA));
 
-            BtnTabMaterial.BorderBrush = fontName == FontHelper.MaterialKey ? (Brush)FindResource("AccentColor") : Brushes.Transparent;
             BtnTabFluent.BorderBrush = fontName == FontHelper.FluentKey ? (Brush)FindResource("AccentColor") : Brushes.Transparent;
             BtnTabBrands.BorderBrush = fontName == FontHelper.BrandsKey ? (Brush)FindResource("AccentColor") : Brushes.Transparent;
 
@@ -113,7 +62,6 @@ namespace AiteBar
             {
                 FontHelper.BrandsKey => LocalizationService.Get("IconPicker_SearchBrandsHint"),
                 FontHelper.FluentKey => LocalizationService.Get("IconPicker_SearchIconsHint"),
-                FontHelper.MaterialKey => LocalizationService.Get("IconPicker_SearchIconsHint"),
                 _ => LocalizationService.Get("IconPicker_SearchCodeHint")
             };
         }
@@ -137,30 +85,25 @@ namespace AiteBar
                 if (glyphTypeface == null) return;
 
                 var glyphMap = glyphTypeface.CharacterToGlyphMap;
-                var namedIcons = GetNamedIcons(fontName);
-                var codes = GetDisplayCodes(glyphMap, namedIcons);
+                IReadOnlyList<IconCatalogEntry> entries = Catalog.BuildEntries(fontName, glyphMap);
 
                 const int batchSize = 100;
-                for (int batch = 0; batch < codes.Length; batch += batchSize)
+                for (int batch = 0; batch < entries.Count; batch += batchSize)
                 {
                     if (_activeFont != fontName) return; // Пользователь сменил вкладку
 
-                    int end = Math.Min(batch + batchSize, codes.Length);
+                    int end = Math.Min(batch + batchSize, entries.Count);
                     for (int i = batch; i < end; i++)
                     {
-                        int code = codes[i];
-                        string symbol;
-                        try { symbol = char.ConvertFromUtf32(code); }
-                        catch { continue; }
-
-                        string? iconName = null;
-                        namedIcons?.TryGetValue(code, out iconName);
-                        string searchKey = BuildSearchKey(fontName, code, iconName);
-                        string tooltip = iconName != null ? $"{iconName}  U+{code:X4}" : $"U+{code:X4}";
-
-                        var btn = CreateIconButton(btnStyle, symbol, fontFam, tooltip, fontName);
+                        IconCatalogEntry entry = entries[i];
+                        var btn = CreateIconButton(
+                            btnStyle,
+                            entry.Symbol,
+                            fontFam,
+                            entry.Tooltip,
+                            fontName);
                         IconPanel.Children.Add(btn);
-                        _allButtons.Add((btn, searchKey));
+                        _allButtons.Add((btn, entry.SearchKey));
                     }
 
                     // Даём UI отрисоваться перед загрузкой следующей пачки
@@ -174,80 +117,6 @@ namespace AiteBar
             }
         }
 
-        private static int[] GetDisplayCodes(IDictionary<int, ushort> glyphMap, Dictionary<int, string>? namedIcons)
-        {
-            if (namedIcons != null)
-            {
-                return [.. namedIcons.Keys
-                    .Where(code => glyphMap.TryGetValue(code, out var glyphIndex) && glyphIndex != 0)
-                    .OrderBy(code => code)];
-            }
-
-            return [.. glyphMap.Keys
-                .Where(code => glyphMap[code] != 0)
-                .Where(code => code >= 0xE000 && code <= 0x10FFFF)
-                .Where(code => code < 0xD800 || code > 0xDFFF)
-                .OrderBy(code => code)];
-        }
-
-        private static Dictionary<int, string>? GetNamedIcons(string fontName) => fontName switch
-        {
-            FontHelper.FluentKey => LoadFluentMap(),
-            FontHelper.MaterialKey => LoadMaterialMap(),
-            _ => null
-        };
-
-        private static string BuildSearchKey(string fontName, int code, string? iconName)
-        {
-            List<string> keyParts = [$"{code:X4}".ToLowerInvariant()];
-            if (!string.IsNullOrWhiteSpace(iconName))
-                keyParts.Add(iconName.ToLowerInvariant());
-            if (fontName == FontHelper.BrandsKey && FontAwesomeNameAliases.TryGetValue(code, out var aliases))
-            {
-                keyParts.AddRange(aliases);
-            }
-            return string.Join(" ", keyParts);
-        }
-
-        private static Dictionary<int, string> LoadFluentMap()
-        {
-            if (_fluentMap != null) return _fluentMap;
-
-            using var stream = OpenResourceStream(FontHelper.FluentCodepointsResource);
-            using var reader = new StreamReader(stream);
-            var json = reader.ReadToEnd();
-            var raw = JsonSerializer.Deserialize<Dictionary<string, int>>(json)
-                ?? throw new InvalidOperationException(LocalizationService.Get("IconPicker_InvalidFluentMetadata"));
-
-            _fluentMap = raw
-                .Where(kv => kv.Key.EndsWith("_24_regular", StringComparison.Ordinal))
-                .GroupBy(kv => kv.Value)
-                .Select(group => group.OrderBy(kv => kv.Key, StringComparer.Ordinal).First())
-                .ToDictionary(kv => kv.Value, kv => FormatFluentName(kv.Key));
-
-            return _fluentMap;
-        }
-
-        private static Dictionary<int, string> LoadMaterialMap()
-        {
-            if (_materialMap != null) return _materialMap;
-
-            using var stream = OpenResourceStream(FontHelper.MaterialCodepointsResource);
-            using var reader = new StreamReader(stream);
-            _materialMap = reader
-                .ReadToEnd()
-                .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
-                .Select(line => line.Split(' ', StringSplitOptions.RemoveEmptyEntries))
-                .Where(parts => parts.Length == 2)
-                .GroupBy(parts => Convert.ToInt32(parts[1], 16))
-                .Select(group => group.First())
-                .ToDictionary(
-                    parts => Convert.ToInt32(parts[1], 16),
-                    parts => parts[0].Replace("_", " "));
-
-            return _materialMap;
-        }
-
         private static Stream OpenResourceStream(string packUri)
         {
             var resource = System.Windows.Application.GetResourceStream(new Uri(packUri, UriKind.Absolute));
@@ -255,12 +124,6 @@ namespace AiteBar
                 throw new FileNotFoundException(LocalizationService.Format("IconPicker_ResourceNotFound", packUri));
             return resource.Stream;
         }
-
-        private static string FormatFluentName(string rawName)
-            => rawName
-                .Replace("ic_fluent_", "", StringComparison.Ordinal)
-                .Replace("_24_regular", "", StringComparison.Ordinal)
-                .Replace("_", " ");
 
         private Button CreateIconButton(Style btnStyle, string symbol, FontFamily fontFamily,
             string tooltip, string fontSrcKey)

@@ -13,4 +13,14 @@ public sealed class TaskbarGeometryHelperTests
     {
         Assert.Equal(expected, TaskbarGeometryHelper.PixelsToDips(pixels, dpiScale), precision: 6);
     }
+
+    [Theory]
+    [InlineData(DockEdge.Top, "\uF19B")]
+    [InlineData(DockEdge.Bottom, "\uF148")]
+    [InlineData(DockEdge.Left, "\uF15B")]
+    [InlineData(DockEdge.Right, "\uF181")]
+    public void GetArrowGlyph_ReturnsFluentDirectionGlyph(DockEdge edge, string expected)
+    {
+        Assert.Equal(expected, TaskbarGeometryHelper.GetArrowGlyph(edge));
+    }
 }

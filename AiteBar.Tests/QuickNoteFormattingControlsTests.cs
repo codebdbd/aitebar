@@ -70,15 +70,15 @@ public sealed class QuickNoteFormattingControlsTests
     }
 
     [Fact]
-    public void Toolbar_ListButtonsUseStableMaterialListGlyphs()
+    public void Toolbar_ListButtonsUseStableFluentListGlyphs()
     {
         XElement toolbar = FindFormattingToolbar();
         Dictionary<string, XElement> buttonsByHandler = toolbar.Elements(PresentationNamespace + "Button")
             .Where(button => button.Attribute("Click") != null)
             .ToDictionary(button => button.Attribute("Click")!.Value);
 
-        Assert.Equal("pack://application:,,,/AiteBar;component/Resources/#Material Icons", buttonsByHandler["BtnBullet_Click"].Attribute("FontFamily")?.Value);
-        Assert.Equal("\uE241", buttonsByHandler["BtnBullet_Click"].Attribute("Content")?.Value);
+        Assert.Equal("pack://application:,,,/AiteBar;component/Resources/#FluentSystemIcons-Regular", buttonsByHandler["BtnBullet_Click"].Attribute("FontFamily")?.Value);
+        Assert.Equal(char.ConvertFromUtf32(0xF0291), buttonsByHandler["BtnBullet_Click"].Attribute("Content")?.Value);
         Assert.Null(buttonsByHandler["BtnNumbered_Click"].Attribute("FontFamily"));
         Assert.Equal("\uF7FA", buttonsByHandler["BtnNumbered_Click"].Attribute("Content")?.Value);
     }

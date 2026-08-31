@@ -62,9 +62,9 @@
                 Background="#007ACC" 
                 Padding="0">
             <TextBlock x:Name="ArrowText" 
-                   Text="→" 
+                   Text="&#xF181;"
+                   FontFamily="pack://application:,,,/AiteBar;component/Resources/#FluentSystemIcons-Regular"
                    FontSize="18"
-                   FontWeight="Bold"
                    Foreground="#FFFFFF"
                    HorizontalAlignment="Center"
                    VerticalAlignment="Center"

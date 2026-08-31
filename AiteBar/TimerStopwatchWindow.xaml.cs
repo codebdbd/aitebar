@@ -595,7 +595,7 @@ public partial class TimerStopwatchWindow : DarkWindow
         BtnSound.ToolTip = LocalizationService.Get(_soundEnabled
             ? "TimerStopwatch_SoundDefault"
             : "TimerStopwatch_SoundOff");
-        TxtStartPauseIcon.Text = _isRunning ? "\uE769" : "\uE768";
+        TxtStartPauseIcon.Text = _isRunning ? "\uF5A2" : "\uF606";
         TxtStartPauseLabel.Text = LocalizationService.Get(_isRunning
             ? "TimerStopwatch_Pause"
             : "TimerStopwatch_Start");

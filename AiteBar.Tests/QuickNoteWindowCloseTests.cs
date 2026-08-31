@@ -20,6 +20,106 @@ namespace AiteBar.Tests;
 public sealed class QuickNoteWindowCloseTests
 {
     [Fact]
+    public async Task Loaded_RestoresPinStateWithoutBreakingToggleBinding()
+    {
+        await RunStaAsync(async () =>
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+            try
+            {
+                var settings = new AppSettingsService(Path.Combine(tempRoot, "buttons.json"), Path.Combine(tempRoot, "settings.json"));
+                settings.UpdateSettings(s => s.QuickNotePinned = true);
+                using var window = new QuickNoteWindow(new ImmediateQuickNotePersistence(), settings)
+                {
+                    WindowStartupLocation = WindowStartupLocation.Manual,
+                    Left = -2000,
+                    Top = -2000,
+                    ShowActivated = false
+                };
+                var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                window.Closed += (_, _) => closed.TrySetResult();
+                try
+                {
+                    window.Show();
+                    await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+
+                    var pinButton = Assert.IsType<ToggleButton>(window.FindName("BtnPin"));
+                    Assert.True(System.Windows.Data.BindingOperations.IsDataBound(
+                        pinButton,
+                        ToggleButton.IsCheckedProperty));
+                    Assert.True(pinButton.IsChecked);
+                    Assert.True(window.IsPinned);
+
+                    pinButton.IsChecked = false;
+                    await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                    Assert.False(window.IsPinned);
+                    Assert.False(settings.Settings.QuickNotePinned);
+
+                    pinButton.IsChecked = true;
+                    await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+                    Assert.True(window.IsPinned);
+                    Assert.True(settings.Settings.QuickNotePinned);
+                }
+                finally
+                {
+                    window.Close();
+                    await closed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                }
+            }
+            finally
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        });
+    }
+
+    [Fact]
+    public async Task Loaded_PlacesCaretAndViewportAtDocumentStart()
+    {
+        await RunStaAsync(async () =>
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+            try
+            {
+                var settings = new AppSettingsService(Path.Combine(tempRoot, "buttons.json"), Path.Combine(tempRoot, "settings.json"));
+                settings.UpdateSettings(s => s.QuickNotePinned = true);
+                using var window = new QuickNoteWindow(new LongQuickNotePersistence(), settings)
+                {
+                    WindowStartupLocation = WindowStartupLocation.Manual,
+                    Left = -2000,
+                    Top = -2000,
+                    Width = 460,
+                    Height = 320,
+                    ShowActivated = false
+                };
+                var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                window.Closed += (_, _) => closed.TrySetResult();
+                try
+                {
+                    window.Show();
+                    await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+
+                    TextPointer expected = window.TxtNote.Document.ContentStart
+                        .GetInsertionPosition(LogicalDirection.Forward) ?? window.TxtNote.Document.ContentStart;
+                    Assert.Equal(0, window.TxtNote.CaretPosition.CompareTo(expected));
+                    Assert.Equal(0, window.TxtNote.VerticalOffset, precision: 1);
+                }
+                finally
+                {
+                    window.Close();
+                    await closed.Task.WaitAsync(TimeSpan.FromSeconds(5));
+                }
+            }
+            finally
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        });
+    }
+
+    [Fact]
     public void LinkActivation_RequiresControlSoPlainClickCanPlaceTheCaret()
     {
         Assert.False(QuickNoteWindow.ShouldActivateLink(ModifierKeys.None));
@@ -540,6 +640,23 @@ public sealed class QuickNoteWindowCloseTests
         {
             document.Blocks.Clear();
             document.Blocks.Add(new Paragraph(new Run("Заметка без надписи в шапке")));
+        }
+        public Task SaveAsync(FlowDocument document) => Task.CompletedTask;
+        public Task<string> SaveConflictCopyAsync(FlowDocument document) => Task.FromResult(string.Empty);
+        public void OpenConflictCopy() { }
+    }
+
+    private sealed class LongQuickNotePersistence : IQuickNotePersistence
+    {
+        public string? LastConflictCopyPath => null;
+        public bool HasExternalChanges() => false;
+        public void Load(FlowDocument document)
+        {
+            document.Blocks.Clear();
+            for (int line = 0; line < 80; line++)
+            {
+                document.Blocks.Add(new Paragraph(new Run($"Line {line}")));
+            }
         }
         public Task SaveAsync(FlowDocument document) => Task.CompletedTask;
         public Task<string> SaveConflictCopyAsync(FlowDocument document) => Task.FromResult(string.Empty);

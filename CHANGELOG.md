@@ -9,6 +9,17 @@
 
 ## [Unreleased]
 
+## [1.15.21] - 2026-08-31
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+
+- **Быстрая заметка — открытие документа**: после загрузки каретка и видимая область теперь находятся в начале заметки, а не в конце.
+- **Быстрая заметка — закрепление**: восстановление и переключение pin-состояния больше не разрывает WPF binding; закреплённая заметка остаётся открытой при потере фокуса.
+- **Иконки — Fluent UI**: Material удалён из пользовательского каталога, а все внутренние UI-пиктограммы переведены с Material, Segoe MDL2 и текстовых символов на встроенные Fluent System Icons. Старые пользовательские Material-глифы продолжают отображаться через legacy-совместимость.
+- **Quick Note document opening**: after loading, the caret and viewport now start at the top of the note instead of the end.
+- **Quick Note pinning**: restoring and toggling the pin state no longer breaks the WPF binding; a pinned note remains open after losing focus.
+- **Icons — Fluent UI**: Material was removed from the user catalog, and all internal UI icons were migrated from Material, Segoe MDL2, and text symbols to bundled Fluent System Icons. Existing user-selected Material glyphs remain renderable through legacy compatibility.
+
 ## [1.15.20] - 2026-08-31
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed

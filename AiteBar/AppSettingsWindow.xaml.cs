@@ -1218,8 +1218,8 @@ public partial class AppSettingsWindow : DarkWindow
                 VerticalAlignment = VerticalAlignment.Center,
                 Child = new TextBlock
                 {
-                    Text = "\uE945",
-                    FontFamily = FontHelper.Resolve(FontHelper.MaterialKey),
+                    Text = "\uE9F9",
+                    FontFamily = FontHelper.Resolve(FontHelper.FluentKey),
                     Foreground = BrushFromHex("#8A95A3"),
                     FontSize = 18,
                     HorizontalAlignment = System.Windows.HorizontalAlignment.Center,

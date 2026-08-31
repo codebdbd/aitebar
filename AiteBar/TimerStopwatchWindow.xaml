@@ -162,7 +162,7 @@
                                       ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
                                       IsChecked="{Binding IsPinned, RelativeSource={RelativeSource AncestorType=local:DarkWindow}, Mode=TwoWay}"
                                       Margin="0,0,4,0"/>
-                        <Button x:Name="BtnCompact" Content="&#xE923;" FontFamily="Segoe MDL2 Assets" FontSize="14" Style="{StaticResource HeaderButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Compact}" Click="BtnCompact_Click" Margin="0,0,4,0"/>
+                        <Button x:Name="BtnCompact" Content="&#xEA1A;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="14" Style="{StaticResource HeaderButtonStyle}" ToolTip="{local:Loc ResourceKey=TimerStopwatch_Compact}" Click="BtnCompact_Click" Margin="0,0,4,0"/>
                         <Button Style="{StaticResource WindowCloseButtonStyle}" ToolTip="{local:Loc ResourceKey=Common_Close}" Click="BtnClose_Click"/>
                     </StackPanel>
                 </Grid>
@@ -213,13 +213,13 @@
                 <UniformGrid x:Name="FullActionView" Grid.Row="5" Columns="2" HorizontalAlignment="Stretch">
                     <Button x:Name="BtnStartPause" Style="{StaticResource PrimaryCommandButtonStyle}" Click="BtnStartPause_Click" Margin="0,0,8,0">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBlock x:Name="TxtStartPauseIcon" Text="&#xE768;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,9,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TxtStartPauseIcon" Text="&#xF606;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="14" Margin="0,0,9,0" VerticalAlignment="Center"/>
                             <TextBlock x:Name="TxtStartPauseLabel" Text="{local:Loc ResourceKey=TimerStopwatch_Start}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>
                     <Button x:Name="BtnReset" Style="{StaticResource CommandButtonStyle}" Click="BtnReset_Click">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                            <TextBlock Text="&#xE777;" FontFamily="Segoe MDL2 Assets" FontSize="14" Margin="0,0,9,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="&#xF1A0;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="14" Margin="0,0,9,0" VerticalAlignment="Center"/>
                             <TextBlock Text="{local:Loc ResourceKey=TimerStopwatch_Reset}" VerticalAlignment="Center"/>
                         </StackPanel>
                     </Button>

@@ -68,7 +68,7 @@ public sealed class TextProcessingVisualContractTests
     }
 
     [Fact]
-    public void Window_UsesCompactAlignedControlsAndSystemGlyphs()
+    public void Window_UsesCompactAlignedControlsAndFluentGlyphs()
     {
         string xaml = ReadWindowXaml();
 
@@ -79,7 +79,7 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("Property=\"local:KeyboardFocusVisualService.ShowKeyboardFocusCue\" Value=\"True\"", xaml);
         Assert.Contains("TargetName=\"EditorFocusBorder\" Property=\"BorderBrush\" Value=\"#3ABEFF\"", xaml);
         Assert.Contains("<ColumnDefinition Width=\"10\"/>", xaml);
-        Assert.Contains("FontFamily=\"Segoe MDL2 Assets\"", xaml);
+        Assert.Contains("FontFamily=\"pack://application:,,,/Resources/#FluentSystemIcons-Regular\"", xaml);
         Assert.Contains("FontSize=\"18\" FontWeight=\"Normal\"", xaml);
         Assert.Contains("x:Name=\"FooterCommandColumn\" Width=\"150\"", xaml);
         Assert.Contains("x:Name=\"RailCommandColumn\" Width=\"150\"", xaml);
@@ -95,7 +95,6 @@ public sealed class TextProcessingVisualContractTests
         Assert.Contains("StreamingUiUpdateInterval = TimeSpan.FromMilliseconds(50)",
             File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "TextProcessingWindow.xaml.cs")));
         Assert.Contains("<Grid MinHeight=\"284\">", xaml);
-        Assert.DoesNotContain("FluentSystemIcons", xaml);
         Assert.DoesNotContain("Padding=\"24,20\"", xaml);
         Assert.DoesNotContain("Padding=\"25,21\"", xaml);
     }

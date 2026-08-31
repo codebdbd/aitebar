@@ -13,7 +13,7 @@ internal static class TimerStopwatchLayoutHelper
     public const double FullMinHeight = 330;
     public const int MaxProgressSegmentCount = 7200;
     public const double ProgressFallbackWidth = 356;
-    public const string CompactToggleGlyph = "\uE923";
+    public const string CompactToggleGlyph = "\uEA1A";
     public const string CompactPlayGlyph = "\uF606";
     public const string CompactPauseGlyph = "\uF5A2";
     public const string CompactExpandGlyph = "\uE685";

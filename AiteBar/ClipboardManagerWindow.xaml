@@ -68,7 +68,7 @@
                 <Setter Property="Height" Value="28"/>
                 <Setter Property="Margin" Value="0,0,6,0"/>
                 <Setter Property="Padding" Value="0"/>
-                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
                 <Setter Property="FontSize" Value="13"/>
                 <Setter Property="FontWeight" Value="Normal"/>
                 <Setter Property="Background" Value="#1A2230"/>
@@ -411,8 +411,8 @@
 
                     Click="BtnClearHistory_Click"/>
              <Button x:Name="BtnWipeAll"
-                    Content="&#xE74D;"
-                    FontFamily="Segoe MDL2 Assets"
+                    Content="&#xF34D;"
+                    FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
                     Style="{StaticResource ClipboardFooterIconButtonStyle}"
                     ToolTip="{local:Loc ResourceKey=ClipboardManager_WipeAll}"
                     AutomationProperties.Name="{local:Loc ResourceKey=ClipboardManager_WipeAll}"
@@ -589,9 +589,9 @@
                                                 HorizontalAlignment="Right">
 
                                         <Button x:Name="CopyButton"
-                                                Content="&#xE8C8;"
+                                                Content="&#xF32C;"
 
-                                                FontFamily="Segoe MDL2 Assets"
+                                                FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
 
                                                 Style="{StaticResource ClipboardActionButtonStyle}"
 
@@ -618,9 +618,9 @@
 
                                                 Click="EntryPinButton_Click"/>
 
-                                        <Button Content="&#xE74D;"
+                                        <Button Content="&#xF34D;"
 
-                                                FontFamily="Segoe MDL2 Assets"
+                                                FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
 
                                                 Style="{StaticResource ClipboardActionButtonStyle}"
 

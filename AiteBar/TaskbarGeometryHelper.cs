@@ -209,11 +209,11 @@ internal static class TaskbarGeometryHelper
     {
         return edge switch
         {
-            DockEdge.Top => "↑",
-            DockEdge.Bottom => "↓",
-            DockEdge.Left => "←",
-            DockEdge.Right => "→",
-            _ => "→"
+            DockEdge.Top => "\uF19B", // ic_fluent_arrow_up_20_regular
+            DockEdge.Bottom => "\uF148", // ic_fluent_arrow_down_20_regular
+            DockEdge.Left => "\uF15B", // ic_fluent_arrow_left_20_regular
+            DockEdge.Right => "\uF181", // ic_fluent_arrow_right_20_regular
+            _ => "\uF181"
         };
     }
 

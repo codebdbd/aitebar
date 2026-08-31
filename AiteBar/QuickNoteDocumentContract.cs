@@ -103,7 +103,7 @@ namespace AiteBar
                     {
                         hyperlink.Foreground = codeText;
                         hyperlink.TextDecorations = null;
-                        hyperlink.FontFamily = new FontFamily("Segoe MDL2 Assets");
+                        hyperlink.FontFamily = FontHelper.Resolve(FontHelper.FluentKey);
                     }
                     else
                     {

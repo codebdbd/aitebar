@@ -146,8 +146,8 @@
 
                                 <TextBlock x:Name="Arrow"
                                            Grid.Column="3"
-                                           Text="&#xE76C;"
-                                           FontFamily="Segoe MDL2 Assets"
+                                           Text="&#xF2B1;"
+                                           FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
                                            FontSize="12"
                                            Foreground="#E6E6E6"
                                            VerticalAlignment="Center"

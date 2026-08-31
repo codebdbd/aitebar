@@ -204,12 +204,12 @@ namespace AiteBar
 
             var copy = new Button
             {
-                Content = "\uE8C8",
+                Content = "\uF32C",
                 Tag = CodeCopyLink,
                 BorderThickness = new Thickness(0),
                 OverridesDefaultStyle = true,
                 Template = CreateTransparentGlyphButtonTemplate(),
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                FontFamily = FontHelper.Resolve(FontHelper.FluentKey),
                 FontSize = 12,
                 Width = 24,
                 Height = 18,
@@ -271,7 +271,7 @@ namespace AiteBar
                     button.Background = Brushes.Transparent;
                     button.BorderThickness = new Thickness(0);
                     button.OverridesDefaultStyle = true;
-                    button.FontFamily = new FontFamily("Segoe MDL2 Assets");
+                    button.FontFamily = FontHelper.Resolve(FontHelper.FluentKey);
                     button.FontSize = 12;
                     button.Width = 24;
                     button.Height = 18;

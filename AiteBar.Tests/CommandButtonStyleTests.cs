@@ -249,8 +249,8 @@ public sealed class CommandButtonStyleTests
                 new SolidColorBrush(Color.FromRgb(0x00, 0x7A, 0xCC))));
             var button = new Button
             {
-                Content = "\uE768",
-                FontFamily = new FontFamily("Segoe MDL2 Assets"),
+                Content = "\uF606",
+                FontFamily = FontHelper.Resolve(FontHelper.FluentKey),
                 FontSize = 18,
                 Style = compactStyle
             };

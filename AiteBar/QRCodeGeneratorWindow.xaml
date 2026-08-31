@@ -26,7 +26,7 @@
             </Style>
 
             <Style x:Key="IconTextStyle" TargetType="TextBlock">
-                <Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+                <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
                 <Setter Property="Foreground" Value="#D7E2F0"/>
                 <Setter Property="FontSize" Value="15"/>
                 <Setter Property="VerticalAlignment" Value="Center"/>
@@ -125,7 +125,7 @@
                         </Grid.RowDefinitions>
                         <Grid>
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-                                <TextBlock Text="&#xE71B;" Style="{StaticResource IconTextStyle}"/>
+                                <TextBlock Text="&#xF7CC;" Style="{StaticResource IconTextStyle}"/>
                                 <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Content}" Style="{StaticResource SectionTitleStyle}"/>
                             </StackPanel>
                         </Grid>
@@ -290,7 +290,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE790;" Style="{StaticResource IconTextStyle}"/>
+                            <TextBlock Text="&#xF2F6;" Style="{StaticResource IconTextStyle}"/>
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_Appearance}" Style="{StaticResource SectionTitleStyle}"/>
                         </StackPanel>
                         <Grid Grid.Row="2">
@@ -340,7 +340,7 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE9D9;" Style="{StaticResource IconTextStyle}"/>
+                            <TextBlock Text="&#xF66D;" Style="{StaticResource IconTextStyle}"/>
                             <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_QualityAndSize}" Style="{StaticResource SectionTitleStyle}"/>
                         </StackPanel>
                         <Grid Grid.Row="2">
@@ -384,25 +384,25 @@
             </Grid.ColumnDefinitions>
             <Button x:Name="BtnSavePng" Style="{StaticResource CommandButtonStyle}" IsEnabled="False" Click="BtnSavePng_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="&#xF680;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_SavePng}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
             <Button x:Name="BtnSaveSvg" Grid.Column="2" Style="{StaticResource CommandButtonStyle}" IsEnabled="False" Click="BtnSaveSvg_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE896;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="&#xF680;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_SaveSvg}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
             <Button x:Name="BtnCopyPng" Grid.Column="4" Style="{StaticResource CommandButtonStyle}" IsEnabled="False" Click="BtnCopyPng_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="&#xF32C;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_CopyPng}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>
             <Button x:Name="BtnCopySvg" Grid.Column="6" Style="{StaticResource CommandButtonStyle}" IsEnabled="False" Click="BtnCopySvg_Click">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="&#xE8C8;" FontFamily="Segoe MDL2 Assets" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                    <TextBlock Text="&#xF32C;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" Margin="0,0,10,0" VerticalAlignment="Center"/>
                     <TextBlock Text="{local:Loc ResourceKey=QRCodeGenerator_CopySvg}" FontWeight="SemiBold"/>
                 </StackPanel>
             </Button>

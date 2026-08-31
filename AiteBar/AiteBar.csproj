@@ -14,9 +14,9 @@
     <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <Version>1.15.20</Version>
-    <AssemblyVersion>1.15.20.0</AssemblyVersion>
-    <FileVersion>1.15.20.0</FileVersion>
+    <Version>1.15.21</Version>
+    <AssemblyVersion>1.15.21.0</AssemblyVersion>
+    <FileVersion>1.15.21.0</FileVersion>
     <DefaultItemExcludes>$(DefaultItemExcludes);obj\**;bin\**</DefaultItemExcludes>
   </PropertyGroup>
 
@@ -35,7 +35,6 @@
     <Resource Include="Resources\Design\qr-logo.svg" />
     <Resource Include="Resources\Font Awesome 7 Brands-Regular-400.otf" />
     <Resource Include="Resources\MaterialIcons-Regular.ttf" />
-    <Resource Include="Resources\MaterialIcons.codepoints" />
     <Resource Include="Resources\FluentSystemIcons-Regular.ttf" />
     <Resource Include="Resources\FluentSystemIcons.json" />
     <Resource Include="Resources\ZenEditor\Fonts\*.ttf" />

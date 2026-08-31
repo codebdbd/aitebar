@@ -381,7 +381,6 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="IconPicker_CopyFailed" xml:space="preserve"><value>Помилка копіювання файлу.</value></data>
   <data name="IconPicker_LoadFailed" xml:space="preserve"><value>Не вдалося завантажити каталог піктограм:
 {0}</value></data>
-  <data name="IconPicker_MaterialIcons" xml:space="preserve"><value>Піктограми Material</value></data>
   <data name="IconPicker_FluentSystem" xml:space="preserve"><value>Система Fluent</value></data>
   <data name="IconPicker_Brands" xml:space="preserve"><value>Бренди</value></data>
   <data name="TimerStopwatch_Compact" xml:space="preserve"><value>Компактний вигляд</value></data>

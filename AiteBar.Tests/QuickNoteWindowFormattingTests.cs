@@ -348,7 +348,7 @@ public sealed class QuickNoteWindowFormattingTests
                 }
                 int selectedIndex = QuickNoteThemeCatalog.Themes.ToList().FindIndex(t => t.Id == QuickNoteThemeCatalog.Find(theme).Id);
                 Assert.Single(palette.Children.OfType<System.Windows.Controls.Button>(), button => button.Content != null);
-                Assert.Equal("\uE73E", ((System.Windows.Controls.Button)palette.Children[selectedIndex]).Content);
+                Assert.Equal("\uF295", ((System.Windows.Controls.Button)palette.Children[selectedIndex]).Content);
                 palette.Measure(new Size(294, 48));
                 palette.Arrange(new Rect(0, 0, 294, 48));
                 palette.UpdateLayout();

@@ -31,9 +31,6 @@ public partial class ZenEditorWindow : DarkWindow
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
     private const uint SwpNoActivate = 0x0010;
-    private static FontFamily MaterialMenuIconFont => FontHelper.Resolve(FontHelper.MaterialKey);
-    private static readonly FontFamily SegoeMenuIconFont = new("Segoe UI");
-
     private static class MenuIcons
     {
         public const int NewDocument = 58586; // ic_fluent_document_add_16_regular

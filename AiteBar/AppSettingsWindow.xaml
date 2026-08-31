@@ -118,13 +118,13 @@
 
                                                Grid.Column="1"
 
-                                               Text="✓"
+                                               Text="&#xE305;"
+
+                                               FontFamily="pack://application:,,,/AiteBar;component/Resources/#FluentSystemIcons-Regular"
 
                                                Margin="5,0,0,0"
 
                                                FontSize="12"
-
-                                               FontWeight="Bold"
 
                                                Foreground="White"
 
@@ -323,7 +323,8 @@
                                             HorizontalAlignment="Right" VerticalAlignment="Top"
                                             Margin="0,-5,-5,0" Background="{DynamicResource AccentColor}"
                                             Visibility="Collapsed">
-                                        <TextBlock Text="✓" Foreground="White" FontWeight="Bold"
+                                        <TextBlock Text="&#xE305;" Foreground="White"
+                                                   FontFamily="pack://application:,,,/AiteBar;component/Resources/#FluentSystemIcons-Regular"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     </Border>
                                 </Grid>

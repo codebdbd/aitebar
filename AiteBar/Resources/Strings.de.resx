@@ -387,7 +387,6 @@ GitHub-Release-Seite öffnen?</value></data>
   <data name="IconPicker_CopyFailed" xml:space="preserve"><value>Fehler beim Kopieren der Datei.</value></data>
   <data name="IconPicker_LoadFailed" xml:space="preserve"><value>Symbolkatalog konnte nicht geladen werden:
 {0}</value></data>
-  <data name="IconPicker_MaterialIcons" xml:space="preserve"><value>Material-Symbole</value></data>
   <data name="IconPicker_FluentSystem" xml:space="preserve"><value>Fluent-System</value></data>
   <data name="IconPicker_Brands" xml:space="preserve"><value>Marken</value></data>
   <data name="TimerStopwatch_Compact" xml:space="preserve"><value>Kompakt</value></data>
