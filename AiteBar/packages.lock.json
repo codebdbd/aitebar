@@ -35,9 +35,9 @@
       },
       "SkiaSharp.NativeAssets.Win32": {
         "type": "Direct",
-        "requested": "[4.150.1, )",
-        "resolved": "4.150.1",
-        "contentHash": "qrLSL8OonbkMJdSH8heK0Jl39Y2xxZGdd7Ru4cyBXk2ITdx+Fu1sCFLmvCKmnMaYs//mlN/YSpSpOurEXErcQw=="
+        "requested": "[4.151.2, )",
+        "resolved": "4.151.2",
+        "contentHash": "sTUHSfWXVYThf/lTG81n8y1gMnr0TiN/2zrApwd0jbGfbsEt9g4+GPsj6UVjjgNLXCI9l5CyzxQ6Zh4fP9ZoVQ=="
       },
       "Svg.Skia": {
         "type": "Direct",
@@ -137,9 +137,9 @@
     "net10.0-windows7.0/win-x64": {
       "SkiaSharp.NativeAssets.Win32": {
         "type": "Direct",
-        "requested": "[4.150.1, )",
-        "resolved": "4.150.1",
-        "contentHash": "qrLSL8OonbkMJdSH8heK0Jl39Y2xxZGdd7Ru4cyBXk2ITdx+Fu1sCFLmvCKmnMaYs//mlN/YSpSpOurEXErcQw=="
+        "requested": "[4.151.2, )",
+        "resolved": "4.151.2",
+        "contentHash": "sTUHSfWXVYThf/lTG81n8y1gMnr0TiN/2zrApwd0jbGfbsEt9g4+GPsj6UVjjgNLXCI9l5CyzxQ6Zh4fP9ZoVQ=="
       },
       "HarfBuzzSharp.NativeAssets.Linux": {
         "type": "Transitive",
