@@ -36,7 +36,8 @@ public partial class ZenEditorDocumentPicker : DarkWindow
             summary.ModifiedUtc.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss"),
             summary.Title,
             summary.IsCurrent ? "•" : string.Empty,
-            summary.IsCurrent)).ToList();
+            summary.IsCurrent,
+            CanDelete: !restoreMode && !summary.IsCurrent)).ToList();
         DocumentList.ItemsSource = _items;
         DocumentList.SelectedIndex = _items.Count > 0 ? 0 : -1;
         _prefixTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(900) };
@@ -63,6 +64,21 @@ public partial class ZenEditorDocumentPicker : DarkWindow
         DocumentList.Foreground = text;
         FontFamily = ZenEditorWindow.CreateThemeFontFamily(theme);
         FontSize = Math.Max(13, theme.FontSize - 5);
+
+        bool isDark = IsDarkTheme(theme);
+        Resources["ZenDeleteButtonForeground"] = BrushFrom(isDark ? "#9BA1A6" : "#7A756D");
+        Resources["ZenDeleteButtonHoverBackground"] = BrushFrom(isDark ? "#382326" : "#FDE8E8");
+        Resources["ZenDeleteButtonHoverBorder"] = BrushFrom(isDark ? "#5C282C" : "#F5C2C2");
+        Resources["ZenDeleteButtonHoverForeground"] = BrushFrom(isDark ? "#FF6B6B" : "#C62828");
+        Resources["ZenDeleteButtonPressedBackground"] = BrushFrom(isDark ? "#482226" : "#F9D0D0");
+        Resources["ZenDeleteButtonPressedBorder"] = BrushFrom(isDark ? "#6E2E33" : "#E8A0A0");
+    }
+
+    private static bool IsDarkTheme(ZenEditorTheme theme)
+    {
+        var color = (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(theme.Background);
+        double brightness = (0.299 * color.R + 0.587 * color.G + 0.114 * color.B) / 255.0;
+        return brightness < 0.5;
     }
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -124,7 +140,7 @@ public partial class ZenEditorDocumentPicker : DarkWindow
 
     private void DeleteButton_Click(object sender, RoutedEventArgs e)
     {
-        if (sender is Button button && button.Tag is Guid documentId)
+        if (!_restoreMode && sender is Button button && button.Tag is Guid documentId)
         {
             SelectedDocumentId = documentId;
             DeleteRequested = true;
@@ -144,8 +160,21 @@ public partial class ZenEditorDocumentPicker : DarkWindow
         DialogResult = true;
     }
 
-    private static SolidColorBrush BrushFrom(string color) =>
-        new((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
+    private static SolidColorBrush BrushFrom(string color)
+    {
+        var brush = new SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(color));
+        if (brush.CanFreeze)
+        {
+            brush.Freeze();
+        }
+        return brush;
+    }
 
-    private sealed record PickerItem(Guid Id, string Modified, string Title, string CurrentMarker, bool IsCurrent);
+    private sealed record PickerItem(
+        Guid Id,
+        string Modified,
+        string Title,
+        string CurrentMarker,
+        bool IsCurrent,
+        bool CanDelete);
 }

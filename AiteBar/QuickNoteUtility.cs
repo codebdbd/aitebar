@@ -14,6 +14,7 @@ public class QuickNoteUtility : UtilityBase<QuickNoteWindow>
     public override string IconGlyph => "\uF56F";
     public override string IconColor => UtilityIconColors.TextWorkspace;
 
+
     protected override QuickNoteWindow CreateWindow(AppSettingsService settingsService, Window? owner)
     {
         // A Snap participant is an independent application window, not an owned panel overlay.
@@ -21,7 +22,27 @@ public class QuickNoteUtility : UtilityBase<QuickNoteWindow>
     }
 
     protected override void ShowWindow(QuickNoteWindow window, AppSettingsService settingsService)
+    {
+        window.ShowSimple(settingsService.Settings);
+    }
+
+    protected override bool RestoreExistingWindow(QuickNoteWindow window)
+    {
+        if (window.IsVisible && window.IsActive && window.WindowState != WindowState.Minimized)
         {
-            window.ShowSimple(settingsService.Settings);
+            window.Close();
+            return true;
         }
+
+        if (window.WindowState == WindowState.Minimized)
+        {
+            window.WindowState = WindowState.Normal;
+        }
+
+        window.Activate();
+        return true;
+    }
+
+    internal bool RestoreExistingWindowForTesting(QuickNoteWindow window) =>
+        RestoreExistingWindow(window);
 }

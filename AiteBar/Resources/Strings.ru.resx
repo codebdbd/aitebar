@@ -1455,6 +1455,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ZenEditor_ThemeGraphite" xml:space="preserve"><value>Графит</value></data>
   <data name="ZenEditor_ThemeNight" xml:space="preserve"><value>Ночь</value></data>
   <data name="ZenEditor_Exit" xml:space="preserve"><value>Выход</value></data>
+  <data name="ZenEditor_DeleteDocument" xml:space="preserve"><value>Удалить документ</value></data>
   <data name="ZenEditor_DeleteConfirm" xml:space="preserve"><value>Удалить документ «{0}»?</value></data>
   <data name="ZenEditor_TxtFilter" xml:space="preserve"><value>Текстовые файлы (*.txt)|*.txt</value></data>
   <data name="ZenEditor_SaveError" xml:space="preserve"><value>Не удалось сохранить документ. Ваш текст остаётся открытым.&#xA;&#xA;{0}</value></data>

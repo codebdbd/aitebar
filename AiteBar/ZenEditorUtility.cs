@@ -22,7 +22,16 @@ public sealed class ZenEditorUtility : UtilityBase<ZenEditorWindow>
 
     protected override bool RestoreExistingWindow(ZenEditorWindow window)
     {
+        if (window.IsVisible && window.IsActive && window.WindowState != WindowState.Minimized)
+        {
+            window.Close();
+            return true;
+        }
+
         window.RestoreFromAiteBar();
         return true;
     }
+
+    internal bool RestoreExistingWindowForTesting(ZenEditorWindow window) =>
+        RestoreExistingWindow(window);
 }

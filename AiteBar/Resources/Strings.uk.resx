@@ -803,6 +803,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="ZenEditor_ThemeGraphite" xml:space="preserve"><value>Графіт</value></data>
   <data name="ZenEditor_ThemeNight" xml:space="preserve"><value>Ніч</value></data>
   <data name="ZenEditor_Exit" xml:space="preserve"><value>Вихід</value></data>
+  <data name="ZenEditor_DeleteDocument" xml:space="preserve"><value>Видалити документ</value></data>
   <data name="ZenEditor_DeleteConfirm" xml:space="preserve"><value>Видалити документ «{0}»?</value></data>
   <data name="ZenEditor_TxtFilter" xml:space="preserve"><value>Текстові файли (*.txt)|*.txt</value></data>
   <data name="ZenEditor_SaveError" xml:space="preserve"><value>Не вдалося зберегти документ. Ваш текст залишається відкритим.&#xA;&#xA;{0}</value></data>

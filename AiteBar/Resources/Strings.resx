@@ -867,6 +867,7 @@ Open the GitHub release page?</value></data>
   <data name="ZenEditor_ThemeGraphite" xml:space="preserve"><value>Graphite</value></data>
   <data name="ZenEditor_ThemeNight" xml:space="preserve"><value>Night</value></data>
   <data name="ZenEditor_Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="ZenEditor_DeleteDocument" xml:space="preserve"><value>Delete document</value></data>
   <data name="ZenEditor_DeleteConfirm" xml:space="preserve"><value>Delete document “{0}”?</value></data>
   <data name="ZenEditor_TxtFilter" xml:space="preserve"><value>Text files (*.txt)|*.txt</value></data>
   <data name="ZenEditor_SaveError" xml:space="preserve"><value>The document could not be saved. Your text remains open.&#xA;&#xA;{0}</value></data>

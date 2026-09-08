@@ -3,11 +3,13 @@ using AiteBar.AiteProfilesUtility;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Xml.Linq;
 
 namespace AiteBar.Tests;
 
+[Collection("WpfTestCollection")]
 public sealed class AiteProfilesUtilityTests
 {
     [Fact]
@@ -407,5 +409,78 @@ public sealed class AiteProfilesUtilityTests
             LastForceRescan = forceRescan;
             return Task.FromResult(rows);
         }
+    }
+
+    [Fact]
+    public async Task AiteProfilesUtility_RestoreExistingWindow_TogglesWindow()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "aitebar_profiles_toggle_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            await RunStaAsync(() =>
+            {
+                var settings = new AppSettingsService(Path.Combine(root, "buttons.json"), Path.Combine(root, "settings.json"));
+                var window = new AiteProfilesWindow(settings)
+                {
+                    WindowStartupLocation = WindowStartupLocation.Manual,
+                    Left = -2000,
+                    Top = -2000,
+                    ShowActivated = false
+                };
+                var utility = new AiteBar.AiteProfilesUtility.AiteProfilesUtility();
+
+                try
+                {
+                    // 1. Minimized window: does not hide, restores to Normal
+                    window.WindowState = WindowState.Minimized;
+                    bool handledMinimized = utility.RestoreExistingWindowForTesting(window);
+                    Assert.True(handledMinimized);
+                    Assert.Equal(WindowState.Normal, window.WindowState);
+
+                    // 2. Active, visible window: hides
+                    window.Show();
+                    window.Activate();
+
+                    if (window.IsActive)
+                    {
+                        bool handled = utility.RestoreExistingWindowForTesting(window);
+                        Assert.True(handled);
+                        Assert.False(window.IsVisible);
+                    }
+                }
+                finally
+                {
+                    window.Close();
+                }
+            });
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
+    private static Task RunStaAsync(Action action)
+    {
+        var tcs = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                action();
+                tcs.SetResult(null);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        return tcs.Task;
     }
 }

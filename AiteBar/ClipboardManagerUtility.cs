@@ -28,8 +28,17 @@ namespace AiteBar
 
         protected override bool RestoreExistingWindow(ClipboardManagerWindow window)
         {
+            if (window.IsVisible && window.IsActive && window.WindowState != WindowState.Minimized)
+            {
+                window.Hide();
+                return true;
+            }
+
             window.RestoreFromAiteBar();
             return true;
         }
+
+        internal bool RestoreExistingWindowForTesting(ClipboardManagerWindow window) =>
+            RestoreExistingWindow(window);
     }
 }

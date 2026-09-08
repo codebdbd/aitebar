@@ -9,10 +9,17 @@
 
 ## [Unreleased]
 
-## [1.15.22] - 2026-08-31
+## [1.15.22] - 2026-09-08
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+
+- **Smart Toggle для утилит**: повторное нажатие горячих клавиш утилит «Дзен-редактор», «Быстрые заметки», «Менеджер профилей» и «Менеджер буфера обмена» теперь скрывает/закрывает активное окно. Если окно свернуто, скрыто или неактивно — горячая клавиша восстанавливает его и переводит фокус.
+- **Smart Toggle for utilities**: pressing the hotkey for Zen Editor, Quick Note, Profile Manager, or Clipboard Manager now toggles (closes/hides) the active window. When minimized, hidden, or inactive, the hotkey restores and focuses it.
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed
 
+- **Дзен-редактор — окно документов**: исправлен контраст кнопки удаления (устранено белое на белом при наведении) и добавлена локализация подсказки удаления на всех поддерживаемых языках.
+- **Zen Editor — document picker**: fixed the delete button hover contrast (prevented light-on-light) and added localized delete tooltips across all supported languages.
 - **Иконки кнопок — обновление панели**: изменение Fluent-глифа, шрифта или изображения существующей кнопки теперь инвалидирует её визуальное состояние; панель сразу показывает выбранную иконку, включая переход с favicon на глиф.
 - **Button icons — panel refresh**: changing an existing button's Fluent glyph, font, or image now invalidates its visual state; the panel immediately shows the selected icon, including favicon-to-glyph changes.
 

@@ -49,6 +49,53 @@ public sealed class ClipboardManagerWindowBehaviorTests
         });
     }
 
+    [Fact]
+    public async Task ClipboardManagerUtility_RestoreExistingWindow_TogglesWindow()
+    {
+        await RunStaAsync(() =>
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+
+            try
+            {
+                using var historyService = new ClipboardHistoryService(
+                    Path.Combine(tempRoot, "clipboard_history.json"),
+                    persistHistory: false);
+                var window = new ClipboardManagerWindow(historyService);
+                var utility = new ClipboardManagerUtility();
+
+                try
+                {
+                    // 1. Minimized window: does not hide, restores to Normal and shows
+                    window.WindowState = WindowState.Minimized;
+                    bool handledMinimized = utility.RestoreExistingWindowForTesting(window);
+                    Assert.True(handledMinimized);
+                    Assert.Equal(WindowState.Normal, window.WindowState);
+
+                    // 2. Active, visible window: hides
+                    window.Show();
+                    window.Activate();
+
+                    if (window.IsActive)
+                    {
+                        bool handled = utility.RestoreExistingWindowForTesting(window);
+                        Assert.True(handled);
+                        Assert.False(window.IsVisible);
+                    }
+                }
+                finally
+                {
+                    window.Close();
+                }
+            }
+            finally
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        });
+    }
+
     private static Task RunStaAsync(Action action)
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);

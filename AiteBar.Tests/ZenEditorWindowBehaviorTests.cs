@@ -179,6 +179,70 @@ public sealed class ZenEditorWindowBehaviorTests
         });
     }
 
+    [Theory]
+    [InlineData("ru", "Удалить документ")]
+    [InlineData("en", "Delete document")]
+    [InlineData("uk", "Видалити документ")]
+    [InlineData("de", "Dokument löschen")]
+    public void ZenEditor_DeleteDocument_IsLocalizedInSupportedCultures(string cultureName, string expected)
+    {
+        var culture = System.Globalization.CultureInfo.GetCultureInfo(cultureName);
+        string actual = LocalizationService.Get("ZenEditor_DeleteDocument", culture);
+        Assert.False(string.IsNullOrWhiteSpace(actual));
+        Assert.DoesNotContain("[[", actual);
+        Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public async Task DocumentPicker_ConfiguresDeleteStateAndThemeBrushes()
+    {
+        await RunStaAsync(() =>
+        {
+            ZenEditorTheme darkTheme = ZenEditorThemeCatalog.Get(ZenEditorThemeCatalog.GraphiteId);
+            ZenEditorTheme lightTheme = ZenEditorThemeCatalog.Get(ZenEditorThemeCatalog.PaperId);
+
+            var currentSummary = new ZenEditorDocumentSummary(
+                Guid.NewGuid(),
+                "Текущий",
+                DateTime.UtcNow,
+                IsCurrent: true);
+            var otherSummary = new ZenEditorDocumentSummary(
+                Guid.NewGuid(),
+                "Другой",
+                DateTime.UtcNow,
+                IsCurrent: false);
+
+            var picker = new ZenEditorDocumentPicker([currentSummary, otherSummary], darkTheme);
+
+            Assert.True(picker.Resources.Contains("ZenDeleteButtonHoverBackground"));
+            Assert.True(picker.Resources.Contains("ZenDeleteButtonHoverForeground"));
+            var darkHoverForeground = Assert.IsType<System.Windows.Media.SolidColorBrush>(picker.Resources["ZenDeleteButtonHoverForeground"]);
+            Assert.Equal(System.Windows.Media.Color.FromRgb(0xFF, 0x6B, 0x6B), darkHoverForeground.Color);
+
+            static bool GetCanDelete(object item) =>
+                (bool?)item.GetType().GetProperty("CanDelete", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Public)?.GetValue(item) ?? false;
+
+            ListBox list = Assert.IsType<ListBox>(picker.FindName("DocumentList"));
+            Assert.Equal(2, list.Items.Count);
+
+            Assert.False(GetCanDelete(list.Items[0]!));
+            Assert.True(GetCanDelete(list.Items[1]!));
+
+            picker.Close();
+
+            var restorePicker = new ZenEditorDocumentPicker([otherSummary], lightTheme, restoreMode: true);
+            Assert.True(restorePicker.Resources.Contains("ZenDeleteButtonHoverForeground"));
+            var lightHoverForeground = Assert.IsType<System.Windows.Media.SolidColorBrush>(restorePicker.Resources["ZenDeleteButtonHoverForeground"]);
+            Assert.Equal(System.Windows.Media.Color.FromRgb(0xC6, 0x28, 0x28), lightHoverForeground.Color);
+
+            ListBox restoreList = Assert.IsType<ListBox>(restorePicker.FindName("DocumentList"));
+            Assert.Single(restoreList.Items);
+            Assert.False(GetCanDelete(restoreList.Items[0]!));
+
+            restorePicker.Close();
+        });
+    }
+
     [Fact]
     public async Task ParagraphEditor_RoundTripsBoldItalicAndUnderlineRanges()
     {
@@ -310,6 +374,56 @@ public sealed class ZenEditorWindowBehaviorTests
                 editor.Text.Length,
                 styles[^1].Start + styles[^1].Length);
         });
+    }
+
+    [Fact]
+    public async Task ZenEditorUtility_RestoreExistingWindow_TogglesWindow()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "aitebar_zen_toggle_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+        try
+        {
+            await RunStaAsync(() =>
+            {
+                var store = new ZenEditorStore(root);
+                var window = new ZenEditorWindow(store);
+                var utility = new ZenEditorUtility();
+
+                try
+                {
+                    // 1. Minimized window: does not close, restores to Normal
+                    window.WindowState = WindowState.Minimized;
+                    bool handledMinimized = utility.RestoreExistingWindowForTesting(window);
+                    Assert.True(handledMinimized);
+                    Assert.Equal(WindowState.Normal, window.WindowState);
+
+                    // 2. Active, visible window: closes
+                    window.Show();
+                    window.Activate();
+
+                    if (window.IsActive)
+                    {
+                        bool closed = false;
+                        window.Closing += (_, _) => closed = true;
+
+                        bool handled = utility.RestoreExistingWindowForTesting(window);
+                        Assert.True(handled);
+                        Assert.True(closed);
+                    }
+                }
+                finally
+                {
+                    window.Close();
+                }
+            });
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
     }
 
     private static void AssertIconFont(

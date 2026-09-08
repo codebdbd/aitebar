@@ -24,7 +24,16 @@ public sealed class AiteProfilesUtility : UtilityBase<AiteProfilesWindow>
 
     protected override bool RestoreExistingWindow(AiteProfilesWindow window)
     {
+        if (window.IsVisible && window.IsActive && window.WindowState != WindowState.Minimized)
+        {
+            window.Hide();
+            return true;
+        }
+
         window.RestoreFromAiteBar();
         return true;
     }
+
+    internal bool RestoreExistingWindowForTesting(AiteProfilesWindow window) =>
+        RestoreExistingWindow(window);
 }

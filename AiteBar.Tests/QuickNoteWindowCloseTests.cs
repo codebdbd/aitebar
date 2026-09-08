@@ -515,6 +515,66 @@ public sealed class QuickNoteWindowCloseTests
         });
     }
 
+    [Fact]
+    public async Task QuickNoteUtility_RestoreExistingWindow_TogglesWindow()
+    {
+        await RunStaAsync(async () =>
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+            try
+            {
+                var settings = new AppSettingsService(Path.Combine(tempRoot, "buttons.json"), Path.Combine(tempRoot, "settings.json"));
+                using var window = new QuickNoteWindow(new ImmediateQuickNotePersistence(), settings)
+                {
+                    WindowStartupLocation = WindowStartupLocation.Manual,
+                    Left = -2000,
+                    Top = -2000,
+                    ShowActivated = false
+                };
+                var utility = new QuickNoteUtility();
+
+                try
+                {
+                    // 1. Minimized window: does not close, restores to Normal
+                    window.WindowState = WindowState.Minimized;
+                    bool handledMinimized = utility.RestoreExistingWindowForTesting(window);
+                    Assert.True(handledMinimized);
+                    Assert.Equal(WindowState.Normal, window.WindowState);
+
+                    // 2. Active, visible window: closes
+                    window.Show();
+                    window.Activate();
+                    await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
+
+                    if (window.IsActive)
+                    {
+                        bool closed = false;
+                        window.Closing += (_, _) => closed = true;
+
+                        bool handled = utility.RestoreExistingWindowForTesting(window);
+                        Assert.True(handled);
+                        Assert.True(closed);
+                    }
+                }
+                finally
+                {
+                    window.Close();
+                }
+            }
+            finally
+            {
+                try
+                {
+                    Directory.Delete(tempRoot, recursive: true);
+                }
+                catch
+                {
+                }
+            }
+        });
+    }
+
     internal static Task RunStaAsync(Func<Task> action)
     {
         var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
