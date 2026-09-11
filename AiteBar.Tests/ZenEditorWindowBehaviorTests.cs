@@ -426,6 +426,40 @@ public sealed class ZenEditorWindowBehaviorTests
         }
     }
 
+    [Fact]
+    public async Task SaveNowAsync_WhenWindowClosed_DoesNotThrowObjectDisposedException()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "AiteBarTests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await RunStaAsync(() =>
+            {
+                var store = new ZenEditorStore(root);
+                var window = new ZenEditorWindow(store);
+                window.Show();
+
+                // Close window, which disposes _saveGate
+                window.Close();
+
+                // SaveNowAsync after close should safely return true without throwing ObjectDisposedException
+                bool result = window.SaveNowAsync(force: true).GetAwaiter().GetResult();
+                Assert.True(result);
+            });
+        }
+        finally
+        {
+            if (Directory.Exists(root))
+            {
+                Directory.Delete(root, recursive: true);
+            }
+        }
+    }
+
     private static void AssertIconFont(
         IEnumerable<MenuItem> commands,
         string gesture,

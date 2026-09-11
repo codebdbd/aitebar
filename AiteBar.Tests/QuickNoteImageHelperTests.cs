@@ -411,6 +411,95 @@ public sealed class QuickNoteImageHelperTests : IDisposable
     }
 
     [Fact]
+    public void TryDeleteSelected_WhenImageSurroundedByText_SafelyRemovesImageStructurally()
+    {
+        RunSta(() =>
+        {
+            var editor = new RichTextBox();
+            Assert.True(QuickNoteImageHelper.TryCreateInlineImage(CreateBitmap(), out InlineUIContainer? image));
+            Assert.NotNull(image);
+
+            var paragraph = new Paragraph();
+            paragraph.Inlines.Add(new Run("Before"));
+            paragraph.Inlines.Add(image!);
+            paragraph.Inlines.Add(new Run("After"));
+
+            editor.Document.Blocks.Clear();
+            editor.Document.Blocks.Add(paragraph);
+
+            using var controller = new QuickNoteImageInteractionController(editor);
+            Assert.True(controller.TrySelectFromMouseInput(image!.Child));
+            Assert.True(controller.HasSelectedImage);
+
+            Assert.True(controller.TryDeleteSelected());
+            Assert.False(controller.HasSelectedImage);
+
+            Assert.Equal(2, paragraph.Inlines.Count);
+            Assert.Equal("Before", Assert.IsType<Run>(paragraph.Inlines.FirstInline).Text);
+            Assert.Equal("After", Assert.IsType<Run>(paragraph.Inlines.LastInline).Text);
+            Assert.Empty(QuickNoteImageHelper.EnumerateImageContainers(editor.Document.Blocks));
+        });
+    }
+
+    [Fact]
+    public void TryDeleteSelected_WhenImageIsOnlyInlineInOnlyParagraph_LeavesValidEmptyRun()
+    {
+        RunSta(() =>
+        {
+            var editor = new RichTextBox();
+            Assert.True(QuickNoteImageHelper.TryCreateInlineImage(CreateBitmap(), out InlineUIContainer? image));
+            Assert.NotNull(image);
+
+            var paragraph = new Paragraph(image!);
+            editor.Document.Blocks.Clear();
+            editor.Document.Blocks.Add(paragraph);
+
+            using var controller = new QuickNoteImageInteractionController(editor);
+            Assert.True(controller.TrySelectFromMouseInput(image!.Child));
+
+            Assert.True(controller.TryDeleteSelected());
+            Assert.False(controller.HasSelectedImage);
+
+            Assert.Single(editor.Document.Blocks);
+            var remainingParagraph = Assert.IsType<Paragraph>(editor.Document.Blocks.FirstBlock);
+            var run = Assert.IsType<Run>(Assert.Single(remainingParagraph.Inlines));
+            Assert.Equal(string.Empty, run.Text);
+            Assert.Empty(QuickNoteImageHelper.EnumerateImageContainers(editor.Document.Blocks));
+        });
+    }
+
+    [Fact]
+    public void TryDeleteSelected_WhenImageIsStandaloneParagraphBetweenOthers_RemovesParagraphCleanly()
+    {
+        RunSta(() =>
+        {
+            var editor = new RichTextBox();
+            Assert.True(QuickNoteImageHelper.TryCreateInlineImage(CreateBitmap(), out InlineUIContainer? image));
+            Assert.NotNull(image);
+
+            var p1 = new Paragraph(new Run("Top"));
+            var pImage = new Paragraph(image!);
+            var p2 = new Paragraph(new Run("Bottom"));
+
+            editor.Document.Blocks.Clear();
+            editor.Document.Blocks.Add(p1);
+            editor.Document.Blocks.Add(pImage);
+            editor.Document.Blocks.Add(p2);
+
+            using var controller = new QuickNoteImageInteractionController(editor);
+            Assert.True(controller.TrySelectFromMouseInput(image!.Child));
+
+            Assert.True(controller.TryDeleteSelected());
+            Assert.False(controller.HasSelectedImage);
+
+            Assert.Equal(2, editor.Document.Blocks.Count);
+            Assert.Equal("Top", new TextRange(p1.ContentStart, p1.ContentEnd).Text);
+            Assert.Equal("Bottom", new TextRange(p2.ContentStart, p2.ContentEnd).Text);
+            Assert.Empty(QuickNoteImageHelper.EnumerateImageContainers(editor.Document.Blocks));
+        });
+    }
+
+    [Fact]
     public void TryGetMarker_RejectsOversizedBase64Payload_WithoutCachePollution()
     {
         RunSta(() =>

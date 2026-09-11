@@ -71,11 +71,62 @@ internal sealed class QuickNoteImageInteractionController : IDisposable
             _editor.BeginChange();
             try
             {
-                TextPointer caret = image.ElementStart.GetInsertionPosition(LogicalDirection.Backward)
-                    ?? image.ElementStart;
-                var range = new TextRange(image.ElementStart, image.ElementEnd);
-                range.Text = string.Empty;
-                _editor.Selection.Select(caret, caret);
+                TextPointer? targetCaret = null;
+                InlineCollection? siblings = GetSiblings(image);
+                Paragraph? parentParagraph = image.Parent as Paragraph ?? image.ElementStart.Paragraph;
+
+                if (siblings != null)
+                {
+                    Inline? prev = image.PreviousInline;
+                    Inline? next = image.NextInline;
+
+                    siblings.Remove(image);
+
+                    if (prev != null)
+                    {
+                        targetCaret = prev.ElementEnd.GetInsertionPosition(LogicalDirection.Forward);
+                    }
+                    else if (next != null)
+                    {
+                        targetCaret = next.ElementStart.GetInsertionPosition(LogicalDirection.Backward);
+                    }
+                }
+
+                if (image.Parent is Span span && span.Inlines.Count == 0)
+                {
+                    GetSiblings(span)?.Remove(span);
+                }
+
+                if (parentParagraph != null && parentParagraph.Inlines.Count == 0)
+                {
+                    var parentBlockCollection = parentParagraph.SiblingBlocks;
+                    if (parentBlockCollection != null && parentBlockCollection.Count > 1)
+                    {
+                        Block? prevBlock = parentParagraph.PreviousBlock;
+                        Block? nextBlock = parentParagraph.NextBlock;
+                        parentBlockCollection.Remove(parentParagraph);
+
+                        if (prevBlock != null)
+                        {
+                            targetCaret = prevBlock.ContentEnd.GetInsertionPosition(LogicalDirection.Backward);
+                        }
+                        else if (nextBlock != null)
+                        {
+                            targetCaret = nextBlock.ContentStart.GetInsertionPosition(LogicalDirection.Forward);
+                        }
+                    }
+                    else
+                    {
+                        var emptyRun = new Run(string.Empty);
+                        parentParagraph.Inlines.Add(emptyRun);
+                        targetCaret = emptyRun.ContentStart;
+                    }
+                }
+
+                targetCaret ??= _editor.Document.ContentEnd.GetInsertionPosition(LogicalDirection.Backward)
+                    ?? _editor.Document.ContentEnd;
+
+                _editor.Selection.Select(targetCaret, targetCaret);
             }
             finally
             {
@@ -85,7 +136,7 @@ internal sealed class QuickNoteImageInteractionController : IDisposable
             ClearSelection();
             return true;
         }
-        catch (InvalidOperationException ex)
+        catch (Exception ex)
         {
             Logger.Log(ex);
             ClearSelection();

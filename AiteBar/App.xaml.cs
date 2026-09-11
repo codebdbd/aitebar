@@ -113,7 +113,7 @@ public partial class App : System.Windows.Application
         DispatcherUnhandledException += (_, args) =>
         {
             TelemetryService.CaptureException(args.Exception, "dispatcher_unhandled");
-            TelemetryService.Flush(TimeSpan.FromSeconds(2));
+            _ = Task.Run(() => TelemetryService.Flush(TimeSpan.FromSeconds(2)));
             args.Handled = true;
         };
     }

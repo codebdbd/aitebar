@@ -68,6 +68,7 @@ public partial class ZenEditorWindow : DarkWindow
     private bool _manualScroll;
     private bool _allowClose;
     private bool _closeInProgress;
+    private bool _isClosed;
     private bool _sessionEndingSubscribed;
     private bool _suppressSearchChange;
     private int _editVersion;
@@ -182,6 +183,7 @@ public partial class ZenEditorWindow : DarkWindow
 
     private void Window_Closed(object? sender, EventArgs e)
     {
+        _isClosed = true;
         _mainWindow?.SetUtilityFullscreenSuppressed(false);
         if (_sessionEndingSubscribed && Application.Current is not null)
         {
@@ -205,9 +207,16 @@ public partial class ZenEditorWindow : DarkWindow
     private async void Window_Deactivated(object sender, EventArgs e)
     {
         SetFullscreenTopmost(isTopmost: false);
-        if (_isLoaded)
+        if (_isLoaded && !_allowClose && !_closeInProgress && !_isClosed)
         {
-            await SaveNowAsync(force: true);
+            try
+            {
+                await SaveNowAsync(force: true);
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
         }
     }
 
@@ -484,12 +493,20 @@ public partial class ZenEditorWindow : DarkWindow
     internal async Task<bool> SaveNowAsync(bool force = false, bool createSnapshot = false)
     {
         _saveTimer.Stop();
-        if (_document is null || (!force && !_dirty))
+        if (_document is null || (!force && !_dirty) || _isClosed)
         {
             return true;
         }
 
-        await _saveGate.WaitAsync();
+        try
+        {
+            await _saveGate.WaitAsync();
+        }
+        catch (ObjectDisposedException)
+        {
+            return false;
+        }
+
         try
         {
             if (_document is null)
@@ -526,7 +543,14 @@ public partial class ZenEditorWindow : DarkWindow
         }
         finally
         {
-            _saveGate.Release();
+            try
+            {
+                _saveGate.Release();
+            }
+            catch (ObjectDisposedException)
+            {
+                // Window was closed while save was completing.
+            }
         }
     }
 
