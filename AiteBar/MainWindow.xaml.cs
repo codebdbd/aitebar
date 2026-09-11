@@ -7,6 +7,9 @@ namespace AiteBar;
 public partial class MainWindow : Window, ISettingsWindowContext
 {
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromMilliseconds(30) };
+    private readonly DispatcherTimer _pointerLeaveTimer = new() { Interval = TimeSpan.FromMilliseconds(Constants.PanelPointerLeaveHideDelayMs) };
+    private PanelShowSource _showSource = PanelShowSource.Explicit;
+    private TaskCompletionSource<bool>? _hideAnimationTcs;
     private readonly ActivationDwellTracker _activationDwellTracker = new();
     private bool _shown = false, _isAnimating = false;
     private bool _activateWindowOnShow = true;
@@ -1329,9 +1332,53 @@ public partial class MainWindow : Window, ISettingsWindowContext
             }
         };
 
+        _pointerLeaveTimer.Tick += PointerLeaveTimer_Tick;
         _nativeService.InstallMouseHook();
         _startupInfrastructureInitialized = true;
         UpdateHoverActivationTimer();
+    }
+
+    private void PointerLeaveTimer_Tick(object? sender, EventArgs e)
+    {
+        _pointerLeaveTimer.Stop();
+
+        NativeMethods.Win32Point pt = new();
+        bool isCursorOverPanel = false;
+        if (NativeMethods.GetCursorPos(ref pt))
+        {
+            isCursorOverPanel = pt.X >= _panelLeft && pt.X <= _panelRight &&
+                                pt.Y >= _panelTop && pt.Y <= _panelBottom;
+        }
+
+        if (PanelLifecycleHelper.ShouldPerformPointerLeaveHide(
+            isShown: _shown,
+            isAnimating: _isAnimating,
+            showSource: _showSource,
+            isPanelInteractionActive: IsPanelInteractionActive,
+            isReordering: _isReordering,
+            isCursorOverPanel: isCursorOverPanel))
+        {
+            _ = HideDock();
+        }
+    }
+
+    private void RootBorder_MouseEnter(object sender, MouseEventArgs e)
+    {
+        _pointerLeaveTimer.Stop();
+    }
+
+    private void RootBorder_MouseLeave(object sender, MouseEventArgs e)
+    {
+        if (PanelLifecycleHelper.ShouldStartPointerLeaveTimer(
+            isShown: _shown,
+            isAnimating: _isAnimating,
+            showSource: _showSource,
+            isPanelInteractionActive: IsPanelInteractionActive,
+            isReordering: _isReordering))
+        {
+            _pointerLeaveTimer.Stop();
+            _pointerLeaveTimer.Start();
+        }
     }
 
     private void SubscribeToPowerEvents()
@@ -1389,6 +1436,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         try
         {
             _timer.Stop();
+            _pointerLeaveTimer.Stop();
             _activationDwellTracker.Reset();
             _nativeService?.UninstallMouseHook();
         }
@@ -1414,6 +1462,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         try
         {
+            _pointerLeaveTimer.Stop();
             _nativeService?.InstallMouseHook();
 
             try
@@ -2105,9 +2154,32 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     public IReadOnlyList<CustomElement> GetElementsSnapshot() => _settingsService.Elements.Select(_settingsService.CloneElement).ToList();
 
-    private void ShowDock(bool fromKeyboard = false, bool activateWindow = true)
+    private void ShowDock(bool activateWindow = true, bool fromKeyboard = false, PanelShowSource? source = null)
     {
-        if (_shown || _isAnimating)
+        PanelShowSource resolvedSource = source ?? (activateWindow ? PanelShowSource.Explicit : PanelShowSource.PointerHover);
+        _pointerLeaveTimer.Stop();
+
+        if (!_shown && _isAnimating)
+        {
+            StopPanelAnimationAtCurrentPosition();
+            _shown = true;
+            _showSource = resolvedSource;
+            _activateWindowOnShow = activateWindow;
+            _activationDwellTracker.Reset();
+            Toggle(hide: false, fromCurrentPosition: true);
+            return;
+        }
+
+        if (_shown)
+        {
+            if (resolvedSource == PanelShowSource.Explicit)
+            {
+                _showSource = PanelShowSource.Explicit;
+            }
+            return;
+        }
+
+        if (_isAnimating)
         {
             return;
         }
@@ -2115,26 +2187,22 @@ public partial class MainWindow : Window, ISettingsWindowContext
         SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
         _activateWindowOnShow = activateWindow;
         _shown = true;
+        _showSource = resolvedSource;
         _activationDwellTracker.Reset();
-        Toggle(false);
+        Toggle(hide: false);
     }
 
 
 
     public void ToggleDock(bool fromKeyboard = false)
     {
-        if (_isAnimating)
-        {
-            return;
-        }
-
         if (_shown)
         {
             _ = HideDock();
             return;
         }
 
-        ShowDock(fromKeyboard);
+        ShowDock(activateWindow: true, fromKeyboard: fromKeyboard, source: PanelShowSource.Explicit);
         if (fromKeyboard)
         {
             EnablePanelKeyboardMode(focusButtons: false);
@@ -2143,7 +2211,9 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private void Toggle(bool hide, bool fromCurrentPosition = false)
     {
-        _isAnimating = true; _timer.Stop();
+        _isAnimating = true;
+        _timer.Stop();
+        _pointerLeaveTimer.Stop();
 
         if (!hide)
         {
@@ -2164,55 +2234,67 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         var duration = TimeSpan.FromMilliseconds(hide ? Constants.PanelHideAnimationMs : Constants.PanelShowAnimationMs);
         var easing = EasingHelper.ForToggle(hide);
-        var animX = new DoubleAnimation(finalX, duration) { EasingFunction = easing };
-        var animY = new DoubleAnimation(finalY, duration) { EasingFunction = easing };
+        bool isHorizontal = PanelLifecycleHelper.IsHorizontalMotion(AppSettings.Edge);
 
-        int completedCount = 0;
         void onCompleted(object? s, EventArgs ev)
         {
-            if (Interlocked.Increment(ref completedCount) == 2)
-            {
-                this.BeginAnimation(LeftProperty, null);
-                this.BeginAnimation(TopProperty, null);
-                this.Left = finalX;
-                this.Top = finalY;
-                _isAnimating = false;
-                UpdatePanelBounds();
-                if (!hide)
-                {
-                    if (_activateWindowOnShow)
-                    {
-                        var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
-                        ForceForegroundWindow(hwnd);
-                        Activate();
-                    }
+            this.BeginAnimation(LeftProperty, null);
+            this.BeginAnimation(TopProperty, null);
+            this.Left = finalX;
+            this.Top = finalY;
+            _isAnimating = false;
+            UpdatePanelBounds();
 
-                    if (IsPanelKeyboardMode)
-                    {
-                        if (_focusPanelButtonsOnShow)
-                        {
-                            FocusPanelForKeyboard();
-                        }
-                        else
-                        {
-                            Focus();
-                        }
-                    }
+            if (hide)
+            {
+                _hideAnimationTcs?.TrySetResult(true);
+                _hideAnimationTcs = null;
+            }
+            else
+            {
+                if (_activateWindowOnShow)
+                {
+                    var hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+                    ForceForegroundWindow(hwnd);
+                    Activate();
                 }
 
-                UpdateHoverActivationTimer();
+                if (IsPanelKeyboardMode)
+                {
+                    if (_focusPanelButtonsOnShow)
+                    {
+                        FocusPanelForKeyboard();
+                    }
+                    else
+                    {
+                        Focus();
+                    }
+                }
             }
+
+            UpdateHoverActivationTimer();
         }
 
-        animX.Completed += onCompleted;
-        animY.Completed += onCompleted;
-
-        this.BeginAnimation(LeftProperty, animX);
-        this.BeginAnimation(TopProperty, animY);
+        if (isHorizontal)
+        {
+            this.Top = finalY;
+            var animX = new DoubleAnimation(finalX, duration) { EasingFunction = easing };
+            animX.Completed += onCompleted;
+            this.BeginAnimation(LeftProperty, animX);
+        }
+        else
+        {
+            this.Left = finalX;
+            var animY = new DoubleAnimation(finalY, duration) { EasingFunction = easing };
+            animY.Completed += onCompleted;
+            this.BeginAnimation(TopProperty, animY);
+        }
     }
 
     private async Task HideDock()
     {
+        _pointerLeaveTimer.Stop();
+
         if (!_shown)
         {
             return;
@@ -2226,12 +2308,17 @@ public partial class MainWindow : Window, ISettingsWindowContext
         _shown = false;
         SetPanelInputMode(PanelInputMode.Pointer, clearFocus: true);
         _activationDwellTracker.Reset();
+
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _hideAnimationTcs = tcs;
+
         Toggle(true, fromCurrentPosition: true);
-        await Task.Delay(Constants.PanelHideAnimationMs);
+        await tcs.Task;
     }
 
     private void StopPanelAnimationAtCurrentPosition()
     {
+        _pointerLeaveTimer.Stop();
         double currentLeft = Left;
         double currentTop = Top;
         BeginAnimation(LeftProperty, null);
@@ -2239,6 +2326,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
         Left = currentLeft;
         Top = currentTop;
         _isAnimating = false;
+        _hideAnimationTcs?.TrySetResult(false);
+        _hideAnimationTcs = null;
         UpdateHoverActivationTimer();
     }
 

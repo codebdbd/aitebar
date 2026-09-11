@@ -12,10 +12,13 @@ public static class Constants
     public const int AnimationSlideMs = 150;
 
     /// <summary>Показ панели (мс).</summary>
-    public const int PanelShowAnimationMs = 175;
+    public const int PanelShowAnimationMs = 240;
 
     /// <summary>Скрытие панели (мс).</summary>
-    public const int PanelHideAnimationMs = 140;
+    public const int PanelHideAnimationMs = 190;
+
+    /// <summary>Задержка автоскрытия панели после ухода курсора (мс), если панель вызвана ховером.</summary>
+    public const int PanelPointerLeaveHideDelayMs = 400;
 
     /// <summary>Анимация окна QuickNote (мс).</summary>
     public const int QuickNoteSlideMs = 200;
