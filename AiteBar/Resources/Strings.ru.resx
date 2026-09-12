@@ -228,6 +228,9 @@
   <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve">
     <value>Перетащите эту строку, чтобы изменить порядок панелей</value>
   </data>
+  <data name="AppSettingsWindow_DropSlotHint" xml:space="preserve">
+    <value>Переместить сюда</value>
+  </data>
   <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve">
     <value>Очистить панель «{0}»?
 

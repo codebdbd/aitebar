@@ -65,6 +65,10 @@ public partial class AppSettingsWindow : DarkWindow
     private Point _contextDragStartPoint;
     private string? _dragOverContextId;
     private bool _dragOverAfter;
+    private FrameworkElement? _ghostCard;
+    private FrameworkElement? _dropSlotElement;
+    private string? _dropTargetContextId;
+    private bool _dropTargetInsertAfter;
 
     public AppSettingsWindow(MainWindow mainWindow, AppSettingsSection initialSection = AppSettingsSection.General)
     {
@@ -1467,6 +1471,7 @@ public partial class AppSettingsWindow : DarkWindow
             System.Windows.Input.Mouse.SetCursor(System.Windows.Input.Cursors.No);
         }
 
+        UpdateGhostCardPosition();
         e.Handled = true;
     }
 
@@ -1484,6 +1489,17 @@ public partial class AppSettingsWindow : DarkWindow
             return;
         }
 
+        ContextRow? sourceRow = _contextRows.Find(r => string.Equals(r.ContextId, _draggedContextId, StringComparison.Ordinal));
+        if (sourceRow != null && DragGhostCanvas != null)
+        {
+            int sourceNumber = _contextRows.IndexOf(sourceRow);
+            string sourceName = sourceRow.NameTextBox.Text;
+            Brush badgeBrush = sourceRow.BadgeBorder.Background;
+            _ghostCard = CreateGhostCard(sourceNumber, badgeBrush, sourceName);
+            DragGhostCanvas.Children.Add(_ghostCard);
+            UpdateGhostCardPosition();
+        }
+
         SetContextDragVisuals(_draggedContextId, null, false);
         try
         {
@@ -1496,8 +1512,231 @@ public partial class AppSettingsWindow : DarkWindow
         }
     }
 
+    private FrameworkElement CreateGhostCard(int number, Brush badgeBrush, string name)
+    {
+        var card = new Border
+        {
+            Width = 320,
+            Height = 44,
+            Background = BrushFromHex("#222831"),
+            BorderBrush = (System.Windows.Media.Brush)FindResource("AccentColor"),
+            BorderThickness = new Thickness(1.5),
+            CornerRadius = new CornerRadius(6),
+            Opacity = 0.92,
+            IsHitTestVisible = false,
+            Effect = new System.Windows.Media.Effects.DropShadowEffect
+            {
+                Color = System.Windows.Media.Colors.Black,
+                BlurRadius = 14,
+                ShadowDepth = 4,
+                Opacity = 0.65
+            }
+        };
+
+        var grid = new Grid
+        {
+            Margin = new Thickness(8, 0, 12, 0),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(28) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(32) });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+
+        var grip = new TextBlock
+        {
+            Text = "\uE9F9",
+            FontFamily = FontHelper.Resolve(FontHelper.FluentKey),
+            Foreground = BrushFromHex("#A0AAB4"),
+            FontSize = 18,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+            VerticalAlignment = System.Windows.VerticalAlignment.Center
+        };
+        Grid.SetColumn(grip, 0);
+        grid.Children.Add(grip);
+
+        var badge = new Border
+        {
+            Width = 22,
+            Height = 22,
+            CornerRadius = new CornerRadius(4),
+            Background = badgeBrush,
+            VerticalAlignment = VerticalAlignment.Center,
+            Child = new TextBlock
+            {
+                Text = number.ToString(CultureInfo.InvariantCulture),
+                Foreground = System.Windows.Media.Brushes.White,
+                FontSize = 11,
+                FontWeight = FontWeights.SemiBold,
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+                VerticalAlignment = System.Windows.VerticalAlignment.Center
+            }
+        };
+        Grid.SetColumn(badge, 1);
+        grid.Children.Add(badge);
+
+        var nameBlock = new TextBlock
+        {
+            Text = name,
+            Foreground = BrushFromHex("#E8EEF6"),
+            FontSize = 13,
+            FontWeight = FontWeights.SemiBold,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            VerticalAlignment = VerticalAlignment.Center,
+            Margin = new Thickness(6, 0, 0, 0)
+        };
+        Grid.SetColumn(nameBlock, 2);
+        grid.Children.Add(nameBlock);
+
+        card.Child = grid;
+        return card;
+    }
+
+    private void UpdateGhostCardPosition()
+    {
+        if (_ghostCard == null || DragGhostCanvas == null)
+        {
+            return;
+        }
+
+        var pt = new NativeMethods.Win32Point();
+        if (NativeMethods.GetCursorPos(ref pt))
+        {
+            Point canvasPoint = DragGhostCanvas.PointFromScreen(new Point(pt.X, pt.Y));
+            Canvas.SetLeft(_ghostCard, canvasPoint.X - 24);
+            Canvas.SetTop(_ghostCard, canvasPoint.Y - 22);
+        }
+    }
+
+    private FrameworkElement CreateDropSlotElement()
+    {
+        var border = new Border
+        {
+            Height = 46,
+            Margin = new Thickness(0, 3, 0, 3),
+            Background = BrushFromHex("#10007ACC"),
+            CornerRadius = new CornerRadius(6),
+            AllowDrop = true
+        };
+
+        var grid = new Grid { IsHitTestVisible = false };
+
+        var dashRect = new System.Windows.Shapes.Rectangle
+        {
+            Stroke = (System.Windows.Media.Brush)FindResource("AccentColor"),
+            StrokeDashArray = [4, 3],
+            StrokeThickness = 1.5,
+            RadiusX = 6,
+            RadiusY = 6,
+            Opacity = 0.75
+        };
+        grid.Children.Add(dashRect);
+
+        var hint = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = System.Windows.HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Opacity = 0.6
+        };
+        hint.Children.Add(new TextBlock
+        {
+            Text = "\uE8D2",
+            FontFamily = FontHelper.Resolve(FontHelper.FluentKey),
+            FontSize = 13,
+            Foreground = (System.Windows.Media.Brush)FindResource("AccentColor"),
+            Margin = new Thickness(0, 0, 6, 0),
+            VerticalAlignment = VerticalAlignment.Center
+        });
+        hint.Children.Add(new TextBlock
+        {
+            Text = LocalizationService.Get("AppSettingsWindow_DropSlotHint"),
+            FontSize = 12,
+            FontWeight = FontWeights.Medium,
+            Foreground = BrushFromHex("#A0B4C8"),
+            VerticalAlignment = VerticalAlignment.Center
+        });
+        grid.Children.Add(hint);
+
+        border.Child = grid;
+        border.DragOver += DropSlot_DragOver;
+        border.Drop += DropSlot_Drop;
+        return border;
+    }
+
+    private void DropSlot_DragOver(object sender, DragEventArgs e)
+    {
+        e.Effects = DragDropEffects.Move;
+        UpdateGhostCardPosition();
+        e.Handled = true;
+    }
+
+    private void DropSlot_Drop(object sender, DragEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_draggedContextId) && !string.IsNullOrEmpty(_dropTargetContextId))
+        {
+            ReorderContextRows(_draggedContextId, _dropTargetContextId, _dropTargetInsertAfter);
+        }
+        ClearContextDragVisuals();
+        e.Handled = true;
+    }
+
+    private void UpdateDropSlotPosition(ContextRow targetRow, bool insertAfter)
+    {
+        _dropSlotElement ??= CreateDropSlotElement();
+
+        int targetGridIndex = PanelContextsList.Children.IndexOf(targetRow.RowGrid);
+        if (targetGridIndex < 0)
+        {
+            return;
+        }
+
+        int targetChildIndex;
+        if (insertAfter)
+        {
+            targetChildIndex = targetGridIndex + 1;
+            if (targetChildIndex < PanelContextsList.Children.Count &&
+                PanelContextsList.Children[targetChildIndex] is Border { Height: 1 })
+            {
+                targetChildIndex++;
+            }
+        }
+        else
+        {
+            targetChildIndex = targetGridIndex;
+        }
+
+        int currentSlotIndex = PanelContextsList.Children.IndexOf(_dropSlotElement);
+        if (currentSlotIndex >= 0)
+        {
+            if (currentSlotIndex == targetChildIndex ||
+                (insertAfter && currentSlotIndex == targetChildIndex - 1))
+            {
+                return;
+            }
+
+            PanelContextsList.Children.RemoveAt(currentSlotIndex);
+            if (currentSlotIndex < targetChildIndex)
+            {
+                targetChildIndex--;
+            }
+        }
+
+        targetChildIndex = Math.Clamp(targetChildIndex, 0, PanelContextsList.Children.Count);
+        PanelContextsList.Children.Insert(targetChildIndex, _dropSlotElement);
+    }
+
+    private void RemoveDropSlot()
+    {
+        if (_dropSlotElement != null && _dropSlotElement.Parent is Panel parent)
+        {
+            parent.Children.Remove(_dropSlotElement);
+        }
+    }
+
     private void ContextRow_DragOver(object sender, DragEventArgs e)
     {
+        UpdateGhostCardPosition();
+
         if (sender is not FrameworkElement { Tag: string targetContextId } row ||
             e.Data.GetData(DataFormats.StringFormat) is not string sourceContextId ||
             string.Equals(sourceContextId, targetContextId, StringComparison.Ordinal))
@@ -1510,6 +1749,10 @@ public partial class AppSettingsWindow : DarkWindow
 
         bool insertAfter = e.GetPosition(row).Y > row.ActualHeight / 2.0;
         e.Effects = DragDropEffects.Move;
+
+        _dropTargetContextId = targetContextId;
+        _dropTargetInsertAfter = insertAfter;
+
         if (!string.Equals(_dragOverContextId, targetContextId, StringComparison.Ordinal) ||
             _dragOverAfter != insertAfter)
         {
@@ -1523,7 +1766,11 @@ public partial class AppSettingsWindow : DarkWindow
         if (sender is FrameworkElement { Tag: string contextId } &&
             string.Equals(_dragOverContextId, contextId, StringComparison.Ordinal))
         {
-            ClearContextDropTargetVisuals();
+            Point pt = e.GetPosition(PanelContextsList);
+            if (pt.X < 0 || pt.X > PanelContextsList.ActualWidth || pt.Y < 0 || pt.Y > PanelContextsList.ActualHeight)
+            {
+                ClearContextDropTargetVisuals();
+            }
         }
     }
 
@@ -1574,42 +1821,36 @@ public partial class AppSettingsWindow : DarkWindow
     {
         _dragOverContextId = targetContextId;
         _dragOverAfter = insertAfter;
+
         foreach (ContextRow row in _contextRows)
         {
             bool isSource = string.Equals(row.ContextId, sourceContextId, StringComparison.Ordinal);
-            bool isTarget = string.Equals(row.ContextId, targetContextId, StringComparison.Ordinal);
+            row.RowGrid.Opacity = isSource ? 0.25 : 1.0;
+            row.RowSurface.Background = System.Windows.Media.Brushes.Transparent;
+            row.RowSurface.BorderBrush = System.Windows.Media.Brushes.Transparent;
+            row.InsertBeforeIndicator.Visibility = Visibility.Collapsed;
+            row.InsertAfterIndicator.Visibility = Visibility.Collapsed;
+        }
 
-            if (isSource)
+        if (targetContextId != null)
+        {
+            ContextRow? targetRow = _contextRows.Find(r => string.Equals(r.ContextId, targetContextId, StringComparison.Ordinal));
+            if (targetRow != null)
             {
-                row.RowGrid.Opacity = 0.35;
-                row.RowSurface.Background = System.Windows.Media.Brushes.Transparent;
-                row.RowSurface.BorderBrush = System.Windows.Media.Brushes.Transparent;
-                row.DragHandle.Background = BrushFromHex("#242A30");
-                if (row.DragHandle.Child is TextBlock sourceGlyph)
-                {
-                    sourceGlyph.Foreground = BrushFromHex("#8A95A3");
-                }
+                UpdateDropSlotPosition(targetRow, insertAfter);
             }
-            else
-            {
-                row.RowGrid.Opacity = 1.0;
-                row.RowSurface.Background = System.Windows.Media.Brushes.Transparent;
-                row.RowSurface.BorderBrush = System.Windows.Media.Brushes.Transparent;
-                row.DragHandle.Background = BrushFromHex("#242A30");
-                if (row.DragHandle.Child is TextBlock otherGlyph)
-                {
-                    otherGlyph.Foreground = BrushFromHex("#8A95A3");
-                }
-            }
-
-            row.InsertBeforeIndicator.Visibility = isTarget && !insertAfter ? Visibility.Visible : Visibility.Collapsed;
-            row.InsertAfterIndicator.Visibility = isTarget && insertAfter ? Visibility.Visible : Visibility.Collapsed;
+        }
+        else
+        {
+            RemoveDropSlot();
         }
     }
 
     private void ClearContextDropTargetVisuals()
     {
         _dragOverContextId = null;
+        _dropTargetContextId = null;
+        RemoveDropSlot();
         foreach (ContextRow row in _contextRows)
         {
             row.InsertBeforeIndicator.Visibility = Visibility.Collapsed;
@@ -1621,6 +1862,16 @@ public partial class AppSettingsWindow : DarkWindow
     {
         _dragOverContextId = null;
         _dragOverAfter = false;
+        _dropTargetContextId = null;
+
+        RemoveDropSlot();
+
+        if (_ghostCard != null && DragGhostCanvas != null)
+        {
+            DragGhostCanvas.Children.Remove(_ghostCard);
+            _ghostCard = null;
+        }
+
         foreach (ContextRow row in _contextRows)
         {
             row.RowGrid.Opacity = 1.0;

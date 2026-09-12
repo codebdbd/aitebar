@@ -35,6 +35,7 @@
   <data name="AppSettingsWindow_ClearPanelEmpty" xml:space="preserve"><value>Leiste ist bereits leer</value></data>
   <data name="AppSettingsWindow_ClearPanelPending" xml:space="preserve"><value>Leiste wird geleert</value></data>
   <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Diese Zeile ziehen, um Leisten neu anzuordnen</value></data>
+  <data name="AppSettingsWindow_DropSlotHint" xml:space="preserve"><value>Hierher verschieben</value></data>
   <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve"><value>Leiste "{0}" leeren?
 
 Es werden {1} benutzerdefinierte Schaltflächen nur aus dieser Leiste entfernt. Name und Einstellungen der Leiste bleiben erhalten.</value></data>

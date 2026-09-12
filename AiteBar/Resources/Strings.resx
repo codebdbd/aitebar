@@ -122,6 +122,7 @@ For modular Python projects use the "Command" type.</value></data>
   <data name="AppSettingsWindow_ClearPanelEmpty" xml:space="preserve"><value>Panel is already empty</value></data>
   <data name="AppSettingsWindow_ClearPanelPending" xml:space="preserve"><value>Panel is being cleared</value></data>
   <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Drag this row to reorder panels</value></data>
+  <data name="AppSettingsWindow_DropSlotHint" xml:space="preserve"><value>Move here</value></data>
   <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve"><value>Clear panel "{0}"?
 
 This will remove {1} custom buttons from this panel only. Panel name and settings will be preserved.</value></data>

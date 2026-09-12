@@ -1227,6 +1227,8 @@
 
         </Grid>
 
+        <Canvas x:Name="DragGhostCanvas" Grid.RowSpan="2" Grid.ColumnSpan="3" IsHitTestVisible="False" ClipToBounds="False"/>
+
     </Grid>
 
 </local:DarkWindow>

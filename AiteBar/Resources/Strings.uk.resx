@@ -249,6 +249,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AppSettingsWindow_ClearPanelEmpty" xml:space="preserve"><value>Панель уже порожня</value></data>
   <data name="AppSettingsWindow_ClearPanelPending" xml:space="preserve"><value>Панель очищується</value></data>
   <data name="AppSettingsWindow_ReorderPanelTooltip" xml:space="preserve"><value>Перетягніть цей рядок, щоб змінити порядок панелей</value></data>
+  <data name="AppSettingsWindow_DropSlotHint" xml:space="preserve"><value>Перемістити сюди</value></data>
   <data name="AppSettingsWindow_ClearPanelConfirm" xml:space="preserve"><value>Очистити панель «{0}»?
 
 Буде видалено користувацьких кнопок: {1}. Тільки з цієї панелі. Назва й налаштування панелі збережуться.</value></data>
