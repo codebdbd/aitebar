@@ -419,10 +419,7 @@ public sealed class ZenEditorWindowBehaviorTests
         }
         finally
         {
-            if (Directory.Exists(root))
-            {
-                Directory.Delete(root, recursive: true);
-            }
+            TryDeleteDirectory(root);
         }
     }
 
@@ -453,9 +450,29 @@ public sealed class ZenEditorWindowBehaviorTests
         }
         finally
         {
-            if (Directory.Exists(root))
+            TryDeleteDirectory(root);
+        }
+    }
+
+    private static void TryDeleteDirectory(string path)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            try
             {
-                Directory.Delete(root, recursive: true);
+                if (Directory.Exists(path))
+                {
+                    Directory.Delete(path, recursive: true);
+                }
+                return;
+            }
+            catch (IOException)
+            {
+                Thread.Sleep(50);
+            }
+            catch
+            {
+                return;
             }
         }
     }
