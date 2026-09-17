@@ -280,6 +280,8 @@ public class AppSettings
     public List<string> UtilityButtonOrder { get; set; } = new();
     public bool CheckForUpdatesEnabled { get; set; } = true;
     public bool ShowPanelOnMouseHover { get; set; } = true;
+    public bool SuppressPanelInFullscreen { get; set; } = true;
+    public bool SuppressHotkeysInFullscreen { get; set; } = true;
     public bool? ShowTaskbarPositionIndicator { get; set; } = true;
     public double? TaskbarIndicatorPositionX { get; set; }
     public double? TaskbarIndicatorPositionY { get; set; }

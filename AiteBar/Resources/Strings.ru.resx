@@ -257,6 +257,12 @@
   <data name="AppSettingsWindow_ShowPanelOnMouseHover" xml:space="preserve">
     <value>Показывать панель при наведении мыши</value>
   </data>
+  <data name="AppSettingsWindow_SuppressPanelInFullscreen" xml:space="preserve">
+    <value>Отключать панель в играх и на полном экране</value>
+  </data>
+  <data name="AppSettingsWindow_SuppressHotkeysInFullscreen" xml:space="preserve">
+    <value>Отключать горячие клавиши в играх и на полном экране</value>
+  </data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicator" xml:space="preserve">
     <value>Показывать указатель положения панели</value>
   </data>
@@ -505,7 +511,10 @@
     <value>Цвет заметки</value>
   </data>
   <data name="QuickNote_Pin" xml:space="preserve">
-    <value>Оставлять заметку открытой</value>
+    <value>Закрепить поверх других окон</value>
+  </data>
+  <data name="QuickNote_Unpin" xml:space="preserve">
+    <value>Открепить заметку</value>
   </data>
   <data name="QuickNote_Undo" xml:space="preserve">
     <value>Отменить</value>
@@ -1292,6 +1301,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AppSettingsWindow_PanelSizeHint" xml:space="preserve"><value>Длина панели вдоль выбранного края: 50% — половина экрана, 100% — весь край.</value></data>
   <data name="AppSettingsWindow_DelayHint" xml:space="preserve"><value>Сколько удерживать курсор у края: 100 мс — быстрый показ, 500 мс — меньше случайных открытий.</value></data>
   <data name="AppSettingsWindow_ShowPanelOnMouseHoverHint" xml:space="preserve"><value>Открывать панель, когда указатель задерживается в зоне активации у края экрана.</value></data>
+  <data name="AppSettingsWindow_SuppressPanelInFullscreenHint" xml:space="preserve"><value>Не показывать панель у края экрана при работе игр или полноэкранных приложений.</value></data>
+  <data name="AppSettingsWindow_SuppressHotkeysInFullscreenHint" xml:space="preserve"><value>Временно освобождать горячие клавиши в пользу активной игры или полноэкранного приложения.</value></data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicatorHint" xml:space="preserve"><value>Показывать текущее положение панели в области панели задач Windows.</value></data>
   <data name="AppSettingsWindow_SecondaryMonitorHint" xml:space="preserve"><value>Размещать панель на втором мониторе, если он доступен.</value></data>
   <data name="AppSettingsWindow_CheckForUpdatesHint" xml:space="preserve"><value>Автоматически проверять наличие новой версии AiteBar.</value></data>

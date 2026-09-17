@@ -14,6 +14,8 @@
   <data name="AppSettingsWindow_PreviousPanel" xml:space="preserve"><value>Попередня панель</value></data>
   <data name="AppSettingsWindow_AddButton" xml:space="preserve"><value>Додати кнопку</value></data>
   <data name="AppSettingsWindow_ShowPanelOnMouseHover" xml:space="preserve"><value>Показувати панель при наведенні миші</value></data>
+  <data name="AppSettingsWindow_SuppressPanelInFullscreen" xml:space="preserve"><value>Вимикати панель в іграх та на повному екрані</value></data>
+  <data name="AppSettingsWindow_SuppressHotkeysInFullscreen" xml:space="preserve"><value>Вимикати гарячі клавіші в іграх та на повному екрані</value></data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicator" xml:space="preserve"><value>Показувати покажчик позиції панелі</value></data>
   <data name="ShowPanel" xml:space="preserve"><value>Показати панель</value></data>
   <data name="HideIndicator" xml:space="preserve"><value>Сховати покажчик</value></data>
@@ -60,7 +62,8 @@
   <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.aite-note</value></data>
   <data name="QuickNote_Menu" xml:space="preserve"><value>Меню нотатки</value></data>
   <data name="QuickNote_Theme" xml:space="preserve"><value>Колір нотатки</value></data>
-  <data name="QuickNote_Pin" xml:space="preserve"><value>Тримати нотатку відкритою</value></data>
+  <data name="QuickNote_Pin" xml:space="preserve"><value>Закріпити поверх інших вікон</value></data>
+  <data name="QuickNote_Unpin" xml:space="preserve"><value>Відкріпити нотатку</value></data>
   <data name="QuickNote_Undo" xml:space="preserve"><value>Скасувати</value></data>
   <data name="QuickNote_Redo" xml:space="preserve"><value>Повторити</value></data>
   <data name="QuickNote_Cut" xml:space="preserve"><value>Вирізати</value></data>
@@ -638,6 +641,8 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value></data>
   <data name="AppSettingsWindow_PanelSizeHint" xml:space="preserve"><value>Довжина панелі вздовж вибраного краю: 50% — половина екрана, 100% — увесь край.</value></data>
   <data name="AppSettingsWindow_DelayHint" xml:space="preserve"><value>Скільки утримувати вказівник біля краю: 100 мс — швидкий показ, 500 мс — менше випадкових відкриттів.</value></data>
   <data name="AppSettingsWindow_ShowPanelOnMouseHoverHint" xml:space="preserve"><value>Відкривати панель, коли вказівник затримується в зоні активації біля краю екрана.</value></data>
+  <data name="AppSettingsWindow_SuppressPanelInFullscreenHint" xml:space="preserve"><value>Не відкривати панель біля краю екрана під час роботи ігор або повноекранних програм.</value></data>
+  <data name="AppSettingsWindow_SuppressHotkeysInFullscreenHint" xml:space="preserve"><value>Тимчасово передавати гарячі клавіші активній грі або повноекранній програмі.</value></data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicatorHint" xml:space="preserve"><value>Показувати поточне положення панелі в області панелі завдань Windows.</value></data>
   <data name="AppSettingsWindow_SecondaryMonitorHint" xml:space="preserve"><value>Розміщувати панель на другому моніторі, якщо він доступний.</value></data>
   <data name="AppSettingsWindow_CheckForUpdatesHint" xml:space="preserve"><value>Автоматично перевіряти наявність нової версії AiteBar.</value></data>

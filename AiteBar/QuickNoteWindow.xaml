@@ -67,6 +67,51 @@
             </Setter>
         </Style>
 
+        <Style x:Key="QuickNotePinToggleButtonStyle" TargetType="ToggleButton">
+            <Setter Property="Content" Value="&#xF602;"/>
+            <Setter Property="Width" Value="32"/>
+            <Setter Property="Height" Value="32"/>
+            <Setter Property="FontFamily" Value="pack://application:,,,/AiteBar;component/Resources/#FluentSystemIcons-Regular"/>
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Foreground" Value="{DynamicResource QuickNoteChromeTextBrush}"/>
+            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="4" BorderThickness="1" BorderBrush="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteHoverForegroundBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteFocusBrush}"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsChecked" Value="True"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource QuickNoteHoverBrush}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource QuickNoteFocusBrush}"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Content" Value="&#xF604;"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
         <Style x:Key="FormatButtonStyle" TargetType="Button" BasedOn="{StaticResource QuickNoteIconButtonStyle}">
             <Setter Property="Width" Value="26"/>
             <Setter Property="Height" Value="28"/>
@@ -187,8 +232,7 @@
                     <ToggleButton x:Name="BtnPin"
                                   WindowChrome.IsHitTestVisibleInChrome="True"
                                   HorizontalAlignment="Left"
-                                  Style="{StaticResource WindowPinToggleButtonStyle}" Foreground="{DynamicResource QuickNoteChromeTextBrush}"
-                                  FontFamily="pack://application:,,,/AiteBar;component/Resources/#FluentSystemIcons-Regular"
+                                  Style="{StaticResource QuickNotePinToggleButtonStyle}"
                                   ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
                                   AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Pin}"
                                   IsChecked="{Binding IsPinned, RelativeSource={RelativeSource AncestorType=local:DarkWindow}, Mode=TwoWay}"

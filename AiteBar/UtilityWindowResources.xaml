@@ -76,11 +76,25 @@
                             <Setter Property="Foreground" Value="White"/>
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Fill" Property="Background" Value="#25007ACC"/>
                             <Setter Property="Foreground" Value="#007ACC"/>
                         </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsChecked" Value="True"/>
+                                <Condition Property="IsMouseOver" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Fill" Property="Background" Value="#40007ACC"/>
+                            <Setter Property="Foreground" Value="#4EA6FF"/>
+                        </MultiTrigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsChecked" Value="True">
+                <Setter Property="Content" Value="&#xF604;"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 </ResourceDictionary>

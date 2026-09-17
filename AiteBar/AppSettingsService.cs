@@ -129,6 +129,8 @@ namespace AiteBar
                 ActiveContextId = original.ActiveContextId,
                 CheckForUpdatesEnabled = original.CheckForUpdatesEnabled,
                 ShowPanelOnMouseHover = original.ShowPanelOnMouseHover,
+                SuppressPanelInFullscreen = original.SuppressPanelInFullscreen,
+                SuppressHotkeysInFullscreen = original.SuppressHotkeysInFullscreen,
                 ShowTaskbarPositionIndicator = original.ShowTaskbarPositionIndicator,
                 TaskbarIndicatorPositionX = original.TaskbarIndicatorPositionX,
                 TaskbarIndicatorPositionY = original.TaskbarIndicatorPositionY,

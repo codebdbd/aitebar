@@ -37,6 +37,7 @@ public sealed class QuickNoteWindowCloseTests
                     Top = -2000,
                     ShowActivated = false
                 };
+                Assert.True(window.IsPinned);
                 var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
                 window.Closed += (_, _) => closed.TrySetResult();
                 try
@@ -50,16 +51,22 @@ public sealed class QuickNoteWindowCloseTests
                         ToggleButton.IsCheckedProperty));
                     Assert.True(pinButton.IsChecked);
                     Assert.True(window.IsPinned);
+                    Assert.True(window.Topmost);
+                    Assert.Equal(LocalizationService.Get("QuickNote_Unpin"), pinButton.ToolTip);
 
                     pinButton.IsChecked = false;
                     await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                     Assert.False(window.IsPinned);
+                    Assert.False(window.Topmost);
                     Assert.False(settings.Settings.QuickNotePinned);
+                    Assert.Equal(LocalizationService.Get("QuickNote_Pin"), pinButton.ToolTip);
 
                     pinButton.IsChecked = true;
                     await Dispatcher.Yield(DispatcherPriority.ApplicationIdle);
                     Assert.True(window.IsPinned);
+                    Assert.True(window.Topmost);
                     Assert.True(settings.Settings.QuickNotePinned);
+                    Assert.Equal(LocalizationService.Get("QuickNote_Unpin"), pinButton.ToolTip);
                 }
                 finally
                 {
@@ -229,9 +236,9 @@ public sealed class QuickNoteWindowCloseTests
                     int style = GetWindowLong(handle, -16);
                     Assert.Equal(wsCaption | wsThickFrame | wsMaximizeBox, style & (wsCaption | wsThickFrame | wsMaximizeBox));
                     Assert.Equal(0, GetWindowLong(handle, -20) & 0x00080000); // No layered window.
-                    Assert.False(window.Topmost);
+                    Assert.True(window.Topmost);
                     Assert.True(window.ShowInTaskbar);
-                    Assert.Equal(0, GetWindowLong(handle, -20) & 0x00000008); // Not WS_EX_TOPMOST.
+                    Assert.Equal(0x00000008, GetWindowLong(handle, -20) & 0x00000008); // WS_EX_TOPMOST.
                     Assert.Equal(IntPtr.Zero, GetWindow(handle, 4)); // GW_OWNER: independent Snap participant.
                     if (OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000))
                     {

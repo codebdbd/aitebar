@@ -9,6 +9,20 @@
 
 ## [Unreleased]
 
+## [1.15.23] - 2026-09-17
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+
+- **Подавление панели и горячих клавиш в играх и полноэкранных приложениях**: панель быстрого доступа автоматически подавляет краевую зону активации курсором, а глобальные горячие клавиши динамически освобождаются при переходе в полноэкранные игры (Direct3D/DirectX и Borderless Fullscreen), возвращая 100% перехватов игре. Поведение настраивается в параметрах приложения тумблерами `SuppressPanelInFullscreen` и `SuppressHotkeysInFullscreen` (включены по умолчанию).
+- **Game and fullscreen suppression for panel and hotkeys**: edge hover activation is suppressed and global hotkeys are dynamically released when an exclusive Direct3D or borderless fullscreen game is active in the foreground, returning keystrokes to the game. Configurable via `SuppressPanelInFullscreen` and `SuppressHotkeysInFullscreen` in App Settings (enabled by default).
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+
+- **Быстрая заметка — закрепление поверх всех окон**: кнопка булавки теперь полноценно закрепляет окно заметки поверх других окон (`Topmost = true`), а подсказка кнопки корректно локализована («Закрепить поверх других окон» / «Открепить заметку»).
+- **Quick Note — Always on Top pinning**: the pin button now keeps the note window Always on Top (`Topmost = true`), and the button tooltip is clearly localized across all supported languages.
+- **Горячая клавиша Дзен-редактора**: устранена блокировка горячих клавиш при работе внутренних полноэкранных утилит; переключение и скрытие Дзен-редактора по горячей клавише работает корректно.
+- **Zen Editor hotkey toggle**: fixed hotkey suppression being triggered by internal fullscreen utilities; toggling and closing Zen Editor via hotkey works as expected.
+
 ## [1.15.22] - 2026-09-08
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

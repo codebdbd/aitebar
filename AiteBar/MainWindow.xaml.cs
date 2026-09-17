@@ -44,13 +44,19 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private readonly PanelPackageService _panelPackageService;
     private readonly AiGateway _aiGateway;
     private readonly TaskbarPositionIndicatorService _positionIndicatorService = new();
+    private readonly IGameFullscreenService _gameFullscreenService;
     private NativeIntegrationService? _nativeService;
 
     private AppSettings AppSettings => _settingsService.Settings;
     private IReadOnlyList<CustomElement> Elements => _settingsService.Elements;
 
-    internal void SetUtilityFullscreenSuppressed(bool suppressed) =>
+    internal IGameFullscreenService GameFullscreenService => _gameFullscreenService;
+
+    internal void SetUtilityFullscreenSuppressed(bool suppressed)
+    {
+        _gameFullscreenService.IsUtilityFullscreenActive = suppressed;
         _positionIndicatorService.SetUtilityFullscreenSuppressed(suppressed);
+    }
 
     private System.Windows.Forms.NotifyIcon _notifyIcon = null!;
 
@@ -106,9 +112,16 @@ public partial class MainWindow : Window, ISettingsWindowContext
     }
 
     private MainWindow(AppSettingsService settingsService, bool settingsPreloaded)
+        : this(settingsService, new GameFullscreenService(), settingsPreloaded)
+    {
+    }
+
+    internal MainWindow(AppSettingsService settingsService, IGameFullscreenService gameFullscreenService, bool settingsPreloaded)
     {
         InitializeComponent();
         _settingsService = settingsService;
+        _gameFullscreenService = gameFullscreenService;
+        _gameFullscreenService.FullscreenStateChanged += GameFullscreenService_FullscreenStateChanged;
         _settingsPreloaded = settingsPreloaded;
         _actionService = new ActionService(_settingsService);
         _aiGateway = new AiGateway(_settingsService);
@@ -148,8 +161,38 @@ public partial class MainWindow : Window, ISettingsWindowContext
         AppSettings settings = AppSettings;
         ClipboardHistoryService.Instance.ConfigurePersistence(settings.ClipboardManagerPersistHistory);
         UnregisterGlobalHotkey();
-        RegisterGlobalHotkey();
+        if (!settings.SuppressHotkeysInFullscreen || !_gameFullscreenService.IsGameOrFullscreenForeground())
+        {
+            RegisterGlobalHotkey();
+        }
         UpdateHoverActivationTimer(settings);
+    }
+
+    private void GameFullscreenService_FullscreenStateChanged(object? sender, bool isFullscreen)
+    {
+        UiDispatcher.Run(Dispatcher, () =>
+        {
+            if (AppSettings.SuppressHotkeysInFullscreen)
+            {
+                if (isFullscreen)
+                {
+                    UnregisterGlobalHotkey();
+                }
+                else
+                {
+                    RegisterGlobalHotkey();
+                }
+            }
+
+            if (isFullscreen)
+            {
+                _activationDwellTracker.Reset();
+            }
+            else
+            {
+                UpdateHoverActivationTimer();
+            }
+        });
     }
 
     public AppSettings GetAppSettings() => _settingsService.Settings;
@@ -729,7 +772,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         return GetTargetScreen(settings.MonitorIndex, settings.MonitorDeviceName);
     }
 
-    private static Screen? GetTargetScreen(int monitorIndex, string? monitorDeviceName = null)
+    internal static Screen? GetTargetScreen(int monitorIndex, string? monitorDeviceName = null)
     {
         Screen[] screens = Screen.AllScreens;
         if (!string.IsNullOrWhiteSpace(monitorDeviceName))
@@ -912,6 +955,11 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
     private IReadOnlyList<string> RegisterGlobalHotkey()
     {
+        if (AppSettings.SuppressHotkeysInFullscreen && _gameFullscreenService.IsGameOrFullscreenForeground())
+        {
+            return Array.Empty<string>();
+        }
+
         IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
         IReadOnlyList<HotkeyDefinition> commandDefinitions = _hotkeyService.CreateDefinitions(AppSettings, LocalizationService.Get);
         IReadOnlyList<HotkeyRegistrationResult> results = _hotkeyService.RegisterAll(hwnd, commandDefinitions);
@@ -942,6 +990,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
 
         if (msg == NativeMethods.WM_HOTKEY)
         {
+            if (AppSettings.SuppressHotkeysInFullscreen && _gameFullscreenService.IsGameOrFullscreenForeground())
+            {
+                handled = true;
+                return IntPtr.Zero;
+            }
+
             int hotkeyId = wParam.ToInt32();
 
             // Check if we have a visible owned window
@@ -1303,6 +1357,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 Screen? screen = GetTargetScreen(settings.MonitorIndex, settings.MonitorDeviceName);
 
                 if (screen == null) return;
+
+                if (settings.SuppressPanelInFullscreen && _gameFullscreenService.IsFullscreenActive(screen))
+                {
+                    _activationDwellTracker.Reset();
+                    return;
+                }
 
                 var bounds = screen.Bounds;
                 double screenLeft = bounds.Left;

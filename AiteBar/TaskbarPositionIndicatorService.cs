@@ -17,6 +17,7 @@ internal class TaskbarPositionIndicatorService : IDisposable
     private AppSettingsService? _appSettingsService;
     private MainWindow? _mainWindow;
     private HwndSource? _hwndSource;
+    private IGameFullscreenService? _gameFullscreenService;
     private bool _disposed;
     private const double IndicatorSize = 28;
     private static readonly TimeSpan VisibilityCheckInterval = TimeSpan.FromSeconds(2);
@@ -29,11 +30,12 @@ internal class TaskbarPositionIndicatorService : IDisposable
     private bool IsSuppressedByFullscreen =>
         _isSuppressedByFullscreen || _isSuppressedByUtilityFullscreen;
 
-    public void Initialize(AppSettingsService appSettingsService, MainWindow mainWindow)
+    public void Initialize(AppSettingsService appSettingsService, MainWindow mainWindow, IGameFullscreenService? gameFullscreenService = null)
     {
         Debug.WriteLine("TaskbarPositionIndicatorService.Initialize called");
         _appSettingsService = appSettingsService;
         _mainWindow = mainWindow;
+        _gameFullscreenService = gameFullscreenService ?? mainWindow.GameFullscreenService;
 
         _appSettingsService.SettingsChanged += AppSettingsService_SettingsChanged;
 
@@ -464,7 +466,15 @@ internal class TaskbarPositionIndicatorService : IDisposable
 
         if (_appSettingsService?.Settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true) == true)
         {
-            if (IsFullscreenAppRunning())
+            System.Windows.Forms.Screen? screen = null;
+            if (_appSettingsService != null)
+            {
+                var settings = _appSettingsService.Settings;
+                screen = MainWindow.GetTargetScreen(settings.MonitorIndex, settings.MonitorDeviceName);
+            }
+
+            bool isFullscreen = _gameFullscreenService?.IsFullscreenActive(screen) ?? IsFullscreenAppRunning();
+            if (isFullscreen)
             {
                 _isSuppressedByFullscreen = true;
                 HideIndicator();

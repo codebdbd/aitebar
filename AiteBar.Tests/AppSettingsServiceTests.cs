@@ -1564,4 +1564,19 @@ public sealed class AppSettingsServiceTests
 
         return (AppSettings)method.Invoke(null, [settings])!;
     }
+
+    [Fact]
+    public void CloneAppSettings_PreservesFullscreenSuppressionSettings()
+    {
+        var settings = new AppSettings
+        {
+            SuppressPanelInFullscreen = false,
+            SuppressHotkeysInFullscreen = false
+        };
+
+        var clone = InvokeCloneAppSettings(settings);
+
+        Assert.False(clone.SuppressPanelInFullscreen);
+        Assert.False(clone.SuppressHotkeysInFullscreen);
+    }
 }

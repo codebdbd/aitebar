@@ -28,12 +28,24 @@ namespace AiteBar
 
         public static readonly DependencyProperty IsPinnedProperty =
             DependencyProperty.Register(nameof(IsPinned), typeof(bool), typeof(DarkWindow),
-                new PropertyMetadata(false));
+                new PropertyMetadata(false, OnIsPinnedPropertyChanged));
 
         public bool IsPinned
         {
             get => (bool)GetValue(IsPinnedProperty);
             set => SetValue(IsPinnedProperty, value);
+        }
+
+        private static void OnIsPinnedPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is DarkWindow window)
+            {
+                window.OnIsPinnedChanged((bool)e.OldValue, (bool)e.NewValue);
+            }
+        }
+
+        protected virtual void OnIsPinnedChanged(bool oldValue, bool newValue)
+        {
         }
 
         protected DarkWindow()

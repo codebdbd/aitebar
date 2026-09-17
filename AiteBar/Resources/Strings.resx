@@ -133,6 +133,8 @@ This will remove {1} custom buttons from this panel only. Panel name and setting
   <data name="AppSettingsWindow_PreviousPanel" xml:space="preserve"><value>Previous panel</value></data>
   <data name="AppSettingsWindow_AddButton" xml:space="preserve"><value>Add button</value></data>
   <data name="AppSettingsWindow_ShowPanelOnMouseHover" xml:space="preserve"><value>Show panel on mouse hover</value></data>
+  <data name="AppSettingsWindow_SuppressPanelInFullscreen" xml:space="preserve"><value>Disable panel in games and fullscreen</value></data>
+  <data name="AppSettingsWindow_SuppressHotkeysInFullscreen" xml:space="preserve"><value>Disable hotkeys in games and fullscreen</value></data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicator" xml:space="preserve"><value>Show panel position indicator</value></data>
   <data name="ShowPanel" xml:space="preserve"><value>Show panel</value></data>
   <data name="HideIndicator" xml:space="preserve"><value>Hide indicator</value></data>
@@ -222,7 +224,8 @@ Choose combinations that are not used by Windows or another app.</value></data>
   <data name="QuickNote_FooterFile" xml:space="preserve"><value>QuickNote.aite-note</value></data>
   <data name="QuickNote_Menu" xml:space="preserve"><value>Note menu</value></data>
   <data name="QuickNote_Theme" xml:space="preserve"><value>Note color</value></data>
-  <data name="QuickNote_Pin" xml:space="preserve"><value>Keep note open</value></data>
+  <data name="QuickNote_Pin" xml:space="preserve"><value>Pin note on top</value></data>
+  <data name="QuickNote_Unpin" xml:space="preserve"><value>Unpin note</value></data>
   <data name="QuickNote_Undo" xml:space="preserve"><value>Undo</value></data>
   <data name="QuickNote_Redo" xml:space="preserve"><value>Redo</value></data>
   <data name="QuickNote_Cut" xml:space="preserve"><value>Cut</value></data>
@@ -702,6 +705,8 @@ Open the GitHub release page?</value></data>
   <data name="AppSettingsWindow_PanelSizeHint" xml:space="preserve"><value>Panel length along the selected edge: 50% is half the screen; 100% fills the edge.</value></data>
   <data name="AppSettingsWindow_DelayHint" xml:space="preserve"><value>How long to hold the pointer at the edge: 100 ms opens quickly; 500 ms prevents accidental openings.</value></data>
   <data name="AppSettingsWindow_ShowPanelOnMouseHoverHint" xml:space="preserve"><value>Open the panel when the pointer pauses in its activation zone at the screen edge.</value></data>
+  <data name="AppSettingsWindow_SuppressPanelInFullscreenHint" xml:space="preserve"><value>Do not reveal the edge panel when playing games or running fullscreen apps.</value></data>
+  <data name="AppSettingsWindow_SuppressHotkeysInFullscreenHint" xml:space="preserve"><value>Temporarily release hotkeys to the active game or fullscreen application.</value></data>
   <data name="AppSettingsWindow_ShowTaskbarPositionIndicatorHint" xml:space="preserve"><value>Show the current panel position in the Windows taskbar area.</value></data>
   <data name="AppSettingsWindow_SecondaryMonitorHint" xml:space="preserve"><value>Place the panel on the secondary display when one is available.</value></data>
   <data name="AppSettingsWindow_CheckForUpdatesHint" xml:space="preserve"><value>Check automatically when a newer AiteBar version is available.</value></data>

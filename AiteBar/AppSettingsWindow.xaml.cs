@@ -731,6 +731,8 @@ public partial class AppSettingsWindow : DarkWindow
     {
         AutomationProperties.SetName(CmbLanguage, LocalizationService.Get("AppSettingsWindow_Language"));
         AutomationProperties.SetName(ChkShowPanelOnMouseHover, LocalizationService.Get("AppSettingsWindow_ShowPanelOnMouseHover"));
+        AutomationProperties.SetName(ChkSuppressPanelInFullscreen, LocalizationService.Get("AppSettingsWindow_SuppressPanelInFullscreen"));
+        AutomationProperties.SetName(ChkSuppressHotkeysInFullscreen, LocalizationService.Get("AppSettingsWindow_SuppressHotkeysInFullscreen"));
         AutomationProperties.SetName(ChkShowTaskbarPositionIndicator, LocalizationService.Get("AppSettingsWindow_ShowTaskbarPositionIndicator"));
         AutomationProperties.SetName(ChkSecondaryMonitor, LocalizationService.Get("AppSettingsWindow_SecondaryMonitor"));
         AutomationProperties.SetName(ChkCheckForUpdatesEnabled, LocalizationService.Get("AppSettingsWindow_CheckForUpdates"));
@@ -1068,6 +1070,8 @@ public partial class AppSettingsWindow : DarkWindow
         ChkSaveTextProcessingDraft.IsChecked = _settings.SaveTextProcessingDraft;
         ChkSavePromptBuilderDrafts.IsChecked = _settings.SavePromptBuilderDrafts;
         ChkShowPanelOnMouseHover.IsChecked = _settings.ShowPanelOnMouseHover;
+        ChkSuppressPanelInFullscreen.IsChecked = _settings.SuppressPanelInFullscreen;
+        ChkSuppressHotkeysInFullscreen.IsChecked = _settings.SuppressHotkeysInFullscreen;
         ChkShowTaskbarPositionIndicator.IsChecked = _settings.ShowTaskbarPositionIndicator.GetValueOrDefault(true);
         ChkCheckForUpdatesEnabled.IsChecked = _settings.CheckForUpdatesEnabled;
         _selectedUiCulture = LocalizationService.NormalizeCultureName(_settings.UiCulture);
@@ -2051,6 +2055,8 @@ public partial class AppSettingsWindow : DarkWindow
                 settings.PromptBuilderLastText = null;
             }
             settings.ShowPanelOnMouseHover = ChkShowPanelOnMouseHover.IsChecked ?? true;
+            settings.SuppressPanelInFullscreen = ChkSuppressPanelInFullscreen.IsChecked ?? true;
+            settings.SuppressHotkeysInFullscreen = ChkSuppressHotkeysInFullscreen.IsChecked ?? true;
             settings.ShowTaskbarPositionIndicator = ChkShowTaskbarPositionIndicator.IsChecked ?? true;
             settings.CheckForUpdatesEnabled = ChkCheckForUpdatesEnabled.IsChecked ?? true;
             settings.UiCulture = _selectedUiCulture;

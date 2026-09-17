@@ -17,6 +17,7 @@ public sealed class AppSettingsLayoutContractTests
         "SliderActivationDelay", "LblActivationDelay100", "LblActivationDelay200", "LblActivationDelay300", "LblActivationDelay500",
         "TxtAboutVersion", "SettingsFooter", "BtnKeepOnTop", "AiConnectionsList", "TxtAiConnectionsEmpty",
         "ChkShowPanelOnMouseHover", "ChkShowTaskbarPositionIndicator", "ChkSecondaryMonitor", "ChkCheckForUpdatesEnabled",
+        "ChkSuppressPanelInFullscreen", "ChkSuppressHotkeysInFullscreen",
         "PanelContextsList",
         "HotkeyNextContext", "HotkeyPreviousContext", "HotkeyAddButton",
         "HotkeyFileSorter", "HotkeyIconConverter", "HotkeyQuickNote", "HotkeyColorPicker", "HotkeyTimerStopwatch", "HotkeyQRCodeGenerator", "HotkeyClipboardManager",

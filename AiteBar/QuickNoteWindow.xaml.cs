@@ -81,6 +81,9 @@ namespace AiteBar
             _geometrySaveTimer.Tick += async (_, _) => await SaveGeometryNowAsync();
             BuildThemePalette();
             ApplyTheme(_theme);
+            IsPinned = _settingsService.Settings.QuickNotePinned;
+            Topmost = IsPinned;
+            UpdatePinStateVisuals(IsPinned);
         }
 
         private void ClearCaches()
@@ -118,6 +121,8 @@ namespace AiteBar
 
             _loaded = true;
             IsPinned = _settingsService.Settings.QuickNotePinned;
+            Topmost = IsPinned;
+            UpdatePinStateVisuals(IsPinned);
             UpdateFooterStats();
             if (_statusKind != QuickNoteStatusKind.LoadFailed)
             {
@@ -577,11 +582,16 @@ namespace AiteBar
         {
             bool isPinned = sender is System.Windows.Controls.Primitives.ToggleButton { IsChecked: true };
             IsPinned = isPinned;
-            _settingsService.UpdateSettings(s =>
+            Topmost = isPinned;
+            UpdatePinStateVisuals(isPinned);
+            if (_settingsService.Settings.QuickNotePinned != isPinned)
             {
-                s.QuickNotePinned = isPinned;
-            });
-            await SaveSettingsSafelyAsync();
+                _settingsService.UpdateSettings(s =>
+                {
+                    s.QuickNotePinned = isPinned;
+                });
+                await SaveSettingsSafelyAsync();
+            }
             TxtNote.Focus();
         }
 
@@ -853,6 +863,23 @@ namespace AiteBar
         {
             UpdateFooterStats();
             SetStatus(_statusKind, _statusArgument);
+            UpdatePinStateVisuals(IsPinned);
+        }
+
+        protected override void OnIsPinnedChanged(bool oldValue, bool newValue)
+        {
+            base.OnIsPinnedChanged(oldValue, newValue);
+            Topmost = newValue;
+            UpdatePinStateVisuals(newValue);
+        }
+
+        private void UpdatePinStateVisuals(bool isPinned)
+        {
+            if (BtnPin == null) return;
+            string key = isPinned ? "QuickNote_Unpin" : "QuickNote_Pin";
+            string text = LocalizationService.Get(key);
+            BtnPin.ToolTip = text;
+            System.Windows.Automation.AutomationProperties.SetName(BtnPin, text);
         }
 
     }
