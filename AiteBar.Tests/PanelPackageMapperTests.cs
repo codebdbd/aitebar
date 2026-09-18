@@ -285,4 +285,47 @@ public sealed class PanelPackageMapperTests
 
         Assert.Equal("", result.Name);
     }
+
+    [Fact]
+    public void FromCustomElement_MapsScriptProperties()
+    {
+        var element = new CustomElement
+        {
+            ActionType = nameof(ActionType.ScriptFile),
+            ActionValue = @"C:\Scripts\run.bat",
+            ScriptArguments = "--test 123",
+            SkipScriptConfirmation = true,
+            HideScriptWindow = true,
+            RunAsAdmin = true
+        };
+
+        PanelPackageElement result = PanelPackageMapper.FromCustomElement(element, _ => null);
+
+        Assert.Equal("--test 123", result.ScriptArguments);
+        Assert.True(result.SkipScriptConfirmation);
+        Assert.True(result.HideScriptWindow);
+        Assert.True(result.RunAsAdmin);
+    }
+
+    [Fact]
+    public void ToImportedCustomElement_MapsScriptProperties()
+    {
+        var source = new PanelPackageElement
+        {
+            Name = "Run Script",
+            ActionType = nameof(ActionType.ScriptFile),
+            ActionValue = @"C:\Scripts\run.bat",
+            ScriptArguments = "--arg val",
+            SkipScriptConfirmation = true,
+            HideScriptWindow = true,
+            RunAsAdmin = true
+        };
+
+        CustomElement result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
+
+        Assert.Equal("--arg val", result.ScriptArguments);
+        Assert.True(result.SkipScriptConfirmation);
+        Assert.True(result.HideScriptWindow);
+        Assert.True(result.RunAsAdmin);
+    }
 }

@@ -136,8 +136,6 @@ AiteBar запускается как один экземпляр. Если по
 | `PromptBuilderAnimationSection` | `All` | Последняя секция стилей анимации |
 | `PromptBuilderPhotoSection` | `All` | Последняя секция стилей фото |
 | `PromptBuilderPhotoStyle` | `Auto` | Последний стиль фото |
-| `PromptBuilderThemeSection` | `All` | Последняя секция стилей темы |
-| `PromptBuilderThemeStyle` | `Auto` | Последний стиль темы |
 | `PromptBuilderTextType` | `Auto` | Последний тип текстового промпта |
 | `PromptBuilderTextTone` | `Neutral` | Последний тон текстового промпта |
 | `PromptBuilderAnalysisDirection` | `Auto` | Последнее направление анализа |

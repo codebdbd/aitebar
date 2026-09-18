@@ -67,9 +67,8 @@ public partial class PromptBuilderWindow : DarkWindow
     private AnimationStyleSection _animationSection = AnimationStyleSection.All;
     private PhotoSection _photoSection = PhotoSection.All;
     private PhotoStyle _photoStyle = PhotoStyle.Auto;
-    private ThemeSection _themeSection = ThemeSection.All;
-    private ThemeStyle _themeStyle = ThemeStyle.Auto;
     private VideoDirection _videoDirection = VideoDirection.Auto;
+    private ArtNudeStyle _artNudeStyle = ArtNudeStyle.Auto;
     private VisualTargetModel _visualTarget = VisualTargetModel.GrokImagine;
     private IconStyle _iconStyle = IconStyle.Auto;
     private GraphicType _graphicType = GraphicType.Auto;
@@ -282,9 +281,8 @@ public partial class PromptBuilderWindow : DarkWindow
             settings.PromptBuilderAnimationSection = _animationSection;
             settings.PromptBuilderPhotoSection = _photoSection;
             settings.PromptBuilderPhotoStyle = _photoStyle;
-            settings.PromptBuilderThemeSection = _themeSection;
-            settings.PromptBuilderThemeStyle = _themeStyle;
             settings.PromptBuilderVideoDirection = _videoDirection;
+            settings.PromptBuilderArtNudeStyle = _artNudeStyle;
             settings.PromptBuilderVisualTarget = _visualTarget;
             settings.PromptBuilderIconStyle = _iconStyle;
             settings.PromptBuilderGraphicType = _graphicType;
@@ -300,7 +298,8 @@ public partial class PromptBuilderWindow : DarkWindow
             (int)PromptBuilderCategory.Images => PromptBuilderCategory.Images,
             (int)PromptBuilderCategory.Video => PromptBuilderCategory.Video,
             (int)PromptBuilderCategory.Music => PromptBuilderCategory.Music,
-            (int)PromptBuilderCategory.Ideas => PromptBuilderCategory.Ideas,
+            (int)PromptBuilderCategory.Ideas => PromptBuilderCategory.Images,
+            (int)PromptBuilderCategory.ArtNude => PromptBuilderCategory.ArtNude,
             (int)PromptBuilderCategory.Paintings => PromptBuilderCategory.Paintings,
             (int)PromptBuilderCategory.Animation => PromptBuilderCategory.Animation,
             (int)PromptBuilderCategory.Icons => PromptBuilderCategory.Graphics,
@@ -324,12 +323,10 @@ public partial class PromptBuilderWindow : DarkWindow
         if (!PromptBuilderService.PhotoSections.Any(section => section.Section == _photoSection)) _photoSection = PhotoSection.All;
         _photoStyle = _settingsService.Settings.PromptBuilderPhotoStyle;
         if (!PromptBuilderService.GetPhotoStyles(_photoSection).Any(style => style.Style == _photoStyle)) _photoStyle = PhotoStyle.Auto;
-        _themeSection = _settingsService.Settings.PromptBuilderThemeSection;
-        if (!PromptBuilderService.ThemeSections.Any(section => section.Section == _themeSection)) _themeSection = ThemeSection.All;
-        _themeStyle = _settingsService.Settings.PromptBuilderThemeStyle;
-        if (!PromptBuilderService.GetThemeStyles(_themeSection).Any(style => style.Style == _themeStyle)) _themeStyle = ThemeStyle.Auto;
         _videoDirection = _settingsService.Settings.PromptBuilderVideoDirection;
         if (!PromptBuilderService.VideoDirections.Any(item => item.Direction == _videoDirection)) _videoDirection = VideoDirection.Auto;
+        _artNudeStyle = _settingsService.Settings.PromptBuilderArtNudeStyle;
+        if (!PromptBuilderService.ArtNudeStyles.Any(item => item.Style == _artNudeStyle)) _artNudeStyle = ArtNudeStyle.Auto;
         _visualTarget = _settingsService.Settings.PromptBuilderVisualTarget;
         if (!PromptBuilderService.VisualTargetModels.Any(item => item.Model == _visualTarget)) _visualTarget = VisualTargetModel.GrokImagine;
         _iconStyle = _settingsService.Settings.PromptBuilderIconStyle;
@@ -427,7 +424,7 @@ public partial class PromptBuilderWindow : DarkWindow
             "Images" => PromptBuilderCategory.Images,
             "Paintings" => PromptBuilderCategory.Paintings,
             "Animation" => PromptBuilderCategory.Animation,
-            "Ideas" => PromptBuilderCategory.Ideas,
+            "ArtNude" => PromptBuilderCategory.ArtNude,
             "Graphics" => PromptBuilderCategory.Graphics,
             "Video" => PromptBuilderCategory.Video,
             "Music" => PromptBuilderCategory.Music,
@@ -700,7 +697,7 @@ public partial class PromptBuilderWindow : DarkWindow
                 }
                 else if (input.Length > TextProcessingService.MaxInputLength)
                 {
-                    SetStatus(LocalizationService.Get("TextProcessing_ErrorInputTooLarge"));
+                    SetStatus(LocalizationService.Get("TextProcessing_ErrorTooLong"));
                 }
                 else if (!_hasEligibleModel)
                 {
@@ -710,7 +707,7 @@ public partial class PromptBuilderWindow : DarkWindow
             }
         }
 
-        AiChatRequest request = _service.BuildRequest(mode, input, createAlternative: repeatLast, photoSection: _photoSection, paintingStyle: _paintingStyle, paintingArtist: _paintingArtist, animationStyle: _animationStyle, photoStyle: _photoStyle, videoDirection: _videoDirection, visualTarget: _visualTarget, themeSection: _themeSection, themeStyle: _themeStyle, iconStyle: _iconStyle, graphicType: _graphicType, graphicStyle: _graphicStyle, animationSection: _animationSection, paintingSection: _paintingSection, rotationOffset: _repeatAttemptCount);
+        AiChatRequest request = _service.BuildRequest(mode, input, createAlternative: repeatLast, photoSection: _photoSection, paintingStyle: _paintingStyle, paintingArtist: _paintingArtist, animationStyle: _animationStyle, photoStyle: _photoStyle, videoDirection: _videoDirection, visualTarget: _visualTarget, iconStyle: _iconStyle, graphicType: _graphicType, graphicStyle: _graphicStyle, animationSection: _animationSection, paintingSection: _paintingSection, rotationOffset: _repeatAttemptCount, artNudeStyle: _artNudeStyle);
         ModelItem? selected = null;
         if (!useAutoModel)
         {
@@ -762,7 +759,7 @@ public partial class PromptBuilderWindow : DarkWindow
                     lastUiUpdate = Stopwatch.GetTimestamp();
                 }
             }
-            string cleaned = _service.CleanResponse(streamedResponse.ToString());
+            string cleaned = _service.CleanResponse(streamedResponse.ToString(), mode);
             if (string.IsNullOrWhiteSpace(cleaned))
             {
                 SetStatus(LocalizationService.Get("PromptBuilder_ErrorEmptyResponse"));
@@ -1083,7 +1080,7 @@ public partial class PromptBuilderWindow : DarkWindow
         ModeImages.IsEnabled = visibleState.CanSelectMode;
         ModePaintings.IsEnabled = visibleState.CanSelectMode;
         ModeAnimation.IsEnabled = visibleState.CanSelectMode;
-        ModeIdeas.IsEnabled = visibleState.CanSelectMode;
+        ModeArtNude.IsEnabled = visibleState.CanSelectMode;
         ModeGraphics.IsEnabled = visibleState.CanSelectMode;
         ModeVideo.IsEnabled = visibleState.CanSelectMode;
         ModeMusic.IsEnabled = visibleState.CanSelectMode;
@@ -1265,7 +1262,7 @@ public partial class PromptBuilderWindow : DarkWindow
             ModeImages.IsSelected = _currentMode == PromptBuilderCategory.Images;
             ModePaintings.IsSelected = _currentMode == PromptBuilderCategory.Paintings;
             ModeAnimation.IsSelected = _currentMode == PromptBuilderCategory.Animation;
-            ModeIdeas.IsSelected = _currentMode == PromptBuilderCategory.Ideas;
+            ModeArtNude.IsSelected = _currentMode == PromptBuilderCategory.ArtNude;
             ModeGraphics.IsSelected = _currentMode == PromptBuilderCategory.Graphics;
             ModeVideo.IsSelected = _currentMode == PromptBuilderCategory.Video;
             ModeMusic.IsSelected = _currentMode == PromptBuilderCategory.Music;
@@ -1279,16 +1276,18 @@ public partial class PromptBuilderWindow : DarkWindow
             PromptBuilderCategory.Images => LocalizationService.Get("PromptBuilder_ModeImagesDesc"),
             PromptBuilderCategory.Paintings => LocalizationService.Get("PromptBuilder_ModePaintingsDesc"),
             PromptBuilderCategory.Animation => LocalizationService.Get("PromptBuilder_ModeAnimationDesc"),
-            PromptBuilderCategory.Ideas => LocalizationService.Get("PromptBuilder_ModeIdeasDesc"),
+            PromptBuilderCategory.ArtNude => LocalizationService.Get("PromptBuilder_ModeArtNudeDesc"),
             PromptBuilderCategory.Graphics => LocalizationService.Get("PromptBuilder_ModeGraphicsDesc"),
             PromptBuilderCategory.Video => LocalizationService.Get("PromptBuilder_ModeVideoDesc"),
             PromptBuilderCategory.Music => LocalizationService.Get("PromptBuilder_ModeMusicDesc"),
             _ => string.Empty
         };
-        VisualOptionsHost.Visibility = _currentMode is PromptBuilderCategory.Images or PromptBuilderCategory.Paintings or PromptBuilderCategory.Animation or PromptBuilderCategory.Ideas ? Visibility.Visible : Visibility.Collapsed;
+        VisualOptionsHost.Visibility = _currentMode is PromptBuilderCategory.Images or PromptBuilderCategory.Paintings or PromptBuilderCategory.Animation ? Visibility.Visible : Visibility.Collapsed;
+        ArtNudeOptionsHost.Visibility = _currentMode == PromptBuilderCategory.ArtNude ? Visibility.Visible : Visibility.Collapsed;
         GraphicOptionsHost.Visibility = _currentMode == PromptBuilderCategory.Graphics ? Visibility.Visible : Visibility.Collapsed;
         VideoDirectionHost.Visibility = _currentMode == PromptBuilderCategory.Video ? Visibility.Visible : Visibility.Collapsed;
         RefreshVisualStyleOptions();
+        RefreshArtNudeStyles();
         RefreshVideoDirections();
         RefreshVisualTargets();
         RefreshGraphicOptions();
@@ -1329,12 +1328,6 @@ public partial class PromptBuilderWindow : DarkWindow
                     CmbVisualStyle.Items.Add(new ComboBoxItem { Tag = style.Style, Content = LocalizationService.Get(style.LocalizationKey) });
                 CmbVisualStyle.SelectedItem = CmbVisualStyle.Items.Cast<ComboBoxItem>().First(item => (AnimationStyle)item.Tag == _animationStyle);
                 break;
-            case PromptBuilderCategory.Ideas:
-                RefreshThemeSections();
-                foreach (ThemeStyleDefinition style in OrderAutoFirst(PromptBuilderService.GetThemeStyles(_themeSection), style => style.Style == ThemeStyle.Auto, style => style.LocalizationKey))
-                    CmbVisualStyle.Items.Add(new ComboBoxItem { Tag = style.Style, Content = LocalizationService.Get(style.LocalizationKey) });
-                CmbVisualStyle.SelectedItem = CmbVisualStyle.Items.Cast<ComboBoxItem>().First(item => (ThemeStyle)item.Tag == _themeStyle);
-                break;
         }
 
         CmbVisualStyle.SelectionChanged += CmbVisualStyle_SelectionChanged;
@@ -1350,7 +1343,6 @@ public partial class PromptBuilderWindow : DarkWindow
             PaintingArtist artist when _paintingArtist != artist => SetPaintingArtist(artist),
             PhotoStyle photo when _photoStyle != photo => SetPhotoStyle(photo),
             AnimationStyle animation when _animationStyle != animation => SetAnimationStyle(animation),
-            ThemeStyle theme when _themeStyle != theme => SetThemeStyle(theme),
             _ => false
         };
         if (changed) SaveCurrentMode();
@@ -1360,23 +1352,19 @@ public partial class PromptBuilderWindow : DarkWindow
     private bool SetPaintingArtist(PaintingArtist artist) { _paintingArtist = artist; return true; }
     private bool SetPhotoStyle(PhotoStyle style) { _photoStyle = style; return true; }
     private bool SetAnimationStyle(AnimationStyle style) { _animationStyle = style; return true; }
-    private bool SetThemeStyle(ThemeStyle style) { _themeStyle = style; return true; }
 
     private void ConfigureAnimationSectionFilter()
     {
         bool isImages = _currentMode == PromptBuilderCategory.Images;
         bool isAnimation = _currentMode == PromptBuilderCategory.Animation;
         bool isPaintings = _currentMode == PromptBuilderCategory.Paintings;
-        bool isIdeas = _currentMode == PromptBuilderCategory.Ideas;
         TxtPhotoSectionLabel.Visibility = isImages ? Visibility.Visible : Visibility.Collapsed;
         CmbPhotoSection.Visibility = isImages ? Visibility.Visible : Visibility.Collapsed;
         TxtAnimationSectionLabel.Visibility = isAnimation ? Visibility.Visible : Visibility.Collapsed;
         CmbAnimationSection.Visibility = isAnimation ? Visibility.Visible : Visibility.Collapsed;
         TxtPaintingSectionLabel.Visibility = isPaintings ? Visibility.Visible : Visibility.Collapsed;
         CmbPaintingSection.Visibility = isPaintings ? Visibility.Visible : Visibility.Collapsed;
-        TxtThemeSectionLabel.Visibility = isIdeas ? Visibility.Visible : Visibility.Collapsed;
-        CmbThemeSection.Visibility = isIdeas ? Visibility.Visible : Visibility.Collapsed;
-        bool hasSectionFilter = isImages || isAnimation || isPaintings || isIdeas;
+        bool hasSectionFilter = isImages || isAnimation || isPaintings;
         AnimationSectionLabelColumn.Width = hasSectionFilter ? GridLength.Auto : new GridLength(0);
         AnimationSectionLeadingGapColumn.Width = new GridLength(hasSectionFilter ? 10 : 0);
         AnimationSectionColumn.Width = new GridLength(hasSectionFilter ? 180 : 0);
@@ -1424,25 +1412,6 @@ public partial class PromptBuilderWindow : DarkWindow
         SaveCurrentMode();
     }
 
-    private void RefreshThemeSections()
-    {
-        CmbThemeSection.SelectionChanged -= CmbThemeSection_SelectionChanged;
-        CmbThemeSection.Items.Clear();
-        foreach (ThemeSectionDefinition section in PromptBuilderService.ThemeSections)
-            CmbThemeSection.Items.Add(new ComboBoxItem { Tag = section.Section, Content = LocalizationService.Get(section.LocalizationKey) });
-        CmbThemeSection.SelectedItem = CmbThemeSection.Items.Cast<ComboBoxItem>().First(item => (ThemeSection)item.Tag == _themeSection);
-        CmbThemeSection.SelectionChanged += CmbThemeSection_SelectionChanged;
-    }
-
-    private void CmbThemeSection_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (CmbThemeSection.SelectedItem is not ComboBoxItem { Tag: ThemeSection section } || _themeSection == section) return;
-        _themeSection = section;
-        if (!PromptBuilderService.GetThemeStyles(section).Any(style => style.Style == _themeStyle)) _themeStyle = ThemeStyle.Auto;
-        RefreshVisualStyleOptions();
-        SaveCurrentMode();
-    }
-
     private void RefreshPaintingSections()
     {
         CmbPaintingSection.SelectionChanged -= CmbPaintingSection_SelectionChanged;
@@ -1468,6 +1437,27 @@ public partial class PromptBuilderWindow : DarkWindow
         }
         RefreshVisualStyleOptions();
         SaveCurrentMode();
+    }
+
+    private void RefreshArtNudeStyles()
+    {
+        CmbArtNudeStyle.SelectionChanged -= CmbArtNudeStyle_SelectionChanged;
+        CmbArtNudeStyle.Items.Clear();
+        foreach (ArtNudeStyleDefinition item in OrderAutoFirst(PromptBuilderService.ArtNudeStyles, item => item.Style == ArtNudeStyle.Auto, item => item.LocalizationKey))
+        {
+            CmbArtNudeStyle.Items.Add(new ComboBoxItem { Tag = item.Style, Content = LocalizationService.Get(item.LocalizationKey) });
+        }
+        CmbArtNudeStyle.SelectedItem = CmbArtNudeStyle.Items.Cast<ComboBoxItem>().First(item => (ArtNudeStyle)item.Tag == _artNudeStyle);
+        CmbArtNudeStyle.SelectionChanged += CmbArtNudeStyle_SelectionChanged;
+    }
+
+    private void CmbArtNudeStyle_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CmbArtNudeStyle.SelectedItem is ComboBoxItem { Tag: ArtNudeStyle style } && _artNudeStyle != style)
+        {
+            _artNudeStyle = style;
+            SaveCurrentMode();
+        }
     }
 
     private void RefreshVideoDirections()
@@ -1658,7 +1648,9 @@ public partial class PromptBuilderWindow : DarkWindow
                 cancellationToken.ThrowIfCancellationRequested();
                 try
                 {
-                    IReadOnlyList<AiModelDescriptor> models = await _gateway.GetModelsAsync(connection, cancellationToken);
+                    using var perConnectionCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                    using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, perConnectionCts.Token);
+                    IReadOnlyList<AiModelDescriptor> models = await _gateway.GetModelsAsync(connection, linkedCts.Token);
                     foreach (AiModelDescriptor model in models.Where(IsEligibleModel))
                     {
                         availableModels.Add(model);
@@ -1671,9 +1663,14 @@ public partial class PromptBuilderWindow : DarkWindow
                         }
                     }
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
                     throw;
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // Per-connection timeout — log and continue with remaining connections.
+                    Logger.Log(ex);
                 }
                 catch (Exception ex)
                 {

@@ -105,6 +105,18 @@ internal sealed class PanelPackageElement
     [JsonPropertyName("color")]
     public string Color { get; set; } = "#E3E3E3";
 
+    [JsonPropertyName("scriptArguments")]
+    public string ScriptArguments { get; set; } = "";
+
+    [JsonPropertyName("skipScriptConfirmation")]
+    public bool SkipScriptConfirmation { get; set; }
+
+    [JsonPropertyName("hideScriptWindow")]
+    public bool HideScriptWindow { get; set; }
+
+    [JsonPropertyName("runAsAdmin")]
+    public bool RunAsAdmin { get; set; }
+
     [JsonPropertyName("image")]
     public PanelPackageImageInfo? Image { get; set; }
 }

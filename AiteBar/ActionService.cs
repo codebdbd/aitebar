@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
@@ -74,12 +75,17 @@ public class ActionService
                 case ActionType.Program:
                 case ActionType.File:
                 case ActionType.Folder:
-                    using (var _ = _runtime.StartProcess(new ProcessStartInfo(el.ActionValue) { UseShellExecute = true }))
+                    var psi = new ProcessStartInfo(el.ActionValue) { UseShellExecute = true };
+                    if (actionType == ActionType.Program && el.RunAsAdmin)
+                    {
+                        psi.Verb = "runas";
+                    }
+                    using (var _ = _runtime.StartProcess(psi))
                     {
                         break;
                     }
                 case ActionType.ScriptFile:
-                    await StartScriptFileAsync(el.ActionValue).ConfigureAwait(false);
+                    await StartScriptFileAsync(el).ConfigureAwait(false);
                     break;
                 case ActionType.Command:
                     ExecuteCommand(el.ActionValue);
@@ -90,6 +96,11 @@ public class ActionService
         }
         catch (Exception ex)
         {
+            if (ex is Win32Exception { NativeErrorCode: 1223 })
+            {
+                return ActionExecutionResult.Ok;
+            }
+
             TelemetryService.CaptureException(ex, "custom_action", new Dictionary<string, string?>
             {
                 ["action_type"] = el.ActionType,
@@ -512,72 +523,196 @@ public class ActionService
         UseShellExecute = true
     };
 
-    private async Task StartScriptFileAsync(string scriptPath)
+    internal async Task StartScriptFileAsync(CustomElement el)
     {
-        if (!_runtime.Confirm(LocalizationService.Format("Action_ConfirmScript", scriptPath), _runtime.GetMainWindow()))
+        if (!el.SkipScriptConfirmation &&
+            !_runtime.Confirm(LocalizationService.Format("Action_ConfirmScript", el.ActionValue), _runtime.GetMainWindow()))
         {
             return;
         }
 
-        var psi = CreateScriptProcessStartInfo(scriptPath);
+        var psi = CreateScriptProcessStartInfo(
+            el.ActionValue,
+            el.ScriptArguments,
+            el.HideScriptWindow,
+            el.RunAsAdmin);
+
         using var proc = _runtime.StartProcess(psi) ?? throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
-    internal static ProcessStartInfo CreateScriptProcessStartInfo(string scriptPath)
+    internal Task StartScriptFileAsync(string scriptPath) =>
+        StartScriptFileAsync(new CustomElement { ActionValue = scriptPath });
+
+    internal static string? ResolvePowerShellExecutable()
+    {
+        // 1. Check PATH for PowerShell 7 (pwsh.exe)
+        string? shell = PathHelper.FindExecutableOnPath("pwsh.exe");
+        if (shell != null && File.Exists(shell))
+        {
+            return shell;
+        }
+
+        // 2. Check PATH for Windows PowerShell (powershell.exe)
+        shell = PathHelper.FindExecutableOnPath("powershell.exe");
+        if (shell != null && File.Exists(shell))
+        {
+            return shell;
+        }
+
+        // 3. Fallback: check standard installation locations if PATH is missing entries
+        string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+        string pwshProgramFiles = Path.Combine(programFiles, "PowerShell", "7", "pwsh.exe");
+        if (File.Exists(pwshProgramFiles))
+        {
+            return pwshProgramFiles;
+        }
+
+        string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string pwshWinApps = Path.Combine(localAppData, "Microsoft", "WindowsApps", "pwsh.exe");
+        if (File.Exists(pwshWinApps))
+        {
+            return pwshWinApps;
+        }
+
+        string systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
+        string defaultPowershell = Path.Combine(systemFolder, "WindowsPowerShell", "v1.0", "powershell.exe");
+        if (File.Exists(defaultPowershell))
+        {
+            return defaultPowershell;
+        }
+
+        return null;
+    }
+
+    internal static ProcessStartInfo CreateScriptProcessStartInfo(
+        string scriptPath,
+        string? scriptArguments = null,
+        bool hideWindow = false,
+        bool runAsAdmin = false)
     {
         string workingDirectory = Path.GetDirectoryName(scriptPath) ?? Environment.CurrentDirectory;
         string extension = Path.GetExtension(scriptPath).ToLowerInvariant();
+        ProcessStartInfo psi;
         switch (extension)
         {
             case ".bat":
             case ".cmd":
-                var psi = new ProcessStartInfo("cmd.exe")
+                psi = new ProcessStartInfo("cmd.exe")
                 {
                     UseShellExecute = false,
                     WorkingDirectory = workingDirectory
                 };
                 psi.ArgumentList.Add("/c");
                 psi.ArgumentList.Add(scriptPath);
-                return psi;
+                break;
             case ".ps1":
-                string? shell = PathHelper.FindExecutableOnPath("pwsh.exe");
-                if (shell == null || !File.Exists(shell))
-                {
-                    shell = PathHelper.FindExecutableOnPath("powershell.exe");
-                }
+                string? shell = ResolvePowerShellExecutable();
                 if (shell == null)
                 {
                     throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
                 }
-                var psiPs = new ProcessStartInfo(shell)
+                psi = new ProcessStartInfo(shell)
                 {
                     UseShellExecute = false,
                     WorkingDirectory = workingDirectory
                 };
-                psiPs.ArgumentList.Add("-NoProfile");
-                if (Path.GetFileName(shell).Equals("powershell.exe", StringComparison.OrdinalIgnoreCase))
+                psi.ArgumentList.Add("-NoProfile");
+                psi.ArgumentList.Add("-ExecutionPolicy");
+                psi.ArgumentList.Add("Bypass");
+                psi.ArgumentList.Add("-File");
+                psi.ArgumentList.Add(scriptPath);
+                break;
+            case ".pyw":
+                string? pythonwExe = PathHelper.FindExecutableOnPath("pythonw.exe") ?? PathHelper.FindExecutableOnPath("python.exe");
+                if (pythonwExe == null || !File.Exists(pythonwExe))
                 {
-                    psiPs.ArgumentList.Add("-ExecutionPolicy");
-                    psiPs.ArgumentList.Add("Bypass");
+                    throw new InvalidOperationException(LocalizationService.Get("Action_PythonNotFound"));
                 }
-                psiPs.ArgumentList.Add("-File");
-                psiPs.ArgumentList.Add(scriptPath);
-                return psiPs;
+                psi = new ProcessStartInfo(pythonwExe)
+                {
+                    UseShellExecute = false,
+                    WorkingDirectory = workingDirectory
+                };
+                psi.ArgumentList.Add(scriptPath);
+                break;
             case ".py":
                 string? pythonExe = PathHelper.FindExecutableOnPath("python.exe");
                 if (pythonExe == null || !File.Exists(pythonExe))
                 {
                     throw new InvalidOperationException(LocalizationService.Get("Action_PythonNotFound"));
                 }
-                var psiPy = new ProcessStartInfo(pythonExe)
+                psi = new ProcessStartInfo(pythonExe)
                 {
                     UseShellExecute = false,
                     WorkingDirectory = workingDirectory
                 };
-                psiPy.ArgumentList.Add(scriptPath);
-                return psiPy;
+                psi.ArgumentList.Add(scriptPath);
+                break;
             default: throw new InvalidOperationException(LocalizationService.Get("Action_UnsupportedScript"));
+        }
+
+        AppendScriptArguments(psi, scriptArguments);
+        ApplyWindowAndElevationOptions(psi, hideWindow, runAsAdmin);
+        return psi;
+    }
+
+    internal static IEnumerable<string> ParseArgumentTokens(string argumentString)
+    {
+        if (string.IsNullOrWhiteSpace(argumentString))
+            yield break;
+
+        var sb = new StringBuilder();
+        bool inQuotes = false;
+
+        for (int i = 0; i < argumentString.Length; i++)
+        {
+            char c = argumentString[i];
+            if (c == '"')
+            {
+                inQuotes = !inQuotes;
+            }
+            else if (char.IsWhiteSpace(c) && !inQuotes)
+            {
+                if (sb.Length > 0)
+                {
+                    yield return sb.ToString();
+                    sb.Clear();
+                }
+            }
+            else
+            {
+                sb.Append(c);
+            }
+        }
+
+        if (sb.Length > 0)
+        {
+            yield return sb.ToString();
+        }
+    }
+
+    private static void AppendScriptArguments(ProcessStartInfo psi, string? scriptArguments)
+    {
+        if (string.IsNullOrWhiteSpace(scriptArguments)) return;
+        foreach (string token in ParseArgumentTokens(scriptArguments))
+        {
+            psi.ArgumentList.Add(token);
+        }
+    }
+
+    private static void ApplyWindowAndElevationOptions(ProcessStartInfo psi, bool hideWindow, bool runAsAdmin)
+    {
+        if (hideWindow)
+        {
+            psi.CreateNoWindow = true;
+            psi.WindowStyle = ProcessWindowStyle.Hidden;
+        }
+
+        if (runAsAdmin)
+        {
+            psi.UseShellExecute = true;
+            psi.Verb = "runas";
         }
     }
 

@@ -1016,20 +1016,21 @@ URL валидируется и нормализуется. Если брауз�
 ### Как использовать
 
 1. Создать кнопку типа `Скрипт`.
-2. Выбрать `.bat`, `.cmd`, `.ps1` или `.py`.
-3. Сохранить и нажать кнопку.
+2. Выбрать `.bat`, `.cmd`, `.ps1`, `.py` или `.pyw`.
+3. При необходимости задать аргументы командной строки, отключить подтверждение, включить фоновый режим (скрытие консоли) или запуск от имени администратора.
+4. Сохранить и нажать кнопку.
 
 ### Входные данные
 
-Путь к существующему скрипту.
+Путь к существующему скрипту, опциональные аргументы командной строки.
 
 ### Результат
 
-`.bat`/`.cmd` запускаются через `cmd.exe /c`; `.ps1` через `pwsh.exe` или `powershell.exe`; `.py` через найденный `python.exe`.
+`.bat`/`.cmd` запускаются через `cmd.exe /c`; `.ps1` через `pwsh.exe` или `powershell.exe` с флагом `-ExecutionPolicy Bypass`; `.pyw` через `pythonw.exe` (без консоли); `.py` через найденный `python.exe`.
 
 ### Ограничения
 
-Поддерживаются только `.bat`, `.cmd`, `.ps1`, `.py`. Для Python нужен `python.exe` в PATH. Для Windows PowerShell добавляется `ExecutionPolicy Bypass`.
+Поддерживаются `.bat`, `.cmd`, `.ps1`, `.py`, `.pyw`. Для Python нужен установленный интерпретатор в PATH (`python.exe`/`pythonw.exe`). Для PowerShell (как `pwsh`, так и Windows PowerShell) передается `ExecutionPolicy Bypass`. Поддерживается безопасная передача аргументов с кавычками, скрытие окна консоли и запуск от имени администратора.
 
 ### Связанные функции
 
@@ -1648,7 +1649,7 @@ HEX-цвет формата `#RRGGBB` копируется в clipboard.
 
 ### Назначение
 
-Создаёт один профессиональный готовый промпт по краткому описанию задачи. Поддерживает пять независимых рубрик: программирование, изображения, тексты, видео и аудио, анализ и идеи. Результат не содержит приветствия, объяснений или уточняющих вопросов.
+Создаёт один профессиональный готовый промпт по краткому описанию задачи. Поддерживает семь независимых творческих рубрик: Изображения, Живопись, Анимация, Арт-ню, Графика, Видео, Музыка. Результат не содержит приветствия, объяснений или уточняющих вопросов.
 
 ### Где находится и как использовать
 
@@ -1658,15 +1659,11 @@ HEX-цвет формата `#RRGGBB` копируется в clipboard.
 
 `AiteBar/PromptBuilderUtility.cs`, `AiteBar/PromptBuilderWindow.xaml`, `AiteBar/PromptBuilderWindow.xaml.cs`, `AiteBar/PromptBuilderService.cs`, `AiteBar/AiGateway.cs`.
 
-The Prompt Builder's unified Analytics tab provides result-oriented directions for comparison, recommendation, market and competitor research, fact-checking, risk assessment, strategy, product and data analysis, scenarios, root causes, and solution options. The UI shows the expected result structure for the selected direction; the generated prompt enforces that contract. Legacy saved Ideas mode is opened as Analytics.
+The Video tab provides a persisted directing selector for advertising, cinematic scenes, product, fashion, documentary, vertical social, music video, interview, explainer, architecture, travel, action, time-lapse, macro, stop motion, 3D product animation, and loop animation.
 
-Every Prompt Builder selector displays an in-context explanation of what it will create. The Video tab provides a persisted directing selector for advertising, cinematic scenes, product, fashion, documentary, vertical social, music video, interview, explainer, architecture, travel, action, time-lapse, macro, stop motion, 3D product animation, and loop animation.
+The Music tab produces a ready-to-paste Suno Styles field description from a short vibe or scene brief. The output is a single plain English paragraph (no lyrics, no song titles, no artist names, no markdown formatting) under 1000 characters, covering genre, mood, tempo, instrumentation, production, and arrangement.
 
-The Programming tab provides a persisted task-type selector for new features, bug fixes, refactoring, code review, architecture, testing, performance, security, APIs, databases, UI/UX, deployment, documentation, code analysis, and migrations.
-
-The Music tab provides a persisted musical-direction selector for Pop, Rock, Electronic, Hip-hop/R&B, Ambient, Cinematic score, Acoustic/Folk, Dance, Jazz/Soul, Classical, and Metal/Punk; it produces a ready-to-paste Suno Styles description.
-
-Prompt Builder keeps one persisted draft per tab: the original brief, the latest generated prompt, the selected options, and the original/result view state. Switching tabs does not clear work; Clear affects only the active tab.
+Prompt Builder keeps one draft per tab in memory: the original brief, the latest generated prompt, the selected options, and the original/result view state. Switching tabs does not clear work; Clear affects only the active tab. Drafts are not persisted between application launches unless `SavePromptBuilderDrafts` is explicitly enabled in settings.
 
 ## Дзен-редактор
 

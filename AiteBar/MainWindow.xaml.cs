@@ -36,6 +36,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
         public const int Delete = 58491; // ic_fluent_delete_16_regular
         public const int Update = 59548; // ic_fluent_arrow_sync_16_regular
         public const int Add = 61706; // ic_fluent_add_16_filled
+        public const int Shield = 60099; // ic_fluent_shield_16_regular
     }
 
     private readonly AppSettingsService _settingsService;
@@ -464,6 +465,14 @@ public partial class MainWindow : Window, ISettingsWindowContext
         menu.Opened += (s, e) => _isElementContextMenuOpen = true;
         menu.Closed += (s, e) => _isElementContextMenuOpen = false;
 
+        if (CanRunAsAdmin(element))
+        {
+            menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Shield), LocalizationService.Get("Menu_RunAsAdmin"), async (s, e) =>
+            {
+                await RunPanelInteractionAsync(() => ExecuteActionAsAdminAsync(element));
+            }));
+        }
+
         menu.Items.Add(CreateMenuItem(FluentGlyph(MenuIcons.Edit), LocalizationService.Get("Menu_Edit"), (s, e) =>
         {
             RunPanelInteraction(() => new SettingsWindow(this, element) { Owner = this }.ShowDialog());
@@ -659,6 +668,23 @@ public partial class MainWindow : Window, ISettingsWindowContext
     }
 
     private static string FluentGlyph(int codePoint) => char.ConvertFromUtf32(codePoint);
+
+    private static bool CanRunAsAdmin(CustomElement element)
+    {
+        if (!Enum.TryParse<ActionType>(element.ActionType, out var actionType))
+        {
+            return false;
+        }
+
+        return actionType is ActionType.Program or ActionType.ScriptFile;
+    }
+
+    private async Task ExecuteActionAsAdminAsync(CustomElement element)
+    {
+        CustomElement adminEl = _settingsService.CloneElement(element);
+        adminEl.RunAsAdmin = true;
+        await ExecuteUserButtonActionAsync(adminEl);
+    }
 
     private static bool CanOpenElementLocation(CustomElement element)
     {

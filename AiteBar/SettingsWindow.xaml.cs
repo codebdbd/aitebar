@@ -155,6 +155,11 @@ namespace AiteBar
                 ChkShift.IsChecked = _editingElement.Shift;
                 ChkAlt.IsChecked = _editingElement.Alt;
                 ChkWin.IsChecked = _editingElement.Win;
+                TxtScriptArguments.Text = _editingElement.ScriptArguments ?? "";
+                ChkSkipScriptConfirmation.IsChecked = _editingElement.SkipScriptConfirmation;
+                ChkScriptHideWindow.IsChecked = _editingElement.HideScriptWindow;
+                ChkScriptRunAsAdmin.IsChecked = _editingElement.RunAsAdmin;
+                TxtScriptArgumentsPlaceholder.Visibility = string.IsNullOrEmpty(TxtScriptArguments.Text) ? Visibility.Visible : Visibility.Collapsed;
 
                 SetComboValue(CmbBrowser, _editingElement.Browser.ToString());
                 SetComboValue(CmbContext, _editingElement.ContextId);
@@ -477,7 +482,7 @@ namespace AiteBar
 
         private void UpdateActionUI()
         {
-            if (PanelHotkeyAction == null || PanelStandardAction == null || PanelWebSettings == null || CmbActionType.SelectedItem == null || ActionHelpBox == null || TxtActionHelp == null || TxtActionPlaceholder == null || TxtActionValue == null || LblActionValue == null || BtnBrowse == null) return;
+            if (PanelHotkeyAction == null || PanelStandardAction == null || PanelWebSettings == null || PanelScriptSettings == null || CmbActionType.SelectedItem == null || ActionHelpBox == null || TxtActionHelp == null || TxtActionPlaceholder == null || TxtActionValue == null || LblActionValue == null || BtnBrowse == null) return;
             string typeStr = ((ComboBoxItem)CmbActionType.SelectedItem).Tag?.ToString() ?? "Web";
             if (Enum.TryParse<AiteBar.ActionType>(typeStr, out var actionType))
             {
@@ -493,6 +498,7 @@ namespace AiteBar
                         PanelStandardAction.Visibility = Visibility.Visible;
                         PanelHotkeyAction.Visibility = Visibility.Collapsed;
                         PanelWebSettings.Visibility = actionType == AiteBar.ActionType.Web ? Visibility.Visible : Visibility.Collapsed;
+                        PanelScriptSettings.Visibility = actionType == AiteBar.ActionType.ScriptFile ? Visibility.Visible : Visibility.Collapsed;
                         if (actionType != AiteBar.ActionType.Web)
                         {
                             CancelPendingFaviconDownload();
@@ -959,8 +965,11 @@ namespace AiteBar
                         return;
                     }
 
-                    if (string.Equals(Path.GetExtension(TxtActionValue.Text), ".py", StringComparison.OrdinalIgnoreCase) &&
-                        PathHelper.FindExecutableOnPath("python.exe") == null)
+                    string ext = Path.GetExtension(TxtActionValue.Text);
+                    if ((string.Equals(ext, ".py", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(ext, ".pyw", StringComparison.OrdinalIgnoreCase)) &&
+                        PathHelper.FindExecutableOnPath("python.exe") == null &&
+                        PathHelper.FindExecutableOnPath("pythonw.exe") == null)
                     {
                         new DarkDialog(LocalizationService.Get("SettingsWindow_PythonNotFound")) { Owner = this }.ShowDialog();
                         return;
@@ -1012,7 +1021,11 @@ namespace AiteBar
                     Alt = actionType == AiteBar.ActionType.Hotkey && (ChkAlt.IsChecked ?? false),
                     Win = actionType == AiteBar.ActionType.Hotkey && (ChkWin.IsChecked ?? false),
                     Key = actionType == AiteBar.ActionType.Hotkey ? selectedKey : "None",
-                    ContextId = ((ComboBoxItem)CmbContext.SelectedItem)?.Tag?.ToString() ?? _context.GetAppSettings().ActiveContextId
+                    ContextId = ((ComboBoxItem)CmbContext.SelectedItem)?.Tag?.ToString() ?? _context.GetAppSettings().ActiveContextId,
+                    ScriptArguments = actionType == AiteBar.ActionType.ScriptFile ? TxtScriptArguments.Text.Trim() : "",
+                    SkipScriptConfirmation = actionType == AiteBar.ActionType.ScriptFile && (ChkSkipScriptConfirmation.IsChecked ?? false),
+                    HideScriptWindow = actionType == AiteBar.ActionType.ScriptFile && (ChkScriptHideWindow.IsChecked ?? false),
+                    RunAsAdmin = actionType == AiteBar.ActionType.ScriptFile && (ChkScriptRunAsAdmin.IsChecked ?? false)
                 };
 
                 IReadOnlyList<string> failedHotkeys = await _context.SaveElement(newElement, _editingElement?.Id);
@@ -1031,6 +1044,14 @@ namespace AiteBar
             finally
             {
                 UpdateSaveButtonState();
+            }
+        }
+
+        private void TxtScriptArguments_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (TxtScriptArgumentsPlaceholder != null)
+            {
+                TxtScriptArgumentsPlaceholder.Visibility = string.IsNullOrEmpty(TxtScriptArguments.Text) ? Visibility.Visible : Visibility.Collapsed;
             }
         }
 

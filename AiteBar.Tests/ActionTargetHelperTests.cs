@@ -86,4 +86,18 @@ public sealed class ActionTargetHelperTests
             }
         }
     }
+
+    [Theory]
+    [InlineData("script.bat", true)]
+    [InlineData("script.cmd", true)]
+    [InlineData("script.ps1", true)]
+    [InlineData("script.py", true)]
+    [InlineData("script.pyw", true)]
+    [InlineData("app.exe", false)]
+    [InlineData("doc.txt", false)]
+    public void IsScriptPath_RecognizesSupportedScriptExtensions(string fileName, bool expected)
+    {
+        string path = Path.Combine(@"C:\Scripts", fileName);
+        Assert.Equal(expected, ActionTargetHelper.IsScriptPath(path));
+    }
 }

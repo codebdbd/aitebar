@@ -36,6 +36,10 @@ internal static class PanelPackageMapper
             Icon = string.IsNullOrWhiteSpace(element.Icon) ? DefaultIcon : element.Icon,
             IconFont = string.IsNullOrWhiteSpace(element.IconFont) ? FontHelper.FluentKey : element.IconFont,
             Color = string.IsNullOrWhiteSpace(element.Color) ? DefaultColor : element.Color,
+            ScriptArguments = element.ScriptArguments ?? "",
+            SkipScriptConfirmation = element.SkipScriptConfirmation,
+            HideScriptWindow = element.HideScriptWindow,
+            RunAsAdmin = element.RunAsAdmin,
             Image = string.IsNullOrWhiteSpace(packageImagePath)
                 ? null
                 : new PanelPackageImageInfo
@@ -77,6 +81,10 @@ internal static class PanelPackageMapper
             Icon = string.IsNullOrWhiteSpace(source.Icon) ? DefaultIcon : source.Icon,
             IconFont = string.IsNullOrWhiteSpace(source.IconFont) ? FontHelper.FluentKey : source.IconFont,
             Color = string.IsNullOrWhiteSpace(source.Color) ? DefaultColor : source.Color,
+            ScriptArguments = source.ScriptArguments ?? "",
+            SkipScriptConfirmation = source.SkipScriptConfirmation,
+            HideScriptWindow = source.HideScriptWindow,
+            RunAsAdmin = source.RunAsAdmin,
             ImagePath = resolveImportedImagePath(source.Image),
             ContextId = targetContextId
         };

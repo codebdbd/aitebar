@@ -122,6 +122,25 @@
                                     </Grid>
                                 </StackPanel>
                             </Border>
+
+                            <!-- Script Settings -->
+                            <Border x:Name="PanelScriptSettings" Background="Transparent" CornerRadius="6" Padding="12" Margin="0,0,0,15" BorderThickness="1" BorderBrush="#3A3A3E" Visibility="Collapsed">
+                                <StackPanel>
+                                    <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_ScriptArguments}" Foreground="{StaticResource MutedText}" Margin="0,0,0,4" FontSize="11"/>
+                                    <Grid Margin="0,0,0,10">
+                                        <TextBox x:Name="TxtScriptArguments" TextChanged="TxtScriptArguments_TextChanged"/>
+                                        <TextBlock x:Name="TxtScriptArgumentsPlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="{StaticResource PlaceholderForegroundBrush}" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_ScriptArgumentsPlaceholder}"/>
+                                    </Grid>
+                                    <StackPanel>
+                                        <StackPanel.Resources>
+                                            <Style TargetType="CheckBox" BasedOn="{StaticResource DenseCheckBoxStyle}"/>
+                                        </StackPanel.Resources>
+                                        <CheckBox x:Name="ChkSkipScriptConfirmation" Content="{local:Loc ResourceKey=SettingsWindow_SkipScriptConfirmation}" Margin="0,0,0,4"/>
+                                        <CheckBox x:Name="ChkScriptHideWindow" Content="{local:Loc ResourceKey=SettingsWindow_ScriptHideWindow}" Margin="0,0,0,4"/>
+                                        <CheckBox x:Name="ChkScriptRunAsAdmin" Content="{local:Loc ResourceKey=SettingsWindow_ScriptRunAsAdmin}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
 
                         <!-- Hotkey Settings -->

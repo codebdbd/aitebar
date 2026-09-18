@@ -321,8 +321,6 @@ namespace AiteBar
                 PromptBuilderAnimationStyle = original.PromptBuilderAnimationStyle,
                 PromptBuilderPhotoSection = original.PromptBuilderPhotoSection,
                 PromptBuilderPhotoStyle = original.PromptBuilderPhotoStyle,
-                PromptBuilderThemeSection = original.PromptBuilderThemeSection,
-                PromptBuilderThemeStyle = original.PromptBuilderThemeStyle,
                 PromptBuilderTextType = original.PromptBuilderTextType,
                 PromptBuilderTextTone = original.PromptBuilderTextTone,
                 PromptBuilderAnalysisDirection = original.PromptBuilderAnalysisDirection,
@@ -333,6 +331,7 @@ namespace AiteBar
                 PromptBuilderIconStyle = original.PromptBuilderIconStyle,
                 PromptBuilderGraphicType = original.PromptBuilderGraphicType,
                 PromptBuilderGraphicStyle = original.PromptBuilderGraphicStyle,
+                PromptBuilderArtNudeStyle = original.PromptBuilderArtNudeStyle,
                 PromptBuilderSelectedConnectionId = original.PromptBuilderSelectedConnectionId,
                 PromptBuilderSelectedModelId = original.PromptBuilderSelectedModelId,
                 PromptBuilderSelectedProviderId = original.PromptBuilderSelectedProviderId,
@@ -1187,7 +1186,11 @@ namespace AiteBar
             Shift = s.Shift,
             Win = s.Win,
             Key = s.Key,
-            ContextId = s.ContextId
+            ContextId = s.ContextId,
+            ScriptArguments = s.ScriptArguments,
+            SkipScriptConfirmation = s.SkipScriptConfirmation,
+            HideScriptWindow = s.HideScriptWindow,
+            RunAsAdmin = s.RunAsAdmin
         };
 
         public void SetUtilityVisibility(string utilityId, bool visible)

@@ -5,7 +5,7 @@ namespace AiteBar;
 internal static class ActionTargetHelper
 {
     private static readonly string[] ProgramExtensions = [".exe", ".lnk", ".appref-ms"];
-    private static readonly string[] ScriptExtensions = [".bat", ".cmd", ".ps1", ".py"];
+    private static readonly string[] ScriptExtensions = [".bat", ".cmd", ".ps1", ".py", ".pyw"];
 
     public static bool IsProgramPath(string path)
     {

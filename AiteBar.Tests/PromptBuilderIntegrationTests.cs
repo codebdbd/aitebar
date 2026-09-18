@@ -14,7 +14,7 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("x:Name=\"ModeImages\"", xaml);
         Assert.Contains("x:Name=\"ModePaintings\"", xaml);
         Assert.Contains("x:Name=\"ModeAnimation\"", xaml);
-        Assert.Contains("x:Name=\"ModeIdeas\"", xaml);
+        Assert.DoesNotContain("x:Name=\"ModeIdeas\"", xaml);
         Assert.Contains("x:Name=\"ModeGraphics\"", xaml);
         Assert.Contains("x:Name=\"VideoDirectionHost\"", xaml);
         Assert.Contains("x:Name=\"CmbVideoDirection\"", xaml);
@@ -29,19 +29,13 @@ public sealed class PromptBuilderIntegrationTests
         Assert.Contains("x:Name=\"CmbAnimationSection\"", xaml);
         Assert.Contains("AnimationSection_Label", xaml);
         Assert.Contains("x:Name=\"CmbPaintingSection\"", xaml);
-        Assert.Contains("x:Name=\"CmbThemeSection\"", xaml);
-        Assert.Contains("ThemeSection_Label", xaml);
+        Assert.DoesNotContain("x:Name=\"CmbThemeSection\"", xaml);
+        Assert.DoesNotContain("ThemeSection_Label", xaml);
         Assert.Contains("PaintingSection_Artists", Read("AiteBar", "Resources", "Strings.ru.resx"));
         Assert.Contains("PaintingSection_Classical", Read("AiteBar", "Resources", "Strings.resx"));
         Assert.Contains("PaintingSection_Modern", Read("AiteBar", "Resources", "Strings.ru.resx"));
         Assert.Contains("PaintingSection_Eastern", Read("AiteBar", "Resources", "Strings.uk.resx"));
         Assert.Contains("PaintingArtist_JMWTurner", Read("AiteBar", "Resources", "Strings.de.resx"));
-        Assert.Contains("ThemeStyle_JapaneseHorror", Read("AiteBar", "Resources", "Strings.ru.resx"));
-        Assert.Contains("ThemeSection_SciFi", Read("AiteBar", "Resources", "Strings.resx"));
-        Assert.Contains("ThemeSection_War", Read("AiteBar", "Resources", "Strings.ru.resx"));
-        Assert.Contains("ThemeSection_Sports", Read("AiteBar", "Resources", "Strings.uk.resx"));
-        Assert.DoesNotContain("new(ThemeSection.Professions", Read("AiteBar", "PromptBuilderService.cs"));
-        Assert.DoesNotContain("ThemeStyle_PilotCockpit", Read("AiteBar", "PromptBuilderService.cs"));
         Assert.Contains("x:Name=\"ModeVideo\"", xaml);
         Assert.Contains("x:Name=\"ModeMusic\"", xaml);
         Assert.DoesNotContain("x:Name=\"ModeAnalysis\"", xaml);
@@ -192,7 +186,7 @@ public sealed class PromptBuilderIntegrationTests
 
         Assert.Contains("OrderAutoFirst(PromptBuilderService.GetAnimationStyles(_animationSection)", code);
         Assert.Contains("OrderAutoFirst(PromptBuilderService.PaintingArtists", code);
-        Assert.Contains("OrderAutoFirst(PromptBuilderService.GetThemeStyles(_themeSection)", code);
+        Assert.Contains("OrderAutoFirst(PromptBuilderService.GetPhotoStyles(_photoSection)", code);
         Assert.DoesNotContain("CmbProgrammingProjectType", code);
         Assert.DoesNotContain("ProgrammingTaskType", code);
         Assert.Contains("PaintingStyleSection.Artists", code);
@@ -251,27 +245,6 @@ public sealed class PromptBuilderIntegrationTests
     }
 
     [Fact]
-    public void ThemesMode_PersistsAndFiltersStylesByThemeSection()
-    {
-        string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
-        string models = Read("AiteBar", "Models.cs");
-        string settings = Read("AiteBar", "AppSettingsService.cs");
-        string service = Read("AiteBar", "PromptBuilderService.cs");
-
-        Assert.Contains("private ThemeSection _themeSection = ThemeSection.All;", code);
-        Assert.Contains("private ThemeStyle _themeStyle = ThemeStyle.Auto;", code);
-        Assert.Contains("settings.PromptBuilderThemeSection = _themeSection;", code);
-        Assert.Contains("settings.PromptBuilderThemeStyle = _themeStyle;", code);
-        Assert.Contains("_themeSection = _settingsService.Settings.PromptBuilderThemeSection;", code);
-        Assert.Contains("RefreshThemeSections();", code);
-        Assert.Contains("PromptBuilderService.GetThemeStyles(_themeSection)", code);
-        Assert.Contains("public ThemeSection PromptBuilderThemeSection { get; set; } = ThemeSection.All;", models);
-        Assert.Contains("public ThemeStyle PromptBuilderThemeStyle { get; set; } = ThemeStyle.Auto;", models);
-        Assert.Contains("PromptBuilderThemeSection = original.PromptBuilderThemeSection", settings);
-        Assert.Contains("public enum ThemeSection", service);
-    }
-
-    [Fact]
     public void LegacyModes_AreNotPresentInThePromptBuilderWindow()
     {
         string code = Read("AiteBar", "PromptBuilderWindow.xaml.cs");
@@ -283,6 +256,8 @@ public sealed class PromptBuilderIntegrationTests
         Assert.DoesNotContain("ProgrammingTaskHost", xaml);
         Assert.DoesNotContain("TextOptionsHost", xaml);
         Assert.DoesNotContain("AnalysisDirectionHost", xaml);
+        Assert.DoesNotContain("x:Name=\"ModeIdeas\"", xaml);
+        Assert.DoesNotContain("x:Name=\"CmbThemeSection\"", xaml);
     }
 
     [Fact]

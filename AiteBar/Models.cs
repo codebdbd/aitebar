@@ -158,6 +158,11 @@ public class CustomElement
     public string Key { get; set; } = "None";
     public string ImagePath { get; set; } = "";
     public string ContextId { get; set; } = "context-0";
+
+    public string ScriptArguments { get; set; } = "";
+    public bool SkipScriptConfirmation { get; set; } = false;
+    public bool HideScriptWindow { get; set; } = false;
+    public bool RunAsAdmin { get; set; } = false;
 }
 
 public enum DockEdge { Top, Bottom, Left, Right }
@@ -256,8 +261,6 @@ public class AppSettings
     public AnimationStyleSection PromptBuilderAnimationSection { get; set; } = AnimationStyleSection.All;
     public PhotoSection PromptBuilderPhotoSection { get; set; } = PhotoSection.All;
     public PhotoStyle PromptBuilderPhotoStyle { get; set; } = PhotoStyle.Auto;
-    public ThemeSection PromptBuilderThemeSection { get; set; } = ThemeSection.All;
-    public ThemeStyle PromptBuilderThemeStyle { get; set; } = ThemeStyle.Auto;
     public TextPromptType PromptBuilderTextType { get; set; } = TextPromptType.Auto;
     public TextPromptTone PromptBuilderTextTone { get; set; } = TextPromptTone.Neutral;
     public AnalysisDirection PromptBuilderAnalysisDirection { get; set; } = AnalysisDirection.Auto;
@@ -268,6 +271,7 @@ public class AppSettings
     public IconStyle PromptBuilderIconStyle { get; set; } = IconStyle.Auto;
     public GraphicType PromptBuilderGraphicType { get; set; } = GraphicType.Auto;
     public GraphicStyle PromptBuilderGraphicStyle { get; set; } = GraphicStyle.Auto;
+    public ArtNudeStyle PromptBuilderArtNudeStyle { get; set; } = ArtNudeStyle.Auto;
     public string? PromptBuilderSelectedConnectionId { get; set; }
     public string? PromptBuilderSelectedModelId { get; set; }
     public string? PromptBuilderSelectedProviderId { get; set; }

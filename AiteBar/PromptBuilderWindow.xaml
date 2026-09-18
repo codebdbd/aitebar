@@ -142,10 +142,10 @@
                              Header="{local:Loc ResourceKey=PromptBuilder_ModeAnimation}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
                              AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeAnimation}"/>
-                    <TabItem x:Name="ModeIdeas" Tag="Ideas"
-                             Header="{local:Loc ResourceKey=PromptBuilder_ModeIdeas}"
+                    <TabItem x:Name="ModeArtNude" Tag="ArtNude"
+                             Header="{local:Loc ResourceKey=PromptBuilder_ModeArtNude}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeIdeas}"/>
+                             AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_ModeArtNude}"/>
                     <TabItem x:Name="ModeGraphics" Tag="Graphics"
                              Header="{local:Loc ResourceKey=PromptBuilder_ModeGraphics}"
                              Style="{StaticResource PromptBuilderTabItemStyle}"
@@ -197,6 +197,17 @@
                 </Grid>
             </Border>
 
+            <Border x:Name="ArtNudeOptionsHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="0"
+                    Background="Transparent" BorderBrush="Transparent"
+                    BorderThickness="0" CornerRadius="0" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="12"/><ColumnDefinition Width="300"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <TextBlock Text="{local:Loc ResourceKey=ArtNudeStyle_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
+                    <ComboBox x:Name="CmbArtNudeStyle" Grid.Column="2" Height="34" SelectionChanged="CmbArtNudeStyle_SelectionChanged"
+                              AutomationProperties.Name="{local:Loc ResourceKey=ArtNudeStyle_Label}"/>
+                </Grid>
+            </Border>
+
             <Border x:Name="VisualOptionsHost" DockPanel.Dock="Top" Margin="0,0,0,12" Padding="0"
                     Background="Transparent" BorderBrush="Transparent"
                     BorderThickness="0" CornerRadius="0" Visibility="Collapsed">
@@ -210,8 +221,6 @@
                     <ComboBox x:Name="CmbAnimationSection" Grid.Column="6" Height="34" SelectionChanged="CmbAnimationSection_SelectionChanged" Visibility="Collapsed" AutomationProperties.Name="{local:Loc ResourceKey=AnimationSection_Label}"/>
                     <TextBlock x:Name="TxtPaintingSectionLabel" Grid.Column="4" Text="{local:Loc ResourceKey=PaintingSection_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center" Visibility="Collapsed"/>
                     <ComboBox x:Name="CmbPaintingSection" Grid.Column="6" Height="34" SelectionChanged="CmbPaintingSection_SelectionChanged" Visibility="Collapsed" AutomationProperties.Name="{local:Loc ResourceKey=PaintingSection_Label}"/>
-                    <TextBlock x:Name="TxtThemeSectionLabel" Grid.Column="4" Text="{local:Loc ResourceKey=ThemeSection_Label}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center" Visibility="Collapsed"/>
-                    <ComboBox x:Name="CmbThemeSection" Grid.Column="6" Height="34" SelectionChanged="CmbThemeSection_SelectionChanged" Visibility="Collapsed" AutomationProperties.Name="{local:Loc ResourceKey=ThemeSection_Label}"/>
                     <TextBlock x:Name="TxtVisualStyleLabel" Grid.Column="8" Text="{local:Loc ResourceKey=PromptBuilder_StyleLabel}" FontSize="13" Foreground="{DynamicResource MutedText}" VerticalAlignment="Center"/>
                     <ComboBox x:Name="CmbVisualStyle" Grid.Column="10" Height="34" SelectionChanged="CmbVisualStyle_SelectionChanged" AutomationProperties.Name="{local:Loc ResourceKey=PromptBuilder_StyleLabel}"/>
                 </Grid>

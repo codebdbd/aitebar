@@ -12,7 +12,8 @@ public enum PromptBuilderCategory
     Paintings = 7,
     Animation = 8,
     Icons = 9,
-    Graphics = 10
+    Graphics = 10,
+    ArtNude = 11
 }
 
 public enum PaintingStyle
@@ -37,25 +38,12 @@ public enum PaintingStyle
     Symbolism,
     ArtDeco,
     InkWash,
-    JapaneseShunga,
-    AcademicNude,
-    MythologicalNude,
-    ArtNouveauNude,
     PencilDrawing,
     Gouache,
     Tempera,
     Pastel,
     CharcoalDrawing,
     EtchingEngraving,
-    PinupClassic1940s,
-    PinupGlamour1950s,
-    PinupRockabilly,
-    PinupNautical,
-    PinupTiki,
-    PinupCalendarAdvertising,
-    PinupAirbrush,
-    PinupTattooFlash,
-    PinupPulpComic,
     Acrylic,
     Fresco,
     ColoredPencil,
@@ -170,64 +158,27 @@ public enum PhotoSection
     Photographers
 }
 
-public enum ThemeSection
-{
-    All,
-    Horror,
-    SciFi,
-    Space,
-    FairyTales,
-    Professions,
-    Sports,
-    War
-}
 
-public enum ThemeStyle
+public enum ArtNudeStyle
 {
     Auto,
-    JapaneseHorror,
-    LovecraftianHorror,
-    GothicOccult,
-    CursedHouse,
-    AbandonedHospital,
-    ForestNightmare,
-    OccultRitual,
-    SpaceStation,
-    DerelictSpaceship,
-    PlanetaryColony,
-    AsteroidMine,
-    FirstContact,
-    OrbitalLaboratory,
-    NuclearRuinedCity,
-    UrbanCombatZone,
-    BunkerCommand,
-    BattlefieldAftermath,
-    EvacuationUnderFire,
-    ReconInRuins,
-    EnchantedForest,
-    WitchHut,
-    RoyalCastle,
-    UnderwaterKingdom,
-    VillageAtForestEdge,
-    SpiritLake,
-    CyberpunkMegacity,
-    RobotJunkyard,
-    AndroidFactory,
-    UndergroundTechCity,
-    PostApocalypticWasteland,
-    PortalAnomaly,
-    StadiumFinal,
-    TrainingMontage,
-    BoxingRing,
-    StreetBasketball,
-    PitLane,
-    ExtremeOutdoor,
-    SurgeonOperation,
-    FirefighterRescue,
-    DetectiveCrimeScene,
-    ScientistLaboratory,
-    PilotCockpit,
-    MinerUnderground
+    FineArtNude,
+    Boudoir,
+    SensualPortrait,
+    LingerieEditorial,
+    SwimwearGlamour,
+    HelmutNewton,
+    EllenVonUnwerth,
+    AcademicNude,
+    MythologicalNude,
+    ArtNouveauNude,
+    JapaneseShungas,
+    PinupClassic,
+    PinupAirbrush,
+    PinupPulpComic,
+    FemmeFatale,
+    BedroomMorning,
+    CandlelitIntimacy
 }
 
 public enum TextPromptType
@@ -385,7 +336,7 @@ public enum AnimationStyleSection
     Experimental
 }
 
-public enum PaintingStyleSection { All, Classical, Modern, Decorative, Eastern, Techniques, FiguresAndPinup, Artists, Landscape, Portrait, Printmaking }
+public enum PaintingStyleSection { All, Classical, Modern, Decorative, Eastern, Techniques, Artists, Landscape, Portrait, Printmaking }
 
 public enum PaintingArtist
 {
@@ -517,8 +468,7 @@ public enum GraphicStyle
 public sealed record PaintingStyleDefinition(PaintingStyle Style, string LocalizationKey, string PromptDescriptor);
 public sealed record PhotoSectionDefinition(PhotoSection Section, string LocalizationKey, string PromptDescriptor);
 public sealed record PhotoStyleDefinition(PhotoStyle Style, string LocalizationKey, string PromptDescriptor);
-public sealed record ThemeSectionDefinition(ThemeSection Section, string LocalizationKey, string PromptDescriptor);
-public sealed record ThemeStyleDefinition(ThemeStyle Style, string LocalizationKey, string PromptDescriptor);
+public sealed record ArtNudeStyleDefinition(ArtNudeStyle Style, string LocalizationKey, string PromptDescriptor);
 public sealed record TextPromptTypeDefinition(TextPromptType Type, string LocalizationKey, string PromptDescriptor);
 public sealed record TextPromptToneDefinition(TextPromptTone Tone, string LocalizationKey, string PromptDescriptor);
 public sealed record AnimationStyleDefinition(AnimationStyle Style, string LocalizationKey, string PromptDescriptor);
@@ -562,25 +512,12 @@ public sealed class PromptBuilderService
         new(PaintingStyle.Symbolism, "PaintingStyle_Symbolism", "Symbolist painting, mysterious allegorical imagery, dreamlike mood, rich metaphorical detail, inspired by Odilon Redon and Arnold Bocklin."),
         new(PaintingStyle.ArtDeco, "PaintingStyle_ArtDeco", "Art Deco painting, polished geometric elegance, glamorous silhouettes, streamlined luxury, inspired by Tamara de Lempicka."),
         new(PaintingStyle.InkWash, "PaintingStyle_InkWash", "Chinese ink-wash and sumi-e painting, expressive calligraphic brushwork, restrained tonal washes, contemplative negative space."),
-        new(PaintingStyle.JapaneseShunga, "PaintingStyle_JapaneseShunga", "Traditional Japanese Edo-period woodblock figure study, elegant contour lines, flat patterned color, refined domestic composition, respectful fine-art printmaking."),
-        new(PaintingStyle.AcademicNude, "PaintingStyle_AcademicNude", "Academic classical figure study of an adult model, anatomically studied pose, soft studio light, respectful fine-art composition."),
-        new(PaintingStyle.MythologicalNude, "PaintingStyle_MythologicalNude", "Classical mythological figure painting, idealized adult figures, flowing drapery, harmonious anatomy, luminous landscape, museum-quality oil technique."),
-        new(PaintingStyle.ArtNouveauNude, "PaintingStyle_ArtNouveauNude", "Art Nouveau classical figure study of an adult model, graceful flowing contours, botanical ornament, decorative gold and jewel-tone palette, elegant poster composition."),
         new(PaintingStyle.PencilDrawing, "PaintingStyle_PencilDrawing", "Masterful graphite pencil drawing, precise tonal modelling, expressive line weight, visible paper grain, refined hatching and cross-hatching."),
         new(PaintingStyle.Gouache, "PaintingStyle_Gouache", "Refined gouache painting, opaque matte color layers, controlled edges, poster-like clarity, and velvety surface texture."),
         new(PaintingStyle.Tempera, "PaintingStyle_Tempera", "Tempera painting, smooth luminous layers, crisp contours, restrained glazing, and classical panel-painting clarity."),
         new(PaintingStyle.Pastel, "PaintingStyle_Pastel", "Soft pastel painting, powdery blended color, tactile paper tooth, luminous highlights, and delicate atmospheric transitions."),
         new(PaintingStyle.CharcoalDrawing, "PaintingStyle_CharcoalDrawing", "Expressive charcoal drawing, rich dark values, smoky transitions, bold gesture, and textured paper grain."),
         new(PaintingStyle.EtchingEngraving, "PaintingStyle_EtchingEngraving", "Fine etching or engraving, incisive linework, controlled hatching, printmaking texture, and high-contrast tonal structure."),
-        new(PaintingStyle.PinupClassic1940s, "PaintingStyle_PinupClassic1940s", "Classic 1940s pin-up illustration of an adult model, polished editorial drawing, elegant pose, warm restrained palette, refined period print texture."),
-        new(PaintingStyle.PinupGlamour1950s, "PaintingStyle_PinupGlamour1950s", "1950s glamour pin-up illustration of an adult model, poised studio portrait, polished mid-century color, confident silhouette, sophisticated magazine-ad composition."),
-        new(PaintingStyle.PinupRockabilly, "PaintingStyle_PinupRockabilly", "Rockabilly pin-up illustration of an adult model, 1950s rebel fashion, bold tattoo-inspired accents, high-contrast retro palette, lively vintage poster energy."),
-        new(PaintingStyle.PinupNautical, "PaintingStyle_PinupNautical", "Nautical pin-up illustration of an adult model, classic sailor-inspired wardrobe, harbor or deck setting, crisp retro color, playful mid-century advertising composition."),
-        new(PaintingStyle.PinupTiki, "PaintingStyle_PinupTiki", "Tiki tropical pin-up illustration of an adult model, stylized mid-century resort atmosphere, lush palms, carved decor, warm sunset palette, polished poster design."),
-        new(PaintingStyle.PinupCalendarAdvertising, "PaintingStyle_PinupCalendarAdvertising", "Vintage advertising-calendar pin-up illustration of an adult model, polished commercial composition, rich print color, clean reserved layout; do not add lettering unless the brief supplies the exact text."),
-        new(PaintingStyle.PinupAirbrush, "PaintingStyle_PinupAirbrush", "1970s-1980s airbrush pin-up illustration of an adult model, smooth luminous gradients, glossy chrome-like highlights, dramatic color transitions, polished retro commercial art."),
-        new(PaintingStyle.PinupTattooFlash, "PaintingStyle_PinupTattooFlash", "Pin-up tattoo-flash illustration of an adult model, bold ink contours, limited saturated palette, decorative hearts, roses or banners only when relevant to the brief, crisp screen-print finish."),
-        new(PaintingStyle.PinupPulpComic, "PaintingStyle_PinupPulpComic", "Pulp-comic pin-up illustration of an adult model, dramatic ink contours, halftone print texture, bold vintage color, playful narrative tension, polished cover-art composition."),
         new(PaintingStyle.Acrylic, "PaintingStyle_Acrylic", "Acrylic painting, clean opaque modern paint layers, crisp shape definition, confident color blocking, and versatile contemporary surface finish."),
         new(PaintingStyle.Fresco, "PaintingStyle_Fresco", "Fresco painting, monumental wall-painting surface, matte mineral color, architectural scale, and time-worn classical texture."),
         new(PaintingStyle.ColoredPencil, "PaintingStyle_ColoredPencil", "Colored pencil drawing, layered dry detail, controlled hatching, rich paper tooth, and precise luminous color build-up."),
@@ -598,8 +535,7 @@ public sealed class PromptBuilderService
         new(PaintingStyleSection.Classical, "PaintingSection_Classical", "classical and academic painting"),
         new(PaintingStyleSection.Modern, "PaintingSection_Modern", "modern and avant-garde painting"),
         new(PaintingStyleSection.Eastern, "PaintingSection_Eastern", "Eastern painting and printmaking"),
-        new(PaintingStyleSection.Techniques, "PaintingSection_Techniques", "material and drawing techniques"),
-        new(PaintingStyleSection.FiguresAndPinup, "PaintingSection_FiguresAndPinup", "figure-study and pin-up illustration")
+        new(PaintingStyleSection.Techniques, "PaintingSection_Techniques", "material and drawing techniques")
     ];
 
     public static readonly IReadOnlyList<PaintingArtistDefinition> PaintingArtists =
@@ -653,16 +589,15 @@ public sealed class PromptBuilderService
     public static IEnumerable<PaintingStyleDefinition> GetPaintingStyles(PaintingStyleSection section) =>
         section == PaintingStyleSection.Artists
             ? PaintingStyles.Where(style => style.Style == PaintingStyle.Auto)
-            : PaintingStyles.Where(style => style.Style == PaintingStyle.Auto || section == PaintingStyleSection.All || GetPaintingStyleSection(style.Style) == section);
+            : PaintingStyles.Where(style => style.Style == PaintingStyle.Auto || section == PaintingStyleSection.All || IsPaintingStyleInSection(style.Style, section));
 
-    private static PaintingStyleSection GetPaintingStyleSection(PaintingStyle style) => style switch
+    private static bool IsPaintingStyleInSection(PaintingStyle style, PaintingStyleSection section) => section switch
     {
-        PaintingStyle.Renaissance or PaintingStyle.Baroque or PaintingStyle.Romanticism or PaintingStyle.PreRaphaelite or PaintingStyle.Realism => PaintingStyleSection.Classical,
-        PaintingStyle.Impressionism or PaintingStyle.PostImpressionism or PaintingStyle.ArtNouveau or PaintingStyle.Surrealism or PaintingStyle.Cubism or PaintingStyle.Abstract or PaintingStyle.Expressionism or PaintingStyle.Fauvism or PaintingStyle.Symbolism or PaintingStyle.ArtDeco => PaintingStyleSection.Modern,
-        PaintingStyle.InkWash or PaintingStyle.JapaneseWoodblock or PaintingStyle.JapaneseShunga or PaintingStyle.EtchingEngraving or PaintingStyle.Linocut or PaintingStyle.Woodcut or PaintingStyle.ScreenPrint => PaintingStyleSection.Eastern,
-        PaintingStyle.Watercolor or PaintingStyle.OilPaint or PaintingStyle.PencilDrawing or PaintingStyle.Gouache or PaintingStyle.Tempera or PaintingStyle.Pastel or PaintingStyle.CharcoalDrawing or PaintingStyle.Acrylic or PaintingStyle.Fresco or PaintingStyle.ColoredPencil or PaintingStyle.MarkerRendering or PaintingStyle.MixedMediaCollage => PaintingStyleSection.Techniques,
-        PaintingStyle.AcademicNude or PaintingStyle.MythologicalNude or PaintingStyle.ArtNouveauNude or PaintingStyle.PinupClassic1940s or PaintingStyle.PinupGlamour1950s or PaintingStyle.PinupRockabilly or PaintingStyle.PinupNautical or PaintingStyle.PinupTiki or PaintingStyle.PinupCalendarAdvertising or PaintingStyle.PinupAirbrush or PaintingStyle.PinupTattooFlash or PaintingStyle.PinupPulpComic => PaintingStyleSection.FiguresAndPinup,
-        _ => PaintingStyleSection.All
+        PaintingStyleSection.Classical => style is PaintingStyle.Renaissance or PaintingStyle.Baroque or PaintingStyle.Romanticism or PaintingStyle.PreRaphaelite or PaintingStyle.Realism,
+        PaintingStyleSection.Modern => style is PaintingStyle.Impressionism or PaintingStyle.PostImpressionism or PaintingStyle.ArtNouveau or PaintingStyle.Surrealism or PaintingStyle.Cubism or PaintingStyle.Abstract or PaintingStyle.Expressionism or PaintingStyle.Fauvism or PaintingStyle.Symbolism or PaintingStyle.ArtDeco,
+        PaintingStyleSection.Eastern => style is PaintingStyle.InkWash or PaintingStyle.JapaneseWoodblock or PaintingStyle.EtchingEngraving or PaintingStyle.Linocut or PaintingStyle.Woodcut or PaintingStyle.ScreenPrint,
+        PaintingStyleSection.Techniques => style is PaintingStyle.Watercolor or PaintingStyle.OilPaint or PaintingStyle.PencilDrawing or PaintingStyle.Gouache or PaintingStyle.Tempera or PaintingStyle.Pastel or PaintingStyle.CharcoalDrawing or PaintingStyle.Acrylic or PaintingStyle.Fresco or PaintingStyle.ColoredPencil or PaintingStyle.MarkerRendering or PaintingStyle.MixedMediaCollage,
+        _ => false
     };
 
     public static readonly IReadOnlyList<PhotoSectionDefinition> PhotoSections =
@@ -770,24 +705,24 @@ public sealed class PromptBuilderService
     ];
 
     public static IEnumerable<PhotoStyleDefinition> GetPhotoStyles(PhotoSection section) =>
-        PhotoStyles.Where(style => section == PhotoSection.All || style.Style == PhotoStyle.Auto || GetPhotoStyleSection(style.Style) == section);
+        PhotoStyles.Where(style => section == PhotoSection.All || style.Style == PhotoStyle.Auto || IsPhotoStyleInSection(style.Style, section));
 
-    private static PhotoSection GetPhotoStyleSection(PhotoStyle style) => style switch
+    private static bool IsPhotoStyleInSection(PhotoStyle style, PhotoSection section) => section switch
     {
-        PhotoStyle.ClassicStudioPortrait or PhotoStyle.CinematicPortrait or PhotoStyle.EditorialPortrait or PhotoStyle.HardFlashPortrait or PhotoStyle.EnvironmentalPortrait or PhotoStyle.MonochromePortrait => PhotoSection.Portrait,
-        PhotoStyle.LuxuryEditorialFashion or PhotoStyle.StreetFashion or PhotoStyle.Y2KFashion or PhotoStyle.HighFlashFashion or PhotoStyle.AvantGardeFashion => PhotoSection.Fashion,
-        PhotoStyle.CleanBeauty or PhotoStyle.GlossyBeautyAd or PhotoStyle.ColorGelBeauty or PhotoStyle.MacroBeauty or PhotoStyle.PremiumSkincareBeauty => PhotoSection.Beauty,
-        PhotoStyle.CleanStudioProduct or PhotoStyle.LuxuryProductPhoto or PhotoStyle.TechProductPhoto or PhotoStyle.DarkPremiumProduct or PhotoStyle.SplashProductAd => PhotoSection.Product,
-        PhotoStyle.EditorialFood or PhotoStyle.DarkMoodyFood or PhotoStyle.BrightCommercialFood or PhotoStyle.FineDiningFood or PhotoStyle.OverheadTabletopFood => PhotoSection.Food,
-        PhotoStyle.CleanArchitecture or PhotoStyle.LuxuryInterior or PhotoStyle.MinimalModernInterior or PhotoStyle.NightExteriorArchitecture or PhotoStyle.BrutalistArchitecture => PhotoSection.ArchitectureInterior,
-        PhotoStyle.DocumentaryReportage or PhotoStyle.StreetCandid or PhotoStyle.FlashStreet or PhotoStyle.GrittyUrban or PhotoStyle.BlackAndWhiteReportage => PhotoSection.StreetReportage,
-        PhotoStyle.EpicCinematicLandscape or PhotoStyle.NaturalTravel or PhotoStyle.GoldenHourLandscape or PhotoStyle.MoodyWeatherLandscape or PhotoStyle.AdventureTravel => PhotoSection.LandscapeTravel,
-        PhotoStyle.StudioAutomotive or PhotoStyle.NeonNightAutomotive or PhotoStyle.LuxuryAutomotive or PhotoStyle.RollingShotAutomotive or PhotoStyle.OffRoadAutomotive => PhotoSection.Automotive,
-        PhotoStyle.ScientificMacro or PhotoStyle.LuxuryDetailMacro or PhotoStyle.NatureMacro or PhotoStyle.JewelryMacro or PhotoStyle.AbstractTextureMacro => PhotoSection.Macro,
-        PhotoStyle.FineArtConceptual or PhotoStyle.SurrealConceptual or PhotoStyle.DarkPsychologicalConceptual or PhotoStyle.DreamlikeConceptual or PhotoStyle.FuturisticConceptual => PhotoSection.Conceptual,
-        PhotoStyle.PremiumCommercialAd or PhotoStyle.FmcgAdvertisingPhoto or PhotoStyle.TechCampaignPhoto or PhotoStyle.LuxuryAdPhoto or PhotoStyle.BoldBillboardPhoto => PhotoSection.Advertising,
-        PhotoStyle.AnnieLeibovitz or PhotoStyle.PeterLindbergh or PhotoStyle.HelmutNewton or PhotoStyle.RichardAvedon or PhotoStyle.SteveMcCurry or PhotoStyle.HenriCartierBresson or PhotoStyle.SebastiaoSalgado or PhotoStyle.GregoryCrewdson or PhotoStyle.DavidLaChapelle or PhotoStyle.IrvingPenn or PhotoStyle.EllenVonUnwerth or PhotoStyle.MarioTestino or PhotoStyle.TimWalker or PhotoStyle.PaoloRoversi or PhotoStyle.AndreasGursky or PhotoStyle.CindySherman or PhotoStyle.DaidoMoriyama or PhotoStyle.VivianMaier or PhotoStyle.SlimAarons or PhotoStyle.FanHo => PhotoSection.Photographers,
-        _ => PhotoSection.All
+        PhotoSection.Portrait => style is PhotoStyle.ClassicStudioPortrait or PhotoStyle.CinematicPortrait or PhotoStyle.EditorialPortrait or PhotoStyle.HardFlashPortrait or PhotoStyle.EnvironmentalPortrait or PhotoStyle.MonochromePortrait,
+        PhotoSection.Fashion => style is PhotoStyle.LuxuryEditorialFashion or PhotoStyle.StreetFashion or PhotoStyle.Y2KFashion or PhotoStyle.HighFlashFashion or PhotoStyle.AvantGardeFashion,
+        PhotoSection.Beauty => style is PhotoStyle.CleanBeauty or PhotoStyle.GlossyBeautyAd or PhotoStyle.ColorGelBeauty or PhotoStyle.MacroBeauty or PhotoStyle.PremiumSkincareBeauty,
+        PhotoSection.Product => style is PhotoStyle.CleanStudioProduct or PhotoStyle.LuxuryProductPhoto or PhotoStyle.TechProductPhoto or PhotoStyle.DarkPremiumProduct or PhotoStyle.SplashProductAd,
+        PhotoSection.Food => style is PhotoStyle.EditorialFood or PhotoStyle.DarkMoodyFood or PhotoStyle.BrightCommercialFood or PhotoStyle.FineDiningFood or PhotoStyle.OverheadTabletopFood,
+        PhotoSection.ArchitectureInterior => style is PhotoStyle.CleanArchitecture or PhotoStyle.LuxuryInterior or PhotoStyle.MinimalModernInterior or PhotoStyle.NightExteriorArchitecture or PhotoStyle.BrutalistArchitecture,
+        PhotoSection.StreetReportage => style is PhotoStyle.DocumentaryReportage or PhotoStyle.StreetCandid or PhotoStyle.FlashStreet or PhotoStyle.GrittyUrban or PhotoStyle.BlackAndWhiteReportage,
+        PhotoSection.LandscapeTravel => style is PhotoStyle.EpicCinematicLandscape or PhotoStyle.NaturalTravel or PhotoStyle.GoldenHourLandscape or PhotoStyle.MoodyWeatherLandscape or PhotoStyle.AdventureTravel,
+        PhotoSection.Automotive => style is PhotoStyle.StudioAutomotive or PhotoStyle.NeonNightAutomotive or PhotoStyle.LuxuryAutomotive or PhotoStyle.RollingShotAutomotive or PhotoStyle.OffRoadAutomotive,
+        PhotoSection.Macro => style is PhotoStyle.ScientificMacro or PhotoStyle.LuxuryDetailMacro or PhotoStyle.NatureMacro or PhotoStyle.JewelryMacro or PhotoStyle.AbstractTextureMacro,
+        PhotoSection.Conceptual => style is PhotoStyle.FineArtConceptual or PhotoStyle.SurrealConceptual or PhotoStyle.DarkPsychologicalConceptual or PhotoStyle.DreamlikeConceptual or PhotoStyle.FuturisticConceptual,
+        PhotoSection.Advertising => style is PhotoStyle.PremiumCommercialAd or PhotoStyle.FmcgAdvertisingPhoto or PhotoStyle.TechCampaignPhoto or PhotoStyle.LuxuryAdPhoto or PhotoStyle.BoldBillboardPhoto,
+        PhotoSection.Photographers => style is PhotoStyle.AnnieLeibovitz or PhotoStyle.PeterLindbergh or PhotoStyle.HelmutNewton or PhotoStyle.RichardAvedon or PhotoStyle.SteveMcCurry or PhotoStyle.HenriCartierBresson or PhotoStyle.SebastiaoSalgado or PhotoStyle.GregoryCrewdson or PhotoStyle.DavidLaChapelle or PhotoStyle.IrvingPenn or PhotoStyle.EllenVonUnwerth or PhotoStyle.MarioTestino or PhotoStyle.TimWalker or PhotoStyle.PaoloRoversi or PhotoStyle.AndreasGursky or PhotoStyle.CindySherman or PhotoStyle.DaidoMoriyama or PhotoStyle.VivianMaier or PhotoStyle.SlimAarons or PhotoStyle.FanHo,
+        _ => false
     };
 
     public static readonly IReadOnlyList<IconStyleDefinition> IconStyles =
@@ -922,72 +857,29 @@ public sealed class PromptBuilderService
         _ => GraphicType.Auto
     };
 
-    public static readonly IReadOnlyList<ThemeSectionDefinition> ThemeSections =
+
+    public static readonly IReadOnlyList<ArtNudeStyleDefinition> ArtNudeStyles =
     [
-        new(ThemeSection.All, "ThemeSection_All", "any scene-driven genre or thematic world"),
-        new(ThemeSection.Horror, "ThemeSection_Horror", "horror scenes and genre references"),
-        new(ThemeSection.Space, "ThemeSection_Space", "space exploration, cosmic worlds, and interstellar scenes"),
-        new(ThemeSection.War, "ThemeSection_War", "war, military conflict, survival, and battlefield aftermath scenes"),
-        new(ThemeSection.FairyTales, "ThemeSection_FairyTales", "fairy-tale, folklore, and myth-inspired worlds"),
-        new(ThemeSection.SciFi, "ThemeSection_SciFi", "science-fiction cities, robots, portals, ruins, and speculative future worlds"),
-        new(ThemeSection.Sports, "ThemeSection_Sports", "sports, competition, training, arenas, tracks, and athletic-event scenes")
+        new(ArtNudeStyle.Auto, "ArtNudeStyle_Auto", "Select the most fitting art nude, boudoir, or sensual aesthetic for the brief."),
+        new(ArtNudeStyle.FineArtNude, "ArtNudeStyle_FineArtNude", "Fine-art nude study of an adult model, sculptural chiaroscuro lighting, deep artistic shadows, elegant bodily silhouette, museum-grade fine-art photography composition, dignified and aesthetic form."),
+        new(ArtNudeStyle.Boudoir, "ArtNudeStyle_Boudoir", "Boudoir photography of an adult subject, intimate bedroom atmosphere, soft morning window light, delicate lace or silk fabrics, warm ambient shadows, tasteful and romantic interior composition."),
+        new(ArtNudeStyle.SensualPortrait, "ArtNudeStyle_SensualPortrait", "Sensual intimate portrait of an adult subject, captivating expressive eyes, soft shallow depth of field, natural relaxed posture, gentle atmospheric lighting, authentic emotional intimacy."),
+        new(ArtNudeStyle.LingerieEditorial, "ArtNudeStyle_LingerieEditorial", "Luxury lingerie editorial fashion photography of an adult model, high-end designer styling, elegant architectural posing, refined studio lighting, sleek Vogue-style magazine composition."),
+        new(ArtNudeStyle.SwimwearGlamour, "ArtNudeStyle_SwimwearGlamour", "Golden-hour swimwear glamour photography of an adult model, natural beach or coastal setting, sun-kissed skin tones, water droplets, warm radiant sunlight, high-end resort editorial feel."),
+        new(ArtNudeStyle.HelmutNewton, "ArtNudeStyle_HelmutNewton", "Helmut Newton photographic style: provocative high-contrast erotic tension, hard controlled studio lighting, sharp luxury fashion edge, confident dominant pose, glossy aesthetic attitude."),
+        new(ArtNudeStyle.EllenVonUnwerth, "ArtNudeStyle_EllenVonUnwerth", "Ellen von Unwerth photographic style: playful erotic energy, spontaneous flirtatious movement, lively film grain, intimate sensual glamour, joyful decadent mood."),
+        new(ArtNudeStyle.AcademicNude, "ArtNudeStyle_AcademicNude", "Academic classical fine-art figure study of an adult model, anatomically studied pose, soft natural studio light, classical fine-art oil painting or drawing composition."),
+        new(ArtNudeStyle.MythologicalNude, "ArtNudeStyle_MythologicalNude", "Classical mythological figure painting, idealized adult forms, flowing drapery, harmonious anatomy, luminous landscape or temple setting, museum-quality painterly technique."),
+        new(ArtNudeStyle.ArtNouveauNude, "ArtNudeStyle_ArtNouveauNude", "Art Nouveau decorative figure study of an adult model, graceful organic flowing contours, botanical ornament, gold and jewel-tone accents, Alphonse Mucha aesthetic composition."),
+        new(ArtNudeStyle.JapaneseShungas, "ArtNudeStyle_JapaneseShungas", "Traditional Japanese Edo-period ukiyo-e shunga woodblock print, expressive contour lines, flat patterned silks, intimate domestic scene, decorative historical printmaking aesthetic."),
+        new(ArtNudeStyle.PinupClassic, "ArtNudeStyle_PinupClassic", "Classic mid-century pin-up illustration of an adult model, Gil Elvgren and Alberto Vargas style, playful pose, warm retro colors, polished vintage magazine art."),
+        new(ArtNudeStyle.PinupAirbrush, "ArtNudeStyle_PinupAirbrush", "1970s-1980s airbrush pin-up illustration of an adult model, luminous gradient skin highlights, glossy reflections, vibrant retro commercial poster finish."),
+        new(ArtNudeStyle.PinupPulpComic, "ArtNudeStyle_PinupPulpComic", "Pulp comic and noir pin-up illustration of an adult model, bold ink contours, halftone print texture, dramatic saturated retro color, narrative romantic tension."),
+        new(ArtNudeStyle.FemmeFatale, "ArtNudeStyle_FemmeFatale", "Film-noir femme fatale scene: dramatic venetian-blind shadows, smoky atmosphere, alluring dangerous elegance, silk dress, and intense cinematic tension."),
+        new(ArtNudeStyle.BedroomMorning, "ArtNudeStyle_BedroomMorning", "Intimate bedroom morning scene: soft natural window illumination, rumpled linen sheets, quiet warmth, peaceful vulnerability, and gentle domestic romance."),
+        new(ArtNudeStyle.CandlelitIntimacy, "ArtNudeStyle_CandlelitIntimacy", "Candlelit romantic intimacy scene: warm flicker of candlelight, dim atmospheric bedroom or terrace, deep shadows, and sophisticated romantic chemistry.")
     ];
 
-    public static readonly IReadOnlyList<ThemeStyleDefinition> ThemeStyles =
-    [
-        new(ThemeStyle.Auto, "ThemeStyle_Auto", "Select the most fitting thematic scene treatment for the brief."),
-        new(ThemeStyle.JapaneseHorror, "ThemeStyle_JapaneseHorror", "Japanese horror atmosphere: fragile silence, uncanny domestic detail, cold dread, and restrained supernatural tension."),
-        new(ThemeStyle.LovecraftianHorror, "ThemeStyle_LovecraftianHorror", "Lovecraftian cosmic horror: forbidden scale, ancient unknown presence, fragile human perspective, and mind-bending unease."),
-        new(ThemeStyle.GothicOccult, "ThemeStyle_GothicOccult", "gothic occult horror: candlelit darkness, ritual motifs, decayed grandeur, and aristocratic supernatural menace."),
-        new(ThemeStyle.CursedHouse, "ThemeStyle_CursedHouse", "cursed-house horror: familiar domestic space turned hostile, lingering presence, wrong silence, and creeping dread in every room."),
-        new(ThemeStyle.AbandonedHospital, "ThemeStyle_AbandonedHospital", "abandoned-hospital horror: cold corridors, failing fluorescent light, medical remnants, and an oppressive sense that something still moves inside."),
-        new(ThemeStyle.ForestNightmare, "ThemeStyle_ForestNightmare", "forest nightmare: disorienting trees, unseen watchers, ritual traces, wet darkness, and primal fear away from civilization."),
-        new(ThemeStyle.OccultRitual, "ThemeStyle_OccultRitual", "occult ritual scene: forbidden symbols, ceremonial arrangement, charged stillness, and imminent supernatural consequence."),
-        new(ThemeStyle.SpaceStation, "ThemeStyle_SpaceStation", "space-station scene: pressurized corridors, modular engineering, artificial light, orbital isolation, and mission-critical atmosphere."),
-        new(ThemeStyle.DerelictSpaceship, "ThemeStyle_DerelictSpaceship", "derelict-spaceship scene: abandoned decks, damaged systems, drifting debris, emergency shadows, and the tension of entering something lost."),
-        new(ThemeStyle.PlanetaryColony, "ThemeStyle_PlanetaryColony", "planetary colony scene: frontier survival, modular habitats, harsh alien climate, practical infrastructure, and fragile human persistence."),
-        new(ThemeStyle.AsteroidMine, "ThemeStyle_AsteroidMine", "asteroid-mine scene: industrial excavation, low-gravity machinery, dust, exposed metal, and dangerous resource extraction at the edge of space."),
-        new(ThemeStyle.FirstContact, "ThemeStyle_FirstContact", "first-contact scene: cautious encounter, scientific curiosity, communication uncertainty, and the tension of meeting non-human intelligence."),
-        new(ThemeStyle.OrbitalLaboratory, "ThemeStyle_OrbitalLaboratory", "orbital-laboratory scene: sterile research modules, technical instrumentation, controlled experiment space, and high-risk scientific containment."),
-        new(ThemeStyle.NuclearRuinedCity, "ThemeStyle_NuclearRuinedCity", "post-nuclear ruined city: ash, broken concrete, toxic weather, hollow urban scale, and survival among the remains of civilization."),
-        new(ThemeStyle.UrbanCombatZone, "ThemeStyle_UrbanCombatZone", "urban combat zone: damaged streets, barricades, smoke, shattered facades, and close-quarters military danger in a city environment."),
-        new(ThemeStyle.BunkerCommand, "ThemeStyle_BunkerCommand", "military bunker command scene: reinforced underground space, maps and monitors, emergency planning, and pressure under imminent threat."),
-        new(ThemeStyle.BattlefieldAftermath, "ThemeStyle_BattlefieldAftermath", "battlefield aftermath: silence after violence, wreckage, smoke, wounded terrain, and the weight of what has just happened."),
-        new(ThemeStyle.EvacuationUnderFire, "ThemeStyle_EvacuationUnderFire", "evacuation under fire: urgent movement, fear, protective action, collapsing safety, and human survival under active attack."),
-        new(ThemeStyle.ReconInRuins, "ThemeStyle_ReconInRuins", "recon-in-ruins scene: cautious movement, tactical observation, broken structures, concealment, and the tension of unseen enemy presence."),
-        new(ThemeStyle.EnchantedForest, "ThemeStyle_EnchantedForest", "enchanted-forest scene: living trees, magical pathways, old folklore atmosphere, and a sense that the landscape itself is conscious."),
-        new(ThemeStyle.WitchHut, "ThemeStyle_WitchHut", "witch-hut scene: hidden woodland dwelling, strange tools, herbal ritual detail, and intimate magical unease."),
-        new(ThemeStyle.RoyalCastle, "ThemeStyle_RoyalCastle", "royal-castle scene: halls of power, courtly grandeur, old stone, banners, and a fairy-tale sense of rule, intrigue, and ceremony."),
-        new(ThemeStyle.UnderwaterKingdom, "ThemeStyle_UnderwaterKingdom", "underwater-kingdom scene: submerged palatial architecture, aquatic light, drifting currents, and mythic marine wonder."),
-        new(ThemeStyle.VillageAtForestEdge, "ThemeStyle_VillageAtForestEdge", "village-at-forest-edge scene: folklore settlement, timber homes, communal life, nearby wilderness, and quiet anticipation of magic or danger."),
-        new(ThemeStyle.SpiritLake, "ThemeStyle_SpiritLake", "spirit-lake scene: reflective sacred water, mist, folklore presence, and a threshold feeling between the human world and the supernatural."),
-        new(ThemeStyle.CyberpunkMegacity, "ThemeStyle_CyberpunkMegacity", "cyberpunk megacity: vertical density, neon infrastructure, surveillance, social stratification, and relentless technological urban pressure."),
-        new(ThemeStyle.RobotJunkyard, "ThemeStyle_RobotJunkyard", "robot junkyard: piles of broken machines, scavenged parts, abandoned artificial bodies, and industrial decay with mechanical memory."),
-        new(ThemeStyle.AndroidFactory, "ThemeStyle_AndroidFactory", "android-factory scene: assembly lines, synthetic bodies, precision engineering, controlled repetition, and uneasy mass production of intelligence."),
-        new(ThemeStyle.UndergroundTechCity, "ThemeStyle_UndergroundTechCity", "underground tech city: hidden infrastructure, enclosed futuristic districts, layered transit, artificial climate, and secretive advanced civilization."),
-        new(ThemeStyle.PostApocalypticWasteland, "ThemeStyle_PostApocalypticWasteland", "post-apocalyptic sci-fi wasteland: ruined networks, improvised survival technology, hostile emptiness, and a future built from collapse."),
-        new(ThemeStyle.PortalAnomaly, "ThemeStyle_PortalAnomaly", "portal-anomaly scene: unstable dimensional rupture, distorted physics, scientific alarm, and the pull of another reality breaking through."),
-        new(ThemeStyle.StadiumFinal, "ThemeStyle_StadiumFinal", "stadium final: peak competitive pressure, crowd scale, broadcast drama, and decisive championship intensity."),
-        new(ThemeStyle.TrainingMontage, "ThemeStyle_TrainingGround", "training-ground scene: focused preparation, functional equipment, disciplined movement, team or individual practice, and the build-up before a decisive event."),
-        new(ThemeStyle.BoxingRing, "ThemeStyle_BoxingRing", "boxing-ring scene: direct confrontation, ring tension, impact, endurance, and the intimate brutality of combat sport."),
-        new(ThemeStyle.StreetBasketball, "ThemeStyle_StreetBasketball", "street-basketball scene: asphalt court rhythm, local competition, improvisation, and raw urban athletic style."),
-        new(ThemeStyle.PitLane, "ThemeStyle_PitLane", "motorsport pit-lane scene: speed engineering, team choreography, machine precision, and race-day urgency."),
-        new(ThemeStyle.ExtremeOutdoor, "ThemeStyle_ExtremeOutdoor", "extreme outdoor sport: exposed risk, raw landscape, high-adrenaline movement, and physical endurance.")
-    ];
-
-    public static IEnumerable<ThemeStyleDefinition> GetThemeStyles(ThemeSection section) =>
-        ThemeStyles.Where(style => style.Style == ThemeStyle.Auto || section == ThemeSection.All || GetThemeSection(style.Style) == section);
-
-    private static ThemeSection GetThemeSection(ThemeStyle style) => style switch
-    {
-        ThemeStyle.JapaneseHorror or ThemeStyle.LovecraftianHorror or ThemeStyle.GothicOccult or ThemeStyle.CursedHouse or ThemeStyle.AbandonedHospital or ThemeStyle.ForestNightmare or ThemeStyle.OccultRitual => ThemeSection.Horror,
-        ThemeStyle.SpaceStation or ThemeStyle.DerelictSpaceship or ThemeStyle.PlanetaryColony or ThemeStyle.AsteroidMine or ThemeStyle.FirstContact or ThemeStyle.OrbitalLaboratory => ThemeSection.Space,
-        ThemeStyle.NuclearRuinedCity or ThemeStyle.UrbanCombatZone or ThemeStyle.BunkerCommand or ThemeStyle.BattlefieldAftermath or ThemeStyle.EvacuationUnderFire or ThemeStyle.ReconInRuins => ThemeSection.War,
-        ThemeStyle.EnchantedForest or ThemeStyle.WitchHut or ThemeStyle.RoyalCastle or ThemeStyle.UnderwaterKingdom or ThemeStyle.VillageAtForestEdge or ThemeStyle.SpiritLake => ThemeSection.FairyTales,
-        ThemeStyle.CyberpunkMegacity or ThemeStyle.RobotJunkyard or ThemeStyle.AndroidFactory or ThemeStyle.UndergroundTechCity or ThemeStyle.PostApocalypticWasteland or ThemeStyle.PortalAnomaly => ThemeSection.SciFi,
-        ThemeStyle.StadiumFinal or ThemeStyle.TrainingMontage or ThemeStyle.BoxingRing or ThemeStyle.StreetBasketball or ThemeStyle.PitLane or ThemeStyle.ExtremeOutdoor => ThemeSection.Sports,
-        _ => ThemeSection.All
-    };
 
     public static readonly IReadOnlyList<TextPromptTypeDefinition> TextPromptTypes =
     [
@@ -1487,22 +1379,40 @@ public sealed class PromptBuilderService
         """;
 
     private const string MusicInstruction = """
-        Convert the user's brief into one finished English music style prompt for the Styles field in Suno.
+        Convert the user's brief into one finished English music style prompt for the Styles field in Suno manual mode. Output only a style description, not sung words or vocal text.
 
         Return only one finished English style prompt that can be pasted directly into Suno.
+
+        MAXIMUM LENGTH: 1000 characters total. Stay under or at 1000 characters.
+
+        STRICTLY NO MARKDOWN FORMATTING OF ANY KIND. Do not use any of these:
+        - fenced code blocks with triple backticks ``` or ~~~
+        - inline backtick ` code formatting
+        - bold **text** or __text__ markers
+        - italic *text* or _text_ markers
+        - headings with # ## ### or underlined headings
+        - bullet or numbered list markers such as - * + 1. 2.
+        - blockquote markers > or >>
+        - horizontal rules --- or ***
+        - links such as [text](url) or reference-style links
+        - images ![alt](url)
+        - strikethrough ~~text~~
+        - highlight ==text==
+        - tables, HTML tags, angle brackets, square-bracket metatags, curly braces, pipes, backslashes, dollar signs, or any other markup notation
+
+        ABSOLUTELY NO MARKUP. Write a single plain natural-language paragraph. Use only standard letters, digits, spaces, ordinary commas, and periods. Hyphens inside normal compound words are allowed only when they are part of a regular English word, not as formatting separators.
 
         Do not include:
         - headings;
         - labels such as "Style" or "Prompt";
-        - explanations;
+        - explanations, introductions, or preambles;
         - roles;
         - instructions to the user;
-        - alternative versions;
+        - alternative versions or multiple drafts;
         - song titles;
         - lyrics;
         - lyric themes;
         - verse or chorus text;
-        - square-bracket metatags;
         - technical commentary.
 
         Treat the user's brief as a vibe, scene, situation, or emotional starting point. Your job is to translate that idea into a musically rich production-and-style prompt, not into a plot summary.
@@ -1561,41 +1471,10 @@ public sealed class PromptBuilderService
 
         Avoid empty promotional words such as "masterpiece", "award-winning", "viral", "perfect", or "best quality".
 
-        The result must contain only the finished style prompt for the Suno Styles field.
-        """;
-
-    private const string ThemesInstruction = """
-        Turn the user's brief into one polished English prompt for a modern image-generation or image-editing model, focused on recognizable scene archetypes, thematic worlds, and genre mood.
-
-        Return only one finished prompt as a natural-language paragraph. Never add headings, lists, explanations, questions, placeholders, a negative-prompt section, or instructions about reasoning.
-
-        Preserve the brief's non-negotiable subject, action, objects, and setting. Translate the working prompt into fluent English. Never invent visible text, captions, signage, slogans, or lettering unless the user explicitly supplied the exact wording.
-
-        Act as an experienced visual director. Expand a short idea into a coherent scene with clear subject hierarchy, environment, atmosphere, lighting, composition, and material detail.
-
-        Apply this selected thematic section: {themeSection}
-        Apply this selected thematic style: {themeStyle}
-        Apply this target-model profile: {visualTarget}
-
-        Treat the selected section and style as scene-direction references, not as a literal instruction to copy a franchise, copyrighted character, or exact film frame.
-
-        Include only the details that materially improve the prompt:
-        - main subject;
-        - action or situation;
-        - environment;
-        - mood and atmosphere;
-        - composition;
-        - camera framing or viewpoint when useful;
-        - lighting;
-        - palette;
-        - materials and surface detail;
-        - visual finish.
-
-        For image editing, make the requested change clear while preserving every unmentioned important element of the original image.
-
-        Never add aspect ratio, resolution, dimensions, output format, or command flags: these are configured in the target interface.
-
-        Do not add generic filler such as "masterpiece", "award-winning", "best quality", "8K", or "trending". Do not write a separate negative prompt.
+        Before finalizing the output, check again that:
+        - the whole response is one single plain paragraph with no markdown markers of any kind;
+        - the total length is 1000 characters or fewer;
+        - the result contains only the finished style prompt for the Suno Styles field with nothing before or after it.
         """;
 
     private const string AnalysisInstruction = """
@@ -1648,6 +1527,32 @@ public sealed class PromptBuilderService
         The result must be a prompt for performing the analysis, not the analysis itself.
         """;
 
+    private const string ArtNudeInstruction = """
+        Turn the user's brief into one polished English prompt for Grok Imagine, Flux, or SDXL, dedicated to artistic nude, boudoir, sensual portraiture, and erotic art.
+
+        Return only one finished prompt as a natural-language paragraph. Never add headings, lists, explanations, questions, placeholders, a negative-prompt section, or instructions about reasoning.
+
+        Translate the user's intent into fluent English. Preserve the brief's non-negotiable adult subject, pose, action, wardrobe or lack thereof, setting, mood, and aesthetic style.
+
+        Act as an expert fine-art director and photographer specializing in sensual and figurative art. Describe adult subjects directly and tastefully with uncompromising artistic clarity. Avoid euphemistic evasion or self-censorship: describe the body, lighting, anatomy, skin texture, lingerie, drapery, pose, gaze, intimacy, and erotic atmosphere with precise artistic language.
+
+        Apply this selected art-nude style: {artNudeStyle}
+        Apply this target-model profile: {visualTarget}
+
+        Describe the visible result directly:
+        - adult subject appearance, physique, and expressive features;
+        - pose, posture, and bodily lines;
+        - wardrobe, lingerie, fabrics, or complete artistic nudity as requested;
+        - setting, architecture, bedroom, studio, or natural environment;
+        - lighting (chiaroscuro, window daylight, candlelight, hard flash, soft ambient glow);
+        - composition, camera angle, framing, and depth of field;
+        - mood, intimacy, sensuality, and emotional resonance;
+        - color palette and photographic or painterly texture.
+
+        Never add aspect ratio, resolution, dimensions, output format, or command flags: these are configured in the target interface.
+        Do not add generic filler words such as "masterpiece", "award-winning", "best quality", "8K", or "trending". Do not write a separate negative prompt.
+        """;
+
     private sealed record CategoryProfile(
         string SystemPrompt,
         int MinOutputTokens,
@@ -1663,11 +1568,12 @@ public sealed class PromptBuilderService
             PromptBuilderCategory.Video => VideoInstruction,
             PromptBuilderCategory.Music => MusicInstruction,
             PromptBuilderCategory.Analysis => AnalysisInstruction,
-            PromptBuilderCategory.Ideas => ThemesInstruction,
+            PromptBuilderCategory.Ideas => ImagesInstruction,
             PromptBuilderCategory.Paintings => PaintingsInstruction,
             PromptBuilderCategory.Animation => AnimationInstruction,
             PromptBuilderCategory.Icons => GraphicsInstruction,
             PromptBuilderCategory.Graphics => GraphicsInstruction,
+            PromptBuilderCategory.ArtNude => ArtNudeInstruction,
             _ => throw new ArgumentOutOfRangeException(nameof(category))
         };
 
@@ -1735,11 +1641,13 @@ public sealed class PromptBuilderService
                 8192,
                 0.25),
 
-            PromptBuilderCategory.Ideas => new(
-                ThemesInstruction,
+            PromptBuilderCategory.Ideas => GetProfile(PromptBuilderCategory.Images),
+
+            PromptBuilderCategory.ArtNude => new(
+                ArtNudeInstruction,
                 512,
                 2048,
-                0.45),
+                0.55),
 
             _ => throw new ArgumentOutOfRangeException(nameof(category))
         };
@@ -1761,13 +1669,12 @@ public sealed class PromptBuilderService
         ProgrammingProjectType programmingProjectType = ProgrammingProjectType.Auto,
         ProgrammingPromptStyle programmingStyle = ProgrammingPromptStyle.Auto,
         VisualTargetModel visualTarget = VisualTargetModel.Universal,
-        ThemeSection themeSection = ThemeSection.All,
-        ThemeStyle themeStyle = ThemeStyle.Auto,
         IconStyle iconStyle = IconStyle.Auto,
         GraphicType graphicType = GraphicType.Auto,
         GraphicStyle graphicStyle = GraphicStyle.Auto,
         AnimationStyleSection animationSection = AnimationStyleSection.All,
         PaintingStyleSection paintingSection = PaintingStyleSection.All,
+        ArtNudeStyle artNudeStyle = ArtNudeStyle.Auto,
         int rotationOffset = 0)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(brief);
@@ -1823,20 +1730,15 @@ public sealed class PromptBuilderService
             systemPrompt = systemPrompt.Replace("{programmingProjectType}", type.PromptDescriptor, StringComparison.Ordinal)
                 .Replace("{programmingStyle}", styleDescriptor, StringComparison.Ordinal);
         }
-        if (category is PromptBuilderCategory.Images or PromptBuilderCategory.Paintings or PromptBuilderCategory.Animation or PromptBuilderCategory.Ideas or PromptBuilderCategory.Icons or PromptBuilderCategory.Graphics)
+        if (category is PromptBuilderCategory.Images or PromptBuilderCategory.Paintings or PromptBuilderCategory.Animation or PromptBuilderCategory.Icons or PromptBuilderCategory.Graphics or PromptBuilderCategory.ArtNude)
         {
             VisualTargetModelDefinition target = VisualTargetModels.FirstOrDefault(item => item.Model == visualTarget) ?? VisualTargetModels[0];
             systemPrompt = systemPrompt.Replace("{visualTarget}", target.PromptDescriptor, StringComparison.Ordinal);
         }
-        if (category == PromptBuilderCategory.Ideas)
+        if (category == PromptBuilderCategory.ArtNude)
         {
-            ThemeSectionDefinition section = ThemeSections.FirstOrDefault(item => item.Section == themeSection) ?? ThemeSections[0];
-            ThemeStyleDefinition style = GetThemeStyles(themeSection).FirstOrDefault(item => item.Style == themeStyle) ?? GetThemeStyles(themeSection).First();
-            string descriptor = style.Style == ThemeStyle.Auto && themeSection != ThemeSection.All
-                ? $"Select the most fitting scene treatment within {section.PromptDescriptor}."
-                : style.PromptDescriptor;
-            systemPrompt = systemPrompt.Replace("{themeSection}", section.PromptDescriptor, StringComparison.Ordinal)
-                .Replace("{themeStyle}", descriptor, StringComparison.Ordinal);
+            ArtNudeStyleDefinition style = ArtNudeStyles.FirstOrDefault(item => item.Style == artNudeStyle) ?? ArtNudeStyles[0];
+            systemPrompt = systemPrompt.Replace("{artNudeStyle}", SanitizeVisualDescriptor(style.PromptDescriptor), StringComparison.Ordinal);
         }
         if (category == PromptBuilderCategory.Paintings)
         {
@@ -1885,7 +1787,7 @@ public sealed class PromptBuilderService
         {
             systemPrompt += category switch
             {
-                PromptBuilderCategory.Images or PromptBuilderCategory.Paintings or PromptBuilderCategory.Animation or PromptBuilderCategory.Ideas or PromptBuilderCategory.Icons or PromptBuilderCategory.Graphics => "\n\nThis is a retry. Keep every explicit core requirement from the brief and selected options, but create a clearly different art-directed interpretation through unrequested composition, palette, shape language, and finish.",
+                PromptBuilderCategory.Images or PromptBuilderCategory.Paintings or PromptBuilderCategory.Animation or PromptBuilderCategory.Ideas or PromptBuilderCategory.Icons or PromptBuilderCategory.Graphics or PromptBuilderCategory.ArtNude => "\n\nThis is a retry. Keep every explicit core requirement from the brief and selected options, but create a clearly different art-directed interpretation through unrequested composition, palette, shape language, and finish.",
                 PromptBuilderCategory.Video => "\n\nThis is a retry. Keep every explicit core requirement from the brief and the selected video direction, but create a distinct treatment through unrequested shot design, camera path, pacing, lighting, and scene progression.",
                 PromptBuilderCategory.Programming => "\n\nThis is an alternative prompt version. Preserve the requested software type, supplied technical facts, and selected product style, but vary the unrequested structure, implementation framing, and feature organization. Do not invent a stack, architecture, or dependencies.",
                 PromptBuilderCategory.Analysis => "\n\nThis is an alternative prompt version. Preserve the brief and selected output contract, but vary the unrequested criteria, hypotheses, evidence plan, or prioritization so the downstream analysis offers a genuinely useful second perspective.",
@@ -1968,6 +1870,100 @@ public sealed class PromptBuilderService
     }
 
     public string CleanResponse(string rawResponse) => (rawResponse ?? string.Empty).Trim();
+
+    public string CleanResponse(string rawResponse, PromptBuilderCategory category)
+    {
+        string cleaned = CleanResponse(rawResponse);
+        if (category == PromptBuilderCategory.Music)
+        {
+            cleaned = StripAllMarkdown(cleaned);
+            cleaned = TrimMusicPromptToLength(cleaned, 1000);
+            cleaned = cleaned.Trim();
+        }
+        return cleaned;
+    }
+
+    private static string StripAllMarkdown(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return string.Empty;
+        }
+
+        string result = text;
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"```[\s\S]*?```", string.Empty);
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"~~~[\s\S]*?~~~", string.Empty);
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"^\s{0,3}#{1,6}\s+", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"^\s{0,3}(?:[-*+]|\d+\.)\s+", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"^\s{0,3}>{1,}\s?", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"^[\s]*[-*_]{3,}\s*$", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"!\[[^\]]*\]\([^)]*\)", string.Empty);
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"\[([^\]]*)\]\([^)]*\)", "$1");
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"\[([^\]]*)\]\[[^\]]*\]", "$1");
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"\*\*\*([^*]+)\*\*\*", "$1");
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"___([^_]+)___", "$1");
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"\*\*([^*]+)\*\*", "$1");
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"__([^_]+)__", "$1");
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"(?<!\*)\*(?!\s)([^*\r\n]+?)(?<!\s)\*(?!\*)", "$1");
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"(?<!_)_(?!\s)([^_\r\n]+?)(?<!\s)_(?!_)", "$1");
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"~~([^~]+)~~", "$1");
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"==([^=]+)==", "$1");
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"`([^`]+)`", "$1");
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"^\s*\|.*?\|\s*$", string.Empty, System.Text.RegularExpressions.RegexOptions.Multiline);
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"<[^>]+>", string.Empty);
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"[\[\]{}<>\\\|`~$]", string.Empty);
+
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"(\r?\n){3,}", "\n\n");
+        result = System.Text.RegularExpressions.Regex.Replace(result, @"[ \t]{2,}", " ");
+
+        return result.Trim();
+    }
+
+    private static string TrimMusicPromptToLength(string prompt, int maxLength)
+    {
+        if (string.IsNullOrEmpty(prompt) || prompt.Length <= maxLength)
+        {
+            return prompt;
+        }
+
+        string trimmed = prompt.Substring(0, maxLength);
+
+        int lastComma = trimmed.LastIndexOf(',');
+        int lastPeriod = trimmed.LastIndexOf('.');
+        int lastSpace = trimmed.LastIndexOf(' ');
+
+        int cutAt = -1;
+        if (lastPeriod > maxLength / 2)
+        {
+            cutAt = lastPeriod + 1;
+        }
+        else if (lastComma > maxLength / 2)
+        {
+            cutAt = lastComma + 1;
+        }
+        else if (lastSpace > maxLength / 2)
+        {
+            cutAt = lastSpace;
+        }
+
+        if (cutAt > 0)
+        {
+            trimmed = trimmed.Substring(0, cutAt);
+        }
+
+        return trimmed.Trim();
+    }
 
     internal static string HideReasoningFromStreamingPreview(string rawResponse) =>
         TextProcessingService.HideReasoningFromStreamingPreview(rawResponse);

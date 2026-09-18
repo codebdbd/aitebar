@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -262,7 +263,7 @@ public sealed class ActionServiceTests
     }
 
     [Fact]
-    public void CreateScriptProcessStartInfo_PowerShellScript_PrefersPwshWithoutExecutionPolicyBypass()
+    public void CreateScriptProcessStartInfo_PowerShellScript_PrefersPwshWithExecutionPolicyBypass()
     {
         string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempRoot);
@@ -281,8 +282,7 @@ public sealed class ActionServiceTests
             string[] args = psi.ArgumentList.ToArray();
 
             Assert.Equal(pwshExe, psi.FileName);
-            Assert.Equal(["-NoProfile", "-File", scriptPath], args);
-            Assert.DoesNotContain("Bypass", args);
+            Assert.Equal(["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", scriptPath], args);
         }
         finally
         {
@@ -319,6 +319,69 @@ public sealed class ActionServiceTests
     }
 
     [Fact]
+    public void CreateScriptProcessStartInfo_PywScript_PrefersPythonw()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string pythonwExe = Path.Combine(tempRoot, "pythonw.exe");
+        string pythonExe = Path.Combine(tempRoot, "python.exe");
+        string scriptPath = Path.Combine(tempRoot, "test-script.pyw");
+        string? originalPath = Environment.GetEnvironmentVariable("PATH");
+
+        try
+        {
+            File.WriteAllText(pythonwExe, string.Empty);
+            File.WriteAllText(pythonExe, string.Empty);
+            Environment.SetEnvironmentVariable("PATH", tempRoot + ";" + originalPath);
+
+            var psi = ActionService.CreateScriptProcessStartInfo(scriptPath);
+
+            Assert.Equal(pythonwExe, psi.FileName);
+            Assert.Equal([scriptPath], psi.ArgumentList.ToArray());
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PATH", originalPath);
+            Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CreateScriptProcessStartInfo_WithArgumentsAndFlags_AppliesConfiguredOptions()
+    {
+        string scriptPath = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"), "test.cmd");
+
+        var psi = ActionService.CreateScriptProcessStartInfo(
+            scriptPath,
+            scriptArguments: "--flag \"param with spaces\" 123",
+            hideWindow: true,
+            runAsAdmin: true);
+
+        Assert.Equal("cmd.exe", psi.FileName);
+        Assert.Equal(["/c", scriptPath, "--flag", "param with spaces", "123"], psi.ArgumentList.ToArray());
+        Assert.True(psi.CreateNoWindow);
+        Assert.Equal(ProcessWindowStyle.Hidden, psi.WindowStyle);
+        Assert.True(psi.UseShellExecute);
+        Assert.Equal("runas", psi.Verb);
+    }
+
+    [Fact]
+    public void ParseArgumentTokens_SplitsQuotedAndUnquotedTokensCorrectly()
+    {
+        string input = "  -a   \"hello world\"   --name=\"John Doe\" simple ";
+        string[] tokens = ActionService.ParseArgumentTokens(input).ToArray();
+
+        Assert.Equal(["-a", "hello world", "--name=John Doe", "simple"], tokens);
+    }
+
+    [Fact]
+    public void ParseArgumentTokens_EmptyOrWhitespace_ReturnsEmpty()
+    {
+        Assert.Empty(ActionService.ParseArgumentTokens(""));
+        Assert.Empty(ActionService.ParseArgumentTokens("   \t  "));
+    }
+
+    [Fact]
     public void CreateScriptProcessStartInfo_UnsupportedExtension_Throws()
     {
         string scriptPath = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"), "test-script.js");
@@ -344,6 +407,28 @@ public sealed class ActionServiceTests
         {
             Environment.SetEnvironmentVariable("PATH", originalPath);
             Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ResolvePowerShellExecutable_WhenPathEmpty_FindsSystemPowerShell()
+    {
+        string? originalPath = Environment.GetEnvironmentVariable("PATH");
+        try
+        {
+            Environment.SetEnvironmentVariable("PATH", string.Empty);
+            string? shell = ActionService.ResolvePowerShellExecutable();
+
+            Assert.NotNull(shell);
+            Assert.True(File.Exists(shell));
+            string fileName = Path.GetFileName(shell);
+            Assert.True(
+                fileName.Equals("pwsh.exe", StringComparison.OrdinalIgnoreCase) ||
+                fileName.Equals("powershell.exe", StringComparison.OrdinalIgnoreCase));
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PATH", originalPath);
         }
     }
 
@@ -754,6 +839,67 @@ public sealed class ActionServiceTests
         Assert.Empty(runtime.StartedProcessInfos);
     }
 
+    [Fact]
+    public async Task ExecuteCustomActionAsync_ScriptFile_WhenSkipConfirmationTrue_DoesNotPromptConfirm()
+    {
+        string scriptPath = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"), "script.cmd");
+        var runtime = new FakeActionServiceRuntime();
+        var service = new ActionService(new AppSettingsService(), runtime);
+        var element = new CustomElement
+        {
+            ActionType = nameof(ActionType.ScriptFile),
+            ActionValue = scriptPath,
+            SkipScriptConfirmation = true
+        };
+
+        ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
+
+        Assert.True(result.Success);
+        Assert.Empty(runtime.ConfirmMessages);
+        Assert.Single(runtime.StartedProcessInfos);
+    }
+
+    [Fact]
+    public async Task ExecuteCustomActionAsync_Program_RunAsAdmin_SetsRunAsVerb()
+    {
+        string exePath = @"C:\Windows\notepad.exe";
+        var runtime = new FakeActionServiceRuntime();
+        var service = new ActionService(new AppSettingsService(), runtime);
+        var element = new CustomElement
+        {
+            ActionType = nameof(ActionType.Program),
+            ActionValue = exePath,
+            RunAsAdmin = true
+        };
+
+        ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
+
+        Assert.True(result.Success);
+        Assert.Single(runtime.StartedProcessInfos);
+        Assert.Equal("runas", runtime.StartedProcessInfos[0].Verb);
+        Assert.True(runtime.StartedProcessInfos[0].UseShellExecute);
+    }
+
+    [Fact]
+    public async Task ExecuteCustomActionAsync_WhenUacCancelled_ReturnsSuccess()
+    {
+        var runtime = new FakeActionServiceRuntime
+        {
+            StartProcessCallback = _ => throw new Win32Exception(1223)
+        };
+        var service = new ActionService(new AppSettingsService(), runtime);
+        var element = new CustomElement
+        {
+            ActionType = nameof(ActionType.Program),
+            ActionValue = @"C:\app.exe",
+            RunAsAdmin = true
+        };
+
+        ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
+
+        Assert.True(result.Success);
+    }
+
     private static void TryDeleteDirectory(string path)
     {
         try
@@ -807,9 +953,15 @@ public sealed class ActionServiceTests
             return ConfirmResult;
         }
 
+        public Func<ProcessStartInfo, IActionProcessHandle?>? StartProcessCallback { get; set; }
+
         public IActionProcessHandle? StartProcess(ProcessStartInfo startInfo)
         {
             StartedProcessInfos.Add(startInfo);
+            if (StartProcessCallback != null)
+            {
+                return StartProcessCallback(startInfo);
+            }
             return ProcessesToReturn.Count > 0 ? ProcessesToReturn.Dequeue() : new FakeActionProcessHandle();
         }
 
