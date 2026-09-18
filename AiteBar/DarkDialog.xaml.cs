@@ -4,6 +4,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 
+using System.Runtime.Versioning;
+
 namespace AiteBar
 {
     public partial class DarkDialog : DarkWindow
@@ -27,7 +29,11 @@ namespace AiteBar
                 BtnOk.Visibility = Visibility.Visible;
             }
 
-            Loaded += (_, _) => FocusDefaultButton();
+            Loaded += (_, _) =>
+            {
+                EnsurePositionOnScreen();
+                FocusDefaultButton();
+            };
         }
 
         public DarkDialog(string message, List<DialogButton> buttons, string? title = null)
@@ -67,7 +73,66 @@ namespace AiteBar
                 ButtonsPanel.Children.Insert(0, btn);
             }
 
-            Loaded += (_, _) => FocusDefaultButton();
+            Loaded += (_, _) =>
+            {
+                EnsurePositionOnScreen();
+                FocusDefaultButton();
+            };
+        }
+
+        private void EnsurePositionOnScreen()
+        {
+            if (!OperatingSystem.IsWindowsVersionAtLeast(6, 1))
+            {
+                return;
+            }
+
+            try
+            {
+                var cursorPoint = System.Windows.Forms.Cursor.Position;
+                var screen = System.Windows.Forms.Screen.FromPoint(cursorPoint)
+                    ?? System.Windows.Forms.Screen.PrimaryScreen;
+
+                if (screen == null)
+                {
+                    return;
+                }
+
+                var dpiScale = VisualTreeHelper.GetDpi(this);
+                double dpiX = dpiScale.DpiScaleX > 0 ? dpiScale.DpiScaleX : 1.0;
+                double dpiY = dpiScale.DpiScaleY > 0 ? dpiScale.DpiScaleY : 1.0;
+
+                Rect workArea = new Rect(
+                    screen.WorkingArea.Left / dpiX,
+                    screen.WorkingArea.Top / dpiY,
+                    screen.WorkingArea.Width / dpiX,
+                    screen.WorkingArea.Height / dpiY);
+
+                Rect? ownerBounds = null;
+                bool isOwnerVisible = false;
+                if (Owner != null)
+                {
+                    isOwnerVisible = Owner.IsVisible;
+                    ownerBounds = new Rect(Owner.Left, Owner.Top, Owner.ActualWidth, Owner.ActualHeight);
+                }
+
+                double dialogWidth = ActualWidth > 0 ? ActualWidth : Width;
+                double dialogHeight = ActualHeight > 0 ? ActualHeight : 160;
+
+                var (newLeft, newTop) = DialogPositionHelper.CalculatePosition(
+                    ownerBounds,
+                    isOwnerVisible,
+                    workArea,
+                    dialogWidth,
+                    dialogHeight);
+
+                Left = newLeft;
+                Top = newTop;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
         }
 
         private void FocusDefaultButton()

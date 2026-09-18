@@ -9,6 +9,22 @@
 
 ## [Unreleased]
 
+## [1.15.24] - 2026-09-18
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+
+- **Позиционирование системных диалогов `DarkDialog`**: окна предупреждений и подтверждений теперь позиционируются DPI-aware и с учётом контекста: если owner-окно видимо и находится в пределах рабочей области — диалог центрируется относительно него; если owner скрыт (панель AiteBar за краем экрана) или невидим — диалог центрируется по рабочей области монитора курсора с гарантированным clamp'ом в видимые границы. Исключён двойной прыжок позиции при открытии.
+- **`DarkDialog` positioning**: confirmation and warning dialogs are now DPI-aware and context-sensitive: when the owner window is visible and within the working area, the dialog is centered on its owner; when the owner is hidden (AiteBar dock off-screen) or invisible, the dialog is centered on the cursor monitor's working area with guaranteed bounds clamping. Eliminated the double position flicker on open.
+- **Детект полноэкранного режима — ложноположительные срабатывания**: удалена трактовка состояния `QUNS_BUSY` как безусловного fullscreen; обычные окна с `WS_CAPTION`, развёрнутые на всю рабочую область (браузер с видео, PowerPoint и т.п.), больше не подавляют панель и горячие клавиши. При этом подлинные borderless-fullscreen приложения с `WS_POPUP`, покрывающие весь монитор, по-прежнему корректно детектируются через геометрическую проверку.
+- **Fullscreen detection — false positives**: the `QUNS_BUSY` notification state is no longer treated as unconditional fullscreen; regular `WS_CAPTION` windows maximized to the working area (browser with video, PowerPoint slide show, etc.) no longer suppress the panel and hotkeys. Genuine borderless-fullscreen `WS_POPUP` windows that cover the entire monitor remain correctly detected via the geometry check.
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+
+- **Helper позиционирования диалогов `DialogPositionHelper`**: чистая тестируемая логика расчёта левой/верхней границы диалога с поддержкой fallback на workArea, толерансом к незначительным выходам за границы и clamp'ом размеров.
+- **Dialog positioning helper `DialogPositionHelper`**: pure testable logic for computing dialog Left/Top with workArea fallback, off-screen tolerance and bounds clamping.
+- **Unit-тесты позиционирования и fullscreen**: 6 сценариев для `DialogPositionHelper` (null owner, invisible owner, off-screen Top/Left, center on owner, edge clamp) + покрытие сценария `QUNS_BUSY` на borderless-fullscreen legacy-приложениях в `GameFullscreenServiceTests`.
+- **Positioning and fullscreen unit tests**: 6 scenarios for `DialogPositionHelper` (null owner, invisible owner, off-screen Top/Left, center on owner, edge clamp) + coverage for the `QUNS_BUSY` + borderless-fullscreen legacy path in `GameFullscreenServiceTests`.
+
 ## [1.15.23] - 2026-09-17
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

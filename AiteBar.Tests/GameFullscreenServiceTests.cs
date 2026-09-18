@@ -135,6 +135,36 @@ public class GameFullscreenServiceTests
     }
 
     [Fact]
+    public void IsGameOrFullscreenForeground_ReturnsFalse_WhenBusyStateOnNormalWindow()
+    {
+        var query = new FakeGameFullscreenNativeQuery
+        {
+            NotificationState = NativeMethods.QUERY_USER_NOTIFICATION_STATE.QUNS_BUSY,
+            WindowRect = new() { Left = 0, Top = 0, Right = 1920, Bottom = 1040 },
+            MonitorRect = new() { Left = 0, Top = 0, Right = 1920, Bottom = 1080 },
+            WindowStyle = NativeMethods.WS_CAPTION | NativeMethods.WS_VISIBLE
+        };
+        using var service = new GameFullscreenService(query, currentProcessId: 1000);
+
+        Assert.False(service.IsGameOrFullscreenForeground());
+    }
+
+    [Fact]
+    public void IsGameOrFullscreenForeground_ReturnsTrue_WhenBusyStateOnBorderlessFullscreen()
+    {
+        var query = new FakeGameFullscreenNativeQuery
+        {
+            NotificationState = NativeMethods.QUERY_USER_NOTIFICATION_STATE.QUNS_BUSY,
+            WindowRect = new() { Left = 0, Top = 0, Right = 1920, Bottom = 1080 },
+            MonitorRect = new() { Left = 0, Top = 0, Right = 1920, Bottom = 1080 },
+            WindowStyle = NativeMethods.WS_POPUP | NativeMethods.WS_VISIBLE
+        };
+        using var service = new GameFullscreenService(query, currentProcessId: 1000);
+
+        Assert.True(service.IsGameOrFullscreenForeground());
+    }
+
+    [Fact]
     public void IsFullscreenActive_ReturnsTrue_WhenUtilityFullscreenActive()
     {
         var query = new FakeGameFullscreenNativeQuery { ForegroundWindow = IntPtr.Zero };

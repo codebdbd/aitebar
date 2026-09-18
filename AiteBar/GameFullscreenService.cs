@@ -212,7 +212,6 @@ public sealed class GameFullscreenService : IGameFullscreenService
             if (_query.QueryUserNotificationState(out var state) == 0)
             {
                 if (state is NativeMethods.QUERY_USER_NOTIFICATION_STATE.QUNS_RUNNING_D3D_FULL_SCREEN or
-                             NativeMethods.QUERY_USER_NOTIFICATION_STATE.QUNS_BUSY or
                              NativeMethods.QUERY_USER_NOTIFICATION_STATE.QUNS_PRESENTATION_MODE)
                 {
                     return true;
