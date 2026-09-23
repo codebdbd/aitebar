@@ -158,6 +158,8 @@ namespace AiteBar
                 TxtScriptArguments.Text = _editingElement.ScriptArguments ?? "";
                 ChkSkipScriptConfirmation.IsChecked = _editingElement.SkipScriptConfirmation;
                 ChkScriptHideWindow.IsChecked = _editingElement.HideScriptWindow;
+                ChkScriptKeepOpen.IsChecked = _editingElement.KeepScriptWindowOpen;
+                ChkScriptKeepOpen.IsEnabled = !_editingElement.HideScriptWindow;
                 ChkScriptRunAsAdmin.IsChecked = _editingElement.RunAsAdmin;
                 TxtScriptArgumentsPlaceholder.Visibility = string.IsNullOrEmpty(TxtScriptArguments.Text) ? Visibility.Visible : Visibility.Collapsed;
 
@@ -1025,6 +1027,7 @@ namespace AiteBar
                     ScriptArguments = actionType == AiteBar.ActionType.ScriptFile ? TxtScriptArguments.Text.Trim() : "",
                     SkipScriptConfirmation = actionType == AiteBar.ActionType.ScriptFile && (ChkSkipScriptConfirmation.IsChecked ?? false),
                     HideScriptWindow = actionType == AiteBar.ActionType.ScriptFile && (ChkScriptHideWindow.IsChecked ?? false),
+                    KeepScriptWindowOpen = actionType == AiteBar.ActionType.ScriptFile && (ChkScriptKeepOpen.IsChecked ?? false),
                     RunAsAdmin = actionType == AiteBar.ActionType.ScriptFile && (ChkScriptRunAsAdmin.IsChecked ?? false)
                 };
 
@@ -1044,6 +1047,15 @@ namespace AiteBar
             finally
             {
                 UpdateSaveButtonState();
+            }
+        }
+
+        private void ChkScriptHideWindow_Changed(object sender, RoutedEventArgs e)
+        {
+            if (ChkScriptKeepOpen != null && ChkScriptHideWindow != null)
+            {
+                bool isHidden = ChkScriptHideWindow.IsChecked ?? false;
+                ChkScriptKeepOpen.IsEnabled = !isHidden;
             }
         }
 

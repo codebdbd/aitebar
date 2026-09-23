@@ -296,6 +296,7 @@ public sealed class PanelPackageMapperTests
             ScriptArguments = "--test 123",
             SkipScriptConfirmation = true,
             HideScriptWindow = true,
+            KeepScriptWindowOpen = true,
             RunAsAdmin = true
         };
 
@@ -304,6 +305,7 @@ public sealed class PanelPackageMapperTests
         Assert.Equal("--test 123", result.ScriptArguments);
         Assert.True(result.SkipScriptConfirmation);
         Assert.True(result.HideScriptWindow);
+        Assert.True(result.KeepScriptWindowOpen);
         Assert.True(result.RunAsAdmin);
     }
 
@@ -318,6 +320,7 @@ public sealed class PanelPackageMapperTests
             ScriptArguments = "--arg val",
             SkipScriptConfirmation = true,
             HideScriptWindow = true,
+            KeepScriptWindowOpen = true,
             RunAsAdmin = true
         };
 
@@ -326,6 +329,7 @@ public sealed class PanelPackageMapperTests
         Assert.Equal("--arg val", result.ScriptArguments);
         Assert.True(result.SkipScriptConfirmation);
         Assert.True(result.HideScriptWindow);
+        Assert.True(result.KeepScriptWindowOpen);
         Assert.True(result.RunAsAdmin);
     }
 }

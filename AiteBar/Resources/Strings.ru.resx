@@ -1030,6 +1030,9 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
   <data name="SettingsWindow_ScriptHideWindow" xml:space="preserve">
     <value>Скрывать окно консоли</value>
   </data>
+  <data name="SettingsWindow_ScriptKeepOpen" xml:space="preserve">
+    <value>Оставлять окно открытым</value>
+  </data>
   <data name="SettingsWindow_ScriptRunAsAdmin" xml:space="preserve">
     <value>Запуск от имени администратора</value>
   </data>

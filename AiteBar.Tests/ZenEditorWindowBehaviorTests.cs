@@ -63,7 +63,7 @@ public sealed class ZenEditorWindowBehaviorTests
                 var window = new ZenEditorWindow(new ZenEditorStore(root));
                 window.Editor.SetValue(TextBlock.LineHeightProperty, 30d);
                 ContextMenu menu = Assert.IsType<ContextMenu>(window.Editor.ContextMenu);
-                Assert.Equal(17, menu.Items.Count);
+                Assert.Equal(18, menu.Items.Count);
                 Assert.Same(window.FindResource("DarkContextMenu"), menu.Style);
                 Assert.Equal(
                     30d,
@@ -84,13 +84,21 @@ public sealed class ZenEditorWindowBehaviorTests
                 });
 
                 MenuItem[] commands = menu.Items.OfType<MenuItem>().ToArray();
-                Assert.Equal(13, commands.Length);
+                Assert.Equal(14, commands.Length);
                 Assert.All(commands, command =>
                 {
                     Assert.False(string.IsNullOrWhiteSpace(command.Header?.ToString()));
                     Assert.Same(window.FindResource("DarkMenuItem"), command.Style);
                     Assert.IsType<CenteredGlyphTextBlock>(command.Icon);
                 });
+
+                MenuItem deleteItem = commands.Single(command =>
+                    string.Equals(command.Header?.ToString(), LocalizationService.Get("ZenEditor_DeleteDocument"), StringComparison.Ordinal));
+                var deleteIcon = Assert.IsType<CenteredGlyphTextBlock>(deleteItem.Icon);
+                Assert.Equal(char.ConvertFromUtf32(0xF34D), deleteIcon.Text);
+                Assert.Equal(FontHelper.Resolve(FontHelper.FluentKey).Source, deleteIcon.FontFamily.Source);
+                Assert.NotNull(deleteItem.Foreground);
+                Assert.Same(deleteItem.Foreground, deleteIcon.Foreground);
                 AssertIconFont(
                     commands,
                     "Ctrl+Z",
@@ -454,6 +462,141 @@ public sealed class ZenEditorWindowBehaviorTests
         }
     }
 
+    [Fact]
+    public async Task DeleteCurrentDocumentAsync_WhenCancelled_PreservesDocument()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "AiteBarTests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await RunStaAsync(async () =>
+            {
+                var store = new ZenEditorStore(root);
+                var window = new ZenEditorWindow(store);
+                await window.InitializeWindowCoreAsync();
+
+                window.Editor.Text = "Документ не должен быть удален";
+                window.ConfirmDeleteDialog = _ => false;
+
+                await window.DeleteCurrentDocumentAsync();
+
+                Assert.Equal("Документ не должен быть удален", window.Editor.Text);
+                IReadOnlyList<ZenEditorDocumentSummary> active = await store.ListAsync("Untitled");
+                Assert.Single(active);
+                IReadOnlyList<ZenEditorDocumentSummary> deleted = await store.ListDeletedAsync("Untitled");
+                Assert.Empty(deleted);
+
+                window.Close();
+            });
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task DeleteCurrentDocumentAsync_WhenConfirmed_DeletesDocumentAndLoadsNext()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "AiteBarTests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await RunStaAsync(async () =>
+            {
+                var store = new ZenEditorStore(root);
+                ZenEditorDocument doc1 = await store.CreateAsync();
+                doc1.Text = "Первый документ";
+                await store.SaveAsync(doc1, createSnapshot: false);
+
+                ZenEditorDocument doc2 = await store.CreateAsync();
+                doc2.Text = "Второй документ";
+                await store.SaveAsync(doc2, createSnapshot: false);
+
+                var index = new ZenEditorStoreIndex { ActiveDocumentId = doc2.Id };
+                await store.SaveIndexAsync(index);
+
+                var window = new ZenEditorWindow(store);
+                await window.InitializeWindowCoreAsync();
+
+                Assert.Equal("Второй документ", window.Editor.Text);
+
+                string? promptedTitle = null;
+                window.ConfirmDeleteDialog = title =>
+                {
+                    promptedTitle = title;
+                    return true;
+                };
+
+                await window.DeleteCurrentDocumentAsync();
+
+                Assert.Equal("Второй документ", promptedTitle);
+                Assert.Equal("Первый документ", window.Editor.Text);
+
+                IReadOnlyList<ZenEditorDocumentSummary> active = await store.ListAsync("Untitled");
+                Assert.Single(active);
+                Assert.Equal(doc1.Id, active[0].Id);
+
+                IReadOnlyList<ZenEditorDocumentSummary> deleted = await store.ListDeletedAsync("Untitled");
+                Assert.Single(deleted);
+                Assert.Equal(doc2.Id, deleted[0].Id);
+
+                window.Close();
+            });
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task DeleteCurrentDocumentAsync_WhenLastDocumentDeleted_CreatesNewEmptyDocument()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "AiteBarTests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await RunStaAsync(async () =>
+            {
+                var store = new ZenEditorStore(root);
+                var window = new ZenEditorWindow(store);
+                await window.InitializeWindowCoreAsync();
+
+                window.Editor.Text = "Единственный документ";
+                await window.SaveNowAsync(force: true);
+
+                window.ConfirmDeleteDialog = _ => true;
+                await window.DeleteCurrentDocumentAsync();
+
+                Assert.Equal(string.Empty, window.Editor.Text);
+
+                IReadOnlyList<ZenEditorDocumentSummary> active = await store.ListAsync("Untitled");
+                Assert.Single(active);
+                IReadOnlyList<ZenEditorDocumentSummary> deleted = await store.ListDeletedAsync("Untitled");
+                Assert.Single(deleted);
+
+                window.Close();
+            });
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
     private static void TryDeleteDirectory(string path)
     {
         for (int i = 0; i < 10; i++)
@@ -508,6 +651,39 @@ public sealed class ZenEditorWindowBehaviorTests
             {
                 Dispatcher.CurrentDispatcher.InvokeShutdown();
             }
+        });
+
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        return completion.Task;
+    }
+
+    private static Task RunStaAsync(Func<Task> action)
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var thread = new Thread(() =>
+        {
+            SynchronizationContext.SetSynchronizationContext(
+                new DispatcherSynchronizationContext(Dispatcher.CurrentDispatcher));
+
+            _ = Dispatcher.CurrentDispatcher.InvokeAsync(async () =>
+            {
+                try
+                {
+                    await action();
+                    completion.SetResult();
+                }
+                catch (Exception ex)
+                {
+                    completion.SetException(ex);
+                }
+                finally
+                {
+                    Dispatcher.CurrentDispatcher.BeginInvokeShutdown(DispatcherPriority.Background);
+                }
+            });
+
+            Dispatcher.Run();
         });
 
         thread.SetApartmentState(ApartmentState.STA);

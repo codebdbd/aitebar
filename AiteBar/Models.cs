@@ -162,6 +162,7 @@ public class CustomElement
     public string ScriptArguments { get; set; } = "";
     public bool SkipScriptConfirmation { get; set; } = false;
     public bool HideScriptWindow { get; set; } = false;
+    public bool KeepScriptWindowOpen { get; set; } = false;
     public bool RunAsAdmin { get; set; } = false;
 }
 

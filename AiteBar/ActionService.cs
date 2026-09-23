@@ -39,6 +39,7 @@ public class ActionService
     private const int FullscreenActivationAttempts = 25;
     private const int FullscreenWindowPollDelayMs = 200;
     private const int FullscreenForegroundDelayMs = 100;
+    internal static bool DisableStandardPythonProbing { get; set; }
 
     public ActionService(AppSettingsService settingsService)
         : this(settingsService, new ActionServiceRuntime())
@@ -126,6 +127,16 @@ public class ActionService
                 {
                     return ActionExecutionResult.Failed(LocalizationService.Format("Action_TargetNotFound", el.ActionValue));
                 }
+            }
+
+            if (ex is FileNotFoundException fnf)
+            {
+                return ActionExecutionResult.Failed(fnf.Message);
+            }
+
+            if (ex is InvalidOperationException ioe)
+            {
+                return ActionExecutionResult.Failed(ioe.Message);
             }
 
             return ActionExecutionResult.Failed(LocalizationService.Get("Action_LaunchFailed"));
@@ -525,6 +536,13 @@ public class ActionService
 
     internal async Task StartScriptFileAsync(CustomElement el)
     {
+        if (string.IsNullOrWhiteSpace(el.ActionValue) || !File.Exists(el.ActionValue))
+        {
+            throw new FileNotFoundException(
+                LocalizationService.Format("Action_TargetNotFound", el.ActionValue),
+                el.ActionValue);
+        }
+
         if (!el.SkipScriptConfirmation &&
             !_runtime.Confirm(LocalizationService.Format("Action_ConfirmScript", el.ActionValue), _runtime.GetMainWindow()))
         {
@@ -535,7 +553,8 @@ public class ActionService
             el.ActionValue,
             el.ScriptArguments,
             el.HideScriptWindow,
-            el.RunAsAdmin);
+            el.RunAsAdmin,
+            el.KeepScriptWindowOpen);
 
         using var proc = _runtime.StartProcess(psi) ?? throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
         await Task.CompletedTask.ConfigureAwait(false);
@@ -585,11 +604,172 @@ public class ActionService
         return null;
     }
 
+    internal static bool IsUsablePythonExecutable(string path)
+    {
+        if (!File.Exists(path)) return false;
+
+        // Microsoft Store dummy redirector (AppInstallerPythonRedirector) has Length == 0
+        if (path.Contains(@"Microsoft\WindowsApps", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                var fi = new FileInfo(path);
+                if (fi.Length == 0) return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private static string? FindNewestPythonInDirectory(string parentDir, string targetExe, string? dirPrefix = null)
+    {
+        if (!Directory.Exists(parentDir)) return null;
+
+        try
+        {
+            var dirs = Directory.GetDirectories(parentDir);
+            Array.Sort(dirs, StringComparer.OrdinalIgnoreCase);
+            Array.Reverse(dirs);
+
+            foreach (string dir in dirs)
+            {
+                if (dirPrefix != null && !Path.GetFileName(dir).StartsWith(dirPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                string candidate = Path.Combine(dir, targetExe);
+                if (File.Exists(candidate) && IsUsablePythonExecutable(candidate))
+                {
+                    return candidate;
+                }
+
+                string scriptsCandidate = Path.Combine(dir, "Scripts", targetExe);
+                if (File.Exists(scriptsCandidate) && IsUsablePythonExecutable(scriptsCandidate))
+                {
+                    return scriptsCandidate;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+
+        return null;
+    }
+
+    internal static string? ResolvePythonExecutable(string? scriptPath = null, bool windowless = false)
+    {
+        string targetExe = windowless ? "pythonw.exe" : "python.exe";
+
+        // 1. Check local virtual environment near the script
+        if (!string.IsNullOrWhiteSpace(scriptPath))
+        {
+            try
+            {
+                string? scriptDir = Path.GetDirectoryName(scriptPath);
+                if (!string.IsNullOrEmpty(scriptDir) && Directory.Exists(scriptDir))
+                {
+                    string venvExe = Path.Combine(scriptDir, ".venv", "Scripts", targetExe);
+                    if (File.Exists(venvExe)) return venvExe;
+
+                    string venvExe2 = Path.Combine(scriptDir, "venv", "Scripts", targetExe);
+                    if (File.Exists(venvExe2)) return venvExe2;
+
+                    string? parentDir = Directory.GetParent(scriptDir)?.FullName;
+                    if (!string.IsNullOrEmpty(parentDir) && Directory.Exists(parentDir))
+                    {
+                        string parentVenvExe = Path.Combine(parentDir, ".venv", "Scripts", targetExe);
+                        if (File.Exists(parentVenvExe)) return parentVenvExe;
+
+                        string parentVenvExe2 = Path.Combine(parentDir, "venv", "Scripts", targetExe);
+                        if (File.Exists(parentVenvExe2)) return parentVenvExe2;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+        }
+
+        // 2. Check PATH, ignoring 0-byte WindowsApps dummy stubs
+        string? fromPath = PathHelper.FindExecutableOnPath(targetExe);
+        if (fromPath != null && IsUsablePythonExecutable(fromPath))
+        {
+            return fromPath;
+        }
+
+        // 3. Fallback: check standard Python installation directories
+        if (!DisableStandardPythonProbing)
+        {
+            // 3a. LocalAppData Programs Python (e.g. %LOCALAPPDATA%\Programs\Python\Python312\python.exe)
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string programsPython = Path.Combine(localAppData, "Programs", "Python");
+            string? foundInPrograms = FindNewestPythonInDirectory(programsPython, targetExe);
+            if (foundInPrograms != null) return foundInPrograms;
+
+            // 3b. uv python installations (e.g. %APPDATA%\uv\python\cpython-3.12.13-windows-x86_64-none\python.exe)
+            string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string uvPython = Path.Combine(appData, "uv", "python");
+            string? foundInUv = FindNewestPythonInDirectory(uvPython, targetExe);
+            if (foundInUv != null) return foundInUv;
+
+            // 3c. ProgramFiles Python
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string? foundInPf = FindNewestPythonInDirectory(programFiles, targetExe, dirPrefix: "Python");
+            if (foundInPf != null) return foundInPf;
+
+            // 3d. ProgramFilesX86 Python
+            string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+            string? foundInPfX86 = FindNewestPythonInDirectory(programFilesX86, targetExe, dirPrefix: "Python");
+            if (foundInPfX86 != null) return foundInPfX86;
+
+            // 3e. Chocolatey
+            string chocoPython = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), "chocolatey", "bin", targetExe);
+            if (File.Exists(chocoPython) && IsUsablePythonExecutable(chocoPython)) return chocoPython;
+
+            // 3f. Pyenv-win
+            string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            string pyenvPython = Path.Combine(userProfile, ".pyenv", "pyenv-win", "shims", targetExe);
+            if (File.Exists(pyenvPython) && IsUsablePythonExecutable(pyenvPython)) return pyenvPython;
+
+            // 3g. py.exe launcher as fallback (for console python)
+            if (!windowless)
+            {
+                string systemFolder = Environment.GetFolderPath(Environment.SpecialFolder.System);
+                string pyLauncher = Path.Combine(Path.GetDirectoryName(systemFolder) ?? @"C:\Windows", "py.exe");
+                if (File.Exists(pyLauncher)) return pyLauncher;
+            }
+        }
+
+        // If windowless pythonw was requested, but only python.exe exists, check if console python can be found
+        if (windowless)
+        {
+            string? fallbackConsolePython = ResolvePythonExecutable(scriptPath, windowless: false);
+            if (fallbackConsolePython != null) return fallbackConsolePython;
+        }
+
+        // If nothing else found, return fromPath if it exists (even if in WindowsApps) as a final attempt
+        if (fromPath != null && File.Exists(fromPath))
+        {
+            return fromPath;
+        }
+
+        return null;
+    }
+
     internal static ProcessStartInfo CreateScriptProcessStartInfo(
         string scriptPath,
         string? scriptArguments = null,
         bool hideWindow = false,
-        bool runAsAdmin = false)
+        bool runAsAdmin = false,
+        bool keepWindowOpen = false)
     {
         string workingDirectory = Path.GetDirectoryName(scriptPath) ?? Environment.CurrentDirectory;
         string extension = Path.GetExtension(scriptPath).ToLowerInvariant();
@@ -598,12 +778,14 @@ public class ActionService
         {
             case ".bat":
             case ".cmd":
+                string cmdSwitch = (!hideWindow && keepWindowOpen) ? "/k" : "/c";
                 psi = new ProcessStartInfo("cmd.exe")
                 {
                     UseShellExecute = false,
                     WorkingDirectory = workingDirectory
                 };
-                psi.ArgumentList.Add("/c");
+                psi.ArgumentList.Add(cmdSwitch);
+                psi.ArgumentList.Add("call");
                 psi.ArgumentList.Add(scriptPath);
                 break;
             case ".ps1":
@@ -618,13 +800,17 @@ public class ActionService
                     WorkingDirectory = workingDirectory
                 };
                 psi.ArgumentList.Add("-NoProfile");
+                if (!hideWindow && keepWindowOpen)
+                {
+                    psi.ArgumentList.Add("-NoExit");
+                }
                 psi.ArgumentList.Add("-ExecutionPolicy");
                 psi.ArgumentList.Add("Bypass");
                 psi.ArgumentList.Add("-File");
                 psi.ArgumentList.Add(scriptPath);
                 break;
             case ".pyw":
-                string? pythonwExe = PathHelper.FindExecutableOnPath("pythonw.exe") ?? PathHelper.FindExecutableOnPath("python.exe");
+                string? pythonwExe = ResolvePythonExecutable(scriptPath, windowless: true);
                 if (pythonwExe == null || !File.Exists(pythonwExe))
                 {
                     throw new InvalidOperationException(LocalizationService.Get("Action_PythonNotFound"));
@@ -637,7 +823,7 @@ public class ActionService
                 psi.ArgumentList.Add(scriptPath);
                 break;
             case ".py":
-                string? pythonExe = PathHelper.FindExecutableOnPath("python.exe");
+                string? pythonExe = ResolvePythonExecutable(scriptPath, windowless: false);
                 if (pythonExe == null || !File.Exists(pythonExe))
                 {
                     throw new InvalidOperationException(LocalizationService.Get("Action_PythonNotFound"));
@@ -647,6 +833,10 @@ public class ActionService
                     UseShellExecute = false,
                     WorkingDirectory = workingDirectory
                 };
+                if (!hideWindow && keepWindowOpen)
+                {
+                    psi.ArgumentList.Add("-i");
+                }
                 psi.ArgumentList.Add(scriptPath);
                 break;
             default: throw new InvalidOperationException(LocalizationService.Get("Action_UnsupportedScript"));

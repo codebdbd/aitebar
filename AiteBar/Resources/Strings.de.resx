@@ -1010,6 +1010,9 @@ Verwenden Sie für modulare Python-Projekte den Typ „Befehl“.</value>
   <data name="SettingsWindow_ScriptHideWindow" xml:space="preserve">
     <value>Konsolenfenster ausblenden</value>
   </data>
+  <data name="SettingsWindow_ScriptKeepOpen" xml:space="preserve">
+    <value>Konsolenfenster geöffnet lassen</value>
+  </data>
   <data name="SettingsWindow_ScriptRunAsAdmin" xml:space="preserve">
     <value>Als Administrator ausführen</value>
   </data>

@@ -114,6 +114,9 @@ internal sealed class PanelPackageElement
     [JsonPropertyName("hideScriptWindow")]
     public bool HideScriptWindow { get; set; }
 
+    [JsonPropertyName("keepScriptWindowOpen")]
+    public bool KeepScriptWindowOpen { get; set; }
+
     [JsonPropertyName("runAsAdmin")]
     public bool RunAsAdmin { get; set; }
 

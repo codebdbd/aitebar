@@ -247,6 +247,9 @@ For modular Python projects use the "Command" type.</value>
   <data name="SettingsWindow_ScriptHideWindow" xml:space="preserve">
     <value>Hide console window</value>
   </data>
+  <data name="SettingsWindow_ScriptKeepOpen" xml:space="preserve">
+    <value>Keep console window open</value>
+  </data>
   <data name="SettingsWindow_ScriptRunAsAdmin" xml:space="preserve">
     <value>Run as administrator</value>
   </data>

@@ -259,7 +259,18 @@ public sealed class ActionServiceTests
         Assert.Equal("cmd.exe", psi.FileName);
         Assert.False(psi.UseShellExecute);
         Assert.Equal(Path.GetDirectoryName(scriptPath), psi.WorkingDirectory);
-        Assert.Equal(["/c", scriptPath], psi.ArgumentList.ToArray());
+        Assert.Equal(["/c", "call", scriptPath], psi.ArgumentList.ToArray());
+    }
+
+    [Fact]
+    public void CreateScriptProcessStartInfo_CmdScript_WithKeepWindowOpen_UsesSlashK()
+    {
+        string scriptPath = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"), "test.cmd");
+
+        var psi = ActionService.CreateScriptProcessStartInfo(scriptPath, keepWindowOpen: true);
+
+        Assert.Equal("cmd.exe", psi.FileName);
+        Assert.Equal(["/k", "call", scriptPath], psi.ArgumentList.ToArray());
     }
 
     [Fact]
@@ -358,11 +369,102 @@ public sealed class ActionServiceTests
             runAsAdmin: true);
 
         Assert.Equal("cmd.exe", psi.FileName);
-        Assert.Equal(["/c", scriptPath, "--flag", "param with spaces", "123"], psi.ArgumentList.ToArray());
+        Assert.Equal(["/c", "call", scriptPath, "--flag", "param with spaces", "123"], psi.ArgumentList.ToArray());
         Assert.True(psi.CreateNoWindow);
         Assert.Equal(ProcessWindowStyle.Hidden, psi.WindowStyle);
         Assert.True(psi.UseShellExecute);
         Assert.Equal("runas", psi.Verb);
+    }
+
+    [Fact]
+    public void CreateScriptProcessStartInfo_PowerShellScript_WithKeepWindowOpen_UsesNoExit()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string pwshExe = Path.Combine(tempRoot, "pwsh.exe");
+        string scriptPath = Path.Combine(tempRoot, "test.ps1");
+        string? originalPath = Environment.GetEnvironmentVariable("PATH");
+
+        try
+        {
+            File.WriteAllText(pwshExe, string.Empty);
+            Environment.SetEnvironmentVariable("PATH", tempRoot + ";" + originalPath);
+
+            var psi = ActionService.CreateScriptProcessStartInfo(scriptPath, keepWindowOpen: true);
+
+            Assert.Equal(pwshExe, psi.FileName);
+            Assert.Contains("-NoExit", psi.ArgumentList);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PATH", originalPath);
+            Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CreateScriptProcessStartInfo_PythonScript_WithKeepWindowOpen_UsesInteractiveFlag()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string pythonExe = Path.Combine(tempRoot, "python.exe");
+        string scriptPath = Path.Combine(tempRoot, "test.py");
+        string? originalPath = Environment.GetEnvironmentVariable("PATH");
+
+        try
+        {
+            File.WriteAllText(pythonExe, string.Empty);
+            Environment.SetEnvironmentVariable("PATH", tempRoot + ";" + originalPath);
+
+            var psi = ActionService.CreateScriptProcessStartInfo(scriptPath, keepWindowOpen: true);
+
+            Assert.Equal(pythonExe, psi.FileName);
+            Assert.Contains("-i", psi.ArgumentList);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("PATH", originalPath);
+            Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ResolvePythonExecutable_WhenInVenv_PrefersVenvPython()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string venvScripts = Path.Combine(tempRoot, ".venv", "Scripts");
+        Directory.CreateDirectory(venvScripts);
+        string venvPython = Path.Combine(venvScripts, "python.exe");
+        File.WriteAllText(venvPython, string.Empty);
+        string scriptPath = Path.Combine(tempRoot, "main.py");
+
+        try
+        {
+            string? resolved = ActionService.ResolvePythonExecutable(scriptPath);
+            Assert.Equal(venvPython, resolved);
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void IsUsablePythonExecutable_WhenWindowsAppsZeroLength_ReturnsFalse()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"), "Microsoft", "WindowsApps");
+        Directory.CreateDirectory(tempRoot);
+        string stubExe = Path.Combine(tempRoot, "python.exe");
+        File.WriteAllText(stubExe, string.Empty);
+
+        try
+        {
+            Assert.False(ActionService.IsUsablePythonExecutable(stubExe));
+        }
+        finally
+        {
+            Directory.Delete(Path.GetDirectoryName(Path.GetDirectoryName(tempRoot)!)!, recursive: true);
+        }
     }
 
     [Fact]
@@ -399,12 +501,14 @@ public sealed class ActionServiceTests
 
         try
         {
+            ActionService.DisableStandardPythonProbing = true;
             Environment.SetEnvironmentVariable("PATH", tempRoot);
 
             Assert.Throws<InvalidOperationException>(() => ActionService.CreateScriptProcessStartInfo(scriptPath));
         }
         finally
         {
+            ActionService.DisableStandardPythonProbing = false;
             Environment.SetEnvironmentVariable("PATH", originalPath);
             Directory.Delete(tempRoot, recursive: true);
         }
@@ -823,40 +927,81 @@ public sealed class ActionServiceTests
     [Fact]
     public async Task ExecuteCustomActionAsync_ScriptFile_WhenConfirmationRejected_DoesNotStartProcess()
     {
-        string scriptPath = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"), "script.ps1");
-        var runtime = new FakeActionServiceRuntime { ConfirmResult = false };
-        var service = new ActionService(new AppSettingsService(), runtime);
-        var element = new CustomElement
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string scriptPath = Path.Combine(tempRoot, "script.ps1");
+        File.WriteAllText(scriptPath, "Write-Host test");
+
+        try
         {
-            ActionType = nameof(ActionType.ScriptFile),
-            ActionValue = scriptPath
-        };
+            var runtime = new FakeActionServiceRuntime { ConfirmResult = false };
+            var service = new ActionService(new AppSettingsService(), runtime);
+            var element = new CustomElement
+            {
+                ActionType = nameof(ActionType.ScriptFile),
+                ActionValue = scriptPath
+            };
 
-        ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
+            ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
 
-        Assert.True(result.Success);
-        Assert.Single(runtime.ConfirmMessages);
-        Assert.Empty(runtime.StartedProcessInfos);
+            Assert.True(result.Success);
+            Assert.Single(runtime.ConfirmMessages);
+            Assert.Empty(runtime.StartedProcessInfos);
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, recursive: true);
+        }
     }
 
     [Fact]
     public async Task ExecuteCustomActionAsync_ScriptFile_WhenSkipConfirmationTrue_DoesNotPromptConfirm()
     {
-        string scriptPath = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"), "script.cmd");
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string scriptPath = Path.Combine(tempRoot, "script.cmd");
+        File.WriteAllText(scriptPath, "@echo off");
+
+        try
+        {
+            var runtime = new FakeActionServiceRuntime();
+            var service = new ActionService(new AppSettingsService(), runtime);
+            var element = new CustomElement
+            {
+                ActionType = nameof(ActionType.ScriptFile),
+                ActionValue = scriptPath,
+                SkipScriptConfirmation = true
+            };
+
+            ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
+
+            Assert.True(result.Success);
+            Assert.Empty(runtime.ConfirmMessages);
+            Assert.Single(runtime.StartedProcessInfos);
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task ExecuteCustomActionAsync_ScriptFile_WhenFileDoesNotExist_ReturnsTargetNotFound()
+    {
+        string nonExistentPath = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"), "nonexistent.bat");
         var runtime = new FakeActionServiceRuntime();
         var service = new ActionService(new AppSettingsService(), runtime);
         var element = new CustomElement
         {
             ActionType = nameof(ActionType.ScriptFile),
-            ActionValue = scriptPath,
-            SkipScriptConfirmation = true
+            ActionValue = nonExistentPath
         };
 
         ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
 
-        Assert.True(result.Success);
-        Assert.Empty(runtime.ConfirmMessages);
-        Assert.Single(runtime.StartedProcessInfos);
+        Assert.False(result.Success);
+        Assert.Contains(nonExistentPath, result.ErrorMessage);
+        Assert.Empty(runtime.StartedProcessInfos);
     }
 
     [Fact]

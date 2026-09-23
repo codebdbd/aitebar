@@ -70,6 +70,7 @@ public sealed class ZenEditorIntegrationTests
         Assert.Contains("RefreshContextMenu();", windowCode[constructor..showFullScreen]);
         Assert.Contains("ZenEditor_NewDocument", windowCode);
         Assert.Contains("ZenEditor_OpenDocument", windowCode);
+        Assert.Contains("ZenEditor_DeleteDocument", windowCode);
         Assert.Contains("ZenEditor_ExportTxt", windowCode);
         Assert.Contains("ZenEditor_Undo", windowCode);
         Assert.Contains("ZenEditor_Redo", windowCode);

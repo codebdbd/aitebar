@@ -2399,7 +2399,14 @@ public partial class MainWindow : Window, ISettingsWindowContext
         _hideAnimationTcs = tcs;
 
         Toggle(true, fromCurrentPosition: true);
-        await tcs.Task;
+
+        // Fail-safe: PanelHideAnimationMs is ~190ms; if animation callback is dropped under system load, force completion
+        Task timeoutTask = Task.Delay(Constants.PanelHideAnimationMs + 300);
+        Task completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+        if (completedTask == timeoutTask && _hideAnimationTcs == tcs)
+        {
+            StopPanelAnimationAtCurrentPosition();
+        }
     }
 
     private void StopPanelAnimationAtCurrentPosition()

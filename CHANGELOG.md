@@ -9,6 +9,17 @@
 
 ## [Unreleased]
 
+## [1.15.25] - 2026-09-23
+
+### 🇷🇺 Добавлено | 🇬🇧 Added
+
+- **Дзен-редактор — удаление текущего документа**: в контекстное меню Дзен-редактора добавлен пункт «Удалить документ» с глифом корзины и danger-стилизацией (красный акцент). Действие запрашивает подтверждение через `DarkDialog` с указанием заголовка текущей заметки, сохраняет свежие изменения в снапшот для возможности восстановления из «Недавно удаленные» и автоматически переключается на следующий документ или создаёт новый, если документ был единственным.
+- **Zen Editor — delete current document**: added a "Delete document" context menu item with a trash bin icon and danger styling (red accent). Prompts for confirmation via `DarkDialog` displaying the document title, ensures current changes are captured in snapshots for recovery from "Recently Deleted", and automatically switches to the next available document or creates a new one if it was the last document.
+- **Запуск скриптов — опция «Не закрывать окно после выполнения»**: для кнопок скриптов (.cmd, .bat, .ps1) добавлена опция удержания консольного окна открытым после завершения команды (`/k` для cmd, `-NoExit` для PowerShell/pwsh). Поддерживается в настройках кнопки, манифесте пакетов панелей (`keepScriptWindowOpen`), при экспорте/импорте и автоматически отключается при выборе скрытия окна.
+- **Script execution — "Keep window open after execution"**: added an option for script buttons (.cmd, .bat, .ps1) to keep the terminal window open after command completion (`/k` for cmd, `-NoExit` for PowerShell/pwsh). Configured in button settings, preserved in panel packages (`keepScriptWindowOpen`), and appropriately disabled when hiding the window.
+- **Расширенные возможности выполнения скриптов**: улучшено разрешение интерпретаторов PowerShell/pwsh, передача аргументов, запуск от имени администратора и исполнение скриптов.
+- **Enhanced script execution**: improved PowerShell/pwsh resolution, custom argument passing, elevated administrator execution, and script file handling.
+
 ## [1.15.24] - 2026-09-18
 
 ### 🇷🇺 Исправлено | 🇬🇧 Fixed

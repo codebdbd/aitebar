@@ -136,7 +136,8 @@
                                             <Style TargetType="CheckBox" BasedOn="{StaticResource DenseCheckBoxStyle}"/>
                                         </StackPanel.Resources>
                                         <CheckBox x:Name="ChkSkipScriptConfirmation" Content="{local:Loc ResourceKey=SettingsWindow_SkipScriptConfirmation}" Margin="0,0,0,4"/>
-                                        <CheckBox x:Name="ChkScriptHideWindow" Content="{local:Loc ResourceKey=SettingsWindow_ScriptHideWindow}" Margin="0,0,0,4"/>
+                                        <CheckBox x:Name="ChkScriptHideWindow" Content="{local:Loc ResourceKey=SettingsWindow_ScriptHideWindow}" Margin="0,0,0,4" Checked="ChkScriptHideWindow_Changed" Unchecked="ChkScriptHideWindow_Changed"/>
+                                        <CheckBox x:Name="ChkScriptKeepOpen" Content="{local:Loc ResourceKey=SettingsWindow_ScriptKeepOpen}" Margin="0,0,0,4"/>
                                         <CheckBox x:Name="ChkScriptRunAsAdmin" Content="{local:Loc ResourceKey=SettingsWindow_ScriptRunAsAdmin}"/>
                                     </StackPanel>
                                 </StackPanel>

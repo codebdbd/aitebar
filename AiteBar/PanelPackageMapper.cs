@@ -39,6 +39,7 @@ internal static class PanelPackageMapper
             ScriptArguments = element.ScriptArguments ?? "",
             SkipScriptConfirmation = element.SkipScriptConfirmation,
             HideScriptWindow = element.HideScriptWindow,
+            KeepScriptWindowOpen = element.KeepScriptWindowOpen,
             RunAsAdmin = element.RunAsAdmin,
             Image = string.IsNullOrWhiteSpace(packageImagePath)
                 ? null
@@ -84,6 +85,7 @@ internal static class PanelPackageMapper
             ScriptArguments = source.ScriptArguments ?? "",
             SkipScriptConfirmation = source.SkipScriptConfirmation,
             HideScriptWindow = source.HideScriptWindow,
+            KeepScriptWindowOpen = source.KeepScriptWindowOpen,
             RunAsAdmin = source.RunAsAdmin,
             ImagePath = resolveImportedImagePath(source.Image),
             ContextId = targetContextId

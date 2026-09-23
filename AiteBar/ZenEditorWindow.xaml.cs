@@ -50,6 +50,7 @@ public partial class ZenEditorWindow : DarkWindow
         public const int Italic = 63476; // ic_fluent_text_italic_20_regular
         public const int Underline = 63498; // ic_fluent_text_underline_20_regular
         public const int RecentlyDeleted = 62590; // ic_fluent_history_20_regular
+        public const int Delete = 0xF34D; // ic_fluent_delete_20_regular (same glyph as Document Picker)
     }
 
     private readonly ZenEditorStore _store;
@@ -126,30 +127,35 @@ public partial class ZenEditorWindow : DarkWindow
     {
         try
         {
-            ZenEditorLoadResult result = await _store.InitializeAsync();
-            _index = result.Index;
-            _theme = ZenEditorThemeCatalog.Get(_index.ThemeId);
-            ApplyTheme(_theme);
-            LoadDocumentIntoEditor(result.Document);
-            ApplyFullScreenBounds();
-            _isLoaded = true;
-            if (Application.Current is not null)
-            {
-                Application.Current.SessionEnding += Application_SessionEnding;
-                _sessionEndingSubscribed = true;
-            }
-            Editor.Focus();
-
-            if (result.WasRecovered)
-            {
-                new DarkDialog(LocalizationService.Get("ZenEditor_Recovered")) { Owner = this }.ShowDialog();
-                Editor.Focus();
-            }
+            await InitializeWindowCoreAsync();
         }
         catch (Exception ex)
         {
             Logger.Log(ex);
             ShowSaveError(ex);
+        }
+    }
+
+    internal async Task InitializeWindowCoreAsync()
+    {
+        ZenEditorLoadResult result = await _store.InitializeAsync();
+        _index = result.Index;
+        _theme = ZenEditorThemeCatalog.Get(_index.ThemeId);
+        ApplyTheme(_theme);
+        LoadDocumentIntoEditor(result.Document);
+        ApplyFullScreenBounds();
+        _isLoaded = true;
+        if (Application.Current is not null && Application.Current.CheckAccess() && !_sessionEndingSubscribed)
+        {
+            Application.Current.SessionEnding += Application_SessionEnding;
+            _sessionEndingSubscribed = true;
+        }
+        Editor.Focus();
+
+        if (result.WasRecovered)
+        {
+            new DarkDialog(LocalizationService.Get("ZenEditor_Recovered")) { Owner = this }.ShowDialog();
+            Editor.Focus();
         }
     }
 
@@ -185,7 +191,7 @@ public partial class ZenEditorWindow : DarkWindow
     {
         _isClosed = true;
         _mainWindow?.SetUtilityFullscreenSuppressed(false);
-        if (_sessionEndingSubscribed && Application.Current is not null)
+        if (_sessionEndingSubscribed && Application.Current is not null && Application.Current.CheckAccess())
         {
             Application.Current.SessionEnding -= Application_SessionEnding;
             _sessionEndingSubscribed = false;
@@ -608,6 +614,7 @@ public partial class ZenEditorWindow : DarkWindow
                 }
 
                 await _store.DeleteAsync(selectedId);
+                _undoHistories.Remove(selectedId);
                 if (_document.Id == selectedId)
                 {
                     IReadOnlyList<ZenEditorDocumentSummary> remaining =
@@ -675,6 +682,55 @@ public partial class ZenEditorWindow : DarkWindow
         _index.ActiveDocumentId = restored.Id;
         await _store.SaveIndexAsync(_index);
         LoadDocumentIntoEditor(restored);
+    }
+
+    internal Func<string, bool>? ConfirmDeleteDialog { get; set; }
+
+    internal async Task DeleteCurrentDocumentAsync()
+    {
+        if (_document is null || _isClosed)
+        {
+            return;
+        }
+
+        string title = ZenEditorTextHelper.GetDisplayTitle(
+            Editor.Text,
+            LocalizationService.Get("ZenEditor_Untitled"));
+
+        bool confirmed = ConfirmDeleteDialog?.Invoke(title)
+            ?? new DarkDialog(
+                LocalizationService.Format("ZenEditor_DeleteConfirm", title),
+                isConfirm: true)
+            {
+                Owner = this
+            }.ShowDialog() == true;
+
+        if (!confirmed)
+        {
+            Editor.Focus();
+            return;
+        }
+
+        if (!await SaveNowAsync(force: true))
+        {
+            return;
+        }
+
+        Guid documentId = _document.Id;
+        await _store.DeleteAsync(documentId);
+        _undoHistories.Remove(documentId);
+
+        IReadOnlyList<ZenEditorDocumentSummary> remaining =
+            await _store.ListAsync(LocalizationService.Get("ZenEditor_Untitled"));
+
+        ZenEditorDocument next = remaining.Count > 0
+            ? await _store.LoadAsync(remaining[0].Id)
+            : await _store.CreateAsync();
+
+        _index.ActiveDocumentId = next.Id;
+        await _store.SaveIndexAsync(_index);
+        LoadDocumentIntoEditor(next);
+        Editor.Focus();
     }
 
     private async Task ExportCopyAsync()
@@ -839,6 +895,11 @@ public partial class ZenEditorWindow : DarkWindow
             MenuIcons.RecentlyDeleted,
             "ZenEditor_RecentlyDeleted",
             async () => await OpenRecentlyDeletedAsync()));
+        menu.Items.Add(CreateMenuItem(
+            MenuIcons.Delete,
+            "ZenEditor_DeleteDocument",
+            async () => await DeleteCurrentDocumentAsync(),
+            isDanger: true));
         menu.Items.Add(CreateMenuSeparator());
         menu.Items.Add(CreateMenuItem(
             MenuIcons.Export,
@@ -944,9 +1005,10 @@ public partial class ZenEditorWindow : DarkWindow
         bool enabled = true,
         string? inputGesture = null,
         bool isActive = false,
-        FontFamily? iconFont = null)
+        FontFamily? iconFont = null,
+        bool isDanger = false)
     {
-        MenuItem item = CreateMenuItemShell(glyph, key, enabled, inputGesture, isActive, iconFont);
+        MenuItem item = CreateMenuItemShell(glyph, key, enabled, inputGesture, isActive, iconFont, isDanger);
         item.Click += (_, _) => action();
         return item;
     }
@@ -958,9 +1020,10 @@ public partial class ZenEditorWindow : DarkWindow
         bool enabled = true,
         string? inputGesture = null,
         bool isActive = false,
-        FontFamily? iconFont = null)
+        FontFamily? iconFont = null,
+        bool isDanger = false)
     {
-        MenuItem item = CreateMenuItemShell(glyph, key, enabled, inputGesture, isActive, iconFont);
+        MenuItem item = CreateMenuItemShell(glyph, key, enabled, inputGesture, isActive, iconFont, isDanger);
         item.Click += async (_, _) => await ExecuteGuardedAsync(action);
         return item;
     }
@@ -1021,7 +1084,8 @@ public partial class ZenEditorWindow : DarkWindow
         bool enabled,
         string? inputGesture,
         bool isActive,
-        FontFamily? iconFont)
+        FontFamily? iconFont,
+        bool isDanger = false)
     {
         return AppContextMenuFactory.CreateItem(
             this,
@@ -1029,6 +1093,7 @@ public partial class ZenEditorWindow : DarkWindow
             LocalizationService.Get(key),
             isActive: isActive,
             isEnabled: enabled,
+            isDanger: isDanger,
             inputGesture: inputGesture,
             iconFont: iconFont);
     }
