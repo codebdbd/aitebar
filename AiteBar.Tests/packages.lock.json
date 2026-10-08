@@ -121,8 +121,8 @@
       },
       "SkiaSharp.NativeAssets.Win32": {
         "type": "Transitive",
-        "resolved": "4.150.1",
-        "contentHash": "qrLSL8OonbkMJdSH8heK0Jl39Y2xxZGdd7Ru4cyBXk2ITdx+Fu1sCFLmvCKmnMaYs//mlN/YSpSpOurEXErcQw=="
+        "resolved": "4.152.1",
+        "contentHash": "MLDP6XT8CHLHF6gZlpW06iswGNBlL/JB2+SKuSLz0Y0k1zzsfofNyUY6J6FC32A4/F67E9S8MwovRBL+ELw0lw=="
       },
       "Svg.Animation": {
         "type": "Transitive",
@@ -225,7 +225,7 @@
           "QRCoder.Xaml": "[1.8.0, )",
           "Sentry": "[6.8.0, )",
           "SkiaSharp": "[4.150.1, )",
-          "SkiaSharp.NativeAssets.Win32": "[4.150.1, )",
+          "SkiaSharp.NativeAssets.Win32": "[4.152.1, )",
           "Svg.Skia": "[5.1.1, )"
         }
       }
