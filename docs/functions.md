@@ -907,13 +907,13 @@ URL валидируется и нормализуется. Если брауз�
 ### Как использовать
 
 1. Создать кнопку типа `Программа`.
-2. Выбрать файл через `Обзор` или ввести путь.
+2. Выбрать приложение через каталог `Программы...`, файл через `Обзор` или ввести путь (`.exe`, `shell:AppsFolder\...`).
 3. Сохранить.
 4. Нажать кнопку.
 
 ### Входные данные
 
-Путь к существующему executable/подходящему program target.
+Путь к существующему executable или UWP/Store AUMID (`shell:AppsFolder\...`).
 
 ### Результат
 
@@ -1686,7 +1686,7 @@ Prompt Builder keeps one draft per tab in memory: the original brief, the latest
 4. Использовать `Ctrl+B`, `Ctrl+I` и `Ctrl+U` для жирности, курсива и подчёркивания.
 5. Нажать `Ctrl+F` для временного поиска; `Enter`/`F3` находят следующее совпадение, `Shift+Enter`/`Shift+F3` — предыдущее.
 6. Использовать `Ctrl+Alt+↑`/`Ctrl+Alt+↓` для циклической смены тем; стандартные `Shift+↑`/`Shift+↓` остаются выделением текста.
-7. Нажать `Esc` или `Alt+F4`, чтобы закрыть редактор: актуальный текст, форматирование, курсор, выделение, прокрутка, тема и монитор сохраняются автоматически. Если открыт поиск, первое нажатие `Esc` закрывает его.
+7. Нажать `Esc`, `Alt+F4` или кликнуть левой кнопкой мыши по левому или правому полю экрана (с настраиваемой рамкой безопасности вокруг текста, по умолчанию 48 px), чтобы закрыть редактор: актуальный текст, форматирование, курсор, выделение, прокрутка, тема и монитор сохраняются автоматически. Если открыт поиск, первое нажатие `Esc` закрывает его. Выход по клику на поля и размер рамки безопасности настраиваются в общих настройках программы.
 
 Каждый жёсткий перенос отображается как новый абзац с межстрочным интервалом
 `1,5em` и дополнительным интервалом `0,75em`. Это только визуальная
@@ -1708,6 +1708,7 @@ plain-text содержимого. Экспорт создаёт независ�
 
 `AiteBar/ZenEditorUtility.cs`, `AiteBar/ZenEditorWindow.xaml`,
 `AiteBar/ZenEditorWindow.xaml.cs`, `AiteBar/ZenParagraphEditor.cs`,
+`AiteBar/ZenEditorLayoutHelper.cs`,
 `AiteBar/ZenEditorStore.cs`,
 `AiteBar/ZenEditorThemeCatalog.cs`.
 
@@ -2409,6 +2410,8 @@ Tray-меню.
 | `ShowPresetColorPicker` | Показывать пипетку | true/false | `false` |
 | `ShowPresetQuickNote` | Показывать Quick Note | true/false | `false` |
 | `ShowPresetZenEditor` | Показывать Дзен-редактор | true/false | `true` |
+| `ZenEditorExitOnSideClick` | Закрывать Дзен-редактор кликом по боковым полям экрана | true/false | `true` |
+| `ZenEditorSideSafetyMargin` | Защитная рамка от текста до зоны выхода (px) | double (24.0, 48.0, 72.0, 96.0) | `48.0` |
 | `ShowPresetPromptBuilder` | Показывать Конструктор промптов | true/false | `false` |
 | `ShowPresetQRCodeGenerator` | Показывать QR Code Generator | true/false | `false` |
 | `ShowPresetClipboardManager` | Показывать Clipboard Manager | true/false | `false` |

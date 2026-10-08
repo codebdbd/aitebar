@@ -21,10 +21,13 @@ namespace AiteBar
         private bool _actionValueValidationTouched;
         private List<BrowserProfileInfo> _availableProfiles = [];
         private List<string> _rotationProfilePaths = [];
+        private string _selectedSingleProfile = "";
+        private bool _useRotation;
         private int _profileLoadVersion;
         private int _previewLoadVersion;
         private CancellationTokenSource? _faviconCts;
         private bool _isLoadingElementData;
+        private bool _isCustomIconChosen;
 
         public SettingsWindow(ISettingsWindowContext context, CustomElement? el = null)
         {
@@ -143,13 +146,25 @@ namespace AiteBar
                 _selectedFont = _editingElement.IconFont;
                 _selectedColor = _editingElement.Color;
                 _selectedImagePath = _editingElement.ImagePath;
+                if (!string.IsNullOrEmpty(_editingElement.Icon) && _editingElement.Icon != "\uF45B")
+                {
+                    _isCustomIconChosen = true;
+                }
+                else if (!string.IsNullOrEmpty(_editingElement.ImagePath))
+                {
+                    string fileName = Path.GetFileName(_editingElement.ImagePath);
+                    if (fileName.StartsWith("custom_", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _isCustomIconChosen = true;
+                    }
+                }
                 SetComboValue(CmbActionType, ActionTargetHelper.NormalizeActionType(_editingElement.ActionType, _editingElement.ActionValue));
                 TxtActionValue.Text = _editingElement.ActionValue;
                 TxtHexColor.Text = _selectedColor;
                 ChkAppMode.IsChecked = _editingElement.IsAppMode;
                 ChkIncognito.IsChecked = _editingElement.IsIncognito;
-                ChkFullscreen.IsChecked = _editingElement.OpenFullscreen;
-                ChkRotation.IsChecked = _editingElement.UseRotation;
+                _useRotation = _editingElement.UseRotation;
+                _selectedSingleProfile = _editingElement.ChromeProfile ?? "";
                 _rotationProfilePaths = [.. _editingElement.RotationProfilePaths];
                 ChkCtrl.IsChecked = _editingElement.Ctrl;
                 ChkShift.IsChecked = _editingElement.Shift;
@@ -165,7 +180,6 @@ namespace AiteBar
 
                 SetComboValue(CmbBrowser, _editingElement.Browser.ToString());
                 SetComboValue(CmbContext, _editingElement.ContextId);
-                SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
                 SetComboValue(CmbKey, _editingElement.Key);
             }
             finally
@@ -175,7 +189,7 @@ namespace AiteBar
 
             UpdatePreview();
             UpdateActionUI();
-            UpdateRotationProfilesUi();
+            UpdateProfileDisplay();
             UpdateNamePlaceholderVisibility();
             
             // Если это веб-элемент без иконки — пытаемся скачать favicon
@@ -255,6 +269,7 @@ namespace AiteBar
                 _selectedIcon = picker.SelectedIcon;
                 _selectedFont = picker.SelectedFont;
                 _selectedImagePath = picker.SelectedImagePath;
+                _isCustomIconChosen = true;
                 UpdatePreview();
             }
         }
@@ -275,6 +290,7 @@ namespace AiteBar
                     CancelPendingFaviconDownload();
                     _selectedImagePath = savedPath;
                     _selectedIcon = ""; // Сбрасываем шрифтовую иконку
+                    _isCustomIconChosen = true;
                     UpdatePreview();
                 }
             }
@@ -354,6 +370,7 @@ namespace AiteBar
             if (_editingElement == null || !IsSelectedBrowser(_editingElement.Browser))
             {
                 _rotationProfilePaths = [];
+                _selectedSingleProfile = "";
             }
 
             await LoadProfilesAsync();
@@ -361,14 +378,11 @@ namespace AiteBar
 
         private async Task LoadProfilesAsync(string? preferredProfile = null)
         {
-            if (CmbBrowser == null || CmbChromeProfile == null) return;
+            if (CmbBrowser == null) return;
 
             string browserStr = ((ComboBoxItem)CmbBrowser.SelectedItem)?.Tag?.ToString() ?? "Chrome";
             if (!Enum.TryParse<BrowserType>(browserStr, out var browserType)) browserType = BrowserType.Chrome;
             int loadVersion = ++_profileLoadVersion;
-
-            CmbChromeProfile.Items.Clear();
-            CmbChromeProfile.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("SettingsWindow_NoProfile"), Tag = "" });
 
             var profileItems = await Task.Run(() => BrowserHelper.GetProfiles(browserType));
             if (loadVersion != _profileLoadVersion || !IsSelectedBrowser(browserType))
@@ -378,16 +392,61 @@ namespace AiteBar
 
             _availableProfiles = profileItems;
 
-            foreach (var profile in profileItems)
-                CmbChromeProfile.Items.Add(new ComboBoxItem { Content = profile.DisplayName, Tag = profile.ProfilePath });
-
-            CmbChromeProfile.SelectedIndex = 0;
             if (!string.IsNullOrWhiteSpace(preferredProfile))
-                SetComboValue(CmbChromeProfile, preferredProfile);
-            else if (_editingElement != null && _editingElement.Browser == browserType)
-                SetComboValue(CmbChromeProfile, _editingElement.ChromeProfile);
+            {
+                _selectedSingleProfile = preferredProfile;
+            }
+            else if (_editingElement != null && _editingElement.Browser == browserType && string.IsNullOrEmpty(_selectedSingleProfile))
+            {
+                _selectedSingleProfile = _editingElement.ChromeProfile;
+            }
 
-            UpdateRotationProfilesUi();
+            UpdateProfileDisplay();
+        }
+
+        private void UpdateProfileDisplay()
+        {
+            if (TxtProfile == null) return;
+
+            if (_useRotation)
+            {
+                int total = _availableProfiles.Count;
+                int selected = _rotationProfilePaths.Count;
+                if (selected == 0 || selected == total)
+                {
+                    TxtProfile.Text = total > 0
+                        ? LocalizationService.Format("RotationProfiles_StatusRotationAll", total)
+                        : LocalizationService.Get("SettingsWindow_RotationProfilesNoneAvailable");
+                }
+                else
+                {
+                    TxtProfile.Text = LocalizationService.Format("RotationProfiles_StatusRotation", selected, total);
+                }
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(_selectedSingleProfile))
+                {
+                    TxtProfile.Text = "";
+                }
+                else
+                {
+                    var match = _availableProfiles.FirstOrDefault(p =>
+                        string.Equals(p.ProfilePath, _selectedSingleProfile, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(p.LaunchName, _selectedSingleProfile, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(p.DisplayName, _selectedSingleProfile, StringComparison.OrdinalIgnoreCase));
+
+                    string name = match?.DisplayName ?? _selectedSingleProfile;
+                    TxtProfile.Text = LocalizationService.Format("RotationProfiles_StatusSingle", name);
+                }
+            }
+
+            if (TxtProfilePlaceholder != null)
+            {
+                TxtProfilePlaceholder.Visibility = string.IsNullOrEmpty(TxtProfile.Text)
+                    ? Visibility.Visible
+                    : Visibility.Collapsed;
+            }
         }
 
         private void RefreshLocalizedUi()
@@ -396,7 +455,7 @@ namespace AiteBar
                 ?? _editingElement?.ContextId
                 ?? _context.GetAppSettings().ActiveContextId;
             string selectedKey = (CmbKey.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? _editingElement?.Key ?? "None";
-            string selectedProfile = (CmbChromeProfile.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? _editingElement?.ChromeProfile ?? "";
+            string selectedProfile = _selectedSingleProfile;
             string selectedActionType = (CmbActionType.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? _editingElement?.ActionType ?? "Web";
             string selectedBrowser = (CmbBrowser.SelectedItem as ComboBoxItem)?.Tag?.ToString() ?? _editingElement?.Browser.ToString() ?? "Chrome";
 
@@ -426,7 +485,7 @@ namespace AiteBar
             UpdateActionPlaceholderVisibility();
             UpdateSaveButtonState();
             UpdateValidationVisuals();
-            UpdateRotationProfilesUi();
+            UpdateProfileDisplay();
 
             _ = LoadProfilesAsync(selectedProfile).ContinueWith(
                 t => Logger.Log(t.Exception!.GetBaseException()),
@@ -441,7 +500,7 @@ namespace AiteBar
 
         private string GetSelectedLaunchProfile(BrowserType browserType)
         {
-            string selectedProfile = ((ComboBoxItem)CmbChromeProfile.SelectedItem)?.Tag?.ToString() ?? "";
+            string selectedProfile = _selectedSingleProfile;
             if (browserType != BrowserType.Firefox || string.IsNullOrWhiteSpace(selectedProfile))
             {
                 return selectedProfile;
@@ -452,34 +511,31 @@ namespace AiteBar
                 ?.LaunchName ?? selectedProfile;
         }
 
-        private void ChkRotation_Changed(object sender, RoutedEventArgs e)
+        private void TxtProfile_PreviewMouseDown(object sender, MouseButtonEventArgs e)
         {
-            UpdateRotationProfilesUi();
+            OpenRotationProfileSelection();
+            e.Handled = true;
         }
 
-        private void BtnRotationProfiles_Click(object sender, RoutedEventArgs e) => OpenRotationProfileSelection();
 
         private void OpenRotationProfileSelection()
         {
-            var dialog = new RotationProfileSelectionWindow(_availableProfiles, _rotationProfilePaths)
+            var dialog = new RotationProfileSelectionWindow(
+                _availableProfiles,
+                _useRotation,
+                _selectedSingleProfile,
+                _rotationProfilePaths)
             {
                 Owner = this
             };
 
             if (dialog.ShowDialog() == true)
             {
+                _useRotation = dialog.UseRotation;
+                _selectedSingleProfile = dialog.SelectedSingleProfilePath;
                 _rotationProfilePaths = dialog.SelectedProfilePaths;
-                UpdateRotationProfilesUi();
+                UpdateProfileDisplay();
             }
-        }
-
-        private void UpdateRotationProfilesUi()
-        {
-            if (BtnRotationProfiles != null)
-            {
-                BtnRotationProfiles.IsEnabled = ChkRotation?.IsChecked == true;
-            }
-
         }
 
         private void UpdateActionUI()
@@ -563,7 +619,7 @@ namespace AiteBar
             }
             UpdateValidationVisuals();
             UpdateSaveButtonState();
-            UpdateRotationProfilesUi();
+            UpdateProfileDisplay();
         }
 
         private void CmbActionType_SelectionChanged(object sender, SelectionChangedEventArgs e) => UpdateActionUI();
@@ -605,6 +661,28 @@ namespace AiteBar
             if (actionType == ActionType.Web && !string.IsNullOrWhiteSpace(TxtActionValue.Text))
             {
                 QueueFaviconDownload(TxtActionValue.Text);
+            }
+            else if (actionType is ActionType.File or ActionType.Folder or ActionType.Program or ActionType.ScriptFile)
+            {
+                string rawPath = TxtActionValue.Text?.Trim() ?? "";
+                if (!string.IsNullOrWhiteSpace(rawPath) && (File.Exists(rawPath) || Directory.Exists(rawPath)))
+                {
+                    if (string.IsNullOrWhiteSpace(TxtName.Text))
+                    {
+                        string autoName = actionType == ActionType.Folder
+                            ? Path.GetFileName(rawPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+                            : Path.GetFileNameWithoutExtension(rawPath);
+                        if (!string.IsNullOrWhiteSpace(autoName))
+                        {
+                            TxtName.Text = autoName;
+                        }
+                    }
+
+                    if (ShouldAutoExtractLocalIcon())
+                    {
+                        TryAutoExtractLocalIcon(rawPath);
+                    }
+                }
             }
         }
 
@@ -691,6 +769,42 @@ namespace AiteBar
             _faviconCts?.Cancel();
             _faviconCts = null;
         }
+
+        private void TryAutoExtractLocalIcon(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+                return;
+
+            string pathToResolve = path.Trim();
+            if (string.Equals(Path.GetExtension(pathToResolve), ".lnk", StringComparison.OrdinalIgnoreCase))
+            {
+                var resolved = LnkResolver.Resolve(pathToResolve);
+                if (resolved != null && !string.IsNullOrWhiteSpace(resolved.TargetPath))
+                {
+                    if (File.Exists(resolved.TargetPath) || Directory.Exists(resolved.TargetPath))
+                    {
+                        pathToResolve = resolved.TargetPath;
+                    }
+                }
+            }
+
+            string? extracted = ShellIconHelper.ExtractAndSaveShellIcon(pathToResolve) ?? IconHelper.ExtractAndSaveIcon(pathToResolve);
+            if (!string.IsNullOrEmpty(extracted) && File.Exists(extracted))
+            {
+                CancelPendingFaviconDownload();
+                _selectedImagePath = extracted;
+                _selectedIcon = "";
+                UpdatePreview();
+            }
+        }
+
+        private bool ShouldAutoExtractLocalIcon()
+        {
+            return !_isCustomIconChosen &&
+                   string.IsNullOrEmpty(_selectedImagePath) &&
+                   (_selectedIcon == "\uF45B" || string.IsNullOrEmpty(_selectedIcon));
+        }
+
         private void BtnBrowse_Click(object sender, RoutedEventArgs e)
         {
             string typeStr = ((ComboBoxItem)CmbActionType.SelectedItem).Tag?.ToString() ?? "Web";
@@ -715,29 +829,39 @@ namespace AiteBar
                 {
                     TxtActionValue.Text = dlgFolder.SelectedPath;
                     if (string.IsNullOrWhiteSpace(TxtName.Text))
-                        TxtName.Text = Path.GetFileName(dlgFolder.SelectedPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
+                    {
+                        string trimmed = dlgFolder.SelectedPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                        string folderName = Path.GetFileName(trimmed);
+                        TxtName.Text = string.IsNullOrWhiteSpace(folderName) ? dlgFolder.SelectedPath : folderName;
+                    }
+
+                    if (!_isCustomIconChosen || string.IsNullOrEmpty(_selectedImagePath))
+                    {
+                        TryAutoExtractLocalIcon(dlgFolder.SelectedPath);
+                    }
                 }
                 return;
             }
 
             if (typeStr == nameof(AiteBar.ActionType.Program))
             {
-                if (!string.IsNullOrWhiteSpace(TxtActionValue.Text))
+                var dlgApps = new InstalledAppsWindow { Owner = this };
+                if (dlgApps.ShowDialog() == true && dlgApps.SelectedApp != null)
                 {
-                    string? existingDir = Path.GetDirectoryName(TxtActionValue.Text);
-                    if (!string.IsNullOrWhiteSpace(existingDir) && Directory.Exists(existingDir))
-                        dlg.InitialDirectory = existingDir;
-                }
+                    var app = dlgApps.SelectedApp;
+                    TxtActionValue.Text = app.Path;
 
-                if (string.IsNullOrWhiteSpace(dlg.InitialDirectory))
-                {
-                    string programFilesX64 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                    string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-                    if (Directory.Exists(programFilesX64))
-                        dlg.InitialDirectory = programFilesX64;
-                    else if (Directory.Exists(programFilesX86))
-                        dlg.InitialDirectory = programFilesX86;
+                    if (string.IsNullOrWhiteSpace(TxtName.Text))
+                    {
+                        TxtName.Text = app.Name;
+                    }
+
+                    if (!_isCustomIconChosen || string.IsNullOrEmpty(_selectedImagePath))
+                    {
+                        TryAutoExtractLocalIcon(app.Path);
+                    }
                 }
+                return;
             }
 
             if (dlg.ShowDialog() == true)
@@ -750,18 +874,18 @@ namespace AiteBar
                     TxtName.Text = Path.GetFileNameWithoutExtension(dlg.FileName);
                 }
 
-                // Если иконка еще не выбрана (пустое изображение и дефолтный шрифт) - пытаемся извлечь
-                if ((typeStr == nameof(AiteBar.ActionType.Program) || typeStr == nameof(AiteBar.ActionType.ScriptFile)) &&
-                    string.IsNullOrEmpty(_selectedImagePath) &&
-                    (_selectedIcon == "\uF45B" || string.IsNullOrEmpty(_selectedIcon)))
+                if (ActionTargetHelper.IsProgramPath(dlg.FileName) && typeStr == nameof(ActionType.File))
                 {
-                    string? extracted = IconHelper.ExtractAndSaveIcon(dlg.FileName);
-                    if (!string.IsNullOrEmpty(extracted))
-                    {
-                        _selectedImagePath = extracted;
-                        _selectedIcon = "";
-                        UpdatePreview();
-                    }
+                    SetComboValue(CmbActionType, nameof(ActionType.Program));
+                }
+                else if (ActionTargetHelper.IsScriptPath(dlg.FileName) && typeStr == nameof(ActionType.File))
+                {
+                    SetComboValue(CmbActionType, nameof(ActionType.ScriptFile));
+                }
+
+                if (!_isCustomIconChosen || string.IsNullOrEmpty(_selectedImagePath))
+                {
+                    TryAutoExtractLocalIcon(dlg.FileName);
                 }
             }
         }
@@ -970,8 +1094,7 @@ namespace AiteBar
                     string ext = Path.GetExtension(TxtActionValue.Text);
                     if ((string.Equals(ext, ".py", StringComparison.OrdinalIgnoreCase) ||
                          string.Equals(ext, ".pyw", StringComparison.OrdinalIgnoreCase)) &&
-                        PathHelper.FindExecutableOnPath("python.exe") == null &&
-                        PathHelper.FindExecutableOnPath("pythonw.exe") == null)
+                        ActionService.ResolvePythonExecutable(TxtActionValue.Text) == null)
                     {
                         new DarkDialog(LocalizationService.Get("SettingsWindow_PythonNotFound")) { Owner = this }.ShowDialog();
                         return;
@@ -998,6 +1121,36 @@ namespace AiteBar
                 {
                     finalImagePath = "";
                 }
+                else if ((actionType is ActionType.Program or ActionType.File or ActionType.Folder or ActionType.ScriptFile) &&
+                         !_isCustomIconChosen &&
+                         string.IsNullOrEmpty(finalImagePath) &&
+                         (_selectedIcon == "\uF45B" || string.IsNullOrEmpty(_selectedIcon)))
+                {
+                    string pathToResolve = actionValue;
+                    if (string.Equals(Path.GetExtension(pathToResolve), ".lnk", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var resolved = LnkResolver.Resolve(pathToResolve);
+                        if (resolved != null && !string.IsNullOrWhiteSpace(resolved.TargetPath))
+                        {
+                            if (File.Exists(resolved.TargetPath) || Directory.Exists(resolved.TargetPath))
+                            {
+                                pathToResolve = resolved.TargetPath;
+                            }
+                        }
+                    }
+
+                    string? extracted = ShellIconHelper.ExtractAndSaveShellIcon(pathToResolve) ?? IconHelper.ExtractAndSaveIcon(pathToResolve);
+                    if (!string.IsNullOrEmpty(extracted) && File.Exists(extracted))
+                    {
+                        finalImagePath = extracted;
+                    }
+                }
+
+                string finalIcon = _selectedIcon;
+                if (!string.IsNullOrEmpty(finalImagePath) && finalIcon == "\uF45B")
+                {
+                    finalIcon = "";
+                }
 
                 var newElement = new CustomElement
                 {
@@ -1006,7 +1159,7 @@ namespace AiteBar
                     Browser = browserType,
                     ActionType = typeStr,
                     ActionValue = actionValue,
-                    Icon = _selectedIcon,
+                    Icon = finalIcon,
                     IconFont = _selectedFont,
                     Color = _selectedColor,
                     ImagePath = finalImagePath,
@@ -1014,8 +1167,8 @@ namespace AiteBar
                     RotationProfilePaths = [.. _rotationProfilePaths],
                     IsAppMode = ChkAppMode.IsChecked ?? false,
                     IsIncognito = ChkIncognito.IsChecked ?? false,
-                    UseRotation = ChkRotation.IsChecked ?? false,
-                    OpenFullscreen = ChkFullscreen.IsChecked ?? false,
+                    UseRotation = _useRotation,
+                    OpenFullscreen = false,
                     IsTopmost = false,
                     LastUsedProfile = _editingElement?.LastUsedProfile ?? "",
                     Ctrl = actionType == AiteBar.ActionType.Hotkey && (ChkCtrl.IsChecked ?? false),

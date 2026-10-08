@@ -742,6 +742,33 @@ Wählen Sie Kombinationen, die nicht von Windows oder einer anderen App verwende
   <data name="RotationProfiles_Clear" xml:space="preserve">
     <value>Auswahl aufheben</value>
   </data>
+  <data name="RotationProfiles_ModeSingle" xml:space="preserve">
+    <value>Einzelnes Profil</value>
+  </data>
+  <data name="RotationProfiles_ModeRotation" xml:space="preserve">
+    <value>Profilrotation</value>
+  </data>
+  <data name="RotationProfiles_SingleHint" xml:space="preserve">
+    <value>Wählen Sie ein Profil zum Öffnen von Links oder wählen Sie Standard.</value>
+  </data>
+  <data name="RotationProfiles_DefaultProfile" xml:space="preserve">
+    <value>Standard (kein Profil)</value>
+  </data>
+  <data name="RotationProfiles_ResetDefault" xml:space="preserve">
+    <value>Zurücksetzen</value>
+  </data>
+  <data name="SettingsWindow_ProfilePlaceholder" xml:space="preserve">
+    <value>Standard (kein Profil)</value>
+  </data>
+  <data name="RotationProfiles_StatusSingle" xml:space="preserve">
+    <value>Einzeln: {0}</value>
+  </data>
+  <data name="RotationProfiles_StatusRotation" xml:space="preserve">
+    <value>Rotation: {0} von {1}</value>
+  </data>
+  <data name="RotationProfiles_StatusRotationAll" xml:space="preserve">
+    <value>Rotation: alle Profile ({0})</value>
+  </data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve">
     <value>Nach Updates suchen</value>
   </data>
@@ -2480,6 +2507,21 @@ GitHub-Release-Seite öffnen?</value>
   </data>
   <data name="ZenEditor_Title" xml:space="preserve">
     <value>Zen-Editor</value>
+  </data>
+  <data name="ZenEditor_ExitOnSideClickSetting" xml:space="preserve">
+    <value>Beenden durch Klick auf freie Bildschirmbereiche</value>
+  </data>
+  <data name="ZenEditor_ExitOnSideClickHint" xml:space="preserve">
+    <value>Zen-Editor durch Klicken auf freie Bereiche links oder rechts vom Text schließen, mit automatischem Speichern.</value>
+  </data>
+  <data name="ZenEditor_SideSafetyMarginSetting" xml:space="preserve">
+    <value>Sicherheitsrahmen um den Text</value>
+  </data>
+  <data name="ZenEditor_SideSafetyMarginHint" xml:space="preserve">
+    <value>Breite des Schutzabstands um den Text, bei dem ein Klick den Editor nicht schließt.</value>
+  </data>
+  <data name="ZenEditor_SafetyMargin48Default" xml:space="preserve">
+    <value>48 px (Standard)</value>
   </data>
   <data name="ZenEditor_Untitled" xml:space="preserve">
     <value>Neues Dokument</value>
@@ -4839,5 +4881,23 @@ Möchten Sie mit der endgültigen Bereinigung fortfahren?</value>
   </data>
   <data name="ArtNudeStyle_CandlelitIntimacy" xml:space="preserve">
     <value>Kerzenschein-Intimität</value>
+  </data>
+  <data name="InstalledApps_Title" xml:space="preserve">
+    <value>Installierte Programme</value>
+  </data>
+  <data name="InstalledApps_SearchPlaceholder" xml:space="preserve">
+    <value>Programme suchen...</value>
+  </data>
+  <data name="InstalledApps_Loading" xml:space="preserve">
+    <value>Installierte Programme werden geladen...</value>
+  </data>
+  <data name="InstalledApps_BrowseDisk" xml:space="preserve">
+    <value>Auf Computer suchen...</value>
+  </data>
+  <data name="InstalledApps_Select" xml:space="preserve">
+    <value>Auswählen</value>
+  </data>
+  <data name="SettingsWindow_AppsCatalog" xml:space="preserve">
+    <value>Programme...</value>
   </data>
 </root>

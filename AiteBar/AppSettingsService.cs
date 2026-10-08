@@ -109,6 +109,8 @@ namespace AiteBar
                 ShowPresetPromptBuilder = original.ShowPresetPromptBuilder,
                 ShowPresetZenEditor = original.ShowPresetZenEditor,
                 ShowPresetAiteProfiles = original.ShowPresetAiteProfiles,
+                ZenEditorExitOnSideClick = original.ZenEditorExitOnSideClick,
+                ZenEditorSideSafetyMargin = original.ZenEditorSideSafetyMargin,
                 ClipboardManagerPersistHistory = original.ClipboardManagerPersistHistory,
                 QuickNoteThemeId = original.QuickNoteThemeId,
                 QuickNotePinned = original.QuickNotePinned,
@@ -293,6 +295,11 @@ namespace AiteBar
                     Win = el.Win,
                     Key = el.Key,
                     ImagePath = el.ImagePath,
+                    ScriptArguments = el.ScriptArguments,
+                    SkipScriptConfirmation = el.SkipScriptConfirmation,
+                    HideScriptWindow = el.HideScriptWindow,
+                    KeepScriptWindowOpen = el.KeepScriptWindowOpen,
+                    RunAsAdmin = el.RunAsAdmin,
                     ContextId = el.ContextId
                 }).ToList() ?? [],
                 UtilityButtonOrder = [.. (original.UtilityButtonOrder ?? [])],
@@ -910,6 +917,11 @@ namespace AiteBar
                     Win = item.Win,
                     Key = item.Key,
                     ImagePath = item.ImagePath,
+                    ScriptArguments = item.ScriptArguments,
+                    SkipScriptConfirmation = item.SkipScriptConfirmation,
+                    HideScriptWindow = item.HideScriptWindow,
+                    KeepScriptWindowOpen = item.KeepScriptWindowOpen,
+                    RunAsAdmin = item.RunAsAdmin,
                     ContextId = contextId
                 };
 
@@ -942,6 +954,11 @@ namespace AiteBar
                    left.Win == right.Win &&
                    left.Key == right.Key &&
                    left.ImagePath == right.ImagePath &&
+                   left.ScriptArguments == right.ScriptArguments &&
+                   left.SkipScriptConfirmation == right.SkipScriptConfirmation &&
+                   left.HideScriptWindow == right.HideScriptWindow &&
+                   left.KeepScriptWindowOpen == right.KeepScriptWindowOpen &&
+                   left.RunAsAdmin == right.RunAsAdmin &&
                    left.ContextId == right.ContextId;
         }
 
@@ -1190,6 +1207,7 @@ namespace AiteBar
             ScriptArguments = s.ScriptArguments,
             SkipScriptConfirmation = s.SkipScriptConfirmation,
             HideScriptWindow = s.HideScriptWindow,
+            KeepScriptWindowOpen = s.KeepScriptWindowOpen,
             RunAsAdmin = s.RunAsAdmin
         };
 

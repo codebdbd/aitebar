@@ -12,6 +12,9 @@ internal static class ActionTargetHelper
         if (string.IsNullOrWhiteSpace(path) || Directory.Exists(path))
             return false;
 
+        if (path.StartsWith("shell:AppsFolder\\", StringComparison.OrdinalIgnoreCase))
+            return true;
+
         string extension = Path.GetExtension(path).ToLowerInvariant();
         return Array.Exists(ProgramExtensions, item => item == extension);
     }

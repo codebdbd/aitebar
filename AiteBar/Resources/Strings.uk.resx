@@ -541,6 +541,33 @@
   <data name="RotationProfiles_Clear" xml:space="preserve">
     <value>Зняти виділення</value>
   </data>
+  <data name="RotationProfiles_ModeSingle" xml:space="preserve">
+    <value>Одиночний профіль</value>
+  </data>
+  <data name="RotationProfiles_ModeRotation" xml:space="preserve">
+    <value>Ротація профілів</value>
+  </data>
+  <data name="RotationProfiles_SingleHint" xml:space="preserve">
+    <value>Виберіть профіль для відкриття посилань або залиште за замовчуванням.</value>
+  </data>
+  <data name="RotationProfiles_DefaultProfile" xml:space="preserve">
+    <value>За замовчуванням (без профілю)</value>
+  </data>
+  <data name="RotationProfiles_ResetDefault" xml:space="preserve">
+    <value>Скинути</value>
+  </data>
+  <data name="SettingsWindow_ProfilePlaceholder" xml:space="preserve">
+    <value>За замовчуванням (без профілю)</value>
+  </data>
+  <data name="RotationProfiles_StatusSingle" xml:space="preserve">
+    <value>Одиночний: {0}</value>
+  </data>
+  <data name="RotationProfiles_StatusRotation" xml:space="preserve">
+    <value>Ротація: {0} з {1}</value>
+  </data>
+  <data name="RotationProfiles_StatusRotationAll" xml:space="preserve">
+    <value>Ротація: всі профілі ({0})</value>
+  </data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve">
     <value>Перевіряти оновлення</value>
   </data>
@@ -2480,6 +2507,21 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
   </data>
   <data name="ZenEditor_Title" xml:space="preserve">
     <value>Дзен-редактор</value>
+  </data>
+  <data name="ZenEditor_ExitOnSideClickSetting" xml:space="preserve">
+    <value>Вихід за кліком на вільні поля екрана</value>
+  </data>
+  <data name="ZenEditor_ExitOnSideClickHint" xml:space="preserve">
+    <value>Закривати Дзен-редактор при кліку у вільну область ліворуч або праворуч від тексту з автозбереженням.</value>
+  </data>
+  <data name="ZenEditor_SideSafetyMarginSetting" xml:space="preserve">
+    <value>Рамка безпеки від тексту</value>
+  </data>
+  <data name="ZenEditor_SideSafetyMarginHint" xml:space="preserve">
+    <value>Ширина захисного відступу навколо тексту, клік у межах якого не закриває редактор.</value>
+  </data>
+  <data name="ZenEditor_SafetyMargin48Default" xml:space="preserve">
+    <value>48 px (За замовчуванням)</value>
   </data>
   <data name="ZenEditor_Untitled" xml:space="preserve">
     <value>Новий документ</value>
@@ -4839,5 +4881,23 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
   </data>
   <data name="ArtNudeStyle_CandlelitIntimacy" xml:space="preserve">
     <value>Інтимність при свічках</value>
+  </data>
+  <data name="InstalledApps_Title" xml:space="preserve">
+    <value>Встановлені програми</value>
+  </data>
+  <data name="InstalledApps_SearchPlaceholder" xml:space="preserve">
+    <value>Пошук програм...</value>
+  </data>
+  <data name="InstalledApps_Loading" xml:space="preserve">
+    <value>Завантаження встановлених програм...</value>
+  </data>
+  <data name="InstalledApps_BrowseDisk" xml:space="preserve">
+    <value>Огляд на диску...</value>
+  </data>
+  <data name="InstalledApps_Select" xml:space="preserve">
+    <value>Вибрати</value>
+  </data>
+  <data name="SettingsWindow_AppsCatalog" xml:space="preserve">
+    <value>Програми...</value>
   </data>
 </root>

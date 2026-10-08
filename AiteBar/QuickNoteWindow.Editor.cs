@@ -23,13 +23,82 @@ namespace AiteBar
     [SupportedOSPlatform("windows6.1")]
     public partial class QuickNoteWindow
     {
-        private void BtnBold_Click(object sender, RoutedEventArgs e) => ToggleFormatting(TextElement.FontWeightProperty, FontWeights.Bold, FontWeights.Normal);
+        private void BtnBold_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleFormatting(TextElement.FontWeightProperty, FontWeights.Bold, FontWeights.Normal);
+            UpdateToolbarFormattingState();
+        }
 
-        private void BtnItalic_Click(object sender, RoutedEventArgs e) => ToggleFormatting(TextElement.FontStyleProperty, FontStyles.Italic, FontStyles.Normal);
+        private void BtnItalic_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleFormatting(TextElement.FontStyleProperty, FontStyles.Italic, FontStyles.Normal);
+            UpdateToolbarFormattingState();
+        }
 
-        private void BtnUnderline_Click(object sender, RoutedEventArgs e) => ToggleTextDecoration(TextDecorationLocation.Underline);
+        private void BtnUnderline_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleTextDecoration(TextDecorationLocation.Underline);
+            UpdateToolbarFormattingState();
+        }
 
-        private void BtnStrikethrough_Click(object sender, RoutedEventArgs e) => ToggleTextDecoration(TextDecorationLocation.Strikethrough);
+        private void BtnStrikethrough_Click(object sender, RoutedEventArgs e)
+        {
+            ToggleTextDecoration(TextDecorationLocation.Strikethrough);
+            UpdateToolbarFormattingState();
+        }
+
+        internal void UpdateToolbarFormattingState()
+        {
+            if (BtnBold == null || BtnItalic == null || BtnUnderline == null || BtnStrikethrough == null)
+            {
+                return;
+            }
+
+            object weight = TxtNote.Selection.GetPropertyValue(TextElement.FontWeightProperty);
+            BtnBold.IsChecked = weight is FontWeight fw && (fw == FontWeights.Bold || fw == FontWeights.SemiBold || fw == FontWeights.ExtraBold);
+
+            object style = TxtNote.Selection.GetPropertyValue(TextElement.FontStyleProperty);
+            BtnItalic.IsChecked = style is System.Windows.FontStyle fs && (fs == FontStyles.Italic || fs == FontStyles.Oblique);
+
+            object decorations = TxtNote.Selection.GetPropertyValue(Inline.TextDecorationsProperty);
+            if (decorations is TextDecorationCollection decs)
+            {
+                BtnUnderline.IsChecked = decs.Any(d => d.Location == TextDecorationLocation.Underline);
+                BtnStrikethrough.IsChecked = decs.Any(d => d.Location == TextDecorationLocation.Strikethrough);
+            }
+            else
+            {
+                BtnUnderline.IsChecked = false;
+                BtnStrikethrough.IsChecked = false;
+            }
+
+            // Determine list/task context from the paragraph at the caret (or selection start).
+            if (BtnBullet != null && BtnNumbered != null && BtnTaskList != null)
+            {
+                Paragraph? caretPara = TxtNote.CaretPosition?.Paragraph
+                    ?? TxtNote.Selection.Start.Paragraph;
+
+                bool isTask = QuickNoteDocumentFormatting.IsTaskParagraph(caretPara, out _, out _, out _);
+                bool isBullet = false;
+                bool isNumbered = false;
+
+                if (!isTask && caretPara?.Parent is ListItem li && li.Parent is FlowList list)
+                {
+                    isBullet = list.MarkerStyle == TextMarkerStyle.Disc
+                        || list.MarkerStyle == TextMarkerStyle.Square
+                        || list.MarkerStyle == TextMarkerStyle.Circle;
+                    isNumbered = list.MarkerStyle == TextMarkerStyle.Decimal
+                        || list.MarkerStyle == TextMarkerStyle.LowerLatin
+                        || list.MarkerStyle == TextMarkerStyle.UpperLatin
+                        || list.MarkerStyle == TextMarkerStyle.LowerRoman
+                        || list.MarkerStyle == TextMarkerStyle.UpperRoman;
+                }
+
+                BtnBullet.IsChecked = isBullet;
+                BtnNumbered.IsChecked = isNumbered;
+                BtnTaskList.IsChecked = isTask;
+            }
+        }
 
         private void BtnCode_Click(object sender, RoutedEventArgs e)
         {
@@ -81,9 +150,17 @@ namespace AiteBar
             }, DispatcherPriority.Input);
         }
 
-        private void BtnBullet_Click(object sender, RoutedEventArgs e) => ApplyListFormatting(numbered: false);
+        private void BtnBullet_Click(object sender, RoutedEventArgs e)
+        {
+            ApplyListFormatting(numbered: false);
+            UpdateToolbarFormattingState();
+        }
 
-        private void BtnNumbered_Click(object sender, RoutedEventArgs e) => ApplyListFormatting(numbered: true);
+        private void BtnNumbered_Click(object sender, RoutedEventArgs e)
+        {
+            ApplyListFormatting(numbered: true);
+            UpdateToolbarFormattingState();
+        }
 
         private void BtnTaskList_Click(object sender, RoutedEventArgs e)
         {
@@ -101,6 +178,7 @@ namespace AiteBar
             finally { TxtNote.EndChange(); }
             MarkChangedAndScheduleSave();
             ScheduleFooterStatsUpdate();
+            UpdateToolbarFormattingState();
             TxtNote.Focus();
         }
 
@@ -225,166 +303,42 @@ namespace AiteBar
 
         private bool HandleTaskItemEnterKey()
         {
-            Paragraph? currentParagraph = TxtNote.CaretPosition?.Paragraph;
-            if (currentParagraph == null || !QuickNoteDocumentFormatting.IsTaskParagraph(currentParagraph, out _, out _, out _))
-            {
-                return false;
-            }
-
-            string itemText = new TextRange(currentParagraph.ContentStart, currentParagraph.ContentEnd).Text.Trim();
-            if (string.IsNullOrEmpty(itemText))
-            {
-                _saveSuppressionCount++;
-                try
-                {
-                    TxtNote.BeginChange();
-                    try
-                    {
-                        QuickNoteDocumentFormatting.RemoveTaskCheckbox(currentParagraph, _theme);
-                    }
-                    finally
-                    {
-                        TxtNote.EndChange();
-                    }
-                }
-                finally
-                {
-                    _saveSuppressionCount--;
-                }
-
-                MarkChangedAndScheduleSave();
-                ScheduleFooterStatsUpdate();
-                return true;
-            }
-
             _saveSuppressionCount++;
             try
             {
-                TxtNote.BeginChange();
-                try
+                if (QuickNoteTaskListController.HandleEnterKey(TxtNote, _theme, OnTaskItemToggled, ConnectTaskItemInParagraph))
                 {
-                    if (!TxtNote.Selection.IsEmpty)
-                    {
-                        TxtNote.Selection.Text = string.Empty;
-                    }
-
-                    TextPointer? caret = TxtNote.CaretPosition;
-                    if (caret == null)
-                    {
-                        return false;
-                    }
-
-                    var newParagraph = new Paragraph();
-                    var newContainer = QuickNoteDocumentFormatting.CreateTaskCheckbox(false, isChecked => OnTaskItemToggled(newParagraph, isChecked), _theme);
-                    newParagraph.Inlines.Add(newContainer);
-
-                    if (caret.CompareTo(currentParagraph.ContentEnd) >= 0)
-                    {
-                        newParagraph.Inlines.Add(new Run(string.Empty));
-                    }
-                    else
-                    {
-                        TextRange tailRange = new TextRange(caret, currentParagraph.ContentEnd);
-                        using var stream = new System.IO.MemoryStream();
-                        tailRange.Save(stream, DataFormats.XamlPackage);
-                        tailRange.Text = string.Empty;
-
-                        stream.Position = 0;
-                        var tempDoc = new FlowDocument();
-                        var tempRange = new TextRange(tempDoc.ContentStart, tempDoc.ContentEnd);
-                        tempRange.Load(stream, DataFormats.XamlPackage);
-
-                        List<Inline> extractedInlines = new();
-                        foreach (Block b in tempDoc.Blocks.ToList())
-                        {
-                            if (b is Paragraph p)
-                            {
-                                foreach (Inline inline in p.Inlines.ToList())
-                                {
-                                    p.Inlines.Remove(inline);
-                                    extractedInlines.Add(inline);
-                                }
-                            }
-                        }
-
-                        if (extractedInlines.Count > 0)
-                        {
-                            foreach (var inline in extractedInlines)
-                            {
-                                newParagraph.Inlines.Add(inline);
-                            }
-                        }
-                        else
-                        {
-                            newParagraph.Inlines.Add(new Run(string.Empty));
-                        }
-                    }
-
-                    currentParagraph.SiblingBlocks.InsertAfter(currentParagraph, newParagraph);
-                    QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(newParagraph, false, _theme);
-                    ConnectTaskItemInParagraph(newParagraph);
-                    TxtNote.CaretPosition = newParagraph.Inlines.FirstInline?.NextInline?.ContentStart ?? newParagraph.ContentEnd;
+                    MarkChangedAndScheduleSave();
+                    ScheduleFooterStatsUpdate();
+                    return true;
                 }
-                finally
-                {
-                    TxtNote.EndChange();
-                }
+
+                return false;
             }
             finally
             {
                 _saveSuppressionCount--;
             }
-
-            MarkChangedAndScheduleSave();
-            ScheduleFooterStatsUpdate();
-            return true;
         }
 
         private bool HandleTaskItemBackspaceKey()
         {
-            if (!TxtNote.Selection.IsEmpty)
+            _saveSuppressionCount++;
+            try
             {
-                return false;
-            }
-
-            Paragraph? currentParagraph = TxtNote.CaretPosition?.Paragraph;
-            if (currentParagraph == null || !QuickNoteDocumentFormatting.IsTaskParagraph(currentParagraph, out _, out _, out _))
-            {
-                return false;
-            }
-
-            TextPointer? caret = TxtNote.CaretPosition;
-            if (caret == null)
-            {
-                return false;
-            }
-            TextRange headRange = new TextRange(currentParagraph.ContentStart, caret);
-            if (string.IsNullOrWhiteSpace(headRange.Text))
-            {
-                _saveSuppressionCount++;
-                try
+                if (QuickNoteTaskListController.HandleBackspaceKey(TxtNote, _theme))
                 {
-                    TxtNote.BeginChange();
-                    try
-                    {
-                        QuickNoteDocumentFormatting.RemoveTaskCheckbox(currentParagraph, _theme);
-                    }
-                    finally
-                    {
-                        TxtNote.EndChange();
-                    }
-                }
-                finally
-                {
-                    _saveSuppressionCount--;
+                    MarkChangedAndScheduleSave();
+                    ScheduleFooterStatsUpdate();
+                    return true;
                 }
 
-                MarkChangedAndScheduleSave();
-                ScheduleFooterStatsUpdate();
-                return true;
+                return false;
             }
-
-            return false;
+            finally
+            {
+                _saveSuppressionCount--;
+            }
         }
 
         private bool TryAutoConvertMarkdownOnSpace()
@@ -509,8 +463,13 @@ namespace AiteBar
                     try
                     {
                         rangeBeforeCaret.Text = string.Empty;
-                        paragraph.FontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(level);
+                        double fontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(level);
+                        paragraph.FontSize = fontSize;
                         paragraph.FontWeight = FontWeights.SemiBold;
+                        foreach (Inline inline in paragraph.Inlines)
+                        {
+                            inline.ClearValue(TextElement.FontSizeProperty);
+                        }
                     }
                     finally
                     {
@@ -804,16 +763,98 @@ namespace AiteBar
             TxtNote.Focus();
         }
 
-        private void ChangeSelectionFontSize(double delta)
+        internal void ChangeSelectionFontSize(double delta)
         {
             RestoreFormatSelection(_preservedFormatSelection);
-            object value = TxtNote.Selection.GetPropertyValue(TextElement.FontSizeProperty);
-            double current = value is double size ? size : QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0);
-            RunDocumentChangeWithoutAutoSave(() =>
-                TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, Math.Clamp(current + delta, 10, 36)));
+            RunDocumentChangeWithoutAutoSave(() => ApplyFontSizeDeltaToSelection(TxtNote.Selection, delta));
             _preservedFormatSelection = null;
             MarkChangedAndScheduleSave();
             TxtNote.Focus();
+        }
+
+        /// <summary>
+        /// Applies <paramref name="delta"/> to each Run and Paragraph inside <paramref name="selection"/>
+        /// individually, preserving the relative size ratio between headings and body text.
+        /// </summary>
+        internal static void ApplyFontSizeDeltaToSelection(TextSelection selection, double delta)
+        {
+            double defaultSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0);
+
+            if (selection.IsEmpty)
+            {
+                object value = selection.GetPropertyValue(TextElement.FontSizeProperty);
+                double size = value is double s ? s : defaultSize;
+                selection.ApplyPropertyValue(TextElement.FontSizeProperty, Math.Clamp(size + delta, 10, 96));
+                return;
+            }
+
+            // 1. Collect all paragraphs overlapping the selection
+            var paragraphs = new HashSet<Paragraph>();
+            TextPointer ptr = selection.Start;
+            while (ptr != null && ptr.CompareTo(selection.End) <= 0)
+            {
+                if (ptr.Paragraph != null)
+                {
+                    paragraphs.Add(ptr.Paragraph);
+                }
+                TextPointer? next = ptr.GetNextContextPosition(LogicalDirection.Forward);
+                if (next == null || next.CompareTo(ptr) <= 0) break;
+                ptr = next;
+            }
+
+            // Scale paragraphs that have explicit local heading sizes
+            foreach (Paragraph para in paragraphs)
+            {
+                object local = para.ReadLocalValue(TextElement.FontSizeProperty);
+                if (local is double paraSize)
+                {
+                    para.FontSize = Math.Clamp(paraSize + delta, 10, 96);
+                }
+            }
+
+            // 2. Collect and scale individual runs in the selection
+            var visitedRuns = new HashSet<Run>();
+            ptr = selection.Start;
+            while (ptr != null && ptr.CompareTo(selection.End) < 0)
+            {
+                if (ptr.GetPointerContext(LogicalDirection.Forward) == TextPointerContext.ElementStart &&
+                    ptr.GetAdjacentElement(LogicalDirection.Forward) is Run adjRun)
+                {
+                    visitedRuns.Add(adjRun);
+                }
+                else if (ptr.Parent is Run parentRun)
+                {
+                    visitedRuns.Add(parentRun);
+                }
+
+                TextPointer? next = ptr.GetNextContextPosition(LogicalDirection.Forward);
+                if (next == null || next.CompareTo(ptr) <= 0) break;
+                ptr = next;
+            }
+
+            foreach (Run run in visitedRuns)
+            {
+                Paragraph? parent = run.Parent as Paragraph;
+                bool parentHasHeadingSize = parent != null && parent.ReadLocalValue(TextElement.FontSizeProperty) is double;
+
+                object local = run.ReadLocalValue(TextElement.FontSizeProperty);
+                if (local is double runSize)
+                {
+                    run.FontSize = Math.Clamp(runSize + delta, 10, 96);
+                }
+                else if (!parentHasHeadingSize)
+                {
+                    // Body text without local override: scale from default body font size
+                    run.FontSize = Math.Clamp(defaultSize + delta, 10, 96);
+                }
+            }
+
+            if (visitedRuns.Count == 0 && paragraphs.Count == 0)
+            {
+                object value = selection.GetPropertyValue(TextElement.FontSizeProperty);
+                double size = value is double s ? s : defaultSize;
+                selection.ApplyPropertyValue(TextElement.FontSizeProperty, Math.Clamp(size + delta, 10, 96));
+            }
         }
 
         private void ToggleTextDecoration(TextDecorationLocation location)
@@ -898,7 +939,7 @@ namespace AiteBar
             TxtNote.Focus();
         }
 
-        private void ApplyHeadingToSelectedLines(int headingLevel, int selectionStart, int selectionEnd)
+        internal void ApplyHeadingToSelectedLines(int headingLevel, int selectionStart, int selectionEnd)
         {
             _saveSuppressionCount++;
             try
@@ -961,10 +1002,25 @@ namespace AiteBar
                 return;
             }
 
+            double targetFontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(headingLevel);
+            FontWeight targetFontWeight = headingLevel == 0 ? FontWeights.Normal : FontWeights.SemiBold;
+
+            Paragraph? pStart = start.Paragraph;
+            Paragraph? pEnd = end.Paragraph;
+            if (pStart != null && pStart == pEnd)
+            {
+                pStart.FontSize = targetFontSize;
+                pStart.FontWeight = targetFontWeight;
+                foreach (Inline inline in pStart.Inlines)
+                {
+                    inline.ClearValue(TextElement.FontSizeProperty);
+                }
+            }
+
             var range = new TextRange(start, end);
             range.ApplyPropertyValue(TextElement.FontFamilyProperty, QuickNoteFonts.Default);
-            range.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(headingLevel));
-            range.ApplyPropertyValue(TextElement.FontWeightProperty, headingLevel == 0 ? FontWeights.Normal : FontWeights.SemiBold);
+            range.ApplyPropertyValue(TextElement.FontSizeProperty, targetFontSize);
+            range.ApplyPropertyValue(TextElement.FontWeightProperty, targetFontWeight);
             range.ApplyPropertyValue(TextElement.FontStyleProperty, FontStyles.Normal);
         }
 
@@ -1008,7 +1064,7 @@ namespace AiteBar
                     return;
                 }
 
-                InsertHyperlinkAtPointer(insertionPointer, QuickNoteDocumentFormatting.CreateHyperlink(linkText, url));
+                QuickNoteHyperlinkHelper.InsertHyperlinkAtPointer(insertionPointer, QuickNoteDocumentFormatting.CreateHyperlink(linkText, url));
             }
             finally
             {
@@ -1092,98 +1148,6 @@ namespace AiteBar
             }
         }
 
-        private static void InsertHyperlinkAtPointer(TextPointer pointer, Hyperlink hyperlink)
-        {
-            if (pointer.Parent is Run run)
-            {
-                InsertHyperlinkInRun(run, pointer, hyperlink);
-                return;
-            }
-
-            if (pointer.Parent is Span span)
-            {
-                InsertInlineInCollection(span.Inlines, pointer, hyperlink);
-                return;
-            }
-
-            if (pointer.Paragraph is { } paragraph)
-            {
-                InsertInlineInCollection(paragraph.Inlines, pointer, hyperlink);
-            }
-        }
-
-        private static void InsertHyperlinkInRun(Run run, TextPointer pointer, Hyperlink hyperlink)
-        {
-            InlineCollection? siblings = GetInlineSiblings(run);
-            if (siblings == null)
-            {
-                return;
-            }
-
-            int splitOffset = new TextRange(run.ContentStart, pointer).Text.Length;
-            splitOffset = Math.Clamp(splitOffset, 0, run.Text.Length);
-            string before = run.Text[..splitOffset];
-            string after = run.Text[splitOffset..];
-
-            run.Text = before;
-            Inline anchor;
-            if (string.IsNullOrEmpty(before))
-            {
-                siblings.InsertBefore(run, hyperlink);
-                anchor = hyperlink;
-                siblings.Remove(run);
-            }
-            else
-            {
-                siblings.InsertAfter(run, hyperlink);
-                anchor = hyperlink;
-            }
-
-            if (!string.IsNullOrEmpty(after))
-            {
-                siblings.InsertAfter(anchor, CloneRunWithText(run, after));
-            }
-        }
-
-        private static void InsertInlineInCollection(InlineCollection inlines, TextPointer pointer, Inline inline)
-        {
-            Inline? nextInline = pointer.GetAdjacentElement(LogicalDirection.Forward) as Inline;
-            if (nextInline != null && ContainsInline(inlines, nextInline))
-            {
-                inlines.InsertBefore(nextInline, inline);
-                return;
-            }
-
-            Inline? previousInline = pointer.GetAdjacentElement(LogicalDirection.Backward) as Inline;
-            if (previousInline != null && ContainsInline(inlines, previousInline))
-            {
-                inlines.InsertAfter(previousInline, inline);
-                return;
-            }
-
-            inlines.Add(inline);
-        }
-
-        private static InlineCollection? GetInlineSiblings(Inline inline)
-        {
-            return inline.Parent switch
-            {
-                Paragraph paragraph => paragraph.Inlines,
-                Span span => span.Inlines,
-                _ => null
-            };
-        }
-
-        private static bool ContainsInline(InlineCollection inlines, Inline inline)
-        {
-            return inlines.Cast<Inline>().Any(candidate => ReferenceEquals(candidate, inline));
-        }
-
-        private static Run CloneRunWithText(Run source, string text)
-        {
-            return QuickNoteDocumentContract.CloneRunWithText(source, text);
-        }
-
         private void ApplyRangeEdit(QuickNoteRangeEdit edit)
         {
             TextPointer? start = GetTextPointerAtOffset(edit.StartOffset);
@@ -1229,7 +1193,7 @@ namespace AiteBar
                     if (scope != ClearFormattingScope.InlineOnly)
                     {
                         string textBeforeListUnwrap = GetEditorText();
-                        RemoveSelectedListFormatting(TxtNote.Selection);
+                        QuickNoteListHelper.RemoveSelectedListFormatting(TxtNote.Document, TxtNote.Selection);
                         string textAfterListUnwrap = GetEditorText();
                         (selectionStart, selectionEnd) = QuickNoteDocumentHelper.RemapSelection(
                             textBeforeListUnwrap,
@@ -1242,7 +1206,7 @@ namespace AiteBar
 
                     if (scope != ClearFormattingScope.PreserveLinks)
                     {
-                        UnwrapHyperlinksInSelection();
+                        QuickNoteHyperlinkHelper.UnwrapHyperlinksInSelection(TxtNote.Document, TxtNote.Selection);
                         SelectEditorRangeByText(selectionStart, selectionEnd, selectedTextToRestore);
                     }
 
@@ -1358,262 +1322,7 @@ namespace AiteBar
                 return selectionStart.CompareTo(rangeStart) >= 0 && selectionStart.CompareTo(rangeEnd) <= 0;
             }
 
-            return TextRangesIntersect(selectionStart, selectionEnd, rangeStart, rangeEnd);
-        }
-
-        private void UnwrapHyperlinksInSelection()
-        {
-            TextPointer start = TxtNote.Selection.Start;
-            TextPointer end = TxtNote.Selection.End;
-            var hyperlinks = GetAllHyperlinks(TxtNote.Document.Blocks)
-                .Where(hyperlink => TextRangesIntersect(start, end, hyperlink.ContentStart, hyperlink.ContentEnd))
-                .Where(hyperlink => !string.Equals(
-                    QuickNoteDocumentFormatting.GetHyperlinkUrl(hyperlink),
-                    QuickNoteDocumentFormatting.CodeCopyLink,
-                    StringComparison.OrdinalIgnoreCase))
-                .Select(hyperlink =>
-                {
-                    string text = QuickNoteDocumentHelper.NormalizeLineEndings(
-                        new TextRange(hyperlink.ContentStart, hyperlink.ContentEnd).Text);
-                    int selectionStart = start.CompareTo(hyperlink.ContentStart) <= 0
-                        ? 0
-                        : QuickNoteDocumentHelper.NormalizeLineEndings(
-                            new TextRange(hyperlink.ContentStart, start).Text).Length;
-                    int selectionEnd = end.CompareTo(hyperlink.ContentEnd) >= 0
-                        ? text.Length
-                        : QuickNoteDocumentHelper.NormalizeLineEndings(
-                            new TextRange(hyperlink.ContentStart, end).Text).Length;
-                    return (
-                        Hyperlink: hyperlink,
-                        Text: text,
-                        Start: Math.Clamp(selectionStart, 0, text.Length),
-                        End: Math.Clamp(selectionEnd, 0, text.Length));
-                })
-                .ToList();
-
-            TxtNote.BeginChange();
-            try
-            {
-                foreach (var item in hyperlinks.AsEnumerable().Reverse())
-                {
-                    Hyperlink hyperlink = item.Hyperlink;
-                    InlineCollection? parentInlines = GetInlineSiblings(hyperlink);
-                    if (parentInlines == null)
-                    {
-                        continue;
-                    }
-
-                    if (item.Start > 0 || item.End < item.Text.Length)
-                    {
-                        ReplaceHyperlinkWithFragments(parentInlines, hyperlink, item.Text, item.Start, item.End);
-                        continue;
-                    }
-
-                    foreach (Inline child in hyperlink.Inlines.ToList())
-                    {
-                        hyperlink.Inlines.Remove(child);
-                        parentInlines.InsertBefore(hyperlink, child);
-                    }
-
-                    parentInlines.Remove(hyperlink);
-                }
-            }
-            finally
-            {
-                TxtNote.EndChange();
-            }
-        }
-
-        private static void ReplaceHyperlinkWithFragments(
-            InlineCollection parentInlines,
-            Hyperlink source,
-            string text,
-            int selectionStart,
-            int selectionEnd)
-        {
-            if (selectionStart > 0)
-            {
-                parentInlines.InsertBefore(source, CreateHyperlinkFragment(
-                    source,
-                    CloneInlineRange(source.Inlines, 0, selectionStart)));
-            }
-
-            if (selectionEnd > selectionStart)
-            {
-                foreach (Inline inline in CloneInlineRange(source.Inlines, selectionStart, selectionEnd))
-                {
-                    parentInlines.InsertBefore(source, inline);
-                }
-            }
-
-            if (selectionEnd < text.Length)
-            {
-                parentInlines.InsertBefore(source, CreateHyperlinkFragment(
-                    source,
-                    CloneInlineRange(source.Inlines, selectionEnd, text.Length)));
-            }
-
-            parentInlines.Remove(source);
-        }
-
-        private static Hyperlink CreateHyperlinkFragment(Hyperlink source, IEnumerable<Inline> inlines)
-        {
-            Hyperlink fragment = QuickNoteDocumentContract.CloneHyperlinkShell(source);
-
-            foreach (Inline inline in inlines)
-            {
-                fragment.Inlines.Add(inline);
-            }
-
-            return fragment;
-        }
-
-        private static IReadOnlyList<Inline> CloneInlineRange(InlineCollection inlines, int start, int end)
-        {
-            var result = new List<Inline>();
-            int offset = 0;
-            foreach (Inline inline in inlines)
-            {
-                int length = GetInlineTextLength(inline);
-                int localStart = Math.Clamp(start - offset, 0, length);
-                int localEnd = Math.Clamp(end - offset, 0, length);
-                if (localEnd > localStart && CloneInlineRange(inline, localStart, localEnd) is { } clone)
-                {
-                    result.Add(clone);
-                }
-
-                offset += length;
-                if (offset >= end)
-                {
-                    break;
-                }
-            }
-
-            return result;
-        }
-
-        private static Inline? CloneInlineRange(Inline inline, int start, int end)
-        {
-            if (inline is Run run)
-            {
-                return CloneRunWithText(run, run.Text[start..end]);
-            }
-
-            if (inline is LineBreak)
-            {
-                return start == 0 && end > 0 ? new LineBreak() : null;
-            }
-
-            if (inline is InlineUIContainer container)
-            {
-                if (start == 0 && end > 0 && QuickNoteImageHelper.TryGetPngPayload(container, out byte[]? png) && png != null &&
-                    QuickNoteImageHelper.TryCreateInlineImage(png, out InlineUIContainer? clone))
-                {
-                    return clone;
-                }
-
-                return null;
-            }
-
-            if (inline is Span span)
-            {
-                Span clone = CloneSpanShell(span);
-                foreach (Inline child in CloneInlineRange(span.Inlines, start, end))
-                {
-                    clone.Inlines.Add(child);
-                }
-
-                return clone.Inlines.Count > 0 ? clone : null;
-            }
-
-            return null;
-        }
-
-        private static Span CloneSpanShell(Span source)
-        {
-            return QuickNoteDocumentContract.CloneSpanShell(source);
-        }
-
-        private static int GetInlineTextLength(Inline inline)
-        {
-            if (inline is Run run)
-            {
-                return QuickNoteDocumentHelper.NormalizeLineEndings(run.Text).Length;
-            }
-
-            if (inline is LineBreak or InlineUIContainer)
-            {
-                return 1;
-            }
-
-            return inline is Span span
-                ? span.Inlines.Sum(GetInlineTextLength)
-                : 0;
-        }
-
-        private static IEnumerable<Hyperlink> GetAllHyperlinks(BlockCollection blocks)
-        {
-            foreach (Block block in blocks)
-            {
-                if (block is Paragraph paragraph)
-                {
-                    foreach (Hyperlink hyperlink in GetAllHyperlinks(paragraph.Inlines))
-                    {
-                        yield return hyperlink;
-                    }
-                }
-                else if (block is FlowList list)
-                {
-                    foreach (ListItem item in list.ListItems)
-                    {
-                        foreach (Hyperlink hyperlink in GetAllHyperlinks(item.Blocks))
-                        {
-                            yield return hyperlink;
-                        }
-                    }
-                }
-                else if (block is Section section)
-                {
-                    foreach (Hyperlink hyperlink in GetAllHyperlinks(section.Blocks))
-                    {
-                        yield return hyperlink;
-                    }
-                }
-                else if (block is Table table)
-                {
-                    foreach (TableRowGroup rowGroup in table.RowGroups)
-                    {
-                        foreach (TableRow row in rowGroup.Rows)
-                        {
-                            foreach (TableCell cell in row.Cells)
-                            {
-                                foreach (Hyperlink hyperlink in GetAllHyperlinks(cell.Blocks))
-                                {
-                                    yield return hyperlink;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        private static IEnumerable<Hyperlink> GetAllHyperlinks(InlineCollection inlines)
-        {
-            foreach (Inline inline in inlines)
-            {
-                if (inline is Hyperlink hyperlink)
-                {
-                    yield return hyperlink;
-                }
-                else if (inline is Span span)
-                {
-                    foreach (Hyperlink child in GetAllHyperlinks(span.Inlines))
-                    {
-                        yield return child;
-                    }
-                }
-            }
+            return QuickNoteListHelper.TextRangesIntersect(selectionStart, selectionEnd, rangeStart, rangeEnd);
         }
 
         private (int Start, int End, bool Changed) ClearSelectedTextMarkers(int selectionStart, int selectionEnd)
@@ -1639,167 +1348,5 @@ namespace AiteBar
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, QuickNoteFonts.Default);
             TxtNote.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
         }
-
-        private static IEnumerable<FlowList> GetAllListsRecursively(BlockCollection blocks)
-        {
-            foreach (Block block in blocks)
-            {
-                if (block is FlowList list)
-                {
-                    yield return list;
-                    
-                    // Check for nested lists inside list items
-                    foreach (ListItem item in list.ListItems)
-                    {
-                        foreach (FlowList nestedList in GetAllListsRecursively(item.Blocks))
-                        {
-                            yield return nestedList;
-                        }
-                    }
-                }
-                else if (block is Section section)
-                {
-                    // Check for lists inside sections
-                    foreach (FlowList nestedList in GetAllListsRecursively(section.Blocks))
-                    {
-                        yield return nestedList;
-                    }
-                }
-            }
-        }
-
-        private void RemoveSelectedListFormatting(TextRange selection)
-        {
-            TextPointer start = selection.Start;
-            TextPointer end = selection.End;
-
-            if (start.CompareTo(end) > 0)
-            {
-                (start, end) = (end, start);
-            }
-
-            var selectedLists = GetAllListsRecursively(TxtNote.Document.Blocks)
-                .Select(list => (List: list, Items: GetSelectedListItems(list, start, end).ToList()))
-                .Where(selection => selection.Items.Count > 0)
-                .ToList();
-
-            if (selectedLists.Count == 0)
-            {
-                return;
-            }
-
-            TxtNote.BeginChange();
-            try
-            {
-                foreach (var (list, items) in selectedLists)
-                {
-                    UnwrapSelectedListItems(list, items);
-                }
-            }
-            finally
-            {
-                TxtNote.EndChange();
-            }
-        }
-
-        private static bool TextRangesIntersect(TextPointer selectionStart, TextPointer selectionEnd, TextPointer rangeStart, TextPointer rangeEnd)
-        {
-            bool collapsedSelection = selectionStart.CompareTo(selectionEnd) == 0;
-            if (collapsedSelection)
-            {
-                return rangeStart.CompareTo(selectionStart) <= 0 && rangeEnd.CompareTo(selectionStart) >= 0;
-            }
-
-            return rangeStart.CompareTo(selectionEnd) < 0 && rangeEnd.CompareTo(selectionStart) > 0;
-        }
-
-        private IEnumerable<ListItem> GetSelectedListItems(
-            FlowList list,
-            TextPointer selectionStart,
-            TextPointer selectionEnd)
-        {
-            foreach (ListItem item in list.ListItems)
-            {
-                if (TextRangesIntersect(selectionStart, selectionEnd, item.ContentStart, item.ContentEnd))
-                {
-                    yield return item;
-                }
-            }
-        }
-
-        private void UnwrapSelectedListItems(FlowList list, IReadOnlyCollection<ListItem> selectedItems)
-        {
-            // Determine the parent block collection
-            BlockCollection? parentBlocks = null;
-            if (list.Parent is ListItem parentListItem)
-            {
-                parentBlocks = parentListItem.Blocks;
-            }
-            else if (list.Parent is FlowDocument parentDocument)
-            {
-                parentBlocks = parentDocument.Blocks;
-            }
-            else if (list.Parent is Section parentSection)
-            {
-                parentBlocks = parentSection.Blocks;
-            }
-            
-            if (parentBlocks == null)
-            {
-                return;
-            }
-
-            var allItems = list.ListItems.ToList();
-            var selectedSet = selectedItems.ToHashSet();
-            var beforeItems = allItems.TakeWhile(item => !selectedSet.Contains(item)).ToList();
-            var afterItems = allItems.Skip(beforeItems.Count + selectedItems.Count).ToList();
-
-            if (beforeItems.Count > 0)
-            {
-                FlowList beforeList = CreateListShell(list);
-                foreach (ListItem item in beforeItems)
-                {
-                    list.ListItems.Remove(item);
-                    beforeList.ListItems.Add(item);
-                }
-
-                parentBlocks.InsertBefore(list, beforeList);
-            }
-
-            foreach (ListItem item in selectedItems)
-            {
-                foreach (Block block in item.Blocks.ToList())
-                {
-                    item.Blocks.Remove(block);
-                    parentBlocks.InsertBefore(list, block);
-                }
-
-                list.ListItems.Remove(item);
-            }
-
-            if (afterItems.Count > 0)
-            {
-                FlowList afterList = CreateListShell(list);
-                foreach (ListItem item in afterItems)
-                {
-                    list.ListItems.Remove(item);
-                    afterList.ListItems.Add(item);
-                }
-
-                parentBlocks.InsertBefore(list, afterList);
-            }
-
-            parentBlocks.Remove(list);
-        }
-
-        private static FlowList CreateListShell(FlowList source) =>
-            new()
-            {
-                MarkerStyle = source.MarkerStyle,
-                Margin = source.Margin,
-                Padding = source.Padding,
-                Tag = source.Tag
-            };
-
     }
 }

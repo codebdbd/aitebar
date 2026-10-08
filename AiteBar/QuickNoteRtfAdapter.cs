@@ -15,6 +15,9 @@ namespace AiteBar
         private const string LegacyCodeFenceStart = "```code";
         private const string LegacyCodeFenceEnd = "```";
 
+        private const string QuoteFenceStart = "\uE000AiteBar:quote:v1:start\uE001";
+        private const string QuoteFenceEnd = "\uE000AiteBar:quote:v1:end\uE001";
+
         public static FlowDocument CreatePackageDocument(FlowDocument source)
         {
             var export = new FlowDocument { PagePadding = source.PagePadding, FontFamily = source.FontFamily, FontSize = source.FontSize };
@@ -131,6 +134,12 @@ namespace AiteBar
                     continue;
                 }
 
+                if (convertCodeBlocksToFences && QuickNoteDocumentFormatting.IsQuoteBlock(block))
+                {
+                    AddQuoteFence(exportDocument, (Section)block);
+                    continue;
+                }
+
                 if (block is Paragraph taskParagraph && QuickNoteDocumentFormatting.IsTaskParagraph(taskParagraph, out bool isChecked, out _, out _))
                 {
                     AddTaskParagraph(exportDocument, taskParagraph, isChecked, convertImagesToMarkers);
@@ -229,6 +238,50 @@ namespace AiteBar
             }
         }
 
+        public static void RestoreQuoteBlocksFromFences(FlowDocument document)
+        {
+            List<Block> blocks = document.Blocks.ToList();
+            document.Blocks.Clear();
+
+            for (int index = 0; index < blocks.Count; index++)
+            {
+                if (blocks[index] is Paragraph paragraph &&
+                    string.Equals(GetParagraphText(paragraph).Trim(), QuoteFenceStart, StringComparison.Ordinal))
+                {
+                    var quoteLines = new List<string>();
+                    int cursor = index + 1;
+
+                    while (cursor < blocks.Count)
+                    {
+                        if (blocks[cursor] is Paragraph endParagraph &&
+                            string.Equals(GetParagraphText(endParagraph).Trim(), QuoteFenceEnd, StringComparison.Ordinal))
+                        {
+                            break;
+                        }
+
+                        quoteLines.Add(GetParagraphText(blocks[cursor]).TrimEnd('\r', '\n'));
+                        cursor++;
+                    }
+
+                    if (cursor < blocks.Count)
+                    {
+                        document.Blocks.Add(QuickNoteDocumentFormatting.CreateQuoteBlockElement(
+                            string.Join(Environment.NewLine, quoteLines),
+                            QuickNoteThemeCatalog.Find(null)));
+                        index = cursor;
+                        continue;
+                    }
+                }
+
+                document.Blocks.Add(blocks[index]);
+            }
+
+            if (document.Blocks.Count == 0)
+            {
+                document.Blocks.Add(new Paragraph(new Run(string.Empty)));
+            }
+        }
+
         public static void RestoreEmbeddedImages(FlowDocument document)
         {
             int totalPayloadBytes = 0;
@@ -266,6 +319,25 @@ namespace AiteBar
                     document.Blocks.Add(QuickNoteDocumentFormatting.CreateCodeBlockElement(
                         QuickNoteDocumentFormatting.GetCodeBlockText(section),
                         QuickNoteThemeCatalog.Find(null)));
+                }
+                else
+                {
+                    document.Blocks.Add(block);
+                }
+            }
+        }
+
+        public static void NormalizeQuoteBlocks(FlowDocument document)
+        {
+            List<Block> blocks = document.Blocks.ToList();
+            document.Blocks.Clear();
+
+            foreach (Block block in blocks)
+            {
+                if (block is Section section && QuickNoteDocumentFormatting.IsQuoteBlock(section))
+                {
+                    section.Tag = QuickNoteTags.Quote;
+                    document.Blocks.Add(section);
                 }
                 else
                 {
@@ -465,6 +537,27 @@ namespace AiteBar
                 FontFamily = QuickNoteFonts.Code,
                 FontSize = 13,
                 LineHeight = 18,
+                Margin = new System.Windows.Thickness(0)
+            };
+
+        private static void AddQuoteFence(FlowDocument document, Section section)
+        {
+            document.Blocks.Add(CreateQuoteParagraph(QuoteFenceStart));
+
+            string quote = QuickNoteDocumentFormatting.GetQuoteBlockText(section);
+            foreach (string line in quote.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n'))
+            {
+                document.Blocks.Add(CreateQuoteParagraph(line));
+            }
+
+            document.Blocks.Add(CreateQuoteParagraph(QuoteFenceEnd));
+        }
+
+        private static Paragraph CreateQuoteParagraph(string text) =>
+            new(new Run(text))
+            {
+                FontFamily = QuickNoteFonts.Default,
+                FontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0),
                 Margin = new System.Windows.Thickness(0)
             };
 

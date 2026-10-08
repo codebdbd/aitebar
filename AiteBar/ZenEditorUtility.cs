@@ -15,7 +15,7 @@ public sealed class ZenEditorUtility : UtilityBase<ZenEditorWindow>
     public override string IconColor => UtilityIconColors.TextWorkspace;
 
     protected override ZenEditorWindow CreateWindow(AppSettingsService settingsService, Window? owner) =>
-        new(Store, owner as MainWindow);
+        new(Store, owner as MainWindow, settingsService);
 
     protected override void ShowWindow(ZenEditorWindow window, AppSettingsService settingsService) =>
         window.ShowFullScreen();

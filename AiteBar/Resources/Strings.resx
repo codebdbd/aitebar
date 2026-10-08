@@ -1179,6 +1179,33 @@ Open the GitHub release page?</value>
   <data name="RotationProfiles_Clear" xml:space="preserve">
     <value>Clear selection</value>
   </data>
+  <data name="RotationProfiles_ModeSingle" xml:space="preserve">
+    <value>Single profile</value>
+  </data>
+  <data name="RotationProfiles_ModeRotation" xml:space="preserve">
+    <value>Profile rotation</value>
+  </data>
+  <data name="RotationProfiles_SingleHint" xml:space="preserve">
+    <value>Select a profile to open links, or choose Default.</value>
+  </data>
+  <data name="RotationProfiles_DefaultProfile" xml:space="preserve">
+    <value>Default (no profile)</value>
+  </data>
+  <data name="RotationProfiles_ResetDefault" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="SettingsWindow_ProfilePlaceholder" xml:space="preserve">
+    <value>Default (no profile)</value>
+  </data>
+  <data name="RotationProfiles_StatusSingle" xml:space="preserve">
+    <value>Single: {0}</value>
+  </data>
+  <data name="RotationProfiles_StatusRotation" xml:space="preserve">
+    <value>Rotation: {0} of {1}</value>
+  </data>
+  <data name="RotationProfiles_StatusRotationAll" xml:space="preserve">
+    <value>Rotation: all profiles ({0})</value>
+  </data>
   <data name="AppSettingsWindow_CheckForUpdates" xml:space="preserve">
     <value>Check for updates</value>
   </data>
@@ -2480,6 +2507,21 @@ Open the GitHub release page?</value>
   </data>
   <data name="ZenEditor_Title" xml:space="preserve">
     <value>Zen Editor</value>
+  </data>
+  <data name="ZenEditor_ExitOnSideClickSetting" xml:space="preserve">
+    <value>Exit by clicking screen margins</value>
+  </data>
+  <data name="ZenEditor_ExitOnSideClickHint" xml:space="preserve">
+    <value>Close Zen Editor by clicking empty areas to the left or right of the text, with auto-save.</value>
+  </data>
+  <data name="ZenEditor_SideSafetyMarginSetting" xml:space="preserve">
+    <value>Safety frame around text</value>
+  </data>
+  <data name="ZenEditor_SideSafetyMarginHint" xml:space="preserve">
+    <value>Width of the protective margin around text where clicking will not close the editor.</value>
+  </data>
+  <data name="ZenEditor_SafetyMargin48Default" xml:space="preserve">
+    <value>48 px (Default)</value>
   </data>
   <data name="ZenEditor_Untitled" xml:space="preserve">
     <value>New document</value>
@@ -4839,5 +4881,23 @@ Do you want to proceed with permanent deletion?</value>
   </data>
   <data name="ArtNudeStyle_CandlelitIntimacy" xml:space="preserve">
     <value>Candlelit romantic intimacy</value>
+  </data>
+  <data name="InstalledApps_Title" xml:space="preserve">
+    <value>Installed Applications</value>
+  </data>
+  <data name="InstalledApps_SearchPlaceholder" xml:space="preserve">
+    <value>Search applications...</value>
+  </data>
+  <data name="InstalledApps_Loading" xml:space="preserve">
+    <value>Loading installed applications...</value>
+  </data>
+  <data name="InstalledApps_BrowseDisk" xml:space="preserve">
+    <value>Find on computer...</value>
+  </data>
+  <data name="InstalledApps_Select" xml:space="preserve">
+    <value>Select</value>
+  </data>
+  <data name="SettingsWindow_AppsCatalog" xml:space="preserve">
+    <value>Apps...</value>
   </data>
 </root>

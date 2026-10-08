@@ -30,7 +30,8 @@ public sealed class QuickNoteFormattingControlsTests
     {
         XElement toolbar = FindFormattingToolbar();
 
-        string[] handlers = toolbar.Elements(PresentationNamespace + "Button")
+        string[] handlers = toolbar.Elements()
+            .Where(e => e.Name == PresentationNamespace + "Button" || e.Name == PresentationNamespace + "ToggleButton")
             .Select(button => (string?)button.Attribute("Click"))
             .Where(click => click != null)
             .Cast<string>()
@@ -73,7 +74,8 @@ public sealed class QuickNoteFormattingControlsTests
     public void Toolbar_ListButtonsUseStableFluentListGlyphs()
     {
         XElement toolbar = FindFormattingToolbar();
-        Dictionary<string, XElement> buttonsByHandler = toolbar.Elements(PresentationNamespace + "Button")
+        Dictionary<string, XElement> buttonsByHandler = toolbar.Elements()
+            .Where(e => e.Name == PresentationNamespace + "Button" || e.Name == PresentationNamespace + "ToggleButton")
             .Where(button => button.Attribute("Click") != null)
             .ToDictionary(button => button.Attribute("Click")!.Value);
 
@@ -123,7 +125,9 @@ public sealed class QuickNoteFormattingControlsTests
     {
         XDocument document = LoadDocument();
         XElement[] buttons = document.Descendants(PresentationNamespace + "Button").ToArray();
-        XElement[] formattingButtons = FindFormattingToolbar().Elements(PresentationNamespace + "Button").ToArray();
+        XElement[] formattingButtons = FindFormattingToolbar().Elements()
+            .Where(e => e.Name == PresentationNamespace + "Button" || e.Name == PresentationNamespace + "ToggleButton")
+            .ToArray();
 
         Assert.All(formattingButtons, button => Assert.NotNull(button.Attribute("AutomationProperties.Name")));
         Assert.NotNull(document.Descendants(PresentationNamespace + "ToggleButton")

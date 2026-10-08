@@ -536,7 +536,16 @@ public class ActionService
 
     internal async Task StartScriptFileAsync(CustomElement el)
     {
-        if (string.IsNullOrWhiteSpace(el.ActionValue) || !File.Exists(el.ActionValue))
+        string? rawPath = el.ActionValue?.Trim();
+        if (string.IsNullOrWhiteSpace(rawPath))
+        {
+            throw new FileNotFoundException(
+                LocalizationService.Format("Action_TargetNotFound", el.ActionValue),
+                el.ActionValue);
+        }
+
+        string normalizedPath = Environment.ExpandEnvironmentVariables(rawPath.Trim('\"'));
+        if (!File.Exists(normalizedPath))
         {
             throw new FileNotFoundException(
                 LocalizationService.Format("Action_TargetNotFound", el.ActionValue),
@@ -544,37 +553,80 @@ public class ActionService
         }
 
         if (!el.SkipScriptConfirmation &&
-            !_runtime.Confirm(LocalizationService.Format("Action_ConfirmScript", el.ActionValue), _runtime.GetMainWindow()))
+            !_runtime.Confirm(LocalizationService.Format("Action_ConfirmScript", normalizedPath), _runtime.GetMainWindow()))
         {
             return;
         }
 
-        var psi = CreateScriptProcessStartInfo(
-            el.ActionValue,
-            el.ScriptArguments,
-            el.HideScriptWindow,
-            el.RunAsAdmin,
-            el.KeepScriptWindowOpen);
+        ProcessStartInfo psi;
+        try
+        {
+            psi = CreateScriptProcessStartInfo(
+                normalizedPath,
+                el.ScriptArguments,
+                el.HideScriptWindow,
+                el.RunAsAdmin,
+                el.KeepScriptWindowOpen);
+        }
+        catch (InvalidOperationException)
+        {
+            // Fallback: If custom interpreter resolution fails, execute via Windows Shell
+            psi = new ProcessStartInfo(normalizedPath)
+            {
+                UseShellExecute = true,
+                WorkingDirectory = Path.GetDirectoryName(normalizedPath) ?? Environment.CurrentDirectory
+            };
+            if (!string.IsNullOrWhiteSpace(el.ScriptArguments))
+            {
+                psi.Arguments = el.ScriptArguments.Trim();
+            }
+            if (el.RunAsAdmin)
+            {
+                psi.Verb = "runas";
+            }
+        }
+
+        EnsureProcessStartInfoCompatibility(psi);
 
         using var proc = _runtime.StartProcess(psi) ?? throw new InvalidOperationException(LocalizationService.Get("Action_LaunchFailed"));
         await Task.CompletedTask.ConfigureAwait(false);
     }
 
     internal Task StartScriptFileAsync(string scriptPath) =>
-        StartScriptFileAsync(new CustomElement { ActionValue = scriptPath });
+        StartScriptFileAsync(new CustomElement { ActionValue = scriptPath, SkipScriptConfirmation = true });
+
+    internal static bool IsUsablePowerShellExecutable(string path)
+    {
+        if (!File.Exists(path)) return false;
+
+        if (path.Contains(@"Microsoft\WindowsApps", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                var fi = new FileInfo(path);
+                if (fi.Length == 0) return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     internal static string? ResolvePowerShellExecutable()
     {
         // 1. Check PATH for PowerShell 7 (pwsh.exe)
         string? shell = PathHelper.FindExecutableOnPath("pwsh.exe");
-        if (shell != null && File.Exists(shell))
+        if (shell != null && IsUsablePowerShellExecutable(shell))
         {
             return shell;
         }
 
         // 2. Check PATH for Windows PowerShell (powershell.exe)
         shell = PathHelper.FindExecutableOnPath("powershell.exe");
-        if (shell != null && File.Exists(shell))
+        if (shell != null && IsUsablePowerShellExecutable(shell))
         {
             return shell;
         }
@@ -589,7 +641,7 @@ public class ActionService
 
         string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         string pwshWinApps = Path.Combine(localAppData, "Microsoft", "WindowsApps", "pwsh.exe");
-        if (File.Exists(pwshWinApps))
+        if (IsUsablePowerShellExecutable(pwshWinApps))
         {
             return pwshWinApps;
         }
@@ -778,16 +830,37 @@ public class ActionService
         {
             case ".bat":
             case ".cmd":
-                string cmdSwitch = (!hideWindow && keepWindowOpen) ? "/k" : "/c";
-                psi = new ProcessStartInfo("cmd.exe")
+                if (!hideWindow && keepWindowOpen)
                 {
-                    UseShellExecute = false,
-                    WorkingDirectory = workingDirectory
-                };
-                psi.ArgumentList.Add(cmdSwitch);
-                psi.ArgumentList.Add("call");
-                psi.ArgumentList.Add(scriptPath);
-                break;
+                    psi = new ProcessStartInfo("cmd.exe")
+                    {
+                        UseShellExecute = true,
+                        WorkingDirectory = workingDirectory,
+                        Arguments = "/k \"\"" + scriptPath + "\"" +
+                            (string.IsNullOrWhiteSpace(scriptArguments) ? "" : " " + scriptArguments.Trim()) + "\""
+                    };
+                }
+                else
+                {
+                    psi = new ProcessStartInfo(scriptPath)
+                    {
+                        UseShellExecute = true,
+                        WorkingDirectory = workingDirectory,
+                        Arguments = scriptArguments?.Trim() ?? ""
+                    };
+                }
+
+                if (hideWindow)
+                {
+                    psi.WindowStyle = ProcessWindowStyle.Hidden;
+                }
+
+                if (runAsAdmin)
+                {
+                    psi.Verb = "runas";
+                }
+
+                return psi;
             case ".ps1":
                 string? shell = ResolvePowerShellExecutable();
                 if (shell == null)
@@ -904,6 +977,47 @@ public class ActionService
             psi.UseShellExecute = true;
             psi.Verb = "runas";
         }
+    }
+
+    internal static void EnsureProcessStartInfoCompatibility(ProcessStartInfo psi)
+    {
+        if (psi.UseShellExecute && psi.ArgumentList.Count > 0)
+        {
+            psi.Arguments = BuildArgumentsString(psi.ArgumentList);
+            psi.ArgumentList.Clear();
+        }
+    }
+
+    internal static string BuildArgumentsString(IEnumerable<string> arguments)
+    {
+        var sb = new StringBuilder();
+        foreach (string arg in arguments)
+        {
+            if (sb.Length > 0) sb.Append(' ');
+            if (string.IsNullOrEmpty(arg))
+            {
+                sb.Append("\"\"");
+            }
+            else if (arg.IndexOfAny([' ', '\t', '\n', '\v', '\"']) >= 0)
+            {
+                sb.Append('\"');
+                for (int i = 0; i < arg.Length; i++)
+                {
+                    char c = arg[i];
+                    if (c == '\"')
+                    {
+                        sb.Append('\\');
+                    }
+                    sb.Append(c);
+                }
+                sb.Append('\"');
+            }
+            else
+            {
+                sb.Append(arg);
+            }
+        }
+        return sb.ToString();
     }
 
     private async Task TryEnterFullscreenAsync(IActionProcessHandle proc)

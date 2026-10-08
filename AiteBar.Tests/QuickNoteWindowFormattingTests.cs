@@ -99,7 +99,7 @@ public sealed class QuickNoteWindowFormattingTests
                 Rect[] originalRects = paragraphs.Select(p => p.ContentStart.GetCharacterRect(LogicalDirection.Forward)).ToArray();
                 editor.Selection.Select(paragraphs[1].ContentStart, paragraphs[2].ContentEnd);
                 var toolbar = Assert.IsType<System.Windows.Controls.StackPanel>(window.FindName("FormattingToolbar"));
-                var button = Assert.IsType<System.Windows.Controls.Button>(toolbar.Children[numbered ? 3 : 2]);
+                var button = Assert.IsAssignableFrom<System.Windows.Controls.Primitives.ButtonBase>(toolbar.Children[numbered ? 3 : 2]);
                 button.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
                 root.UpdateLayout();
                 for (int replay = 0; replay < 2; replay++)
@@ -369,7 +369,7 @@ public sealed class QuickNoteWindowFormattingTests
                 var status = Assert.IsType<System.Windows.Controls.TextBlock>(window.FindName("TxtSaveStatus"));
                 Assert.Equal(status.ActualHeight + 4, footer.ActualHeight);
                 Assert.InRange(footer.ActualHeight, 16, 20);
-                foreach (System.Windows.Controls.Button button in toolbar.Children)
+                foreach (System.Windows.Controls.Primitives.ButtonBase button in toolbar.Children)
                 {
                     Point origin = button.TranslatePoint(new Point(), root);
                     Assert.InRange(origin.X, 0, width - button.ActualWidth);
@@ -1350,6 +1350,278 @@ public sealed class QuickNoteWindowFormattingTests
             {
                 Directory.Delete(tempRoot, recursive: true);
             }
+        });
+    }
+
+    [Fact]
+    public void HeadingFormatting_SetsParagraphProperties_AndResetsToBodyCleanly()
+    {
+        RunSta(() =>
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+            try
+            {
+                var settings = new AppSettingsService(Path.Combine(tempRoot, "buttons.json"), Path.Combine(tempRoot, "settings.json"));
+                using var window = new QuickNoteWindow(new NoOpQuickNotePersistence(), settings);
+                window.EnsureDocumentLoadedForFirstPaint();
+
+                var paragraph = new Paragraph(new Run("Heading Line"));
+                window.TxtNote.Document.Blocks.Clear();
+                window.TxtNote.Document.Blocks.Add(paragraph);
+
+                // Select text and apply H1 (level 1)
+                window.TxtNote.Selection.Select(paragraph.ContentStart, paragraph.ContentEnd);
+                var (start, end) = window.GetSelectionOffsets();
+                window.ApplyHeadingToSelectedLines(1, start, end);
+
+                Assert.Equal(QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(1), paragraph.FontSize);
+                Assert.Equal(FontWeights.SemiBold, paragraph.FontWeight);
+
+                // Reset to normal text (level 0)
+                window.ApplyHeadingToSelectedLines(0, start, end);
+
+                Assert.Equal(QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0), paragraph.FontSize);
+                Assert.Equal(FontWeights.Normal, paragraph.FontWeight);
+            }
+            finally
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        });
+    }
+
+    [Fact]
+    public void TaskItem_CheckedTask_RtfRoundTrip_UncheckRemovesStrikethroughWhenNoUserStrike()
+    {
+        RunSta(() =>
+        {
+            var theme = QuickNoteThemeCatalog.Find("dark");
+            var sourceDoc = new FlowDocument();
+            var paragraph = new Paragraph(new Run("Simple task that gets completed"));
+            sourceDoc.Blocks.Add(paragraph);
+
+            // Make it a checked task
+            QuickNoteDocumentFormatting.ToggleTaskParagraph(paragraph, null, theme);
+            QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(paragraph, true, theme);
+
+            // Export to RTF document
+            FlowDocument exportDoc = QuickNoteRtfAdapter.CreateExportDocument(sourceDoc);
+
+            // Restore from RTF
+            var targetDoc = new FlowDocument();
+            foreach (Block b in exportDoc.Blocks.ToList())
+            {
+                exportDoc.Blocks.Remove(b);
+                targetDoc.Blocks.Add(b);
+            }
+            QuickNoteRtfAdapter.RestoreTaskItems(targetDoc, theme);
+
+            var restoredPara = Assert.IsType<Paragraph>(targetDoc.Blocks.FirstBlock);
+            Assert.True(QuickNoteDocumentFormatting.IsTaskParagraph(restoredPara, out bool isChecked, out _, out _));
+            Assert.True(isChecked);
+
+            // Now uncheck it
+            QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(restoredPara, false, theme);
+
+            // Both paragraph and its inlines must NOT have strikethrough
+            Assert.Null(restoredPara.TextDecorations);
+            foreach (var inline in restoredPara.Inlines.Skip(1))
+            {
+                Assert.True(inline.TextDecorations == null || !inline.TextDecorations.Any(d => d.Location == TextDecorationLocation.Strikethrough));
+            }
+        });
+    }
+
+    [Fact]
+    public void Toolbar_ReflectsSelectionFormattingState()
+    {
+        RunSta(() =>
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+            try
+            {
+                var settings = new AppSettingsService(Path.Combine(tempRoot, "buttons.json"), Path.Combine(tempRoot, "settings.json"));
+                using var window = new QuickNoteWindow(new NoOpQuickNotePersistence(), settings);
+                window.EnsureDocumentLoadedForFirstPaint();
+
+                var runBold = new Run("Bold") { FontWeight = FontWeights.Bold };
+                var runNormal = new Run("Normal");
+                var paragraph = new Paragraph();
+                paragraph.Inlines.Add(runBold);
+                paragraph.Inlines.Add(runNormal);
+
+                window.TxtNote.Document.Blocks.Clear();
+                window.TxtNote.Document.Blocks.Add(paragraph);
+
+                // Select Bold run
+                window.TxtNote.Selection.Select(runBold.ContentStart, runBold.ContentEnd);
+                window.UpdateToolbarFormattingState();
+
+                Assert.True(window.BtnBold.IsChecked);
+                Assert.False(window.BtnItalic.IsChecked);
+
+                // Select Normal run
+                window.TxtNote.Selection.Select(runNormal.ContentStart, runNormal.ContentEnd);
+                window.UpdateToolbarFormattingState();
+
+                Assert.False(window.BtnBold.IsChecked);
+            }
+            finally
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        });
+    }
+
+    [Fact]
+    public void Toolbar_ReflectsListAndTaskFormattingState()
+    {
+        RunSta(() =>
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+            try
+            {
+                var settings = new AppSettingsService(Path.Combine(tempRoot, "buttons.json"), Path.Combine(tempRoot, "settings.json"));
+                using var window = new QuickNoteWindow(new NoOpQuickNotePersistence(), settings);
+                window.EnsureDocumentLoadedForFirstPaint();
+
+                // 1. Bullet list
+                var bulletList = new System.Windows.Documents.List { MarkerStyle = TextMarkerStyle.Disc };
+                var bulletItem = new ListItem(new Paragraph(new Run("Bullet item")));
+                bulletList.ListItems.Add(bulletItem);
+
+                // 2. Numbered list
+                var numberedList = new System.Windows.Documents.List { MarkerStyle = TextMarkerStyle.Decimal };
+                var numberedItem = new ListItem(new Paragraph(new Run("Numbered item")));
+                numberedList.ListItems.Add(numberedItem);
+
+                // 3. Task paragraph
+                var taskPara = new Paragraph(new Run("Task item"));
+                QuickNoteDocumentFormatting.ToggleTaskParagraph(taskPara, null, QuickNoteThemeCatalog.Find("dark"));
+
+                window.TxtNote.Document.Blocks.Clear();
+                window.TxtNote.Document.Blocks.Add(bulletList);
+                window.TxtNote.Document.Blocks.Add(numberedList);
+                window.TxtNote.Document.Blocks.Add(taskPara);
+
+                // Test bullet list caret
+                var bulletPara = (Paragraph)bulletItem.Blocks.FirstBlock;
+                window.TxtNote.CaretPosition = bulletPara.ContentStart;
+                window.TxtNote.Selection.Select(bulletPara.ContentStart, bulletPara.ContentStart);
+                window.UpdateToolbarFormattingState();
+
+                Assert.True(window.BtnBullet.IsChecked);
+                Assert.False(window.BtnNumbered.IsChecked);
+                Assert.False(window.BtnTaskList.IsChecked);
+
+                // Test numbered list caret
+                var numberedPara = (Paragraph)numberedItem.Blocks.FirstBlock;
+                window.TxtNote.CaretPosition = numberedPara.ContentStart;
+                window.TxtNote.Selection.Select(numberedPara.ContentStart, numberedPara.ContentStart);
+                window.UpdateToolbarFormattingState();
+
+                Assert.False(window.BtnBullet.IsChecked);
+                Assert.True(window.BtnNumbered.IsChecked);
+                Assert.False(window.BtnTaskList.IsChecked);
+
+                // Test task item caret
+                window.TxtNote.CaretPosition = taskPara.ContentStart;
+                window.TxtNote.Selection.Select(taskPara.ContentStart, taskPara.ContentStart);
+                window.UpdateToolbarFormattingState();
+
+                Assert.False(window.BtnBullet.IsChecked);
+                Assert.False(window.BtnNumbered.IsChecked);
+                Assert.True(window.BtnTaskList.IsChecked);
+            }
+            finally
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        });
+    }
+
+    [Fact]
+    public void FontSize_ApplyFontSizeDeltaToSelection_ScalesProportionallyWithoutCollapsing()
+    {
+        RunSta(() =>
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+            try
+            {
+                var settings = new AppSettingsService(Path.Combine(tempRoot, "buttons.json"), Path.Combine(tempRoot, "settings.json"));
+                using var window = new QuickNoteWindow(new NoOpQuickNotePersistence(), settings);
+                window.EnsureDocumentLoadedForFirstPaint();
+
+                var headingPara = new Paragraph(new Run("Heading 1")) { FontSize = 24 };
+                var bodyRun = new Run("Body text") { FontSize = 13 };
+                var bodyPara = new Paragraph(bodyRun);
+
+                window.TxtNote.Document.Blocks.Clear();
+                window.TxtNote.Document.Blocks.Add(headingPara);
+                window.TxtNote.Document.Blocks.Add(bodyPara);
+
+                // Select both paragraphs
+                window.TxtNote.Selection.Select(headingPara.ContentStart, bodyPara.ContentEnd);
+
+                // Apply +2 delta
+                QuickNoteWindow.ApplyFontSizeDeltaToSelection(window.TxtNote.Selection, 2);
+
+                // Both must scale independently by +2 without collapsing to a single value
+                Assert.Equal(26.0, headingPara.FontSize);
+                Assert.Equal(15.0, bodyRun.FontSize);
+
+                // Apply -4 delta
+                QuickNoteWindow.ApplyFontSizeDeltaToSelection(window.TxtNote.Selection, -4);
+                Assert.Equal(22.0, headingPara.FontSize);
+                Assert.Equal(11.0, bodyRun.FontSize);
+            }
+            finally
+            {
+                Directory.Delete(tempRoot, recursive: true);
+            }
+        });
+    }
+
+    [Fact]
+    public void QuoteBlock_RtfRoundTrip_PreservesQuoteBlockAndStyling()
+    {
+        RunSta(() =>
+        {
+            var theme = QuickNoteThemeCatalog.Find("dark");
+            var sourceDoc = new FlowDocument();
+            Section quoteBlock = QuickNoteDocumentFormatting.CreateQuoteBlockElement("Quote line 1\nQuote line 2", theme);
+            sourceDoc.Blocks.Add(quoteBlock);
+
+            // 1. Direct adapter round-trip
+            FlowDocument exportDoc = QuickNoteRtfAdapter.CreateExportDocument(sourceDoc);
+            var targetDoc = new FlowDocument();
+            foreach (Block b in exportDoc.Blocks.ToList())
+            {
+                exportDoc.Blocks.Remove(b);
+                targetDoc.Blocks.Add(b);
+            }
+            QuickNoteRtfAdapter.RestoreQuoteBlocksFromFences(targetDoc);
+
+            Assert.Single(targetDoc.Blocks);
+            var restoredSection = Assert.IsType<Section>(targetDoc.Blocks.FirstBlock);
+            Assert.True(QuickNoteDocumentFormatting.IsQuoteBlock(restoredSection));
+            string restoredText = QuickNoteDocumentFormatting.GetQuoteBlockText(restoredSection);
+            Assert.Equal("Quote line 1\r\nQuote line 2", restoredText);
+
+            // 2. Full codec RTF serialization round-trip
+            byte[] rtfBytes = QuickNoteDocumentCodec.Serialize(sourceDoc, package: false);
+            var codecDoc = new FlowDocument();
+            QuickNoteDocumentCodec.Deserialize(rtfBytes, codecDoc, package: false);
+
+            Assert.Single(codecDoc.Blocks);
+            var codecRestoredSection = Assert.IsType<Section>(codecDoc.Blocks.FirstBlock);
+            Assert.True(QuickNoteDocumentFormatting.IsQuoteBlock(codecRestoredSection));
+            string codecRestoredText = QuickNoteDocumentFormatting.GetQuoteBlockText(codecRestoredSection);
+            Assert.Equal("Quote line 1\r\nQuote line 2", codecRestoredText);
         });
     }
 

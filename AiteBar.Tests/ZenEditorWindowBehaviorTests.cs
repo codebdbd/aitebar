@@ -597,6 +597,247 @@ public sealed class ZenEditorWindowBehaviorTests
         }
     }
 
+    [Fact]
+    public async Task ExitZones_ConfiguredWithHandCursorAndAccessibility()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "AiteBarTests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await RunStaAsync(async () =>
+            {
+                var store = new ZenEditorStore(root);
+                var window = new ZenEditorWindow(store);
+                await window.InitializeWindowCoreAsync();
+
+                Assert.NotNull(window.LeftExitZone);
+                Assert.NotNull(window.RightExitZone);
+
+                Assert.Equal(System.Windows.Input.Cursors.Hand, window.LeftExitZone.Cursor);
+                Assert.Equal(System.Windows.Input.Cursors.Hand, window.RightExitZone.Cursor);
+
+                Assert.False(window.LeftExitZone.Focusable);
+                Assert.False(window.RightExitZone.Focusable);
+
+                Assert.Equal(System.Windows.Media.Brushes.Transparent, window.LeftExitZone.Background);
+                Assert.Equal(System.Windows.Media.Brushes.Transparent, window.RightExitZone.Background);
+
+                string expectedName = LocalizationService.Get("Common_Close");
+                Assert.Equal(expectedName, System.Windows.Automation.AutomationProperties.GetName(window.LeftExitZone));
+                Assert.Equal(expectedName, System.Windows.Automation.AutomationProperties.GetName(window.RightExitZone));
+
+                window.Close();
+            });
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task ExitZones_Geometry_AdaptsToContainerWidth()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "AiteBarTests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await RunStaAsync(async () =>
+            {
+                var store = new ZenEditorStore(root);
+                var window = new ZenEditorWindow(store);
+                await window.InitializeWindowCoreAsync();
+
+                window.EditorHost.Width = 1920;
+                window.EditorHost.Height = 1080;
+                window.Editor.Width = 760;
+                window.UpdateExitZonesGeometry();
+
+                // sideMargin = (1920 - 760) / 2 = 580; safetyMargin = 48 -> 532
+                Assert.Equal(Visibility.Visible, window.LeftExitZone.Visibility);
+                Assert.Equal(Visibility.Visible, window.RightExitZone.Visibility);
+                Assert.Equal(532, window.LeftExitZone.Width);
+                Assert.Equal(532, window.RightExitZone.Width);
+
+                window.EditorHost.Width = 800;
+                window.Editor.Width = 736;
+                window.UpdateExitZonesGeometry();
+
+                Assert.Equal(Visibility.Collapsed, window.LeftExitZone.Visibility);
+                Assert.Equal(Visibility.Collapsed, window.RightExitZone.Visibility);
+
+                window.Close();
+            });
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task ExitZones_Geometry_AdaptsToCustomSafetyMargin()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "AiteBarTests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await RunStaAsync(async () =>
+            {
+                var store = new ZenEditorStore(root);
+                var settings = new AppSettingsService(Path.Combine(root, "settings.json"));
+                settings.UpdateSettings(s => s.ZenEditorSideSafetyMargin = 96.0);
+
+                var window = new ZenEditorWindow(store, settingsService: settings);
+                await window.InitializeWindowCoreAsync();
+
+                window.EditorHost.Width = 1920;
+                window.EditorHost.Height = 1080;
+                window.Editor.Width = 760;
+                window.UpdateExitZonesGeometry();
+
+                // sideMargin = 580; safetyMargin = 96 -> 484
+                Assert.Equal(Visibility.Visible, window.LeftExitZone.Visibility);
+                Assert.Equal(Visibility.Visible, window.RightExitZone.Visibility);
+                Assert.Equal(484, window.LeftExitZone.Width);
+                Assert.Equal(484, window.RightExitZone.Width);
+
+                window.Close();
+            });
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task ExitZones_DisabledWhenExitOnSideClickIsFalse()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "AiteBarTests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await RunStaAsync(async () =>
+            {
+                var store = new ZenEditorStore(root);
+                var settings = new AppSettingsService(Path.Combine(root, "settings.json"));
+                settings.UpdateSettings(s => s.ZenEditorExitOnSideClick = false);
+
+                var window = new ZenEditorWindow(store, settingsService: settings);
+                await window.InitializeWindowCoreAsync();
+
+                window.EditorHost.Width = 1920;
+                window.EditorHost.Height = 1080;
+                window.Editor.Width = 760;
+                window.UpdateExitZonesGeometry();
+
+                Assert.Equal(Visibility.Collapsed, window.LeftExitZone.Visibility);
+                Assert.Equal(Visibility.Collapsed, window.RightExitZone.Visibility);
+
+                window.Close();
+            });
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task ExitZones_HandleClick_ClosesUnlessSaveErrorVisible()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "AiteBarTests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await RunStaAsync(async () =>
+            {
+                var store = new ZenEditorStore(root);
+                var window = new ZenEditorWindow(store);
+                await window.InitializeWindowCoreAsync();
+
+                int closingCount = 0;
+                window.Closing += (_, e) =>
+                {
+                    closingCount++;
+                    e.Cancel = true; // Prevent actual disposal during test
+                };
+
+                window.SaveErrorOverlay.Visibility = Visibility.Visible;
+                window.HandleExitZoneClick();
+                Assert.Equal(0, closingCount);
+
+                window.SaveErrorOverlay.Visibility = Visibility.Collapsed;
+                window.HandleExitZoneClick();
+                Assert.Equal(1, closingCount);
+            });
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
+    [Fact]
+    public async Task ExitZones_MousePress_TriggersClose()
+    {
+        string root = Path.Combine(
+            Path.GetTempPath(),
+            "AiteBarTests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            await RunStaAsync(async () =>
+            {
+                var store = new ZenEditorStore(root);
+                var window = new ZenEditorWindow(store);
+                await window.InitializeWindowCoreAsync();
+
+                int closingCount = 0;
+                window.Closing += (_, e) =>
+                {
+                    closingCount++;
+                    e.Cancel = true;
+                };
+
+                // 1. Mouse down on left zone -> closes
+                window.TriggerExitZoneMouseDown(window.LeftExitZone);
+                Assert.Equal(1, closingCount);
+
+                // 2. Mouse down on right zone -> closes
+                window.TriggerExitZoneMouseDown(window.RightExitZone);
+                Assert.Equal(2, closingCount);
+            });
+        }
+        finally
+        {
+            TryDeleteDirectory(root);
+        }
+    }
+
     private static void TryDeleteDirectory(string path)
     {
         for (int i = 0; i < 10; i++)

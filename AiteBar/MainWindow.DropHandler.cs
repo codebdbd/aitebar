@@ -231,13 +231,41 @@ public partial class MainWindow
                 string? iconPath = null;
                 bool isWeb = type == ActionType.Web;
 
-                if (type == ActionType.Program || type == ActionType.ScriptFile || type == ActionType.File)
-                    iconPath = IconHelper.ExtractAndSaveIcon(val);
+                if (type == ActionType.Program || type == ActionType.ScriptFile || type == ActionType.File || type == ActionType.Folder)
+                {
+                    string pathToResolve = val;
+                    if (string.Equals(Path.GetExtension(val), ".lnk", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var resolved = LnkResolver.Resolve(val);
+                        if (resolved != null && !string.IsNullOrWhiteSpace(resolved.TargetPath))
+                        {
+                            if (File.Exists(resolved.TargetPath))
+                            {
+                                val = resolved.TargetPath;
+                                if (ActionTargetHelper.IsScriptPath(val)) type = ActionType.ScriptFile;
+                                else if (ActionTargetHelper.IsProgramPath(val)) type = ActionType.Program;
+                                else type = ActionType.File;
+                            }
+                            else if (Directory.Exists(resolved.TargetPath))
+                            {
+                                val = resolved.TargetPath;
+                                type = ActionType.Folder;
+                            }
+                            pathToResolve = resolved.TargetPath;
+                        }
+                    }
+
+                    iconPath = ShellIconHelper.ExtractAndSaveShellIcon(pathToResolve) ?? IconHelper.ExtractAndSaveIcon(pathToResolve);
+                }
 
                 var newElement = new CustomElement
                 {
                     Id = Guid.NewGuid().ToString(),
-                    Name = isWeb ? (Uri.TryCreate(val, UriKind.Absolute, out var uri) ? uri.Host : val) : Path.GetFileNameWithoutExtension(val),
+                    Name = isWeb 
+                        ? (Uri.TryCreate(val, UriKind.Absolute, out var uri) ? uri.Host : val) 
+                        : (type == ActionType.Folder 
+                            ? (Path.GetFileName(val.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)) is string folderName && !string.IsNullOrWhiteSpace(folderName) ? folderName : val)
+                            : (Path.GetFileNameWithoutExtension(val) is string fileName && !string.IsNullOrWhiteSpace(fileName) ? fileName : val)),
                     ActionValue = val,
                     ActionType = type.ToString(),
                     ImagePath = iconPath ?? "",

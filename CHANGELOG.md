@@ -9,6 +9,43 @@
 
 ## [Unreleased]
 
+### 🇷🇺 Добавлено | 🇬🇧 Added
+
+- **Дзен-редактор — выход по клику на боковые поля экрана с настраиваемой рамкой безопасности**: добавлены интерактивные зоны на пустых боковых полях экрана слева и справа, клик по которым закрывает Дзен-редактор с автоматическим сохранением текста. Для предотвращения случайных закрытий при наборе или выделении текста введена настраиваемая защитная рамка вокруг колонки редактора (по умолчанию 48 px, варианты 24, 48, 72, 96 px) и защита от закрытия при перетаскивании мыши. Поведение и размер рамки безопасности настраиваются в общих настройках программы и сохраняются между сессиями.
+- **Zen Editor — exit via side screen margin clicks with configurable safety frame**: added interactive zones on the empty side margins of the screen where clicking closes the Zen Editor with automatic document saving. To prevent accidental triggers when typing or selecting text, a configurable safety margin frame is enforced around the text column (default 48 px, presets: 24, 48, 72, 96 px) along with mouse drag safety. The feature toggle and safety frame width are fully customizable in App Settings and persisted across sessions.
+
+- **Иконки файлов и папок — парсинг, автоизвлечение и устранение черного фона**:
+  - Исправлено автоизвлечение иконок при добавлении файлов и папок в окне настроек кнопки (`SettingsWindow`) и при перетягивании на панель (`MainWindow`).
+  - Устранен черный фон вокруг извлеченных иконок за счет прямой обработки 32-битного альфа-канала (`GetDIBits` / `PngBitmapEncoder`) вместо стандартного вызова GDI+, отбрасывавшего прозрачность.
+  - Обновлен кеш иконок для гарантированного исключения ранее сохраненных изображений с черным фоном.
+- **File and folder icons — parsing, auto-extraction, and black background elimination**:
+  - Fixed icon auto-extraction when adding files and folders via the button settings dialog (`SettingsWindow`) and via drag-and-drop (`MainWindow`).
+  - Resolved the black background issue around extracted icons by preserving the 32-bit alpha channel via `GetDIBits` and `PngBitmapEncoder` instead of standard GDI+ conversion.
+  - Updated icon cache keying to prevent reuse of legacy black-background cached images.
+- **Быстрые заметки — форматирование, типографика и надежность RTF**:
+  - Устранено обрезание выносных элементов шрифта в заголовках (динамический межстрочный интервал вместо жестко заданного 20 px).
+  - Заголовки теперь единообразно применяются на уровне блока (`Paragraph.FontSize`) с автоматической очисткой конфликтующих инлайн-переопределений.
+  - Исправлено сохранение зачёркивания выполненных задач после переоткрытия заметки в формате RTF.
+  - Кнопки A+/A- теперь масштабируют выделенный текст пропорционально, сохраняя разницу между заголовками и основным текстом.
+  - Добавлена очистка буфера обмена (`QuickNoteClipboardSanitizer`) от сторонних шрифтов, цветов и внешних отступов веб-страниц.
+  - Обеспечено сохранение и восстановление блоков цитат со стилями и темой в RTF файлах.
+- **Quick Note — formatting, typography, and RTF round-trip reliability**:
+  - Fixed glyph ascender/descender clipping on headings (dynamic line spacing instead of fixed 20 px).
+  - Headings now consistently apply at the paragraph level with automatic clearance of conflicting inline overrides.
+  - Fixed completed task strikethrough persistence after RTF reload.
+  - Proportional font scaling (A+/A-) preserves relative size deltas between headings and body runs without collapsing.
+  - Sanitized clipboard ingestion removes foreign fonts, colors, and web margins while retaining semantic formatting.
+  - Preserved quote block borders and theme styling across RTF serialization.
+
+### 🇷🇺 Изменено | 🇬🇧 Changed
+
+- **Быстрые заметки — реактивный тулбар и декомпозиция архитектуры**:
+  - Кнопки списков (маркированный, нумерованный) и задач на панели инструментов переведены в режим переключателей (`ToggleButton`) и динамически подсвечивают текущий контекст под курсором.
+  - Выделены специализированные хелперы `QuickNoteListHelper` и `QuickNoteHyperlinkHelper`, расширен `QuickNoteTaskListController`, что снизило связность кода и изолировало манипуляции с деревом FlowDocument.
+- **Quick Note — reactive toolbar and architectural decoupling**:
+  - List and task toolbar buttons are now `ToggleButton`s with live highlighting reflecting the active cursor context.
+  - Extracted `QuickNoteListHelper` and `QuickNoteHyperlinkHelper`, extended `QuickNoteTaskListController`, reducing coupling and isolating FlowDocument AST operations.
+
 ## [1.15.25] - 2026-09-23
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added

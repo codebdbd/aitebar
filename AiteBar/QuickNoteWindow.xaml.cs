@@ -286,6 +286,7 @@ namespace AiteBar
                 }
             }
             _footerStatsController.ScheduleUpdate(documentChanged: false);
+            UpdateToolbarFormattingState();
         }
 
         private async void TxtNote_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -480,6 +481,21 @@ namespace AiteBar
             {
                 e.CancelCommand();
                 InsertImage(image);
+                return;
+            }
+
+            if (e.DataObject.GetDataPresent(DataFormats.Rtf))
+            {
+                if (e.DataObject.GetData(DataFormats.Rtf) is string rtf &&
+                    QuickNoteClipboardSanitizer.TrySanitizeRtf(rtf, out byte[]? package) &&
+                    package != null)
+                {
+                    var dataObject = new System.Windows.DataObject();
+                    using var stream = new MemoryStream(package);
+                    dataObject.SetData(DataFormats.XamlPackage, stream.ToArray());
+                    e.DataObject = dataObject;
+                    e.FormatToApply = DataFormats.XamlPackage;
+                }
             }
         }
 
@@ -852,7 +868,7 @@ namespace AiteBar
             return QuickNoteDocumentHelper.GetTextPointerAtOffset(TxtNote.Document, offset);
         }
 
-        private (int Start, int End) GetSelectionOffsets()
+        internal (int Start, int End) GetSelectionOffsets()
         {
             int start = GetTextOffset(TxtNote.Selection.Start);
             int end = GetTextOffset(TxtNote.Selection.End);

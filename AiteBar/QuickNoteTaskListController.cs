@@ -167,5 +167,149 @@ namespace AiteBar
 
             return count;
         }
+
+        public static bool HandleEnterKey(
+            WpfRichTextBox editor,
+            QuickNoteTheme theme,
+            Action<Paragraph, bool> onTaskToggled,
+            Action<Paragraph> connectTask)
+        {
+            if (editor?.Document == null)
+            {
+                return false;
+            }
+
+            Paragraph? currentParagraph = editor.CaretPosition?.Paragraph;
+            if (currentParagraph == null || !QuickNoteDocumentFormatting.IsTaskParagraph(currentParagraph, out _, out _, out _))
+            {
+                return false;
+            }
+
+            string itemText = new TextRange(currentParagraph.ContentStart, currentParagraph.ContentEnd).Text.Trim();
+            if (string.IsNullOrEmpty(itemText))
+            {
+                editor.BeginChange();
+                try
+                {
+                    QuickNoteDocumentFormatting.RemoveTaskCheckbox(currentParagraph, theme);
+                }
+                finally
+                {
+                    editor.EndChange();
+                }
+
+                return true;
+            }
+
+            editor.BeginChange();
+            try
+            {
+                if (!editor.Selection.IsEmpty)
+                {
+                    editor.Selection.Text = string.Empty;
+                }
+
+                TextPointer? caret = editor.CaretPosition;
+                if (caret == null)
+                {
+                    return false;
+                }
+
+                var newParagraph = new Paragraph();
+                var newContainer = QuickNoteDocumentFormatting.CreateTaskCheckbox(false, isChecked => onTaskToggled(newParagraph, isChecked), theme);
+                newParagraph.Inlines.Add(newContainer);
+
+                if (caret.CompareTo(currentParagraph.ContentEnd) >= 0)
+                {
+                    newParagraph.Inlines.Add(new Run(string.Empty));
+                }
+                else
+                {
+                    TextRange tailRange = new TextRange(caret, currentParagraph.ContentEnd);
+                    using var stream = new System.IO.MemoryStream();
+                    tailRange.Save(stream, System.Windows.DataFormats.XamlPackage);
+                    tailRange.Text = string.Empty;
+
+                    stream.Position = 0;
+                    var tempDoc = new FlowDocument();
+                    var tempRange = new TextRange(tempDoc.ContentStart, tempDoc.ContentEnd);
+                    tempRange.Load(stream, System.Windows.DataFormats.XamlPackage);
+
+                    List<Inline> extractedInlines = new();
+                    foreach (Block b in tempDoc.Blocks.ToList())
+                    {
+                        if (b is Paragraph p)
+                        {
+                            foreach (Inline inline in p.Inlines.ToList())
+                            {
+                                p.Inlines.Remove(inline);
+                                extractedInlines.Add(inline);
+                            }
+                        }
+                    }
+
+                    if (extractedInlines.Count > 0)
+                    {
+                        foreach (var inline in extractedInlines)
+                        {
+                            newParagraph.Inlines.Add(inline);
+                        }
+                    }
+                    else
+                    {
+                        newParagraph.Inlines.Add(new Run(string.Empty));
+                    }
+                }
+
+                currentParagraph.SiblingBlocks.InsertAfter(currentParagraph, newParagraph);
+                QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(newParagraph, false, theme);
+                connectTask(newParagraph);
+                editor.CaretPosition = newParagraph.Inlines.FirstInline?.NextInline?.ContentStart ?? newParagraph.ContentEnd;
+            }
+            finally
+            {
+                editor.EndChange();
+            }
+
+            return true;
+        }
+
+        public static bool HandleBackspaceKey(WpfRichTextBox editor, QuickNoteTheme theme)
+        {
+            if (editor?.Document == null || !editor.Selection.IsEmpty)
+            {
+                return false;
+            }
+
+            Paragraph? currentParagraph = editor.CaretPosition?.Paragraph;
+            if (currentParagraph == null || !QuickNoteDocumentFormatting.IsTaskParagraph(currentParagraph, out _, out _, out _))
+            {
+                return false;
+            }
+
+            TextPointer? caret = editor.CaretPosition;
+            if (caret == null)
+            {
+                return false;
+            }
+
+            TextRange headRange = new TextRange(currentParagraph.ContentStart, caret);
+            if (string.IsNullOrWhiteSpace(headRange.Text))
+            {
+                editor.BeginChange();
+                try
+                {
+                    QuickNoteDocumentFormatting.RemoveTaskCheckbox(currentParagraph, theme);
+                }
+                finally
+                {
+                    editor.EndChange();
+                }
+
+                return true;
+            }
+
+            return false;
+        }
     }
 }

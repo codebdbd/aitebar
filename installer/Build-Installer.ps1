@@ -70,7 +70,7 @@ New-Item -ItemType Directory -Force -Path $installerDir | Out-Null
 
 # Installer outputs are generated artifacts. Remove an older version so the
 # directory and release workflow always contain exactly one installer.
-Get-ChildItem -Path $installerDir -Filter "AiteBar-Setup-*.exe" -File -ErrorAction SilentlyContinue | Remove-Item -Force
+Get-ChildItem -Path $installerDir -Filter "AiteBar-Setup*.exe" -File -ErrorAction SilentlyContinue | Remove-Item -Force
 
 # Cleanup any temporary files left by previous Inno Setup runs (before)
 Get-ChildItem -Path $installerDir -Filter "*.tmp" -Force -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue

@@ -39,7 +39,29 @@
     </Window.Resources>
 
     <Grid x:Name="RootGrid">
-        <Grid x:Name="EditorHost">
+        <Border x:Name="LeftExitZone"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Stretch"
+                Width="120"
+                Background="Transparent"
+                Cursor="Hand"
+                Focusable="False"
+                Panel.ZIndex="10"
+                PreviewMouseLeftButtonDown="ExitZone_PreviewMouseLeftButtonDown"
+                AutomationProperties.Name="{local:Loc ResourceKey=Common_Close}"/>
+
+        <Border x:Name="RightExitZone"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Stretch"
+                Width="120"
+                Background="Transparent"
+                Cursor="Hand"
+                Focusable="False"
+                Panel.ZIndex="10"
+                PreviewMouseLeftButtonDown="ExitZone_PreviewMouseLeftButtonDown"
+                AutomationProperties.Name="{local:Loc ResourceKey=Common_Close}"/>
+
+        <Grid x:Name="EditorHost" Panel.ZIndex="5">
             <local:ZenParagraphEditor x:Name="Editor"
                      Style="{StaticResource ZenEditorTextBoxStyle}"
                      Width="760"

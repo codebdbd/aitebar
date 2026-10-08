@@ -224,6 +224,17 @@ public partial class AppSettingsWindow : DarkWindow
         CmbLanguage.SelectedIndex = 0;
     }
 
+    private void LoadZenEditorSafetyMarginList()
+    {
+        string? currentTag = GetComboTag(CmbZenEditorSideSafetyMargin);
+        CmbZenEditorSideSafetyMargin.Items.Clear();
+        CmbZenEditorSideSafetyMargin.Items.Add(new ComboBoxItem { Content = "24 px", Tag = "24" });
+        CmbZenEditorSideSafetyMargin.Items.Add(new ComboBoxItem { Content = LocalizationService.Get("ZenEditor_SafetyMargin48Default"), Tag = "48" });
+        CmbZenEditorSideSafetyMargin.Items.Add(new ComboBoxItem { Content = "72 px", Tag = "72" });
+        CmbZenEditorSideSafetyMargin.Items.Add(new ComboBoxItem { Content = "96 px", Tag = "96" });
+        SetComboValue(CmbZenEditorSideSafetyMargin, currentTag ?? "48");
+    }
+
     private (CheckBox CheckBox, UtilityButtonDefinition Definition)[] GetUtilityVisibilityBindings() =>
     [
         (ChkShowPresetSearch, UtilityButtonCatalog.Search),
@@ -277,6 +288,7 @@ public partial class AppSettingsWindow : DarkWindow
         {
             LoadLanguageList();
             SetComboValue(CmbLanguage, language);
+            LoadZenEditorSafetyMarginList();
             SelectSegmentByTag(edge, SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
             ChkSecondaryMonitor.IsChecked = isSecondaryMonitor;
             UpdateMonitorCheckbox();
@@ -736,6 +748,8 @@ public partial class AppSettingsWindow : DarkWindow
         AutomationProperties.SetName(ChkShowTaskbarPositionIndicator, LocalizationService.Get("AppSettingsWindow_ShowTaskbarPositionIndicator"));
         AutomationProperties.SetName(ChkSecondaryMonitor, LocalizationService.Get("AppSettingsWindow_SecondaryMonitor"));
         AutomationProperties.SetName(ChkCheckForUpdatesEnabled, LocalizationService.Get("AppSettingsWindow_CheckForUpdates"));
+        AutomationProperties.SetName(ChkZenEditorExitOnSideClick, LocalizationService.Get("ZenEditor_ExitOnSideClickSetting"));
+        AutomationProperties.SetName(CmbZenEditorSideSafetyMargin, LocalizationService.Get("ZenEditor_SideSafetyMarginSetting"));
 
         (CheckBox CheckBox, string ResourceKey)[] utilitySwitches =
         [
@@ -1069,6 +1083,9 @@ public partial class AppSettingsWindow : DarkWindow
         ChkClipboardManagerPersistHistory.IsChecked = _settings.ClipboardManagerPersistHistory;
         ChkSaveTextProcessingDraft.IsChecked = _settings.SaveTextProcessingDraft;
         ChkSavePromptBuilderDrafts.IsChecked = _settings.SavePromptBuilderDrafts;
+        ChkZenEditorExitOnSideClick.IsChecked = _settings.ZenEditorExitOnSideClick;
+        SetComboValue(CmbZenEditorSideSafetyMargin, ((int)Math.Round(_settings.ZenEditorSideSafetyMargin)).ToString(CultureInfo.InvariantCulture));
+        UpdateZenEditorSafetyMarginVisibility();
         ChkShowPanelOnMouseHover.IsChecked = _settings.ShowPanelOnMouseHover;
         ChkSuppressPanelInFullscreen.IsChecked = _settings.SuppressPanelInFullscreen;
         ChkSuppressHotkeysInFullscreen.IsChecked = _settings.SuppressHotkeysInFullscreen;
@@ -2054,6 +2071,8 @@ public partial class AppSettingsWindow : DarkWindow
                 settings.PromptBuilderDrafts = [];
                 settings.PromptBuilderLastText = null;
             }
+            settings.ZenEditorExitOnSideClick = ChkZenEditorExitOnSideClick.IsChecked ?? true;
+            settings.ZenEditorSideSafetyMargin = GetSelectedZenEditorSafetyMargin();
             settings.ShowPanelOnMouseHover = ChkShowPanelOnMouseHover.IsChecked ?? true;
             settings.SuppressPanelInFullscreen = ChkSuppressPanelInFullscreen.IsChecked ?? true;
             settings.SuppressHotkeysInFullscreen = ChkSuppressHotkeysInFullscreen.IsChecked ?? true;
@@ -2202,6 +2221,26 @@ public partial class AppSettingsWindow : DarkWindow
         }
 
         return ContextStateHelper.NormalizeContexts(result);
+    }
+
+    private double GetSelectedZenEditorSafetyMargin()
+    {
+        string? tag = GetComboTag(CmbZenEditorSideSafetyMargin);
+        return double.TryParse(tag, NumberStyles.Float, CultureInfo.InvariantCulture, out double value) && value > 0
+            ? value
+            : ZenEditorLayoutHelper.DefaultSideSafetyMargin;
+    }
+
+    private void ChkZenEditorExitOnSideClick_Changed(object sender, RoutedEventArgs e)
+    {
+        UpdateZenEditorSafetyMarginVisibility();
+    }
+
+    private void UpdateZenEditorSafetyMarginVisibility()
+    {
+        bool isEnabled = ChkZenEditorExitOnSideClick.IsChecked == true;
+        ZenEditorSafetyMarginDivider.Visibility = isEnabled ? Visibility.Visible : Visibility.Collapsed;
+        ZenEditorSafetyMarginRow.Visibility = isEnabled ? Visibility.Visible : Visibility.Collapsed;
     }
 }
 

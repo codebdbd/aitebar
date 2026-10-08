@@ -250,16 +250,16 @@ public sealed class ActionServiceTests
     }
 
     [Fact]
-    public void CreateScriptProcessStartInfo_CmdScript_UsesCmdWithSeparateArguments()
+    public void CreateScriptProcessStartInfo_CmdScript_LaunchesThroughShell()
     {
         string scriptPath = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"), "test script.cmd");
 
         var psi = ActionService.CreateScriptProcessStartInfo(scriptPath);
 
-        Assert.Equal("cmd.exe", psi.FileName);
-        Assert.False(psi.UseShellExecute);
+        Assert.Equal(scriptPath, psi.FileName);
+        Assert.True(psi.UseShellExecute);
         Assert.Equal(Path.GetDirectoryName(scriptPath), psi.WorkingDirectory);
-        Assert.Equal(["/c", "call", scriptPath], psi.ArgumentList.ToArray());
+        Assert.Empty(psi.ArgumentList);
     }
 
     [Fact]
@@ -270,7 +270,8 @@ public sealed class ActionServiceTests
         var psi = ActionService.CreateScriptProcessStartInfo(scriptPath, keepWindowOpen: true);
 
         Assert.Equal("cmd.exe", psi.FileName);
-        Assert.Equal(["/k", "call", scriptPath], psi.ArgumentList.ToArray());
+        Assert.True(psi.UseShellExecute);
+        Assert.Equal("/k \"\"" + scriptPath + "\"\"", psi.Arguments);
     }
 
     [Fact]
@@ -330,6 +331,29 @@ public sealed class ActionServiceTests
     }
 
     [Fact]
+    public void IsUsablePowerShellExecutable_SkipsZeroByteWindowsApps()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string winApps = Path.Combine(tempRoot, "Microsoft", "WindowsApps");
+        Directory.CreateDirectory(winApps);
+        string dummyPwsh = Path.Combine(winApps, "pwsh.exe");
+        string realPwsh = Path.Combine(tempRoot, "pwsh.exe");
+
+        try
+        {
+            File.WriteAllText(dummyPwsh, string.Empty);
+            File.WriteAllText(realPwsh, "valid binary");
+
+            Assert.False(ActionService.IsUsablePowerShellExecutable(dummyPwsh));
+            Assert.True(ActionService.IsUsablePowerShellExecutable(realPwsh));
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    [Fact]
     public void CreateScriptProcessStartInfo_PywScript_PrefersPythonw()
     {
         string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
@@ -368,9 +392,9 @@ public sealed class ActionServiceTests
             hideWindow: true,
             runAsAdmin: true);
 
-        Assert.Equal("cmd.exe", psi.FileName);
-        Assert.Equal(["/c", "call", scriptPath, "--flag", "param with spaces", "123"], psi.ArgumentList.ToArray());
-        Assert.True(psi.CreateNoWindow);
+        Assert.Equal(scriptPath, psi.FileName);
+        Assert.Equal("--flag \"param with spaces\" 123", psi.Arguments);
+        Assert.Empty(psi.ArgumentList);
         Assert.Equal(ProcessWindowStyle.Hidden, psi.WindowStyle);
         Assert.True(psi.UseShellExecute);
         Assert.Equal("runas", psi.Verb);
@@ -906,7 +930,9 @@ public sealed class ActionServiceTests
             var element = new CustomElement
             {
                 ActionType = nameof(ActionType.ScriptFile),
-                ActionValue = scriptPath
+                ActionValue = scriptPath,
+                SkipScriptConfirmation = false,
+                KeepScriptWindowOpen = false
             };
 
             ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
@@ -939,7 +965,8 @@ public sealed class ActionServiceTests
             var element = new CustomElement
             {
                 ActionType = nameof(ActionType.ScriptFile),
-                ActionValue = scriptPath
+                ActionValue = scriptPath,
+                SkipScriptConfirmation = false
             };
 
             ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
@@ -983,6 +1010,45 @@ public sealed class ActionServiceTests
         {
             Directory.Delete(tempRoot, recursive: true);
         }
+    }
+
+    [Fact]
+    public async Task ExecuteCustomActionAsync_ScriptFile_DefaultSkipConfirmationTrue_LaunchesDirectlyWithoutPrompt()
+    {
+        string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempRoot);
+        string scriptPath = Path.Combine(tempRoot, "script.cmd");
+        File.WriteAllText(scriptPath, "@echo off");
+
+        try
+        {
+            var runtime = new FakeActionServiceRuntime();
+            var service = new ActionService(new AppSettingsService(), runtime);
+            var element = new CustomElement
+            {
+                ActionType = nameof(ActionType.ScriptFile),
+                ActionValue = scriptPath
+                // Uses default SkipScriptConfirmation = true
+            };
+
+            ActionExecutionResult result = await service.ExecuteCustomActionAsync(element);
+
+            Assert.True(result.Success);
+            Assert.Empty(runtime.ConfirmMessages);
+            Assert.Single(runtime.StartedProcessInfos);
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void CustomElement_ScriptDefaults_AreSkipConfirmationAndKeepOpen()
+    {
+        var element = new CustomElement();
+        Assert.True(element.SkipScriptConfirmation);
+        Assert.True(element.KeepScriptWindowOpen);
     }
 
     [Fact]

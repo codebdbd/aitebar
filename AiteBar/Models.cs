@@ -160,9 +160,9 @@ public class CustomElement
     public string ContextId { get; set; } = "context-0";
 
     public string ScriptArguments { get; set; } = "";
-    public bool SkipScriptConfirmation { get; set; } = false;
+    public bool SkipScriptConfirmation { get; set; } = true;
     public bool HideScriptWindow { get; set; } = false;
-    public bool KeepScriptWindowOpen { get; set; } = false;
+    public bool KeepScriptWindowOpen { get; set; } = true;
     public bool RunAsAdmin { get; set; } = false;
 }
 
@@ -197,6 +197,8 @@ public class AppSettings
         public bool ShowPresetPromptBuilder { get; set; } = false;
         public bool ShowPresetZenEditor { get; set; } = true;
         public bool ShowPresetAiteProfiles { get; set; } = true;
+    public bool ZenEditorExitOnSideClick { get; set; } = true;
+    public double ZenEditorSideSafetyMargin { get; set; } = 48.0;
     public bool ClipboardManagerPersistHistory { get; set; } = false;
     public string QuickNoteThemeId { get; set; } = "dark";
     public bool QuickNotePinned { get; set; } = false;

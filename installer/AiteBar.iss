@@ -24,7 +24,7 @@ PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 LicenseFile=..\LICENSE
 OutputDir=..\artifacts\installer
-OutputBaseFilename=AiteBar-Setup-{#AppVersion}
+OutputBaseFilename=AiteBar-Setup
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppDisplayName} Installer
 VersionInfoProductName={#AppDisplayName}
@@ -44,6 +44,7 @@ RestartApplications=no
 
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\*"
+Type: filesandordirs; Name: "{autopf}\Aite Bar"
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
@@ -66,6 +67,7 @@ Name: "{group}\{#AppDisplayName}"; Filename: "{app}\{#AppExeName}"
 Name: "{autodesktop}\{#AppDisplayName}"; Filename: "{app}\{#AppExeName}"; Tasks: desktopicon
 
 [Registry]
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: none; ValueName: "Aite Bar"; Flags: deletevalue
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "{#AppName}"; ValueData: """{app}\{#AppExeName}"""; Flags: uninsdeletevalue; Tasks: autostart
 
 [Code]

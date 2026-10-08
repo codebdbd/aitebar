@@ -116,6 +116,11 @@ namespace AiteBar
                 string fileName = $"auto_{Guid.NewGuid()}.png";
                 string destPath = Path.Combine(PathHelper.IconsFolder, fileName);
 
+                if (ShellIconHelper.SaveHIconAsPng(icon.Handle, destPath))
+                {
+                    return destPath;
+                }
+
                 using (var bitmap = icon.ToBitmap())
                 {
                     bitmap.Save(destPath, ImageFormat.Png);
@@ -142,8 +147,13 @@ namespace AiteBar
                 if (ext == ".ico")
                 {
                     using var icon = new Icon(sourcePath);
-                    using var bitmap = icon.ToBitmap();
                     string destPath = Path.Combine(PathHelper.IconsFolder, Path.ChangeExtension(fileName, ".png"));
+                    if (ShellIconHelper.SaveHIconAsPng(icon.Handle, destPath))
+                    {
+                        return destPath;
+                    }
+
+                    using var bitmap = icon.ToBitmap();
                     bitmap.Save(destPath, ImageFormat.Png);
                     return destPath;
                 }

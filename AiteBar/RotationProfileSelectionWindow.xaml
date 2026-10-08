@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/Resources/app.ico"
-        Title="{local:Loc ResourceKey=RotationProfiles_Title}" Width="640" Height="440"
+        Title="{local:Loc ResourceKey=RotationProfiles_Title}" Width="640" Height="480"
         WindowStartupLocation="CenterOwner" Background="#191919" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize" ShowInTaskbar="False"
         Topmost="True">
@@ -29,10 +29,19 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <StackPanel>
-                <TextBlock Text="{local:Loc ResourceKey=RotationProfiles_Profiles}" Foreground="White" FontSize="14" FontWeight="SemiBold"/>
-                <TextBlock Text="{local:Loc ResourceKey=RotationProfiles_DefaultHint}" Foreground="{StaticResource MutedText}" FontSize="11" Margin="0,3,0,0"/>
+                <Border Style="{StaticResource SegmentedContainerStyle}" CornerRadius="4" HorizontalAlignment="Left" Margin="0,0,0,8">
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="RbModeSingle" Content="{local:Loc ResourceKey=RotationProfiles_ModeSingle}"
+                                     GroupName="ProfileMode" Style="{StaticResource SegmentedRadioButtonStyle}"
+                                     Checked="ProfileMode_Changed" IsChecked="True"/>
+                        <RadioButton x:Name="RbModeRotation" Content="{local:Loc ResourceKey=RotationProfiles_ModeRotation}"
+                                     GroupName="ProfileMode" Style="{StaticResource SegmentedRadioButtonStyle}"
+                                     Checked="ProfileMode_Changed"/>
+                    </StackPanel>
+                </Border>
+                <TextBlock x:Name="TxtModeHint" Text="{local:Loc ResourceKey=RotationProfiles_SingleHint}" Foreground="{StaticResource MutedText}" FontSize="11"/>
             </StackPanel>
-            <Border Grid.Column="1" Background="#383838" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="4" Padding="10,4" VerticalAlignment="Top">
+            <Border x:Name="BadgeSelectionCount" Grid.Column="1" Background="#252526" BorderBrush="{StaticResource BorderColor}" BorderThickness="1" CornerRadius="4" Padding="10,4" VerticalAlignment="Top" Visibility="Collapsed">
                 <TextBlock x:Name="TxtSelectionCount" Foreground="{StaticResource MutedText}" FontSize="11"/>
             </Border>
         </Grid>
@@ -42,17 +51,24 @@
             <TextBlock x:Name="TxtSearchPlaceholder" Text="{local:Loc ResourceKey=RotationProfiles_SearchPlaceholder}" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="{StaticResource PlaceholderForegroundBrush}" IsHitTestVisible="False"/>
         </Grid>
 
-        <Border Grid.Row="2" Background="#383838" BorderBrush="#3A3A3E" BorderThickness="1" CornerRadius="6" Padding="4">
+        <Border Grid.Row="2" Background="#252526" BorderBrush="#3A3A3E" BorderThickness="1" CornerRadius="6" Padding="4">
             <ScrollViewer VerticalScrollBarVisibility="Auto">
                 <StackPanel x:Name="PanelProfiles"/>
             </ScrollViewer>
         </Border>
 
-        <UniformGrid Grid.Row="3" Columns="4" Margin="0,14,0,0">
-            <Button Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=RotationProfiles_SelectAll}" Click="BtnSelectAll_Click" Height="36" Margin="0,0,6,0"/>
-            <Button Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=RotationProfiles_Clear}" Click="BtnClear_Click" Height="36" Margin="6,0,6,0"/>
-            <Button x:Name="BtnCancel" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Height="36" Margin="6,0,6,0" IsCancel="True"/>
-            <Button x:Name="BtnSave" Style="{StaticResource ActionButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Height="36" Margin="6,0,0,0" IsDefault="True"/>
-        </UniformGrid>
+        <Grid Grid.Row="3" Margin="0,14,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="BtnQuickAction1" Grid.Column="0" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=RotationProfiles_ResetDefault}" Click="BtnQuickAction1_Click" Height="36" Margin="0,0,8,0" Padding="14,0"/>
+            <Button x:Name="BtnQuickAction2" Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=RotationProfiles_Clear}" Click="BtnQuickAction2_Click" Height="36" Margin="0,0,8,0" Padding="14,0"/>
+            <Button x:Name="BtnCancel" Grid.Column="3" Style="{StaticResource SecondaryButtonStyle}" Content="{local:Loc ResourceKey=Common_Cancel}" Click="BtnCancel_Click" Height="36" Margin="0,0,8,0" Padding="16,0" IsCancel="True"/>
+            <Button x:Name="BtnSave" Grid.Column="4" Style="{StaticResource ActionButtonStyle}" Content="{local:Loc ResourceKey=Common_Save}" Click="BtnSave_Click" Height="36" Padding="20,0" IsDefault="True"/>
+        </Grid>
     </Grid>
 </local:DarkWindow>

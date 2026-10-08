@@ -17,6 +17,10 @@
     <SolidColorBrush x:Key="FormControlDisabledForegroundBrush" Color="#777777"/>
     <SolidColorBrush x:Key="FormControlErrorBorderBrush" Color="#E85A5A"/>
     <SolidColorBrush x:Key="PlaceholderForegroundBrush" Color="#666666"/>
+    <SolidColorBrush x:Key="CheckBoxBorderBrush" Color="#707074"/>
+    <SolidColorBrush x:Key="CheckBoxBorderHoverBrush" Color="#8E95A2"/>
+    <SolidColorBrush x:Key="CheckBoxBackground" Color="#252526"/>
+    <SolidColorBrush x:Key="CheckBoxBackgroundHover" Color="#2F2F33"/>
 
     <!-- ============================================ -->
     <!-- BUTTON STYLES - UNIFIED FOR ALL WINDOWS      -->
@@ -463,11 +467,11 @@
                                 VerticalAlignment="Center">
                             <Grid Width="16" Height="16" SnapsToDevicePixels="True">
                                 <Border x:Name="BoxOutline"
-                                        Background="{StaticResource FormControlBorderBrush}"
+                                        Background="{StaticResource CheckBoxBorderBrush}"
                                         CornerRadius="3"/>
                                 <Border x:Name="Box"
                                         Margin="1"
-                                        Background="{StaticResource FormControlBackground}"
+                                        Background="{StaticResource CheckBoxBackground}"
                                         CornerRadius="2">
                                     <Path x:Name="CheckMark"
                                           Data="M 3 7 L 6 10 L 13 3"
@@ -485,8 +489,8 @@
                     </DockPanel>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Box" Property="Background" Value="{StaticResource FormControlBackgroundHover}"/>
-                            <Setter TargetName="BoxOutline" Property="Background" Value="{StaticResource FormControlBorderHoverBrush}"/>
+                            <Setter TargetName="Box" Property="Background" Value="{StaticResource CheckBoxBackgroundHover}"/>
+                            <Setter TargetName="BoxOutline" Property="Background" Value="{StaticResource CheckBoxBorderHoverBrush}"/>
                         </Trigger>
                         <MultiTrigger>
                             <MultiTrigger.Conditions>
@@ -534,8 +538,148 @@
     </Style>
 
     <Style x:Key="SelectionListCheckBoxStyle" TargetType="CheckBox" BasedOn="{StaticResource BaseCheckBoxStyle}">
-        <Setter Property="Margin" Value="8,5,8,5"/>
-        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Margin" Value="0,1,0,1"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="CheckBox">
+                    <Border x:Name="RowBorder"
+                            Background="Transparent"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <DockPanel LastChildFill="True">
+                            <Border x:Name="FocusFrame"
+                                    Width="20"
+                                    Height="20"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    Padding="1"
+                                    VerticalAlignment="Center">
+                                <Grid Width="16" Height="16" SnapsToDevicePixels="True">
+                                    <Border x:Name="BoxOutline"
+                                            Background="{StaticResource CheckBoxBorderBrush}"
+                                            CornerRadius="3"/>
+                                    <Border x:Name="Box"
+                                            Margin="1"
+                                            Background="{StaticResource CheckBoxBackground}"
+                                            CornerRadius="2">
+                                        <Path x:Name="CheckMark"
+                                              Data="M 3 7 L 6 10 L 13 3"
+                                              Stroke="White"
+                                              StrokeThickness="2"
+                                              StrokeStartLineCap="Round"
+                                              StrokeEndLineCap="Round"
+                                              Visibility="Collapsed"/>
+                                    </Border>
+                                </Grid>
+                            </Border>
+                            <ContentPresenter Margin="8,0,0,0"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </DockPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="RowBorder" Property="Background" Value="#1AFFFFFF"/>
+                            <Setter TargetName="Box" Property="Background" Value="{StaticResource CheckBoxBackgroundHover}"/>
+                            <Setter TargetName="BoxOutline" Property="Background" Value="{StaticResource CheckBoxBorderHoverBrush}"/>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True"/>
+                                <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="FocusFrame" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                        </MultiTrigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="Box" Property="Background" Value="{DynamicResource AccentColor}"/>
+                            <Setter TargetName="BoxOutline" Property="Background" Value="{DynamicResource AccentColor}"/>
+                            <Setter TargetName="CheckMark" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource FormControlDisabledForegroundBrush}"/>
+                            <Setter TargetName="Box" Property="Opacity" Value="0.55"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="SelectionListRadioButtonStyle" TargetType="RadioButton">
+        <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+        <Setter Property="Foreground" Value="{StaticResource FormControlForegroundBrush}"/>
+        <Setter Property="Margin" Value="0,1,0,1"/>
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="SnapsToDevicePixels" Value="True"/>
+        <Setter Property="UseLayoutRounding" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="RowBorder"
+                            Background="Transparent"
+                            CornerRadius="4"
+                            Padding="{TemplateBinding Padding}"
+                            SnapsToDevicePixels="True">
+                        <DockPanel LastChildFill="True">
+                            <Border x:Name="FocusFrame"
+                                    Width="20"
+                                    Height="20"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="1"
+                                    CornerRadius="10"
+                                    Padding="1"
+                                    VerticalAlignment="Center">
+                                <Grid Width="16" Height="16" SnapsToDevicePixels="True">
+                                    <Ellipse x:Name="RadioOutline"
+                                             Stroke="{StaticResource CheckBoxBorderBrush}"
+                                             StrokeThickness="1.5"
+                                             Fill="{StaticResource CheckBoxBackground}"/>
+                                    <Ellipse x:Name="RadioDot"
+                                             Width="8"
+                                             Height="8"
+                                             Fill="White"
+                                             Visibility="Collapsed"/>
+                                </Grid>
+                            </Border>
+                            <ContentPresenter Margin="8,0,0,0"
+                                              VerticalAlignment="Center"
+                                              RecognizesAccessKey="True"/>
+                        </DockPanel>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="RowBorder" Property="Background" Value="#1AFFFFFF"/>
+                            <Setter TargetName="RadioOutline" Property="Stroke" Value="{StaticResource CheckBoxBorderHoverBrush}"/>
+                            <Setter TargetName="RadioOutline" Property="Fill" Value="{StaticResource CheckBoxBackgroundHover}"/>
+                        </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsKeyboardFocused" Value="True"/>
+                                <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="FocusFrame" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                        </MultiTrigger>
+                        <Trigger Property="IsChecked" Value="True">
+                            <Setter TargetName="RadioOutline" Property="Stroke" Value="{DynamicResource AccentColor}"/>
+                            <Setter TargetName="RadioOutline" Property="Fill" Value="{DynamicResource AccentColor}"/>
+                            <Setter TargetName="RadioDot" Property="Visibility" Value="Visible"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Foreground" Value="{StaticResource FormControlDisabledForegroundBrush}"/>
+                            <Setter TargetName="RadioOutline" Property="Opacity" Value="0.55"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!-- ============================================ -->

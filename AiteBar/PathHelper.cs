@@ -32,6 +32,7 @@ namespace AiteBar
         public static string SettingsFile => Path.Combine(AppDataFolder, "settings.json");
         public static string LogFile => Path.Combine(AppDataFolder, "error.log");
         public static string IconsFolder => Path.Combine(AppDataFolder, "Icons");
+        public static string CacheFolder => Path.Combine(AppDataFolder, "Cache");
 
         // Методы для тестов
         public static void SetAppDataFolderOverride(string path)
@@ -62,6 +63,7 @@ namespace AiteBar
         {
             if (!Directory.Exists(AppDataFolder)) Directory.CreateDirectory(AppDataFolder);
             if (!Directory.Exists(IconsFolder)) Directory.CreateDirectory(IconsFolder);
+            if (!Directory.Exists(CacheFolder)) Directory.CreateDirectory(CacheFolder);
         }
 
         public static string? FindExecutableOnPath(string fileName)

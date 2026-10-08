@@ -270,4 +270,89 @@ public sealed class IconHelperTests
             Directory.Delete(root, recursive: true);
         }
     }
+
+    [Fact]
+    public void ExtractAndSaveShellIcon_Folder_ReturnsValidPng()
+    {
+        string folder = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(root, "test");
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            PathHelper.SetAppDataFolderOverride(testRoot);
+            string? iconPath = ShellIconHelper.ExtractAndSaveShellIcon(folder);
+
+            Assert.NotNull(iconPath);
+            Assert.True(File.Exists(iconPath));
+            Assert.True(new FileInfo(iconPath).Length > 0);
+            Assert.Equal(".png", Path.GetExtension(iconPath));
+
+            using var bmp = new Bitmap(iconPath);
+            Assert.Equal(0, bmp.GetPixel(0, 0).A);
+        }
+        finally
+        {
+            PathHelper.ClearAppDataFolderOverride();
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ExtractAndSaveShellIcon_FolderWithTrailingSlash_ReturnsValidPng()
+    {
+        string folder = Environment.GetFolderPath(Environment.SpecialFolder.Windows) + Path.DirectorySeparatorChar;
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(root, "test");
+        Directory.CreateDirectory(root);
+
+        try
+        {
+            PathHelper.SetAppDataFolderOverride(testRoot);
+            string? iconPath = ShellIconHelper.ExtractAndSaveShellIcon(folder);
+
+            Assert.NotNull(iconPath);
+            Assert.True(File.Exists(iconPath));
+            Assert.True(new FileInfo(iconPath).Length > 0);
+            Assert.Equal(".png", Path.GetExtension(iconPath));
+
+            using var bmp = new Bitmap(iconPath);
+            Assert.Equal(0, bmp.GetPixel(0, 0).A);
+        }
+        finally
+        {
+            PathHelper.ClearAppDataFolderOverride();
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ExtractAndSaveShellIcon_RegularFile_ReturnsValidPng()
+    {
+        string root = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+        string testRoot = Path.Combine(root, "test");
+        Directory.CreateDirectory(root);
+        string textFile = Path.Combine(root, "sample.txt");
+        File.WriteAllText(textFile, "hello world");
+
+        try
+        {
+            PathHelper.SetAppDataFolderOverride(testRoot);
+            string? iconPath = ShellIconHelper.ExtractAndSaveShellIcon(textFile);
+
+            Assert.NotNull(iconPath);
+            Assert.True(File.Exists(iconPath));
+            Assert.True(new FileInfo(iconPath).Length > 0);
+            Assert.Equal(".png", Path.GetExtension(iconPath));
+
+            using var bmp = new Bitmap(iconPath);
+            Assert.Equal(0, bmp.GetPixel(0, 0).A);
+        }
+        finally
+        {
+            PathHelper.ClearAppDataFolderOverride();
+            Directory.Delete(root, recursive: true);
+        }
+    }
 }

@@ -38,7 +38,9 @@ internal static class QuickNoteDocumentCodec
         new TextRange(document.ContentStart, document.ContentEnd).Load(stream,
             package ? DataFormats.XamlPackage : DataFormats.Rtf);
         QuickNoteRtfAdapter.RestoreCodeBlocksFromFences(document);
+        QuickNoteRtfAdapter.RestoreQuoteBlocksFromFences(document);
         if (package) QuickNoteRtfAdapter.NormalizeCodeBlocks(document);
+        if (package) QuickNoteRtfAdapter.NormalizeQuoteBlocks(document);
         QuickNoteRtfAdapter.RestoreEmbeddedImages(document);
         QuickNoteRtfAdapter.RestoreTaskItems(document);
     }

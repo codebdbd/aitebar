@@ -44,6 +44,7 @@ global using MouseButtonEventArgs = System.Windows.Input.MouseButtonEventArgs;
 global using ComboBox = System.Windows.Controls.ComboBox;
 global using ComboBoxItem = System.Windows.Controls.ComboBoxItem;
 global using CheckBox = System.Windows.Controls.CheckBox;
+global using RadioButton = System.Windows.Controls.RadioButton;
 global using TextBox = System.Windows.Controls.TextBox;
 global using Image = System.Windows.Controls.Image;
 global using Orientation = System.Windows.Controls.Orientation;

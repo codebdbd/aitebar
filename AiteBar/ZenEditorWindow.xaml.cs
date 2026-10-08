@@ -55,6 +55,7 @@ public partial class ZenEditorWindow : DarkWindow
 
     private readonly ZenEditorStore _store;
     private readonly MainWindow? _mainWindow;
+    private readonly AppSettingsService? _settingsService;
     private readonly DispatcherTimer _saveTimer;
     private readonly SemaphoreSlim _saveGate = new(1, 1);
     private readonly SemaphoreSlim _snapshotGate = new(1, 1);
@@ -76,10 +77,11 @@ public partial class ZenEditorWindow : DarkWindow
     private string _previousText = string.Empty;
     private IReadOnlyList<ZenEditorTextStyle> _previousStyles = [];
 
-    public ZenEditorWindow(ZenEditorStore store, MainWindow? mainWindow = null)
+    public ZenEditorWindow(ZenEditorStore store, MainWindow? mainWindow = null, AppSettingsService? settingsService = null)
     {
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _mainWindow = mainWindow;
+        _settingsService = settingsService;
         InitializeComponent();
 
         _saveTimer = CreateTimer(AutoSaveDelay, async () => await SaveNowAsync());
@@ -449,6 +451,33 @@ public partial class ZenEditorWindow : DarkWindow
     private void Editor_ContextMenuOpening(object sender, ContextMenuEventArgs e)
     {
         RefreshContextMenu();
+    }
+
+    private void ExitZone_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (sender is FrameworkElement zone)
+        {
+            e.Handled = true;
+            TriggerExitZoneMouseDown(zone);
+        }
+    }
+
+    internal void TriggerExitZoneMouseDown(FrameworkElement zone)
+    {
+        HandleExitZoneClick();
+    }
+
+    internal void TriggerExitZoneMouseUp(FrameworkElement zone, Point position)
+    {
+        HandleExitZoneClick();
+    }
+
+    internal void HandleExitZoneClick()
+    {
+        if (SaveErrorOverlay.Visibility != Visibility.Visible)
+        {
+            Close();
+        }
     }
 
     private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -1313,9 +1342,86 @@ public partial class ZenEditorWindow : DarkWindow
             return;
         }
 
-        double availableWidth = Math.Max(0, EditorHost.ActualWidth - 64);
-        Editor.Width = Math.Min(_theme.ColumnWidth, availableWidth);
-        Editor.Margin = new Thickness(32, EditorHost.ActualHeight * 0.18, 32, 32);
+        Editor.Width = ZenEditorLayoutHelper.CalculateEditorWidth(EditorHost.ActualWidth, _theme.ColumnWidth);
+        Editor.Margin = new Thickness(
+            ZenEditorLayoutHelper.SideMargin,
+            EditorHost.ActualHeight * ZenEditorLayoutHelper.TopMarginRatio,
+            ZenEditorLayoutHelper.SideMargin,
+            ZenEditorLayoutHelper.BottomMargin);
+        UpdateExitZonesGeometry();
+    }
+
+    internal bool ExitOnSideClick
+    {
+        get => _settingsService?.Settings.ZenEditorExitOnSideClick ?? _index.ExitOnSideClick;
+        set
+        {
+            if (_settingsService != null)
+            {
+                _settingsService.Settings.ZenEditorExitOnSideClick = value;
+            }
+            _index.ExitOnSideClick = value;
+            UpdateExitZonesGeometry();
+        }
+    }
+
+    internal double SideSafetyMargin
+    {
+        get => _settingsService?.Settings.ZenEditorSideSafetyMargin ?? _index.SideSafetyMargin;
+        set
+        {
+            if (_settingsService != null)
+            {
+                _settingsService.Settings.ZenEditorSideSafetyMargin = value;
+            }
+            _index.SideSafetyMargin = value;
+            UpdateExitZonesGeometry();
+        }
+    }
+
+    internal void UpdateExitZonesGeometry()
+    {
+        if (LeftExitZone == null || RightExitZone == null || Editor == null)
+        {
+            return;
+        }
+
+        if (!ExitOnSideClick)
+        {
+            LeftExitZone.Visibility = Visibility.Collapsed;
+            RightExitZone.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        double containerWidth = EditorHost.ActualWidth > 0
+            ? EditorHost.ActualWidth
+            : (!double.IsNaN(EditorHost.Width) && EditorHost.Width > 0 ? EditorHost.Width : 0);
+
+        if (containerWidth <= 0)
+        {
+            LeftExitZone.Visibility = Visibility.Collapsed;
+            RightExitZone.Visibility = Visibility.Collapsed;
+            return;
+        }
+
+        double editorWidth = Editor.Width > 0 && !double.IsNaN(Editor.Width)
+            ? Editor.Width
+            : ZenEditorLayoutHelper.CalculateEditorWidth(containerWidth, _theme.ColumnWidth);
+
+        double zoneWidth = ZenEditorLayoutHelper.CalculateExitZoneWidth(containerWidth, editorWidth, SideSafetyMargin);
+
+        if (zoneWidth <= 0)
+        {
+            LeftExitZone.Visibility = Visibility.Collapsed;
+            RightExitZone.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            LeftExitZone.Visibility = Visibility.Visible;
+            RightExitZone.Visibility = Visibility.Visible;
+            LeftExitZone.Width = zoneWidth;
+            RightExitZone.Width = zoneWidth;
+        }
     }
 
     private void UpdateTitle()

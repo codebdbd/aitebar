@@ -48,6 +48,8 @@ public sealed class ZenEditorStoreIndex
     public string ThemeId { get; set; } = ZenEditorThemeCatalog.PaperId;
     public string LastMonitorDeviceName { get; set; } = string.Empty;
     public string LastExportDirectory { get; set; } = string.Empty;
+    public bool ExitOnSideClick { get; set; } = true;
+    public double SideSafetyMargin { get; set; } = 48.0;
     public List<ZenEditorDocumentMetadata> Documents { get; set; } = [];
 }
 

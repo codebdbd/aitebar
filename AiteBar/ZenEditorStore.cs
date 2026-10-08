@@ -636,6 +636,8 @@ public sealed class ZenEditorStore
         ThemeId = index.ThemeId,
         LastMonitorDeviceName = index.LastMonitorDeviceName,
         LastExportDirectory = index.LastExportDirectory,
+        ExitOnSideClick = index.ExitOnSideClick,
+        SideSafetyMargin = index.SideSafetyMargin,
         Documents = index.Documents.Select(CloneMetadata).ToList()
     };
 

@@ -150,7 +150,6 @@ public sealed class FormControlHeightTests
 
     [Theory]
     [InlineData("BtnBrowse")]
-    [InlineData("BtnRotationProfiles")]
     [InlineData("BtnOpenCatalog")]
     [InlineData("BtnSelectCustomIcon")]
     public void SettingsSelectionButton_UsesSharedFormSelectionStyle(string buttonName)

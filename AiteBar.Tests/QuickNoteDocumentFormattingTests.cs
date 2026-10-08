@@ -239,6 +239,33 @@ public sealed class QuickNoteDocumentFormattingTests
         });
     }
 
+    [Fact]
+    public void ClipboardSanitizer_StripsForeignFontsAndMargins_PreservingInlines()
+    {
+        RunSta(() =>
+        {
+            var doc = new FlowDocument();
+            var para = new Paragraph(new Bold(new Run("Bold Title")))
+            {
+                FontFamily = new FontFamily("Comic Sans MS"),
+                FontSize = 48,
+                Foreground = Brushes.Red,
+                Margin = new Thickness(50)
+            };
+            doc.Blocks.Add(para);
+
+            QuickNoteClipboardSanitizer.SanitizeFlowDocument(doc);
+
+            Assert.Equal(new Thickness(0), para.Margin);
+            Assert.Equal(DependencyProperty.UnsetValue, para.ReadLocalValue(TextElement.FontFamilyProperty));
+            Assert.Equal(DependencyProperty.UnsetValue, para.ReadLocalValue(TextElement.FontSizeProperty));
+            Assert.Equal(DependencyProperty.UnsetValue, para.ReadLocalValue(TextElement.ForegroundProperty));
+
+            var bold = Assert.IsType<Bold>(para.Inlines.FirstInline);
+            Assert.IsType<Run>(bold.Inlines.FirstInline);
+        });
+    }
+
     private static void RunSta(Action action)
     {
         Exception? exception = null;

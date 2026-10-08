@@ -45,9 +45,15 @@
                     <StackPanel Grid.Column="0" Margin="0,0,30,0">
                         <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_ButtonName}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
                         <Grid Margin="0,0,0,15">
-                            <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged" GotFocus="TxtName_GotFocus" LostFocus="TxtName_LostFocus"/>
-                            <TextBlock x:Name="TxtNamePlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="{StaticResource PlaceholderForegroundBrush}" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_ButtonNamePlaceholder}"/>
-                            <TextBlock x:Name="TxtNameError" Margin="2,42,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+                            <Grid Grid.Row="0">
+                                <TextBox x:Name="TxtName" TextChanged="TxtName_TextChanged" GotFocus="TxtName_GotFocus" LostFocus="TxtName_LostFocus"/>
+                                <TextBlock x:Name="TxtNamePlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="{StaticResource PlaceholderForegroundBrush}" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_ButtonNamePlaceholder}"/>
+                            </Grid>
+                            <TextBlock x:Name="TxtNameError" Grid.Row="1" Margin="2,6,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
                         </Grid>
 
                         <UniformGrid Columns="2" Margin="0,0,0,15">
@@ -66,34 +72,33 @@
                         <StackPanel x:Name="PanelStandardAction">
                             <TextBlock x:Name="LblActionValue" Text="{local:Loc ResourceKey=SettingsWindow_UrlOrPath}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
                             <Grid Margin="0,0,0,15">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"/>
-                                    <ColumnDefinition Width="Auto"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBox x:Name="TxtActionValue" TextChanged="TxtActionValue_TextChanged" GotFocus="TxtActionValue_GotFocus" LostFocus="TxtActionValue_LostFocus"/>
-                                <TextBlock x:Name="TxtActionPlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="{StaticResource PlaceholderForegroundBrush}" IsHitTestVisible="False"/>
-                                <TextBlock x:Name="TxtActionValueError" Grid.ColumnSpan="2" Margin="2,42,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
-                                <Button x:Name="BtnBrowse" Grid.Column="1" Width="80" Margin="5,0,0,0" Click="BtnBrowse_Click" Style="{StaticResource FormSelectionButtonStyle}" Content="{local:Loc ResourceKey=Common_Browse}"/>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                <Grid Grid.Row="0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtActionValue" TextChanged="TxtActionValue_TextChanged" GotFocus="TxtActionValue_GotFocus" LostFocus="TxtActionValue_LostFocus"/>
+                                    <TextBlock x:Name="TxtActionPlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="{StaticResource PlaceholderForegroundBrush}" IsHitTestVisible="False"/>
+                                    <Button x:Name="BtnBrowse" Grid.Column="1" Width="80" Margin="5,0,0,0" Click="BtnBrowse_Click" Style="{StaticResource FormSelectionButtonStyle}" Content="{local:Loc ResourceKey=Common_Browse}"/>
+                                </Grid>
+                                <TextBlock x:Name="TxtActionValueError" Grid.Row="1" Margin="2,6,0,0" Foreground="{StaticResource FormControlErrorBorderBrush}" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed"/>
                             </Grid>
 
                             <!-- Browser Settings -->
-                            <Border x:Name="PanelWebSettings" Background="Transparent" CornerRadius="6" Padding="15" Margin="0,0,0,15" BorderThickness="1" BorderBrush="#3A3A3E">
-                                <StackPanel>
-                                    <Grid Margin="0,0,0,10">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="*"/>
-                                            <ColumnDefinition Width="*"/>
-                                        </Grid.ColumnDefinitions>
-                                        <StackPanel Margin="0,0,5,0">
-                                            <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Browser}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="11"/>
-                                            <ComboBox x:Name="CmbBrowser" SelectionChanged="CmbBrowser_SelectionChanged">
-                                            </ComboBox>
-                                        </StackPanel>
-                                        <StackPanel Grid.Column="1" Margin="5,0,0,0">
-                                            <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Profile}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="11"/>
-                                            <ComboBox x:Name="CmbChromeProfile"/>
-                                        </StackPanel>
+                            <StackPanel x:Name="PanelWebSettings" Margin="0,0,0,15">
+                                    <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Browser}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                                    <ComboBox x:Name="CmbBrowser" SelectionChanged="CmbBrowser_SelectionChanged" Margin="0,0,0,15"/>
+
+                                    <TextBlock Text="{local:Loc ResourceKey=SettingsWindow_Profile}" Foreground="{StaticResource MutedText}" Margin="0,0,0,5" FontSize="12"/>
+                                    <Grid Margin="0,0,0,12">
+                                        <TextBox x:Name="TxtProfile" IsReadOnly="True" Cursor="Hand" PreviewMouseDown="TxtProfile_PreviewMouseDown" Focusable="False"/>
+                                        <TextBlock x:Name="TxtProfilePlaceholder" Margin="{StaticResource FormInputPlaceholderMargin}" VerticalAlignment="Center" Foreground="{StaticResource PlaceholderForegroundBrush}" IsHitTestVisible="False" Text="{local:Loc ResourceKey=SettingsWindow_ProfilePlaceholder}"/>
                                     </Grid>
+
                                     <Grid>
                                         <Grid.Resources>
                                             <Style TargetType="CheckBox" BasedOn="{StaticResource DenseCheckBoxStyle}"/>
@@ -102,26 +107,10 @@
                                             <ColumnDefinition Width="*"/>
                                             <ColumnDefinition Width="*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Grid.RowDefinitions>
-                                            <RowDefinition Height="Auto"/>
-                                            <RowDefinition Height="Auto"/>
-                                        </Grid.RowDefinitions>
-                                        <CheckBox x:Name="ChkAppMode" Grid.Row="0" Grid.Column="0" Content="{local:Loc ResourceKey=SettingsWindow_AppMode}"/>
-                                        <CheckBox x:Name="ChkIncognito" Grid.Row="0" Grid.Column="1" Content="{local:Loc ResourceKey=SettingsWindow_Incognito}" Margin="5,2,0,2"/>
-                                        <CheckBox x:Name="ChkFullscreen" Grid.Row="1" Grid.Column="0" Content="{local:Loc ResourceKey=SettingsWindow_Fullscreen}"/>
-                                        <Grid Grid.Row="1" Grid.Column="1" Margin="5,3,0,3">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="Auto"/>
-                                                <ColumnDefinition Width="Auto"/>
-                                            </Grid.ColumnDefinitions>
-                                            <CheckBox x:Name="ChkRotation" Content="{local:Loc ResourceKey=SettingsWindow_Rotation}" Checked="ChkRotation_Changed" Unchecked="ChkRotation_Changed"/>
-                                            <Button x:Name="BtnRotationProfiles" Grid.Column="1" Style="{StaticResource FormSelectionButtonStyle}" Click="BtnRotationProfiles_Click" Margin="10,0,0,0" Width="36" Padding="0" SnapsToDevicePixels="True" UseLayoutRounding="True">
-                                                <TextBlock Text="&#xE908;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="24" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" TextOptions.TextFormattingMode="Ideal" TextOptions.TextRenderingMode="Auto"/>
-                                            </Button>
-                                        </Grid>
+                                        <CheckBox x:Name="ChkAppMode" Grid.Column="0" Content="{local:Loc ResourceKey=SettingsWindow_AppMode}"/>
+                                        <CheckBox x:Name="ChkIncognito" Grid.Column="1" Content="{local:Loc ResourceKey=SettingsWindow_Incognito}" Margin="5,2,0,2"/>
                                     </Grid>
-                                </StackPanel>
-                            </Border>
+                            </StackPanel>
 
                             <!-- Script Settings -->
                             <Border x:Name="PanelScriptSettings" Background="Transparent" CornerRadius="6" Padding="12" Margin="0,0,0,15" BorderThickness="1" BorderBrush="#3A3A3E" Visibility="Collapsed">
@@ -135,9 +124,9 @@
                                         <StackPanel.Resources>
                                             <Style TargetType="CheckBox" BasedOn="{StaticResource DenseCheckBoxStyle}"/>
                                         </StackPanel.Resources>
-                                        <CheckBox x:Name="ChkSkipScriptConfirmation" Content="{local:Loc ResourceKey=SettingsWindow_SkipScriptConfirmation}" Margin="0,0,0,4"/>
+                                        <CheckBox x:Name="ChkSkipScriptConfirmation" IsChecked="True" Content="{local:Loc ResourceKey=SettingsWindow_SkipScriptConfirmation}" Margin="0,0,0,4"/>
                                         <CheckBox x:Name="ChkScriptHideWindow" Content="{local:Loc ResourceKey=SettingsWindow_ScriptHideWindow}" Margin="0,0,0,4" Checked="ChkScriptHideWindow_Changed" Unchecked="ChkScriptHideWindow_Changed"/>
-                                        <CheckBox x:Name="ChkScriptKeepOpen" Content="{local:Loc ResourceKey=SettingsWindow_ScriptKeepOpen}" Margin="0,0,0,4"/>
+                                        <CheckBox x:Name="ChkScriptKeepOpen" IsChecked="True" Content="{local:Loc ResourceKey=SettingsWindow_ScriptKeepOpen}" Margin="0,0,0,4"/>
                                         <CheckBox x:Name="ChkScriptRunAsAdmin" Content="{local:Loc ResourceKey=SettingsWindow_ScriptRunAsAdmin}"/>
                                     </StackPanel>
                                 </StackPanel>
