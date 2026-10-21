@@ -31,6 +31,7 @@ public sealed class RuntimeLocalizationWindowSourceTests
         mainWindowCode += File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.DropHandler.cs"));
         mainWindowCode += File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.KeyboardNavigationHandler.cs"));
         mainWindowCode += File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.TrayMenuHandler.cs"));
+        mainWindowCode += File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.ContextMenuHandler.cs"));
 
         Assert.Contains("private void RefreshLocalizedUi()", code);
         Assert.Contains("LoadKeyList();", code);
