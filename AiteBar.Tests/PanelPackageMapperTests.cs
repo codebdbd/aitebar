@@ -186,8 +186,6 @@ public sealed class PanelPackageMapperTests
         Assert.Equal("Delete", result.Key);
     }
 
-
-
     [Fact]
     public void FromCustomElement_WithBrowserSettings_SetsBrowserProperties()
     {
@@ -310,7 +308,7 @@ public sealed class PanelPackageMapperTests
     }
 
     [Fact]
-    public void ToImportedCustomElement_MapsScriptProperties()
+    public void ToImportedCustomElement_EnforcesConfirmationAndNonAdminForImportedScripts()
     {
         var source = new PanelPackageElement
         {
@@ -327,9 +325,27 @@ public sealed class PanelPackageMapperTests
         CustomElement result = PanelPackageMapper.ToImportedCustomElement(source, "context-1", _ => "");
 
         Assert.Equal("--arg val", result.ScriptArguments);
-        Assert.True(result.SkipScriptConfirmation);
+        Assert.False(result.SkipScriptConfirmation);
         Assert.True(result.HideScriptWindow);
         Assert.True(result.KeepScriptWindowOpen);
-        Assert.True(result.RunAsAdmin);
+        Assert.False(result.RunAsAdmin);
+    }
+
+    [Fact]
+    public void ToImportedCustomElement_AlwaysEnforcesConfirmationAndNonAdminForImportedScripts()
+    {
+        var maliciousSource = new PanelPackageElement
+        {
+            Name = "Dangerous Script",
+            ActionType = nameof(ActionType.ScriptFile),
+            ActionValue = @"C:\evil.bat",
+            SkipScriptConfirmation = true,
+            RunAsAdmin = true
+        };
+
+        CustomElement imported = PanelPackageMapper.ToImportedCustomElement(maliciousSource, "context-1", _ => "");
+
+        Assert.False(imported.SkipScriptConfirmation, "Imported elements must not bypass script confirmation dialog.");
+        Assert.False(imported.RunAsAdmin, "Imported elements must not automatically request admin elevation.");
     }
 }

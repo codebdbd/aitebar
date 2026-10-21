@@ -83,10 +83,10 @@ internal static class PanelPackageMapper
             IconFont = string.IsNullOrWhiteSpace(source.IconFont) ? FontHelper.FluentKey : source.IconFont,
             Color = string.IsNullOrWhiteSpace(source.Color) ? DefaultColor : source.Color,
             ScriptArguments = source.ScriptArguments ?? "",
-            SkipScriptConfirmation = source.SkipScriptConfirmation,
+            SkipScriptConfirmation = false,
             HideScriptWindow = source.HideScriptWindow,
             KeepScriptWindowOpen = source.KeepScriptWindowOpen,
-            RunAsAdmin = source.RunAsAdmin,
+            RunAsAdmin = false,
             ImagePath = resolveImportedImagePath(source.Image),
             ContextId = targetContextId
         };
