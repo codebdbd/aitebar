@@ -4,11 +4,8 @@
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.14.x  | :white_check_mark: |
-| 1.13.x  | :white_check_mark: |
-| 1.12.x  | :white_check_mark: |
-| 1.11.x  | :white_check_mark: |
-| < 1.11  | :x:                |
+| 1.16.x  | :white_check_mark: |
+| < 1.16  | :x:                |
 
 ## Reporting a Vulnerability
 
@@ -30,6 +27,7 @@ We acknowledge receipt within 48 hours and provide a fix timeline.
 
 - Review imported panels before use — they may contain buttons that launch commands or scripts.
 - Only import panels from trusted sources.
+- Imported panels cannot bypass confirmation or auto-elevate: script confirmation is always enforced (`SkipScriptConfirmation = false`), and administrator privileges are stripped on import (`RunAsAdmin = false`).
 
 ### Clipboard Manager
 
@@ -54,4 +52,5 @@ We acknowledge receipt within 48 hours and provide a fix timeline.
 
 - All data is stored locally in `%AppData%\Codebdbd\Aite Bar\`.
 - Settings are backed up automatically (up to 5 versions).
+- Backup archives are validated against zip bomb and path traversal attacks (maximum uncompressed size 100 MB, single entry limit 10 MB, entry count limit 1000, and strict destination path verification).
 - Clipboard history, Quick Note content, settings, and panel data stay local unless the user explicitly exports or shares them.
