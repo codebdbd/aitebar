@@ -11,7 +11,10 @@ internal sealed class BackupService
     private const string SettingsEntry = "settings.json";
     private const string SecretsEntry = "private.bin";
     private const string IconsPrefix = "icons/";
-    private const long MaxArchiveBytes = 100 * 1024 * 1024;
+    internal const long MaxArchiveBytes = 100 * 1024 * 1024;
+    internal const long MaxTotalUncompressedBytes = 100 * 1024 * 1024;
+    internal const long MaxSingleEntryBytes = 10 * 1024 * 1024;
+    internal const int MaxArchiveEntries = 1000;
     private const int SaltSize = 16;
     private const int NonceSize = 12;
     private const int TagSize = 16;
@@ -53,54 +56,122 @@ internal sealed class BackupService
 
     public async Task<BackupReadResult> ReadAsync(string source, BackupRestoreOptions options, CancellationToken cancellationToken = default)
     {
-        if (new FileInfo(source).Length > MaxArchiveBytes) throw new InvalidDataException("Backup is too large.");
-        await using FileStream input = File.OpenRead(source);
-        using var archive = new ZipArchive(input, ZipArchiveMode.Read, leaveOpen: false);
-        ZipArchiveEntry settingsEntry = archive.GetEntry(SettingsEntry) ?? throw new InvalidDataException("Backup does not contain settings.");
-        await using Stream settingsStream = settingsEntry.Open();
-        AppSettings settings = await JsonSerializer.DeserializeAsync<AppSettings>(settingsStream, JsonOptions, cancellationToken)
-            ?? throw new InvalidDataException("Backup settings are invalid.");
-
-        var icons = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
-        foreach (ZipArchiveEntry entry in archive.Entries.Where(entry => entry.FullName.StartsWith(IconsPrefix, StringComparison.Ordinal)))
+        if (!File.Exists(source))
         {
-            string relativePath = entry.FullName[IconsPrefix.Length..];
-            if (string.IsNullOrWhiteSpace(relativePath) || relativePath.Contains("..", StringComparison.Ordinal) || Path.IsPathRooted(relativePath))
-                throw new InvalidDataException("Backup contains an invalid icon path.");
-            await using Stream stream = entry.Open();
-            using var memory = new MemoryStream();
-            await stream.CopyToAsync(memory, cancellationToken);
-            icons[relativePath] = memory.ToArray();
+            throw new FileNotFoundException("Backup file not found.", source);
         }
 
-        BackupSecretPayload? secrets = null;
-        ZipArchiveEntry? secretsEntry = archive.GetEntry(SecretsEntry);
-        if (secretsEntry is not null)
+        if (new FileInfo(source).Length > MaxArchiveBytes)
         {
-            if (string.IsNullOrEmpty(options.Password)) throw new InvalidOperationException("A password is required for this backup.");
-            await using Stream secretStream = secretsEntry.Open();
-            using var memory = new MemoryStream();
-            await secretStream.CopyToAsync(memory, cancellationToken);
-            byte[] plaintext = Decrypt(memory.ToArray(), options.Password);
-            try
+            throw new InvalidDataException("Backup is too large.");
+        }
+
+        long totalUncompressedBytes = 0;
+        void TrackUncompressedBytes(long bytes)
+        {
+            checked
             {
-                secrets = JsonSerializer.Deserialize<BackupSecretPayload>(plaintext, JsonOptions)
-                    ?? throw new InvalidDataException("Backup private data is invalid.");
+                totalUncompressedBytes += bytes;
             }
-            finally { CryptographicOperations.ZeroMemory(plaintext); }
+
+            if (totalUncompressedBytes > MaxTotalUncompressedBytes)
+            {
+                throw new InvalidDataException("Backup uncompressed data exceeds maximum allowed size.");
+            }
         }
 
-        return new BackupReadResult(settings, secrets, icons);
+        try
+        {
+            await using FileStream input = File.OpenRead(source);
+            using var archive = new ZipArchive(input, ZipArchiveMode.Read, leaveOpen: false);
+
+            if (archive.Entries.Count > MaxArchiveEntries)
+            {
+                throw new InvalidDataException("Backup contains too many entries.");
+            }
+
+            ZipArchiveEntry settingsEntry = archive.GetEntry(SettingsEntry)
+                ?? throw new InvalidDataException("Backup does not contain settings.");
+
+            byte[] settingsBytes = await ReadBoundedEntryBytesAsync(settingsEntry, MaxSingleEntryBytes, TrackUncompressedBytes, cancellationToken);
+            ReadOnlySpan<byte> settingsSpan = settingsBytes;
+            if (settingsSpan.StartsWith([(byte)0xEF, (byte)0xBB, (byte)0xBF]))
+            {
+                settingsSpan = settingsSpan[3..];
+            }
+            AppSettings settings = JsonSerializer.Deserialize<AppSettings>(settingsSpan, JsonOptions)
+                ?? throw new InvalidDataException("Backup settings are invalid.");
+
+            var icons = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+            foreach (ZipArchiveEntry entry in archive.Entries.Where(entry => entry.FullName.StartsWith(IconsPrefix, StringComparison.Ordinal)))
+            {
+                string relativePath = entry.FullName[IconsPrefix.Length..];
+                if (!IsSafeRelativePath(relativePath))
+                {
+                    throw new InvalidDataException("Backup contains an invalid icon path.");
+                }
+
+                byte[] iconBytes = await ReadBoundedEntryBytesAsync(entry, MaxSingleEntryBytes, TrackUncompressedBytes, cancellationToken);
+                icons[relativePath] = iconBytes;
+            }
+
+            BackupSecretPayload? secrets = null;
+            ZipArchiveEntry? secretsEntry = archive.GetEntry(SecretsEntry);
+            if (secretsEntry is not null)
+            {
+                if (string.IsNullOrEmpty(options.Password))
+                {
+                    throw new InvalidOperationException("A password is required for this backup.");
+                }
+
+                byte[] encryptedBytes = await ReadBoundedEntryBytesAsync(secretsEntry, MaxSingleEntryBytes, TrackUncompressedBytes, cancellationToken);
+                byte[] plaintext = Decrypt(encryptedBytes, options.Password);
+                try
+                {
+                    TrackUncompressedBytes(plaintext.Length);
+                    secrets = JsonSerializer.Deserialize<BackupSecretPayload>(plaintext, JsonOptions)
+                        ?? throw new InvalidDataException("Backup private data is invalid.");
+                }
+                finally
+                {
+                    CryptographicOperations.ZeroMemory(plaintext);
+                }
+            }
+
+            return new BackupReadResult(settings, secrets, icons);
+        }
+        catch (InvalidDataException)
+        {
+            throw;
+        }
+        catch (InvalidOperationException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidDataException("Backup file is corrupt or invalid.", ex);
+        }
     }
 
     public async Task RestoreAsync(string source, BackupRestoreOptions options, AppSettingsService settingsService, CancellationToken cancellationToken = default)
     {
         BackupReadResult backup = await ReadAsync(source, options, cancellationToken);
+        string root = Path.GetFullPath(PathHelper.IconsFolder + Path.DirectorySeparatorChar);
+
         foreach (var (relativePath, content) in backup.Icons)
         {
+            if (!IsSafeRelativePath(relativePath))
+            {
+                throw new InvalidDataException("Backup contains an invalid icon path.");
+            }
+
             string destination = Path.GetFullPath(Path.Combine(PathHelper.IconsFolder, relativePath));
-            string root = Path.GetFullPath(PathHelper.IconsFolder + Path.DirectorySeparatorChar);
-            if (!destination.StartsWith(root, StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Backup contains an invalid icon path.");
+            if (!destination.StartsWith(root, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidDataException("Backup contains an invalid icon path.");
+            }
+
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
             await File.WriteAllBytesAsync(destination, content, cancellationToken);
         }
@@ -122,10 +193,59 @@ internal sealed class BackupService
         await settingsService.SaveAsync();
     }
 
+    private static async Task<byte[]> ReadBoundedEntryBytesAsync(
+        ZipArchiveEntry entry,
+        long maxEntryBytes,
+        Action<long>? onBytesRead,
+        CancellationToken cancellationToken)
+    {
+        if (entry.Length > maxEntryBytes)
+        {
+            throw new InvalidDataException($"Backup entry '{entry.FullName}' exceeds maximum allowed size.");
+        }
+
+        await using Stream stream = entry.Open();
+        using var memory = new MemoryStream();
+        byte[] buffer = new byte[8192];
+        long totalRead = 0;
+        int read;
+
+        while ((read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
+        {
+            totalRead += read;
+            if (totalRead > maxEntryBytes)
+            {
+                throw new InvalidDataException($"Backup entry '{entry.FullName}' exceeds maximum allowed size.");
+            }
+
+            onBytesRead?.Invoke(read);
+            await memory.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+        }
+
+        return memory.ToArray();
+    }
+
+    internal static bool IsSafeRelativePath(string relativePath)
+    {
+        if (string.IsNullOrWhiteSpace(relativePath) || Path.IsPathRooted(relativePath))
+        {
+            return false;
+        }
+
+        string normalized = relativePath.Replace('\\', '/');
+        string[] parts = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+        {
+            return false;
+        }
+
+        return parts.All(part => !string.Equals(part, "..", StringComparison.Ordinal) && !string.Equals(part, ".", StringComparison.Ordinal));
+    }
+
     private static async Task WriteEntryAsync(ZipArchive archive, string name, string content, CancellationToken token)
     {
         ZipArchiveEntry entry = archive.CreateEntry(name, CompressionLevel.Optimal);
-        await using StreamWriter writer = new(entry.Open(), Encoding.UTF8);
+        await using StreamWriter writer = new(entry.Open(), new UTF8Encoding(false));
         await writer.WriteAsync(content.AsMemory(), token);
     }
 
