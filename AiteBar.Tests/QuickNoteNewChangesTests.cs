@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
@@ -12,6 +12,7 @@ using Xunit;
 namespace AiteBar.Tests;
 
 [Collection("WpfTestCollection")]
+[Trait("Category", "WPF")]
 public sealed class QuickNoteNewChangesTests
 {
     [Fact]

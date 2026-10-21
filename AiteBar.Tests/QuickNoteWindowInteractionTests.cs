@@ -1,10 +1,11 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Interop;
 
 namespace AiteBar.Tests;
 
 [Collection("WpfTestCollection")]
+[Trait("Category", "WPF")]
 public sealed class QuickNoteWindowInteractionTests
 {
     [Theory]

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using System.Windows.Documents;
 using AiteBar;
@@ -6,6 +6,7 @@ using AiteBar;
 namespace AiteBar.Tests;
 
 [Collection("WpfTestCollection")]
+[Trait("Category", "WPF")]
 public sealed class QuickNoteSaveControllerTests
 {
     private sealed class MockPersistence : IQuickNotePersistence

@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,6 +11,7 @@ using System.Windows.Media.Imaging;
 namespace AiteBar.Tests;
 
 [Collection("WpfTestCollection")]
+[Trait("Category", "WPF")]
 public sealed class QuickNoteWindowFormattingTests
 {
     [Fact]

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -17,6 +17,7 @@ using System.Windows.Threading;
 namespace AiteBar.Tests;
 
 [Collection("WpfTestCollection")]
+[Trait("Category", "WPF")]
 public sealed class QuickNoteWindowCloseTests
 {
     [Fact]

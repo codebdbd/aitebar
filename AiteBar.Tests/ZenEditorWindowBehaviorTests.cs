@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,6 +8,7 @@ using System.Windows.Threading;
 namespace AiteBar.Tests;
 
 [Collection("WpfTestCollection")]
+[Trait("Category", "WPF")]
 public sealed class ZenEditorWindowBehaviorTests
 {
     [Fact]

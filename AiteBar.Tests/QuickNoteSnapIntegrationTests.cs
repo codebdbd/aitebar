@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Documents;
@@ -9,6 +9,7 @@ using System.Windows.Threading;
 namespace AiteBar.Tests;
 
 [Collection("WpfTestCollection")]
+[Trait("Category", "WPF")]
 public sealed class QuickNoteSnapIntegrationTests
 {
     [InteractiveSnapFact]
@@ -483,6 +484,7 @@ public sealed class QuickNoteSnapIntegrationTests
     }
 }
 
+[Trait("Category", "WPF")]
 public sealed class InteractiveSnapTheoryAttribute : TheoryAttribute
 {
     public InteractiveSnapTheoryAttribute()
@@ -492,6 +494,7 @@ public sealed class InteractiveSnapTheoryAttribute : TheoryAttribute
     }
 }
 
+[Trait("Category", "WPF")]
 public sealed class InteractiveSnapFactAttribute : FactAttribute
 {
     public InteractiveSnapFactAttribute()

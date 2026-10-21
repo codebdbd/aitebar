@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Globalization;
 using System.IO;
 using System.Threading;
@@ -12,6 +12,7 @@ using AiteBar;
 namespace AiteBar.Tests;
 
 [Collection("LocalizationStateTestCollection")]
+[Trait("Category", "WPF")]
 public sealed class IconConverterWindowLayoutTests : IDisposable
 {
     private readonly string _tempDir;

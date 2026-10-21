@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Threading;
 using System.Windows;
 using System.Windows.Threading;
@@ -6,6 +6,7 @@ using System.Windows.Threading;
 namespace AiteBar.Tests;
 
 [Collection("WpfTestCollection")]
+[Trait("Category", "WPF")]
 public sealed class ClipboardManagerWindowBehaviorTests
 {
     [Fact]

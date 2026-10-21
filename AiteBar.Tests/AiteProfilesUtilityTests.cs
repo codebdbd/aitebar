@@ -1,4 +1,4 @@
-using AiteBar;
+﻿using AiteBar;
 using AiteBar.AiteProfilesUtility;
 using System.IO;
 using System.Threading;
@@ -10,6 +10,7 @@ using System.Xml.Linq;
 namespace AiteBar.Tests;
 
 [Collection("WpfTestCollection")]
+[Trait("Category", "WPF")]
 public sealed class AiteProfilesUtilityTests
 {
     [Fact]
