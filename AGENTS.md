@@ -112,7 +112,7 @@ dotnet vstest .\AiteBar.Tests\bin\Release\net10.0-windows\AiteBar.Tests.dll
 - Не ломать Quick Note как легкое single-note окно поверх текущей архитектуры `QuickNoteUtility`, `QuickNoteWindow`, `QuickNoteService`, `QuickNoteMarkdown`, `QuickNoteDocumentHelper`, `QuickNoteLayoutHelper` и `QuickNoteTheme`.
 - При правках Quick Note сохранять сценарии: pin toggle удерживает окно открытым при потере фокуса, unpinned-режим закрывает окно при потере фокуса, размер и позиция запоминаются и clamp-ятся в рабочую область монитора.
 - Не ломать Undo/Redo через `Ctrl+Z`/`Ctrl+Y` и видимые команды окна.
-- Не ломать открытие URL обычным кликом, обработку conflict-copy, статус для длинной заметки при ограничении link highlighting и round-trip underline через Markdown-compatible `<u>...</u>`.
+- Не ломать открытие URL по Ctrl+клику, обработку conflict-copy, статус для длинной заметки при ограничении link highlighting и round-trip underline через Markdown-compatible `<u>...</u>`.
 - Форматирование, которое доступно в toolbar, должно сохраняться после save/reload; если меняется Markdown serialization/parsing, добавлять focused unit-тесты.
 
 ### Clipboard Manager

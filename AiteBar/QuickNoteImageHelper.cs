@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,12 +35,18 @@ internal static class QuickNoteImageHelper
         try
         {
             using var stream = new MemoryStream(bytes, writable: false);
-            var frame = BitmapFrame.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
-            if (frame.PixelWidth <= 0 || frame.PixelHeight <= 0 ||
-                (long)frame.PixelWidth * frame.PixelHeight > MaxPixels)
+            // First decode with DelayCreation to check dimensions safely without allocating full pixel memory
+            var decoder = BitmapDecoder.Create(stream, BitmapCreateOptions.DelayCreation, BitmapCacheOption.None);
+            if (decoder.Frames.Count == 0) return false;
+            var frameHeader = decoder.Frames[0];
+            if (frameHeader.PixelWidth <= 0 || frameHeader.PixelHeight <= 0 ||
+                (long)frameHeader.PixelWidth * frameHeader.PixelHeight > MaxPixels)
             {
                 return false;
             }
+
+            stream.Position = 0;
+            var frame = BitmapFrame.Create(stream, BitmapCreateOptions.PreservePixelFormat, BitmapCacheOption.OnLoad);
 
             if (frame.PixelWidth <= MaxLongestSide && frame.PixelHeight <= MaxLongestSide)
             {
@@ -87,10 +94,9 @@ internal static class QuickNoteImageHelper
         }
     }
 
-    internal static bool TryGetMarker(InlineUIContainer container, out string marker, out int payloadBytes)
+    internal static bool TryGetPngBytes(InlineUIContainer container, out byte[]? png)
     {
-        marker = string.Empty;
-        payloadBytes = 0;
+        png = null;
         if (!TryGetImageControl(container, out Image? image) || image is null || image.Source is not BitmapSource source)
         {
             return false;
@@ -98,7 +104,7 @@ internal static class QuickNoteImageHelper
 
         try
         {
-            byte[]? png = container.GetValue(PngPayloadProperty) as byte[];
+            png = container.GetValue(PngPayloadProperty) as byte[];
             if (png == null && image is QuickNoteImage quickImage && !string.IsNullOrEmpty(quickImage.PngBase64))
             {
                 try
@@ -114,39 +120,36 @@ internal static class QuickNoteImageHelper
             png ??= EncodePng(source);
             if (png.Length == 0 || png.Length > MaxEncodedBytes)
             {
+                png = null;
                 return false;
             }
 
-            payloadBytes = png.Length;
             container.SetValue(PngPayloadProperty, png);
-            marker = $"{MarkerPrefix}{Convert.ToBase64String(png)}{MarkerSuffix}";
             return true;
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or NotSupportedException)
         {
+            png = null;
             return false;
         }
     }
 
-    internal static bool TryGetPngPayload(InlineUIContainer container, out byte[]? png)
+    internal static bool TryGetMarker(InlineUIContainer container, out string marker, out int payloadBytes)
     {
-        png = null;
-        if (!TryGetMarker(container, out string marker, out _))
+        marker = string.Empty;
+        payloadBytes = 0;
+        if (!TryGetPngBytes(container, out byte[]? png) || png == null)
         {
             return false;
         }
 
-        try
-        {
-            png = Convert.FromBase64String(marker[MarkerPrefix.Length..^MarkerSuffix.Length]);
-            return true;
-        }
-        catch (FormatException ex)
-        {
-            Logger.Log(new InvalidOperationException("Failed to decode PNG payload from image marker", ex));
-            return false;
-        }
+        payloadBytes = png.Length;
+        marker = $"{MarkerPrefix}{Convert.ToBase64String(png)}{MarkerSuffix}";
+        return true;
     }
+
+    internal static bool TryGetPngPayload(InlineUIContainer container, out byte[]? png) =>
+        TryGetPngBytes(container, out png);
 
     internal static bool TryGetImageControl(InlineUIContainer container, out Image? image)
     {
@@ -161,17 +164,17 @@ internal static class QuickNoteImageHelper
 
     internal static bool CanAddToDocument(FlowDocument document, InlineUIContainer candidate)
     {
-        if (!TryGetMarker(candidate, out _, out int candidateBytes))
+        if (!TryGetPngBytes(candidate, out byte[]? candidatePng) || candidatePng == null)
         {
             return false;
         }
 
-        int total = candidateBytes;
+        int total = candidatePng.Length;
         foreach (InlineUIContainer existing in EnumerateImageContainers(document.Blocks))
         {
-            if (TryGetMarker(existing, out _, out int bytes))
+            if (TryGetPngBytes(existing, out byte[]? existingPng) && existingPng != null)
             {
-                total += bytes;
+                total += existingPng.Length;
                 if (total > MaxTotalEmbeddedBytes)
                 {
                     return false;

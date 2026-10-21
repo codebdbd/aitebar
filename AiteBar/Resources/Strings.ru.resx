@@ -4819,6 +4819,15 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
   <data name="QuickNote_ShowRecoveryCopy" xml:space="preserve">
     <value>Показать резервную копию в папке</value>
   </data>
+  <data name="QuickNote_RestoreRecoveryCopy" xml:space="preserve">
+    <value>Р’РѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ РёР· РєРѕРїРёРё</value>
+  </data>
+  <data name="QuickNote_KeepCurrentVersion" xml:space="preserve">
+    <value>РћСЃС‚Р°РІРёС‚СЊ С‚РµРєСѓС‰СѓСЋ РІРµСЂСЃРёСЋ</value>
+  </data>
+  <data name="QuickNote_LinkTooltip" xml:space="preserve">
+    <value>Ctrl + РєР»РёРє РґР»СЏ РїРµСЂРµС…РѕРґР°</value>
+  </data>
   <data name="PromptBuilder_ModeArtNude" xml:space="preserve">
     <value>Арт-ню</value>
   </data>

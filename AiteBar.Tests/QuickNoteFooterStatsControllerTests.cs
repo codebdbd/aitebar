@@ -1,3 +1,5 @@
+using System.Threading;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using AiteBar;
 
@@ -27,6 +29,34 @@ public sealed class QuickNoteFooterStatsControllerTests
         Assert.Equal(0, stats.CharacterCount);
         Assert.Equal(0, stats.WordCount);
         Assert.Equal(0, stats.LineCount);
+    }
+
+    [Fact]
+    public void CalculateStats_HandlesWhitespaceOnlyDocumentAsEmpty()
+    {
+        var doc = new FlowDocument();
+        doc.Blocks.Add(new Paragraph(new Run("   \t  \n  \r\n  ")));
+        var stats = QuickNoteFooterStatsController.CalculateStats(doc);
+        Assert.True(stats.IsEmpty);
+        Assert.Equal(0, stats.WordCount);
+    }
+
+    [Fact]
+    public void CalculateStats_DocumentWithOnlyImageIsNotEmpty()
+    {
+        var thread = new Thread(() =>
+        {
+            var doc = new FlowDocument();
+            var image = new Image { Width = 100, Height = 100 };
+            var container = new InlineUIContainer(image);
+            doc.Blocks.Add(new Paragraph(container));
+
+            var stats = QuickNoteFooterStatsController.CalculateStats(doc);
+            Assert.False(stats.IsEmpty);
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        thread.Join();
     }
 
     [Theory]

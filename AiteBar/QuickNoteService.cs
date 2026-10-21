@@ -43,6 +43,7 @@ namespace AiteBar
 
         public bool HasExternalChanges() => _store.HasExternalChanges();
         public Task<bool> HasExternalChangesAsync() => Task.Run(_store.HasExternalChanges);
+        public void ResetConflictSession() => _store.ResetConflictSession();
 
         public void Load(FlowDocument document)
         {
@@ -92,6 +93,43 @@ namespace AiteBar
         {
             byte[] snapshot = QuickNoteDocumentCodec.Serialize(document, IsPackage);
             return Task.Run(() => _store.SaveConflictCopy(snapshot));
+        }
+
+        public Task UpdateConflictCopyAsync(string path, FlowDocument document)
+        {
+            byte[] snapshot = QuickNoteDocumentCodec.Serialize(document, IsPackage);
+            return Task.Run(() => _store.UpdateConflictCopy(path, snapshot));
+        }
+
+        public async Task<bool> TryRestoreConflictCopyAsync(FlowDocument targetDocument)
+        {
+            targetDocument.VerifyAccess();
+            string? path = LastConflictCopyPath;
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                return false;
+
+            try
+            {
+                byte[] bytes = await File.ReadAllBytesAsync(path);
+                if (bytes.Length == 0) return false;
+
+                QuickNoteDocumentCodec.Deserialize(bytes, targetDocument, IsPackage);
+                ResetConflictSession();
+                await SaveAsync(targetDocument);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+                return false;
+            }
+        }
+
+        public async Task OverwriteAndClearConflictAsync(FlowDocument document)
+        {
+            document.VerifyAccess();
+            ResetConflictSession();
+            await SaveAsync(document);
         }
 
         public void OpenConflictCopy()

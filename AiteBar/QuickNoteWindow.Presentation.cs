@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -102,6 +102,7 @@ namespace AiteBar
             var codeText = Brush(QuickNoteDocumentFormatting.GetCodeText(theme));
             var link = Brush(theme.Link);
 
+            Background = background;
             if (Content is Grid root && root.Children.OfType<Border>().FirstOrDefault() is { } shell)
             {
                 shell.Background = background;
@@ -151,6 +152,7 @@ namespace AiteBar
             RunDocumentChangeWithoutAutoSave(() =>
             {
                 document.Foreground = normalText;
+                document.FontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0);
                 foreach (Block block in document.Blocks)
                 {
                     ApplyBlockStyles(block, normalText, codeBackground, codeText, linkBrush);
@@ -177,6 +179,10 @@ namespace AiteBar
                     return;
                 }
 
+                if (paragraph.ReadLocalValue(TextElement.FontSizeProperty) is double fs && fs == 14)
+                {
+                    paragraph.FontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0);
+                }
                 paragraph.Foreground = normalText;
                 QuickNoteDocumentFormatting.ApplyInlineTheme(paragraph.Inlines, normalText, codeBackground, codeText, linkBrush);
                 return;
@@ -206,6 +212,10 @@ namespace AiteBar
 
             if (block is Section section)
             {
+                if (section.ReadLocalValue(TextElement.FontSizeProperty) is double sfs && sfs == 14)
+                {
+                    section.FontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0);
+                }
                 if (QuickNoteDocumentFormatting.IsQuoteBlock(section))
                 {
                     ApplyQuoteBlockStyles(section);

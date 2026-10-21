@@ -1,4 +1,4 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -84,7 +84,7 @@ public sealed class QuickNoteDocumentFormattingTests
     [Theory]
     [InlineData(1, 32)]
     [InlineData(3, 22)]
-    [InlineData(0, 14)]
+    [InlineData(0, 16)]
     public void HeadingSizes_AreVisualValues(int level, double size) => Assert.Equal(size, QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(level));
 
     [Fact]

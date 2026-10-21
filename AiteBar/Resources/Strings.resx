@@ -4819,6 +4819,15 @@ Do you want to proceed with permanent deletion?</value>
   <data name="QuickNote_ShowRecoveryCopy" xml:space="preserve">
     <value>Show recovery copy in folder</value>
   </data>
+  <data name="QuickNote_RestoreRecoveryCopy" xml:space="preserve">
+    <value>Restore conflict copy</value>
+  </data>
+  <data name="QuickNote_KeepCurrentVersion" xml:space="preserve">
+    <value>Keep current version</value>
+  </data>
+  <data name="QuickNote_LinkTooltip" xml:space="preserve">
+    <value>Ctrl + Click to follow link</value>
+  </data>
   <data name="PromptBuilder_ModeArtNude" xml:space="preserve">
     <value>Art Nude</value>
   </data>

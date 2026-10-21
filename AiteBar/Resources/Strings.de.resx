@@ -4819,6 +4819,15 @@ Möchten Sie mit der endgültigen Bereinigung fortfahren?</value>
   <data name="QuickNote_ShowRecoveryCopy" xml:space="preserve">
     <value>Wiederherstellungskopie im Ordner zeigen</value>
   </data>
+  <data name="QuickNote_RestoreRecoveryCopy" xml:space="preserve">
+    <value>Wiederherstellungskopie wiederherstellen</value>
+  </data>
+  <data name="QuickNote_KeepCurrentVersion" xml:space="preserve">
+    <value>Aktuelle Version behalten</value>
+  </data>
+  <data name="QuickNote_LinkTooltip" xml:space="preserve">
+    <value>Strg + Klick zum Г–ffnen</value>
+  </data>
   <data name="PromptBuilder_ModeArtNude" xml:space="preserve">
     <value>Aktkunst</value>
   </data>

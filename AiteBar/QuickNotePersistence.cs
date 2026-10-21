@@ -16,6 +16,9 @@ internal interface IQuickNotePersistence
     void Load(FlowDocument document);
     Task SaveAsync(FlowDocument document);
     Task<string> SaveConflictCopyAsync(FlowDocument document);
+    Task UpdateConflictCopyAsync(string path, FlowDocument document) => SaveConflictCopyAsync(document);
+    Task<bool> TryRestoreConflictCopyAsync(FlowDocument targetDocument) => Task.FromResult(false);
+    Task OverwriteAndClearConflictAsync(FlowDocument document) => Task.CompletedTask;
     void OpenConflictCopy();
     void RevealConflictCopy() => OpenConflictCopy();
 }
@@ -32,6 +35,9 @@ internal sealed class QuickNotePersistence(QuickNoteService service) : IQuickNot
     public void Load(FlowDocument document) => _service.Load(document);
     public Task SaveAsync(FlowDocument document) => _service.SaveAsync(document);
     public Task<string> SaveConflictCopyAsync(FlowDocument document) => _service.SaveConflictCopyAsync(document);
+    public Task UpdateConflictCopyAsync(string path, FlowDocument document) => _service.UpdateConflictCopyAsync(path, document);
+    public Task<bool> TryRestoreConflictCopyAsync(FlowDocument targetDocument) => _service.TryRestoreConflictCopyAsync(targetDocument);
+    public Task OverwriteAndClearConflictAsync(FlowDocument document) => _service.OverwriteAndClearConflictAsync(document);
     public void OpenConflictCopy() => _service.OpenConflictCopy();
     public void RevealConflictCopy() => _service.RevealConflictCopy();
 }
@@ -51,43 +57,37 @@ internal sealed class QuickNoteClipboard : IQuickNoteClipboard
         {
             try
             {
-                Clipboard.SetText(text);
+                Clipboard.SetDataObject(new System.Windows.DataObject(DataFormats.UnicodeText, text), true);
                 return true;
             }
-            catch (Exception ex) when (ex is System.Runtime.InteropServices.ExternalException or InvalidOperationException)
+            catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException)
             {
-                if (attempt == 2)
-                {
-                    Logger.Log(ex);
-                }
-                else
-                {
-                    System.Threading.Thread.Sleep(40);
-                }
+                System.Threading.Thread.Sleep(20);
             }
         }
-
         return false;
     }
 
     public bool TryGetImage(out BitmapSource? image)
     {
         image = null;
-        try
+        for (int attempt = 0; attempt < 3; attempt++)
         {
-            if (!Clipboard.ContainsImage())
+            try
             {
+                if (Clipboard.ContainsImage())
+                {
+                    image = Clipboard.GetImage();
+                    return image != null;
+                }
                 return false;
             }
-
-            image = Clipboard.GetImage();
-            return image != null;
+            catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException)
+            {
+                System.Threading.Thread.Sleep(20);
+            }
         }
-        catch (Exception ex) when (ex is System.Runtime.InteropServices.ExternalException or InvalidOperationException)
-        {
-            Logger.Log(ex);
-            return false;
-        }
+        return false;
     }
 
     public bool TrySetImage(BitmapSource image)
@@ -96,22 +96,14 @@ internal sealed class QuickNoteClipboard : IQuickNoteClipboard
         {
             try
             {
-                Clipboard.SetImage(image);
+                Clipboard.SetDataObject(new System.Windows.DataObject(DataFormats.Bitmap, image), true);
                 return true;
             }
-            catch (Exception ex) when (ex is System.Runtime.InteropServices.ExternalException or InvalidOperationException)
+            catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException)
             {
-                if (attempt == 2)
-                {
-                    Logger.Log(ex);
-                }
-                else
-                {
-                    System.Threading.Thread.Sleep(40);
-                }
+                System.Threading.Thread.Sleep(20);
             }
         }
-
         return false;
     }
 }

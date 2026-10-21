@@ -465,10 +465,13 @@ namespace AiteBar
                 return;
             }
 
-            TxtNote.Cursor = ShouldActivateLink(Keyboard.Modifiers) &&
-                             FindLinkAtMouse(e.GetPosition(TxtNote)) != null
+            bool isOverLink = FindLinkAtMouse(e.GetPosition(TxtNote)) != null;
+            TxtNote.Cursor = ShouldActivateLink(Keyboard.Modifiers) && isOverLink
                 ? System.Windows.Input.Cursors.Hand
                 : System.Windows.Input.Cursors.IBeam;
+            TxtNote.ToolTip = isOverLink
+                ? LocalizationService.Get("QuickNote_LinkTooltip")
+                : null;
         }
 
         internal static bool ShouldActivateLink(ModifierKeys modifiers) =>
@@ -570,7 +573,7 @@ namespace AiteBar
 
         private void UpdateStatusSaved()
         {
-            SetStatus(_noteService.HasLoadFailed ? QuickNoteStatusKind.LoadFailed : QuickNoteStatusKind.SavedAt);
+            SetStatus(_noteService.HasLoadFailed ? QuickNoteStatusKind.LoadFailed : QuickNoteStatusKind.SavedAt, DateTime.Now.ToString("HH:mm"));
         }
 
         private void ScheduleSave() => _saveController.Schedule();
@@ -586,12 +589,69 @@ namespace AiteBar
 
         private void BtnRecoveryCopy_Click(object sender, RoutedEventArgs e)
         {
-            try { _noteService.RevealConflictCopy(); }
-            catch (Exception ex)
+            var menu = new ContextMenu();
+
+            var itemReveal = new MenuItem
             {
-                Logger.Log(ex);
-                SetStatus(QuickNoteStatusKind.OpenFailed);
-            }
+                Header = LocalizationService.Get("QuickNote_ShowRecoveryCopy")
+            };
+            itemReveal.Click += (_, _) =>
+            {
+                try { _noteService.RevealConflictCopy(); }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                    SetStatus(QuickNoteStatusKind.OpenFailed);
+                }
+            };
+            menu.Items.Add(itemReveal);
+
+            var itemRestore = new MenuItem
+            {
+                Header = LocalizationService.Get("QuickNote_RestoreRecoveryCopy")
+            };
+            itemRestore.Click += async (_, _) =>
+            {
+                try
+                {
+                    if (await _noteService.TryRestoreConflictCopyAsync(TxtNote.Document))
+                    {
+                        QuickNoteDocumentFormatting.NormalizeListLayout(TxtNote.Document);
+                        ConnectTaskItemEvents(TxtNote.Document);
+                        UpdateStatusSaved();
+                        ScheduleFooterStatsUpdate();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                    SetStatus(QuickNoteStatusKind.OpenFailed);
+                }
+            };
+            menu.Items.Add(itemRestore);
+
+            var itemKeepCurrent = new MenuItem
+            {
+                Header = LocalizationService.Get("QuickNote_KeepCurrentVersion")
+            };
+            itemKeepCurrent.Click += async (_, _) =>
+            {
+                try
+                {
+                    await _noteService.OverwriteAndClearConflictAsync(TxtNote.Document);
+                    UpdateStatusSaved();
+                }
+                catch (Exception ex)
+                {
+                    Logger.Log(ex);
+                    SetStatus(QuickNoteStatusKind.SaveFailed);
+                }
+            };
+            menu.Items.Add(itemKeepCurrent);
+
+            menu.PlacementTarget = BtnRecoveryCopy;
+            menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Top;
+            menu.IsOpen = true;
         }
 
         private async void BtnPin_Checked(object sender, RoutedEventArgs e)

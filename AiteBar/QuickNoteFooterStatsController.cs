@@ -81,21 +81,15 @@ namespace AiteBar
 
             if (_dirty)
             {
-                string text = GetEditorText();
-                _isEmpty = string.IsNullOrWhiteSpace(text) && !QuickNoteImageHelper.EnumerateImageContainers(_editor.Document.Blocks).Any();
-                _charCount = text.Length;
-                _lineCount = string.IsNullOrEmpty(text) ? 0 : text.Count(c => c == '\n') + 1;
-                _wordCount = CountWords(text);
+                var stats = CalculateStats(_editor.Document);
+                _isEmpty = stats.IsEmpty;
+                _charCount = stats.CharacterCount;
+                _lineCount = stats.LineCount;
+                _wordCount = stats.WordCount;
                 _dirty = false;
             }
 
             _statsText.Text = LocalizationService.Format("QuickNote_Stats", _charCount, _lineCount);
-        }
-
-        private string GetEditorText()
-        {
-            var range = new TextRange(_editor.Document.ContentStart, _editor.Document.ContentEnd);
-            return QuickNoteDocumentHelper.NormalizeLineEndings(range.Text).TrimEnd('\r', '\n');
         }
 
         public void Dispose()
@@ -105,7 +99,7 @@ namespace AiteBar
             _debounceTimer.Stop();
         }
 
-        // ---- Static facade (kept for tests / backward compatibility) ----
+        // ---- Static calculation used by both UI and tests ----
         public static QuickNoteStatsResult CalculateStats(FlowDocument document)
         {
             var result = new QuickNoteStatsResult();
@@ -114,12 +108,12 @@ namespace AiteBar
             var range = new TextRange(document.ContentStart, document.ContentEnd);
             string raw = range.Text;
             string normalized = QuickNoteDocumentHelper.NormalizeLineEndings(raw).TrimEnd('\r', '\n');
-            result.IsEmpty = string.IsNullOrEmpty(normalized);
+            result.IsEmpty = string.IsNullOrWhiteSpace(normalized) && !QuickNoteImageHelper.EnumerateImageContainers(document.Blocks).Any();
             result.CharacterCount = normalized.Length;
             if (!result.IsEmpty)
             {
                 result.WordCount = CountWords(normalized);
-                result.LineCount = normalized.Count(c => c == '\n') + 1;
+                result.LineCount = string.IsNullOrEmpty(normalized) ? 0 : normalized.Count(c => c == '\n') + 1;
             }
             return result;
         }
@@ -142,7 +136,7 @@ namespace AiteBar
             return kind switch
             {
                 QuickNoteStatusKind.Saving => LocalizationService.Get("QuickNote_Saving"),
-                QuickNoteStatusKind.SavedAt => LocalizationService.Format("QuickNote_SavedAt", DateTime.Now.ToString("HH:mm")),
+                QuickNoteStatusKind.SavedAt => LocalizationService.Format("QuickNote_SavedAt", string.IsNullOrWhiteSpace(argument) ? DateTime.Now.ToString("HH:mm") : argument),
                 QuickNoteStatusKind.LoadFailed => LocalizationService.Get("QuickNote_LoadFailed"),
                 QuickNoteStatusKind.SaveFailed => LocalizationService.Get("QuickNote_SaveFailed"),
                 QuickNoteStatusKind.OpenFailed => LocalizationService.Get("QuickNote_OpenFailed"),

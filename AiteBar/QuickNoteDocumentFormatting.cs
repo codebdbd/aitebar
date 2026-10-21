@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -94,9 +94,9 @@ namespace AiteBar
             2 => 26,
             3 => 22,
             4 => 18,
-            5 => 16,
-            6 => 15,
-            _ => 14
+            5 => 17,
+            6 => 16,
+            _ => 16
         };
 
         public static QuickNoteRangeEdit GetClearLineMarkerRangeEdit(string text, int selectionStart, int selectionEnd)
