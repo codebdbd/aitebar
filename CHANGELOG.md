@@ -9,6 +9,19 @@
 
 ## [Unreleased]
 
+## [1.16.1] - 2026-11-01
+
+### 🇷🇺 Исправлено | 🇬🇧 Fixed
+
+- **Индикатор положения на панели задач — скрытие из списка приложений Диспетчера задач и именование окна**:
+  - Окну индикатора (TaskbarPositionIndicatorWindow) присвоен системный расширенный стиль WS_EX_TOOLWINDOW, благодаря чему вспомогательный оверлей больше не отображается в списке приложений Диспетчера задач Windows и в переключателе окон Alt+Tab.
+  - Задан явный системный заголовок окна Title="AiteBar Taskbar Indicator" для корректной идентификации в средствах диагностики (Process Explorer, Spy++) и службах специальных возможностей (UI Automation).
+  - В Диспетчере задач устранено появление второй неподписанной строки под заголовком AiteBar (2).
+- **Taskbar position indicator — hidden from Task Manager app list and explicit window naming**:
+  - Assigned extended window style WS_EX_TOOLWINDOW to TaskbarPositionIndicatorWindow, ensuring the auxiliary overlay widget is excluded from Windows Task Manager's running apps list and Alt+Tab switcher.
+  - Added explicit system window title Title="AiteBar Taskbar Indicator" for proper identification in diagnostic tools (Process Explorer, Spy++) and accessibility frameworks (UI Automation).
+  - Resolved process grouping duplication and blank untitled entry under AiteBar (2) in Task Manager.
+
 ## [1.16.0] - 2026-10-08
 
 ### 🇷🇺 Добавлено | 🇬🇧 Added
