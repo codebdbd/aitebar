@@ -92,6 +92,7 @@ public sealed class FormControlHeightTests
     [InlineData("SettingsWindow.xaml", "TxtNamePlaceholder")]
     [InlineData("SettingsWindow.xaml", "TxtActionPlaceholder")]
     [InlineData("SettingsWindow.xaml", "TxtHexPlaceholder")]
+    [InlineData("InstalledAppsWindow.xaml", "TxtSearchPlaceholder")]
     public void TextInputPlaceholder_UsesCaretAlignedSharedMargin(string fileName, string elementName)
     {
         XDocument window = LoadXaml(fileName);
@@ -100,6 +101,17 @@ public sealed class FormControlHeightTests
             element => string.Equals(element.Attribute(XamlNamespace + "Name")?.Value, elementName, StringComparison.Ordinal));
 
         Assert.Equal("{StaticResource FormInputPlaceholderMargin}", placeholder.Attribute("Margin")?.Value);
+    }
+
+    [Fact]
+    public void InstalledAppsWindow_SearchBox_DoesNotOverridePadding()
+    {
+        XDocument window = LoadXaml("InstalledAppsWindow.xaml");
+        XElement searchBox = Assert.Single(
+            window.Descendants(PresentationNamespace + "TextBox"),
+            element => string.Equals(element.Attribute(XamlNamespace + "Name")?.Value, "TxtSearch", StringComparison.Ordinal));
+
+        Assert.Null(searchBox.Attribute("Padding"));
     }
 
     [Fact]

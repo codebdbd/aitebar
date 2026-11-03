@@ -73,9 +73,7 @@
         <!-- 1. Поиск -->
         <Grid Grid.Row="0" Margin="0,0,0,10">
             <TextBox x:Name="TxtSearch"
-                     TextChanged="TxtSearch_TextChanged"
-                     Padding="8,0"
-                     Height="{StaticResource FormControlHeight}"/>
+                     TextChanged="TxtSearch_TextChanged"/>
             <TextBlock x:Name="TxtSearchPlaceholder"
                        Text="{local:Loc ResourceKey=InstalledApps_SearchPlaceholder}"
                        Margin="{StaticResource FormInputPlaceholderMargin}"
