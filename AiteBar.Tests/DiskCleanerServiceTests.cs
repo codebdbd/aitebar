@@ -521,4 +521,39 @@ public sealed class DiskCleanerServiceTests
             }
         }
     }
+
+    [Fact]
+    public void FormatReportReason_Succeeded_ReturnsNull()
+    {
+        var report = new DiskCleanCategoryReport("UserTemp", DiskCleanCategoryStatus.Succeeded, 100, 2, 0);
+        var reason = DiskCleanerWindow.FormatReportReason(report);
+        Assert.Null(reason);
+    }
+
+    [Fact]
+    public void FormatReportReason_UserTemp_LockedFiles_ReturnsLocalizedLockedReason()
+    {
+        var report = new DiskCleanCategoryReport("UserTemp", DiskCleanCategoryStatus.PartiallyCleaned, 100, 2, 5);
+        var reason = DiskCleanerWindow.FormatReportReason(report);
+        Assert.NotNull(reason);
+        Assert.Contains("5", reason);
+    }
+
+    [Fact]
+    public void FormatReportReason_BrowserCache_LockedFiles_ReturnsBrowserSpecificReason()
+    {
+        var report = new DiskCleanCategoryReport(DiskCleanerService.CategoryBrowserCache, DiskCleanCategoryStatus.PartiallyCleaned, 100, 2, 3);
+        var reason = DiskCleanerWindow.FormatReportReason(report);
+        Assert.NotNull(reason);
+        Assert.Contains("3", reason);
+    }
+
+    [Fact]
+    public void FormatReportReason_DnsFlushFailure_ReturnsDnsReason()
+    {
+        var report = new DiskCleanCategoryReport(DiskCleanerService.CategoryDnsCache, DiskCleanCategoryStatus.Failed, 0, 0, 0, "DNS resolver flush returned false.");
+        var reason = DiskCleanerWindow.FormatReportReason(report);
+        Assert.NotNull(reason);
+        Assert.False(string.IsNullOrWhiteSpace(reason));
+    }
 }

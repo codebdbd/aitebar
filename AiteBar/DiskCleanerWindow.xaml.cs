@@ -386,7 +386,7 @@ public partial class DiskCleanerWindow : DarkWindow
         }
     }
 
-    private static string? FormatReportReason(DiskCleanCategoryReport report)
+    internal static string? FormatReportReason(DiskCleanCategoryReport report)
     {
         if (report.Status == DiskCleanCategoryStatus.Succeeded)
         {
