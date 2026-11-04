@@ -1,4 +1,4 @@
-﻿using System.Runtime.Versioning;
+using System.Runtime.Versioning;
 using Microsoft.Win32;
 
 namespace AiteBar;
@@ -799,6 +799,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
     private void Window_SourceInitialized(object sender, EventArgs e)
     {
         IntPtr hwnd = new System.Windows.Interop.WindowInteropHelper(this).Handle;
+        int exStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
+        _ = NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, exStyle | NativeMethods.WS_EX_TOOLWINDOW);
         _windowHwndSource = System.Windows.Interop.HwndSource.FromHwnd(hwnd);
         _windowHwndSource?.AddHook(WndProc);
         ClipboardHistoryService.Instance.Initialize(hwnd);

@@ -263,42 +263,17 @@ namespace AiteBar
 
         private List<Paragraph> GetSelectedParagraphs()
         {
-            var list = new List<Paragraph>();
             TextPointer start = TxtNote.Selection.Start;
             TextPointer end = TxtNote.Selection.End;
 
-            Paragraph? startP = start.Paragraph;
-            Paragraph? endP = end.Paragraph;
-
-            if (startP == null || endP == null)
+            if (start.CompareTo(end) > 0)
             {
-                return list;
+                (start, end) = (end, start);
             }
 
-            if (startP == endP)
-            {
-                list.Add(startP);
-                return list;
-            }
-
-            TextPointer current = start;
-            while (current != null && current.CompareTo(end) <= 0)
-            {
-                Paragraph? p = current.Paragraph;
-                if (p != null && !list.Contains(p))
-                {
-                    list.Add(p);
-                }
-
-                TextPointer next = current.GetNextContextPosition(LogicalDirection.Forward);
-                if (next == null || next.CompareTo(current) <= 0)
-                {
-                    break;
-                }
-                current = next;
-            }
-
-            return list;
+            return QuickNoteTaskListController.EnumerateAllParagraphs(TxtNote.Document)
+                .Where(p => QuickNoteListHelper.TextRangesIntersect(start, end, p.ContentStart, p.ContentEnd))
+                .ToList();
         }
 
         private bool HandleTaskItemEnterKey()
@@ -1170,6 +1145,13 @@ namespace AiteBar
 
         internal void ClearSelectedFormatting(ClearFormattingScope scope = ClearFormattingScope.All)
         {
+            bool selectWholeDocument = TxtNote.Selection.IsEmpty;
+            int originalCaret = selectWholeDocument ? GetTextOffset(TxtNote.CaretPosition) : 0;
+            if (selectWholeDocument)
+            {
+                TxtNote.SelectAll();
+            }
+
             TryConvertSelectedSpecialBlocksToPlainText();
 
             var (selectionStart, selectionEnd) = GetSelectionOffsets();
@@ -1194,6 +1176,7 @@ namespace AiteBar
                     {
                         string textBeforeListUnwrap = GetEditorText();
                         QuickNoteListHelper.RemoveSelectedListFormatting(TxtNote.Document, TxtNote.Selection);
+                        QuickNoteListHelper.RemoveSelectedTaskFormatting(TxtNote.Document, TxtNote.Selection, _theme, preserveLinks: scope == ClearFormattingScope.PreserveLinks);
                         string textAfterListUnwrap = GetEditorText();
                         (selectionStart, selectionEnd) = QuickNoteDocumentHelper.RemapSelection(
                             textBeforeListUnwrap,
@@ -1203,6 +1186,10 @@ namespace AiteBar
                             selectedTextToRestore);
                         SelectEditorRangeByText(selectionStart, selectionEnd, selectedTextToRestore);
                     }
+                    else
+                    {
+                        QuickNoteListHelper.ClearSelectedTaskInlineFormatting(TxtNote.Document, TxtNote.Selection, _theme);
+                    }
 
                     if (scope != ClearFormattingScope.PreserveLinks)
                     {
@@ -1210,7 +1197,7 @@ namespace AiteBar
                         SelectEditorRangeByText(selectionStart, selectionEnd, selectedTextToRestore);
                     }
 
-                    ResetSelectionFormatting();
+                    ResetSelectionFormatting(scope);
                 }
                 finally
                 {
@@ -1222,7 +1209,15 @@ namespace AiteBar
                 _saveSuppressionCount--;
             }
 
-            SelectEditorRangeByText(selectionStart, selectionEnd, selectedTextToRestore);
+            if (selectWholeDocument)
+            {
+                SelectEditorRange(originalCaret, originalCaret);
+            }
+            else
+            {
+                SelectEditorRangeByText(selectionStart, selectionEnd, selectedTextToRestore);
+            }
+
             ApplyDocumentStyles(
                 TxtNote.Document,
                 Brush(_theme.Text),
@@ -1339,14 +1334,57 @@ namespace AiteBar
             return (selectionStart, selectionEnd, false);
         }
 
-        private void ResetSelectionFormatting()
+        private void ResetSelectionFormatting(ClearFormattingScope scope)
         {
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Normal);
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontStyleProperty, FontStyles.Normal);
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontSizeProperty, QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0));
             TxtNote.Selection.ApplyPropertyValue(Inline.TextDecorationsProperty, null);
+            TxtNote.Selection.ApplyPropertyValue(Paragraph.TextDecorationsProperty, null);
             TxtNote.Selection.ApplyPropertyValue(TextElement.FontFamilyProperty, QuickNoteFonts.Default);
             TxtNote.Selection.ApplyPropertyValue(TextElement.ForegroundProperty, Brush(_theme.Text));
+
+            foreach (Paragraph p in GetSelectedParagraphs())
+            {
+                bool isTask = QuickNoteDocumentFormatting.IsTaskParagraph(p, out _, out _, out _);
+                if (isTask && scope == ClearFormattingScope.InlineOnly)
+                {
+                    continue;
+                }
+
+                if (p.TextDecorations != null && p.TextDecorations.Count > 0)
+                {
+                    p.ClearValue(Paragraph.TextDecorationsProperty);
+                    p.TextDecorations = null;
+                }
+                QuickNoteDocumentFormatting.SetIsUserStrikethrough(p, false);
+                p.Tag = null;
+
+                foreach (Inline inline in EnumerateInlines(p.Inlines))
+                {
+                    if (inline is InlineUIContainer) continue;
+                    if (QuickNoteListHelper.TextRangesIntersect(TxtNote.Selection.Start, TxtNote.Selection.End, inline.ContentStart, inline.ContentEnd))
+                    {
+                        QuickNoteDocumentFormatting.SetIsUserStrikethrough(inline, false);
+                        QuickNoteDocumentFormatting.SetIsTaskStrikethrough(inline, false);
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<Inline> EnumerateInlines(InlineCollection inlines)
+        {
+            foreach (Inline inline in inlines)
+            {
+                yield return inline;
+                if (inline is Span span)
+                {
+                    foreach (Inline child in EnumerateInlines(span.Inlines))
+                    {
+                        yield return child;
+                    }
+                }
+            }
         }
     }
 }

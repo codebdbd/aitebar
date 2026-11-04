@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -169,6 +169,95 @@ namespace AiteBar
             }
 
             return section;
+        }
+
+        public static void NormalizeLegacyDefaultFontSizes(FlowDocument document, double legacySize = 14)
+        {
+            if (document == null) return;
+
+            if (document.ReadLocalValue(TextElement.FontSizeProperty) is double docFs && Math.Abs(docFs - legacySize) < 0.1)
+            {
+                document.FontSize = GetHeadingFontSizeForLevel(0);
+            }
+
+            foreach (Block block in document.Blocks)
+            {
+                NormalizeBlockFontSize(block, legacySize);
+            }
+        }
+
+        private static void NormalizeBlockFontSize(Block block, double legacySize)
+        {
+            if (block.ReadLocalValue(TextElement.FontSizeProperty) is double fs && Math.Abs(fs - legacySize) < 0.1)
+            {
+                block.ClearValue(TextElement.FontSizeProperty);
+            }
+
+            if (block is Paragraph paragraph)
+            {
+                NormalizeInlineFontSizes(paragraph.Inlines, legacySize);
+            }
+            else if (block is System.Windows.Documents.List list)
+            {
+                foreach (ListItem item in list.ListItems)
+                {
+                    if (item.ReadLocalValue(TextElement.FontSizeProperty) is double itemFs && Math.Abs(itemFs - legacySize) < 0.1)
+                    {
+                        item.ClearValue(TextElement.FontSizeProperty);
+                    }
+                    foreach (Block child in item.Blocks)
+                    {
+                        NormalizeBlockFontSize(child, legacySize);
+                    }
+                }
+            }
+            else if (block is Section section)
+            {
+                if (!IsCodeBlock(section))
+                {
+                    foreach (Block child in section.Blocks)
+                    {
+                        NormalizeBlockFontSize(child, legacySize);
+                    }
+                }
+            }
+            else if (block is Table table)
+            {
+                foreach (TableRowGroup group in table.RowGroups)
+                {
+                    foreach (TableRow row in group.Rows)
+                    {
+                        foreach (TableCell cell in row.Cells)
+                        {
+                            foreach (Block child in cell.Blocks)
+                            {
+                                NormalizeBlockFontSize(child, legacySize);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void NormalizeInlineFontSizes(InlineCollection inlines, double legacySize)
+        {
+            foreach (Inline inline in inlines)
+            {
+                if (inline is InlineUIContainer)
+                {
+                    continue;
+                }
+
+                if (inline.ReadLocalValue(TextElement.FontSizeProperty) is double inlineFs && Math.Abs(inlineFs - legacySize) < 0.1)
+                {
+                    inline.ClearValue(TextElement.FontSizeProperty);
+                }
+
+                if (inline is Span span)
+                {
+                    NormalizeInlineFontSizes(span.Inlines, legacySize);
+                }
+            }
         }
 
         public static void NormalizeListLayout(FlowDocument document)
@@ -513,8 +602,16 @@ namespace AiteBar
             container = null;
             checkBox = null;
 
-            if (paragraph?.Inlines.FirstInline is InlineUIContainer uiContainer &&
-                uiContainer.Child is CheckBox cb)
+            if (paragraph == null)
+            {
+                return false;
+            }
+
+            InlineUIContainer? uiContainer = EnumerateInlines(paragraph.Inlines)
+                .OfType<InlineUIContainer>()
+                .FirstOrDefault(uic => uic.Child is CheckBox);
+
+            if (uiContainer?.Child is CheckBox cb)
             {
                 // Tags are runtime metadata and XamlPackage may omit them. The first
                 // InlineUIContainer hosting a CheckBox is the persisted task schema.
@@ -535,6 +632,21 @@ namespace AiteBar
             }
 
             return false;
+        }
+
+        private static IEnumerable<Inline> EnumerateInlines(InlineCollection inlines)
+        {
+            foreach (Inline inline in inlines)
+            {
+                yield return inline;
+                if (inline is Span span)
+                {
+                    foreach (Inline child in EnumerateInlines(span.Inlines))
+                    {
+                        yield return child;
+                    }
+                }
+            }
         }
 
         private static readonly DependencyProperty TaskParagraphProperty =
@@ -609,7 +721,14 @@ namespace AiteBar
 
             if (container != null)
             {
-                paragraph.Inlines.Remove(container);
+                if (container.Parent is Span parentSpan)
+                {
+                    parentSpan.Inlines.Remove(container);
+                }
+                else
+                {
+                    paragraph.Inlines.Remove(container);
+                }
             }
 
             ApplyTaskFormattingToParagraph(paragraph, false, theme);

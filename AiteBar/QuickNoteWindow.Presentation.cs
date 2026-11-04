@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -179,10 +179,6 @@ namespace AiteBar
                     return;
                 }
 
-                if (paragraph.ReadLocalValue(TextElement.FontSizeProperty) is double fs && fs == 14)
-                {
-                    paragraph.FontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0);
-                }
                 paragraph.Foreground = normalText;
                 QuickNoteDocumentFormatting.ApplyInlineTheme(paragraph.Inlines, normalText, codeBackground, codeText, linkBrush);
                 return;
@@ -212,10 +208,6 @@ namespace AiteBar
 
             if (block is Section section)
             {
-                if (section.ReadLocalValue(TextElement.FontSizeProperty) is double sfs && sfs == 14)
-                {
-                    section.FontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0);
-                }
                 if (QuickNoteDocumentFormatting.IsQuoteBlock(section))
                 {
                     ApplyQuoteBlockStyles(section);

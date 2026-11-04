@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Versioning;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using FlowList = System.Windows.Documents.List;
 
@@ -159,5 +161,133 @@ namespace AiteBar
                 Padding = source.Padding,
                 Tag = source.Tag
             };
+
+        public static void RemoveSelectedTaskFormatting(FlowDocument document, TextRange selection, QuickNoteTheme theme, bool preserveLinks)
+        {
+            TextPointer start = selection.Start;
+            TextPointer end = selection.End;
+
+            if (start.CompareTo(end) > 0)
+            {
+                (start, end) = (end, start);
+            }
+
+            List<Paragraph> taskParagraphs = QuickNoteTaskListController.EnumerateAllParagraphs(document)
+                .Where(p => QuickNoteDocumentFormatting.IsTaskParagraph(p, out _, out _, out _))
+                .Where(p => TextRangesIntersect(start, end, p.ContentStart, p.ContentEnd))
+                .ToList();
+
+            if (taskParagraphs.Count == 0)
+            {
+                return;
+            }
+
+            foreach (Paragraph p in taskParagraphs)
+            {
+                UnwrapTaskParagraph(p, theme, preserveLinks);
+            }
+        }
+
+        public static void UnwrapTaskParagraph(Paragraph paragraph, QuickNoteTheme theme, bool preserveLinks)
+        {
+            if (QuickNoteDocumentFormatting.IsTaskParagraph(paragraph, out _, out InlineUIContainer? container, out _))
+            {
+                if (container != null)
+                {
+                    if (container.Parent is Span parentSpan)
+                    {
+                        parentSpan.Inlines.Remove(container);
+                    }
+                    else
+                    {
+                        paragraph.Inlines.Remove(container);
+                    }
+                }
+            }
+
+            paragraph.ClearValue(Paragraph.TextDecorationsProperty);
+            QuickNoteDocumentFormatting.SetIsUserStrikethrough(paragraph, false);
+            paragraph.Tag = null;
+            paragraph.Foreground = QuickNoteBrush.FromHex(theme.Text);
+            paragraph.ClearValue(TextElement.FontSizeProperty);
+            paragraph.ClearValue(TextElement.FontWeightProperty);
+            paragraph.ClearValue(TextElement.FontStyleProperty);
+            paragraph.ClearValue(TextElement.FontFamilyProperty);
+
+            ClearInlinesFormatting(paragraph.Inlines, preserveLinks);
+        }
+
+        public static void ClearSelectedTaskInlineFormatting(FlowDocument document, TextRange selection, QuickNoteTheme theme)
+        {
+            TextPointer start = selection.Start;
+            TextPointer end = selection.End;
+
+            if (start.CompareTo(end) > 0)
+            {
+                (start, end) = (end, start);
+            }
+
+            List<Paragraph> taskParagraphs = QuickNoteTaskListController.EnumerateAllParagraphs(document)
+                .Where(p => QuickNoteDocumentFormatting.IsTaskParagraph(p, out _, out _, out _))
+                .Where(p => TextRangesIntersect(start, end, p.ContentStart, p.ContentEnd))
+                .ToList();
+
+            foreach (Paragraph p in taskParagraphs)
+            {
+                if (!QuickNoteDocumentFormatting.IsTaskParagraph(p, out bool isChecked, out InlineUIContainer? container, out _))
+                {
+                    continue;
+                }
+
+                QuickNoteDocumentFormatting.SetIsUserStrikethrough(p, false);
+                p.ClearValue(TextElement.FontSizeProperty);
+                p.ClearValue(TextElement.FontWeightProperty);
+                p.ClearValue(TextElement.FontStyleProperty);
+                p.ClearValue(TextElement.FontFamilyProperty);
+
+                ClearInlinesFormatting(p.Inlines, preserveLinks: true, skipContainer: container);
+
+                QuickNoteDocumentFormatting.ApplyTaskFormattingToParagraph(p, isChecked, theme);
+            }
+        }
+
+        private static void ClearInlinesFormatting(InlineCollection inlines, bool preserveLinks, InlineUIContainer? skipContainer = null)
+        {
+            foreach (Inline inline in inlines.ToList())
+            {
+                if (inline is InlineUIContainer uic)
+                {
+                    if (uic == skipContainer) continue;
+                    continue;
+                }
+
+                QuickNoteDocumentFormatting.SetIsUserStrikethrough(inline, false);
+                QuickNoteDocumentFormatting.SetIsTaskStrikethrough(inline, false);
+
+                if (inline is Hyperlink hyperlink)
+                {
+                    if (!preserveLinks)
+                    {
+                        hyperlink.ClearValue(TextElement.ForegroundProperty);
+                        hyperlink.ClearValue(Inline.TextDecorationsProperty);
+                    }
+                    ClearInlinesFormatting(hyperlink.Inlines, preserveLinks, skipContainer);
+                    continue;
+                }
+
+                inline.ClearValue(TextElement.FontSizeProperty);
+                inline.ClearValue(TextElement.FontWeightProperty);
+                inline.ClearValue(TextElement.FontStyleProperty);
+                inline.ClearValue(TextElement.FontFamilyProperty);
+                inline.ClearValue(TextElement.ForegroundProperty);
+                inline.ClearValue(TextElement.BackgroundProperty);
+                inline.ClearValue(Inline.TextDecorationsProperty);
+
+                if (inline is Span span)
+                {
+                    ClearInlinesFormatting(span.Inlines, preserveLinks, skipContainer);
+                }
+            }
+        }
     }
 }

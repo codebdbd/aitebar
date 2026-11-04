@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -4779,6 +4779,24 @@ Do you want to proceed with permanent deletion?</value>
   </data>
   <data name="DiskCleaner_LockedFilesFormat" xml:space="preserve">
     <value>({0} locked)</value>
+  </data>
+  <data name="DiskCleaner_Reason_LockedFiles" xml:space="preserve">
+    <value>{0} files were locked by running processes.</value>
+  </data>
+  <data name="DiskCleaner_Reason_BrowserLockedFiles" xml:space="preserve">
+    <value>{0} browser cache files were locked (close Chrome, Edge, or Firefox before cleanup).</value>
+  </data>
+  <data name="DiskCleaner_Reason_BrowserAccessError" xml:space="preserve">
+    <value>Could not access browser profile directories.</value>
+  </data>
+  <data name="DiskCleaner_Reason_DnsFlushFailed" xml:space="preserve">
+    <value>DNS resolver flush returned false.</value>
+  </data>
+  <data name="DiskCleaner_Reason_RecycleBinFailed" xml:space="preserve">
+    <value>Recycle Bin cleanup encountered an error: {0}</value>
+  </data>
+  <data name="DiskCleaner_Reason_DirNotFound" xml:space="preserve">
+    <value>Directory does not exist.</value>
   </data>
   <data name="QuickNote_Theme_dark" xml:space="preserve">
     <value>Dark</value>

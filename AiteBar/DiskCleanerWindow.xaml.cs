@@ -52,11 +52,48 @@ public partial class DiskCleanerWindow : DarkWindow
             : Forms.Screen.PrimaryScreen;
         var work = screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
 
-        var (shownX, shownY) = UtilityWindowLayoutHelper.GetCenteredCoordinates(settings.Edge, work, Width, Height);
+        MaxHeight = Math.Max(400, work.Height - 32);
+
+        double targetHeight = double.IsNaN(Height) ? 520 : Height;
+        var (shownX, shownY) = UtilityWindowLayoutHelper.GetCenteredCoordinates(settings.Edge, work, Width, targetHeight);
         Left = shownX;
         Top = shownY;
         Show();
         Activate();
+        EnsureWindowWithinWorkArea();
+    }
+
+    private void EnsureWindowWithinWorkArea()
+    {
+        var settings = _settingsService.Settings;
+        var screens = Forms.Screen.AllScreens;
+        var screen = settings.MonitorIndex >= 0 && settings.MonitorIndex < screens.Length
+            ? screens[settings.MonitorIndex]
+            : Forms.Screen.PrimaryScreen;
+        var work = screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
+
+        double currentHeight = ActualHeight > 0 ? ActualHeight : (double.IsNaN(Height) ? MinHeight : Height);
+        double currentWidth = ActualWidth > 0 ? ActualWidth : (double.IsNaN(Width) ? MinWidth : Width);
+
+        if (currentHeight > work.Height - 32)
+        {
+            MaxHeight = Math.Max(400, work.Height - 32);
+            currentHeight = MaxHeight;
+        }
+
+        if (Top + currentHeight > work.Bottom - 16)
+        {
+            Top = Math.Max(work.Top + 16, work.Bottom - currentHeight - 16);
+        }
+
+        if (Left + currentWidth > work.Right - 16)
+        {
+            Left = Math.Max(work.Left + 16, work.Right - currentWidth - 16);
+        }
+        if (Left < work.Left + 16)
+        {
+            Left = work.Left + 16;
+        }
     }
 
     private async void DiskCleanerWindow_Loaded(object sender, RoutedEventArgs e)
@@ -70,6 +107,10 @@ public partial class DiskCleanerWindow : DarkWindow
         if (_isBusy) return;
         _isBusy = true;
         UpdateUiState();
+
+        ResultsCard.Visibility = Visibility.Collapsed;
+        ResultsDetailsPanel.Children.Clear();
+        EnsureWindowWithinWorkArea();
 
         TxtOverallStatus.Foreground = (Brush)FindResource("MutedText");
         TxtOverallStatus.Text = LocalizationService.Get("DiskCleaner_Status_Scanning");
@@ -107,6 +148,7 @@ public partial class DiskCleanerWindow : DarkWindow
             ProgressBarStatus.Visibility = Visibility.Collapsed;
             UpdateUiState();
             UpdateTotalReclaimable();
+            _ = Dispatcher.InvokeAsync(EnsureWindowWithinWorkArea, System.Windows.Threading.DispatcherPriority.Loaded);
         }
     }
 
@@ -114,6 +156,7 @@ public partial class DiskCleanerWindow : DarkWindow
     {
         CategoriesPanel.Children.Clear();
         _categoryItems.Clear();
+        CategoriesScrollViewer.ScrollToTop();
 
         for (int i = 0; i < categories.Count; i++)
         {
@@ -339,7 +382,58 @@ public partial class DiskCleanerWindow : DarkWindow
             ProgressBarStatus.Visibility = Visibility.Collapsed;
             UpdateUiState();
             UpdateTotalReclaimable();
+            _ = Dispatcher.InvokeAsync(EnsureWindowWithinWorkArea, System.Windows.Threading.DispatcherPriority.Loaded);
         }
+    }
+
+    private static string? FormatReportReason(DiskCleanCategoryReport report)
+    {
+        if (report.Status == DiskCleanCategoryStatus.Succeeded)
+        {
+            return null;
+        }
+
+        if (report.LockedCount > 0)
+        {
+            if (report.CategoryId == DiskCleanerService.CategoryBrowserCache)
+            {
+                return string.Format(
+                    LocalizationService.Get("DiskCleaner_Reason_BrowserLockedFiles"),
+                    report.LockedCount);
+            }
+
+            return string.Format(
+                LocalizationService.Get("DiskCleaner_Reason_LockedFiles"),
+                report.LockedCount);
+        }
+
+        if (string.IsNullOrWhiteSpace(report.FailureReason))
+        {
+            return null;
+        }
+
+        if (report.CategoryId == DiskCleanerService.CategoryDnsCache)
+        {
+            return LocalizationService.Get("DiskCleaner_Reason_DnsFlushFailed");
+        }
+
+        if (report.FailureReason.Contains("0x", StringComparison.OrdinalIgnoreCase))
+        {
+            return string.Format(LocalizationService.Get("DiskCleaner_Reason_RecycleBinFailed"), report.FailureReason);
+        }
+
+        if (report.FailureReason.Contains("access errors", StringComparison.OrdinalIgnoreCase)
+            || report.FailureReason.Contains("access", StringComparison.OrdinalIgnoreCase))
+        {
+            return LocalizationService.Get("DiskCleaner_Reason_BrowserAccessError");
+        }
+
+        if (report.FailureReason.Contains("Directory does not exist", StringComparison.OrdinalIgnoreCase))
+        {
+            return LocalizationService.Get("DiskCleaner_Reason_DirNotFound");
+        }
+
+        return report.FailureReason;
     }
 
     private void PopulateResultDetails(DiskCleanResult result)
@@ -367,7 +461,7 @@ public partial class DiskCleanerWindow : DarkWindow
             rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            // Left: Title + Reason (if any)
+            // Left: Title + Localized Reason (if any)
             var textStack = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 8, 0) };
             var titleBlock = new TextBlock
             {
@@ -378,11 +472,12 @@ public partial class DiskCleanerWindow : DarkWindow
             };
             textStack.Children.Add(titleBlock);
 
-            if (!string.IsNullOrWhiteSpace(report.FailureReason))
+            string? localizedReason = FormatReportReason(report);
+            if (!string.IsNullOrWhiteSpace(localizedReason))
             {
                 var reasonBlock = new TextBlock
                 {
-                    Text = report.FailureReason,
+                    Text = localizedReason,
                     FontSize = 9.5,
                     Foreground = report.Status == DiskCleanCategoryStatus.Failed
                         ? (Brush)FindResource("FailedRedColor")
@@ -450,6 +545,7 @@ public partial class DiskCleanerWindow : DarkWindow
         }
 
         ResultsCard.Visibility = result.Reports.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        _ = Dispatcher.InvokeAsync(EnsureWindowWithinWorkArea, System.Windows.Threading.DispatcherPriority.Loaded);
     }
 
     private void BtnSelectSafeOnly_Click(object sender, RoutedEventArgs e)

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -4779,6 +4779,24 @@ Möchten Sie mit der endgültigen Bereinigung fortfahren?</value>
   </data>
   <data name="DiskCleaner_LockedFilesFormat" xml:space="preserve">
     <value>({0} gesperrt)</value>
+  </data>
+  <data name="DiskCleaner_Reason_LockedFiles" xml:space="preserve">
+    <value>{0} Dateien wurden von laufenden Prozessen gesperrt.</value>
+  </data>
+  <data name="DiskCleaner_Reason_BrowserLockedFiles" xml:space="preserve">
+    <value>{0} Browser-Cache-Dateien waren gesperrt (schließen Sie Chrome, Edge oder Firefox vor der Bereinigung).</value>
+  </data>
+  <data name="DiskCleaner_Reason_BrowserAccessError" xml:space="preserve">
+    <value>Zugriff auf Browser-Profilverzeichnisse nicht möglich.</value>
+  </data>
+  <data name="DiskCleaner_Reason_DnsFlushFailed" xml:space="preserve">
+    <value>DNS-Auflöser-Flush hat 'false' zurückgegeben.</value>
+  </data>
+  <data name="DiskCleaner_Reason_RecycleBinFailed" xml:space="preserve">
+    <value>Fehler beim Leeren des Papierkorbs: {0}</value>
+  </data>
+  <data name="DiskCleaner_Reason_DirNotFound" xml:space="preserve">
+    <value>Verzeichnis existiert nicht.</value>
   </data>
   <data name="QuickNote_Theme_dark" xml:space="preserve">
     <value>Dunkel</value>

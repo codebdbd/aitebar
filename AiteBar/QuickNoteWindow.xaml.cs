@@ -617,6 +617,7 @@ namespace AiteBar
                     if (await _noteService.TryRestoreConflictCopyAsync(TxtNote.Document))
                     {
                         QuickNoteDocumentFormatting.NormalizeListLayout(TxtNote.Document);
+                        QuickNoteDocumentFormatting.NormalizeLegacyDefaultFontSizes(TxtNote.Document);
                         ConnectTaskItemEvents(TxtNote.Document);
                         UpdateStatusSaved();
                         ScheduleFooterStatsUpdate();
@@ -791,6 +792,7 @@ namespace AiteBar
                         _noteService.Load(TxtNote.Document);
                         if (_noteService.HasLoadFailed) SetStatus(QuickNoteStatusKind.LoadFailed);
                         QuickNoteDocumentFormatting.NormalizeListLayout(TxtNote.Document);
+                        QuickNoteDocumentFormatting.NormalizeLegacyDefaultFontSizes(TxtNote.Document);
                         ConnectTaskItemEvents(TxtNote.Document);
                         _imageInteraction.ClearSelection();
                     }

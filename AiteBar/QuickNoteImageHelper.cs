@@ -24,6 +24,26 @@ internal static class QuickNoteImageHelper
         typeof(QuickNoteImageHelper),
         new PropertyMetadata(null));
 
+    static QuickNoteImageHelper()
+    {
+        EnableXamlDeserializationForUndo();
+    }
+
+    internal static void EnableXamlDeserializationForUndo()
+    {
+        try
+        {
+            var prop = typeof(FrameworkCompatibilityPreferences).GetProperty(
+                "DisableLegacyDangerousXamlDeserializationMode",
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            prop?.GetSetMethod(true)?.Invoke(null, [false]);
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
+    }
+
     internal static bool TryCreateInlineImage(byte[] bytes, out InlineUIContainer? container)
     {
         container = null;
@@ -105,6 +125,18 @@ internal static class QuickNoteImageHelper
         try
         {
             png = container.GetValue(PngPayloadProperty) as byte[];
+            if (png == null && image.Source is BitmapImage { UriSource: { IsFile: true } uri } && File.Exists(uri.LocalPath))
+            {
+                try
+                {
+                    png = File.ReadAllBytes(uri.LocalPath);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    Logger.Log(ex);
+                }
+            }
+
             if (png == null && image is QuickNoteImage quickImage && !string.IsNullOrEmpty(quickImage.PngBase64))
             {
                 try
@@ -153,13 +185,57 @@ internal static class QuickNoteImageHelper
 
     internal static bool TryGetImageControl(InlineUIContainer container, out Image? image)
     {
-        image = container.Child switch
+        if (container.Child is Image directImage)
         {
-            Image directImage => directImage,
-            Border { Child: Image wrappedImage } => wrappedImage,
-            _ => null
-        };
-        return image != null;
+            image = directImage;
+            return true;
+        }
+
+        if (container.Child is Border { Child: Image wrappedImage })
+        {
+            image = wrappedImage;
+            return true;
+        }
+
+        // When WPF Undo/Redo falls back to a dummy Grid because restrictive XAML blocked Image deserialization,
+        // restore the Image control from the container's preserved PngPayload.
+        if (container.Child is Grid && container.GetValue(PngPayloadProperty) is byte[] png && png.Length > 0)
+        {
+            try
+            {
+                string cachePath = GetCacheImagePath(png);
+                var bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.UriSource = new Uri(cachePath, UriKind.Absolute);
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapImage.EndInit();
+                bitmapImage.Freeze();
+
+                double scale = Math.Min(1, Math.Min(640d / bitmapImage.PixelWidth, 480d / bitmapImage.PixelHeight));
+                double width = Math.Max(1, bitmapImage.PixelWidth * scale);
+                double height = Math.Max(1, bitmapImage.PixelHeight * scale);
+
+                var restoredImage = new Image
+                {
+                    Source = bitmapImage,
+                    Width = width,
+                    Height = height,
+                    Stretch = Stretch.Uniform,
+                    ToolTip = "Embedded image"
+                };
+
+                container.Child = restoredImage;
+                image = restoredImage;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+        }
+
+        image = null;
+        return false;
     }
 
     internal static bool CanAddToDocument(FlowDocument document, InlineUIContainer candidate)
@@ -187,7 +263,7 @@ internal static class QuickNoteImageHelper
 
     internal static IEnumerable<InlineUIContainer> EnumerateImageContainers(BlockCollection blocks)
     {
-        foreach (Block block in blocks)
+        foreach (Block block in blocks.ToArray())
         {
             if (block is Paragraph paragraph)
             {
@@ -205,7 +281,7 @@ internal static class QuickNoteImageHelper
             }
             else if (block is System.Windows.Documents.List list)
             {
-                foreach (ListItem item in list.ListItems)
+                foreach (ListItem item in list.ListItems.ToArray())
                 {
                     foreach (InlineUIContainer image in EnumerateImageContainers(item.Blocks))
                     {
@@ -218,7 +294,7 @@ internal static class QuickNoteImageHelper
 
     internal static IEnumerable<InlineUIContainer> EnumerateImageContainers(InlineCollection inlines)
     {
-        foreach (Inline inline in inlines)
+        foreach (Inline inline in inlines.ToArray())
         {
             if (inline is InlineUIContainer image && TryGetImageControl(image, out _))
             {
@@ -274,39 +350,44 @@ internal static class QuickNoteImageHelper
         return stream.ToArray();
     }
 
+    private static string GetCacheImagePath(byte[] png)
+    {
+        string hash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(png));
+        string dir = Path.Combine(Path.GetTempPath(), "AiteBar", "ImageCache");
+        Directory.CreateDirectory(dir);
+        string path = Path.Combine(dir, $"{hash}.png");
+        if (!File.Exists(path))
+        {
+            File.WriteAllBytes(path, png);
+        }
+        return path;
+    }
+
     private static bool CreateContainer(BitmapSource source, byte[] png, out InlineUIContainer? container)
     {
-        if (source.CanFreeze)
-        {
-            source.Freeze();
-        }
+        string cachePath = GetCacheImagePath(png);
+        var bitmapImage = new BitmapImage();
+        bitmapImage.BeginInit();
+        bitmapImage.UriSource = new Uri(cachePath, UriKind.Absolute);
+        bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+        bitmapImage.EndInit();
+        bitmapImage.Freeze();
 
         // Keep a portrait image from consuming the whole note while never enlarging small images.
-        double scale = Math.Min(1, Math.Min(640d / source.PixelWidth, 480d / source.PixelHeight));
-        double width = Math.Max(1, source.PixelWidth * scale);
-        double height = Math.Max(1, source.PixelHeight * scale);
-        
+        double scale = Math.Min(1, Math.Min(640d / bitmapImage.PixelWidth, 480d / bitmapImage.PixelHeight));
+        double width = Math.Max(1, bitmapImage.PixelWidth * scale);
+        double height = Math.Max(1, bitmapImage.PixelHeight * scale);
+
         var imageControl = new Image
         {
-            Source = source,
+            Source = bitmapImage,
             Width = width,
             Height = height,
-            Stretch = System.Windows.Media.Stretch.Uniform,
+            Stretch = Stretch.Uniform,
             ToolTip = "Embedded image"
         };
 
-        // WPF's Undo reader accepts native Image but not arbitrary custom controls. Its Source
-        // must also have a package URI; a raw in-memory CachedBitmap cannot be reconstructed.
-        // Use WPF's own image packaging so its cache/undo units own the resource lifetime.
-        var packageDocument = new FlowDocument(new Paragraph(new InlineUIContainer(imageControl)));
-        using var package = new MemoryStream();
-        new TextRange(packageDocument.ContentStart, packageDocument.ContentEnd).Save(package, DataFormats.XamlPackage);
-        package.Position = 0;
-        var restored = new FlowDocument();
-        new TextRange(restored.ContentStart, restored.ContentEnd).Load(package, DataFormats.XamlPackage);
-        var paragraph = (Paragraph)restored.Blocks.FirstBlock;
-        container = (InlineUIContainer)paragraph.Inlines.FirstInline;
-        paragraph.Inlines.Remove(container);
+        container = new InlineUIContainer(imageControl);
         container.SetValue(PngPayloadProperty, png);
         return true;
     }

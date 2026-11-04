@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype">
     <value>text/microsoft-resx</value>
@@ -4779,6 +4779,24 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
   </data>
   <data name="DiskCleaner_LockedFilesFormat" xml:space="preserve">
     <value>({0} заблоковано)</value>
+  </data>
+  <data name="DiskCleaner_Reason_LockedFiles" xml:space="preserve">
+    <value>{0} файлів заблоковано запущеними процесами.</value>
+  </data>
+  <data name="DiskCleaner_Reason_BrowserLockedFiles" xml:space="preserve">
+    <value>{0} файлів кешу заблоковано (закрийте Chrome, Edge або Firefox перед очищенням).</value>
+  </data>
+  <data name="DiskCleaner_Reason_BrowserAccessError" xml:space="preserve">
+    <value>Не вдалося отримати доступ до каталогів профілів браузера.</value>
+  </data>
+  <data name="DiskCleaner_Reason_DnsFlushFailed" xml:space="preserve">
+    <value>Службі DNS не вдалося скинути кеш дозволів.</value>
+  </data>
+  <data name="DiskCleaner_Reason_RecycleBinFailed" xml:space="preserve">
+    <value>Під час очищення Кошика сталася помилка: {0}</value>
+  </data>
+  <data name="DiskCleaner_Reason_DirNotFound" xml:space="preserve">
+    <value>Каталог не знайдено.</value>
   </data>
   <data name="QuickNote_Theme_dark" xml:space="preserve">
     <value>Темна</value>
