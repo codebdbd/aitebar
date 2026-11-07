@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -134,10 +134,13 @@ namespace AiteBar
                 ?? TxtNote.Document.ContentStart;
             TxtNote.ScrollToHome();
             ResetCaretFormatting();
-            ScheduleDocumentStylesUpdate();
 
             ClearCaches();
             ApplyTheme(_theme);
+
+            TxtNote.IsUndoEnabled = false;
+            TxtNote.IsUndoEnabled = true;
+            UpdateUndoRedoState();
         }
 
         protected override async void OnDeactivatedAutoDismiss()
@@ -237,6 +240,7 @@ namespace AiteBar
         private void TxtNote_TextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)
         {
             _footerStatsController.ScheduleUpdate();
+            UpdateUndoRedoState();
             if (!_loaded)
             {
                 return;
@@ -287,6 +291,7 @@ namespace AiteBar
             }
             _footerStatsController.ScheduleUpdate(documentChanged: false);
             UpdateToolbarFormattingState();
+            UpdateUndoRedoState();
         }
 
         private async void TxtNote_PreviewKeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -327,7 +332,8 @@ namespace AiteBar
                 UndoEditor();
                 e.Handled = true;
             }
-            else if (Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y)
+            else if ((Keyboard.Modifiers == ModifierKeys.Control && e.Key == Key.Y) ||
+                     (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift) && e.Key == Key.Z))
             {
                 RedoEditor();
                 e.Handled = true;
@@ -845,6 +851,7 @@ namespace AiteBar
             }
 
             TxtNote.Undo();
+            UpdateUndoRedoState();
         }
 
         private void RedoEditor()
@@ -855,6 +862,19 @@ namespace AiteBar
             }
 
             TxtNote.Redo();
+            UpdateUndoRedoState();
+        }
+
+        internal void UpdateUndoRedoState()
+        {
+            if (BtnUndo != null)
+            {
+                BtnUndo.IsEnabled = TxtNote.CanUndo;
+            }
+            if (BtnRedo != null)
+            {
+                BtnRedo.IsEnabled = TxtNote.CanRedo;
+            }
         }
 
         private void SetStatus(QuickNoteStatusKind kind, string? argument = null)

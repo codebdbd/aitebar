@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -149,7 +149,8 @@ namespace AiteBar
             System.Windows.Media.Brush codeText,
             System.Windows.Media.Brush linkBrush)
         {
-            RunDocumentChangeWithoutAutoSave(() =>
+            _saveSuppressionCount++;
+            try
             {
                 document.Foreground = normalText;
                 document.FontSize = QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0);
@@ -157,7 +158,11 @@ namespace AiteBar
                 {
                     ApplyBlockStyles(block, normalText, codeBackground, codeText, linkBrush);
                 }
-            });
+            }
+            finally
+            {
+                _saveSuppressionCount--;
+            }
         }
 
         private void ApplyBlockStyles(

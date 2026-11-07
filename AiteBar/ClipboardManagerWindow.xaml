@@ -15,58 +15,34 @@
         <WindowChrome ResizeBorderThickness="6" CaptionHeight="0" GlassFrameThickness="0" CornerRadius="12"/>
     </WindowChrome.WindowChrome>
 
-
-
     <Window.Resources>
-
         <ResourceDictionary>
-
             <ResourceDictionary.MergedDictionaries>
-
                 <ResourceDictionary Source="SettingsWindowResources.xaml"/>
-
                 <ResourceDictionary Source="FormControlsResources.xaml"/>
-
                 <ResourceDictionary Source="UtilityWindowResources.xaml"/>
-
             </ResourceDictionary.MergedDictionaries>
 
-
-
             <Style x:Key="EntryItemStyle" TargetType="Border">
-
-                <Setter Property="Background" Value="#192A41"/>
-
-                <Setter Property="BorderBrush" Value="Transparent"/>
-
-                <Setter Property="BorderThickness" Value="0"/>
-
-                <Setter Property="CornerRadius" Value="4"/>
-
-                <Setter Property="Padding" Value="14"/>
-
+                <Setter Property="Background" Value="#20252D"/>
+                <Setter Property="BorderBrush" Value="#2E3744"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="CornerRadius" Value="6"/>
+                <Setter Property="Padding" Value="8,6,8,6"/>
                 <Setter Property="Margin" Value="0"/>
-
                 <Setter Property="Cursor" Value="Hand"/>
-
                 <Style.Triggers>
-
                     <Trigger Property="IsMouseOver" Value="True">
-
-                        <Setter Property="Background" Value="#1A202A"/>
-
+                        <Setter Property="Background" Value="#262C36"/>
+                        <Setter Property="BorderBrush" Value="#3D4A5C"/>
                     </Trigger>
-
                 </Style.Triggers>
-
             </Style>
-
-
 
             <Style x:Key="ClipboardActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
                 <Setter Property="Width" Value="28"/>
                 <Setter Property="Height" Value="28"/>
-                <Setter Property="Margin" Value="0,0,6,0"/>
+                <Setter Property="Margin" Value="0,0,4,0"/>
                 <Setter Property="Padding" Value="0"/>
                 <Setter Property="FontFamily" Value="pack://application:,,,/Resources/#FluentSystemIcons-Regular"/>
                 <Setter Property="FontSize" Value="13"/>
@@ -106,144 +82,86 @@
                 </Setter>
             </Style>
 
-
-
             <Style x:Key="PreviewFrameStyle" TargetType="Border">
-
-                <Setter Property="Width" Value="78"/>
-
-                <Setter Property="Height" Value="78"/>
-
-                <Setter Property="CornerRadius" Value="10"/>
-
+                <Setter Property="Width" Value="42"/>
+                <Setter Property="Height" Value="42"/>
+                <Setter Property="CornerRadius" Value="6"/>
                 <Setter Property="Background" Value="#11161E"/>
-
                 <Setter Property="BorderBrush" Value="#2B3642"/>
-
                 <Setter Property="BorderThickness" Value="1"/>
-
-                <Setter Property="Margin" Value="0,0,12,0"/>
-
+                <Setter Property="Margin" Value="0,0,10,0"/>
             </Style>
-
-
 
             <Style x:Key="ClipboardTypeBadgeStyle" TargetType="Border">
-
-                <Setter Property="Width" Value="78"/>
-
-                <Setter Property="Height" Value="78"/>
-
-                <Setter Property="CornerRadius" Value="10"/>
-
-                <Setter Property="Background" Value="#191919"/>
-
+                <Setter Property="Width" Value="42"/>
+                <Setter Property="Height" Value="42"/>
+                <Setter Property="CornerRadius" Value="6"/>
+                <Setter Property="Background" Value="#18212D"/>
                 <Setter Property="BorderBrush" Value="#313E4C"/>
-
                 <Setter Property="BorderThickness" Value="1"/>
-
-                <Setter Property="Margin" Value="0,0,12,0"/>
-
+                <Setter Property="Margin" Value="0,0,10,0"/>
             </Style>
-
-
 
             <Style x:Key="ClipboardScrollBarStyle"
                    TargetType="ScrollBar"
-                   BasedOn="{StaticResource DarkScrollBarStyle}"/>
-
-
+                   BasedOn="{StaticResource DarkScrollBarStyle}">
+                <Setter Property="Width" Value="5"/>
+                <Setter Property="MinWidth" Value="5"/>
+                <Setter Property="Margin" Value="3,0,0,0"/>
+            </Style>
 
             <Style x:Key="ClipboardFooterIconButtonStyle" TargetType="Button" BasedOn="{StaticResource ClipboardActionButtonStyle}">
-                <Setter Property="Width" Value="32"/>
-                <Setter Property="Height" Value="32"/>
-                <Setter Property="Margin" Value="10,0,0,0"/>
-                <Setter Property="FontSize" Value="14"/>
+                <Setter Property="Width" Value="28"/>
+                <Setter Property="Height" Value="28"/>
+                <Setter Property="Margin" Value="0,0,4,0"/>
+                <Setter Property="FontSize" Value="13"/>
             </Style>
-
-
 
             <Style x:Key="ClipboardListBoxStyle" TargetType="ListBox">
-
                 <Setter Property="Background" Value="Transparent"/>
-
                 <Setter Property="BorderThickness" Value="0"/>
-
                 <Setter Property="Padding" Value="0"/>
-
                 <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
-
                 <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
-
             </Style>
 
-
-
             <Style x:Key="ClipboardListBoxItemStyle" TargetType="ListBoxItem">
-
                 <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-
                 <Setter Property="Padding" Value="0"/>
-
-                <Setter Property="Margin" Value="0,0,0,10"/>
-
+                <Setter Property="Margin" Value="0,0,0,5"/>
                 <Setter Property="Background" Value="Transparent"/>
-
                 <Setter Property="BorderThickness" Value="0"/>
-
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-
                 <Setter Property="Template">
-
                     <Setter.Value>
-
                         <ControlTemplate TargetType="ListBoxItem">
                             <Grid SnapsToDevicePixels="True" UseLayoutRounding="True">
-
                                 <Border x:Name="FocusChrome"
                                         Background="Transparent"
                                         CornerRadius="4"
                                         SnapsToDevicePixels="True"/>
-
                                 <Border Margin="1"
                                         Background="Transparent"
                                         CornerRadius="3"
                                         SnapsToDevicePixels="True">
                                     <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-
                                                       VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
                                 </Border>
-
                             </Grid>
-
                             <ControlTemplate.Triggers>
-
                                 <MultiTrigger>
-
                                     <MultiTrigger.Conditions>
-
                                         <Condition Property="IsSelected" Value="True"/>
-
                                         <Condition Property="Selector.IsSelectionActive" Value="True"/>
-
                                     </MultiTrigger.Conditions>
-
                                     <Setter TargetName="FocusChrome" Property="Background" Value="{StaticResource FormControlFocusBorderBrush}"/>
-
                                 </MultiTrigger>
-
                             </ControlTemplate.Triggers>
-
                         </ControlTemplate>
-
                     </Setter.Value>
-
                 </Setter>
-
             </Style>
-
         </ResourceDictionary>
-
     </Window.Resources>
 
     <Grid>
@@ -255,531 +173,283 @@
             <!-- Inner Border with Dark Background creating the 1px blue stroke -->
             <Border Margin="1" CornerRadius="11" Background="#191919" BorderBrush="#14000000" BorderThickness="1">
                 <Grid Margin="16">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
 
-                <!-- Custom Header Bar -->
-                <Border x:Name="HeaderBar" Grid.Row="0" Margin="0,0,0,10" Background="Transparent" MouseLeftButtonDown="HeaderBar_MouseLeftButtonDown">
-                    <Grid>
+                    <!-- Custom Header Bar -->
+                    <Border x:Name="HeaderBar" Grid.Row="0" Margin="0,0,0,10" Background="Transparent" MouseLeftButtonDown="HeaderBar_MouseLeftButtonDown">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{local:Loc ResourceKey=ClipboardManager_Title}"
+                                       VerticalAlignment="Center"
+                                       FontWeight="SemiBold"
+                                       FontSize="14"
+                                       Foreground="#E8EDF2"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <ToggleButton x:Name="BtnPin"
+                                              Style="{StaticResource WindowPinToggleButtonStyle}"
+                                              ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
+                                              IsChecked="{Binding IsPinned, RelativeSource={RelativeSource AncestorType=local:DarkWindow}, Mode=TwoWay}"/>
+                                <Button Style="{StaticResource WindowCloseButtonStyle}"
+                                        ToolTip="{local:Loc ResourceKey=Common_Close}"
+                                        Click="BtnClose_Click"/>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <TabControl x:Name="FilterTabs"
+                                Grid.Row="1"
+                                Margin="0,0,0,10"
+                                Style="{StaticResource UnderlineTabControlStyle}"
+                                SelectionChanged="FilterTabs_SelectionChanged">
+                        <TabItem x:Name="TabFilterAll"
+                                 Header="{local:Loc ResourceKey=ClipboardManager_FilterAll}"
+                                 Style="{StaticResource UnderlineTabItemStyle}"
+                                 Tag="All"
+                                 IsSelected="True"/>
+                        <TabItem x:Name="TabFilterPinned"
+                                 Header="{local:Loc ResourceKey=ClipboardManager_FilterPinned}"
+                                 Style="{StaticResource UnderlineTabItemStyle}"
+                                 Tag="Pinned"/>
+                        <TabItem x:Name="TabFilterText"
+                                 Header="{local:Loc ResourceKey=ClipboardManager_FilterText}"
+                                 Style="{StaticResource UnderlineTabItemStyle}"
+                                 Tag="Text"/>
+                        <TabItem x:Name="TabFilterImages"
+                                 Header="{local:Loc ResourceKey=ClipboardManager_FilterImages}"
+                                 Style="{StaticResource UnderlineTabItemStyle}"
+                                 Tag="Images"/>
+                    </TabControl>
+
+                    <Grid Grid.Row="2" Margin="0,0,0,8">
                         <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="{local:Loc ResourceKey=ClipboardManager_Title}"
-                                   VerticalAlignment="Center"
-                                   FontWeight="SemiBold"
-                                   FontSize="14"
-                                   Foreground="#E8EDF2"/>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal">
-                            <ToggleButton x:Name="BtnPin"
-                                          Style="{StaticResource WindowPinToggleButtonStyle}"
-                                          ToolTip="{local:Loc ResourceKey=QuickNote_Pin}"
-                                          IsChecked="{Binding IsPinned, RelativeSource={RelativeSource AncestorType=local:DarkWindow}, Mode=TwoWay}"/>
-                            <Button Style="{StaticResource WindowCloseButtonStyle}"
-                                    ToolTip="{local:Loc ResourceKey=Common_Close}"
-                                    Click="BtnClose_Click"/>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="&#xF690;"
+                                   FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
+                                   FontSize="16"
+                                   Foreground="{StaticResource MutedText}"
+                                   Margin="0,0,8,0"
+                                   VerticalAlignment="Center"/>
+
+                        <Grid Grid.Column="1">
+                            <TextBox x:Name="TxtSearch"
+                                     Style="{StaticResource BaseTextBoxStyle}"
+                                     TextChanged="TxtSearch_TextChanged"
+                                     GotFocus="TxtSearch_GotFocus"
+                                     LostFocus="TxtSearch_LostFocus"
+                                     FontSize="12"
+                                     AutomationProperties.Name="{local:Loc ResourceKey=ClipboardManager_SearchPlaceholder}"/>
+                            <TextBlock x:Name="TxtSearchPlaceholder"
+                                       Text="{local:Loc ResourceKey=ClipboardManager_SearchPlaceholder}"
+                                       Foreground="{StaticResource MutedText}"
+                                       FontSize="12"
+                                       Margin="{StaticResource FormInputPlaceholderMargin}"
+                                       IsHitTestVisible="False"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,16,0">
+                            <Button x:Name="BtnClearHistory"
+                                    Content="&#xF202;"
+                                    FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
+                                    Style="{StaticResource ClipboardFooterIconButtonStyle}"
+                                    Margin="0,0,4,0"
+                                    ToolTip="{local:Loc ResourceKey=ClipboardManager_ClearHistory}"
+                                    AutomationProperties.Name="{local:Loc ResourceKey=ClipboardManager_ClearHistory}"
+                                    Click="BtnClearHistory_Click"/>
+                            <Button x:Name="BtnWipeAll"
+                                    Content="&#xF34D;"
+                                    FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
+                                    Style="{StaticResource ClipboardFooterIconButtonStyle}"
+                                    Margin="0"
+                                    ToolTip="{local:Loc ResourceKey=ClipboardManager_WipeAll}"
+                                    AutomationProperties.Name="{local:Loc ResourceKey=ClipboardManager_WipeAll}"
+                                    Click="BtnWipeAll_Click"/>
                         </StackPanel>
                     </Grid>
-                </Border>
 
-
-
-
-
-        <TabControl x:Name="FilterTabs"
-
-                    Grid.Row="1"
-
-                    Margin="0,0,0,10"
-
-                    Style="{StaticResource UnderlineTabControlStyle}"
-
-                    SelectionChanged="FilterTabs_SelectionChanged">
-
-            <TabItem x:Name="TabFilterAll"
-
-                     Header="{local:Loc ResourceKey=ClipboardManager_FilterAll}"
-
-                     Style="{StaticResource UnderlineTabItemStyle}"
-
-                     Tag="All"
-
-                     IsSelected="True"/>
-
-            <TabItem x:Name="TabFilterPinned"
-
-                     Header="{local:Loc ResourceKey=ClipboardManager_FilterPinned}"
-
-                     Style="{StaticResource UnderlineTabItemStyle}"
-
-                     Tag="Pinned"/>
-
-            <TabItem x:Name="TabFilterText"
-
-                     Header="{local:Loc ResourceKey=ClipboardManager_FilterText}"
-
-                     Style="{StaticResource UnderlineTabItemStyle}"
-
-                     Tag="Text"/>
-
-            <TabItem x:Name="TabFilterImages"
-
-                     Header="{local:Loc ResourceKey=ClipboardManager_FilterImages}"
-
-                     Style="{StaticResource UnderlineTabItemStyle}"
-
-                     Tag="Images"/>
-
-        </TabControl>
-
-
-
-        <Grid Grid.Row="2" Margin="0,0,0,10">
-
-            <Grid.ColumnDefinitions>
-
-                <ColumnDefinition Width="Auto"/>
-
-                <ColumnDefinition Width="*"/>
-
-                <ColumnDefinition Width="Auto"/>
-
-            </Grid.ColumnDefinitions>
-
-            <TextBlock Grid.Column="0"
-
-                       Text="&#xF690;"
-
-                       FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-
-                       FontSize="18"
-
-                       Foreground="{StaticResource MutedText}"
-
-                       Margin="0,0,8,0"
-
-                       VerticalAlignment="Center"/>
-
-            <Grid Grid.Column="1">
-
-                <TextBox x:Name="TxtSearch"
-
-                         Style="{StaticResource BaseTextBoxStyle}"
-
-                         TextChanged="TxtSearch_TextChanged"
-
-                         GotFocus="TxtSearch_GotFocus"
-
-                         LostFocus="TxtSearch_LostFocus"
-
-                         FontSize="12"
-                         AutomationProperties.Name="{local:Loc ResourceKey=ClipboardManager_SearchPlaceholder}"/>
-
-                <TextBlock x:Name="TxtSearchPlaceholder"
-
-                           Text="{local:Loc ResourceKey=ClipboardManager_SearchPlaceholder}"
-
-                           Foreground="{StaticResource MutedText}"
-
-                           FontSize="12"
-
-                           Margin="{StaticResource FormInputPlaceholderMargin}"
-
-                           IsHitTestVisible="False"
-
-                           VerticalAlignment="Center"/>
-
-            </Grid>
-
-             <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,0,0,0">
-             <Button x:Name="BtnClearHistory"
-
-                    Content="&#xF202;"
-
-                    FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-
-                    Style="{StaticResource ClipboardFooterIconButtonStyle}"
-
-                    ToolTip="{local:Loc ResourceKey=ClipboardManager_ClearHistory}"
-
-                    AutomationProperties.Name="{local:Loc ResourceKey=ClipboardManager_ClearHistory}"
-
-                    Click="BtnClearHistory_Click"/>
-             <Button x:Name="BtnWipeAll"
-                    Content="&#xF34D;"
-                    FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-                    Style="{StaticResource ClipboardFooterIconButtonStyle}"
-                    ToolTip="{local:Loc ResourceKey=ClipboardManager_WipeAll}"
-                    AutomationProperties.Name="{local:Loc ResourceKey=ClipboardManager_WipeAll}"
-                    Click="BtnWipeAll_Click"/>
-             </StackPanel>
-
-        </Grid>
-
-
-
-        <Grid Grid.Row="3">
-
-            <ListBox x:Name="EntriesList"
-
-                     Margin="0,0,-5,0"
-
-                     Padding="0"
-
-                     Style="{StaticResource ClipboardListBoxStyle}"
-
-                     ItemContainerStyle="{StaticResource ClipboardListBoxItemStyle}"
-
-                     BorderThickness="0"
-
-                     Background="Transparent"
-
-                     HorizontalContentAlignment="Stretch"
-
-                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-
-                     ScrollViewer.VerticalScrollBarVisibility="Visible"
-
-                     ScrollViewer.CanContentScroll="True"
-
-                     VirtualizingStackPanel.IsVirtualizing="True"
-
-                     KeyboardNavigation.TabNavigation="Continue">
-
-                <ListBox.Resources>
-
-                    <Style TargetType="ScrollBar" BasedOn="{StaticResource ClipboardScrollBarStyle}"/>
-
-                </ListBox.Resources>
-
-                <ListBox.ItemTemplate>
-
-                    <DataTemplate>
-
-                        <Border x:Name="CardBorder"
-
-                                Style="{StaticResource EntryItemStyle}"
-
-                                MouseLeftButtonDown="EntryCard_MouseLeftButtonDown">
-
-                            <Grid>
-
-                                <Grid.ColumnDefinitions>
-
-                                    <ColumnDefinition Width="Auto"/>
-
-                                    <ColumnDefinition Width="*"/>
-
-                                </Grid.ColumnDefinitions>
-
-
-
-                                <Border x:Name="TextBadge"
-
-                                        Grid.Column="0"
-
-                                        Style="{StaticResource ClipboardTypeBadgeStyle}">
-
-                                    <TextBlock Text="TXT"
-
-                                               FontSize="14"
-
-                                               FontWeight="Bold"
-
-                                               Foreground="White"
-
-                                               HorizontalAlignment="Center"
-
-                                               VerticalAlignment="Center"/>
-
-                                </Border>
-
-
-
-                                <Border x:Name="ImagePreview"
-
-                                        Grid.Column="0"
-
-                                        Style="{StaticResource PreviewFrameStyle}"
-
-                                        Visibility="Collapsed">
-
-                                    <Grid>
-
-                                        <Image Source="{Binding PreviewImage}"
-
-                                               Stretch="UniformToFill"
-
-                                               SnapsToDevicePixels="True"/>
-
-                                        <TextBlock x:Name="ImageFallback"
-
-                                                   Text="{Binding ImageLabel}"
-
-                                                   Foreground="{StaticResource MutedText}"
-
-                                                   FontSize="11"
-
-                                                   HorizontalAlignment="Center"
-
-                                                   VerticalAlignment="Center"
-
-                                                   TextAlignment="Center"
-
-                                                   Visibility="Collapsed"/>
-
-                                    </Grid>
-
-                                </Border>
-
-
-
-                                <Grid Grid.Column="1">
-
-                                    <Grid.RowDefinitions>
-
-                                        <RowDefinition Height="Auto"/>
-
-                                        <RowDefinition Height="Auto"/>
-
-                                    </Grid.RowDefinitions>
-
-
-
-                                    <Grid>
-                                        <StackPanel>
-
-                                            <TextBlock Text="{Binding Title}"
-
-                                                       FontSize="13"
-
-                                                       FontWeight="SemiBold"
-
-                                                       Foreground="White"
-
-                                                       TextWrapping="Wrap"
-
-                                                       MaxHeight="36"/>
-
-                                            <TextBlock Text="{Binding Summary}"
-
-                                                       FontSize="10"
-
-                                                       Foreground="{StaticResource MutedText}"
-
-                                                       Margin="0,4,0,0"/>
-
-                                        </StackPanel>
-
-                                    </Grid>
-
-
-
-                                    <StackPanel Grid.Row="1"
-
-                                                Margin="{Binding ActionsMargin}"
-
-                                                Orientation="Horizontal"
-
-                                                HorizontalAlignment="Right">
-
-                                        <Button x:Name="CopyButton"
-                                                Content="&#xF32C;"
-
-                                                FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-
-                                                Style="{StaticResource ClipboardActionButtonStyle}"
-
-                                                ToolTip="{Binding CopyLabel}"
-
-                                                AutomationProperties.Name="{Binding CopyLabel}"
-
-                                                Tag="{Binding Id}"
-
-                                                Click="EntryCopyButton_Click"/>
-
-                                        <Button x:Name="PinButton"
-                                                Content="&#xF602;"
-
-                                                FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-
-                                                Style="{StaticResource ClipboardActionButtonStyle}"
-
-                                                ToolTip="{Binding PinLabel}"
-
-                                                AutomationProperties.Name="{Binding PinLabel}"
-
-                                                Tag="{Binding Id}"
-
-                                                Click="EntryPinButton_Click"/>
-
-                                        <Button Content="&#xF34D;"
-
-                                                FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
-
-                                                Style="{StaticResource ClipboardActionButtonStyle}"
-
-                                                ToolTip="{Binding DeleteLabel}"
-
-                                                AutomationProperties.Name="{Binding DeleteLabel}"
-
-                                                Tag="{Binding Id}"
-
-                                                Click="EntryDeleteButton_Click"/>
-
-                                    </StackPanel>
-
-                                </Grid>
-
-                            </Grid>
-
-                        </Border>
-
-                        <DataTemplate.Triggers>
-
-                            <DataTrigger Binding="{Binding IsImage}" Value="True">
-
-                                <Setter TargetName="TextBadge" Property="Visibility" Value="Collapsed"/>
-
-                                <Setter TargetName="ImagePreview" Property="Visibility" Value="Visible"/>
-
-                            </DataTrigger>
-
-                            <DataTrigger Binding="{Binding PreviewImage}" Value="{x:Null}">
-
-                                <Setter TargetName="ImageFallback" Property="Visibility" Value="Visible"/>
-
-                            </DataTrigger>
-
-                            <DataTrigger Binding="{Binding IsPinned}" Value="True">
-
-                                <Setter TargetName="CardBorder" Property="Background" Value="#2D2D2D"/>
-
-                                <Setter TargetName="PinButton" Property="Content" Value="&#xF604;"/>
-
-                                <Setter TargetName="PinButton" Property="Background" Value="{StaticResource AccentColor}"/>
-
-                                <Setter TargetName="PinButton" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
-
-                                <Setter TargetName="PinButton" Property="Foreground" Value="White"/>
-
-                            </DataTrigger>
-
-                            <DataTrigger Binding="{Binding IsRecentlyCopied}" Value="True">
-
-                                <Setter TargetName="CardBorder" Property="Background" Value="#22324A"/>
-
-                                <Setter TargetName="CopyButton" Property="Content" Value="&#xE73E;"/>
-
-                                <Setter TargetName="CopyButton" Property="Background" Value="{StaticResource AccentColor}"/>
-
-                                <Setter TargetName="CopyButton" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
-
-                                <Setter TargetName="CopyButton" Property="Foreground" Value="White"/>
-
-                                <Setter TargetName="CopyButton" Property="ToolTip" Value="{Binding CopiedLabel}"/>
-
-                            </DataTrigger>
-
-                            <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
-
-                                <Setter TargetName="CardBorder" Property="Background" Value="#1B222C"/>
-
-                            </DataTrigger>
-
-                            <MultiDataTrigger>
-
-                                <MultiDataTrigger.Conditions>
-
-                                    <Condition Binding="{Binding IsPinned}" Value="True"/>
-
-                                    <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True"/>
-
-                                </MultiDataTrigger.Conditions>
-
-                                <Setter TargetName="CardBorder" Property="Background" Value="#2D2D2D"/>
-
-                            </MultiDataTrigger>
-
-                        </DataTemplate.Triggers>
-
-                    </DataTemplate>
-
-                </ListBox.ItemTemplate>
-
-            </ListBox>
-
-
-
-            <TextBlock x:Name="TxtEmptyHint"
-
-                       Text="{local:Loc ResourceKey=ClipboardManager_EmptyHint}"
-
-                       Foreground="{StaticResource MutedText}"
-
-                       FontSize="12"
-
-                       TextWrapping="Wrap"
-
-                       HorizontalAlignment="Center"
-
-                       VerticalAlignment="Top"
-
-                       Margin="0,20,0,0"
-
-                       Visibility="Collapsed"
-
-                       IsHitTestVisible="False"/>
-
-        </Grid>
-
-
-
-        <Grid Grid.Row="4" Margin="0,10,0,0">
-
-            <Grid.RowDefinitions>
-
-                <RowDefinition Height="Auto"/>
-
-                <RowDefinition Height="Auto"/>
-
-            </Grid.RowDefinitions>
-
-            <TextBlock x:Name="TxtStatus"
-
-                       Foreground="{StaticResource MutedText}"
-
-                       FontSize="11"
-
-                       TextWrapping="Wrap"
-
-                       TextTrimming="CharacterEllipsis"
-
-                       VerticalAlignment="Top"
-
-                       Margin="0,0,0,8"/>
-
-            <Grid Grid.Row="1">
-
-                <Grid.ColumnDefinitions>
-
-                    <ColumnDefinition Width="*"/>
-
-                </Grid.ColumnDefinitions>
-
-            </Grid>
-
-        </Grid>
-
+                    <Grid Grid.Row="3">
+                        <ListBox x:Name="EntriesList"
+                                 Margin="0"
+                                 Padding="0"
+                                 Style="{StaticResource ClipboardListBoxStyle}"
+                                 ItemContainerStyle="{StaticResource ClipboardListBoxItemStyle}"
+                                 BorderThickness="0"
+                                 Background="Transparent"
+                                 HorizontalContentAlignment="Stretch"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                 ScrollViewer.CanContentScroll="True"
+                                 VirtualizingStackPanel.IsVirtualizing="True"
+                                 KeyboardNavigation.TabNavigation="Continue">
+                            <ListBox.Resources>
+                                <Style TargetType="ScrollBar" BasedOn="{StaticResource ClipboardScrollBarStyle}"/>
+                            </ListBox.Resources>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Border x:Name="CardBorder"
+                                            Style="{StaticResource EntryItemStyle}"
+                                            MouseLeftButtonDown="EntryCard_MouseLeftButtonDown">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <Border x:Name="TextBadge"
+                                                    Grid.Column="0"
+                                                    Style="{StaticResource ClipboardTypeBadgeStyle}">
+                                                <TextBlock Text="TXT"
+                                                           FontSize="11"
+                                                           FontWeight="Bold"
+                                                           Foreground="#9DB8D6"
+                                                           HorizontalAlignment="Center"
+                                                           VerticalAlignment="Center"/>
+                                            </Border>
+
+                                            <Border x:Name="ImagePreview"
+                                                    Grid.Column="0"
+                                                    Style="{StaticResource PreviewFrameStyle}"
+                                                    Visibility="Collapsed">
+                                                <Grid>
+                                                    <Image Source="{Binding PreviewImage}"
+                                                           Stretch="UniformToFill"
+                                                           SnapsToDevicePixels="True"/>
+                                                    <TextBlock x:Name="ImageFallback"
+                                                               Text="{Binding ImageLabel}"
+                                                               Foreground="{StaticResource MutedText}"
+                                                               FontSize="10"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               TextAlignment="Center"
+                                                               Visibility="Collapsed"/>
+                                                </Grid>
+                                            </Border>
+
+                                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,8,0">
+                                                <TextBlock Text="{Binding Title}"
+                                                           FontSize="12"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="#E8EDF2"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           MaxHeight="36"/>
+                                                <TextBlock Text="{Binding Summary}"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource MutedText}"
+                                                           Margin="0,2,0,0"/>
+                                            </StackPanel>
+
+                                            <StackPanel Grid.Column="2"
+                                                        Orientation="Horizontal"
+                                                        VerticalAlignment="Center"
+                                                        HorizontalAlignment="Right">
+                                                <Button x:Name="CopyButton"
+                                                        Content="&#xF32C;"
+                                                        FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
+                                                        Style="{StaticResource ClipboardActionButtonStyle}"
+                                                        ToolTip="{Binding CopyLabel}"
+                                                        AutomationProperties.Name="{Binding CopyLabel}"
+                                                        Tag="{Binding Id}"
+                                                        Click="EntryCopyButton_Click"/>
+                                                <Button x:Name="PinButton"
+                                                        Content="&#xF602;"
+                                                        FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
+                                                        Style="{StaticResource ClipboardActionButtonStyle}"
+                                                        ToolTip="{Binding PinLabel}"
+                                                        AutomationProperties.Name="{Binding PinLabel}"
+                                                        Tag="{Binding Id}"
+                                                        Click="EntryPinButton_Click"/>
+                                                <Button x:Name="DeleteButton"
+                                                        Content="&#xF34D;"
+                                                        FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular"
+                                                        Style="{StaticResource ClipboardActionButtonStyle}"
+                                                        Margin="0"
+                                                        ToolTip="{Binding DeleteLabel}"
+                                                        AutomationProperties.Name="{Binding DeleteLabel}"
+                                                        Tag="{Binding Id}"
+                                                        Click="EntryDeleteButton_Click"/>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                    <DataTemplate.Triggers>
+                                        <DataTrigger Binding="{Binding IsImage}" Value="True">
+                                            <Setter TargetName="TextBadge" Property="Visibility" Value="Collapsed"/>
+                                            <Setter TargetName="ImagePreview" Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding PreviewImage}" Value="{x:Null}">
+                                            <Setter TargetName="ImageFallback" Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsPinned}" Value="True">
+                                            <Setter TargetName="CardBorder" Property="Background" Value="#252A34"/>
+                                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="#007ACC"/>
+                                            <Setter TargetName="PinButton" Property="Content" Value="&#xF604;"/>
+                                            <Setter TargetName="PinButton" Property="Background" Value="{StaticResource AccentColor}"/>
+                                            <Setter TargetName="PinButton" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
+                                            <Setter TargetName="PinButton" Property="Foreground" Value="White"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding IsRecentlyCopied}" Value="True">
+                                            <Setter TargetName="CardBorder" Property="Background" Value="#1C2E42"/>
+                                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
+                                            <Setter TargetName="CopyButton" Property="Content" Value="&#xE73E;"/>
+                                            <Setter TargetName="CopyButton" Property="Background" Value="{StaticResource AccentColor}"/>
+                                            <Setter TargetName="CopyButton" Property="BorderBrush" Value="{StaticResource AccentColor}"/>
+                                            <Setter TargetName="CopyButton" Property="Foreground" Value="White"/>
+                                            <Setter TargetName="CopyButton" Property="ToolTip" Value="{Binding CopiedLabel}"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True">
+                                            <Setter TargetName="CardBorder" Property="Background" Value="#2A323F"/>
+                                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                        </DataTrigger>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding IsPinned}" Value="True"/>
+                                                <Condition Binding="{Binding RelativeSource={RelativeSource AncestorType=ListBoxItem}, Path=IsSelected}" Value="True"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter TargetName="CardBorder" Property="Background" Value="#2D3544"/>
+                                            <Setter TargetName="CardBorder" Property="BorderBrush" Value="{StaticResource FormControlFocusBorderBrush}"/>
+                                        </MultiDataTrigger>
+                                    </DataTemplate.Triggers>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+
+                        <TextBlock x:Name="TxtEmptyHint"
+                                   Text="{local:Loc ResourceKey=ClipboardManager_EmptyHint}"
+                                   Foreground="{StaticResource MutedText}"
+                                   FontSize="12"
+                                   TextWrapping="Wrap"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Top"
+                                   Margin="0,20,0,0"
+                                   Visibility="Collapsed"
+                                   IsHitTestVisible="False"/>
+                    </Grid>
+
+                    <Grid Grid.Row="4" Margin="0,10,0,0">
+                        <TextBlock x:Name="TxtStatus"
+                                   Foreground="{StaticResource MutedText}"
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Top"
+                                   Margin="0,0,0,8"/>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Border>
     </Grid>
-</Border>
-</Border>
-</Grid>
-
 </local:DarkWindow>
-

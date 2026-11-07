@@ -94,6 +94,21 @@ public sealed class ClipboardManagerIntegrationTests : IDisposable
         Assert.Contains("RestoreExistingWindow(_window)", registryCode, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ClipboardManager_HasCompactLayoutAndAlignedGridInvariants()
+    {
+        string repoRoot = FindRepoRoot();
+        XDocument doc = XDocument.Load(Path.Combine(repoRoot, "AiteBar", "ClipboardManagerWindow.xaml"));
+
+        XElement entriesList = FindNamedElement(doc, "EntriesList");
+        Assert.Equal("0", entriesList.Attribute("Margin")?.Value);
+
+        string rawXaml = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "ClipboardManagerWindow.xaml"));
+        Assert.Contains("Value=\"42\"", rawXaml);
+        Assert.Contains("Value=\"8,6,8,6\"", rawXaml);
+        Assert.DoesNotContain("Value=\"78\"", rawXaml);
+    }
+
     private static XElement FindNamedElement(XDocument document, string name)
     {
         XName xName = XName.Get("Name", "http://schemas.microsoft.com/winfx/2006/xaml");

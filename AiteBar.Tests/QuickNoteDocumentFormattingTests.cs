@@ -1,4 +1,4 @@
-using System.Threading;
+﻿using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -84,7 +84,7 @@ public sealed class QuickNoteDocumentFormattingTests
     [Theory]
     [InlineData(1, 32)]
     [InlineData(3, 22)]
-    [InlineData(0, 16)]
+    [InlineData(0, 14)]
     public void HeadingSizes_AreVisualValues(int level, double size) => Assert.Equal(size, QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(level));
 
     [Fact]
@@ -267,7 +267,7 @@ public sealed class QuickNoteDocumentFormattingTests
     }
 
     [Fact]
-    public void NormalizeLegacyDefaultFontSizes_ClearsLegacy14OnParagraphsRunsAndTasks_PreservingCustomSizes()
+    public void DefaultBodyFontSize_RemainsFourteen()
     {
         RunSta(() =>
         {
@@ -277,37 +277,15 @@ public sealed class QuickNoteDocumentFormattingTests
             var legacyPara = new Paragraph(new Run("Legacy text")) { FontSize = 14 };
             var customPara = new Paragraph(new Run("Custom large text")) { FontSize = 22 };
 
-            var taskTheme = QuickNoteThemeCatalog.Find("dark");
-            var taskPara = new Paragraph { FontSize = 14 };
-            taskPara.Inlines.Add(QuickNoteDocumentFormatting.CreateTaskCheckbox(false, null, taskTheme));
-            var taskRun = new Run("Task label") { FontSize = 14 };
-            taskPara.Inlines.Add(taskRun);
-
-            var spanRun = new Run("Nested run") { FontSize = 14 };
-            var span = new Span(spanRun) { FontSize = 14 };
-            var spanPara = new Paragraph(span);
-
             doc.Blocks.Add(legacyPara);
             doc.Blocks.Add(customPara);
-            doc.Blocks.Add(taskPara);
-            doc.Blocks.Add(spanPara);
 
             QuickNoteDocumentFormatting.NormalizeLegacyDefaultFontSizes(doc);
 
-            // Document root size migrated to base 16
-            Assert.Equal(16.0, doc.FontSize);
-
-            // Legacy paragraph and inlines cleared to inherit from document
-            Assert.Equal(DependencyProperty.UnsetValue, legacyPara.ReadLocalValue(TextElement.FontSizeProperty));
+            // Default body size remains 14
+            Assert.Equal(14.0, doc.FontSize);
+            Assert.Equal(14.0, QuickNoteDocumentFormatting.GetHeadingFontSizeForLevel(0));
             Assert.Equal(22.0, customPara.ReadLocalValue(TextElement.FontSizeProperty));
-
-            // Task paragraph and task inline run cleared
-            Assert.Equal(DependencyProperty.UnsetValue, taskPara.ReadLocalValue(TextElement.FontSizeProperty));
-            Assert.Equal(DependencyProperty.UnsetValue, taskRun.ReadLocalValue(TextElement.FontSizeProperty));
-
-            // Nested span and run cleared
-            Assert.Equal(DependencyProperty.UnsetValue, span.ReadLocalValue(TextElement.FontSizeProperty));
-            Assert.Equal(DependencyProperty.UnsetValue, spanRun.ReadLocalValue(TextElement.FontSizeProperty));
         });
     }
 

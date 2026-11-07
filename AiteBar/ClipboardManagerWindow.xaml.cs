@@ -207,7 +207,7 @@ namespace AiteBar
                     ? LocalizationService.Get("ClipboardManager_Unpin")
                     : LocalizationService.Get("ClipboardManager_Pin"),
                 DeleteLabel = LocalizationService.Get("ClipboardManager_Delete"),
-                ActionsMargin = entry.IsImage ? new Thickness(0, 10, 0, 0) : new Thickness(50, 10, 0, 0),
+                ActionsMargin = new Thickness(0),
                 IsRecentlyCopied = string.Equals(_copiedEntryId, entry.Id, StringComparison.Ordinal)
             };
         }

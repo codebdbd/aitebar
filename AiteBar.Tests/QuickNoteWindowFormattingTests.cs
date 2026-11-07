@@ -1657,6 +1657,63 @@ public sealed class QuickNoteWindowFormattingTests
         return $"#{color.R:X2}{color.G:X2}{color.B:X2}";
     }
 
+    [Fact]
+    public Task UndoRedo_ButtonsSynchronizeWithEditorState() =>
+        QuickNoteWindowCloseTests.RunStaAsync(async () =>
+        {
+            string tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(tempRoot);
+            try
+            {
+                var settings = new AppSettingsService(Path.Combine(tempRoot, "buttons.json"), Path.Combine(tempRoot, "settings.json"));
+                settings.UpdateSettings(s => s.QuickNotePinned = true);
+                using var window = new QuickNoteWindow(new NoOpQuickNotePersistence(), settings)
+                {
+                    WindowStartupLocation = WindowStartupLocation.Manual,
+                    Left = -2000,
+                    Top = -2000,
+                    ShowActivated = false
+                };
+                var closed = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+                window.Closed += (_, _) => closed.TrySetResult();
+                try
+                {
+                    window.Show();
+                    await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+
+                    // Initially no undo or redo
+                    Assert.False(window.BtnUndo.IsEnabled);
+                    Assert.False(window.BtnRedo.IsEnabled);
+
+                    // Type some text
+                    window.TxtNote.AppendText("Hello ");
+                    window.UpdateUndoRedoState();
+                    Assert.True(window.BtnUndo.IsEnabled);
+                    Assert.False(window.BtnRedo.IsEnabled);
+
+                    // Undo
+                    window.TxtNote.Undo();
+                    window.UpdateUndoRedoState();
+                    Assert.True(window.BtnRedo.IsEnabled);
+
+                    // Redo
+                    window.TxtNote.Redo();
+                    window.UpdateUndoRedoState();
+                    Assert.True(window.BtnUndo.IsEnabled);
+                    Assert.False(window.BtnRedo.IsEnabled);
+                }
+                finally
+                {
+                    window.Close();
+                    await closed.Task;
+                }
+            }
+            finally
+            {
+                try { Directory.Delete(tempRoot, true); } catch { }
+            }
+        });
+
     private sealed class NoOpQuickNotePersistence : IQuickNotePersistence
     {
         public string? LastConflictCopyPath => null;

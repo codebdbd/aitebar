@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -94,9 +94,9 @@ namespace AiteBar
             2 => 26,
             3 => 22,
             4 => 18,
-            5 => 17,
-            6 => 16,
-            _ => 16
+            5 => 16,
+            6 => 15,
+            _ => 14
         };
 
         public static QuickNoteRangeEdit GetClearLineMarkerRangeEdit(string text, int selectionStart, int selectionEnd)
@@ -173,17 +173,7 @@ namespace AiteBar
 
         public static void NormalizeLegacyDefaultFontSizes(FlowDocument document, double legacySize = 14)
         {
-            if (document == null) return;
-
-            if (document.ReadLocalValue(TextElement.FontSizeProperty) is double docFs && Math.Abs(docFs - legacySize) < 0.1)
-            {
-                document.FontSize = GetHeadingFontSizeForLevel(0);
-            }
-
-            foreach (Block block in document.Blocks)
-            {
-                NormalizeBlockFontSize(block, legacySize);
-            }
+            // Body text default size is 14pt.
         }
 
         private static void NormalizeBlockFontSize(Block block, double legacySize)
