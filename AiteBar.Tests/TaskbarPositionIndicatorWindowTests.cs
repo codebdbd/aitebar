@@ -45,30 +45,40 @@ public sealed class TaskbarPositionIndicatorWindowTests
         EnsureApplicationResources();
 
         string? title = null;
+        Exception? failure = null;
         var thread = new Thread(() =>
         {
-            var window = new TaskbarPositionIndicatorWindow();
-            title = window.Title;
+            try
+            {
+                var window = new TaskbarPositionIndicatorWindow();
+                title = window.Title;
+                window.Close();
+            }
+            catch (Exception ex)
+            {
+                // An unhandled exception on a raw thread would crash the whole testhost.
+                failure = ex;
+            }
         });
         thread.SetApartmentState(ApartmentState.STA);
         thread.Start();
         thread.Join();
+
+        if (failure != null)
+        {
+            throw new Xunit.Sdk.XunitException($"Window construction failed: {failure}");
+        }
 
         Assert.Equal("AiteBar Taskbar Indicator", title);
     }
 
     private static void EnsureApplicationResources()
     {
-        if (Application.ResourceAssembly == null)
-        {
-            Application.ResourceAssembly = typeof(App).Assembly;
-        }
+        WpfTestApplication.EnsureCreated();
 
-        if (Application.Current == null)
-        {
-            var app = new App();
-            app.InitializeComponent();
-        }
+        Assert.True(
+            Application.Current is App,
+            $"Expected Application.Current to be App with App.xaml resources, but was {Application.Current?.GetType().FullName ?? "null"}.");
     }
 
     private static string FindRepoRoot()

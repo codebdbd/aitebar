@@ -34,6 +34,12 @@ public partial class AiConnectionDialog : DarkWindow
     public string ProviderId => (CmbProvider.SelectedItem as ProviderOption)?.Id ?? string.Empty;
     public string ConnectionName => TxtDisplayName.Text.Trim();
     public string ApiKey => PwdApiKey.Password.Trim();
+    public string? CustomBaseUrl =>
+        AiProviderCatalog.TryGet(ProviderId, out AiProviderDefinition provider) &&
+        provider.RequiresCustomBaseUrl &&
+        AiProviderCatalog.TryNormalizeCustomBaseUrl(TxtBaseUrl.Text, out string normalized)
+            ? normalized
+            : null;
 
     private void CmbProvider_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
@@ -47,6 +53,17 @@ public partial class AiConnectionDialog : DarkWindow
             if (isDefaultName)
             {
                 TxtDisplayName.Text = GenerateUniqueConnectionName(provider.Name);
+            }
+
+            bool requiresBaseUrl = AiProviderCatalog.TryGet(provider.Id, out AiProviderDefinition definition) &&
+                                   definition.RequiresCustomBaseUrl;
+            if (PanelBaseUrl != null)
+            {
+                PanelBaseUrl.Visibility = requiresBaseUrl ? Visibility.Visible : Visibility.Collapsed;
+            }
+            if (TxtGetApiKeyLink != null)
+            {
+                TxtGetApiKeyLink.Visibility = requiresBaseUrl ? Visibility.Collapsed : Visibility.Visible;
             }
         }
         UpdateAddState();
@@ -93,7 +110,13 @@ public partial class AiConnectionDialog : DarkWindow
         {
             return;
         }
+        bool requiresBaseUrl = CmbProvider.SelectedItem is ProviderOption selected &&
+                               AiProviderCatalog.TryGet(selected.Id, out AiProviderDefinition definition) &&
+                               definition.RequiresCustomBaseUrl;
+        bool validBaseUrl = !requiresBaseUrl ||
+                            AiProviderCatalog.TryNormalizeCustomBaseUrl(TxtBaseUrl?.Text, out _);
         BtnAdd.IsEnabled = CmbProvider.SelectedItem != null &&
+                           validBaseUrl &&
                            !string.IsNullOrWhiteSpace(TxtDisplayName.Text) &&
                            !string.IsNullOrWhiteSpace(PwdApiKey.Password);
     }

@@ -17,6 +17,9 @@ public sealed class DiskCleanerServiceTests
         public HashSet<string> ExistingDirectories { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public List<string> FixedDrives { get; set; } = ["C:\\"];
         public Func<string, IEnumerable<string>>? EnumerateDirectoriesHandler { get; set; }
+        public string? MockUserSid { get; set; } = "S-1-5-21-Mock";
+
+        public string? GetCurrentUserSid() => MockUserSid;
 
         public long CalculateDirectorySize(string directoryPath) =>
             DirectorySizes.TryGetValue(directoryPath, out long size) ? size : 0;
@@ -78,6 +81,7 @@ public sealed class DiskCleanerServiceTests
         }
 
         public bool FlushDnsCache() => FlushDnsResult;
+        public void UpdateRecycleBinIcon() { }
     }
 
     [Theory]
@@ -168,6 +172,8 @@ public sealed class DiskCleanerServiceTests
     public async Task CleanAsync_Win32RecycleBinFailure_ReportsFailedWithoutFakeSuccess()
     {
         var mockFs = new MockFileSystemOperations();
+        mockFs.ExistingDirectories.Add("C:\\$Recycle.Bin");
+        mockFs.DirectorySizes["C:\\$Recycle.Bin"] = 500;
         var mockWin32 = new MockWin32Operations { EmptyRecycleBinResult = unchecked((int)0x80070005) }; // E_ACCESSDENIED
 
         var service = new DiskCleanerService(fs: mockFs, win32: mockWin32);
@@ -328,6 +334,81 @@ public sealed class DiskCleanerServiceTests
         var report = Assert.Single(result.Reports);
         Assert.Equal(DiskCleanCategoryStatus.PartiallyCleaned, report.Status);
         Assert.Contains("access errors", report.FailureReason ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task BrowserCache_ScansAndCleansServiceWorkerAndOtherBrowsers_WithoutTouchingCookiesOrAuth()
+    {
+        var mockFs = new MockFileSystemOperations();
+        string localAppData = mockFs.GetSpecialFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string chromeUserData = Path.Combine(localAppData, "Google", "Chrome", "User Data");
+        string braveUserData = Path.Combine(localAppData, "BraveSoftware", "Brave-Browser", "User Data");
+        string operaLocalData = Path.Combine(localAppData, "Opera Software", "Opera Stable");
+
+        string chromeProfile5 = Path.Combine(chromeUserData, "Profile 5");
+        string swCacheStorage = Path.Combine(chromeProfile5, "Service Worker", "CacheStorage");
+        string swScriptCache = Path.Combine(chromeProfile5, "Service Worker", "ScriptCache");
+        string cookiesDir = Path.Combine(chromeProfile5, "Network");
+        string indexedDbDir = Path.Combine(chromeProfile5, "IndexedDB");
+        string localStorageDir = Path.Combine(chromeProfile5, "Local Storage");
+
+        string braveDefault = Path.Combine(braveUserData, "Default");
+        string braveCache = Path.Combine(braveDefault, "Cache");
+
+        string operaDefault = Path.Combine(operaLocalData, "Default");
+        string operaSystemCache = Path.Combine(operaDefault, "System Cache");
+
+        mockFs.ExistingDirectories.Add(chromeUserData);
+        mockFs.ExistingDirectories.Add(braveUserData);
+        mockFs.ExistingDirectories.Add(operaLocalData);
+        mockFs.ExistingDirectories.Add(swCacheStorage);
+        mockFs.ExistingDirectories.Add(swScriptCache);
+        mockFs.ExistingDirectories.Add(cookiesDir);
+        mockFs.ExistingDirectories.Add(indexedDbDir);
+        mockFs.ExistingDirectories.Add(localStorageDir);
+        mockFs.ExistingDirectories.Add(braveCache);
+        mockFs.ExistingDirectories.Add(operaSystemCache);
+
+        mockFs.DirectorySizes[swCacheStorage] = 500_000_000;
+        mockFs.DirectorySizes[swScriptCache] = 10_000_000;
+        mockFs.DirectorySizes[cookiesDir] = 5_000_000;
+        mockFs.DirectorySizes[indexedDbDir] = 200_000_000;
+        mockFs.DirectorySizes[localStorageDir] = 15_000_000;
+        mockFs.DirectorySizes[braveCache] = 40_000_000;
+        mockFs.DirectorySizes[operaSystemCache] = 30_000_000;
+
+        var cleanedPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        mockFs.CleanResults[swCacheStorage] = (500_000_000, 100, 0);
+        mockFs.CleanResults[swScriptCache] = (10_000_000, 10, 0);
+        mockFs.CleanResults[braveCache] = (40_000_000, 20, 0);
+        mockFs.CleanResults[operaSystemCache] = (30_000_000, 15, 0);
+        mockFs.CleanResults[cookiesDir] = (5_000_000, 1, 0);
+        mockFs.CleanResults[indexedDbDir] = (200_000_000, 50, 0);
+        mockFs.CleanResults[localStorageDir] = (15_000_000, 5, 0);
+
+        mockFs.EnumerateDirectoriesHandler = path =>
+        {
+            if (path.Equals(chromeUserData, StringComparison.OrdinalIgnoreCase))
+                return [chromeProfile5];
+            if (path.Equals(braveUserData, StringComparison.OrdinalIgnoreCase))
+                return [braveDefault];
+            if (path.Equals(operaLocalData, StringComparison.OrdinalIgnoreCase))
+                return [operaDefault];
+            return [];
+        };
+
+        var service = new DiskCleanerService(fs: mockFs);
+        var scanResult = await service.ScanAsync();
+        var browserCategory = scanResult.Categories.Single(c => c.Id == DiskCleanerService.CategoryBrowserCache);
+
+        // Only safe caches (500M + 10M + 40M + 30M = 580M) are counted; Cookies, IndexedDB, Local Storage are NOT counted
+        Assert.Equal(580_000_000, browserCategory.SizeBytes);
+
+        var cleanResult = await service.CleanAsync(new HashSet<string> { DiskCleanerService.CategoryBrowserCache });
+        var report = Assert.Single(cleanResult.Reports);
+        Assert.Equal(DiskCleanCategoryStatus.Succeeded, report.Status);
+        Assert.Equal(580_000_000, report.FreedBytes);
+        Assert.Equal(145, report.CleanedCount);
     }
 
     [Fact]
@@ -555,5 +636,86 @@ public sealed class DiskCleanerServiceTests
         var reason = DiskCleanerWindow.FormatReportReason(report);
         Assert.NotNull(reason);
         Assert.False(string.IsNullOrWhiteSpace(reason));
+    }
+
+    [Fact]
+    public async Task ScanAsync_RecycleBin_PrefersUserSidFolder()
+    {
+        var mockFs = new MockFileSystemOperations();
+        mockFs.FixedDrives = ["C:\\", "D:\\"];
+        mockFs.MockUserSid = "S-1-5-21-1234567890";
+
+        string userSidPathC = "C:\\$Recycle.Bin\\S-1-5-21-1234567890";
+        string userSidPathD = "D:\\$Recycle.Bin\\S-1-5-21-1234567890";
+        mockFs.ExistingDirectories.Add(userSidPathC);
+        mockFs.ExistingDirectories.Add(userSidPathD);
+        mockFs.DirectorySizes[userSidPathC] = 5_000_000;
+        mockFs.DirectorySizes[userSidPathD] = 3_000_000;
+
+        var service = new DiskCleanerService(fs: mockFs);
+        var result = await service.ScanAsync();
+
+        var rb = result.Categories.FirstOrDefault(c => c.Id == DiskCleanerService.CategoryRecycleBin);
+        Assert.NotNull(rb);
+        Assert.Equal(8_000_000, rb.SizeBytes);
+    }
+
+    [Fact]
+    public async Task CleanAsync_RecycleBin_CleansUserSidFolder_WhenNativeEmptyReturnsUnexpected()
+    {
+        var mockFs = new MockFileSystemOperations();
+        mockFs.FixedDrives = ["C:\\"];
+        mockFs.MockUserSid = "S-1-5-21-1234567890";
+
+        string userSidPathC = "C:\\$Recycle.Bin\\S-1-5-21-1234567890";
+        mockFs.ExistingDirectories.Add(userSidPathC);
+        mockFs.DirectorySizes[userSidPathC] = 10_000_000;
+        mockFs.CleanResults[userSidPathC] = (Freed: 10_000_000, Cleaned: 5, Locked: 0);
+
+        var mockWin32 = new MockWin32Operations
+        {
+            // Windows Shell returns E_UNEXPECTED (0x8000FFFF) when non-elevated or empty
+            EmptyRecycleBinResult = unchecked((int)0x8000FFFF),
+            OnEmptyRecycleBin = () =>
+            {
+                mockFs.DirectorySizes[userSidPathC] = 0;
+            }
+        };
+
+        var service = new DiskCleanerService(fs: mockFs, win32: mockWin32);
+        var result = await service.CleanAsync(new HashSet<string> { DiskCleanerService.CategoryRecycleBin });
+
+        Assert.NotNull(result);
+        Assert.False(result.HasErrors);
+        var report = Assert.Single(result.Reports);
+        Assert.Equal(DiskCleanCategoryStatus.Succeeded, report.Status);
+        Assert.Equal(10_000_000, report.FreedBytes);
+        Assert.True(report.CleanedCount >= 1);
+    }
+
+    [Fact]
+    public async Task CleanAsync_RecycleBin_AlreadyEmpty_ReportsSucceeded()
+    {
+        var mockFs = new MockFileSystemOperations();
+        mockFs.FixedDrives = ["C:\\"];
+        mockFs.MockUserSid = "S-1-5-21-1234567890";
+
+        string userSidPathC = "C:\\$Recycle.Bin\\S-1-5-21-1234567890";
+        mockFs.ExistingDirectories.Add(userSidPathC);
+        mockFs.DirectorySizes[userSidPathC] = 0;
+
+        var mockWin32 = new MockWin32Operations
+        {
+            EmptyRecycleBinResult = unchecked((int)0x8000FFFF)
+        };
+
+        var service = new DiskCleanerService(fs: mockFs, win32: mockWin32);
+        var result = await service.CleanAsync(new HashSet<string> { DiskCleanerService.CategoryRecycleBin });
+
+        Assert.NotNull(result);
+        Assert.False(result.HasErrors);
+        var report = Assert.Single(result.Reports);
+        Assert.Equal(DiskCleanCategoryStatus.Succeeded, report.Status);
+        Assert.Equal(0, report.FreedBytes);
     }
 }

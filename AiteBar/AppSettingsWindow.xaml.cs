@@ -91,7 +91,13 @@ public partial class AppSettingsWindow : DarkWindow
         _activationDelaySelectionChanged = false;
         _isLoadingSettings = false;
         RefreshLocalizedUi();
-        Closed += (_, _) => CleanupPendingAiCredentials();
+        InitializeTelegramSettings();
+        InitializeIptvSettings();
+        Closed += (_, _) =>
+        {
+            CleanupPendingAiCredentials();
+            CleanupPendingIptvState();
+        };
     }
 
     private FrameworkElement[] GetSettingsSections() =>
@@ -101,6 +107,8 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeySettingsSection,
         QuickToolsSettingsSection,
         AiProvidersSettingsSection,
+        TelegramSettingsSection,
+        IptvSettingsSection,
         AboutSettingsSection
     ];
 
@@ -257,7 +265,9 @@ public partial class AppSettingsWindow : DarkWindow
         (ChkShowPresetTextProcessing, UtilityButtonCatalog.TextProcessing),
         (ChkShowPresetPromptBuilder, UtilityButtonCatalog.PromptBuilder),
         (ChkShowPresetZenEditor, UtilityButtonCatalog.ZenEditor),
-        (ChkShowPresetAiteProfiles, UtilityButtonCatalog.AiteProfiles)
+        (ChkShowPresetAiteProfiles, UtilityButtonCatalog.AiteProfiles),
+        (ChkShowPresetTelegramPostEditor, UtilityButtonCatalog.TelegramPostEditor),
+        (ChkShowPresetIptvPlayer, UtilityButtonCatalog.IptvPlayer)
     ];
 
     private static void SetComboValue(ComboBox combo, string? value)
@@ -314,6 +324,7 @@ public partial class AppSettingsWindow : DarkWindow
         SortQuickToolRows();
         BuildAiConnectionRows();
         UpdateAiDependentQuickToolAvailability();
+        RefreshTelegramSettingsLists();
         UpdateAboutVersionText();
 
         if (_isWindowLoaded)
@@ -343,7 +354,9 @@ public partial class AppSettingsWindow : DarkWindow
         (QuickToolRowTextProcessing, "QuickTool_TextProcessing_Title"),
         (QuickToolRowPromptBuilder, "QuickTool_PromptBuilder_Title"),
         (QuickToolRowZenEditor, "QuickTool_ZenEditor_Title"),
-        (QuickToolRowAiteProfiles, "QuickTool_AiteProfiles_Title")
+        (QuickToolRowAiteProfiles, "QuickTool_AiteProfiles_Title"),
+        (QuickToolRowTelegramPostEditor, "QuickTool_TelegramPostEditor_Title"),
+        (QuickToolRowIptvPlayer, "QuickTool_IptvPlayer_Title")
     ];
 
     private void SortQuickToolRows()
@@ -405,9 +418,12 @@ public partial class AppSettingsWindow : DarkWindow
                 Style = (Style)FindResource("ModernSettingTitleStyle"),
                 TextTrimming = TextTrimming.CharacterEllipsis
             });
+            string providerLabel = string.IsNullOrWhiteSpace(connection.CustomBaseUrl)
+                ? provider.DisplayName
+                : $"{provider.DisplayName} ({connection.CustomBaseUrl})";
             details.Children.Add(new TextBlock
             {
-                Text = LocalizationService.Format("AiSettings_ConnectionDetails", provider.DisplayName),
+                Text = LocalizationService.Format("AiSettings_ConnectionDetails", providerLabel),
                 Style = (Style)FindResource("ModernSettingDescriptionStyle"),
                 TextWrapping = TextWrapping.Wrap
             });
@@ -503,7 +519,8 @@ public partial class AppSettingsWindow : DarkWindow
                 ProviderId = dialog.ProviderId,
                 DisplayName = dialog.ConnectionName,
                 CredentialTarget = target,
-                IsEnabled = true
+                IsEnabled = true,
+                CustomBaseUrl = dialog.CustomBaseUrl
             });
             _pendingAiCredentialTargets.Add(target);
             BuildAiConnectionRows();
@@ -774,6 +791,7 @@ public partial class AppSettingsWindow : DarkWindow
             (ChkShowPresetPromptBuilder, "Tool_PromptBuilder"),
             (ChkShowPresetZenEditor, "Tool_ZenEditor"),
             (ChkShowPresetAiteProfiles, "Tool_AiteProfiles"),
+            (ChkShowPresetTelegramPostEditor, "Tool_TelegramPostEditor"),
             (ChkClipboardManagerPersistHistory, "ClipboardManager_PersistHistorySetting")
         ];
         foreach ((CheckBox checkBox, string resourceKey) in utilitySwitches)
@@ -796,7 +814,8 @@ public partial class AppSettingsWindow : DarkWindow
             (HotkeyTextProcessing, "Tool_TextProcessing"),
             (HotkeyPromptBuilder, "Tool_PromptBuilder"),
             (HotkeyZenEditor, "Tool_ZenEditor"),
-            (HotkeyAiteProfiles, "Tool_AiteProfiles")
+            (HotkeyAiteProfiles, "Tool_AiteProfiles"),
+            (HotkeyTelegramPostEditor, "Tool_TelegramPostEditor")
         ];
         foreach ((HotkeyCaptureBox captureBox, string resourceKey) in hotkeyFields)
         {
@@ -823,6 +842,8 @@ public partial class AppSettingsWindow : DarkWindow
         yield return HotkeyPromptBuilder;
         yield return HotkeyZenEditor;
         yield return HotkeyAiteProfiles;
+        yield return HotkeyTelegramPostEditor;
+        yield return HotkeyIptvPlayer;
     }
 
     private List<ContextRowDraft> CaptureContextRowDrafts()
@@ -1002,7 +1023,9 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding textProcessingBinding,
         HotkeyBinding promptBuilderBinding,
         HotkeyBinding zenEditorBinding,
-        HotkeyBinding aiteProfilesBinding)
+        HotkeyBinding aiteProfilesBinding,
+        HotkeyBinding telegramPostEditorBinding,
+        HotkeyBinding iptvPlayerBinding)
     {
         var registrations = new (string Name, HotkeyBinding Binding)[]
         {
@@ -1019,7 +1042,9 @@ public partial class AppSettingsWindow : DarkWindow
             (LocalizationService.Get("Tool_TextProcessing"), textProcessingBinding),
             (LocalizationService.Get("Tool_PromptBuilder"), promptBuilderBinding),
             (LocalizationService.Get("Tool_ZenEditor"), zenEditorBinding),
-            (LocalizationService.Get("Tool_AiteProfiles"), aiteProfilesBinding)
+            (LocalizationService.Get("Tool_AiteProfiles"), aiteProfilesBinding),
+            (LocalizationService.Get("Tool_TelegramPostEditor"), telegramPostEditorBinding),
+            (LocalizationService.Get("Tool_IptvPlayer"), iptvPlayerBinding)
         };
 
         var missingModifiers = registrations
@@ -1108,6 +1133,8 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyPromptBuilder.SetBinding(_settings.PromptBuilderHotkey);
         HotkeyZenEditor.SetBinding(_settings.ZenEditorHotkey);
         HotkeyAiteProfiles.SetBinding(_settings.AiteProfilesHotkey);
+        HotkeyTelegramPostEditor.SetBinding(_settings.TelegramPostEditorHotkey);
+        HotkeyIptvPlayer.SetBinding(_settings.IptvPlayerHotkey);
 
         SelectSegmentByTag(_settings.Edge.ToString(), SegEdgeTop, SegEdgeBottom, SegEdgeLeft, SegEdgeRight);
         ChkSecondaryMonitor.IsChecked = _settings.MonitorIndex > 0;
@@ -1172,7 +1199,8 @@ public partial class AppSettingsWindow : DarkWindow
         DisplayName = connection.DisplayName,
         CredentialTarget = connection.CredentialTarget,
         IsEnabled = connection.IsEnabled,
-        PreferredModelId = connection.PreferredModelId
+        PreferredModelId = connection.PreferredModelId,
+        CustomBaseUrl = connection.CustomBaseUrl
     };
 
     private void NormalizeDiscreteSettings()
@@ -2030,8 +2058,10 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeyBinding promptBuilderBinding = HotkeyPromptBuilder.GetBinding();
         HotkeyBinding zenEditorBinding = HotkeyZenEditor.GetBinding();
         HotkeyBinding aiteProfilesBinding = HotkeyAiteProfiles.GetBinding();
+        HotkeyBinding telegramPostEditorBinding = HotkeyTelegramPostEditor.GetBinding();
+        HotkeyBinding iptvPlayerBinding = HotkeyIptvPlayer.GetBinding();
 
-        if (!ValidateHotkeyBindings(nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding, textProcessingBinding, promptBuilderBinding, zenEditorBinding, aiteProfilesBinding))
+        if (!ValidateHotkeyBindings(nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding, textProcessingBinding, promptBuilderBinding, zenEditorBinding, aiteProfilesBinding, telegramPostEditorBinding, iptvPlayerBinding))
         {
             return;
         }
@@ -2054,6 +2084,11 @@ public partial class AppSettingsWindow : DarkWindow
             settings.PromptBuilderHotkey = promptBuilderBinding;
             settings.ZenEditorHotkey = zenEditorBinding;
             settings.AiteProfilesHotkey = aiteProfilesBinding;
+            settings.TelegramPostEditorHotkey = telegramPostEditorBinding;
+            settings.IptvPlayerHotkey = iptvPlayerBinding;
+
+            CommitIptvDraftChanges();
+            settings.Iptv = _iptvDraft.Clone();
 
             foreach (var (checkBox, definition) in GetUtilityVisibilityBindings())
             {

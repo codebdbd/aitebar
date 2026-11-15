@@ -4,7 +4,7 @@
         xmlns:local="clr-namespace:AiteBar"
         Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
         Title="{local:Loc ResourceKey=DiskCleaner_Title}"
-        Width="580" SizeToContent="Height" MinWidth="580" MinHeight="360"
+        Width="600" SizeToContent="Height" MinWidth="580"
         WindowStartupLocation="CenterScreen" Background="#191919" Foreground="#DCDCDC"
         WindowStyle="SingleBorderWindow" ResizeMode="NoResize"
         ShowInTaskbar="False" Topmost="True"
@@ -104,6 +104,13 @@
                 <Setter Property="VerticalAlignment" Value="Center"/>
                 <Setter Property="Margin" Value="8,0,10,0"/>
             </Style>
+
+            <Style x:Key="DiskCleanerQuickActionButtonStyle" TargetType="Button" BasedOn="{StaticResource CommandButtonStyle}">
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="MinWidth" Value="0"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="Padding" Value="12,0"/>
+            </Style>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -154,30 +161,26 @@
             <Button x:Name="BtnSelectSafeOnly"
                     Grid.Column="0"
                     Content="{local:Loc ResourceKey=DiskCleaner_SelectSafeOnly}"
-                    Style="{StaticResource CommandButtonStyle}"
-                    Click="BtnSelectSafeOnly_Click"
-                    Padding="10,4"/>
+                    Style="{StaticResource DiskCleanerQuickActionButtonStyle}"
+                    Click="BtnSelectSafeOnly_Click"/>
 
             <Button x:Name="BtnSelectAll"
                     Grid.Column="2"
                     Content="{local:Loc ResourceKey=DiskCleaner_SelectAll}"
-                    Style="{StaticResource CommandButtonStyle}"
-                    Click="BtnSelectAll_Click"
-                    Padding="10,4"/>
+                    Style="{StaticResource DiskCleanerQuickActionButtonStyle}"
+                    Click="BtnSelectAll_Click"/>
 
             <Button x:Name="BtnDeselectAll"
                     Grid.Column="4"
                     Content="{local:Loc ResourceKey=DiskCleaner_DeselectAll}"
-                    Style="{StaticResource CommandButtonStyle}"
-                    Click="BtnDeselectAll_Click"
-                    Padding="10,4"/>
+                    Style="{StaticResource DiskCleanerQuickActionButtonStyle}"
+                    Click="BtnDeselectAll_Click"/>
 
             <Button x:Name="BtnScan"
                     Grid.Column="6"
                     Content="{local:Loc ResourceKey=DiskCleaner_Scan}"
-                    Style="{StaticResource CommandButtonStyle}"
-                    Click="BtnScan_Click"
-                    Padding="12,4"/>
+                    Style="{StaticResource DiskCleanerQuickActionButtonStyle}"
+                    Click="BtnScan_Click"/>
         </Grid>
 
         <!-- Progress Bar (Visible during clean/scan) -->

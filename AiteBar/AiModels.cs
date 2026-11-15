@@ -48,6 +48,7 @@ public sealed class AiConnectionSettings
     public string CredentialTarget { get; set; } = string.Empty;
     public bool IsEnabled { get; set; } = true;
     public string? PreferredModelId { get; set; }
+    public string? CustomBaseUrl { get; set; }
 }
 
 public sealed record AiModelDescriptor(

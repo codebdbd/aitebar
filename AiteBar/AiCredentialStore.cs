@@ -13,10 +13,14 @@ internal interface IAiCredentialStore
 
 internal sealed class WindowsAiCredentialStore : IAiCredentialStore
 {
+    internal const string TelegramBotTargetPrefix = "AiteBar:TelegramBot:";
+    internal const string TelegramServerTargetPrefix = "AiteBar:TelegramServer:";
+    internal const string IptvSourceTargetPrefix = "AiteBar:IptvSource:";
+
     private const uint CredTypeGeneric = 1;
     private const uint CredPersistLocalMachine = 2;
     private const int ErrorNotFound = 1168;
-    private const int MaxCredentialBlobBytes = 2560;
+    internal const int MaxCredentialBlobBytes = 2560;
 
     public void Write(string target, string secret)
     {
@@ -116,10 +120,17 @@ internal sealed class WindowsAiCredentialStore : IAiCredentialStore
         throw new Win32Exception(error, "Windows Credential Manager could not delete the AI credential.");
     }
 
+    internal static bool IsSupportedTarget(string target) =>
+        !string.IsNullOrWhiteSpace(target) &&
+        (target.StartsWith(AiProviderCatalog.CredentialTargetPrefix, StringComparison.Ordinal) ||
+         target.StartsWith(TelegramBotTargetPrefix, StringComparison.Ordinal) ||
+         target.StartsWith(TelegramServerTargetPrefix, StringComparison.Ordinal) ||
+         target.StartsWith(IptvSourceTargetPrefix, StringComparison.Ordinal));
+
     private static void ValidateTarget(string target)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(target);
-        if (!target.StartsWith(AiProviderCatalog.CredentialTargetPrefix, StringComparison.Ordinal))
+        if (!IsSupportedTarget(target))
         {
             throw new ArgumentException("Unsupported AI credential target.", nameof(target));
         }

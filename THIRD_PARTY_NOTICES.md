@@ -76,6 +76,13 @@ are distributed under `Resources/ZenEditor/Licenses`.
 - **License**: MIT
 - **Usage**: SVG rendering for Icon Converter utility.
 
+### LibVLCSharp / LibVLC
+
+- **Copyright**: VideoLAN and VideoLAN authors
+- **Projects**: https://code.videolan.org/videolan/LibVLCSharp / https://www.videolan.org/vlc/libvlc.html
+- **License**: LGPL-2.1-or-later
+- **Usage**: Native media engine and WPF controls for the IPTV Player utility.
+
 ---
 
 This notice file is provided for informational purposes. Please review the upstream projects for the full and current license texts and any additional notice requirements that may apply to your distribution model.

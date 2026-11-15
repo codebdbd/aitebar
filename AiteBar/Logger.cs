@@ -47,6 +47,23 @@ namespace AiteBar
         public static Task LogAsync(Exception ex) =>
             Task.Run(() => Log(ex));
 
+        /// <summary>
+        /// Blocks until pending log entries are written or the timeout elapses.
+        /// Used on fatal paths where the process may terminate right after logging.
+        /// </summary>
+        public static bool Flush(TimeSpan timeout)
+        {
+            try
+            {
+                return WaitForFlushAsync().Wait(timeout);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex);
+                return false;
+            }
+        }
+
         // For testing
         internal static Task WaitForFlushAsync()
         {

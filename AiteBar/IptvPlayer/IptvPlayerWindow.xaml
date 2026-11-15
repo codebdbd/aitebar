@@ -1,0 +1,357 @@
+<local:DarkWindow x:Class="AiteBar.IptvPlayer.IptvPlayerWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:AiteBar"
+        xmlns:vlc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
+        WindowClass="Workspace"
+        Title="IPTV Player"
+        Width="1050"
+        Height="680"
+        MinWidth="800"
+        MinHeight="500"
+        Background="#141416"
+        Foreground="#D0D0D0"
+        WindowStartupLocation="CenterScreen">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/AiteBar;component/SettingsWindowResources.xaml" />
+                <ResourceDictionary Source="/AiteBar;component/FormControlsResources.xaml" />
+                <ResourceDictionary Source="/AiteBar;component/UtilityWindowResources.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <FontFamily x:Key="FluentSystemIcons">pack://application:,,,/Resources/#FluentSystemIcons-Regular</FontFamily>
+
+            <Style x:Key="PlayerButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
+                <Setter Property="Background" Value="#252528"/>
+                <Setter Property="Foreground" Value="#CCCCCC"/>
+                <Setter Property="BorderThickness" Value="0"/>
+                <Setter Property="Width" Value="32"/>
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="Margin" Value="0"/>
+            </Style>
+
+            <Style x:Key="VolumeSliderStyle" TargetType="Slider">
+                <Setter Property="Height" Value="24"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="Slider">
+                            <Grid VerticalAlignment="Center">
+                                <Track x:Name="PART_Track">
+                                    <Track.DecreaseRepeatButton>
+                                        <RepeatButton Command="{x:Static Slider.DecreaseLarge}">
+                                            <RepeatButton.Template>
+                                                <ControlTemplate TargetType="RepeatButton">
+                                                    <Border Height="4" Background="{DynamicResource AccentColor}" CornerRadius="2"/>
+                                                </ControlTemplate>
+                                            </RepeatButton.Template>
+                                        </RepeatButton>
+                                    </Track.DecreaseRepeatButton>
+                                    <Track.IncreaseRepeatButton>
+                                        <RepeatButton Command="{x:Static Slider.IncreaseLarge}">
+                                            <RepeatButton.Template>
+                                                <ControlTemplate TargetType="RepeatButton">
+                                                    <Border Height="4" Background="#38383D" CornerRadius="2"/>
+                                                </ControlTemplate>
+                                            </RepeatButton.Template>
+                                        </RepeatButton>
+                                    </Track.IncreaseRepeatButton>
+                                    <Track.Thumb>
+                                        <Thumb>
+                                            <Thumb.Template>
+                                                <ControlTemplate TargetType="Thumb">
+                                                    <Ellipse Width="12" Height="12" Fill="#FFFFFF" Stroke="{DynamicResource AccentColor}" StrokeThickness="2" Cursor="Hand"/>
+                                                </ControlTemplate>
+                                            </Thumb.Template>
+                                        </Thumb>
+                                    </Track.Thumb>
+                                </Track>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <Style x:Key="ChannelListItemStyle" TargetType="ListBoxItem">
+                <Setter Property="Height" Value="42"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="Foreground" Value="#C0C0C0"/>
+                <Setter Property="Padding" Value="8,4"/>
+                <Setter Property="Cursor" Value="Hand"/>
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ListBoxItem">
+                            <Border x:Name="Bd" Background="{TemplateBinding Background}" CornerRadius="4" Margin="0,1" Padding="{TemplateBinding Padding}">
+                                <ContentPresenter VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#25252A"/>
+                                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter TargetName="Bd" Property="Background" Value="#1B2E42"/>
+                                    <Setter Property="Foreground" Value="#FFFFFF"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <Grid x:Name="RootGrid">
+        <Grid.ColumnDefinitions>
+            <!-- Видео-зона слева -->
+            <ColumnDefinition Width="*" MinWidth="480"/>
+            <!-- Разделитель -->
+            <ColumnDefinition Width="Auto"/>
+            <!-- Сайдбар каналов справа (~360 DIP) -->
+            <ColumnDefinition x:Name="ColSidebar" Width="360" MinWidth="260" MaxWidth="550"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Левая зона: видео + контролы -->
+        <Grid Grid.Column="0" Background="#0C0C0D">
+            <Grid.RowDefinitions>
+                <!-- Область VideoView 16:9 -->
+                <RowDefinition Height="*"/>
+                <!-- Инфо-полоса канала -->
+                <RowDefinition Height="Auto"/>
+                <!-- Панель контролов -->
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Video View (Self-closing: NO children to avoid LibVLCSharp secondary ForegroundWindow) -->
+            <Grid Grid.Row="0" x:Name="VideoContainer" Background="#000000">
+                <vlc:VideoView x:Name="VlcVideoView" Background="#000000" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            </Grid>
+
+            <!-- Инфо-полоса активного канала под видео -->
+            <Border Grid.Row="1" Background="#18181B" Padding="14,8" BorderBrush="#252528" BorderThickness="0,1,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0" VerticalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" MaxWidth="380"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Name="TxtActiveChannel" Grid.Column="0" Text="Выберите канал для воспроизведения"
+                                   FontSize="13" FontWeight="SemiBold" Foreground="#FFFFFF" TextTrimming="CharacterEllipsis"/>
+                        <TextBlock x:Name="TxtActiveGroup" Grid.Column="1" Text="" FontSize="11" Foreground="#888888" Margin="8,2,0,0"
+                                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+
+                    <!-- Индикатор статуса воспроизведения (Connecting, Buffering, Error) -->
+                    <StackPanel x:Name="StatusPanel" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                Margin="8,0,12,0" Visibility="Collapsed">
+                        <TextBlock x:Name="TxtStatusIcon" Text="&#xF190;" FontFamily="{StaticResource FluentSystemIcons}"
+                                   FontSize="14" Foreground="{DynamicResource AccentColor}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock x:Name="TxtStatusMessage" Text="Connecting..." FontSize="12" Foreground="#D0D0D0"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Выпадающий список вариантов качества -->
+                    <ComboBox x:Name="CmbVariants" Grid.Column="2" Height="26" Width="130" Margin="8,0,0,0"
+                              Visibility="Collapsed" SelectionChanged="CmbVariants_SelectionChanged"/>
+                </Grid>
+            </Border>
+
+            <!-- Нижняя панель управления плеера -->
+            <Border Grid.Row="2" Background="#161618" Padding="12,10" BorderBrush="#222225" BorderThickness="0,1,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Транспорт: Play/Stop/Pause -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <Button x:Name="BtnPlayStop" Style="{StaticResource PlayerButtonStyle}" Content="&#xF606;"
+                                ToolTip="Воспроизведение / Стоп" Click="BtnPlayStop_Click"/>
+                        <Button x:Name="BtnPause" Style="{StaticResource PlayerButtonStyle}" Content="&#xF5A2;"
+                                Margin="6,0,0,0" ToolTip="Пауза" Click="BtnPause_Click" IsEnabled="False"/>
+                    </StackPanel>
+
+                    <!-- Громкость: Mute + Slider -->
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left" Margin="24,0,0,0" VerticalAlignment="Center">
+                        <Button x:Name="BtnMute" Style="{StaticResource PlayerButtonStyle}" Content="&#xEB42;"
+                                ToolTip="Без звука (M)" Click="BtnMute_Click"/>
+                        <Slider x:Name="SldVolume" Width="110" Margin="10,0,0,0" Minimum="0" Maximum="100" Value="80"
+                                Style="{StaticResource VolumeSliderStyle}"
+                                SmallChange="5" LargeChange="10" VerticalAlignment="Center" ValueChanged="SldVolume_ValueChanged"/>
+                        <TextBlock x:Name="TxtVolume" Text="80%" FontSize="11" Foreground="#888888" Width="35"
+                                   Margin="8,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Правые действия: Полный экран / Боковая панель -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal">
+                        <Button x:Name="BtnToggleSidebar" Style="{StaticResource PlayerButtonStyle}" Content="&#xE8BD;"
+                                ToolTip="Показать/скрыть список каналов" Margin="0,0,6,0" Click="BtnToggleSidebar_Click"/>
+                        <Button x:Name="BtnFullscreen" Style="{StaticResource PlayerButtonStyle}" Content="&#xE684;"
+                                ToolTip="Во весь экран (F)" Click="BtnFullscreen_Click"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- Разделитель колонок -->
+        <GridSplitter x:Name="Splitter" Grid.Column="1" Width="4" HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                      Background="#1C1C1F" ShowsPreview="False"/>
+
+        <!-- Правая панель: каналы и фильтры -->
+        <Border Grid.Column="2" Background="#1A1A1D" BorderBrush="#26262A" BorderThickness="1,0,0,0">
+            <Grid Margin="12,12,12,8">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/> <!-- Верхняя строка: Заголовок и Настройки -->
+                    <RowDefinition Height="Auto"/> <!-- Поиск -->
+                    <RowDefinition Height="Auto"/> <!-- Фильтры плейлиста и групп -->
+                    <RowDefinition Height="*"/>    <!-- Список каналов -->
+                    <RowDefinition Height="Auto"/> <!-- Подсказки хоткеев -->
+                </Grid.RowDefinitions>
+
+                <!-- Верхняя строка: Заголовок и Настройки -->
+                <Grid Grid.Row="0" Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Text="Каналы"
+                               FontWeight="SemiBold" FontSize="14" Foreground="#E0E0E0"
+                               VerticalAlignment="Center"/>
+
+                    <Button x:Name="BtnSources" Grid.Column="1"
+                            Style="{StaticResource IconCompactButtonStyle}"
+                            Content="&#xF6A9;"
+                            ToolTip="{local:Loc ResourceKey=IptvSettings_SourcesTitle}"
+                            Click="BtnSources_Click"/>
+                </Grid>
+
+                <!-- Поиск -->
+                <Grid Grid.Row="1" Margin="0,0,0,10">
+                    <TextBox x:Name="TxtSearch" Style="{StaticResource BaseTextBoxStyle}" Height="30"
+                             Padding="6,0,24,0" TextChanged="TxtSearch_TextChanged"/>
+                    <TextBlock x:Name="TxtSearchWatermark" Text="Поиск каналов..." Foreground="#666666" FontSize="11"
+                               IsHitTestVisible="False" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                    <Button x:Name="BtnClearSearch" Content="&#xF34C;" FontFamily="{StaticResource FluentSystemIcons}"
+                            FontSize="10" Style="{StaticResource PlayerButtonStyle}" Width="20" Height="20"
+                            HorizontalAlignment="Right" Margin="0,0,5,0" Visibility="Collapsed" Click="BtnClearSearch_Click"/>
+                </Grid>
+
+                <!-- Фильтры: Плейлист и Группа -->
+                <Grid Grid.Row="2" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <ComboBox x:Name="CmbPlaylists" Grid.Column="0" Height="28" Margin="0,0,4,0"
+                              DisplayMemberPath="Display" SelectedValuePath="Value"
+                              SelectionChanged="CmbPlaylists_SelectionChanged"/>
+                    <ComboBox x:Name="CmbGroups" Grid.Column="1" Height="28" Margin="4,0,0,0"
+                              DisplayMemberPath="Display" SelectedValuePath="Value"
+                              SelectionChanged="CmbGroups_SelectionChanged"/>
+                </Grid>
+
+                <!-- Список каналов -->
+                <ListBox x:Name="LstChannels" Grid.Row="3" Background="Transparent" BorderThickness="0"
+                         ItemContainerStyle="{StaticResource ChannelListItemStyle}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         ScrollViewer.CanContentScroll="True"
+                         ScrollViewer.PanningMode="VerticalOnly"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling"
+                         VirtualizingPanel.ScrollUnit="Pixel"
+                         VirtualizingPanel.CacheLength="20,20"
+                         VirtualizingPanel.CacheLengthUnit="Item"
+                         SelectionChanged="LstChannels_SelectionChanged"
+                         MouseDoubleClick="LstChannels_MouseDoubleClick">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="2,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/> <!-- Звезда избранного -->
+                                    <ColumnDefinition Width="32"/>   <!-- Лого / Иконка -->
+                                    <ColumnDefinition Width="*"/>    <!-- Название и группа -->
+                                </Grid.ColumnDefinitions>
+
+                                <!-- Star Toggle -->
+                                <Button Grid.Column="0" Background="Transparent" BorderThickness="0" Width="24" Height="24"
+                                        FontFamily="{StaticResource FluentSystemIcons}" FontSize="13"
+                                        Foreground="{Binding IsFavorite, Converter={x:Null}}"
+                                        Content="{Binding IsFavorite, Converter={x:Null}}"
+                                        Tag="{Binding}" Click="BtnStar_Click" Cursor="Hand" Margin="0,0,4,0">
+                                    <Button.Style>
+                                        <Style TargetType="Button">
+                                            <Setter Property="Template">
+                                                <Setter.Value>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <TextBlock x:Name="StarGlyph" Text="&#xF71A;" Foreground="#66666E" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                        <ControlTemplate.Triggers>
+                                                             <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                                                                <Setter TargetName="StarGlyph" Property="Text" Value="&#xF70F;"/>
+                                                                <Setter TargetName="StarGlyph" Property="Foreground" Value="#FFB84D"/>
+                                                            </DataTrigger>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="StarGlyph" Property="Foreground" Value="#FFD180"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Setter.Value>
+                                            </Setter>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+
+                                <!-- Логотип канала -->
+                                <Border Grid.Column="1" Width="28" Height="28" Background="#202024" CornerRadius="4" Margin="0,0,8,0">
+                                    <Grid>
+                                        <TextBlock Text="&#xEDC3;" FontFamily="{StaticResource FluentSystemIcons}" FontSize="15"
+                                                   Foreground="#8E95A0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                        <Image Source="{Binding LogoImage}" Stretch="Uniform" RenderOptions.BitmapScalingMode="LowQuality"/>
+                                    </Grid>
+                                </Border>
+
+                                <!-- Название и группа -->
+                                <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold"
+                                               Foreground="#E0E0E0" TextTrimming="CharacterEllipsis"/>
+                                    <TextBlock Text="{Binding Group}" FontSize="10" Foreground="#888888"
+                                               Margin="0,1,0,0" TextTrimming="CharacterEllipsis"/>
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <!-- Индикатор загрузки списка каналов -->
+                <StackPanel x:Name="PnlLoadingChannels" Grid.Row="3" HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed">
+                    <TextBlock Text="&#xF190;" FontFamily="{StaticResource FluentSystemIcons}" FontSize="22"
+                               Foreground="{DynamicResource AccentColor}" HorizontalAlignment="Center" Margin="0,0,0,8"/>
+                    <TextBlock Text="Загрузка каналов..." Foreground="#8E95A0" FontSize="12" HorizontalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Индикатор пустого списка -->
+                <TextBlock x:Name="TxtNoChannels" Grid.Row="3" Text="Каналы не найдены"
+                           HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="#666666" FontSize="12" Visibility="Collapsed"/>
+
+                <!-- Подсказки хоткеев -->
+                <Border Grid.Row="4" Margin="0,6,0,0" Padding="0,6,0,0" BorderBrush="#242428" BorderThickness="0,1,0,0">
+                    <TextBlock Text="PgUp/PgDn: каналы • F: весь экран • Esc: выход • M: звук"
+                               FontSize="11" Foreground="#7E8590" HorizontalAlignment="Center"/>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</local:DarkWindow>

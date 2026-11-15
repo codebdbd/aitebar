@@ -55,7 +55,7 @@ internal sealed class AiProviderClient
         CancellationToken cancellationToken)
     {
         (AiProviderDefinition provider, string apiKey) = ResolveConnection(connection);
-        Uri uri = BuildModelsUri(provider, apiKey);
+        Uri uri = ResolveModelsUri(provider, connection);
         using var request = new HttpRequestMessage(HttpMethod.Get, uri);
         ApplyAuthentication(request, provider, apiKey);
         using HttpResponseMessage response = await _httpClient.SendAsync(
@@ -81,7 +81,8 @@ internal sealed class AiProviderClient
         }
 
         (AiProviderDefinition provider, string apiKey) = ResolveConnection(connection);
-        return await GenerateOpenAiCompatibleAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false);
+        Uri chatUri = ResolveChatCompletionsUri(provider, connection);
+        return await GenerateOpenAiCompatibleAsync(provider, chatUri, apiKey, model, request, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<AiProviderStream> GenerateStreamingAsync(
@@ -98,21 +99,18 @@ internal sealed class AiProviderClient
         }
 
         (AiProviderDefinition provider, string apiKey) = ResolveConnection(connection);
-        return await StartOpenAiStreamAsync(provider, apiKey, model, request, cancellationToken).ConfigureAwait(false);
+        Uri chatUri = ResolveChatCompletionsUri(provider, connection);
+        return await StartOpenAiStreamAsync(provider, chatUri, apiKey, model, request, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<AiProviderStream> StartOpenAiStreamAsync(
         AiProviderDefinition provider,
+        Uri chatUri,
         string apiKey,
         AiModelDescriptor model,
         AiChatRequest request,
         CancellationToken cancellationToken)
     {
-        if (provider.ChatCompletionsUri == null)
-        {
-            throw new InvalidOperationException($"Provider '{provider.Id}' does not define a chat endpoint.");
-        }
-
         var payload = new Dictionary<string, object?>
         {
             ["model"] = model.ModelId,
@@ -125,7 +123,7 @@ internal sealed class AiProviderClient
             payload["temperature"] = Math.Clamp(temperature, 0d, 2d);
         }
 
-        var httpRequest = new HttpRequestMessage(HttpMethod.Post, provider.ChatCompletionsUri)
+        var httpRequest = new HttpRequestMessage(HttpMethod.Post, chatUri)
         {
             Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
         };
@@ -218,16 +216,12 @@ internal sealed class AiProviderClient
 
     private async Task<AiProviderResponse> GenerateOpenAiCompatibleAsync(
         AiProviderDefinition provider,
+        Uri chatUri,
         string apiKey,
         AiModelDescriptor model,
         AiChatRequest request,
         CancellationToken cancellationToken)
     {
-        if (provider.ChatCompletionsUri == null)
-        {
-            throw new InvalidOperationException($"Provider '{provider.Id}' does not define a chat endpoint.");
-        }
-
         var payload = new Dictionary<string, object?>
         {
             ["model"] = model.ModelId,
@@ -240,7 +234,7 @@ internal sealed class AiProviderClient
             payload["temperature"] = Math.Clamp(temperature, 0d, 2d);
         }
 
-        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, provider.ChatCompletionsUri)
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, chatUri)
         {
             Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
         };
@@ -293,12 +287,67 @@ internal sealed class AiProviderClient
                         ReadString(item, "name") ?? id,
                         ResolveCapabilities(item),
                         ReadNullableInt(item, "context_length") ?? ReadNullableInt(item, "max_context_length"),
-                        provider.DefaultCostStatus,
+                        ResolveModelCostStatus(provider, item, id),
                         ReadBoolean(item, "deprecated"));
             })
             .Where(model => model != null)
             .Cast<AiModelDescriptor>()
             .ToArray();
+    }
+
+    internal static AiCostStatus ResolveModelCostStatus(
+        AiProviderDefinition provider,
+        JsonElement item,
+        string modelId)
+    {
+        if (string.Equals(provider.Id, "openrouter", StringComparison.OrdinalIgnoreCase))
+        {
+            if (modelId.EndsWith(":free", StringComparison.OrdinalIgnoreCase) ||
+                HasZeroOpenRouterPricing(item))
+            {
+                return AiCostStatus.VerifiedFree;
+            }
+
+            return AiCostStatus.Paid;
+        }
+
+        return provider.DefaultCostStatus;
+    }
+
+    private static bool HasZeroOpenRouterPricing(JsonElement item)
+    {
+        if (!item.TryGetProperty("pricing", out JsonElement pricing) ||
+            pricing.ValueKind != JsonValueKind.Object)
+        {
+            return false;
+        }
+
+        return IsZeroPrice(pricing, "prompt") && IsZeroPrice(pricing, "completion");
+    }
+
+    private static bool IsZeroPrice(JsonElement pricing, string field)
+    {
+        if (!pricing.TryGetProperty(field, out JsonElement value))
+        {
+            return false;
+        }
+
+        if (value.ValueKind == JsonValueKind.Number && value.TryGetDecimal(out decimal number))
+        {
+            return number == 0m;
+        }
+
+        if (value.ValueKind == JsonValueKind.String &&
+            decimal.TryParse(
+                value.GetString(),
+                System.Globalization.NumberStyles.Number,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out decimal parsed))
+        {
+            return parsed == 0m;
+        }
+
+        return false;
     }
 
     private (AiProviderDefinition Provider, string ApiKey) ResolveConnection(AiConnectionSettings connection)
@@ -316,10 +365,31 @@ internal sealed class AiProviderClient
         return (provider, apiKey);
     }
 
-    private static Uri BuildModelsUri(AiProviderDefinition provider, string apiKey)
+    private static Uri ResolveModelsUri(AiProviderDefinition provider, AiConnectionSettings connection)
     {
-        _ = apiKey;
+        if (provider.RequiresCustomBaseUrl)
+        {
+            if (!AiProviderCatalog.TryNormalizeCustomBaseUrl(connection.CustomBaseUrl, out string baseUrl))
+            {
+                throw new InvalidOperationException($"Connection '{connection.DisplayName}' is missing a valid Base URL.");
+            }
+            return new Uri($"{baseUrl}/models", UriKind.Absolute);
+        }
         return provider.ModelsUri;
+    }
+
+    private static Uri ResolveChatCompletionsUri(AiProviderDefinition provider, AiConnectionSettings connection)
+    {
+        if (provider.RequiresCustomBaseUrl)
+        {
+            if (!AiProviderCatalog.TryNormalizeCustomBaseUrl(connection.CustomBaseUrl, out string baseUrl))
+            {
+                throw new InvalidOperationException($"Connection '{connection.DisplayName}' is missing a valid Base URL.");
+            }
+            return new Uri($"{baseUrl}/chat/completions", UriKind.Absolute);
+        }
+        return provider.ChatCompletionsUri
+            ?? throw new InvalidOperationException($"Provider '{provider.Id}' does not define a chat endpoint.");
     }
 
     private static void ApplyAuthentication(

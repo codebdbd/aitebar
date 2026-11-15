@@ -51,6 +51,12 @@ Application license: MIT License (see LICENSE file)
    Notes: Unmodified Regular and Bold TTF files are bundled for Quick Note code blocks.
    The complete license text is distributed in Resources/Fonts/JetBrainsMono/OFL.txt.
 
+8. LibVLCSharp / LibVLC
+   Copyright (c) VideoLAN and VideoLAN authors
+   Projects: https://code.videolan.org/videolan/LibVLCSharp / https://www.videolan.org/vlc/libvlc.html
+   License: LGPL-2.1-or-later
+   Notes: Used as native media playback backend for IPTV Player. Bundled as dynamic libraries.
+
 This notice file is provided for informational purposes.
 Please review the upstream projects for the full and current license texts and any
 additional notice requirements that may apply to your distribution model.

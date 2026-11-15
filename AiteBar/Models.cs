@@ -197,6 +197,8 @@ public class AppSettings
         public bool ShowPresetPromptBuilder { get; set; } = false;
         public bool ShowPresetZenEditor { get; set; } = true;
         public bool ShowPresetAiteProfiles { get; set; } = true;
+        public bool ShowPresetTelegramPostEditor { get; set; } = true;
+        public bool ShowPresetIptvPlayer { get; set; } = true;
     public bool ZenEditorExitOnSideClick { get; set; } = true;
     public double ZenEditorSideSafetyMargin { get; set; } = 48.0;
     public bool ClipboardManagerPersistHistory { get; set; } = false;
@@ -233,6 +235,8 @@ public class AppSettings
     public HotkeyBinding PromptBuilderHotkey { get; set; } = new();
     public HotkeyBinding ZenEditorHotkey { get; set; } = new();
     public HotkeyBinding AiteProfilesHotkey { get; set; } = new();
+    public HotkeyBinding TelegramPostEditorHotkey { get; set; } = new();
+    public HotkeyBinding IptvPlayerHotkey { get; set; } = new();
     public FileSortUndoState? LastFileSortOperation { get; set; }
     public MultiFileSortUndoState? LastMultiFileSortOperation { get; set; }
     public List<string> SavedFileSortFolders { get; set; } = [];
@@ -249,6 +253,18 @@ public class AppSettings
     public bool TextProcessingIsAutoModel { get; set; } = true;
     public string? TextProcessingLastText { get; set; }
     public bool SaveTextProcessingDraft { get; set; } = false;
+
+    public double? TelegramPostEditorLeft { get; set; }
+    public double? TelegramPostEditorTop { get; set; }
+    public double? TelegramPostEditorWidth { get; set; }
+    public double? TelegramPostEditorHeight { get; set; }
+    public string? TelegramPostEditorWindowState { get; set; }
+
+    public double? IptvPlayerLeft { get; set; }
+    public double? IptvPlayerTop { get; set; }
+    public double? IptvPlayerWidth { get; set; }
+    public double? IptvPlayerHeight { get; set; }
+    public string? IptvPlayerWindowState { get; set; }
 
     public double? PromptBuilderLeft { get; set; }
     public double? PromptBuilderTop { get; set; }
@@ -293,6 +309,7 @@ public class AppSettings
     public double? TaskbarIndicatorPositionX { get; set; }
     public double? TaskbarIndicatorPositionY { get; set; }
     public AiSettings Ai { get; set; } = new();
+    public IptvPlayer.IptvSettings Iptv { get; set; } = new();
     public SentrySettings? Sentry { get; set; }
 }
 

@@ -2265,6 +2265,12 @@ GitHub-Release-Seite öffnen?</value>
   <data name="AiSettings_GetApiKey" xml:space="preserve">
     <value>API-Schlüssel auf der offiziellen Website erstellen</value>
   </data>
+  <data name="AiSettings_BaseUrl" xml:space="preserve">
+    <value>Basis-URL</value>
+  </data>
+  <data name="AiSettings_BaseUrlHint" xml:space="preserve">
+    <value>OpenAI-kompatible Endpunkt-URL, z. B. https://api.example.com/v1</value>
+  </data>
   <data name="AiSettings_ConnectionName" xml:space="preserve">
     <value>Verbindungsname</value>
   </data>
@@ -4926,5 +4932,389 @@ Möchten Sie mit der endgültigen Bereinigung fortfahren?</value>
   </data>
   <data name="SettingsWindow_AppsCatalog" xml:space="preserve">
     <value>Programme...</value>
+  </data>
+  <data name="Tool_TelegramPostEditor" xml:space="preserve">
+    <value>Telegram-Post-Editor</value>
+  </data>
+  <data name="Main_TelegramPostEditorTooltip" xml:space="preserve">
+    <value>Telegram-Post-Editor</value>
+  </data>
+  <data name="QuickTool_TelegramPostEditor_Title" xml:space="preserve">
+    <value>Telegram-Post-Editor</value>
+  </data>
+  <data name="QuickTool_TelegramPostEditor_Description" xml:space="preserve">
+    <value>Beiträge für Telegram-Kanäle erstellen, mit KI bearbeiten, vorschauen und planen.</value>
+  </data>
+  <data name="TelegramPostEditor_Title" xml:space="preserve">
+    <value>Telegram-Post-Editor</value>
+  </data>
+  <data name="TelegramPostEditor_LocalModeBadge" xml:space="preserve">
+    <value>Lokaler Modus</value>
+  </data>
+  <data name="TelegramPostEditor_LibraryHeader" xml:space="preserve">
+    <value>Bibliothek</value>
+  </data>
+  <data name="TelegramPostEditor_LibraryEmptyHint" xml:space="preserve">
+    <value>Noch keine Entwürfe. Erstellen Sie Ihren ersten Beitrag.</value>
+  </data>
+  <data name="TelegramPostEditor_EditorHeader" xml:space="preserve">
+    <value>Editor</value>
+  </data>
+  <data name="TelegramPostEditor_PreviewHeader" xml:space="preserve">
+    <value>Telegram-Vorschau</value>
+  </data>
+  <data name="TelegramPostEditor_PreviewHint" xml:space="preserve">
+    <value>Hier wird eine ungefähre Vorschau der Telegram-Nachricht angezeigt.</value>
+  </data>
+  <data name="TelegramPostEditor_StatusReady" xml:space="preserve">
+    <value>Bereit</value>
+  </data>
+  <data name="TelegramSettings_Title" xml:space="preserve">
+    <value>Telegram</value>
+  </data>
+  <data name="TelegramSettings_Description" xml:space="preserve">
+    <value>Telegram-Bots und -Kanäle für TelegramPostEditor verwalten. Bot-Tokens werden im Windows Credential Manager gespeichert.</value>
+  </data>
+  <data name="TelegramSettings_BotsTitle" xml:space="preserve">
+    <value>Telegram-Bots</value>
+  </data>
+  <data name="TelegramSettings_BotTokenHint" xml:space="preserve">
+    <value>Bot-Token von @BotFather einfügen (wird über getMe geprüft und im Windows Credential Manager gespeichert):</value>
+  </data>
+  <data name="TelegramSettings_AddBot" xml:space="preserve">
+    <value>Hinzufügen</value>
+  </data>
+  <data name="TelegramSettings_NoBots" xml:space="preserve">
+    <value>Noch keine Telegram-Bots verbunden.</value>
+  </data>
+  <data name="TelegramSettings_ChannelsTitle" xml:space="preserve">
+    <value>Telegram-Kanäle</value>
+  </data>
+  <data name="TelegramSettings_ChannelInputHint" xml:space="preserve">
+    <value>Kanal-@username, t.me/...-Link oder Kanal-ID eingeben (Präfix -100 wird automatisch ergänzt; der Bot muss Administrator sein):</value>
+  </data>
+  <data name="TelegramSettings_IsTestChannel" xml:space="preserve">
+    <value>Als Testkanal markieren</value>
+  </data>
+  <data name="TelegramSettings_AddChannel" xml:space="preserve">
+    <value>Hinzufügen</value>
+  </data>
+  <data name="TelegramSettings_NoChannels" xml:space="preserve">
+    <value>Noch keine Telegram-Kanäle verbunden.</value>
+  </data>
+  <data name="TelegramSettings_OpenSettings" xml:space="preserve">
+    <value>Bots &amp; Kanäle verwalten…</value>
+  </data>
+  <data name="TelegramPostEditor_NewPost" xml:space="preserve">
+    <value>Neuer Beitrag</value>
+  </data>
+  <data name="TelegramPostEditor_FromTemplate" xml:space="preserve">
+    <value>Aus Vorlage</value>
+  </data>
+  <data name="TelegramPostEditor_ExportJson" xml:space="preserve">
+    <value>JSON-Export</value>
+  </data>
+  <data name="TelegramPostEditor_SearchPlaceholder" xml:space="preserve">
+    <value>Nach Titel oder Text suchen…</value>
+  </data>
+  <data name="TelegramPostEditor_ShowTrash" xml:space="preserve">
+    <value>Papierkorb anzeigen</value>
+  </data>
+  <data name="TelegramPostEditor_Duplicate" xml:space="preserve">
+    <value>Duplizieren</value>
+  </data>
+  <data name="TelegramPostEditor_MoveToTrash" xml:space="preserve">
+    <value>In Papierkorb</value>
+  </data>
+  <data name="TelegramPostEditor_Restore" xml:space="preserve">
+    <value>Wiederherstellen</value>
+  </data>
+  <data name="TelegramPostEditor_DraftTitleLabel" xml:space="preserve">
+    <value>Entwurfstitel</value>
+  </data>
+  <data name="TelegramPostEditor_EditorPlaceholder" xml:space="preserve">
+    <value>Telegram-Beitrag hier schreiben…</value>
+  </data>
+  <data name="TelegramPostEditor_Spoiler" xml:space="preserve">
+    <value>Spoiler</value>
+  </data>
+  <data name="TelegramPostEditor_InlineCode" xml:space="preserve">
+    <value>Code</value>
+  </data>
+  <data name="TelegramPostEditor_Quote" xml:space="preserve">
+    <value>Zitat</value>
+  </data>
+  <data name="TelegramPostEditor_AddMedia" xml:space="preserve">
+    <value>Medien</value>
+  </data>
+  <data name="TelegramPostEditor_AiProcess" xml:space="preserve">
+    <value>Mit KI bearbeiten</value>
+  </data>
+  <data name="TelegramPostEditor_AiStop" xml:space="preserve">
+    <value>Stopp</value>
+  </data>
+  <data name="TelegramPostEditor_TabPreview" xml:space="preserve">
+    <value>Vorschau</value>
+  </data>
+  <data name="TelegramPostEditor_TabChannels" xml:space="preserve">
+    <value>Kanäle</value>
+  </data>
+  <data name="TelegramPostEditor_TabQueue" xml:space="preserve">
+    <value>Warteschlange</value>
+  </data>
+  <data name="TelegramPostEditor_PreviewEmpty" xml:space="preserve">
+    <value>Text eingeben oder Medien anhängen, um die Telegram-Vorschau zu sehen.</value>
+  </data>
+  <data name="TelegramPostEditor_PreviewDefaultChannel" xml:space="preserve">
+    <value>Ausgewählter Kanal</value>
+  </data>
+  <data name="TelegramPostEditor_EmptyPostHint" xml:space="preserve">
+    <value>Text oder Medien hinzufügen, um zu veröffentlichen.</value>
+  </data>
+  <data name="TelegramPostEditor_ReadyToPublish" xml:space="preserve">
+    <value>Bereit zum Senden.</value>
+  </data>
+  <data name="TelegramPostEditor_TestPublish" xml:space="preserve">
+    <value>Test-Veröffentlichung</value>
+  </data>
+  <data name="TelegramPostEditor_PublishNow" xml:space="preserve">
+    <value>Jetzt veröffentlichen</value>
+  </data>
+  <data name="TelegramPostEditor_StatusDraft" xml:space="preserve">
+    <value>Entwurf</value>
+  </data>
+  <data name="TelegramPostEditor_StatusScheduled" xml:space="preserve">
+    <value>Geplant</value>
+  </data>
+  <data name="TelegramPostEditor_StatusPublished" xml:space="preserve">
+    <value>Veröffentlicht</value>
+  </data>
+  <data name="TelegramPostEditor_StatusFailed" xml:space="preserve">
+    <value>Fehler</value>
+  </data>
+  <data name="TelegramPostEditor_StatusSavedAt" xml:space="preserve">
+    <value>Automatisch gespeichert um {0}</value>
+  </data>
+  <data name="TelegramPostEditor_StatusSaving" xml:space="preserve">
+    <value>Speichern…</value>
+  </data>
+  <data name="TelegramPostEditor_LocalModeTooltip" xml:space="preserve">
+    <value>Lokaler Modus: Planungsserver nicht gekoppelt. Sofort- und Testveröffentlichung funktionieren lokal.</value>
+  </data>
+  <data name="TelegramPostEditor_SelectedChannelsSummary" xml:space="preserve">
+    <value>Ausgewählte Kanäle: {0}</value>
+  </data>
+  <data name="TelegramPostEditor_AllDrafts" xml:space="preserve">
+    <value>Alle Entwürfe</value>
+  </data>
+  <data name="TelegramPostEditor_Trash" xml:space="preserve">
+    <value>Papierkorb</value>
+  </data>
+  <data name="TelegramPostEditor_SortByDate" xml:space="preserve">
+    <value>Nach Datum</value>
+  </data>
+  <data name="TelegramPostEditor_SortByTitle" xml:space="preserve">
+    <value>Nach Titel</value>
+  </data>
+  <data name="TelegramPostEditor_Schedule" xml:space="preserve">
+    <value>Planen</value>
+  </data>
+  <data name="TelegramPostEditor_NoInstruction" xml:space="preserve">
+    <value>Ohne Anweisung</value>
+  </data>
+  <data name="TelegramPostEditor_AutoModel" xml:space="preserve">
+    <value>Auto (AiGateway)</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_CreateFromBrief" xml:space="preserve">
+    <value>Aus Beschreibung</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_Improve" xml:space="preserve">
+    <value>Text verbessern</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_Shorten" xml:space="preserve">
+    <value>Kürzen</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_FixGrammar" xml:space="preserve">
+    <value>Grammatik prüfen</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_RewriteStyle" xml:space="preserve">
+    <value>Im Stil umschreiben</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_SuggestTitles" xml:space="preserve">
+    <value>Überschriften</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_Translate" xml:space="preserve">
+    <value>Übersetzen</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_AdaptToChannel" xml:space="preserve">
+    <value>An Kanal anpassen</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_FormatForTelegram" xml:space="preserve">
+    <value>Für Telegram</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_Alternatives" xml:space="preserve">
+    <value>Varianten</value>
+  </data>
+  <data name="TelegramPostEditor_AiApply" xml:space="preserve">
+    <value>Übernehmen</value>
+  </data>
+  <data name="TelegramPostEditor_AiDismiss" xml:space="preserve">
+    <value>Verwerfen</value>
+  </data>
+  <data name="TelegramPostEditor_AiEmptyInput" xml:space="preserve">
+    <value>Geben Sie zuerst Text ein (oder wählen Sie „Aus Beschreibung“).</value>
+  </data>
+  <data name="TelegramPostEditor_AiGenerating" xml:space="preserve">
+    <value>Generiere…</value>
+  </data>
+  <data name="TelegramPostEditor_ChannelsSelectHeader" xml:space="preserve">
+    <value>Kanäle für Veröffentlichung</value>
+  </data>
+  <data name="TelegramPostEditor_ConnectedBotsSummary" xml:space="preserve">
+    <value>Verbundene Bots: {0}</value>
+  </data>
+  <data name="TelegramPostEditor_ChannelMissingBotToken" xml:space="preserve">
+    <value>Bot-Token fehlt im Anmeldeinformations-Manager</value>
+  </data>
+  <data name="TelegramPostEditor_QuickConnectBotTitle" xml:space="preserve">
+    <value>Bot verbinden</value>
+  </data>
+  <data name="TelegramPostEditor_QuickConnectChannelTitle" xml:space="preserve">
+    <value>Kanal verbinden</value>
+  </data>
+  <data name="TelegramPostEditor_ConnectButton" xml:space="preserve">
+    <value>Verbinden</value>
+  </data>
+  <data name="TelegramPostEditor_BotTokenPlaceholder" xml:space="preserve">
+    <value>Token von @BotFather einfügen…</value>
+  </data>
+  <data name="TelegramPostEditor_ChannelInputPlaceholder" xml:space="preserve">
+    <value>@channel, t.me/… oder -100… ID</value>
+  </data>
+  <data name="TelegramPostEditor_QueueUrlLabel" xml:space="preserve">
+    <value>Planungsserver-URL (HTTPS)</value>
+  </data>
+  <data name="TelegramPostEditor_QueuePairCodePlaceholder" xml:space="preserve">
+    <value>Einmaliger Kopplungscode</value>
+  </data>
+  <data name="TelegramPostEditor_QueuePairButton" xml:space="preserve">
+    <value>Koppeln</value>
+  </data>
+  <data name="TelegramPostEditor_QueueDateLabel" xml:space="preserve">
+    <value>Veröffentlichungsdatum und -zeit (lokal)</value>
+  </data>
+  <data name="TelegramPostEditor_QueueSubmitButton" xml:space="preserve">
+    <value>Zur Warteschlange</value>
+  </data>
+  <data name="TelegramPostEditor_PublishFailedTitle" xml:space="preserve">
+    <value>Veröffentlichungsfehler</value>
+  </data>
+  <data name="TelegramPostEditor_SelectedCountSuffix" xml:space="preserve">
+    <value>{0} Medien angehängt</value>
+  </data>
+  <data name="TelegramPostEditor_SelectChannelWarning" xml:space="preserve">
+    <value>Wählen Sie mindestens einen Kanal zum Veröffentlichen aus.</value>
+  </data>
+  <data name="TelegramPostEditor_NoTestChannelWarning" xml:space="preserve">
+    <value>Es ist noch kein Testkanal konfiguriert.</value>
+  </data>
+  <data name="Tool_IptvPlayer" xml:space="preserve">
+    <value>IPTV-Player</value>
+  </data>
+  <data name="Main_IptvPlayerTooltip" xml:space="preserve">
+    <value>IPTV-Player</value>
+  </data>
+  <data name="QuickTool_IptvPlayer_Title" xml:space="preserve">
+    <value>IPTV-Player</value>
+  </data>
+  <data name="QuickTool_IptvPlayer_Description" xml:space="preserve">
+    <value>Streaming-TV und M3U-Wiedergabelisten ansehen</value>
+  </data>
+  <data name="IptvSettings_Title" xml:space="preserve">
+    <value>IPTV</value>
+  </data>
+  <data name="IptvSettings_Description" xml:space="preserve">
+    <value>Wiedergabelisten, lokale M3U-Dateien und automatische Hintergrundaktualisierung verwalten.</value>
+  </data>
+  <data name="IptvSettings_SourcesTitle" xml:space="preserve">
+    <value>Wiedergabelisten-Quellen</value>
+  </data>
+  <data name="IptvSettings_AddPlaylist" xml:space="preserve">
+    <value>Wiedergabeliste hinzufügen...</value>
+  </data>
+  <data name="IptvSettings_RefreshAll" xml:space="preserve">
+    <value>Alle URL-Wiedergabelisten aktualisieren</value>
+  </data>
+  <data name="IptvSettings_NoSources" xml:space="preserve">
+    <value>Noch keine Wiedergabelisten eingerichtet. Klicken Sie auf "Wiedergabeliste hinzufügen...", um eine M3U-URL oder -Datei anzugeben.</value>
+  </data>
+  <data name="IptvSettings_AutoUpdateTitle" xml:space="preserve">
+    <value>Automatische Hintergrundaktualisierung</value>
+  </data>
+  <data name="IptvSettings_AutoUpdateDescription" xml:space="preserve">
+    <value>Entfernte URL-Wiedergabelisten automatisch aktualisieren, während AiteBar ausgeführt wird.</value>
+  </data>
+  <data name="IptvSettings_AutoUpdateSwitch" xml:space="preserve">
+    <value>Automatische Hintergrundaktualisierung aktivieren</value>
+  </data>
+  <data name="IptvSettings_AutoUpdateSwitchHint" xml:space="preserve">
+    <value>Lädt regelmäßig frische Kanallisten für aktive Quellen herunter.</value>
+  </data>
+  <data name="IptvSettings_UpdateInterval" xml:space="preserve">
+    <value>Aktualisierungsintervall (Stunden)</value>
+  </data>
+  <data name="IptvSettings_UpdateIntervalHint" xml:space="preserve">
+    <value>Standard: 24 Stunden (1 bis 720 Stunden).</value>
+  </data>
+  <data name="Iptv_DialogTitle" xml:space="preserve">
+    <value>IPTV-Wiedergabeliste</value>
+  </data>
+  <data name="Iptv_PlaylistName" xml:space="preserve">
+    <value>Wiedergabelistenname</value>
+  </data>
+  <data name="Iptv_SourceKind" xml:space="preserve">
+    <value>Quellentyp</value>
+  </data>
+  <data name="Iptv_Location" xml:space="preserve">
+    <value>URL oder Dateipfad</value>
+  </data>
+  <data name="Iptv_InlineContent" xml:space="preserve">
+    <value>M3U-Textinhalt</value>
+  </data>
+  <data name="Iptv_AutoFallbackVariants" xml:space="preserve">
+    <value>Qualitätsvarianten automatisch gruppieren (HD/FHD/SD)</value>
+  </data>
+  <data name="Iptv_CopyLocalFileToStore" xml:space="preserve">
+    <value>Lokale Datei in das Anwendungsprofil kopieren</value>
+  </data>
+  <data name="Iptv_PlaylistEnabled" xml:space="preserve">
+    <value>Wiedergabeliste ist aktiviert</value>
+  </data>
+  <data name="Iptv_CheckButton" xml:space="preserve">
+    <value>Prüfen</value>
+  </data>
+  <data name="Iptv_CheckHint" xml:space="preserve">
+    <value>Klicken Sie auf 'Prüfen', um den Stream zu validieren</value>
+  </data>
+  <data name="Iptv_Checking" xml:space="preserve">
+    <value>Quelle wird geprüft...</value>
+  </data>
+  <data name="Iptv_UrlLabel" xml:space="preserve">
+    <value>Wiedergabelisten-URL (http / https)</value>
+  </data>
+  <data name="Iptv_FilePathLabel" xml:space="preserve">
+    <value>Dateipfad (.m3u, .m3u8)</value>
+  </data>
+  <data name="Iptv_StreamUrlLabel" xml:space="preserve">
+    <value>Medienstream-URL</value>
+  </data>
+  <data name="Iptv_SelectPlaylistFile" xml:space="preserve">
+    <value>Wiedergabelistendatei auswählen</value>
+  </data>
+  <data name="Iptv_ErrorEmptyName" xml:space="preserve">
+    <value>Bitte geben Sie einen Namen für die Wiedergabeliste ein.</value>
+  </data>
+  <data name="Iptv_ToggleEnabled" xml:space="preserve">
+    <value>Wiedergabeliste aktivieren/deaktivieren</value>
   </data>
 </root>

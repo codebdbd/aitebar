@@ -3,6 +3,12 @@
                     xmlns:sys="clr-namespace:System;assembly=mscorlib"
                     xmlns:local="clr-namespace:AiteBar">
     <sys:Double x:Key="FormControlHeight">36</sys:Double>
+    <sys:Double x:Key="CompactControlHeight">28</sys:Double>
+    <sys:Double x:Key="ToolbarControlHeight">28</sys:Double>
+    <CornerRadius x:Key="ControlCornerRadius">4</CornerRadius>
+    <CornerRadius x:Key="PanelCornerRadius">6</CornerRadius>
+    <Thickness x:Key="ButtonPaddingNormal">15,0</Thickness>
+    <Thickness x:Key="ButtonPaddingCompact">10,0</Thickness>
     <Thickness x:Key="FormInputPlaceholderMargin">8,0,0,0</Thickness>
 
     <SolidColorBrush x:Key="FormControlBackground" Color="#383838"/>
@@ -99,6 +105,20 @@
         </Style.Triggers>
     </Style>
 
+    <!-- Compact Primary Button (28px) for sidebars, compact utilities -->
+    <Style x:Key="PrimaryCompactButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+        <Setter Property="Height" Value="{StaticResource CompactControlHeight}"/>
+        <Setter Property="Padding" Value="{StaticResource ButtonPaddingCompact}"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <!-- Compact Secondary Button (28px) for sidebars, compact utilities -->
+    <Style x:Key="SecondaryCompactButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+        <Setter Property="Height" Value="{StaticResource CompactControlHeight}"/>
+        <Setter Property="Padding" Value="{StaticResource ButtonPaddingCompact}"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
     <Style x:Key="FormSelectionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
         <Setter Property="Height" Value="{StaticResource FormControlHeight}"/>
     </Style>
@@ -152,6 +172,13 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- Compact Icon Button (28x28) -->
+    <Style x:Key="IconCompactButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
+        <Setter Property="Width" Value="{StaticResource CompactControlHeight}"/>
+        <Setter Property="Height" Value="{StaticResource CompactControlHeight}"/>
+        <Setter Property="FontSize" Value="16"/>
     </Style>
 
     <!-- Toolbar/Format Button - For quick note toolbar and similar -->

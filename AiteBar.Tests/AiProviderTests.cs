@@ -9,13 +9,29 @@ namespace AiteBar.Tests;
 public sealed class AiProviderTests
 {
     [Fact]
-    public void Catalog_ContainsSupportedFreeTierProvidersAndExcludesDeepInfra()
+    public void Catalog_ContainsSupportedProvidersAndValidHttpsEndpoints()
     {
         string[] ids = AiProviderCatalog.All.Select(provider => provider.Id).ToArray();
 
-        Assert.Equal(["cerebras", "groq", "mistral"], ids);
+        Assert.Equal(
+        [
+            "cerebras",
+            "groq",
+            "mistral",
+            "codestral",
+            "gemini",
+            "nvidia",
+            "openrouter",
+            "sambanova",
+            "huggingface",
+            "scaleway",
+            "ovhcloud",
+            "novita",
+            "siliconflow",
+            "ollama_cloud",
+            "custom"
+        ], ids);
         Assert.DoesNotContain("deepinfra", ids);
-        Assert.DoesNotContain("openrouter", ids);
         Assert.DoesNotContain("github", ids);
         Assert.All(AiProviderCatalog.All, provider => Assert.Equal("https", provider.ModelsUri.Scheme));
     }
@@ -1203,6 +1219,152 @@ public sealed class AiProviderTests
                     "{\"data\":[{\"id\":\"test\",\"name\":\"Test\"}]}",
                     Encoding.UTF8,
                     "application/json")
+            });
+        }
+    }
+
+    [Fact]
+    public void SettingsNormalizer_ValidatesAndNormalizesCustomBaseUrl()
+    {
+        var settings = new AiSettings
+        {
+            Connections =
+            [
+                new AiConnectionSettings
+                {
+                    Id = "custom-https",
+                    ProviderId = "custom",
+                    DisplayName = "Custom Router",
+                    CredentialTarget = "AiteBar/AI/custom-https",
+                    CustomBaseUrl = "https://router.example.com/v1/chat/completions"
+                },
+                new AiConnectionSettings
+                {
+                    Id = "custom-loopback",
+                    ProviderId = "custom",
+                    DisplayName = "Local Ollama",
+                    CredentialTarget = "AiteBar/AI/custom-loopback",
+                    CustomBaseUrl = "http://localhost:11434/v1/"
+                },
+                new AiConnectionSettings
+                {
+                    Id = "custom-insecure",
+                    ProviderId = "custom",
+                    DisplayName = "Insecure",
+                    CredentialTarget = "AiteBar/AI/custom-insecure",
+                    CustomBaseUrl = "http://remote.example.com/v1"
+                },
+                new AiConnectionSettings
+                {
+                    Id = "custom-empty",
+                    ProviderId = "custom",
+                    DisplayName = "Missing URL",
+                    CredentialTarget = "AiteBar/AI/custom-empty",
+                    CustomBaseUrl = ""
+                },
+                new AiConnectionSettings
+                {
+                    Id = "groq-with-url",
+                    ProviderId = "groq",
+                    DisplayName = "Groq",
+                    CredentialTarget = "AiteBar/AI/groq-with-url",
+                    CustomBaseUrl = "https://should-be-cleared.example.com/v1"
+                }
+            ]
+        };
+
+        AiSettings normalized = AiSettingsNormalizer.Normalize(settings, out bool changed);
+
+        Assert.True(changed);
+        Assert.Equal(3, normalized.Connections.Count);
+        Assert.Equal("https://router.example.com/v1", normalized.Connections[0].CustomBaseUrl);
+        Assert.Equal("http://localhost:11434/v1", normalized.Connections[1].CustomBaseUrl);
+        Assert.Null(normalized.Connections[2].CustomBaseUrl);
+    }
+
+    [Fact]
+    public async Task ProviderClient_CustomProvider_UsesCustomBaseUrlForModelsAndChat()
+    {
+        var credentials = new MemoryCredentialStore();
+        credentials.Write("AiteBar/AI/custom-1", "custom-key");
+        var handler = new CaptureRequestHandler();
+        var client = new AiProviderClient(new HttpClient(handler), credentials);
+        var connection = new AiConnectionSettings
+        {
+            Id = "custom-1",
+            ProviderId = "custom",
+            DisplayName = "My Router",
+            CredentialTarget = "AiteBar/AI/custom-1",
+            CustomBaseUrl = "https://router.example.com/api/v1"
+        };
+
+        IReadOnlyList<AiModelDescriptor> models = await client.GetModelsAsync(connection, CancellationToken.None);
+        Assert.Single(models);
+        Assert.Equal("https://router.example.com/api/v1/models", handler.RequestedUris[0]);
+
+        AiProviderResponse response = await client.GenerateAsync(
+            connection,
+            models[0],
+            new AiChatRequest { Messages = [new AiChatMessage("user", "hi")] },
+            CancellationToken.None);
+        Assert.Equal("ok", response.Content);
+        Assert.Equal("https://router.example.com/api/v1/chat/completions", handler.RequestedUris[1]);
+    }
+
+    [Fact]
+    public async Task ProviderClient_OpenRouter_ClassifiesFreeAndPaidModels()
+    {
+        var credentials = new MemoryCredentialStore();
+        credentials.Write("AiteBar/AI/or-1", "or-key");
+        var handler = new OpenRouterModelsHandler();
+        var client = new AiProviderClient(new HttpClient(handler), credentials);
+        var connection = Connection("or-1", "openrouter", "AiteBar/AI/or-1");
+
+        IReadOnlyList<AiModelDescriptor> models = await client.GetModelsAsync(connection, CancellationToken.None);
+
+        Assert.Equal(3, models.Count);
+        Assert.Equal(AiCostStatus.VerifiedFree, models.Single(m => m.ModelId == "meta-llama/llama-3.3-70b-instruct:free").CostStatus);
+        Assert.Equal(AiCostStatus.VerifiedFree, models.Single(m => m.ModelId == "zero-priced/model").CostStatus);
+        Assert.Equal(AiCostStatus.Paid, models.Single(m => m.ModelId == "anthropic/claude-3.5-sonnet").CostStatus);
+    }
+
+    private sealed class CaptureRequestHandler : HttpMessageHandler
+    {
+        public List<string> RequestedUris { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            RequestedUris.Add(request.RequestUri!.AbsoluteUri);
+            string body = request.Method == HttpMethod.Get
+                ? "{\"data\":[{\"id\":\"custom-model\",\"name\":\"Custom Model\"}]}"
+                : "{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}";
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
+            });
+        }
+    }
+
+    private sealed class OpenRouterModelsHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            const string body = """
+            {
+              "data": [
+                { "id": "meta-llama/llama-3.3-70b-instruct:free", "name": "Llama 3.3 70B Free", "pricing": { "prompt": "0", "completion": "0" } },
+                { "id": "zero-priced/model", "name": "Zero Priced", "pricing": { "prompt": "0", "completion": "0" } },
+                { "id": "anthropic/claude-3.5-sonnet", "name": "Claude 3.5 Sonnet", "pricing": { "prompt": "0.000003", "completion": "0.000015" } }
+              ]
+            }
+            """;
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(body, Encoding.UTF8, "application/json")
             });
         }
     }

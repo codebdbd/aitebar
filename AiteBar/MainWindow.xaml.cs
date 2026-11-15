@@ -777,6 +777,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
             case HotkeyCommand.ZenEditor:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("ZenEditor", HideDock));
                 break;
+            case HotkeyCommand.TelegramPostEditor:
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("TelegramPostEditor", HideDock));
+                break;
+            case HotkeyCommand.IptvPlayer:
+                _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("IptvPlayer", HideDock));
+                break;
             case HotkeyCommand.AiteProfiles:
                 _ = RunPresetActionAsync(() => _actionService.LaunchUtilityAsync("AiteProfiles", HideDock));
                 break;
@@ -1298,6 +1304,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             PositionWindowImmediately(_shown);
             _positionIndicatorService.Initialize(_settingsService, this);
             _ = Dispatcher.BeginInvoke(IconPickerWindow.WarmupCatalogMetadata, DispatcherPriority.ApplicationIdle);
+            TriggerIptvBackgroundRefreshIfNeeded();
         }
         catch (OperationCanceledException)
         {
@@ -1691,6 +1698,12 @@ public partial class MainWindow : Window, ISettingsWindowContext
                         break;
                     case "ZenEditor":
                         await _actionService.LaunchUtilityAsync("ZenEditor", HideDock);
+                        break;
+                    case "TelegramPostEditor":
+                        await _actionService.LaunchUtilityAsync("TelegramPostEditor", HideDock);
+                        break;
+                    case "IptvPlayer":
+                        await _actionService.LaunchUtilityAsync("IptvPlayer", HideDock);
                         break;
                     case "AiteProfiles":
                         await _actionService.LaunchUtilityAsync("AiteProfiles", HideDock);
@@ -2186,6 +2199,33 @@ public partial class MainWindow : Window, ISettingsWindowContext
         return parent is T p ? p : FindParent<T>(parent);
     }
 
+
+    private void TriggerIptvBackgroundRefreshIfNeeded()
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var settings = _settingsService.Settings.Iptv;
+                if (settings == null || !settings.AutoUpdateEnabled) return;
+                var store = new IptvPlayer.IptvPlayerStore();
+                using var svc = new IptvPlayer.IptvPlaylistService(store);
+                if (svc.IsAutoUpdateDue(settings))
+                {
+                    int updated = await svc.RefreshAllUrlSourcesAsync(settings.Sources);
+                    if (updated > 0)
+                    {
+                        settings.LastAutoUpdateUtc = DateTime.UtcNow;
+                        await _settingsService.SaveAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Log(ex);
+            }
+        });
+    }
 
     protected override void OnClosed(EventArgs e)
     {

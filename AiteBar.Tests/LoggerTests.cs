@@ -95,6 +95,32 @@ public sealed class LoggerTests
         Assert.Contains(backups, path => new FileInfo(path).Length > 1024 * 1024);
     }
 
+    [Fact]
+    public void Flush_BlocksUntilPendingEntryIsWritten()
+    {
+        using var scope = new LogArtifactScope();
+
+        Logger.Log(new InvalidOperationException("fatal flush smoke"));
+        bool flushed = Logger.Flush(TimeSpan.FromSeconds(5));
+
+        Assert.True(flushed);
+        Assert.Contains("fatal flush smoke", File.ReadAllText(PathHelper.LogFile), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Flush_ReturnsImmediatelyWhenQueueIsEmpty()
+    {
+        using var scope = new LogArtifactScope();
+        await Logger.WaitForFlushAsync();
+
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        bool flushed = Logger.Flush(TimeSpan.FromSeconds(5));
+        stopwatch.Stop();
+
+        Assert.True(flushed);
+        Assert.True(stopwatch.Elapsed < TimeSpan.FromSeconds(1), $"Flush took {stopwatch.Elapsed}.");
+    }
+
     internal sealed class LogArtifactScope : IDisposable
     {
         private readonly string _tempRoot = Path.Combine(Path.GetTempPath(), "AiteBarTests", Guid.NewGuid().ToString("N"));

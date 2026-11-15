@@ -32,6 +32,7 @@ public partial class DiskCleanerWindow : DarkWindow
     {
         InitializeComponent();
         _settingsService = settingsService;
+        PopulateCategories(GetDefaultCategories(), isInitial: true);
         Loaded += DiskCleanerWindow_Loaded;
     }
 
@@ -54,7 +55,7 @@ public partial class DiskCleanerWindow : DarkWindow
 
         MaxHeight = Math.Max(400, work.Height - 32);
 
-        double targetHeight = double.IsNaN(Height) ? 520 : Height;
+        double targetHeight = double.IsNaN(Height) ? 440 : Height;
         var (shownX, shownY) = UtilityWindowLayoutHelper.GetCenteredCoordinates(settings.Edge, work, Width, targetHeight);
         Left = shownX;
         Top = shownY;
@@ -72,7 +73,7 @@ public partial class DiskCleanerWindow : DarkWindow
             : Forms.Screen.PrimaryScreen;
         var work = screen?.WorkingArea ?? Forms.Screen.PrimaryScreen?.WorkingArea ?? new System.Drawing.Rectangle(0, 0, 1280, 720);
 
-        double currentHeight = ActualHeight > 0 ? ActualHeight : (double.IsNaN(Height) ? MinHeight : Height);
+        double currentHeight = ActualHeight > 0 ? ActualHeight : (double.IsNaN(Height) ? 440 : Height);
         double currentWidth = ActualWidth > 0 ? ActualWidth : (double.IsNaN(Width) ? MinWidth : Width);
 
         if (currentHeight > work.Height - 32)
@@ -128,7 +129,7 @@ public partial class DiskCleanerWindow : DarkWindow
         try
         {
             var result = await _cleanerService.ScanAsync(progress, _cts.Token);
-            PopulateCategories(result.Categories);
+            UpdateCategorySizes(result.Categories);
             TxtOverallStatus.Foreground = (Brush)FindResource("MutedText");
             TxtOverallStatus.Text = LocalizationService.Get("DiskCleaner_Status_Ready");
         }
@@ -152,7 +153,19 @@ public partial class DiskCleanerWindow : DarkWindow
         }
     }
 
-    private void PopulateCategories(IReadOnlyList<DiskCleanCategory> categories)
+    private static IReadOnlyList<DiskCleanCategory> GetDefaultCategories() =>
+    [
+        new(DiskCleanerService.CategoryUserTemp, "DiskCleaner_Category_UserTemp", "DiskCleaner_Category_UserTemp_Desc", 0, IsSelected: true, IsSafe: true),
+        new(DiskCleanerService.CategoryBrowserCache, "DiskCleaner_Category_BrowserCache", "DiskCleaner_Category_BrowserCache_Desc", 0, IsSelected: true, IsSafe: true),
+        new(DiskCleanerService.CategoryGpuCache, "DiskCleaner_Category_GpuCache", "DiskCleaner_Category_GpuCache_Desc", 0, IsSelected: true, IsSafe: true),
+        new(DiskCleanerService.CategoryDnsCache, "DiskCleaner_Category_DnsCache", "DiskCleaner_Category_DnsCache_Desc", 0, IsSelected: true, IsSafe: true),
+        new(DiskCleanerService.CategoryRecycleBin, "DiskCleaner_Category_RecycleBin", "DiskCleaner_Category_RecycleBin_Desc", 0, IsSelected: false, IsSafe: false, WarningKey: "DiskCleaner_Warning_RecycleBin"),
+        new(DiskCleanerService.CategoryDevCache, "DiskCleaner_Category_DevCache", "DiskCleaner_Category_DevCache_Desc", 0, IsSelected: false, IsSafe: false, WarningKey: "DiskCleaner_Warning_DevCache"),
+        new(DiskCleanerService.CategoryCrashDumps, "DiskCleaner_Category_CrashDumps", "DiskCleaner_Category_CrashDumps_Desc", 0, IsSelected: false, IsSafe: false, WarningKey: "DiskCleaner_Warning_CrashDumps"),
+        new(DiskCleanerService.CategoryWindowsTemp, "DiskCleaner_Category_WindowsTemp", "DiskCleaner_Category_WindowsTemp_Desc", 0, IsSelected: false, IsSafe: false, WarningKey: "DiskCleaner_Warning_WindowsTemp"),
+    ];
+
+    private void PopulateCategories(IReadOnlyList<DiskCleanCategory> categories, bool isInitial = false)
     {
         CategoriesPanel.Children.Clear();
         _categoryItems.Clear();
@@ -170,7 +183,7 @@ public partial class DiskCleanerWindow : DarkWindow
                 });
             }
 
-            var rowGrid = new Grid { Margin = new Thickness(12, 10, 12, 10) };
+            var rowGrid = new Grid { Margin = new Thickness(12, 6, 12, 6) };
             rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
             rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             rowGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -231,9 +244,9 @@ public partial class DiskCleanerWindow : DarkWindow
             var badgeBorder = new Border { Style = (Style)FindResource("SizeBadgeStyle") };
             var sizeText = new TextBlock
             {
-                Text = DiskCleanerService.FormatByteSize(cat.SizeBytes),
+                Text = isInitial ? "..." : DiskCleanerService.FormatByteSize(cat.SizeBytes),
                 FontSize = 11,
-                Foreground = cat.SizeBytes > 0 ? (Brush)FindResource("SafeGreenColor") : (Brush)FindResource("MutedText"),
+                Foreground = (!isInitial && cat.SizeBytes > 0) ? (Brush)FindResource("SafeGreenColor") : (Brush)FindResource("MutedText"),
                 VerticalAlignment = VerticalAlignment.Center
             };
             badgeBorder.Child = sizeText;
@@ -258,6 +271,22 @@ public partial class DiskCleanerWindow : DarkWindow
                 Switch = toggleSwitch,
                 SizeText = sizeText
             });
+        }
+    }
+
+    private void UpdateCategorySizes(IReadOnlyList<DiskCleanCategory> scannedCategories)
+    {
+        foreach (var cat in scannedCategories)
+        {
+            var item = _categoryItems.FirstOrDefault(c => c.Category.Id == cat.Id);
+            if (item != null)
+            {
+                item.Category = cat;
+                item.SizeText.Text = DiskCleanerService.FormatByteSize(cat.SizeBytes);
+                item.SizeText.Foreground = cat.SizeBytes > 0
+                    ? (Brush)FindResource("SafeGreenColor")
+                    : (Brush)FindResource("MutedText");
+            }
         }
     }
 
@@ -305,24 +334,6 @@ public partial class DiskCleanerWindow : DarkWindow
 
         if (selectedItems.Count == 0) return;
 
-        // Safety confirmation for Caution categories
-        var cautionItems = selectedItems.Where(item => !item.Category.IsSafe).ToList();
-        if (cautionItems.Count > 0)
-        {
-            string itemsList = string.Join("\n• ", cautionItems.Select(c => LocalizationService.Get(c.Category.TitleKey)));
-            string message = string.Format(
-                LocalizationService.Get("DiskCleaner_ConfirmCautionMessage"),
-                cautionItems.Count,
-                "• " + itemsList);
-            string caption = LocalizationService.Get("DiskCleaner_ConfirmCautionTitle");
-
-            var confirmResult = System.Windows.MessageBox.Show(this, message, caption, MessageBoxButton.YesNo, MessageBoxImage.Warning);
-            if (confirmResult != MessageBoxResult.Yes)
-            {
-                return;
-            }
-        }
-
         _isBusy = true;
         UpdateUiState();
 
@@ -364,9 +375,9 @@ public partial class DiskCleanerWindow : DarkWindow
             PopulateResultDetails(result);
 
             // Re-run quick scan to refresh remaining sizes
-            await Task.Delay(500);
+            await Task.Delay(300);
             var scanRes = await _cleanerService.ScanAsync(null, _cts.Token);
-            PopulateCategories(scanRes.Categories);
+            UpdateCategorySizes(scanRes.Categories);
         }
         catch (OperationCanceledException)
         {

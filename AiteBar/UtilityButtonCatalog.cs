@@ -136,6 +136,16 @@ internal static class UtilityButtonCatalog
         settings => settings.ShowPresetAiteProfiles,
         (settings, visible) => settings.ShowPresetAiteProfiles = visible);
 
+    public static UtilityButtonDefinition TelegramPostEditor { get; } = new(
+        "TelegramPostEditor", "\uF69A", UtilityIconColors.TextWorkspace, "Main_TelegramPostEditorTooltip",
+        settings => settings.ShowPresetTelegramPostEditor,
+        (settings, visible) => settings.ShowPresetTelegramPostEditor = visible);
+
+    public static UtilityButtonDefinition IptvPlayer { get; } = new(
+        "IptvPlayer", "\uEDC3", UtilityIconColors.ScreenCapture, "Main_IptvPlayerTooltip",
+        settings => settings.ShowPresetIptvPlayer,
+        (settings, visible) => settings.ShowPresetIptvPlayer = visible);
+
     public static IReadOnlyList<UtilityButtonDefinition> All { get; } =
     [
         Search,
@@ -158,7 +168,9 @@ internal static class UtilityButtonCatalog
         TextProcessing,
         PromptBuilder,
         ZenEditor,
-        AiteProfiles
+        AiteProfiles,
+        TelegramPostEditor,
+        IptvPlayer
     ];
 
     private static readonly IReadOnlyDictionary<string, UtilityButtonDefinition> ById =

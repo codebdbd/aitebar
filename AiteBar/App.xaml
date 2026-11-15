@@ -9,6 +9,9 @@
                 <ResourceDictionary Source="FormControlsResources.xaml"/>
                 <ResourceDictionary Source="UtilityWindowResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <!-- Fonts -->
+            <FontFamily x:Key="FluentSystemIcons">pack://application:,,,/Resources/#FluentSystemIcons-Regular</FontFamily>
+
             <!-- Colors -->
         <SolidColorBrush x:Key="WindowBackground" Color="#191919"/>
         <SolidColorBrush x:Key="PanelBackground" Color="#191919"/>

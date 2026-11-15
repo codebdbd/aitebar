@@ -196,6 +196,8 @@ public sealed class HotkeyServiceTests
                 HotkeyCommand.PromptBuilder,
                 HotkeyCommand.ZenEditor,
                 HotkeyCommand.AiteProfiles,
+                HotkeyCommand.TelegramPostEditor,
+                HotkeyCommand.IptvPlayer,
                 HotkeyCommand.ActivateContext0,
                 HotkeyCommand.ActivateContext1,
                 HotkeyCommand.ActivateContext2,

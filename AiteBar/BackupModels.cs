@@ -8,4 +8,9 @@ internal sealed record BackupSecretPayload(
     Dictionary<string, string> Credentials,
     IReadOnlyList<ClipboardHistoryEntry>? ClipboardEntries);
 
-internal sealed record BackupReadResult(AppSettings Settings, BackupSecretPayload? Secrets, IReadOnlyDictionary<string, byte[]> Icons);
+internal sealed record BackupReadResult(
+    AppSettings Settings,
+    BackupSecretPayload? Secrets,
+    IReadOnlyDictionary<string, byte[]> Icons,
+    IReadOnlyDictionary<string, byte[]>? TelegramFiles = null,
+    IReadOnlyDictionary<string, byte[]>? IptvFiles = null);

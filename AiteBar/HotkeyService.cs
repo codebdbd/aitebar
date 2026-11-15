@@ -23,6 +23,8 @@ public enum HotkeyCommand
     PromptBuilder,
     ZenEditor,
     AiteProfiles,
+    TelegramPostEditor,
+    IptvPlayer,
     ActivateContext0,
     ActivateContext1,
     ActivateContext2,
@@ -78,6 +80,8 @@ public sealed class HotkeyService
     internal const int ZenEditorId = 9012;
     internal const int PromptBuilderId = 9013;
     internal const int AiteProfilesId = 9014;
+    internal const int TelegramPostEditorId = 9015;
+    internal const int IptvPlayerId = 9016;
     internal const int ContextHotkeyBaseId = 9100;
 
     internal const uint ModAlt = 0x0001;
@@ -100,7 +104,9 @@ public sealed class HotkeyService
         new HotkeyDescriptor(HotkeyCommand.TextProcessing, TextProcessingId, "Tool_TextProcessing"),
         new HotkeyDescriptor(HotkeyCommand.PromptBuilder, PromptBuilderId, "Tool_PromptBuilder"),
         new HotkeyDescriptor(HotkeyCommand.ZenEditor, ZenEditorId, "Tool_ZenEditor"),
-        new HotkeyDescriptor(HotkeyCommand.AiteProfiles, AiteProfilesId, "Tool_AiteProfiles")
+        new HotkeyDescriptor(HotkeyCommand.AiteProfiles, AiteProfilesId, "Tool_AiteProfiles"),
+        new HotkeyDescriptor(HotkeyCommand.TelegramPostEditor, TelegramPostEditorId, "Tool_TelegramPostEditor"),
+        new HotkeyDescriptor(HotkeyCommand.IptvPlayer, IptvPlayerId, "Tool_IptvPlayer")
     ];
 
     private static readonly IReadOnlyDictionary<int, HotkeyCommand> CommandsById =
@@ -139,7 +145,9 @@ public sealed class HotkeyService
             [HotkeyCommand.TextProcessing] = settings.TextProcessingHotkey,
             [HotkeyCommand.PromptBuilder] = settings.PromptBuilderHotkey,
             [HotkeyCommand.ZenEditor] = settings.ZenEditorHotkey,
-            [HotkeyCommand.AiteProfiles] = settings.AiteProfilesHotkey
+            [HotkeyCommand.AiteProfiles] = settings.AiteProfilesHotkey,
+            [HotkeyCommand.TelegramPostEditor] = settings.TelegramPostEditorHotkey,
+            [HotkeyCommand.IptvPlayer] = settings.IptvPlayerHotkey
         };
 
         var definitions = Descriptors

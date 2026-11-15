@@ -7,6 +7,8 @@ public enum AppSettingsSection
     Hotkeys,
     QuickTools,
     AiProviders,
+    Telegram,
+    Iptv,
     About
 }
 

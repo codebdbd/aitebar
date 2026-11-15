@@ -21,18 +21,18 @@ public sealed class AppSettingsLayoutContractTests
         "PanelContextsList",
         "HotkeyNextContext", "HotkeyPreviousContext", "HotkeyAddButton",
         "HotkeyFileSorter", "HotkeyIconConverter", "HotkeyQuickNote", "HotkeyColorPicker", "HotkeyTimerStopwatch", "HotkeyQRCodeGenerator", "HotkeyClipboardManager",
-        "HotkeyTextProcessing", "HotkeyPromptBuilder", "HotkeyZenEditor", "HotkeyAiteProfiles",
+        "HotkeyTextProcessing", "HotkeyPromptBuilder", "HotkeyZenEditor", "HotkeyAiteProfiles", "HotkeyTelegramPostEditor", "HotkeyIptvPlayer",
         "ChkShowPresetSearch", "ChkShowPresetScreenshot", "ChkShowPresetVideo", "ChkShowPresetCalc",
         "ChkShowPresetExplorer", "ChkShowPresetDownloads", "ChkShowPresetFileSorter", "ChkShowPresetDiskCleaner", "ChkShowPresetIconConverter",
         "ChkShowPresetTimerStopwatch", "ChkShowPresetColorPicker", "ChkShowPresetQuickNote", "ChkShowPresetQRCodeGenerator",
         "ChkShowPresetClipboardManager", "ChkShowPresetShowDesktop", "ChkShowPresetAppsFolder", "ChkShowPresetCopilot",
-        "ChkShowPresetTextProcessing", "ChkShowPresetPromptBuilder", "ChkShowPresetZenEditor", "ChkShowPresetAiteProfiles",
-        "ChkClipboardManagerPersistHistory", "QuickToolsList",
+        "ChkShowPresetTextProcessing", "ChkShowPresetPromptBuilder", "ChkShowPresetZenEditor", "ChkShowPresetAiteProfiles", "ChkShowPresetTelegramPostEditor", "ChkShowPresetIptvPlayer",
+        "ChkClipboardManagerPersistHistory", "ChkIptvAutoUpdate", "QuickToolsList",
         "QuickToolRowQuickNote", "QuickToolRowQRCodeGenerator", "QuickToolRowDownloads", "QuickToolRowVideo",
         "QuickToolRowCopilot", "QuickToolRowCalculator", "QuickToolRowIconConverter", "QuickToolRowClipboardManager",
         "QuickToolRowColorPicker", "QuickToolRowSearch", "QuickToolRowShowDesktop", "QuickToolRowAppsFolder",
         "QuickToolRowExplorer", "QuickToolRowScreenshot", "QuickToolRowFileSorter", "QuickToolRowDiskCleaner", "QuickToolRowTimerStopwatch",
-        "QuickToolRowTextProcessing", "QuickToolRowPromptBuilder", "QuickToolRowZenEditor", "QuickToolRowAiteProfiles"
+        "QuickToolRowTextProcessing", "QuickToolRowPromptBuilder", "QuickToolRowZenEditor", "QuickToolRowAiteProfiles", "QuickToolRowTelegramPostEditor", "QuickToolRowIptvPlayer"
     ];
 
     [Fact]
@@ -92,7 +92,7 @@ public sealed class AppSettingsLayoutContractTests
             element.Attribute(XamlNamespace + "Name")?.Value is "TxtPanelSizeValue" or "TxtActivationZoneValue" or "TxtActivationDelayValue");
         Assert.DoesNotContain(window.Descendants(PresentationNamespace + "Style"), element =>
             element.Attribute(XamlNamespace + "Key")?.Value is "ModernValueChipStyle" or "ModernValueChipTextStyle");
-        Assert.Equal(14, window.Descendants().Count(element => element.Name.LocalName == "HotkeyCaptureBox"));
+        Assert.Equal(16, window.Descendants().Count(element => element.Name.LocalName == "HotkeyCaptureBox"));
         Assert.DoesNotContain(window.Descendants(), element =>
             (element.Attribute(XamlNamespace + "Name")?.Value ?? string.Empty).EndsWith("Key", StringComparison.Ordinal));
 
@@ -141,8 +141,8 @@ public sealed class AppSettingsLayoutContractTests
 
         XElement navigation = FindNamedElement(window, "SettingsNavigationList");
         XElement[] navigationItems = navigation.Elements(PresentationNamespace + "ListBoxItem").ToArray();
-        Assert.Equal(6, navigationItems.Length);
-        Assert.Equal(["\uF587", "\uE8B0", "\uF4B8", "\uF82E", "\uF15A", "\uF4A2"],
+        Assert.Equal(8, navigationItems.Length);
+        Assert.Equal(["\uF587", "\uE8B0", "\uF4B8", "\uF82E", "\uF15A", "\uF69A", "\uEDC3", "\uF4A2"],
             navigationItems.Select(item => item.Attribute("Tag")?.Value ?? string.Empty).ToArray());
         Assert.All(navigationItems, item =>
         {
@@ -161,6 +161,8 @@ public sealed class AppSettingsLayoutContractTests
             "HotkeySettingsSection",
             "QuickToolsSettingsSection",
             "AiProvidersSettingsSection",
+            "TelegramSettingsSection",
+            "IptvSettingsSection",
             "AboutSettingsSection"
         ];
         string[] actualSections = scrollViewer
@@ -180,7 +182,7 @@ public sealed class AppSettingsLayoutContractTests
             .Cast<string>()
             .ToArray();
         Assert.Equal(expectedSections, directSectionChildren);
-        Assert.Equal(["0,0,0,32", "0,0,0,32", "0,0,0,32", "0,0,0,32", "0,0,0,32", "0"], scrollContent
+        Assert.Equal(["0,0,0,32", "0,0,0,32", "0,0,0,32", "0,0,0,32", "0,0,0,32", "0,0,0,32", "0,0,0,32", "0"], scrollContent
             .Elements(PresentationNamespace + "Border")
             .Where(element => expectedSections.Contains(element.Attribute(XamlNamespace + "Name")?.Value, StringComparer.Ordinal))
             .Select(element => element.Attribute("Margin")?.Value ?? string.Empty)

@@ -24,6 +24,7 @@ public interface IFileSystemOperations
     IEnumerable<string> EnumerateFixedDriveRootPaths();
     string GetSpecialFolderPath(Environment.SpecialFolder folder);
     IEnumerable<string> EnumerateDirectories(string path);
+    string? GetCurrentUserSid();
 }
 
 public interface IProcessRunner
@@ -39,11 +40,26 @@ public interface IWin32DiskOperations
 {
     int EmptyRecycleBin(string? rootPath);
     bool FlushDnsCache();
+    void UpdateRecycleBinIcon();
 }
 
 [SupportedOSPlatform("windows6.1")]
 public sealed class WindowsFileSystemOperations : IFileSystemOperations
 {
+    private static readonly EnumerationOptions SafeRecursiveEnumerationOptions = new()
+    {
+        IgnoreInaccessible = true,
+        RecurseSubdirectories = true,
+        AttributesToSkip = FileAttributes.ReparsePoint
+    };
+
+    private static readonly EnumerationOptions SafeTopLevelEnumerationOptions = new()
+    {
+        IgnoreInaccessible = true,
+        RecurseSubdirectories = false,
+        AttributesToSkip = FileAttributes.ReparsePoint
+    };
+
     public long CalculateDirectorySize(string directoryPath)
     {
         if (!Directory.Exists(directoryPath)) return 0;
@@ -51,7 +67,7 @@ public sealed class WindowsFileSystemOperations : IFileSystemOperations
         try
         {
             var dirInfo = new DirectoryInfo(directoryPath);
-            foreach (var file in dirInfo.EnumerateFiles("*", new EnumerationOptions { IgnoreInaccessible = true, RecurseSubdirectories = true }))
+            foreach (var file in dirInfo.EnumerateFiles("*", SafeRecursiveEnumerationOptions))
             {
                 try
                 {
@@ -81,10 +97,15 @@ public sealed class WindowsFileSystemOperations : IFileSystemOperations
         var dirInfo = new DirectoryInfo(directoryPath);
 
         // Files
-        foreach (var file in dirInfo.EnumerateFiles("*", new EnumerationOptions { IgnoreInaccessible = true }))
+        foreach (var file in dirInfo.EnumerateFiles("*", SafeTopLevelEnumerationOptions))
         {
             try
             {
+                if (string.Equals(file.Name, "desktop.ini", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 long len = file.Length;
                 file.Attributes = FileAttributes.Normal;
                 file.Delete();
@@ -98,11 +119,12 @@ public sealed class WindowsFileSystemOperations : IFileSystemOperations
         }
 
         // Subdirectories
-        foreach (var subDir in dirInfo.EnumerateDirectories("*", new EnumerationOptions { IgnoreInaccessible = true }))
+        foreach (var subDir in dirInfo.EnumerateDirectories("*", SafeTopLevelEnumerationOptions))
         {
             try
             {
                 long subFreed = CalculateDirectorySize(subDir.FullName);
+                NormalizeAttributesRecursively(subDir);
                 subDir.Delete(true);
                 freed += subFreed;
                 cleaned++;
@@ -113,10 +135,38 @@ public sealed class WindowsFileSystemOperations : IFileSystemOperations
                 freed += innerFreed;
                 cleaned += innerCleaned;
                 locked += innerLocked;
+                try
+                {
+                    subDir.Attributes = FileAttributes.Normal;
+                    subDir.Delete(true);
+                }
+                catch { }
             }
         }
 
         return (freed, cleaned, locked);
+    }
+
+    private static void NormalizeAttributesRecursively(DirectoryInfo dir)
+    {
+        try
+        {
+            dir.Attributes = FileAttributes.Normal;
+            foreach (var file in dir.EnumerateFiles("*", SafeTopLevelEnumerationOptions))
+            {
+                try
+                {
+                    file.Attributes = FileAttributes.Normal;
+                }
+                catch { }
+            }
+
+            foreach (var sub in dir.EnumerateDirectories("*", SafeTopLevelEnumerationOptions))
+            {
+                NormalizeAttributesRecursively(sub);
+            }
+        }
+        catch { }
     }
 
     public bool DirectoryExists(string path) => Directory.Exists(path);
@@ -140,11 +190,23 @@ public sealed class WindowsFileSystemOperations : IFileSystemOperations
         if (!Directory.Exists(path)) return [];
         try
         {
-            return Directory.EnumerateDirectories(path);
+            return Directory.EnumerateDirectories(path, "*", SafeTopLevelEnumerationOptions);
         }
         catch
         {
             return [];
+        }
+    }
+
+    public string? GetCurrentUserSid()
+    {
+        try
+        {
+            return System.Security.Principal.WindowsIdentity.GetCurrent().User?.Value;
+        }
+        catch
+        {
+            return null;
         }
     }
 }
@@ -222,6 +284,9 @@ public sealed class NativeWin32DiskOperations : IWin32DiskOperations
     [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
     private static extern int SHEmptyRecycleBin(IntPtr hwnd, string? pszRootPath, uint dwFlags);
 
+    [DllImport("shell32.dll")]
+    private static extern int SHUpdateRecycleBinIcon();
+
     [DllImport("dnsapi.dll", EntryPoint = "DnsFlushResolverCache")]
     private static extern int DnsFlushResolverCache();
 
@@ -252,5 +317,14 @@ public sealed class NativeWin32DiskOperations : IWin32DiskOperations
         {
             return false;
         }
+    }
+
+    public void UpdateRecycleBinIcon()
+    {
+        try
+        {
+            SHUpdateRecycleBinIcon();
+        }
+        catch { }
     }
 }

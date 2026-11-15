@@ -2265,6 +2265,12 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
   <data name="AiSettings_GetApiKey" xml:space="preserve">
     <value>Получить API-ключ на официальном сайте</value>
   </data>
+  <data name="AiSettings_BaseUrl" xml:space="preserve">
+    <value>Базовый URL</value>
+  </data>
+  <data name="AiSettings_BaseUrlHint" xml:space="preserve">
+    <value>OpenAI-совместимый адрес API, например https://api.example.com/v1</value>
+  </data>
   <data name="AiSettings_ConnectionName" xml:space="preserve">
     <value>Название подключения</value>
   </data>
@@ -4926,5 +4932,389 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
   </data>
   <data name="SettingsWindow_AppsCatalog" xml:space="preserve">
     <value>Программы...</value>
+  </data>
+  <data name="Tool_TelegramPostEditor" xml:space="preserve">
+    <value>Редактор постов Telegram</value>
+  </data>
+  <data name="Main_TelegramPostEditorTooltip" xml:space="preserve">
+    <value>Редактор постов Telegram</value>
+  </data>
+  <data name="QuickTool_TelegramPostEditor_Title" xml:space="preserve">
+    <value>Редактор постов Telegram</value>
+  </data>
+  <data name="QuickTool_TelegramPostEditor_Description" xml:space="preserve">
+    <value>Создание, ИИ-обработка, предпросмотр и планирование публикаций в Telegram-каналы.</value>
+  </data>
+  <data name="TelegramPostEditor_Title" xml:space="preserve">
+    <value>Редактор постов Telegram</value>
+  </data>
+  <data name="TelegramPostEditor_LocalModeBadge" xml:space="preserve">
+    <value>Локальный режим</value>
+  </data>
+  <data name="TelegramPostEditor_LibraryHeader" xml:space="preserve">
+    <value>Библиотека</value>
+  </data>
+  <data name="TelegramPostEditor_LibraryEmptyHint" xml:space="preserve">
+    <value>Черновиков пока нет. Создайте первую публикацию.</value>
+  </data>
+  <data name="TelegramPostEditor_EditorHeader" xml:space="preserve">
+    <value>Редактор</value>
+  </data>
+  <data name="TelegramPostEditor_PreviewHeader" xml:space="preserve">
+    <value>Превью Telegram</value>
+  </data>
+  <data name="TelegramPostEditor_PreviewHint" xml:space="preserve">
+    <value>Здесь будет отображаться ориентировочное превью сообщения Telegram.</value>
+  </data>
+  <data name="TelegramPostEditor_StatusReady" xml:space="preserve">
+    <value>Готово</value>
+  </data>
+  <data name="TelegramSettings_Title" xml:space="preserve">
+    <value>Telegram</value>
+  </data>
+  <data name="TelegramSettings_Description" xml:space="preserve">
+    <value>Управление Telegram-ботами и каналами для TelegramPostEditor. Токены ботов хранятся в Windows Credential Manager.</value>
+  </data>
+  <data name="TelegramSettings_BotsTitle" xml:space="preserve">
+    <value>Telegram-боты</value>
+  </data>
+  <data name="TelegramSettings_BotTokenHint" xml:space="preserve">
+    <value>Вставьте токен бота от @BotFather (проверяется через getMe и сохраняется в Windows Credential Manager):</value>
+  </data>
+  <data name="TelegramSettings_AddBot" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="TelegramSettings_NoBots" xml:space="preserve">
+    <value>Подключённых ботов пока нет.</value>
+  </data>
+  <data name="TelegramSettings_ChannelsTitle" xml:space="preserve">
+    <value>Telegram-каналы</value>
+  </data>
+  <data name="TelegramSettings_ChannelInputHint" xml:space="preserve">
+    <value>Введите @username, ссылку t.me/... или ID канала (префикс -100 добавится автоматически; бот должен быть администратором):</value>
+  </data>
+  <data name="TelegramSettings_IsTestChannel" xml:space="preserve">
+    <value>Это тестовый канал</value>
+  </data>
+  <data name="TelegramSettings_AddChannel" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="TelegramSettings_NoChannels" xml:space="preserve">
+    <value>Подключённых каналов пока нет.</value>
+  </data>
+  <data name="TelegramSettings_OpenSettings" xml:space="preserve">
+    <value>Настроить ботов и каналы…</value>
+  </data>
+  <data name="TelegramPostEditor_NewPost" xml:space="preserve">
+    <value>Новый пост</value>
+  </data>
+  <data name="TelegramPostEditor_FromTemplate" xml:space="preserve">
+    <value>Из шаблона</value>
+  </data>
+  <data name="TelegramPostEditor_ExportJson" xml:space="preserve">
+    <value>Экспорт JSON</value>
+  </data>
+  <data name="TelegramPostEditor_SearchPlaceholder" xml:space="preserve">
+    <value>Поиск по названию и тексту…</value>
+  </data>
+  <data name="TelegramPostEditor_ShowTrash" xml:space="preserve">
+    <value>Показать корзину</value>
+  </data>
+  <data name="TelegramPostEditor_Duplicate" xml:space="preserve">
+    <value>Дублировать</value>
+  </data>
+  <data name="TelegramPostEditor_MoveToTrash" xml:space="preserve">
+    <value>В корзину</value>
+  </data>
+  <data name="TelegramPostEditor_Restore" xml:space="preserve">
+    <value>Восстановить</value>
+  </data>
+  <data name="TelegramPostEditor_DraftTitleLabel" xml:space="preserve">
+    <value>Название черновика</value>
+  </data>
+  <data name="TelegramPostEditor_EditorPlaceholder" xml:space="preserve">
+    <value>Начните писать пост для Telegram…</value>
+  </data>
+  <data name="TelegramPostEditor_Spoiler" xml:space="preserve">
+    <value>Спойлер</value>
+  </data>
+  <data name="TelegramPostEditor_InlineCode" xml:space="preserve">
+    <value>Код</value>
+  </data>
+  <data name="TelegramPostEditor_Quote" xml:space="preserve">
+    <value>Цитата</value>
+  </data>
+  <data name="TelegramPostEditor_AddMedia" xml:space="preserve">
+    <value>Медиа</value>
+  </data>
+  <data name="TelegramPostEditor_AiProcess" xml:space="preserve">
+    <value>ИИ-обработка</value>
+  </data>
+  <data name="TelegramPostEditor_AiStop" xml:space="preserve">
+    <value>Стоп</value>
+  </data>
+  <data name="TelegramPostEditor_TabPreview" xml:space="preserve">
+    <value>Превью</value>
+  </data>
+  <data name="TelegramPostEditor_TabChannels" xml:space="preserve">
+    <value>Каналы</value>
+  </data>
+  <data name="TelegramPostEditor_TabQueue" xml:space="preserve">
+    <value>Очередь</value>
+  </data>
+  <data name="TelegramPostEditor_PreviewEmpty" xml:space="preserve">
+    <value>Введите текст или добавьте медиа, чтобы увидеть предпросмотр сообщения Telegram.</value>
+  </data>
+  <data name="TelegramPostEditor_PreviewDefaultChannel" xml:space="preserve">
+    <value>Выбранный канал</value>
+  </data>
+  <data name="TelegramPostEditor_EmptyPostHint" xml:space="preserve">
+    <value>Добавьте текст или медиа для публикации.</value>
+  </data>
+  <data name="TelegramPostEditor_ReadyToPublish" xml:space="preserve">
+    <value>Готово к отправке.</value>
+  </data>
+  <data name="TelegramPostEditor_TestPublish" xml:space="preserve">
+    <value>Тестовая публикация</value>
+  </data>
+  <data name="TelegramPostEditor_PublishNow" xml:space="preserve">
+    <value>Опубликовать сейчас</value>
+  </data>
+  <data name="TelegramPostEditor_StatusDraft" xml:space="preserve">
+    <value>Черновик</value>
+  </data>
+  <data name="TelegramPostEditor_StatusScheduled" xml:space="preserve">
+    <value>Запланировано</value>
+  </data>
+  <data name="TelegramPostEditor_StatusPublished" xml:space="preserve">
+    <value>Опубликовано</value>
+  </data>
+  <data name="TelegramPostEditor_StatusFailed" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="TelegramPostEditor_StatusSavedAt" xml:space="preserve">
+    <value>Автосохранено в {0}</value>
+  </data>
+  <data name="TelegramPostEditor_StatusSaving" xml:space="preserve">
+    <value>Сохранение…</value>
+  </data>
+  <data name="TelegramPostEditor_LocalModeTooltip" xml:space="preserve">
+    <value>Локальный режим: сервер планирования не привязан. Доступна немедленная и тестовая публикация.</value>
+  </data>
+  <data name="TelegramPostEditor_SelectedChannelsSummary" xml:space="preserve">
+    <value>Выбрано каналов: {0}</value>
+  </data>
+  <data name="TelegramPostEditor_AllDrafts" xml:space="preserve">
+    <value>Все черновики</value>
+  </data>
+  <data name="TelegramPostEditor_Trash" xml:space="preserve">
+    <value>Корзина</value>
+  </data>
+  <data name="TelegramPostEditor_SortByDate" xml:space="preserve">
+    <value>По дате</value>
+  </data>
+  <data name="TelegramPostEditor_SortByTitle" xml:space="preserve">
+    <value>По названию</value>
+  </data>
+  <data name="TelegramPostEditor_Schedule" xml:space="preserve">
+    <value>Запланировать</value>
+  </data>
+  <data name="TelegramPostEditor_NoInstruction" xml:space="preserve">
+    <value>Без инструкции</value>
+  </data>
+  <data name="TelegramPostEditor_AutoModel" xml:space="preserve">
+    <value>Авто (AiGateway)</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_CreateFromBrief" xml:space="preserve">
+    <value>Создать по описанию</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_Improve" xml:space="preserve">
+    <value>Улучшить текст</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_Shorten" xml:space="preserve">
+    <value>Сократить</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_FixGrammar" xml:space="preserve">
+    <value>Исправить ошибки</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_RewriteStyle" xml:space="preserve">
+    <value>Переписать по стилю</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_SuggestTitles" xml:space="preserve">
+    <value>Предложить заголовки</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_Translate" xml:space="preserve">
+    <value>Перевести</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_AdaptToChannel" xml:space="preserve">
+    <value>Адаптировать к каналу</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_FormatForTelegram" xml:space="preserve">
+    <value>Оформить для Telegram</value>
+  </data>
+  <data name="TelegramPostEditor_AiAction_Alternatives" xml:space="preserve">
+    <value>Варианты поста</value>
+  </data>
+  <data name="TelegramPostEditor_AiApply" xml:space="preserve">
+    <value>Применить</value>
+  </data>
+  <data name="TelegramPostEditor_AiDismiss" xml:space="preserve">
+    <value>Отклонить</value>
+  </data>
+  <data name="TelegramPostEditor_AiEmptyInput" xml:space="preserve">
+    <value>Сначала введите текст поста (или выберите «Создать по описанию»).</value>
+  </data>
+  <data name="TelegramPostEditor_AiGenerating" xml:space="preserve">
+    <value>Генерация…</value>
+  </data>
+  <data name="TelegramPostEditor_ChannelsSelectHeader" xml:space="preserve">
+    <value>Каналы для публикации</value>
+  </data>
+  <data name="TelegramPostEditor_ConnectedBotsSummary" xml:space="preserve">
+    <value>Подключённых ботов: {0}</value>
+  </data>
+  <data name="TelegramPostEditor_ChannelMissingBotToken" xml:space="preserve">
+    <value>Токен бота не найден в Диспетчере учётных данных</value>
+  </data>
+  <data name="TelegramPostEditor_QuickConnectBotTitle" xml:space="preserve">
+    <value>Подключить бота</value>
+  </data>
+  <data name="TelegramPostEditor_QuickConnectChannelTitle" xml:space="preserve">
+    <value>Подключить канал</value>
+  </data>
+  <data name="TelegramPostEditor_ConnectButton" xml:space="preserve">
+    <value>Подключить</value>
+  </data>
+  <data name="TelegramPostEditor_BotTokenPlaceholder" xml:space="preserve">
+    <value>Вставьте токен от @BotFather…</value>
+  </data>
+  <data name="TelegramPostEditor_ChannelInputPlaceholder" xml:space="preserve">
+    <value>@channel, ссылка t.me/… или ID</value>
+  </data>
+  <data name="TelegramPostEditor_QueueUrlLabel" xml:space="preserve">
+    <value>URL сервера планирования (HTTPS)</value>
+  </data>
+  <data name="TelegramPostEditor_QueuePairCodePlaceholder" xml:space="preserve">
+    <value>Одноразовый код привязки</value>
+  </data>
+  <data name="TelegramPostEditor_QueuePairButton" xml:space="preserve">
+    <value>Привязать</value>
+  </data>
+  <data name="TelegramPostEditor_QueueDateLabel" xml:space="preserve">
+    <value>Дата и время публикации (локальное)</value>
+  </data>
+  <data name="TelegramPostEditor_QueueSubmitButton" xml:space="preserve">
+    <value>Поставить в серверную очередь</value>
+  </data>
+  <data name="TelegramPostEditor_PublishFailedTitle" xml:space="preserve">
+    <value>Ошибка публикации</value>
+  </data>
+  <data name="TelegramPostEditor_SelectedCountSuffix" xml:space="preserve">
+    <value>Прикреплено медиа: {0}</value>
+  </data>
+  <data name="TelegramPostEditor_SelectChannelWarning" xml:space="preserve">
+    <value>Выберите хотя бы один канал для публикации.</value>
+  </data>
+  <data name="TelegramPostEditor_NoTestChannelWarning" xml:space="preserve">
+    <value>Не настроен ни один тестовый канал.</value>
+  </data>
+  <data name="Tool_IptvPlayer" xml:space="preserve">
+    <value>IPTV Плеер</value>
+  </data>
+  <data name="Main_IptvPlayerTooltip" xml:space="preserve">
+    <value>IPTV Плеер</value>
+  </data>
+  <data name="QuickTool_IptvPlayer_Title" xml:space="preserve">
+    <value>IPTV Плеер</value>
+  </data>
+  <data name="QuickTool_IptvPlayer_Description" xml:space="preserve">
+    <value>Просмотр потокового телевидения и плейлистов M3U</value>
+  </data>
+  <data name="IptvSettings_Title" xml:space="preserve">
+    <value>IPTV</value>
+  </data>
+  <data name="IptvSettings_Description" xml:space="preserve">
+    <value>Управление плейлистами, локальными файлами M3U и фоновым автообновлением.</value>
+  </data>
+  <data name="IptvSettings_SourcesTitle" xml:space="preserve">
+    <value>Источники плейлистов</value>
+  </data>
+  <data name="IptvSettings_AddPlaylist" xml:space="preserve">
+    <value>Добавить плейлист...</value>
+  </data>
+  <data name="IptvSettings_RefreshAll" xml:space="preserve">
+    <value>Обновить все URL-плейлисты</value>
+  </data>
+  <data name="IptvSettings_NoSources" xml:space="preserve">
+    <value>Плейлисты еще не добавлены. Нажмите "Добавить плейлист...", чтобы указать URL или файл M3U.</value>
+  </data>
+  <data name="IptvSettings_AutoUpdateTitle" xml:space="preserve">
+    <value>Фоновое автообновление</value>
+  </data>
+  <data name="IptvSettings_AutoUpdateDescription" xml:space="preserve">
+    <value>Автоматически обновлять удаленные URL-плейлисты во время работы AiteBar.</value>
+  </data>
+  <data name="IptvSettings_AutoUpdateSwitch" xml:space="preserve">
+    <value>Включить автоматическое фоновое обновление</value>
+  </data>
+  <data name="IptvSettings_AutoUpdateSwitchHint" xml:space="preserve">
+    <value>Периодически загружает свежие списки каналов для активных источников.</value>
+  </data>
+  <data name="IptvSettings_UpdateInterval" xml:space="preserve">
+    <value>Интервал обновления (часы)</value>
+  </data>
+  <data name="IptvSettings_UpdateIntervalHint" xml:space="preserve">
+    <value>По умолчанию: 24 часа (от 1 до 720 часов).</value>
+  </data>
+  <data name="Iptv_DialogTitle" xml:space="preserve">
+    <value>Плейлист IPTV</value>
+  </data>
+  <data name="Iptv_PlaylistName" xml:space="preserve">
+    <value>Название плейлиста</value>
+  </data>
+  <data name="Iptv_SourceKind" xml:space="preserve">
+    <value>Тип источника</value>
+  </data>
+  <data name="Iptv_Location" xml:space="preserve">
+    <value>Ссылка или путь</value>
+  </data>
+  <data name="Iptv_InlineContent" xml:space="preserve">
+    <value>Содержимое M3U</value>
+  </data>
+  <data name="Iptv_AutoFallbackVariants" xml:space="preserve">
+    <value>Автоматически группировать варианты качества (HD/FHD/SD)</value>
+  </data>
+  <data name="Iptv_CopyLocalFileToStore" xml:space="preserve">
+    <value>Копировать локальный файл в профиль приложения</value>
+  </data>
+  <data name="Iptv_PlaylistEnabled" xml:space="preserve">
+    <value>Плейлист включен</value>
+  </data>
+  <data name="Iptv_CheckButton" xml:space="preserve">
+    <value>Проверить</value>
+  </data>
+  <data name="Iptv_CheckHint" xml:space="preserve">
+    <value>Нажмите 'Проверить' для валидации потока</value>
+  </data>
+  <data name="Iptv_Checking" xml:space="preserve">
+    <value>Проверка источника...</value>
+  </data>
+  <data name="Iptv_UrlLabel" xml:space="preserve">
+    <value>URL плейлиста (http / https)</value>
+  </data>
+  <data name="Iptv_FilePathLabel" xml:space="preserve">
+    <value>Путь к файлу (.m3u, .m3u8)</value>
+  </data>
+  <data name="Iptv_StreamUrlLabel" xml:space="preserve">
+    <value>URL медиа-потока</value>
+  </data>
+  <data name="Iptv_SelectPlaylistFile" xml:space="preserve">
+    <value>Выберите файл плейлиста</value>
+  </data>
+  <data name="Iptv_ErrorEmptyName" xml:space="preserve">
+    <value>Укажите название плейлиста.</value>
+  </data>
+  <data name="Iptv_ToggleEnabled" xml:space="preserve">
+    <value>Включить/отключить источник</value>
   </data>
 </root>

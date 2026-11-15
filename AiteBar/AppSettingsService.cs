@@ -109,6 +109,8 @@ namespace AiteBar
                 ShowPresetPromptBuilder = original.ShowPresetPromptBuilder,
                 ShowPresetZenEditor = original.ShowPresetZenEditor,
                 ShowPresetAiteProfiles = original.ShowPresetAiteProfiles,
+                ShowPresetTelegramPostEditor = original.ShowPresetTelegramPostEditor,
+                ShowPresetIptvPlayer = original.ShowPresetIptvPlayer,
                 ZenEditorExitOnSideClick = original.ZenEditorExitOnSideClick,
                 ZenEditorSideSafetyMargin = original.ZenEditorSideSafetyMargin,
                 ClipboardManagerPersistHistory = original.ClipboardManagerPersistHistory,
@@ -147,9 +149,11 @@ namespace AiteBar
                         DisplayName = connection.DisplayName,
                         CredentialTarget = connection.CredentialTarget,
                         IsEnabled = connection.IsEnabled,
-                        PreferredModelId = connection.PreferredModelId
+                        PreferredModelId = connection.PreferredModelId,
+                        CustomBaseUrl = connection.CustomBaseUrl
                     }).ToList() ?? []
                 },
+                Iptv = original.Iptv != null ? original.Iptv.Clone() : new(),
                 NextContextHotkey = new HotkeyBinding
                 {
                     Ctrl = original.NextContextHotkey.Ctrl,
@@ -262,6 +266,22 @@ namespace AiteBar
                     Win = original.AiteProfilesHotkey.Win,
                     Key = original.AiteProfilesHotkey.Key
                 } : new(),
+                TelegramPostEditorHotkey = original.TelegramPostEditorHotkey != null ? new HotkeyBinding
+                {
+                    Ctrl = original.TelegramPostEditorHotkey.Ctrl,
+                    Alt = original.TelegramPostEditorHotkey.Alt,
+                    Shift = original.TelegramPostEditorHotkey.Shift,
+                    Win = original.TelegramPostEditorHotkey.Win,
+                    Key = original.TelegramPostEditorHotkey.Key
+                } : new(),
+                IptvPlayerHotkey = original.IptvPlayerHotkey != null ? new HotkeyBinding
+                {
+                    Ctrl = original.IptvPlayerHotkey.Ctrl,
+                    Alt = original.IptvPlayerHotkey.Alt,
+                    Shift = original.IptvPlayerHotkey.Shift,
+                    Win = original.IptvPlayerHotkey.Win,
+                    Key = original.IptvPlayerHotkey.Key
+                } : new(),
                 Contexts = original.Contexts?.Select(ctx => new PanelContext
                 {
                     Id = ctx.Id,
@@ -315,6 +335,16 @@ namespace AiteBar
                 TextProcessingIsAutoModel = original.TextProcessingIsAutoModel,
                 TextProcessingLastText = original.TextProcessingLastText,
                 SaveTextProcessingDraft = original.SaveTextProcessingDraft,
+                TelegramPostEditorLeft = original.TelegramPostEditorLeft,
+                TelegramPostEditorTop = original.TelegramPostEditorTop,
+                TelegramPostEditorWidth = original.TelegramPostEditorWidth,
+                TelegramPostEditorHeight = original.TelegramPostEditorHeight,
+                TelegramPostEditorWindowState = original.TelegramPostEditorWindowState,
+                IptvPlayerLeft = original.IptvPlayerLeft,
+                IptvPlayerTop = original.IptvPlayerTop,
+                IptvPlayerWidth = original.IptvPlayerWidth,
+                IptvPlayerHeight = original.IptvPlayerHeight,
+                IptvPlayerWindowState = original.IptvPlayerWindowState,
                 PromptBuilderLeft = original.PromptBuilderLeft,
                 PromptBuilderTop = original.PromptBuilderTop,
                 PromptBuilderWidth = original.PromptBuilderWidth,
@@ -769,6 +799,13 @@ namespace AiteBar
                     changed = true;
                 }
                 _appSettings.Ai = normalizedAi;
+
+                var normalizedIptv = IptvPlayer.IptvSettingsNormalizer.Normalize(_appSettings.Iptv, out bool iptvChanged);
+                if (iptvChanged)
+                {
+                    changed = true;
+                }
+                _appSettings.Iptv = normalizedIptv;
 
                 string normalizedActiveContextId = ContextStateHelper.NormalizeActiveContextId(_appSettings.ActiveContextId, _appSettings.Contexts);
                 if (!string.Equals(_appSettings.ActiveContextId, normalizedActiveContextId, StringComparison.Ordinal))

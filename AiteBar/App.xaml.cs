@@ -105,6 +105,12 @@ public partial class App : System.Windows.Application
         {
             if (args.ExceptionObject is Exception ex)
             {
+                Logger.Log($"Unhandled AppDomain exception (IsTerminating={args.IsTerminating}).");
+                Logger.Log(ex);
+                if (args.IsTerminating)
+                {
+                    Logger.Flush(TimeSpan.FromSeconds(2));
+                }
                 TelemetryService.CaptureException(ex, "appdomain_unhandled");
                 TelemetryService.Flush(TimeSpan.FromSeconds(2));
             }
@@ -112,6 +118,7 @@ public partial class App : System.Windows.Application
 
         DispatcherUnhandledException += (_, args) =>
         {
+            Logger.Log(args.Exception);
             TelemetryService.CaptureException(args.Exception, "dispatcher_unhandled");
             _ = Task.Run(() => TelemetryService.Flush(TimeSpan.FromSeconds(2)));
             args.Handled = true;

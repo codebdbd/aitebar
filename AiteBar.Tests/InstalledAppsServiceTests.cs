@@ -107,10 +107,10 @@ public sealed class InstalledAppsServiceTests
         {
             try
             {
-                if (System.Windows.Application.Current == null)
-                {
-                    _ = new System.Windows.Application();
-                }
+                // Use the shared App (with App.xaml resources) rather than a bare Application:
+                // only one Application may exist per process, and a resource-less instance
+                // breaks WPF tests that later look up shared styles (e.g. DarkContextMenu).
+                WpfTestApplication.EnsureCreated();
 
                 action();
                 tcs.SetResult(null);

@@ -28,12 +28,27 @@ public sealed class DiskCleanerService
     private static readonly string[] BrowserCacheFolderNames =
     [
         "Cache",
+        "System Cache",
         "Code Cache",
+        "Media Cache",
         "GPUCache",
         "DawnWebGPUCache",
         "DawnGraphiteCache",
         "ShaderCache",
-        "GrShaderCache"
+        "GrShaderCache",
+        @"Service Worker\CacheStorage",
+        @"Service Worker\ScriptCache"
+    ];
+
+    private static string[] GetChromiumUserDataPaths(string localAppData) =>
+    [
+        Path.Combine(localAppData, "Google", "Chrome", "User Data"),
+        Path.Combine(localAppData, "Microsoft", "Edge", "User Data"),
+        Path.Combine(localAppData, "BraveSoftware", "Brave-Browser", "User Data"),
+        Path.Combine(localAppData, "Vivaldi", "User Data"),
+        Path.Combine(localAppData, "Yandex", "YandexBrowser", "User Data"),
+        Path.Combine(localAppData, "Opera Software", "Opera Stable"),
+        Path.Combine(localAppData, "Opera Software", "Opera GX Stable")
     ];
 
     private static readonly Regex BrowserProfileRegex =
@@ -235,30 +250,68 @@ public sealed class DiskCleanerService
                 progress?.Report(new DiskCleanProgress(CategoryRecycleBin, "Emptying Recycle Bin...", currentStep * stepProgress));
                 long before = CalculateRecycleBinSize();
                 int hresult = _win32.EmptyRecycleBin(null);
+
+                // Directly clean files in user's recycle bin directories if any remain
+                int directCleaned = 0;
+                int directLocked = 0;
+                foreach (var rbPath in GetUserRecycleBinPaths())
+                {
+                    var res = _fs.CleanDirectoryContents(rbPath);
+                    directCleaned += res.CleanedFiles;
+                    directLocked += res.LockedFiles;
+                }
+
+                _win32.UpdateRecycleBinIcon();
+
                 long after = CalculateRecycleBinSize();
                 long freed = Math.Max(0, before - after);
 
-                if (hresult == 0) // S_OK
+                // S_OK (0) or E_UNEXPECTED (0x8000FFFF - returned by Windows when bin is already empty)
+                bool isSuccessHr = hresult == 0 || hresult == unchecked((int)0x8000FFFF);
+
+                if (isSuccessHr && after == 0 && directLocked == 0)
                 {
                     reports.Add(new DiskCleanCategoryReport(
                         CategoryRecycleBin,
                         DiskCleanCategoryStatus.Succeeded,
                         freed,
-                        CleanedCount: 1,
+                        CleanedCount: (freed > 0 || before > 0) ? Math.Max(1, directCleaned) : 0,
                         LockedCount: 0));
                     totalFreed += freed;
                     totalCleaned++;
                 }
                 else if (freed > 0)
                 {
+                    DiskCleanCategoryStatus status = after == 0 && isSuccessHr && directLocked == 0
+                        ? DiskCleanCategoryStatus.Succeeded
+                        : DiskCleanCategoryStatus.PartiallyCleaned;
+
+                    string? reason = !isSuccessHr
+                        ? $"Recycle Bin emptied partially with HRESULT 0x{hresult:X8}"
+                        : (directLocked > 0 ? $"{directLocked} files were locked in Recycle Bin." : null);
+
                     reports.Add(new DiskCleanCategoryReport(
                         CategoryRecycleBin,
-                        DiskCleanCategoryStatus.PartiallyCleaned,
+                        status,
                         freed,
-                        CleanedCount: 1,
-                        LockedCount: 0,
-                        FailureReason: $"Recycle Bin emptied partially with HRESULT 0x{hresult:X8}"));
+                        CleanedCount: Math.Max(1, directCleaned),
+                        LockedCount: directLocked,
+                        FailureReason: reason));
+
                     totalFreed += freed;
+                    if (status == DiskCleanCategoryStatus.Succeeded)
+                    {
+                        totalCleaned++;
+                    }
+                }
+                else if (isSuccessHr && before == 0 && after == 0)
+                {
+                    reports.Add(new DiskCleanCategoryReport(
+                        CategoryRecycleBin,
+                        DiskCleanCategoryStatus.Succeeded,
+                        FreedBytes: 0,
+                        CleanedCount: 0,
+                        LockedCount: 0));
                     totalCleaned++;
                 }
                 else
@@ -268,8 +321,8 @@ public sealed class DiskCleanerService
                         DiskCleanCategoryStatus.Failed,
                         FreedBytes: 0,
                         CleanedCount: 0,
-                        LockedCount: 0,
-                        FailureReason: $"Win32 EmptyRecycleBin returned HRESULT 0x{hresult:X8}"));
+                        LockedCount: directLocked,
+                        FailureReason: $"Recycle Bin cleanup returned HRESULT 0x{hresult:X8}"));
                 }
                 currentStep++;
             }
@@ -341,13 +394,35 @@ public sealed class DiskCleanerService
     public (long FreedBytes, int CleanedFiles, int LockedFiles) CleanDirectoryContents(string directoryPath) =>
         _fs.CleanDirectoryContents(directoryPath);
 
+    public IEnumerable<string> GetUserRecycleBinPaths()
+    {
+        string? userSid = _fs.GetCurrentUserSid();
+        foreach (var rootPath in _fs.EnumerateFixedDriveRootPaths())
+        {
+            if (!string.IsNullOrEmpty(userSid))
+            {
+                string userRb = Path.Combine(rootPath, "$Recycle.Bin", userSid);
+                if (_fs.DirectoryExists(userRb))
+                {
+                    yield return userRb;
+                    continue;
+                }
+            }
+
+            string topRb = Path.Combine(rootPath, "$Recycle.Bin");
+            if (_fs.DirectoryExists(topRb))
+            {
+                yield return topRb;
+            }
+        }
+    }
+
     private long CalculateRecycleBinSize()
     {
         long total = 0;
-        foreach (var rootPath in _fs.EnumerateFixedDriveRootPaths())
+        foreach (var rbPath in GetUserRecycleBinPaths())
         {
-            string recycleBin = Path.Combine(rootPath, "$Recycle.Bin");
-            total += _fs.CalculateDirectorySize(recycleBin);
+            total += _fs.CalculateDirectorySize(rbPath);
         }
         return total;
     }
@@ -357,13 +432,10 @@ public sealed class DiskCleanerService
         long total = 0;
         string localAppData = _fs.GetSpecialFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-        // Google Chrome
-        string chromeUserData = Path.Combine(localAppData, "Google", "Chrome", "User Data");
-        total += CalculateChromiumCacheSize(chromeUserData);
-
-        // Microsoft Edge
-        string edgeUserData = Path.Combine(localAppData, "Microsoft", "Edge", "User Data");
-        total += CalculateChromiumCacheSize(edgeUserData);
+        foreach (string userDataPath in GetChromiumUserDataPaths(localAppData))
+        {
+            total += CalculateChromiumCacheSize(userDataPath);
+        }
 
         // Mozilla Firefox
         string firefoxProfiles = Path.Combine(localAppData, "Mozilla", "Firefox", "Profiles");
@@ -510,11 +582,7 @@ public sealed class DiskCleanerService
         bool anyCacheFound = false;
         string localAppData = _fs.GetSpecialFolderPath(Environment.SpecialFolder.LocalApplicationData);
 
-        var userDatas = new[]
-        {
-            Path.Combine(localAppData, "Google", "Chrome", "User Data"),
-            Path.Combine(localAppData, "Microsoft", "Edge", "User Data")
-        };
+        var userDatas = GetChromiumUserDataPaths(localAppData);
 
         foreach (var userData in userDatas)
         {

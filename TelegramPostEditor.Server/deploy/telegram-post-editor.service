@@ -1,0 +1,19 @@
+[Unit]
+Description=AiteBar TelegramPostEditor Scheduler Server
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tpe
+Group=tpe
+WorkingDirectory=/opt/telegram-post-editor
+ExecStart=/usr/bin/dotnet /opt/telegram-post-editor/TelegramPostEditor.Server.dll --urls http://127.0.0.1:5080
+Restart=always
+RestartSec=5
+Environment=ASPNETCORE_ENVIRONMENT=Production
+Environment=TPE_MASTER_KEY=REPLACE_WITH_BASE64_32BYTE_KEY
+Environment=Storage__DataDir=/var/lib/telegram-post-editor
+
+[Install]
+WantedBy=multi-user.target

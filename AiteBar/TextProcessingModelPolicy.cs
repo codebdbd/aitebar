@@ -52,6 +52,76 @@ internal static class TextProcessingModelPolicy
                 "mistral-medium",
                 "mistral-small",
                 "open-mistral-nemo"
+            ],
+            ["codestral"] =
+            [
+                "codestral-latest",
+                "codestral"
+            ],
+            ["gemini"] =
+            [
+                "gemini-2.5-flash",
+                "gemini-2.5-pro",
+                "gemini-2.0-flash"
+            ],
+            ["nvidia"] =
+            [
+                "llama-3.3-70b",
+                "llama-3.1-70b",
+                "nemotron",
+                "qwen"
+            ],
+            ["openrouter"] =
+            [
+                "llama-3.3-70b",
+                "deepseek",
+                "qwen",
+                "gemini",
+                "mistral"
+            ],
+            ["sambanova"] =
+            [
+                "llama-3.3-70b",
+                "llama-3.1-70b",
+                "llama-4-maverick",
+                "qwen"
+            ],
+            ["huggingface"] =
+            [
+                "llama-3.3-70b",
+                "qwen",
+                "mistral"
+            ],
+            ["scaleway"] =
+            [
+                "llama-3.3-70b",
+                "qwen",
+                "mistral"
+            ],
+            ["ovhcloud"] =
+            [
+                "llama-3.3-70b",
+                "qwen",
+                "mistral"
+            ],
+            ["novita"] =
+            [
+                "llama-3.3-70b",
+                "deepseek",
+                "qwen"
+            ],
+            ["siliconflow"] =
+            [
+                "qwen",
+                "deepseek",
+                "glm"
+            ],
+            ["ollama_cloud"] =
+            [
+                "gpt-oss",
+                "deepseek",
+                "qwen",
+                "gemma"
             ]
         };
 

@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
@@ -34,6 +34,32 @@ public sealed class FormControlHeightTests
 
         AssertSetter(FindStyle(resources, "IconButtonStyle"), "Height", "32");
         AssertSetter(FindStyle(resources, "ToolbarButtonStyle"), "Height", "30");
+    }
+
+    [Fact]
+    public void CompactButtonStyles_Use28PixelHeightToken()
+    {
+        XDocument resources = LoadXaml("FormControlsResources.xaml");
+        XElement compactHeight = Assert.Single(
+            resources.Root!.Elements(),
+            element => string.Equals(element.Attribute(XamlNamespace + "Key")?.Value, "CompactControlHeight", StringComparison.Ordinal));
+
+        Assert.Equal("28", compactHeight.Value);
+
+        XElement primaryCompact = FindStyle(resources, "PrimaryCompactButtonStyle");
+        Assert.Equal("{StaticResource PrimaryButtonStyle}", primaryCompact.Attribute("BasedOn")?.Value);
+        AssertSetter(primaryCompact, "Height", "{StaticResource CompactControlHeight}");
+        AssertSetter(primaryCompact, "Padding", "{StaticResource ButtonPaddingCompact}");
+
+        XElement secondaryCompact = FindStyle(resources, "SecondaryCompactButtonStyle");
+        Assert.Equal("{StaticResource SecondaryButtonStyle}", secondaryCompact.Attribute("BasedOn")?.Value);
+        AssertSetter(secondaryCompact, "Height", "{StaticResource CompactControlHeight}");
+        AssertSetter(secondaryCompact, "Padding", "{StaticResource ButtonPaddingCompact}");
+
+        XElement iconCompact = FindStyle(resources, "IconCompactButtonStyle");
+        Assert.Equal("{StaticResource IconButtonStyle}", iconCompact.Attribute("BasedOn")?.Value);
+        AssertSetter(iconCompact, "Height", "{StaticResource CompactControlHeight}");
+        AssertSetter(iconCompact, "Width", "{StaticResource CompactControlHeight}");
     }
 
     [Fact]

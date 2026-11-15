@@ -11,6 +11,8 @@ internal sealed class BackupService
     private const string SettingsEntry = "settings.json";
     private const string SecretsEntry = "private.bin";
     private const string IconsPrefix = "icons/";
+    private const string TelegramPrefix = "telegram/";
+    private const string IptvPrefix = "iptv/";
     internal const long MaxArchiveBytes = 100 * 1024 * 1024;
     internal const long MaxTotalUncompressedBytes = 100 * 1024 * 1024;
     internal const long MaxSingleEntryBytes = 10 * 1024 * 1024;
@@ -43,12 +45,85 @@ internal sealed class BackupService
             }
         }
 
+        string telegramRoot = TelegramPostEditor.Persistence.PostDbMigrator.GetDefaultRootFolder();
+        string telegramDb = TelegramPostEditor.Persistence.PostDbMigrator.GetDefaultDatabasePath();
+        if (File.Exists(telegramDb))
+        {
+            string tempDbCopy = Path.Combine(Path.GetTempPath(), $"aitebar_tg_backup_{Guid.NewGuid():N}.db");
+            try
+            {
+                using (var srcConn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={telegramDb};Mode=ReadOnly"))
+                using (var dstConn = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={tempDbCopy};Mode=ReadWriteCreate"))
+                {
+                    srcConn.Open();
+                    dstConn.Open();
+                    srcConn.BackupDatabase(dstConn);
+                }
+                archive.CreateEntryFromFile(tempDbCopy, $"{TelegramPrefix}posts.db", CompressionLevel.Optimal);
+            }
+            finally
+            {
+                Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+                if (File.Exists(tempDbCopy)) File.Delete(tempDbCopy);
+            }
+
+            string telegramMedia = Path.Combine(telegramRoot, "Media");
+            if (Directory.Exists(telegramMedia))
+            {
+                foreach (string path in Directory.EnumerateFiles(telegramMedia, "*", SearchOption.AllDirectories))
+                {
+                    string relative = Path.GetRelativePath(telegramRoot, path).Replace('\\', '/');
+                    archive.CreateEntryFromFile(path, $"{TelegramPrefix}{relative}", CompressionLevel.Optimal);
+                }
+            }
+        }
+
+        string iptvRoot = Path.Combine(PathHelper.AppDataFolder, "IptvPlayer");
+        if (Directory.Exists(iptvRoot))
+        {
+            foreach (string path in Directory.EnumerateFiles(iptvRoot, "*", SearchOption.AllDirectories))
+            {
+                string relative = Path.GetRelativePath(iptvRoot, path).Replace('\\', '/');
+                // Пропускаем DPAPI Secrets, так как при экспорте секретов они шифруются в secrets payload
+                if (relative.StartsWith("Secrets/", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+                archive.CreateEntryFromFile(path, $"{IptvPrefix}{relative}", CompressionLevel.Optimal);
+            }
+        }
+
         if (!options.IncludeSecrets) return;
         var secrets = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (AiConnectionSettings connection in settings.Ai.Connections)
         {
             if (!string.IsNullOrWhiteSpace(connection.CredentialTarget) && _credentials.Read(connection.CredentialTarget) is string value)
                 secrets[connection.CredentialTarget] = value;
+        }
+        if (settings.Iptv?.Sources != null)
+        {
+            foreach (var src in settings.Iptv.Sources)
+            {
+                string target = $"{WindowsAiCredentialStore.IptvSourceTargetPrefix}{src.Id}";
+                if (_credentials.Read(target) is string iptvSecret)
+                {
+                    secrets[target] = iptvSecret;
+                }
+            }
+        }
+        if (File.Exists(telegramDb))
+        {
+            var tgMigrator = new TelegramPostEditor.Persistence.PostDbMigrator(telegramDb);
+            using Microsoft.Data.Sqlite.SqliteConnection tgConn = tgMigrator.OpenConnection();
+            using Microsoft.Data.Sqlite.SqliteCommand botCmd = tgConn.CreateCommand();
+            botCmd.CommandText = "SELECT token_secret_ref FROM bots;";
+            using Microsoft.Data.Sqlite.SqliteDataReader reader = botCmd.ExecuteReader();
+            while (reader.Read())
+            {
+                string targetRef = reader.GetString(0);
+                if (!string.IsNullOrWhiteSpace(targetRef) && _credentials.Read(targetRef) is string tgSecret)
+                    secrets[targetRef] = tgSecret;
+            }
         }
         var payload = new BackupSecretPayload(secrets, options.IncludeClipboard ? ClipboardHistoryService.Instance.Entries : null);
         await WriteEntryAsync(archive, SecretsEntry, Encrypt(JsonSerializer.SerializeToUtf8Bytes(payload, JsonOptions), options.Password!), cancellationToken);
@@ -138,7 +213,33 @@ internal sealed class BackupService
                 }
             }
 
-            return new BackupReadResult(settings, secrets, icons);
+            var telegramFiles = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+            foreach (ZipArchiveEntry entry in archive.Entries.Where(entry => entry.FullName.StartsWith(TelegramPrefix, StringComparison.Ordinal)))
+            {
+                string relativePath = entry.FullName[TelegramPrefix.Length..];
+                if (!IsSafeRelativePath(relativePath))
+                {
+                    throw new InvalidDataException("Backup contains an invalid TelegramPostEditor path.");
+                }
+
+                byte[] tgBytes = await ReadBoundedEntryBytesAsync(entry, MaxSingleEntryBytes, TrackUncompressedBytes, cancellationToken);
+                telegramFiles[relativePath] = tgBytes;
+            }
+
+            var iptvFiles = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
+            foreach (ZipArchiveEntry entry in archive.Entries.Where(entry => entry.FullName.StartsWith(IptvPrefix, StringComparison.Ordinal)))
+            {
+                string relativePath = entry.FullName[IptvPrefix.Length..];
+                if (!IsSafeRelativePath(relativePath))
+                {
+                    throw new InvalidDataException("Backup contains an invalid IPTV path.");
+                }
+
+                byte[] iptvBytes = await ReadBoundedEntryBytesAsync(entry, MaxSingleEntryBytes, TrackUncompressedBytes, cancellationToken);
+                iptvFiles[relativePath] = iptvBytes;
+            }
+
+            return new BackupReadResult(settings, secrets, icons, telegramFiles, iptvFiles);
         }
         catch (InvalidDataException)
         {
@@ -174,6 +275,50 @@ internal sealed class BackupService
 
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
             await File.WriteAllBytesAsync(destination, content, cancellationToken);
+        }
+
+        if (backup.TelegramFiles is { Count: > 0 })
+        {
+            string tgRoot = TelegramPostEditor.Persistence.PostDbMigrator.GetDefaultRootFolder();
+            string tgRootFull = Path.GetFullPath(tgRoot + Path.DirectorySeparatorChar);
+            foreach (var (relativePath, content) in backup.TelegramFiles)
+            {
+                if (!IsSafeRelativePath(relativePath))
+                {
+                    throw new InvalidDataException("Backup contains an invalid TelegramPostEditor path.");
+                }
+
+                string destination = Path.GetFullPath(Path.Combine(tgRoot, relativePath));
+                if (!destination.StartsWith(tgRootFull, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidDataException("Backup contains an invalid TelegramPostEditor path.");
+                }
+
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                await File.WriteAllBytesAsync(destination, content, cancellationToken);
+            }
+        }
+
+        if (backup.IptvFiles is { Count: > 0 })
+        {
+            string iptvRoot = Path.Combine(PathHelper.AppDataFolder, "IptvPlayer");
+            string iptvRootFull = Path.GetFullPath(iptvRoot + Path.DirectorySeparatorChar);
+            foreach (var (relativePath, content) in backup.IptvFiles)
+            {
+                if (!IsSafeRelativePath(relativePath))
+                {
+                    throw new InvalidDataException("Backup contains an invalid IPTV path.");
+                }
+
+                string destination = Path.GetFullPath(Path.Combine(iptvRoot, relativePath));
+                if (!destination.StartsWith(iptvRootFull, StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new InvalidDataException("Backup contains an invalid IPTV path.");
+                }
+
+                Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                await File.WriteAllBytesAsync(destination, content, cancellationToken);
+            }
         }
 
         if (backup.Secrets is not null)

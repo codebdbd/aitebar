@@ -27,7 +27,9 @@ public sealed class UtilityButtonCatalogTests
         "TextProcessing",
         "PromptBuilder",
         "ZenEditor",
-        "AiteProfiles"
+        "AiteProfiles",
+        "TelegramPostEditor",
+        "IptvPlayer"
     ];
 
     [Fact]
@@ -91,7 +93,8 @@ public sealed class UtilityButtonCatalogTests
             UtilityIconColors.ScreenCapture,
             UtilityButtonCatalog.Screenshot,
             UtilityButtonCatalog.Record,
-            UtilityButtonCatalog.ColorPicker);
+            UtilityButtonCatalog.ColorPicker,
+            UtilityButtonCatalog.IptvPlayer);
 
         AssertSameColor(
             UtilityIconColors.AssetCreation,
@@ -136,6 +139,7 @@ public sealed class UtilityButtonCatalogTests
         Assert.Equal(UtilityButtonCatalog.PromptBuilder.Color, new PromptBuilderUtility().IconColor);
         Assert.Equal(UtilityButtonCatalog.ZenEditor.Color, new ZenEditorUtility().IconColor);
         Assert.Equal(UtilityButtonCatalog.AiteProfiles.Color, new AiteProfilesUtility.AiteProfilesUtility().IconColor);
+        Assert.Equal(UtilityButtonCatalog.IptvPlayer.Color, new IptvPlayer.IptvPlayerUtility().IconColor);
     }
 
     [Fact]
