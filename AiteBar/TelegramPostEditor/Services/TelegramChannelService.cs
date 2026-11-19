@@ -31,7 +31,7 @@ public sealed class TelegramChannelService
     public async Task<BotAccount> ConnectBotAsync(string token, string? customDisplayName = null, CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(token);
-        TelegramBotInfo info = await _botClient.GetMeAsync(token.Trim(), cancellationToken).ConfigureAwait(false);
+        TelegramBotInfo info = await VerifyBotAsync(token, cancellationToken).ConfigureAwait(false);
 
         BotAccount? existing = GetBots().FirstOrDefault(b => b.TelegramBotId == info.Id);
         string botId = existing?.Id ?? Guid.NewGuid().ToString("N");
@@ -54,11 +54,35 @@ public sealed class TelegramChannelService
         return bot;
     }
 
+    internal Task<TelegramBotInfo> VerifyBotAsync(string token, CancellationToken cancellationToken) =>
+        _botClient.GetMeAsync(token.Trim(), cancellationToken);
+
+    internal string? ReadBotToken(string botId) => _secretStore.ReadBotToken(botId);
+
+    internal async Task<TelegramChatInfo> VerifyChannelAsync(BotAccount bot, string token, string address, CancellationToken cancellationToken)
+    {
+        string normalized = NormalizeChannelIdentifier(address);
+        TelegramChatInfo chat = await _botClient.GetChatAsync(token, normalized, cancellationToken).ConfigureAwait(false);
+        long botId = bot.TelegramBotId ?? (await VerifyBotAsync(token, cancellationToken).ConfigureAwait(false)).Id;
+        TelegramChatMemberInfo member = await _botClient.GetChatMemberAsync(token, chat.Id, botId, cancellationToken).ConfigureAwait(false);
+        if (!member.CanPostMessages)
+        {
+            throw new InvalidOperationException($"Bot '{bot.DisplayName}' does not have permission to post messages in '{chat.Title ?? normalized}'.");
+        }
+        return chat;
+    }
+
     public void SaveBot(BotAccount bot)
     {
         ArgumentNullException.ThrowIfNull(bot);
         using SqliteConnection connection = _migrator.OpenConnection();
+        SaveBot(connection, null, bot);
+    }
+
+    private static void SaveBot(SqliteConnection connection, SqliteTransaction? transaction, BotAccount bot)
+    {
         using SqliteCommand cmd = connection.CreateCommand();
+        cmd.Transaction = transaction;
         cmd.CommandText = """
             INSERT INTO bots (id, display_name, token_secret_ref, telegram_bot_id, username, state, created_utc)
             VALUES ($id, $name, $ref, $tgId, $username, $state, $created)
@@ -82,7 +106,13 @@ public sealed class TelegramChannelService
     public IReadOnlyList<BotAccount> GetBots()
     {
         using SqliteConnection connection = _migrator.OpenConnection();
+        return GetBots(connection, null);
+    }
+
+    private static IReadOnlyList<BotAccount> GetBots(SqliteConnection connection, SqliteTransaction? transaction)
+    {
         using SqliteCommand cmd = connection.CreateCommand();
+        cmd.Transaction = transaction;
         cmd.CommandText = "SELECT id, display_name, token_secret_ref, telegram_bot_id, username, state, created_utc FROM bots ORDER BY display_name ASC;";
         var list = new List<BotAccount>();
         using SqliteDataReader reader = cmd.ExecuteReader();
@@ -232,7 +262,13 @@ public sealed class TelegramChannelService
     {
         ArgumentNullException.ThrowIfNull(channel);
         using SqliteConnection connection = _migrator.OpenConnection();
+        SaveChannel(connection, null, channel);
+    }
+
+    private static void SaveChannel(SqliteConnection connection, SqliteTransaction? transaction, ChannelAccount channel)
+    {
         using SqliteCommand cmd = connection.CreateCommand();
+        cmd.Transaction = transaction;
         cmd.CommandText = """
             INSERT INTO channels (id, telegram_chat_id, username, display_name, bot_id, default_instruction_id, timezone, is_test_channel, default_disable_notification, default_disable_web_preview)
             VALUES ($id, $chatId, $username, $name, $botId, $instId, $tz, $isTest, $noNotify, $noPreview)
@@ -260,10 +296,88 @@ public sealed class TelegramChannelService
         cmd.ExecuteNonQuery();
     }
 
+    internal void ApplySettingsDraft(IReadOnlyList<BotAccount> bots, IReadOnlyList<ChannelAccount> channels,
+        IReadOnlyDictionary<string, string> tokens, IReadOnlySet<string> removedBots, IReadOnlySet<string> removedChannels,
+        IReadOnlyDictionary<string, string> originalBots, IReadOnlyDictionary<string, string> originalChannels)
+    {
+        if (bots.Count == 0 && channels.Count == 0 && removedBots.Count == 0 && removedChannels.Count == 0) return;
+        using SqliteConnection connection = _migrator.OpenConnection();
+        using SqliteTransaction transaction = connection.BeginTransaction();
+        var currentBots = GetBots(connection, transaction);
+        var currentChannels = GetChannels(connection, transaction);
+        EnsureUnchanged(currentBots.ToDictionary(bot => bot.Id, bot => JsonSerializer.Serialize(bot)), originalBots, bots.Select(bot => bot.Id).Concat(removedBots));
+        EnsureUnchanged(currentChannels.ToDictionary(channel => channel.Id, channel => JsonSerializer.Serialize(channel)), originalChannels, channels.Select(channel => channel.Id).Concat(removedChannels));
+        if (bots.Any(bot => bot.TelegramBotId is not null && currentBots.Any(item => item.Id != bot.Id && item.TelegramBotId == bot.TelegramBotId)) ||
+            channels.Any(channel => currentChannels.Any(item => item.Id != channel.Id && item.TelegramChatId == channel.TelegramChatId)))
+        {
+            throw new InvalidOperationException(LocalizationService.Get("SettingsLists_ConcurrentEdit"));
+        }
+        var previousTokens = new Dictionary<string, string?>(StringComparer.Ordinal);
+        try
+        {
+            foreach (var (id, token) in tokens)
+            {
+                previousTokens[id] = _secretStore.ReadBotToken(id);
+                _secretStore.SaveBotToken(id, token);
+            }
+            foreach (BotAccount bot in bots) SaveBot(connection, transaction, bot);
+            foreach (ChannelAccount channel in channels) SaveChannel(connection, transaction, channel);
+            foreach (string id in removedChannels)
+            {
+                DeleteUnreferenced("DELETE FROM channels WHERE id = $id AND NOT EXISTS (SELECT 1 FROM publication_targets WHERE channel_id = $id) AND NOT EXISTS (SELECT 1 FROM channel_variants WHERE channel_id = $id);", id);
+            }
+            foreach (string id in removedBots)
+            {
+                DeleteUnreferenced("DELETE FROM bots WHERE id = $id AND NOT EXISTS (SELECT 1 FROM channels WHERE bot_id = $id);", id);
+            }
+            foreach (string id in removedBots)
+            {
+                previousTokens.TryAdd(id, _secretStore.ReadBotToken(id));
+                _secretStore.DeleteBotToken(id);
+            }
+            transaction.Commit();
+        }
+        catch
+        {
+            foreach (var (id, token) in previousTokens)
+            {
+                if (token is null) _secretStore.DeleteBotToken(id);
+                else _secretStore.SaveBotToken(id, token);
+            }
+            throw;
+        }
+
+        void DeleteUnreferenced(string sql, string id)
+        {
+            using SqliteCommand command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = sql;
+            command.Parameters.AddWithValue("$id", id);
+            if (command.ExecuteNonQuery() == 0)
+            {
+                throw new InvalidOperationException(LocalizationService.Get("SettingsLists_TelegramInUse"));
+            }
+        }
+    }
+
+    private static void EnsureUnchanged(IReadOnlyDictionary<string, string> current, IReadOnlyDictionary<string, string> original, IEnumerable<string> changedIds)
+    {
+        if (changedIds.Any(id => current.GetValueOrDefault(id) != original.GetValueOrDefault(id)))
+        {
+            throw new InvalidOperationException(LocalizationService.Get("SettingsLists_ConcurrentEdit"));
+        }
+    }
+
     public IReadOnlyList<ChannelAccount> GetChannels()
     {
         using SqliteConnection connection = _migrator.OpenConnection();
+        return GetChannels(connection, null);
+    }
+
+    private static IReadOnlyList<ChannelAccount> GetChannels(SqliteConnection connection, SqliteTransaction? transaction)
+    {
         using SqliteCommand cmd = connection.CreateCommand();
+        cmd.Transaction = transaction;
         cmd.CommandText = """
             SELECT id, telegram_chat_id, username, display_name, bot_id, default_instruction_id, timezone, is_test_channel, default_disable_notification, default_disable_web_preview
             FROM channels

@@ -4,17 +4,17 @@
     "net10.0-windows7.0": {
       "LibVLCSharp": {
         "type": "Direct",
-        "requested": "[3.9.0, )",
-        "resolved": "3.9.0",
-        "contentHash": "wydvN5kotK5y/ZRC04/F6YUqesJCzdixaItRkR8L0/nOLSs2/BJ7rKRbU7BxkxpKIBqlN8EpuXxH/fQEZEHtuw=="
+        "requested": "[3.9.4, )",
+        "resolved": "3.9.4",
+        "contentHash": "SmapcnMarT7eoiZeSIq0UhTrK/fdw+NDodfMft/S4Bnqlnz98zYtaAsQ3fO9U+O2KZKrOOf0R3jONUEShpjK4g=="
       },
       "LibVLCSharp.WPF": {
         "type": "Direct",
-        "requested": "[3.9.0, )",
-        "resolved": "3.9.0",
-        "contentHash": "pBOfuPmuZHwPEmjco0cpzDNEQXod3ASt3RpLRE/JV5/E6/9tQu5jsMeTe6hG1KzBiiAAp7nnVbZQt3DOPBqMCA==",
+        "requested": "[3.9.4, )",
+        "resolved": "3.9.4",
+        "contentHash": "mU575rJM02MtTXqZG1sYiJF5DpPO6HRFKIYGFK0R9m0BRQKNvbYgIk6FkJPt6OC1Y04WAz+JykYz/MBBJfdpSw==",
         "dependencies": {
-          "LibVLCSharp": "3.9.0"
+          "LibVLCSharp": "3.9.4"
         }
       },
       "Microsoft.Data.Sqlite": {

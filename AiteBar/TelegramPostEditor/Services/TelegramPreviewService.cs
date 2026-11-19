@@ -26,7 +26,7 @@ public static class TelegramPreviewService
         ArgumentNullException.ThrowIfNull(resolvedMedia);
 
         TelegramSerializedContent content = TelegramDocumentSerializer.SerializeForTelegram(document, channelOverride);
-        PostValidationSummary validation = TelegramValidationService.Validate(document, resolvedMedia, channel, channelOverride);
+        PostValidationSummary validation = TelegramValidationService.Validate(document, resolvedMedia, channelOverride);
         List<InlineUrlButton> buttons = channelOverride?.Buttons ?? document.Buttons;
 
         bool hasExternalLinks =

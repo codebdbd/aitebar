@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -23,7 +22,7 @@ public sealed class IptvPlaylistService : IDisposable
 
     private readonly IptvPlayerStore _store;
     private readonly HttpClient _httpClient;
-    private readonly ConcurrentDictionary<string, (SemaphoreSlim Lock, CancellationTokenSource? Cts, long Generation)> _sourceLocks = new();
+    private static readonly SemaphoreSlim RefreshGate = new(1, 1);
     private bool _disposed;
 
     public IptvPlaylistService(IptvPlayerStore store, HttpMessageHandler? handler = null)
@@ -43,324 +42,203 @@ public sealed class IptvPlaylistService : IDisposable
         _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("AiteBar-IPTV/1.0");
     }
 
-    public async Task<IptvSourceCheckResult> CheckSourceAsync(IptvPlaylistSource source, CancellationToken cancellationToken = default)
-    {
-        if (source == null)
-        {
-            return new IptvSourceCheckResult { IsSuccess = false, ErrorMessage = "Source is null" };
-        }
+    public Task<IptvSourceCheckResult> CheckSourceAsync(IptvPlaylistSource source, CancellationToken cancellationToken = default)
+        => CheckSourceAsync(source, null, cancellationToken);
 
-        var sw = Stopwatch.StartNew();
+    internal async Task<IptvSourceCheckResult> CheckSourceAsync(
+        IptvPlaylistSource source, string? locationOverride, CancellationToken cancellationToken = default)
+    {
+        var stopwatch = Stopwatch.StartNew();
         try
         {
-            string content;
-            string? baseLocation = null;
-
-            switch (source.Kind)
-            {
-                case IptvSourceKind.Url:
-                    string effectiveUrl = GetEffectiveUrl(source);
-                    if (!Uri.TryCreate(effectiveUrl, UriKind.Absolute, out Uri? uri) ||
-                        (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-                    {
-                        return new IptvSourceCheckResult
-                        {
-                            IsSuccess = false,
-                            ErrorMessage = "Invalid HTTP/HTTPS URL",
-                            ElapsedMs = sw.ElapsedMilliseconds
-                        };
-                    }
-
-                    baseLocation = effectiveUrl;
-                    content = await DownloadStringHardenedAsync(effectiveUrl, cancellationToken);
-                    break;
-
-                case IptvSourceKind.LocalFile:
-                    string filePath = source.Location;
-                    if (!File.Exists(filePath))
-                    {
-                        // Проверяем внутреннюю копию
-                        string storePath = _store.GetSourceFilePath(source.Id);
-                        if (File.Exists(storePath))
-                        {
-                            filePath = storePath;
-                        }
-                    }
-
-                    if (!File.Exists(filePath))
-                    {
-                        return new IptvSourceCheckResult
-                        {
-                            IsSuccess = false,
-                            ErrorMessage = "Local file not found",
-                            ElapsedMs = sw.ElapsedMilliseconds
-                        };
-                    }
-
-                    baseLocation = filePath;
-                    content = await File.ReadAllTextAsync(filePath, Encoding.UTF8, cancellationToken);
-                    break;
-
-                case IptvSourceKind.InlineText:
-                    content = source.InlineContent ?? string.Empty;
-                    break;
-
-                case IptvSourceKind.SingleStream:
-                    string streamUrl = GetEffectiveUrl(source);
-                    if (!IptvPlaylistParser.IsValidStreamUrl(streamUrl, IptvSourceKind.SingleStream))
-                    {
-                        return new IptvSourceCheckResult
-                        {
-                            IsSuccess = false,
-                            ErrorMessage = "Invalid stream URL",
-                            ElapsedMs = sw.ElapsedMilliseconds
-                        };
-                    }
-
-                    sw.Stop();
-                    return new IptvSourceCheckResult
-                    {
-                        IsSuccess = true,
-                        TotalCount = 1,
-                        FirstChannels = [string.IsNullOrWhiteSpace(source.Name) ? streamUrl : source.Name],
-                        ElapsedMs = sw.ElapsedMilliseconds
-                    };
-
-                default:
-                    return new IptvSourceCheckResult
-                    {
-                        IsSuccess = false,
-                        ErrorMessage = "Unknown source kind",
-                        ElapsedMs = sw.ElapsedMilliseconds
-                    };
-            }
-
-            var (channels, _) = IptvPlaylistParser.ParseM3u(content, source.Kind, baseLocation);
-            sw.Stop();
-
-            if (channels.Count == 0)
-            {
-                return new IptvSourceCheckResult
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "No valid channels found in playlist",
-                    ElapsedMs = sw.ElapsedMilliseconds
-                };
-            }
-
+            var (channels, _, _) = await ReadSourceAsync(source, locationOverride, cancellationToken);
             return new IptvSourceCheckResult
             {
                 IsSuccess = true,
                 TotalCount = channels.Count,
-                FirstChannels = channels.Take(5).Select(c => c.Title).ToList(),
-                ElapsedMs = sw.ElapsedMilliseconds
-            };
-        }
-        catch (OperationCanceledException)
-        {
-            sw.Stop();
-            return new IptvSourceCheckResult
-            {
-                IsSuccess = false,
-                ErrorMessage = "Operation canceled or timed out",
-                ElapsedMs = sw.ElapsedMilliseconds
+                FirstChannels = channels.Take(5).Select(channel => channel.Title).ToList(),
+                ElapsedMs = stopwatch.ElapsedMilliseconds
             };
         }
         catch (Exception ex)
         {
-            sw.Stop();
             return new IptvSourceCheckResult
             {
-                IsSuccess = false,
-                ErrorMessage = ex.Message,
-                ElapsedMs = sw.ElapsedMilliseconds
+                ErrorMessage = ex is OperationCanceledException ? "Operation canceled or timed out" : ex.Message,
+                ElapsedMs = stopwatch.ElapsedMilliseconds
             };
         }
     }
 
-    public async Task<bool> RefreshSourceAsync(IptvPlaylistSource source, CancellationToken callerToken = default)
+    public Task<bool> RefreshSourceAsync(IptvPlaylistSource source, CancellationToken cancellationToken = default)
+        => RefreshSourceAsync(source, null, cancellationToken);
+
+    internal async Task<bool> RefreshSourceAsync(
+        IptvPlaylistSource source, string? locationOverride, CancellationToken cancellationToken = default)
     {
         if (source == null || string.IsNullOrWhiteSpace(source.Id))
         {
             return false;
         }
 
-        var entry = _sourceLocks.GetOrAdd(source.Id, id => (new SemaphoreSlim(1, 1), null, 0));
-        entry.Cts?.Cancel();
-        var myCts = CancellationTokenSource.CreateLinkedTokenSource(callerToken);
-        long currentGen = unchecked(entry.Generation + 1);
-        _sourceLocks[source.Id] = (entry.Lock, myCts, currentGen);
-
-        await entry.Lock.WaitAsync(callerToken);
         try
         {
-            // Проверяем, не вытеснила ли нас более новая операция
-            if (_sourceLocks.TryGetValue(source.Id, out var active) && active.Generation != currentGen)
+            await RefreshGate.WaitAsync(cancellationToken);
+            try
             {
-                return false;
-            }
-
-            var result = await CheckSourceAsync(source, myCts.Token);
-            if (!result.IsSuccess)
-            {
-                source.LastStatus = "Error";
-                source.LastErrorMessage = result.ErrorMessage;
-                return false;
-            }
-
-            // Получаем контент и парсим в кэш
-            string content = string.Empty;
-            string? baseLocation = null;
-
-            if (source.Kind == IptvSourceKind.Url)
-            {
-                string effectiveUrl = GetEffectiveUrl(source);
-                baseLocation = effectiveUrl;
-                content = await DownloadStringHardenedAsync(effectiveUrl, myCts.Token);
-            }
-            else if (source.Kind == IptvSourceKind.LocalFile)
-            {
-                string filePath = source.Location;
-                if (!File.Exists(filePath))
+                var (channels, skipped, sourceCopy) = await ReadSourceAsync(source, locationOverride, cancellationToken);
+                cancellationToken.ThrowIfCancellationRequested();
+                if (sourceCopy is not null)
                 {
-                    string storePath = _store.GetSourceFilePath(source.Id);
-                    if (File.Exists(storePath)) filePath = storePath;
+                    _store.SaveSourceFileContent(source.SourceStorageId, sourceCopy);
                 }
-                baseLocation = filePath;
-                content = await File.ReadAllTextAsync(filePath, Encoding.UTF8, myCts.Token);
 
-                if (source.CopyLocalFileToStore)
-                {
-                    _store.SaveSourceFileContent(source.Id, content);
-                }
-            }
-            else if (source.Kind == IptvSourceKind.InlineText)
-            {
-                content = source.InlineContent ?? string.Empty;
-                _store.SaveSourceFileContent(source.Id, content);
-            }
-            else if (source.Kind == IptvSourceKind.SingleStream)
-            {
-                string streamUrl = GetEffectiveUrl(source);
-                var singleEntry = new IptvCachedChannelEntry
-                {
-                    Title = string.IsNullOrWhiteSpace(source.Name) ? "Single Stream" : source.Name,
-                    Group = "Общие",
-                    StreamUrl = streamUrl,
-                    SortOrder = 0
-                };
-
-                var singleCache = new IptvPlaylistCache
+                var refreshedAt = DateTime.UtcNow;
+                _store.SaveCache(new IptvPlaylistCache
                 {
                     PlaylistId = source.Id,
-                    RefreshedAtUtc = DateTime.UtcNow,
-                    Channels = [singleEntry],
-                    InvalidEntryCount = 0
-                };
-                _store.SaveCache(singleCache);
+                    SourceHash = source.ContentRevision,
+                    RefreshedAtUtc = refreshedAt,
+                    Channels = channels,
+                    InvalidEntryCount = skipped
+                });
 
-                source.LastRefreshedUtc = DateTime.UtcNow;
+                source.LastRefreshedUtc = refreshedAt;
                 source.LastStatus = "Ok";
                 source.LastErrorMessage = null;
-                source.ChannelCount = 1;
+                source.ChannelCount = channels.Count;
                 return true;
             }
-
-            var (channels, skipped) = IptvPlaylistParser.ParseM3u(content, source.Kind, baseLocation);
-
-            var cache = new IptvPlaylistCache
+            finally
             {
-                PlaylistId = source.Id,
-                RefreshedAtUtc = DateTime.UtcNow,
-                Channels = channels,
-                InvalidEntryCount = skipped
-            };
-            _store.SaveCache(cache);
-
-            source.LastRefreshedUtc = DateTime.UtcNow;
-            source.LastStatus = "Ok";
-            source.LastErrorMessage = null;
-            source.ChannelCount = channels.Count;
-            return true;
+                RefreshGate.Release();
+            }
         }
-        catch (OperationCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             return false;
         }
         catch (Exception ex)
         {
             source.LastStatus = "Error";
-            source.LastErrorMessage = ex.Message;
+            source.LastErrorMessage = ex is OperationCanceledException ? "Operation timed out" : ex.Message;
             return false;
-        }
-        finally
-        {
-            entry.Lock.Release();
         }
     }
 
-    public async Task<int> RefreshAllUrlSourcesAsync(IEnumerable<IptvPlaylistSource> sources, CancellationToken cancellationToken = default)
+    private async Task<(List<IptvCachedChannelEntry> Channels, int Skipped, string? SourceCopy)> ReadSourceAsync(
+        IptvPlaylistSource source, string? locationOverride, CancellationToken cancellationToken)
     {
-        if (sources == null)
-        {
-            return 0;
-        }
+        ArgumentNullException.ThrowIfNull(source);
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(RequestTimeoutSeconds));
+        CancellationToken token = timeout.Token;
+        string? baseLocation = null;
+        string? sourceCopy = null;
+        string content;
 
-        var urlSources = sources.Where(s => s.IsEnabled && s.Kind == IptvSourceKind.Url).ToList();
-        int successCount = 0;
-
-        foreach (var source in urlSources)
+        switch (source.Kind)
         {
-            if (cancellationToken.IsCancellationRequested)
-            {
+            case IptvSourceKind.SingleStream:
+                string streamUrl = locationOverride ?? GetEffectiveUrl(source);
+                if (!IptvPlaylistParser.IsValidStreamUrl(streamUrl, source.Kind))
+                {
+                    throw new InvalidDataException("Invalid stream URL");
+                }
+
+                return ([new IptvCachedChannelEntry
+                {
+                    Title = string.IsNullOrWhiteSpace(source.Name) ? "Single Stream" : source.Name,
+                    Group = "Общие",
+                    StreamUrl = streamUrl
+                }], 0, null);
+
+            case IptvSourceKind.Url:
+                baseLocation = locationOverride ?? GetEffectiveUrl(source);
+                if (!Uri.TryCreate(baseLocation, UriKind.Absolute, out Uri? uri) ||
+                    (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+                {
+                    throw new InvalidDataException("Invalid HTTP/HTTPS URL");
+                }
+
+                (content, baseLocation) = await DownloadStringHardenedAsync(baseLocation, token);
                 break;
-            }
 
-            bool ok = await RefreshSourceAsync(source, cancellationToken);
-            if (ok)
-            {
-                successCount++;
-            }
+            case IptvSourceKind.LocalFile:
+                baseLocation = source.Location;
+                if (File.Exists(baseLocation))
+                {
+                    if (new FileInfo(baseLocation).Length > MaxResponseBytes)
+                    {
+                        throw new InvalidDataException("Playlist file exceeds size limit");
+                    }
+
+                    content = await File.ReadAllTextAsync(baseLocation, Encoding.UTF8, token);
+                    sourceCopy = source.CopyLocalFileToStore ? content : null;
+                }
+                else
+                {
+                    content = _store.ReadSourceFileContent(source.SourceStorageId) ?? throw new FileNotFoundException("Local playlist file not found");
+                }
+                break;
+
+            case IptvSourceKind.InlineText:
+                content = source.InlineContent ?? _store.ReadSourceFileContent(source.SourceStorageId) ?? string.Empty;
+                break;
+
+            default:
+                throw new InvalidDataException("Unknown playlist source kind");
         }
 
-        return successCount;
+        var (channels, skipped) = IptvPlaylistParser.ParseM3u(content, source.Kind, baseLocation);
+        if (channels.Count == 0)
+        {
+            throw new InvalidDataException("No valid channels found in playlist");
+        }
+
+        return (channels, skipped, sourceCopy);
     }
 
     public bool IsAutoUpdateDue(IptvSettings settings)
     {
-        if (settings == null || !settings.AutoUpdateEnabled)
+        if (!settings.AutoUpdateEnabled)
         {
             return false;
         }
 
-        if (!settings.LastAutoUpdateUtc.HasValue)
-        {
-            return true;
-        }
-
         int interval = Math.Max(1, settings.UpdateIntervalHours);
-        return (DateTime.UtcNow - settings.LastAutoUpdateUtc.Value).TotalHours >= interval;
+        return !settings.LastAutoUpdateUtc.HasValue ||
+            (DateTime.UtcNow - settings.LastAutoUpdateUtc.Value).TotalHours >= interval;
     }
 
     private string GetEffectiveUrl(IptvPlaylistSource source)
     {
-        string? secret = _store.ReadSecretLocation(source.Id);
-        if (!string.IsNullOrWhiteSpace(secret))
+        if (IptvPlaylistParser.IsMaskedSensitiveUrl(source.Location))
         {
-            return secret;
+            return _store.ReadSecretLocation(source.SourceStorageId)
+                ?? throw new InvalidDataException("Playlist credentials are missing. Edit the source and enter the complete URL.");
         }
 
         return source.Location ?? string.Empty;
     }
 
-    private async Task<string> DownloadStringHardenedAsync(string initialUrl, CancellationToken cancellationToken)
+    private async Task<(string Content, string Location)> DownloadStringHardenedAsync(string initialUrl, CancellationToken cancellationToken)
+    {
+        var (bytes, location, charset) = await DownloadRemoteBytesAsync(
+            _httpClient, initialUrl, MaxResponseBytes, cancellationToken);
+        return (DetectEncoding(bytes, charset).GetString(bytes), location);
+    }
+
+    internal static async Task<(byte[] Bytes, string Location, string? Charset)> DownloadRemoteBytesAsync(
+        HttpClient client, string initialUrl, int maxBytes, CancellationToken cancellationToken)
     {
         string currentUrl = initialUrl;
         int hops = 0;
 
         while (hops < MaxRedirectHops)
         {
-            if (!Uri.TryCreate(currentUrl, UriKind.Absolute, out Uri? uri))
+            if (!Uri.TryCreate(currentUrl, UriKind.Absolute, out Uri? uri) ||
+                (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
             {
                 throw new InvalidOperationException("Invalid URI during download.");
             }
@@ -368,7 +246,7 @@ public sealed class IptvPlaylistService : IDisposable
             await ValidateDestinationSecurityAsync(uri, cancellationToken);
 
             using var request = new HttpRequestMessage(HttpMethod.Get, uri);
-            using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
             if ((int)response.StatusCode >= 300 && (int)response.StatusCode <= 399)
             {
@@ -391,9 +269,9 @@ public sealed class IptvPlaylistService : IDisposable
             response.EnsureSuccessStatusCode();
 
             long? contentLength = response.Content.Headers.ContentLength;
-            if (contentLength.HasValue && contentLength.Value > MaxResponseBytes)
+            if (contentLength > maxBytes)
             {
-                throw new InvalidOperationException($"Playlist exceeds maximum size limit of {MaxResponseBytes / 1024 / 1024} MiB.");
+                throw new InvalidOperationException($"Download exceeds the limit of {maxBytes / 1024 / 1024} MiB.");
             }
 
             using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -405,16 +283,14 @@ public sealed class IptvPlaylistService : IDisposable
             while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
             {
                 totalRead += read;
-                if (totalRead > MaxResponseBytes)
+                if (totalRead > maxBytes)
                 {
-                    throw new InvalidOperationException($"Playlist payload exceeded {MaxResponseBytes / 1024 / 1024} MiB limit.");
+                    throw new InvalidOperationException($"Download exceeds the limit of {maxBytes / 1024 / 1024} MiB.");
                 }
                 ms.Write(buffer, 0, read);
             }
 
-            byte[] bytes = ms.ToArray();
-            Encoding encoding = DetectEncoding(bytes, response.Content.Headers.ContentType?.CharSet);
-            return encoding.GetString(bytes);
+            return (ms.ToArray(), currentUrl, response.Content.Headers.ContentType?.CharSet);
         }
 
         throw new InvalidOperationException("Too many redirects.");
@@ -432,7 +308,7 @@ public sealed class IptvPlaylistService : IDisposable
         {
             addresses = await Dns.GetHostAddressesAsync(uri.DnsSafeHost, cancellationToken);
         }
-        catch
+        catch (SocketException)
         {
             // Если DNS не резолвится, оставляем HttpClient обработать ошибку сети
             return;
@@ -507,12 +383,6 @@ public sealed class IptvPlaylistService : IDisposable
         {
             _disposed = true;
             _httpClient.Dispose();
-            foreach (var val in _sourceLocks.Values)
-            {
-                try { val.Cts?.Cancel(); } catch { }
-                try { val.Lock.Dispose(); } catch { }
-            }
-            _sourceLocks.Clear();
         }
     }
 }

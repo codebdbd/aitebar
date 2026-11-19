@@ -15,7 +15,7 @@ public sealed class AppSettingsLayoutContractTests
         "SliderPanelSize", "LblPanelSize50", "LblPanelSize70", "LblPanelSize90", "LblPanelSize100",
         "SliderActivationZone", "LblActivationZone10", "LblActivationZone30", "LblActivationZone50", "LblActivationZone100",
         "SliderActivationDelay", "LblActivationDelay100", "LblActivationDelay200", "LblActivationDelay300", "LblActivationDelay500",
-        "TxtAboutVersion", "SettingsFooter", "BtnKeepOnTop", "AiConnectionsList", "TxtAiConnectionsEmpty",
+        "TxtAboutVersion", "SettingsFooter", "AiConnectionsList", "TxtAiConnectionsEmpty",
         "ChkShowPanelOnMouseHover", "ChkShowTaskbarPositionIndicator", "ChkSecondaryMonitor", "ChkCheckForUpdatesEnabled",
         "ChkSuppressPanelInFullscreen", "ChkSuppressHotkeysInFullscreen",
         "PanelContextsList",
@@ -58,7 +58,6 @@ public sealed class AppSettingsLayoutContractTests
         AssertHandlerCount(window, "SliderPanelSize_ValueChanged", 1);
         AssertHandlerCount(window, "SliderActivationZone_ValueChanged", 1);
         AssertHandlerCount(window, "SliderActivationDelay_ValueChanged", 1);
-        AssertHandlerCount(window, "BtnKeepOnTop_Click", 1);
         AssertHandlerCount(window, "BtnCancel_Click", 1);
         AssertHandlerCount(window, "BtnSave_Click", 1);
     }
@@ -111,12 +110,13 @@ public sealed class AppSettingsLayoutContractTests
         XDocument window = LoadWindow();
         XElement root = Assert.IsType<XElement>(window.Root);
 
-        Assert.Equal("1200", root.Attribute("Width")?.Value);
-        Assert.Equal("680", root.Attribute("Height")?.Value);
+        Assert.Equal("1080", root.Attribute("Width")?.Value);
+        Assert.Equal("760", root.Attribute("Height")?.Value);
         Assert.Equal("960", root.Attribute("MinWidth")?.Value);
         Assert.Equal("600", root.Attribute("MinHeight")?.Value);
         Assert.Equal("CanResize", root.Attribute("ResizeMode")?.Value);
-        Assert.Equal("True", root.Attribute("Topmost")?.Value);
+        Assert.Null(root.Attribute("Topmost"));
+        Assert.Null(root.Attribute("WindowState"));
         Assert.Equal("True", root.Attribute("ShowInTaskbar")?.Value);
         Assert.Equal("CenterScreen", root.Attribute("WindowStartupLocation")?.Value);
         Assert.Empty(window.Descendants(PresentationNamespace + "TabControl"));
@@ -124,7 +124,8 @@ public sealed class AppSettingsLayoutContractTests
 
         XElement layoutRoot = FindNamedElement(window, "SettingsLayoutRoot");
         Assert.Equal("16", layoutRoot.Attribute("Margin")?.Value);
-        Assert.Equal(["255", "24", "*"], layoutRoot
+        Assert.Equal("1220", layoutRoot.Attribute("MaxWidth")?.Value);
+        Assert.Equal(["230", "24", "*"], layoutRoot
             .Element(PresentationNamespace + "Grid.ColumnDefinitions")!
             .Elements(PresentationNamespace + "ColumnDefinition")
             .Select(column => column.Attribute("Width")?.Value ?? string.Empty)
@@ -132,7 +133,7 @@ public sealed class AppSettingsLayoutContractTests
         XElement contentHost = FindNamedElement(window, "SettingsContentHost");
         Assert.Equal("2", contentHost.Attribute("Grid.Column")?.Value);
         Assert.Equal("2", contentHost.Attribute("Grid.RowSpan")?.Value);
-        Assert.Equal("1000", contentHost.Attribute("MaxWidth")?.Value);
+        Assert.Null(contentHost.Attribute("MaxWidth"));
         Assert.Equal("Stretch", contentHost.Attribute("HorizontalAlignment")?.Value);
         Assert.Equal("0", FindNamedElement(window, "SettingsNavigationPanel").Attribute("Padding")?.Value);
         XElement navigationPanel = FindNamedElement(window, "SettingsNavigationPanel");
@@ -141,8 +142,8 @@ public sealed class AppSettingsLayoutContractTests
 
         XElement navigation = FindNamedElement(window, "SettingsNavigationList");
         XElement[] navigationItems = navigation.Elements(PresentationNamespace + "ListBoxItem").ToArray();
-        Assert.Equal(8, navigationItems.Length);
-        Assert.Equal(["\uF587", "\uE8B0", "\uF4B8", "\uF82E", "\uF15A", "\uF69A", "\uEDC3", "\uF4A2"],
+        Assert.Equal(6, navigationItems.Length);
+        Assert.Equal(["\uF587", "\uE8B0", "\uF4B8", "\uF82E", "\uF15A", "\uF4A2"],
             navigationItems.Select(item => item.Attribute("Tag")?.Value ?? string.Empty).ToArray());
         Assert.All(navigationItems, item =>
         {
@@ -161,8 +162,6 @@ public sealed class AppSettingsLayoutContractTests
             "HotkeySettingsSection",
             "QuickToolsSettingsSection",
             "AiProvidersSettingsSection",
-            "TelegramSettingsSection",
-            "IptvSettingsSection",
             "AboutSettingsSection"
         ];
         string[] actualSections = scrollViewer
@@ -182,10 +181,10 @@ public sealed class AppSettingsLayoutContractTests
             .Cast<string>()
             .ToArray();
         Assert.Equal(expectedSections, directSectionChildren);
-        Assert.Equal(["0,0,0,32", "0,0,0,32", "0,0,0,32", "0,0,0,32", "0,0,0,32", "0,0,0,32", "0,0,0,32", "0"], scrollContent
+        Assert.Equal(["Visible", "Collapsed", "Collapsed", "Collapsed", "Collapsed", "Collapsed"], scrollContent
             .Elements(PresentationNamespace + "Border")
             .Where(element => expectedSections.Contains(element.Attribute(XamlNamespace + "Name")?.Value, StringComparer.Ordinal))
-            .Select(element => element.Attribute("Margin")?.Value ?? string.Empty)
+            .Select(element => element.Attribute("Visibility")?.Value ?? "Visible")
             .ToArray());
 
         XElement clipboardPersistence = FindNamedElement(window, "ChkClipboardManagerPersistHistory");
@@ -196,18 +195,30 @@ public sealed class AppSettingsLayoutContractTests
 
         XElement cancel = FindNamedElement(window, "BtnCancel");
         XElement save = FindNamedElement(window, "BtnSave");
-        XElement keepOnTop = FindNamedElement(window, "BtnKeepOnTop");
         XElement footer = FindNamedElement(window, "SettingsFooter");
         Assert.DoesNotContain(cancel, scrollViewer.Descendants());
         Assert.DoesNotContain(save, scrollViewer.Descendants());
-        Assert.DoesNotContain(keepOnTop, scrollViewer.Descendants());
         Assert.Equal("1", footer.Attribute("Grid.Row")?.Value);
-        Assert.Equal("True", keepOnTop.Attribute("IsChecked")?.Value);
-        Assert.Contains(keepOnTop, footer.Descendants());
+        Assert.Empty(footer.Descendants(PresentationNamespace + "ToggleButton"));
         Assert.Contains(cancel, footer.Descendants());
         Assert.Contains(save, footer.Descendants());
         Assert.Contains(cancel, contentHost.Descendants());
         Assert.Contains(save, contentHost.Descendants());
+    }
+
+    [Fact]
+    public void ListsPickerAndAllThreeCommandsShareOneToolbarGrid()
+    {
+        XDocument window = LoadWindow();
+        XElement picker = FindNamedElement(window, "SettingsListPicker");
+        XElement toolbar = Assert.IsType<XElement>(picker.Parent);
+        Assert.Equal(PresentationNamespace + "Grid", toolbar.Name);
+        Assert.Null(picker.Attribute("Grid.Row"));
+        XElement commands = Assert.Single(toolbar.Elements(PresentationNamespace + "StackPanel"));
+        Assert.Equal("Horizontal", commands.Attribute("Orientation")?.Value);
+        Assert.Equal("1", commands.Attribute("Grid.Column")?.Value);
+        Assert.Equal(["AddSettingsListEntry_Click", "ImportSettingsList_Click", "ExportSettingsList_Click"],
+            commands.Elements(PresentationNamespace + "Button").Select(button => button.Attribute("Click")?.Value));
     }
 
     [Fact]
@@ -327,18 +338,13 @@ public sealed class AppSettingsLayoutContractTests
     }
 
     [Fact]
-    public void NavigationHandlers_AreWiredAndLocalizationQueuesSectionRealignment()
+    public void NavigationUsesSelectionAndLeavesTheSideMenuFixedWhenContentScrolls()
     {
         XDocument window = LoadWindow();
-        string code = File.ReadAllText(Path.Combine(FindRepoRoot(), "AiteBar", "AppSettingsWindow.xaml.cs"));
 
         Assert.Equal("SettingsNavigationList_SelectionChanged", FindNamedElement(window, "SettingsNavigationList").Attribute("SelectionChanged")?.Value);
-        Assert.Equal("SettingsScrollViewer_ScrollChanged", FindNamedElement(window, "SettingsScrollViewer").Attribute("ScrollChanged")?.Value);
+        Assert.Null(FindNamedElement(window, "SettingsScrollViewer").Attribute("ScrollChanged"));
         Assert.Equal("Window_Loaded", window.Root?.Attribute("Loaded")?.Value);
-        Assert.Contains("AppSettingsSectionNavigationHelper.GetTargetOffset", code);
-        Assert.Contains("AppSettingsSectionNavigationHelper.GetActiveSectionIndex", code);
-        Assert.Contains("LayoutInformation.GetLayoutSlot(section).Top", code);
-        Assert.Contains("QueueScrollToSection(selectedSectionIndex);", code);
     }
 
     [Fact]

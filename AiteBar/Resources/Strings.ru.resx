@@ -2124,12 +2124,6 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
   <data name="AppSettingsWindow_DelayMaxLabel" xml:space="preserve">
     <value>500 мс</value>
   </data>
-  <data name="AppSettingsWindow_KeepOnTop" xml:space="preserve">
-    <value>Поверх других окон</value>
-  </data>
-  <data name="AppSettingsWindow_KeepOnTopHint" xml:space="preserve">
-    <value>Закрепить окно настроек поверх других программ до его закрытия.</value>
-  </data>
   <data name="QuickTool_QuickNote_Title" xml:space="preserve">
     <value>Быстрая заметка</value>
   </data>
@@ -5060,7 +5054,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
     <value>Каналы</value>
   </data>
   <data name="TelegramPostEditor_TabQueue" xml:space="preserve">
-    <value>Очередь</value>
+    <value>Запланированные</value>
   </data>
   <data name="TelegramPostEditor_PreviewEmpty" xml:space="preserve">
     <value>Введите текст или добавьте медиа, чтобы увидеть предпросмотр сообщения Telegram.</value>
@@ -5167,6 +5161,15 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
   <data name="TelegramPostEditor_AiGenerating" xml:space="preserve">
     <value>Генерация…</value>
   </data>
+  <data name="TelegramPostEditor_AiActionLabel" xml:space="preserve">
+    <value>Действие ИИ</value>
+  </data>
+  <data name="TelegramPostEditor_AiInstructionLabel" xml:space="preserve">
+    <value>Инструкция (стиль)</value>
+  </data>
+  <data name="TelegramPostEditor_AiModelLabel" xml:space="preserve">
+    <value>Модель ИИ</value>
+  </data>
   <data name="TelegramPostEditor_ChannelsSelectHeader" xml:space="preserve">
     <value>Каналы для публикации</value>
   </data>
@@ -5243,7 +5246,7 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
     <value>Добавить плейлист...</value>
   </data>
   <data name="IptvSettings_RefreshAll" xml:space="preserve">
-    <value>Обновить все URL-плейлисты</value>
+    <value>Обновить сохранённые плейлисты</value>
   </data>
   <data name="IptvSettings_NoSources" xml:space="preserve">
     <value>Плейлисты еще не добавлены. Нажмите "Добавить плейлист...", чтобы указать URL или файл M3U.</value>
@@ -5316,5 +5319,578 @@ cd /d "B:\project_name" &amp;&amp; py -m app.main</value>
   </data>
   <data name="Iptv_ToggleEnabled" xml:space="preserve">
     <value>Включить/отключить источник</value>
+  </data>
+  <data name="TelegramPostEditor_QueueTokenNotice" xml:space="preserve">
+    <value>При планировании токены ботов выбранных каналов передаются привязанному серверу.</value>
+  </data>
+  <data name="TelegramPostEditor_QueueConnected" xml:space="preserve">
+    <value>Сервер планирования подключён</value>
+  </data>
+  <data name="TelegramPostEditor_QueuePairAddress" xml:space="preserve">
+    <value>Привяжите этот адрес сервера перед планированием.</value>
+  </data>
+  <data name="Iptv_SelectChannel" xml:space="preserve">
+    <value>Щёлкните по каналу или нажмите PgUp/PgDn</value>
+  </data>
+  <data name="Iptv_FillVideo" xml:space="preserve">
+    <value>Заполнить область видео с обрезкой краёв</value>
+  </data>
+  <data name="Iptv_StreamVariant" xml:space="preserve">
+    <value>Источник трансляции</value>
+  </data>
+  <data name="Iptv_StreamNumber" xml:space="preserve">
+    <value>Источник {0}</value>
+  </data>
+  <data name="Iptv_OpeningStream" xml:space="preserve">
+    <value>Открываем канал…</value>
+  </data>
+  <data name="Iptv_BufferingStream" xml:space="preserve">
+    <value>Буферизация…</value>
+  </data>
+  <data name="Iptv_ReconnectingStream" xml:space="preserve">
+    <value>Переподключение…</value>
+  </data>
+  <data name="Iptv_StreamUnavailable" xml:space="preserve">
+    <value>Канал недоступен. Повторите попытку или выберите другой канал.</value>
+  </data>
+  <data name="Iptv_StreamStopped" xml:space="preserve">
+    <value>Воспроизведение остановлено. Выберите канал или нажмите «Воспроизвести».</value>
+  </data>
+  <data name="Iptv_AudioOnly" xml:space="preserve">
+    <value>Аудиопоток</value>
+  </data>
+  <data name="Iptv_WaitingForVideo" xml:space="preserve">
+    <value>Ожидание видеокадра…</value>
+  </data>
+  <data name="Iptv_EngineUnavailable" xml:space="preserve">
+    <value>Не удалось запустить видеоплеер.</value>
+  </data>
+  <data name="Iptv_FillLabel" xml:space="preserve">
+    <value>Заполнить</value>
+  </data>
+  <data name="Iptv_Pause" xml:space="preserve">
+    <value>Пауза (Пробел)</value>
+  </data>
+  <data name="Iptv_Resume" xml:space="preserve">
+    <value>Продолжить (Пробел)</value>
+  </data>
+  <data name="Iptv_PauseUnavailable" xml:space="preserve">
+    <value>Этот поток нельзя поставить на паузу</value>
+  </data>
+  <data name="Iptv_EnterFullscreen" xml:space="preserve">
+    <value>На весь экран (F)</value>
+  </data>
+  <data name="Iptv_ExitFullscreen" xml:space="preserve">
+    <value>Выйти из полноэкранного режима (Esc)</value>
+  </data>
+  <data name="Iptv_Mute" xml:space="preserve">
+    <value>Выключить звук (M)</value>
+  </data>
+  <data name="Iptv_Unmute" xml:space="preserve">
+    <value>Включить звук (M)</value>
+  </data>
+  <data name="Iptv_Volume" xml:space="preserve">
+    <value>Громкость</value>
+  </data>
+  <data name="Iptv_PictureInPicture" xml:space="preserve">
+    <value>Картинка в картинке (P)</value>
+  </data>
+  <data name="IptvSettings_PendingSave" xml:space="preserve">
+    <value>Нажмите «Сохранить» в настройках, чтобы загрузить плейлист.</value>
+  </data>
+  <data name="Iptv_PlaylistNotLoaded" xml:space="preserve">
+    <value>Каналы плейлиста ещё не загружены.</value>
+  </data>
+  <data name="Iptv_PlaylistLoadFailed" xml:space="preserve">
+    <value>Плейлист не загрузился. Проверьте источник в настройках IPTV.</value>
+  </data>
+  <data name="Iptv_NoMatchingChannels" xml:space="preserve">
+    <value>По выбранным фильтрам каналы не найдены.</value>
+  </data>
+  <data name="Iptv_AddPlaylistInSettings" xml:space="preserve">
+    <value>Добавьте плейлист в настройках IPTV.</value>
+  </data>
+  <data name="Iptv_SearchFavorites" xml:space="preserve">
+    <value>Поиск в избранном</value>
+  </data>
+  <data name="Iptv_SearchChannels" xml:space="preserve">
+    <value>Поиск каналов</value>
+  </data>
+  <data name="Iptv_ClearSearch" xml:space="preserve">
+    <value>Очистить поиск</value>
+  </data>
+  <data name="Iptv_Favorites" xml:space="preserve">
+    <value>Избранное</value>
+  </data>
+  <data name="Iptv_Filters" xml:space="preserve">
+    <value>Фильтры</value>
+  </data>
+  <data name="Iptv_PlaylistFilter" xml:space="preserve">
+    <value>Плейлист</value>
+  </data>
+  <data name="Iptv_GroupFilter" xml:space="preserve">
+    <value>Группа</value>
+  </data>
+  <data name="Iptv_ClearPlaylistFilter" xml:space="preserve">
+    <value>Снять фильтр по плейлисту</value>
+  </data>
+  <data name="Iptv_ClearGroupFilter" xml:space="preserve">
+    <value>Снять фильтр по группе</value>
+  </data>
+  <data name="Iptv_ResolutionFilter" xml:space="preserve">
+    <value>Разрешение по меткам плейлиста</value>
+  </data>
+  <data name="Iptv_AnyResolution" xml:space="preserve">
+    <value>Все</value>
+  </data>
+  <data name="Iptv_UhdOrHigher" xml:space="preserve">
+    <value>4K и выше</value>
+  </data>
+  <data name="Iptv_ManageSources" xml:space="preserve">
+    <value>Источники</value>
+  </data>
+  <data name="Iptv_ResetFilters" xml:space="preserve">
+    <value>Сбросить</value>
+  </data>
+  <data name="Iptv_AllPlaylists" xml:space="preserve">
+    <value>Все плейлисты</value>
+  </data>
+  <data name="Iptv_AllGroups" xml:space="preserve">
+    <value>Все группы</value>
+  </data>
+  <data name="Iptv_NoFavorites" xml:space="preserve">
+    <value>Отметьте канал звездой, и он появится здесь.</value>
+  </data>
+  <data name="Iptv_OnAir" xml:space="preserve">
+    <value>В эфире</value>
+  </data>
+  <data name="Iptv_AddFavorite" xml:space="preserve">
+    <value>Добавить в избранное</value>
+  </data>
+  <data name="Iptv_RemoveFavorite" xml:space="preserve">
+    <value>Убрать из избранного</value>
+  </data>
+  <data name="Iptv_RetryStream" xml:space="preserve">
+    <value>Повторить</value>
+  </data>
+  <data name="Iptv_StreamInfo" xml:space="preserve">
+    <value>О трансляции</value>
+  </data>
+  <data name="Iptv_FramesPerSecond" xml:space="preserve">
+    <value>{0:0.#} кадр/с</value>
+  </data>
+  <data name="Iptv_VideoCodec" xml:space="preserve">
+    <value>Видеокодек: {0}</value>
+  </data>
+  <data name="Iptv_VideoBitrate" xml:space="preserve">
+    <value>Битрейт видео: {0:0.#} кбит/с</value>
+  </data>
+  <data name="Iptv_DroppedFrames" xml:space="preserve">
+    <value>Пропущено кадров: {0}</value>
+  </data>
+  <data name="Iptv_NoActiveChannel" xml:space="preserve">
+    <value>Канал не выбран</value>
+  </data>
+  <data name="Iptv_PreviousChannel" xml:space="preserve">
+    <value>Предыдущий канал (PgUp)</value>
+  </data>
+  <data name="Iptv_NextChannel" xml:space="preserve">
+    <value>Следующий канал (PgDn)</value>
+  </data>
+  <data name="Iptv_ReturnToWindow" xml:space="preserve">
+    <value>Вернуться в плеер (P или Esc)</value>
+  </data>
+  <data name="Iptv_VideoOnly" xml:space="preserve">
+    <value>Показать или скрыть каналы (V)</value>
+  </data>
+  <data name="SettingsLists_Title" xml:space="preserve">
+    <value>Подключение ресурсов</value>
+  </data>
+  <data name="SettingsLists_Add" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="SettingsLists_Import" xml:space="preserve">
+    <value>Импорт</value>
+  </data>
+  <data name="SettingsLists_Export" xml:space="preserve">
+    <value>Экспорт</value>
+  </data>
+  <data name="SettingsLists_UndoRemove" xml:space="preserve">
+    <value>Отменить удаление</value>
+  </data>
+  <data name="SettingsLists_TelegramReading" xml:space="preserve">
+    <value>Каналы Telegram для чтения</value>
+  </data>
+  <data name="SettingsLists_TelegramPublishing" xml:space="preserve">
+    <value>Каналы Telegram для публикации</value>
+  </data>
+  <data name="SettingsLists_Rss" xml:space="preserve">
+    <value>RSS-ленты</value>
+  </data>
+  <data name="SettingsLists_Prompts" xml:space="preserve">
+    <value>Промпты</value>
+  </data>
+  <data name="SettingsLists_Enabled" xml:space="preserve">
+    <value>Включено</value>
+  </data>
+  <data name="SettingsLists_Up" xml:space="preserve">
+    <value>Переместить выше</value>
+  </data>
+  <data name="SettingsLists_Down" xml:space="preserve">
+    <value>Переместить ниже</value>
+  </data>
+  <data name="SettingsLists_Edit" xml:space="preserve">
+    <value>Редактировать</value>
+  </data>
+  <data name="SettingsLists_CheckFailed" xml:space="preserve">
+    <value>Ошибка проверки</value>
+  </data>
+  <data name="SettingsLists_Checked" xml:space="preserve">
+    <value>Проверено</value>
+  </data>
+  <data name="SettingsLists_AddressValid" xml:space="preserve">
+    <value>Формат адреса верен</value>
+  </data>
+  <data name="SettingsLists_Empty" xml:space="preserve">
+    <value>Список пуст</value>
+  </data>
+  <data name="SettingsLists_Name" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="SettingsLists_Category" xml:space="preserve">
+    <value>Категория</value>
+  </data>
+  <data name="SettingsLists_RssUrl" xml:space="preserve">
+    <value>Ссылка RSS</value>
+  </data>
+  <data name="SettingsLists_ChannelAddress" xml:space="preserve">
+    <value>Ссылка, @username или ID канала</value>
+  </data>
+  <data name="SettingsLists_PromptText" xml:space="preserve">
+    <value>Текст промпта</value>
+  </data>
+  <data name="SettingsLists_InvalidEntry" xml:space="preserve">
+    <value>Проверьте данные. Запись содержит ошибку, уже существует или не прошла проверку.</value>
+  </data>
+  <data name="SettingsLists_RefreshSelected" xml:space="preserve">
+    <value>Обновить выбранный</value>
+  </data>
+  <data name="SettingsLists_TelegramInUse" xml:space="preserve">
+    <value>Запись Telegram связана с каналом или публикацией.</value>
+  </data>
+  <data name="SettingsLists_Token" xml:space="preserve">
+    <value>Токен бота</value>
+  </data>
+  <data name="SettingsLists_ImportResult" xml:space="preserve">
+    <value>Добавлено: {0}. Пропущено: {1}. Ошибок: {2}.</value>
+  </data>
+  <data name="SettingsLists_ImportErrors" xml:space="preserve">
+    <value>Проверьте строки: {0}</value>
+  </data>
+  <data name="SettingsLists_OpenFile" xml:space="preserve">
+    <value>Открыть TXT или MD…</value>
+  </data>
+  <data name="SettingsLists_PasteImport" xml:space="preserve">
+    <value>Вставить из буфера</value>
+  </data>
+  <data name="SettingsLists_EnterImport" xml:space="preserve">
+    <value>Ввести вручную</value>
+  </data>
+  <data name="SettingsLists_EditImport" xml:space="preserve">
+    <value>Редактировать текст</value>
+  </data>
+  <data name="SettingsLists_HideImport" xml:space="preserve">
+    <value>Скрыть текст</value>
+  </data>
+  <data name="SettingsLists_IptvImportFormat" xml:space="preserve">
+    <value>Подойдут TXT с табуляцией, Markdown-таблица или строки в формате Название,Ссылка.</value>
+  </data>
+  <data name="SettingsLists_ImportFormat" xml:space="preserve">
+    <value>В TXT разделяйте поля табуляцией, в Markdown используйте таблицу.</value>
+  </data>
+  <data name="SettingsLists_ImportText" xml:space="preserve">
+    <value>Текст для импорта</value>
+  </data>
+  <data name="SettingsLists_ImportReady" xml:space="preserve">
+    <value>Текст загружен. Откройте предпросмотр, чтобы проверить строки.</value>
+  </data>
+  <data name="SettingsLists_ClipboardEmpty" xml:space="preserve">
+    <value>В буфере обмена нет текста.</value>
+  </data>
+  <data name="SettingsLists_ClipboardUnavailable" xml:space="preserve">
+    <value>Не удалось прочитать буфер обмена. Повторите попытку.</value>
+  </data>
+  <data name="SettingsLists_EmptyImportFile" xml:space="preserve">
+    <value>В выбранном файле нет текста.</value>
+  </data>
+  <data name="SettingsLists_FileTooLarge" xml:space="preserve">
+    <value>Объём текста для импорта не должен превышать 4 МБ.</value>
+  </data>
+  <data name="SettingsLists_AllCategories" xml:space="preserve">
+    <value>Все категории</value>
+  </data>
+  <data name="SettingsLists_NoCategory" xml:space="preserve">
+    <value>Без категории</value>
+  </data>
+  <data name="SettingsLists_ManagePrompts" xml:space="preserve">
+    <value>Управление промптами…</value>
+  </data>
+  <data name="SettingsLists_Preview" xml:space="preserve">
+    <value>Предпросмотр</value>
+  </data>
+  <data name="SettingsLists_New" xml:space="preserve">
+    <value>Новая</value>
+  </data>
+  <data name="SettingsLists_AlreadyPresent" xml:space="preserve">
+    <value>Уже есть</value>
+  </data>
+  <data name="SettingsLists_Error" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="SettingsLists_UseDefaultBot" xml:space="preserve">
+    <value>Бот по умолчанию</value>
+  </data>
+  <data name="SettingsLists_RestoreFailed" xml:space="preserve">
+    <value>Не удалось восстановить настройки. Перед повторной попыткой откройте настройки заново.</value>
+  </data>
+  <data name="SettingsLists_SelectEntry" xml:space="preserve">
+    <value>Включить</value>
+  </data>
+  <data name="SettingsLists_Line" xml:space="preserve">
+    <value>Строка</value>
+  </data>
+  <data name="SettingsLists_Status" xml:space="preserve">
+    <value>Статус</value>
+  </data>
+  <data name="SettingsLists_Ai" xml:space="preserve">
+    <value>ИИ-подключения</value>
+  </data>
+  <data name="SettingsLists_Iptv" xml:space="preserve">
+    <value>IPTV-источники</value>
+  </data>
+  <data name="SettingsLists_ConcurrentEdit" xml:space="preserve">
+    <value>Данные Telegram изменились в другом окне. Откройте настройки заново и повторите изменения.</value>
+  </data>
+  <data name="SettingsLists_SelectToUpdate" xml:space="preserve">
+    <value>Уже есть · отметьте для обновления</value>
+  </data>
+  <data name="SettingsLists_UpdatedCount" xml:space="preserve">
+    <value>Обновлено: {0}</value>
+  </data>
+  <data name="SettingsLists_Provider" xml:space="preserve">
+    <value>Провайдер</value>
+  </data>
+  <data name="SettingsLists_PlaylistType" xml:space="preserve">
+    <value>Тип источника</value>
+  </data>
+  <data name="SettingsLists_TelegramId" xml:space="preserve">
+    <value>Telegram ID</value>
+  </data>
+  <data name="SettingsLists_BotId" xml:space="preserve">
+    <value>Telegram ID бота</value>
+  </data>
+  <data name="SettingsLists_LoadRss" xml:space="preserve">
+    <value>Загрузить</value>
+  </data>
+  <data name="SettingsLists_InsertRss" xml:space="preserve">
+    <value>Вставить выбранное</value>
+  </data>
+  <data name="SettingsLists_ManageRss" xml:space="preserve">
+    <value>Настроить ленты</value>
+  </data>
+  <data name="SettingsLists_RssReady" xml:space="preserve">
+    <value>Выберите ленту и нажмите «Загрузить».</value>
+  </data>
+  <data name="SettingsLists_NoFeeds" xml:space="preserve">
+    <value>Нет включённых лент.</value>
+  </data>
+  <data name="SettingsLists_RssLoading" xml:space="preserve">
+    <value>Загружаем ленту…</value>
+  </data>
+  <data name="SettingsLists_RssNoItems" xml:space="preserve">
+    <value>В ленте нет записей.</value>
+  </data>
+  <data name="SettingsLists_DefaultOrCurrentBot" xml:space="preserve">
+    <value>Бот по умолчанию или текущий</value>
+  </data>
+  <data name="SettingsLists_RssShort" xml:space="preserve">
+    <value>RSS</value>
+  </data>
+  <data name="TelegramComposer_ApproximatePreview" xml:space="preserve">
+    <value>Примерный вид в Telegram</value>
+  </data>
+  <data name="TelegramComposer_Assistant" xml:space="preserve">
+    <value>ИИ-помощник</value>
+  </data>
+  <data name="TelegramComposer_BackToDraft" xml:space="preserve">
+    <value>К черновику</value>
+  </data>
+  <data name="TelegramComposer_Canceled" xml:space="preserve">
+    <value>Отменено</value>
+  </data>
+  <data name="TelegramComposer_CheckChannel" xml:space="preserve">
+    <value>Проверьте канал перед повторной отправкой.</value>
+  </data>
+  <data name="TelegramComposer_Connect" xml:space="preserve">
+    <value>Подключить бота или канал</value>
+  </data>
+  <data name="TelegramComposer_ConnectHint" xml:space="preserve">
+    <value>Подключите бота с правом публикации и добавьте канал.</value>
+  </data>
+  <data name="TelegramComposer_DeliveredCount" xml:space="preserve">
+    <value>Опубликовано в {0} из {1} каналов</value>
+  </data>
+  <data name="TelegramComposer_DraftActions" xml:space="preserve">
+    <value>Действия с черновиком</value>
+  </data>
+  <data name="TelegramComposer_Drafts" xml:space="preserve">
+    <value>Черновики</value>
+  </data>
+  <data name="TelegramComposer_DraftUnavailable" xml:space="preserve">
+    <value>Не удалось открыть черновик.</value>
+  </data>
+  <data name="TelegramComposer_FutureTime" xml:space="preserve">
+    <value>Укажите будущую дату и действительное местное время в формате ЧЧ:ММ.</value>
+  </data>
+  <data name="TelegramComposer_HidePreview" xml:space="preserve">
+    <value>Скрыть предпросмотр</value>
+  </data>
+  <data name="TelegramComposer_Later" xml:space="preserve">
+    <value>По расписанию</value>
+  </data>
+  <data name="TelegramComposer_MessagePreview" xml:space="preserve">
+    <value>Сообщение Telegram</value>
+  </data>
+  <data name="TelegramComposer_Now" xml:space="preserve">
+    <value>Сейчас</value>
+  </data>
+  <data name="TelegramComposer_OpenDraft" xml:space="preserve">
+    <value>Открыть черновик</value>
+  </data>
+  <data name="TelegramComposer_PairRequired" xml:space="preserve">
+    <value>Подключите сервер планирования, чтобы продолжить.</value>
+  </data>
+  <data name="TelegramComposer_Paused" xml:space="preserve">
+    <value>Приостановлено</value>
+  </data>
+  <data name="TelegramComposer_PostText" xml:space="preserve">
+    <value>Текст поста</value>
+  </data>
+  <data name="TelegramComposer_QueueEmpty" xml:space="preserve">
+    <value>Запланированных постов пока нет.</value>
+  </data>
+  <data name="TelegramComposer_QueueOffline" xml:space="preserve">
+    <value>Часть статусов не удалось обновить. Показаны последние известные данные.</value>
+  </data>
+  <data name="TelegramComposer_Refresh" xml:space="preserve">
+    <value>Обновить статусы</value>
+  </data>
+  <data name="TelegramComposer_RestoreToPublish" xml:space="preserve">
+    <value>Чтобы опубликовать черновик, восстановите его из корзины.</value>
+  </data>
+  <data name="TelegramComposer_RetryFailed" xml:space="preserve">
+    <value>Повторить отправку с ошибками</value>
+  </data>
+  <data name="TelegramComposer_RetryWait" xml:space="preserve">
+    <value>Ожидает повторной отправки</value>
+  </data>
+  <data name="TelegramComposer_Review" xml:space="preserve">
+    <value>Настроить публикацию</value>
+  </data>
+  <data name="TelegramComposer_Back" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="TelegramComposer_Editor" xml:space="preserve">
+    <value>Редактор</value>
+  </data>
+  <data name="TelegramComposer_SaveError" xml:space="preserve">
+    <value>Не удалось сохранить черновик.</value>
+  </data>
+  <data name="TelegramComposer_Scheduled" xml:space="preserve">
+    <value>Сервер принял публикацию в очередь</value>
+  </data>
+  <data name="TelegramComposer_Scheduler" xml:space="preserve">
+    <value>Сервер планирования</value>
+  </data>
+  <data name="TelegramComposer_ScheduleZone" xml:space="preserve">
+    <value>Местные дата и время · {0}</value>
+  </data>
+  <data name="TelegramComposer_Submitting" xml:space="preserve">
+    <value>Выполняется…</value>
+  </data>
+  <data name="TelegramComposer_TestChannel" xml:space="preserve">
+    <value>{0} (тест)</value>
+  </data>
+  <data name="TelegramComposer_TimeFormat" xml:space="preserve">
+    <value>Время (ЧЧ:ММ)</value>
+  </data>
+  <data name="TelegramComposer_Title" xml:space="preserve">
+    <value>Публикации</value>
+  </data>
+  <data name="TelegramComposer_UnknownResult" xml:space="preserve">
+    <value>Отправка не подтверждена</value>
+  </data>
+  <data name="TelegramComposer_When" xml:space="preserve">
+    <value>Когда</value>
+  </data>
+  <data name="TelegramComposer_WhereToSend" xml:space="preserve">
+    <value>Куда отправить пост?</value>
+  </data>
+  <data name="TelegramComposer_Send" xml:space="preserve">
+    <value>Отправить</value>
+  </data>
+  <data name="TelegramComposer_Routing" xml:space="preserve">
+    <value>Куда и когда</value>
+  </data>
+  <data name="TelegramComposer_WhereSummary" xml:space="preserve">
+    <value>Куда: {0}</value>
+  </data>
+  <data name="TelegramComposer_WhenSummary" xml:space="preserve">
+    <value>Когда: {0}</value>
+  </data>
+  <data name="TelegramComposer_SelectRecipient" xml:space="preserve">
+    <value>выбрать получателей</value>
+  </data>
+  <data name="TelegramComposer_ChooseTime" xml:space="preserve">
+    <value>выбрать время</value>
+  </data>
+  <data name="TelegramComposer_AiBrief" xml:space="preserve">
+    <value>Опиши, о чём должен быть пост.</value>
+  </data>
+  <data name="TelegramComposer_AiDraft" xml:space="preserve">
+    <value>Написать</value>
+  </data>
+  <data name="TelegramComposer_AiStart" xml:space="preserve">
+    <value>Написать с ИИ</value>
+  </data>
+  <data name="TelegramComposer_AiInputContext" xml:space="preserve">
+    <value>{0} · Что изменить?</value>
+  </data>
+  <data name="TelegramComposer_AiRewrite" xml:space="preserve">
+    <value>Переформулировать</value>
+  </data>
+  <data name="TelegramComposer_AiOptions" xml:space="preserve">
+    <value>Настройки ИИ</value>
+  </data>
+  <data name="TelegramComposer_AiSelection" xml:space="preserve">
+    <value>Выделенный фрагмент</value>
+  </data>
+  <data name="TelegramComposer_AiWholePost" xml:space="preserve">
+    <value>Весь пост</value>
+  </data>
+  <data name="TelegramComposer_AiReplace" xml:space="preserve">
+    <value>Заменить</value>
+  </data>
+  <data name="TelegramComposer_AiStale" xml:space="preserve">
+    <value>Пост изменился. Запроси новую правку для текущего текста.</value>
+  </data>
+  <data name="TelegramComposer_OpenPublished" xml:space="preserve">
+    <value>Открыть в Telegram</value>
+  </data>
+  <data name="TelegramComposer_Reschedule" xml:space="preserve">
+    <value>Изменить время</value>
+  </data>
+  <data name="TelegramComposer_RescheduleTime" xml:space="preserve">
+    <value>Местные дата и время (ГГГГ-ММ-ДД ЧЧ:ММ) · {0}</value>
   </data>
 </root>

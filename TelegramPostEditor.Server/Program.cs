@@ -187,14 +187,24 @@ app.MapPut("/api/v1/channels/{id}", (string id, ChannelUpsertRequest req, HttpCo
             ON CONFLICT(id) DO UPDATE SET
                 display_name = excluded.display_name,
                 encrypted_token = excluded.encrypted_token,
-                updated_utc = excluded.updated_utc;
+                updated_utc = excluded.updated_utc
+            WHERE bots.device_id = excluded.device_id;
             """;
         botCmd.Parameters.AddWithValue("$id", req.BotId);
         botCmd.Parameters.AddWithValue("$dev", deviceId);
         botCmd.Parameters.AddWithValue("$name", req.BotDisplayName);
         botCmd.Parameters.AddWithValue("$enc", encrypted);
         botCmd.Parameters.AddWithValue("$now", now);
-        botCmd.ExecuteNonQuery();
+        if (botCmd.ExecuteNonQuery() == 0) return Results.Conflict(new { error = "Bot ID is already in use." });
+    }
+
+    using (SqliteCommand ownerCmd = conn.CreateCommand())
+    {
+        ownerCmd.Transaction = tx;
+        ownerCmd.CommandText = "SELECT 1 FROM bots WHERE id = $id AND device_id = $dev;";
+        ownerCmd.Parameters.AddWithValue("$id", req.BotId);
+        ownerCmd.Parameters.AddWithValue("$dev", deviceId);
+        if (ownerCmd.ExecuteScalar() is null) return Results.BadRequest(new { error = "Bot is not registered for this device." });
     }
 
     using (SqliteCommand chCmd = conn.CreateCommand())
@@ -209,7 +219,8 @@ app.MapPut("/api/v1/channels/{id}", (string id, ChannelUpsertRequest req, HttpCo
                 display_name = excluded.display_name,
                 username = excluded.username,
                 timezone = excluded.timezone,
-                updated_utc = excluded.updated_utc;
+                updated_utc = excluded.updated_utc
+            WHERE channels.device_id = excluded.device_id;
             """;
         chCmd.Parameters.AddWithValue("$id", id);
         chCmd.Parameters.AddWithValue("$dev", deviceId);
@@ -219,7 +230,7 @@ app.MapPut("/api/v1/channels/{id}", (string id, ChannelUpsertRequest req, HttpCo
         chCmd.Parameters.AddWithValue("$user", (object?)req.Username ?? DBNull.Value);
         chCmd.Parameters.AddWithValue("$tz", req.Timezone);
         chCmd.Parameters.AddWithValue("$now", now);
-        chCmd.ExecuteNonQuery();
+        if (chCmd.ExecuteNonQuery() == 0) return Results.Conflict(new { error = "Channel ID is already in use." });
     }
 
     tx.Commit();
@@ -238,53 +249,87 @@ app.MapPost("/api/v1/media", async (HttpContext ctx) =>
         return Results.BadRequest(new { error = "Invalid or oversized media file." });
     }
 
-    string mediaId = form["mediaId"].FirstOrDefault() ?? Guid.NewGuid().ToString("N");
+    string? clientMediaId = form["mediaId"].FirstOrDefault();
+    if (clientMediaId is not null && !Guid.TryParseExact(clientMediaId, "N", out _))
+    {
+        return Results.BadRequest(new { error = "Invalid media ID." });
+    }
+
+    string mediaId = $"{deviceId}:{clientMediaId?.ToLowerInvariant() ?? Guid.NewGuid().ToString("N")}";
     string expectedSha = form["sha256"].FirstOrDefault() ?? string.Empty;
     int kind = int.TryParse(form["kind"].FirstOrDefault(), out int k) ? k : 3;
 
-    string safeExt = Path.GetExtension(Path.GetFileName(file.FileName));
-    string relPath = $"{mediaId}{safeExt}";
-    string absPath = Path.GetFullPath(Path.Combine(mediaDir, relPath));
-    if (!absPath.StartsWith(Path.GetFullPath(mediaDir), StringComparison.OrdinalIgnoreCase))
+    string fileName = Path.GetFileName(file.FileName);
+    string extension = Path.GetExtension(fileName);
+    if (extension.Length > 10 || extension.Skip(1).Any(c => !char.IsAsciiLetterOrDigit(c)))
     {
-        return Results.BadRequest(new { error = "Invalid file path." });
+        extension = string.Empty;
     }
 
-    await using (FileStream fs = File.Create(absPath))
+    string relPath = $"{Guid.NewGuid():N}{extension}";
+    string absPath = Path.Combine(mediaDir, relPath);
+    string mimeType = file.ContentType ?? "application/octet-stream";
+    bool created = false;
+    bool committed = false;
+    try
     {
-        await file.CopyToAsync(fs, ctx.RequestAborted);
-    }
+        string actualSha;
+        await using (var stream = new FileStream(absPath, FileMode.CreateNew, FileAccess.ReadWrite, FileShare.None))
+        {
+            created = true;
+            await file.CopyToAsync(stream, ctx.RequestAborted);
+            stream.Position = 0;
+            actualSha = Convert.ToHexString(await SHA256.HashDataAsync(stream, ctx.RequestAborted)).ToLowerInvariant();
+        }
 
-    string actualSha;
-    await using (FileStream fs = File.OpenRead(absPath))
+        if (!string.IsNullOrWhiteSpace(expectedSha) && !string.Equals(expectedSha, actualSha, StringComparison.OrdinalIgnoreCase))
+        {
+            return Results.BadRequest(new { error = "SHA-256 mismatch." });
+        }
+
+        using SqliteConnection conn = migrator.OpenConnection();
+        using SqliteTransaction tx = conn.BeginTransaction();
+        using (SqliteCommand existing = conn.CreateCommand())
+        {
+            existing.Transaction = tx;
+            existing.CommandText = "SELECT device_id, sha256, kind, mime_type, size_bytes FROM uploaded_media WHERE id = $id;";
+            existing.Parameters.AddWithValue("$id", mediaId);
+            using SqliteDataReader reader = existing.ExecuteReader();
+            if (reader.Read())
+            {
+                if (reader.GetString(0) != deviceId || reader.GetString(1) != actualSha || reader.GetInt32(2) != kind)
+                {
+                    return Results.Conflict(new { error = "Media ID is already in use." });
+                }
+
+                return Results.Ok(new MediaUploadResponse(mediaId, actualSha, reader.GetInt64(4), reader.GetString(3)));
+            }
+        }
+
+        using SqliteCommand cmd = conn.CreateCommand();
+        cmd.Transaction = tx;
+        cmd.CommandText = """
+            INSERT INTO uploaded_media (id, device_id, sha256, file_name, mime_type, kind, size_bytes, relative_path, created_utc)
+            VALUES ($id, $dev, $sha, $name, $mime, $kind, $size, $rel, $now);
+            """;
+        cmd.Parameters.AddWithValue("$id", mediaId);
+        cmd.Parameters.AddWithValue("$dev", deviceId);
+        cmd.Parameters.AddWithValue("$sha", actualSha);
+        cmd.Parameters.AddWithValue("$name", fileName);
+        cmd.Parameters.AddWithValue("$mime", mimeType);
+        cmd.Parameters.AddWithValue("$kind", kind);
+        cmd.Parameters.AddWithValue("$size", file.Length);
+        cmd.Parameters.AddWithValue("$rel", relPath);
+        cmd.Parameters.AddWithValue("$now", DateTime.UtcNow.ToString("O"));
+        cmd.ExecuteNonQuery();
+        tx.Commit();
+        committed = true;
+        return Results.Ok(new MediaUploadResponse(mediaId, actualSha, file.Length, mimeType));
+    }
+    finally
     {
-        actualSha = Convert.ToHexString(await SHA256.HashDataAsync(fs, ctx.RequestAborted)).ToLowerInvariant();
+        if (created && !committed) File.Delete(absPath);
     }
-
-    if (!string.IsNullOrWhiteSpace(expectedSha) && !string.Equals(expectedSha, actualSha, StringComparison.OrdinalIgnoreCase))
-    {
-        File.Delete(absPath);
-        return Results.BadRequest(new { error = "SHA-256 mismatch." });
-    }
-
-    using SqliteConnection conn = migrator.OpenConnection();
-    using SqliteCommand cmd = conn.CreateCommand();
-    cmd.CommandText = """
-        INSERT OR REPLACE INTO uploaded_media (id, device_id, sha256, file_name, mime_type, kind, size_bytes, relative_path, created_utc)
-        VALUES ($id, $dev, $sha, $name, $mime, $kind, $size, $rel, $now);
-        """;
-    cmd.Parameters.AddWithValue("$id", mediaId);
-    cmd.Parameters.AddWithValue("$dev", deviceId);
-    cmd.Parameters.AddWithValue("$sha", actualSha);
-    cmd.Parameters.AddWithValue("$name", Path.GetFileName(file.FileName));
-    cmd.Parameters.AddWithValue("$mime", file.ContentType ?? "application/octet-stream");
-    cmd.Parameters.AddWithValue("$kind", kind);
-    cmd.Parameters.AddWithValue("$size", file.Length);
-    cmd.Parameters.AddWithValue("$rel", relPath);
-    cmd.Parameters.AddWithValue("$now", DateTime.UtcNow.ToString("O"));
-    cmd.ExecuteNonQuery();
-
-    return Results.Ok(new MediaUploadResponse(mediaId, actualSha, file.Length, file.ContentType ?? "application/octet-stream"));
 });
 
 app.MapPost("/api/v1/publications", (
@@ -359,19 +404,25 @@ app.MapPost("/api/v1/publications", (
         }
 
         // Verify all media exist on server before committing QUEUED_SERVER
-        List<string> mediaIds = target.MediaIds ?? [];
-        foreach (string mid in mediaIds)
+        var mediaIds = new List<string>();
+        foreach (string mid in target.MediaIds ?? [])
         {
             using SqliteCommand mCmd = conn.CreateCommand();
             mCmd.Transaction = tx;
-            mCmd.CommandText = "SELECT COUNT(1) FROM uploaded_media WHERE id = $mid AND device_id = $dev;";
+            mCmd.CommandText = """
+                SELECT id FROM uploaded_media
+                WHERE device_id = $dev AND (id = $mid OR id = $scoped)
+                ORDER BY (id = $mid) DESC LIMIT 1;
+                """;
             mCmd.Parameters.AddWithValue("$mid", mid);
             mCmd.Parameters.AddWithValue("$dev", deviceId);
-            if (Convert.ToInt32(mCmd.ExecuteScalar()) == 0)
+            mCmd.Parameters.AddWithValue("$scoped", $"{deviceId}:{mid.ToLowerInvariant()}");
+            if (mCmd.ExecuteScalar() is not string storedId)
             {
                 tx.Rollback();
                 return Results.BadRequest(new { error = $"Media '{mid}' must be uploaded before queueing." });
             }
+            mediaIds.Add(storedId);
         }
 
         using (SqliteCommand tCmd = conn.CreateCommand())
@@ -440,6 +491,7 @@ app.MapPatch("/api/v1/publications/{id}", (string id, PatchPublicationRequest re
     cmd.CommandText = """
         UPDATE publication_targets
         SET scheduled_at_utc = COALESCE($sched, scheduled_at_utc),
+            next_attempt_utc = CASE WHEN status = 'RETRY_WAIT' THEN COALESCE($sched, next_attempt_utc) ELSE next_attempt_utc END,
             revision = COALESCE($rev, revision),
             immutable_content_snapshot = COALESCE($snap, immutable_content_snapshot),
             updated_utc = $now

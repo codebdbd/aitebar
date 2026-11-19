@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.Versioning;
 using System.Security.Cryptography;
 using System.Text;
@@ -11,6 +12,9 @@ namespace AiteBar.IptvPlayer;
 [SupportedOSPlatform("windows6.1")]
 public sealed class IptvPlayerStore
 {
+    private const string ProtectedTextPrefix = "aitebar-dpapi-v1:";
+    private static readonly object FileGate = new();
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
@@ -43,6 +47,31 @@ public sealed class IptvPlayerStore
     public string FavoritesPath => Path.Combine(_baseDirectory, "favorites.json");
     public string PlayerStatePath => Path.Combine(_baseDirectory, "player-state.json");
 
+    internal void ProtectLegacyFiles()
+    {
+        lock (FileGate)
+        {
+            foreach (string path in Directory.EnumerateFiles(CacheDirectory, "*.json*")
+                .Concat(Directory.EnumerateFiles(SourcesDirectory, "*.m3u*"))
+                .Concat(new[] { FavoritesPath, FavoritesPath + ".bak", FavoritesPath + ".tmp" }).ToList())
+            {
+                try
+                {
+                    if (!File.Exists(path)) continue;
+                    string content = File.ReadAllText(path, Encoding.UTF8);
+                    if (!content.StartsWith(ProtectedTextPrefix, StringComparison.Ordinal))
+                    {
+                        WriteProtectedFile(path, content);
+                    }
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or CryptographicException)
+                {
+                    Logger.Log(ex);
+                }
+            }
+        }
+    }
+
     private void EnsureDirectories()
     {
         try
@@ -58,20 +87,30 @@ public sealed class IptvPlayerStore
         }
     }
 
-    public string GetSourceFilePath(string sourceId) => Path.Combine(SourcesDirectory, $"{sourceId}.m3u");
-    public string GetCacheFilePath(string sourceId) => Path.Combine(CacheDirectory, $"{sourceId}.json");
-    private string GetDpapiSecretPath(string sourceId) => Path.Combine(SecretsDirectory, $"{sourceId}.dat");
+    public string GetSourceFilePath(string sourceId) => GetSourcePath(SourcesDirectory, sourceId, ".m3u");
+    public string GetCacheFilePath(string sourceId) => GetSourcePath(CacheDirectory, sourceId, ".json");
+    private string GetDpapiSecretPath(string sourceId) => GetSourcePath(SecretsDirectory, sourceId, ".dat");
+
+    private static string GetSourcePath(string directory, string sourceId, string extension)
+    {
+        if (!IptvSettingsNormalizer.IsValidSourceId(sourceId))
+        {
+            throw new ArgumentException("Invalid IPTV source ID.", nameof(sourceId));
+        }
+
+        return Path.Combine(directory, sourceId + extension);
+    }
 
     #region Favorites
 
     public List<IptvFavorite> LoadFavorites()
     {
-        return LoadWithBackupFallback<List<IptvFavorite>>(FavoritesPath) ?? [];
+        return LoadWithBackupFallback<List<IptvFavorite>>(FavoritesPath, protect: true) ?? [];
     }
 
     public void SaveFavorites(List<IptvFavorite> favorites)
     {
-        AtomicSaveWithBackup(FavoritesPath, favorites ?? []);
+        AtomicSaveWithBackup(FavoritesPath, favorites ?? [], protect: true);
     }
 
     #endregion
@@ -100,7 +139,7 @@ public sealed class IptvPlayerStore
         }
 
         string path = GetCacheFilePath(sourceId);
-        return LoadWithBackupFallback<IptvPlaylistCache>(path);
+        return LoadWithBackupFallback<IptvPlaylistCache>(path, protect: true);
     }
 
     public void SaveCache(IptvPlaylistCache cache)
@@ -111,7 +150,7 @@ public sealed class IptvPlayerStore
         }
 
         string path = GetCacheFilePath(cache.PlaylistId);
-        AtomicSaveWithBackup(path, cache);
+        AtomicSaveWithBackup(path, cache, protect: true);
     }
 
     public void DeleteCache(string sourceId)
@@ -130,19 +169,13 @@ public sealed class IptvPlayerStore
 
     public string? ReadSourceFileContent(string sourceId)
     {
-        string path = GetSourceFilePath(sourceId);
-        if (File.Exists(path))
-        {
-            return File.ReadAllText(path, Encoding.UTF8);
-        }
-
-        return null;
+        return LoadWithBackupFallback(GetSourceFilePath(sourceId), static content => content, protect: true);
     }
 
     public void SaveSourceFileContent(string sourceId, string content)
     {
         string path = GetSourceFilePath(sourceId);
-        AtomicSaveRaw(path, content ?? string.Empty);
+        AtomicSaveRaw(path, content ?? string.Empty, protect: true);
     }
 
     public void DeleteSourceFile(string sourceId)
@@ -156,87 +189,63 @@ public sealed class IptvPlayerStore
 
     public string? ReadSecretLocation(string sourceId)
     {
-        if (string.IsNullOrWhiteSpace(sourceId))
-        {
-            return null;
-        }
+        if (string.IsNullOrWhiteSpace(sourceId)) return null;
 
-        string target = $"{WindowsAiCredentialStore.IptvSourceTargetPrefix}{sourceId}";
-
-        // Сначала пробуем Windows Credential Manager
-        try
+        lock (FileGate)
         {
-            string? secret = _credentials.Read(target);
-            if (!string.IsNullOrWhiteSpace(secret))
+            string dpapiFile = GetDpapiSecretPath(sourceId);
+            if (File.Exists(dpapiFile))
             {
-                return secret;
-            }
-        }
-        catch
-        {
-            // fallback к DPAPI
-        }
-
-        // Если не найдено в Credential Manager, проверяем DPAPI секрет
-        string dpapiFile = GetDpapiSecretPath(sourceId);
-        if (File.Exists(dpapiFile))
-        {
-            try
-            {
-                byte[] encrypted = File.ReadAllBytes(dpapiFile);
-                if (encrypted.Length > 0)
+                try
                 {
-                    byte[] decrypted = ProtectedData.Unprotect(encrypted, null, DataProtectionScope.CurrentUser);
+                    byte[] decrypted = ProtectedData.Unprotect(File.ReadAllBytes(dpapiFile), null, DataProtectionScope.CurrentUser);
                     return Encoding.UTF8.GetString(decrypted);
                 }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or CryptographicException)
+                {
+                    // Try the legacy Credential Manager entry if the protected file cannot be opened.
+                }
+            }
+
+            try
+            {
+                return _credentials.Read($"{WindowsAiCredentialStore.IptvSourceTargetPrefix}{sourceId}");
             }
             catch
             {
-                // DPAPI failed
+                return null;
             }
         }
-
-        return null;
     }
 
     public void SaveSecretLocation(string sourceId, string secretLocation)
     {
-        if (string.IsNullOrWhiteSpace(sourceId) || string.IsNullOrWhiteSpace(secretLocation))
-        {
-            return;
-        }
-
+        ArgumentException.ThrowIfNullOrWhiteSpace(secretLocation);
+        string dpapiFile = GetDpapiSecretPath(sourceId);
         string target = $"{WindowsAiCredentialStore.IptvSourceTargetPrefix}{sourceId}";
         byte[] bytes = Encoding.UTF8.GetBytes(secretLocation);
 
-        if (bytes.Length <= WindowsAiCredentialStore.MaxCredentialBlobBytes)
+        EnsureDirectories();
+        lock (FileGate)
         {
-            try
+            if (bytes.Length <= WindowsAiCredentialStore.MaxCredentialBlobBytes)
             {
-                _credentials.Write(target, secretLocation);
-                // Удаляем DPAPI файл, если оставался
-                string dpapi = GetDpapiSecretPath(sourceId);
-                if (File.Exists(dpapi))
+                try
                 {
-                    File.Delete(dpapi);
+                    _credentials.Write(target, secretLocation);
+                    File.Delete(dpapiFile);
+                    return;
                 }
-                return;
+                catch
+                {
+                    // Use DPAPI when Credential Manager is unavailable.
+                }
             }
-            catch
-            {
-                // Если Credential Manager недоступен (например в тесте без UI/сессии), fallback к DPAPI
-            }
-        }
 
-        // DPAPI сохранение
-        try
-        {
+            string tempPath = dpapiFile + ".tmp";
             byte[] encrypted = ProtectedData.Protect(bytes, null, DataProtectionScope.CurrentUser);
-            File.WriteAllBytes(GetDpapiSecretPath(sourceId), encrypted);
-        }
-        catch
-        {
-            // ignore
+            File.WriteAllBytes(tempPath, encrypted);
+            File.Move(tempPath, dpapiFile, overwrite: true);
         }
     }
 
@@ -257,85 +266,97 @@ public sealed class IptvPlayerStore
             // ignore
         }
 
-        string dpapi = GetDpapiSecretPath(sourceId);
-        if (File.Exists(dpapi))
-        {
-            try { File.Delete(dpapi); } catch { }
-        }
+        DeleteFiles(GetDpapiSecretPath(sourceId));
     }
 
     #endregion
 
     #region Atomic Helpers
 
-    private T? LoadWithBackupFallback<T>(string filePath) where T : class
+    private T? LoadWithBackupFallback<T>(string filePath, bool protect = false) where T : class =>
+        LoadWithBackupFallback(filePath, content => JsonSerializer.Deserialize<T>(content, JsonOptions), protect);
+
+    private static T? LoadWithBackupFallback<T>(string filePath, Func<string, T?> deserialize, bool protect) where T : class
     {
-        if (File.Exists(filePath))
+        lock (FileGate)
         {
-            try
+            T? result = null;
+            foreach (string candidate in new[] { filePath, filePath + ".bak" })
             {
-                string json = File.ReadAllText(filePath, Encoding.UTF8);
-                return JsonSerializer.Deserialize<T>(json, JsonOptions);
-            }
-            catch
-            {
-                // Файл поврежден — пробуем .bak
-            }
-        }
+                if (!File.Exists(candidate)) continue;
 
-        string bakPath = filePath + ".bak";
-        if (File.Exists(bakPath))
-        {
-            try
-            {
-                string json = File.ReadAllText(bakPath, Encoding.UTF8);
-                return JsonSerializer.Deserialize<T>(json, JsonOptions);
-            }
-            catch
-            {
-                // .bak тоже поврежден
-            }
-        }
+                try
+                {
+                    string stored = File.ReadAllText(candidate, Encoding.UTF8);
+                    bool encrypted = stored.StartsWith(ProtectedTextPrefix, StringComparison.Ordinal);
+                    string content = encrypted
+                        ? Encoding.UTF8.GetString(ProtectedData.Unprotect(
+                            Convert.FromBase64String(stored[ProtectedTextPrefix.Length..]), null, DataProtectionScope.CurrentUser))
+                        : stored;
+                    result ??= deserialize(content);
 
-        return null;
+                    if (protect && !encrypted)
+                    {
+                        WriteProtectedFile(candidate, content);
+                    }
+                    if (!protect && result is not null) break;
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException or FormatException or CryptographicException)
+                {
+                    // Try the other copy if this file cannot be read.
+                }
+            }
+
+            return result;
+        }
     }
 
-    private void AtomicSaveWithBackup<T>(string filePath, T data)
+    private void AtomicSaveWithBackup<T>(string filePath, T data, bool protect = false)
     {
         EnsureDirectories();
         string json = JsonSerializer.Serialize(data, JsonOptions);
-        AtomicSaveRaw(filePath, json);
+        AtomicSaveRaw(filePath, json, protect);
     }
 
-    private void AtomicSaveRaw(string filePath, string content)
+    private void AtomicSaveRaw(string filePath, string content, bool protect)
     {
         EnsureDirectories();
-        string tempPath = filePath + ".tmp";
-        string bakPath = filePath + ".bak";
-
-        File.WriteAllText(tempPath, content, Encoding.UTF8);
-
-        if (File.Exists(filePath))
+        lock (FileGate)
         {
-            try
+            string stored = protect ? ProtectText(content) : content;
+            string bakPath = filePath + ".bak";
+            if (File.Exists(filePath))
             {
-                File.Copy(filePath, bakPath, true);
+                string previous = File.ReadAllText(filePath, Encoding.UTF8);
+                if (protect && !previous.StartsWith(ProtectedTextPrefix, StringComparison.Ordinal))
+                {
+                    previous = ProtectText(previous);
+                }
+                WriteAtomicFile(bakPath, previous);
             }
-            catch
-            {
-                // ignore
-            }
-        }
 
-        File.Move(tempPath, filePath, true);
+            WriteAtomicFile(filePath, stored);
+        }
+    }
+
+    private static void WriteProtectedFile(string path, string content) => WriteAtomicFile(path, ProtectText(content));
+
+    private static string ProtectText(string content) => ProtectedTextPrefix + Convert.ToBase64String(
+        ProtectedData.Protect(Encoding.UTF8.GetBytes(content), null, DataProtectionScope.CurrentUser));
+
+    private static void WriteAtomicFile(string path, string content)
+    {
+        string tempPath = path + ".tmp";
+        File.WriteAllText(tempPath, content, Encoding.UTF8);
+        File.Move(tempPath, path, true);
     }
 
     private static void DeleteFiles(string mainPath)
     {
-        string[] candidates = [mainPath, mainPath + ".tmp", mainPath + ".bak"];
-        foreach (string file in candidates)
+        lock (FileGate)
         {
-            if (File.Exists(file))
+            string[] candidates = [mainPath, mainPath + ".tmp", mainPath + ".bak", mainPath + ".bak.tmp"];
+            foreach (string file in candidates)
             {
                 try { File.Delete(file); } catch { }
             }

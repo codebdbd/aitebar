@@ -84,6 +84,8 @@ public partial class MainWindow : Window, ISettingsWindowContext
         private IReadOnlyList<ButtonVisualState> _lastButtonVisualStates = [];
         private int _mouseWheelCaptureToken = 0;
     private readonly CancellationTokenSource _startupCts = new();
+    private readonly SemaphoreSlim _iptvRefreshGate = new(1, 1);
+    private bool _iptvRefreshStarted;
     private System.Windows.Interop.HwndSource? _windowHwndSource;
     private PanelLayoutHelper.PanelLayoutMetrics _lastMetrics;
     private DateTime _lastContextWheelSwitchUtc = DateTime.MinValue;
@@ -995,6 +997,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
                 _deferredStartupCompleted = true;
                 RegisterGlobalHotkey();
                 _positionIndicatorService.Initialize(_settingsService, this);
+                StartIptvBackgroundRefresh();
                 return;
             }
             try
@@ -1304,7 +1307,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
             PositionWindowImmediately(_shown);
             _positionIndicatorService.Initialize(_settingsService, this);
             _ = Dispatcher.BeginInvoke(IconPickerWindow.WarmupCatalogMetadata, DispatcherPriority.ApplicationIdle);
-            TriggerIptvBackgroundRefreshIfNeeded();
+            StartIptvBackgroundRefresh();
         }
         catch (OperationCanceledException)
         {
@@ -2154,11 +2157,7 @@ public partial class MainWindow : Window, ISettingsWindowContext
     {
         if (_appSettingsWindow != null)
         {
-            if (_appSettingsWindow.WindowState == WindowState.Minimized)
-            {
-                _appSettingsWindow.WindowState = WindowState.Maximized;
-            }
-
+            _appSettingsWindow.RestoreIfMinimized();
             _appSettingsWindow.NavigateToSection(section);
             _appSettingsWindow.Show();
             _appSettingsWindow.Activate();
@@ -2200,31 +2199,98 @@ public partial class MainWindow : Window, ISettingsWindowContext
     }
 
 
-    private void TriggerIptvBackgroundRefreshIfNeeded()
+    private void StartIptvBackgroundRefresh()
     {
+        if (_iptvRefreshStarted) return;
+        _iptvRefreshStarted = true;
+        CancellationToken token = _startupCts.Token;
         _ = Task.Run(async () =>
         {
+            using var timer = new PeriodicTimer(TimeSpan.FromMinutes(1));
+            try
+            {
+                await RefreshIptvSourcesAsync(null, initializeMissing: true, token);
+                while (await timer.WaitForNextTickAsync(token))
+                {
+                    await RefreshIptvSourcesAsync(null, initializeMissing: false, token);
+                }
+            }
+            catch (OperationCanceledException) when (token.IsCancellationRequested)
+            {
+            }
+        });
+    }
+
+    internal void QueueIptvSourceRefresh(HashSet<string> sourceIds)
+    {
+        if (sourceIds.Count == 0) return;
+        CancellationToken token = _startupCts.Token;
+        _ = Task.Run(() => RefreshIptvSourcesAsync(sourceIds, initializeMissing: false, token));
+    }
+
+    private async Task RefreshIptvSourcesAsync(HashSet<string>? sourceIds, bool initializeMissing, CancellationToken token)
+    {
+        try
+        {
+            await _iptvRefreshGate.WaitAsync(token);
             try
             {
                 var settings = _settingsService.Settings.Iptv;
-                if (settings == null || !settings.AutoUpdateEnabled) return;
+                if (sourceIds is null && !initializeMissing && !settings.AutoUpdateEnabled) return;
+
                 var store = new IptvPlayer.IptvPlayerStore();
-                using var svc = new IptvPlayer.IptvPlaylistService(store);
-                if (svc.IsAutoUpdateDue(settings))
+                if (initializeMissing) store.ProtectLegacyFiles();
+                using var service = new IptvPlayer.IptvPlaylistService(store);
+                bool autoUpdate = sourceIds is null && service.IsAutoUpdateDue(settings);
+                var sources = settings.Sources.Where(source => source.IsEnabled &&
+                    (sourceIds?.Contains(source.Id) == true ||
+                        (autoUpdate && source.Kind == IptvPlayer.IptvSourceKind.Url) ||
+                        (initializeMissing && (store.LoadCache(source.Id) is not { } cache ||
+                            cache.SourceHash != source.ContentRevision)))).ToList();
+                if (sources.Count == 0) return;
+
+                foreach (var source in sources)
                 {
-                    int updated = await svc.RefreshAllUrlSourcesAsync(settings.Sources);
-                    if (updated > 0)
-                    {
-                        settings.LastAutoUpdateUtc = DateTime.UtcNow;
-                        await _settingsService.SaveAsync();
-                    }
+                    token.ThrowIfCancellationRequested();
+                    await service.RefreshSourceAsync(source, token);
                 }
+                token.ThrowIfCancellationRequested();
+
+                _settingsService.UpdateSettings(current =>
+                {
+                    var refreshedSources = sources.ToDictionary(source => source.Id, StringComparer.OrdinalIgnoreCase);
+                    foreach (var source in current.Iptv.Sources)
+                    {
+                        if (!refreshedSources.TryGetValue(source.Id, out var refreshed) ||
+                            source.ContentRevision != refreshed.ContentRevision)
+                        {
+                            continue;
+                        }
+
+                        source.LastRefreshedUtc = refreshed.LastRefreshedUtc;
+                        source.LastStatus = refreshed.LastStatus;
+                        source.LastErrorMessage = refreshed.LastErrorMessage;
+                        source.ChannelCount = refreshed.ChannelCount;
+                    }
+                    if (autoUpdate && sources.Any(source => source.Kind == IptvPlayer.IptvSourceKind.Url))
+                    {
+                        current.Iptv.LastAutoUpdateUtc = DateTime.UtcNow;
+                    }
+                });
+                await _settingsService.SaveAsync();
             }
-            catch (Exception ex)
+            finally
             {
-                Logger.Log(ex);
+                _iptvRefreshGate.Release();
             }
-        });
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested)
+        {
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+        }
     }
 
     protected override void OnClosed(EventArgs e)

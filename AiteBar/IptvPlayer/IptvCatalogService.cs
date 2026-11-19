@@ -42,17 +42,12 @@ public sealed class IptvCatalogService
             return result;
         }
 
-        var enabledSources = settings.Sources
-            .Where(s => s.IsEnabled)
-            .OrderBy(s => s.SortOrder)
-            .ToList();
-
         int globalOrder = result.Count;
 
-        foreach (var source in enabledSources)
+        foreach (var source in GetEnabledSources(settings))
         {
             var cache = _store.LoadCache(source.Id);
-            if (cache?.Channels == null || cache.Channels.Count == 0)
+            if (cache?.Channels == null || cache.Channels.Count == 0 || cache.SourceHash != source.ContentRevision)
             {
                 continue;
             }
@@ -105,14 +100,57 @@ public sealed class IptvCatalogService
             }
         }
 
+        foreach (var channel in result)
+        {
+            channel.AvailableResolutions = IptvResolutionLabels.Read(channel.Title);
+            foreach (var variant in channel.Variants)
+                channel.AvailableResolutions |= IptvResolutionLabels.Read(variant.Title);
+        }
+        SetDuplicateChannelLabels(result);
         return result;
     }
+
+    internal static void SetDuplicateChannelLabels(IEnumerable<IptvChannel> channels)
+    {
+        foreach (var matches in channels.GroupBy(channel => channel.Title.Trim(), StringComparer.OrdinalIgnoreCase))
+        {
+            if (matches.Count() < 2) continue;
+
+            bool differentSources = matches.Select(channel => channel.PlaylistId).Distinct(StringComparer.OrdinalIgnoreCase).Skip(1).Any();
+            foreach (var channel in matches)
+            {
+                channel.SecondaryText = differentSources && !string.IsNullOrWhiteSpace(channel.PlaylistName)
+                    ? channel.PlaylistName : string.Join(" · ", channel.GroupNames);
+            }
+        }
+    }
+
+    internal static List<IptvPlaylistSource> GetEnabledSources(IptvSettings settings) =>
+        settings.Sources.Where(source => source.IsEnabled).OrderBy(source => source.SortOrder).ToList();
+
+    internal static IEnumerable<string> GetGroupNames(IEnumerable<IptvChannel> catalog) =>
+        catalog.SelectMany(channel => channel.GroupNames)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(group => group, StringComparer.CurrentCultureIgnoreCase);
 
     public List<IptvChannel> FilterCatalog(
         List<IptvChannel> catalog,
         string? playlistFilterId,
         string? groupFilter,
-        string? searchQuery)
+        string? searchQuery,
+        bool favoritesOnly = false,
+        IptvResolution resolution = IptvResolution.Any)
+        => FilterChannels(catalog, playlistFilterId, groupFilter, searchQuery, favoritesOnly, resolution)
+            .OrderBy(channel => channel.SortOrder).ToList();
+
+    // BuildCatalog appends channels in SortOrder, so the browser can preserve that order.
+    internal static IEnumerable<IptvChannel> FilterChannels(
+        List<IptvChannel> catalog,
+        string? playlistFilterId,
+        string? groupFilter,
+        string? searchQuery,
+        bool favoritesOnly,
+        IptvResolution resolution)
     {
         if (catalog == null || catalog.Count == 0)
         {
@@ -120,6 +158,9 @@ public sealed class IptvCatalogService
         }
 
         IEnumerable<IptvChannel> query = catalog;
+        if (favoritesOnly) query = query.Where(channel => channel.IsFavorite);
+        if (resolution != IptvResolution.Any)
+            query = query.Where(channel => (channel.AvailableResolutions & resolution) != 0);
 
         // Фильтр по плейлисту
         if (!string.IsNullOrWhiteSpace(playlistFilterId) && playlistFilterId != "ALL")
@@ -136,7 +177,7 @@ public sealed class IptvCatalogService
             }
             else
             {
-                query = query.Where(c => string.Equals(c.Group, groupFilter, StringComparison.OrdinalIgnoreCase));
+                query = query.Where(channel => channel.GroupNames.Contains(groupFilter, StringComparer.OrdinalIgnoreCase));
             }
         }
 
@@ -147,11 +188,12 @@ public sealed class IptvCatalogService
             query = query.Where(c =>
                 c.Title.Contains(needle, StringComparison.OrdinalIgnoreCase) ||
                 c.Group.Contains(needle, StringComparison.OrdinalIgnoreCase) ||
+                c.GroupNames.Any(group => group.Contains(needle, StringComparison.OrdinalIgnoreCase)) ||
                 (!string.IsNullOrWhiteSpace(c.TvgName) && c.TvgName.Contains(needle, StringComparison.OrdinalIgnoreCase)) ||
                 (!string.IsNullOrWhiteSpace(c.CleanTitle) && c.CleanTitle.Contains(needle, StringComparison.OrdinalIgnoreCase)));
         }
 
-        return query.OrderBy(c => c.SortOrder).ToList();
+        return query;
     }
 
     public void ToggleFavorite(IptvChannel channel)
@@ -177,7 +219,6 @@ public sealed class IptvCatalogService
                 PlaylistId = channel.PlaylistId,
                 TvgId = channel.TvgId,
                 Title = channel.Title,
-                StreamUrl = channel.StreamUrl,
                 AddedAtUtc = DateTime.UtcNow
             });
             channel.IsFavorite = true;
@@ -228,6 +269,9 @@ public sealed class IptvCatalogService
                 CleanTitle = IptvPlaylistParser.CleanChannelTitle(primary.Title),
                 OriginalTitle = primary.Title,
                 Group = string.IsNullOrWhiteSpace(primary.Group) ? "Общие" : primary.Group,
+                GroupNames = list.SelectMany(entry => IptvChannel.SplitGroupNames(
+                        string.IsNullOrWhiteSpace(entry.Group) ? "Общие" : entry.Group))
+                    .Distinct(StringComparer.OrdinalIgnoreCase).ToArray(),
                 LogoUrl = primary.LogoUrl,
                 TvgId = primary.TvgId,
                 TvgName = primary.TvgName,

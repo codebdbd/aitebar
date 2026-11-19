@@ -47,13 +47,14 @@ public sealed class PostAutosaveService : IDisposable
         _pendingCts = null;
 
         PostDocument? doc = _pendingDocument;
-        _pendingDocument = null;
         if (doc == null)
         {
             return;
         }
 
         await PersistAsync(doc, createRevision: true, cancellationToken).ConfigureAwait(false);
+        if (_pendingCts == null && ReferenceEquals(_pendingDocument, doc))
+            _pendingDocument = null;
     }
 
     private async Task DebounceSaveAsync(PostDocument document, CancellationToken token)
@@ -66,12 +67,12 @@ public sealed class PostAutosaveService : IDisposable
                 return;
             }
 
-            if (ReferenceEquals(_pendingDocument, document))
+            await PersistAsync(document, createRevision: false, token).ConfigureAwait(false);
+            if (!token.IsCancellationRequested && ReferenceEquals(_pendingDocument, document))
             {
                 _pendingDocument = null;
             }
 
-            await PersistAsync(document, createRevision: false, token).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {

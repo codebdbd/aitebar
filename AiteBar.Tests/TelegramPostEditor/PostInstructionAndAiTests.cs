@@ -135,7 +135,7 @@ public sealed class PostInstructionAndAiTests : IDisposable
         }
     }
 
-    private sealed class FakeTelegramAiGateway : ITelegramAiGateway
+    internal sealed class FakeTelegramAiGateway : ITelegramAiGateway
     {
         public AiChatRequest? LastRequest { get; private set; }
         public string? FailModelId { get; set; }

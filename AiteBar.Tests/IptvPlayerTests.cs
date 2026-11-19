@@ -161,6 +161,27 @@ public sealed class IptvPlayerTests : IDisposable
     #region Store Tests (Atomic save & .bak recovery)
 
     [Fact]
+    public void LoadCache_MigratesLegacyPrimaryAndBackupWithoutExposingUrls()
+    {
+        const string stream = "https://203.0.113.10/live?token=private-stream";
+        var store = new IptvPlayerStore(_tempDirectory);
+        string path = store.GetCacheFilePath("legacy");
+        string legacy = System.Text.Json.JsonSerializer.Serialize(new IptvPlaylistCache
+        {
+            PlaylistId = "legacy",
+            Channels = [new() { Title = "Legacy channel", StreamUrl = stream }]
+        });
+        File.WriteAllText(path, legacy);
+        File.WriteAllText(path + ".bak", legacy);
+
+        Assert.Equal(stream, Assert.Single(store.LoadCache("legacy")!.Channels).StreamUrl);
+        Assert.DoesNotContain("private-stream", File.ReadAllText(path));
+        Assert.DoesNotContain("private-stream", File.ReadAllText(path + ".bak"));
+        File.WriteAllText(path, "broken");
+        Assert.Equal(stream, Assert.Single(store.LoadCache("legacy")!.Channels).StreamUrl);
+    }
+
+    [Fact]
     public void Store_SavesAndLoadsFavoritesAtomically()
     {
         var store = new IptvPlayerStore(_tempDirectory);
@@ -233,6 +254,133 @@ public sealed class IptvPlayerTests : IDisposable
 
     #region Catalog & Variant Grouping Tests
 
+    [Theory]
+    [InlineData("Пятница 720x576", IptvResolution.Sd)]
+    [InlineData("Eurosport (720p)", IptvResolution.Hd)]
+    [InlineData("Sports HD (1080i) [Geo-blocked]", IptvResolution.Fhd)]
+    [InlineData("News [Full HD]", IptvResolution.Fhd)]
+    [InlineData("News (2560×1440)", IptvResolution.Qhd)]
+    [InlineData("Cinema (2160p)", IptvResolution.Uhd)]
+    [InlineData("Cinema 4K", IptvResolution.Uhd)]
+    [InlineData("Channel 1080", IptvResolution.Any)]
+    [InlineData("Channel HD Plus", IptvResolution.Any)]
+    public void ResolutionLabel_RecognizesExplicitPlaylistNames(string title, IptvResolution expected)
+    {
+        Assert.Equal(expected, IptvResolutionLabels.Read(title));
+    }
+
+    [Fact]
+    public void Catalog_ResolutionCombinesWithGroupsAndKeepsAllVariants()
+    {
+        var store = new IptvPlayerStore(_tempDirectory);
+        var service = new IptvCatalogService(store);
+        var source = new IptvPlaylistSource { Id = "quality" };
+        store.SaveCache(new IptvPlaylistCache
+        {
+            PlaylistId = source.Id,
+            Channels =
+            [
+                new() { TvgId = "sports", Title = "Sport (720p)", Group = "Sports", StreamUrl = "https://example.com/720" },
+                new() { TvgId = "sports", Title = "Sport (1080p)", Group = "Sports", StreamUrl = "https://example.com/1080" },
+                new() { Title = "News (1080p)", Group = "News", StreamUrl = "https://example.com/news" },
+                new() { Title = "Untitled quality", Group = "Sports", StreamUrl = "https://example.com/unknown" }
+            ]
+        });
+
+        var channels = service.BuildCatalog(new IptvSettings { Sources = [source] });
+
+        Assert.Equal(2, service.FilterCatalog(channels, source.Id, "Sports", null).Count);
+        var hd = Assert.Single(service.FilterCatalog(channels, source.Id, "Sports", null, resolution: IptvResolution.Hd));
+        Assert.Same(hd, Assert.Single(service.FilterCatalog(channels, source.Id, "Sports", null, resolution: IptvResolution.Fhd)));
+        Assert.Equal(2, service.FilterCatalog(channels, source.Id, null, null, resolution: IptvResolution.Fhd).Count);
+        Assert.Equal(2, hd.Variants.Count);
+    }
+
+    [Fact]
+    public void Catalog_ExpandsCompositeGroupsFromExistingCache()
+    {
+        var store = new IptvPlayerStore(_tempDirectory);
+        var service = new IptvCatalogService(store);
+        var source = new IptvPlaylistSource { Id = "cached-groups", AutoFallbackVariants = false };
+        store.SaveCache(new IptvPlaylistCache
+        {
+            PlaylistId = source.Id,
+            Channels =
+            [
+                new() { Title = "Outdoor TV", Group = "Auto; Outdoor;;Sports", StreamUrl = "https://example.com/outdoor" },
+                new() { Title = "Sports TV", Group = "sports; Series", StreamUrl = "https://example.com/sports" }
+            ]
+        });
+
+        var catalog = service.BuildCatalog(new IptvSettings { Sources = [source] });
+
+        Assert.Equal(new[] { "Auto", "Outdoor", "Series", "Sports" }, IptvCatalogService.GetGroupNames(catalog));
+        Assert.Equal("Outdoor TV", Assert.Single(service.FilterCatalog(catalog, source.Id, "outdoor", null)).Title);
+        Assert.Equal(2, service.FilterCatalog(catalog, source.Id, "Sports", null).Count);
+    }
+
+    [Fact]
+    public void Catalog_FavoritesCanBeFilteredByPlaylistGroupAndSearch()
+    {
+        var catalog = new IptvCatalogService(new IptvPlayerStore(_tempDirectory));
+        var chosen = new IptvChannel { PlaylistId = "one", Title = "Sports North", Group = "Sports", IsFavorite = true };
+        var channels = new List<IptvChannel>
+        {
+            chosen,
+            new() { PlaylistId = "one", Title = "Sports South", Group = "Sports" },
+            new() { PlaylistId = "two", Title = "Sports North", Group = "Sports", IsFavorite = true },
+            new() { PlaylistId = "one", Title = "Local North", Group = "News", IsFavorite = true }
+        };
+
+        Assert.Same(chosen, Assert.Single(catalog.FilterCatalog(channels, "one", "Sports", "North", favoritesOnly: true)));
+        Assert.Equal(2, catalog.FilterCatalog(channels, "one", "Sports", null).Count);
+    }
+
+    [Fact]
+    public void Catalog_OnlyDuplicateTitlesGetDistinguishingText()
+    {
+        var first = new IptvChannel { Title = "Sports", PlaylistId = "one", PlaylistName = "First list" };
+        var second = new IptvChannel { Title = "sports", PlaylistId = "two", PlaylistName = "Second list" };
+        var independent = new IptvChannel { Title = "News", PlaylistId = "two", PlaylistName = "Second list" };
+
+        IptvCatalogService.SetDuplicateChannelLabels([first, second, independent]);
+
+        Assert.Equal("First list", first.SecondaryText);
+        Assert.Equal("Second list", second.SecondaryText);
+        Assert.Null(independent.SecondaryText);
+    }
+
+    [Fact]
+    public async Task Catalog_KeepsNewPlaylistSelectableBeforeItsSavedRevisionLoads()
+    {
+        var store = new IptvPlayerStore(_tempDirectory);
+        var catalog = new IptvCatalogService(store);
+        using var service = new IptvPlaylistService(store);
+        var source = new IptvPlaylistSource
+        {
+            Name = "New playlist",
+            Kind = IptvSourceKind.InlineText,
+            ContentRevision = Guid.NewGuid().ToString("N"),
+            InlineContent = "#EXTM3U\n#EXTINF:-1,New channel\nhttps://example.com/new.m3u8"
+        };
+        var disabled = new IptvPlaylistSource { IsEnabled = false };
+        var settings = new IptvSettings { Sources = [disabled, source] };
+        store.SaveCache(new IptvPlaylistCache
+        {
+            PlaylistId = source.Id,
+            Channels = [new IptvCachedChannelEntry { Title = "Old channel", StreamUrl = "https://example.com/old.m3u8" }]
+        });
+
+        Assert.Equal(source.Id, Assert.Single(IptvCatalogService.GetEnabledSources(settings)).Id);
+        Assert.Empty(catalog.BuildCatalog(settings));
+
+        Assert.True(await service.RefreshSourceAsync(source));
+
+        var channel = Assert.Single(catalog.BuildCatalog(settings));
+        Assert.Equal(source.Id, channel.PlaylistId);
+        Assert.Equal("New channel", channel.Title);
+    }
+
     [Fact]
     public void Catalog_AutoFallbackVariants_ConservativeGrouping()
     {
@@ -256,7 +404,7 @@ public sealed class IptvPlayerTests : IDisposable
             Channels =
             [
                 new IptvCachedChannelEntry { Title = "ESPN 1080p", TvgId = "espn", Group = "Sports", StreamUrl = "http://espn.com/1080" },
-                new IptvCachedChannelEntry { Title = "ESPN 720p", TvgId = "espn", Group = "Sports", StreamUrl = "http://espn.com/720" },
+                new IptvCachedChannelEntry { Title = "ESPN 720p", TvgId = "espn", Group = "Sports;Live", StreamUrl = "http://espn.com/720" },
                 new IptvCachedChannelEntry { Title = "Discovery", TvgId = null, Group = "Doc", StreamUrl = "http://disc.com/sd" },
                 new IptvCachedChannelEntry { Title = "Discovery HD", TvgId = null, Group = "Doc", StreamUrl = "http://disc.com/hd" }
             ]
@@ -274,6 +422,7 @@ public sealed class IptvPlayerTests : IDisposable
         Assert.Equal(2, espn.Variants.Count);
         Assert.Equal("http://espn.com/1080", espn.Variants[0].StreamUrl);
         Assert.Equal("http://espn.com/720", espn.Variants[1].StreamUrl);
+        Assert.Same(espn, Assert.Single(catalogService.FilterCatalog(catalog, null, "Live", null)));
 
         var disc1 = catalog.Find(c => c.Title == "Discovery");
         var disc2 = catalog.Find(c => c.Title == "Discovery HD");
@@ -385,6 +534,53 @@ public sealed class IptvPlayerTests : IDisposable
     }
 
     [Fact]
+    public async Task PlaylistService_CheckAndRefreshUseEditedUrlAndRefreshDownloadsOnce()
+    {
+        const string current = "https://203.0.113.10/list.m3u?token=edited";
+        var store = new IptvPlayerStore(_tempDirectory);
+        store.SaveSecretLocation("test", "https://203.0.113.10/list.m3u?token=old");
+        var handler = new PlaylistHttpHandler();
+        using var service = new IptvPlaylistService(store, handler);
+        var source = new IptvPlaylistSource
+        {
+            Id = "test",
+            Location = IptvPlaylistParser.MaskSensitiveUrl(current)
+        };
+
+        Assert.True((await service.CheckSourceAsync(source, current)).IsSuccess);
+        Assert.Equal(current, Assert.Single(handler.Requests));
+        handler.Requests.Clear();
+
+        Assert.True(await service.RefreshSourceAsync(source, current));
+        Assert.Equal(current, Assert.Single(handler.Requests));
+        Assert.Equal("https://203.0.113.10/stream?token=stream-key",
+            Assert.Single(store.LoadCache(source.Id)!.Channels).StreamUrl);
+        Assert.DoesNotContain("stream-key", File.ReadAllText(store.GetCacheFilePath(source.Id)));
+    }
+
+    [Fact]
+    public async Task PlaylistDownload_RejectsOversizedPayloadBeforeCaching()
+    {
+        using var client = new HttpClient(new PlaylistHttpHandler());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => IptvPlaylistService.DownloadRemoteBytesAsync(
+            client, "https://203.0.113.10/logo.png", 4, CancellationToken.None));
+    }
+
+    private sealed class PlaylistHttpHandler : HttpMessageHandler
+    {
+        internal List<string> Requests { get; } = [];
+
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token)
+        {
+            Requests.Add(request.RequestUri!.AbsoluteUri);
+            return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("#EXTM3U\n#EXTINF:-1,Channel\nstream?token=stream-key")
+            });
+        }
+    }
+
+    [Fact]
     public async Task PlaylistService_RefreshSourceAsync_SavesCacheAndUpdatesMetadata()
     {
         var store = new IptvPlayerStore(_tempDirectory);
@@ -436,6 +632,224 @@ public sealed class IptvPlayerTests : IDisposable
     #endregion
 
     #region Window XAML Instantiation Tests
+
+    [Theory]
+    [InlineData(672, 554, 672, 378)]
+    [InlineData(1600, 450, 800, 450)]
+    [InlineData(800, 450, 800, 450)]
+    [InlineData(640, 0, 0, 0)]
+    public void VideoViewportFitsSixteenByNine(double width, double height, double expectedWidth, double expectedHeight)
+    {
+        var size = IptvVideoViewport.Fit(new System.Windows.Size(width, height));
+        Assert.Equal(expectedWidth, size.Width, 5);
+        Assert.Equal(expectedHeight, size.Height, 5);
+    }
+
+    [Theory]
+    [InlineData(true, 820, 440, "820:440")]
+    [InlineData(false, 820, 440, "")]
+    [InlineData(true, 820, 0, "")]
+    public void FillModeUsesTheViewportRatioWithoutAffectingFitMode(bool fill, double width, double height, string expected)
+    {
+        Assert.Equal(expected, IptvVideoViewport.GetCropGeometry(fill, width, height));
+    }
+
+    [Fact]
+    public void ViewingModesRestoreThePreviousModeAndKeepTheWindowedPreference()
+    {
+        var modes = new IptvViewModes();
+        modes.ToggleVideoOnly();
+        modes.TogglePictureInPicture();
+        Assert.Equal(IptvViewMode.PictureInPicture, modes.Current);
+
+        modes.ToggleFullscreen();
+        Assert.Equal(IptvViewMode.Fullscreen, modes.Current);
+        modes.ToggleFullscreen();
+        Assert.Equal(IptvViewMode.PictureInPicture, modes.Current);
+        modes.ReturnToWindowed();
+        Assert.Equal(IptvViewMode.VideoOnly, modes.Current);
+        modes.ToggleVideoOnly();
+        Assert.Equal(IptvViewMode.Standard, modes.Current);
+    }
+
+    [Fact]
+    public void PictureInPicturePlacementIsClampedAndPersistedSeparately()
+    {
+        var area = new System.Windows.Rect(-1920, 24, 1920, 1000);
+        var saved = new IptvPipPlacement("secondary", 3000, -200, 390, 280);
+        var result = IptvPipLayout.Fit(area, 1.25, saved);
+        Assert.Equal(area.Right, result.Right);
+        Assert.Equal(area.Top, result.Top);
+        Assert.Equal(487.5, result.Width);
+        Assert.Equal(274.21875, result.Height, 6);
+        Assert.Equal(new System.Windows.Rect(-650, 8, 640, 360),
+            IptvPipLayout.Fit(new System.Windows.Rect(-650, 0, 640, 400), 2, null));
+
+        var store = new IptvPlayerStore(_tempDirectory);
+        store.SavePlayerState(new IptvPlayerState { IsSidebarOpen = true, PictureInPicturePlacement = saved });
+        Assert.Equal(saved, store.LoadPlayerState().PictureInPicturePlacement);
+        Assert.True(store.LoadPlayerState().IsSidebarOpen);
+    }
+
+    [Fact]
+    public async Task QueuedTuningSkipsIntermediateChannelsAndPreservesCommandOrder()
+    {
+        var queue = new IptvPlaybackCommandQueue();
+        using var hold = new ManualResetEventSlim();
+        var applied = new List<string>();
+        int requested = 0;
+        Task first = queue.Enqueue(() =>
+        {
+            Assert.True(hold.Wait(TimeSpan.FromSeconds(10)));
+            applied.Add("Previous stream stopped");
+        });
+        Task stale = queue.Enqueue(() => applied.Add("Intermediate channel opened"), () => Volatile.Read(ref requested) == 1);
+        Task latest = queue.Enqueue(() => applied.Add("Latest channel opened"), () => Volatile.Read(ref requested) == 2);
+        Volatile.Write(ref requested, 2);
+        hold.Set();
+        await Task.WhenAll(first, stale, latest).WaitAsync(TimeSpan.FromSeconds(15));
+        Assert.Equal(["Previous stream stopped", "Latest channel opened"], applied);
+    }
+
+    [Fact]
+    public async Task BrowsingChannelsLetsTheUserChooseQualityBeforePlayback()
+    {
+        WpfTestApplication.EnsureCreated();
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                PathHelper.SetAppDataFolderOverride(_tempDirectory);
+                var window = new IptvPlayerWindow(null, null);
+                try
+                {
+                    var channels = (System.Windows.Controls.ListBox)window.FindName("LstChannels");
+                    var quality = (System.Windows.Controls.ComboBox)window.FindName("CmbVariants");
+                    var title = (System.Windows.Controls.TextBlock)window.FindName("TxtActiveChannel");
+                    var second = new IptvChannel
+                    {
+                        Id = "second",
+                        Title = "Second",
+                        Variants =
+                        [
+                            new() { Title = "SD", StreamUrl = Path.Combine(_tempDirectory, "missing-sd.ts") },
+                            new() { Title = "HD", StreamUrl = Path.Combine(_tempDirectory, "missing-hd.ts") }
+                        ]
+                    };
+                    channels.ItemsSource = new[] { new IptvChannel { Id = "first", Title = "First" }, second };
+                    var video = (System.Windows.FrameworkElement)window.FindName("VlcVideoView");
+                    Assert.Equal(System.Windows.Visibility.Hidden, video.Visibility);
+                    var sidebar = (System.Windows.FrameworkElement)window.FindName("ChannelsSidebar");
+                    var toggle = (System.Windows.Controls.Button)window.FindName("BtnToggleSidebar");
+                    toggle.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                    Assert.Equal(System.Windows.Visibility.Collapsed, sidebar.Visibility);
+                    Assert.Same(video, window.FindName("VlcVideoView"));
+                    toggle.RaiseEvent(new System.Windows.RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent));
+                    Assert.Equal(System.Windows.Visibility.Visible, sidebar.Visibility);
+
+                    channels.SelectedIndex = 0;
+                    channels.SelectedIndex = 1;
+                    quality.SelectedIndex = 1;
+
+                    Assert.Equal("Second", title.Text);
+                    Assert.Equal(1, second.ActiveVariantIndex);
+
+                    channels.SelectedIndex = 0;
+                    Assert.Equal("First", title.Text);
+                    Assert.Equal(System.Windows.Visibility.Collapsed, quality.Visibility);
+                    channels.SelectedIndex = 1;
+                    Assert.Equal(1, quality.SelectedIndex);
+
+                    var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+                    var pendingTune = typeof(IptvPlayerWindow).GetField("_pendingTune", flags)!;
+                    var navigate = typeof(IptvPlayerWindow).GetMethod("NavigateChannel", flags)!;
+                    Assert.Null(pendingTune.GetValue(window));
+                    navigate.Invoke(window, [1]);
+                    Assert.Equal(0, channels.SelectedIndex);
+                    Assert.Null(pendingTune.GetValue(window));
+                    navigate.Invoke(window, [1]);
+                    Assert.Equal(1, channels.SelectedIndex);
+                    Assert.Null(pendingTune.GetValue(window));
+                    navigate.Invoke(window, [-1]);
+                    typeof(IptvPlayerWindow).GetMethod("ChannelTuneTimer_Tick", flags)!.Invoke(window, [null, EventArgs.Empty]);
+                    Assert.Same(channels.Items[0], pendingTune.GetValue(window));
+                }
+                finally
+                {
+                    window.Close();
+                }
+                completion.SetResult();
+            }
+            catch (Exception ex)
+            {
+                completion.SetException(ex);
+            }
+            finally
+            {
+                PathHelper.ClearAppDataFolderOverride();
+            }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.IsBackground = true;
+        thread.Start();
+        await completion.Task.WaitAsync(TimeSpan.FromSeconds(15));
+    }
+
+    [Fact]
+    public void VideoDoubleClickConsumesPendingPauseAndTogglesFullscreen()
+    {
+        WpfTestApplication.EnsureCreated();
+
+        Exception? failure = null;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                var window = new IptvPlayerWindow(null, null);
+                try
+                {
+                    var surface = (System.Windows.FrameworkElement)window.FindName("VideoSurface");
+                    var controls = (System.Windows.FrameworkElement)window.FindName("VideoControls");
+                    Assert.True(surface.Focusable);
+                    Assert.Equal(System.Windows.Visibility.Collapsed, controls.Visibility);
+
+                    var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+                    var playerType = typeof(IptvPlayerWindow);
+                    var timer = Assert.IsType<System.Windows.Threading.DispatcherTimer>(
+                        playerType.GetField("_videoClickTimer", flags)!.GetValue(window));
+                    var modes = Assert.IsType<IptvViewModes>(playerType.GetField("_viewModes", flags)!.GetValue(window));
+                    var completeClick = playerType.GetMethod("CompleteVideoClick", flags)!;
+                    var resolveClick = playerType.GetMethod("ResolvePendingVideoClick", flags)!;
+
+                    Assert.False(Assert.IsType<bool>(resolveClick.Invoke(window, [2])));
+                    completeClick.Invoke(window, null);
+                    Assert.True(timer.IsEnabled);
+                    Assert.Equal(IptvViewMode.Standard, modes.Current);
+                    Assert.True(Assert.IsType<bool>(resolveClick.Invoke(window, [2])));
+                    Assert.False(timer.IsEnabled);
+                    Assert.Equal(IptvViewMode.Fullscreen, modes.Current);
+
+                    completeClick.Invoke(window, null);
+                    Assert.True(Assert.IsType<bool>(resolveClick.Invoke(window, [2])));
+                    Assert.False(timer.IsEnabled);
+                    Assert.Equal(IptvViewMode.Standard, modes.Current);
+                }
+                finally
+                {
+                    window.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                failure = ex;
+            }
+        }) { IsBackground = true };
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(15)));
+        Assert.Null(failure);
+    }
 
     [Fact]
     public void IptvPlayerWindow_InstantiatesWithoutResourceException()

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -13,6 +14,8 @@ public partial class AppSettingsWindow
     private IptvSettings _iptvDraft = new();
     private readonly Dictionary<string, string> _pendingIptvSecrets = new(StringComparer.Ordinal);
     private readonly HashSet<string> _deletedIptvSourceIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _changedIptvSourceIds = new(StringComparer.OrdinalIgnoreCase);
+    private readonly CancellationTokenSource _iptvOperations = new();
     private IptvPlayerStore? _iptvStore;
     private IptvPlaylistService? _iptvPlaylistService;
 
@@ -38,6 +41,7 @@ public partial class AppSettingsWindow
             return;
         }
 
+        SelectIptvRefreshSource();
         IptvSourcesList.Children.Clear();
         var sources = _iptvDraft.Sources.OrderBy(s => s.SortOrder).ToList();
         TxtIptvSourcesEmpty.Visibility = sources.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
@@ -48,175 +52,104 @@ public partial class AppSettingsWindow
             source.SortOrder = i;
             var row = BuildIptvSourceRow(source, i, sources.Count);
             IptvSourcesList.Children.Add(row);
-
-            if (i < sources.Count - 1)
-            {
-                IptvSourcesList.Children.Add(new Border { Style = (Style)FindResource("ModernDividerStyle") });
-            }
         }
     }
 
+    private readonly Dictionary<string, string> _iptvChecks = new(StringComparer.Ordinal);
+    private IptvPlaylistSource? _selectedIptvSource;
+
     private Grid BuildIptvSourceRow(IptvPlaylistSource source, int index, int totalCount)
     {
-        var row = new Grid { Margin = new Thickness(0, 8, 0, 8) };
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Чекбокс активности
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) }); // Инфо
-        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // Кнопки действий
-
-        // 1. Чекбокс включен/выключен
-        var chkEnabled = new CheckBox
-        {
-            IsChecked = source.IsEnabled,
-            Style = (Style)FindResource("ModernSwitchStyle"),
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 12, 0),
-            ToolTip = LocalizationService.Get("Iptv_ToggleEnabled") ?? "Включить/отключить источник"
-        };
-        chkEnabled.Click += (_, _) =>
-        {
-            source.IsEnabled = chkEnabled.IsChecked == true;
-        };
-        Grid.SetColumn(chkEnabled, 0);
-        row.Children.Add(chkEnabled);
-
-        // 2. Блок названия и статуса
-        var infoPanel = new StackPanel
-        {
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(0, 0, 12, 0)
-        };
-
-        var titleBlock = new TextBlock
-        {
-            Text = string.IsNullOrWhiteSpace(source.Name) ? "Безымянный плейлист" : source.Name,
-            Style = (Style)FindResource("ModernSettingTitleStyle"),
-            TextTrimming = TextTrimming.CharacterEllipsis
-        };
-        infoPanel.Children.Add(titleBlock);
-
-        string kindLabel = source.Kind switch
-        {
-            IptvSourceKind.Url => "URL",
-            IptvSourceKind.LocalFile => "Файл",
-            IptvSourceKind.InlineText => "Текст",
-            IptvSourceKind.SingleStream => "Поток",
-            _ => "Источник"
-        };
-
-        string statusText = source.ChannelCount > 0
-            ? $"{kindLabel} • {source.ChannelCount} кан."
-            : $"{kindLabel} • Нет кэша";
-
-        if (!string.IsNullOrWhiteSpace(source.LastStatus) && source.LastStatus != "Ok")
-        {
-            statusText += $" • Ошибка: {source.LastErrorMessage}";
-        }
-
-        var statusBlock = new TextBlock
-        {
-            Text = statusText,
-            Style = (Style)FindResource("ModernSettingDescriptionStyle"),
-            Foreground = source.LastStatus == "Error"
-                ? new SolidColorBrush(System.Windows.Media.Color.FromRgb(240, 90, 90))
-                : (Brush)FindResource("MutedText")
-        };
-        infoPanel.Children.Add(statusBlock);
-
-        Grid.SetColumn(infoPanel, 1);
-        row.Children.Add(infoPanel);
-
-        // 3. Блок кнопок управления
-        var actionsPanel = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            VerticalAlignment = VerticalAlignment.Center
-        };
-
-        // Вверх
-        var btnUp = CreateIconButton("\uF19B", "Вверх", () => MoveIptvSource(index, -1));
-        btnUp.IsEnabled = index > 0;
-        actionsPanel.Children.Add(btnUp);
-
-        // Вниз
-        var btnDown = CreateIconButton("\uF148", "Вниз", () => MoveIptvSource(index, 1));
-        btnDown.IsEnabled = index < totalCount - 1;
-        actionsPanel.Children.Add(btnDown);
-
-        // Проверить
-        var btnCheck = CreateIconButton("\uF298", "Проверить", async () =>
-        {
-            if (_iptvPlaylistService == null) return;
-            var res = await _iptvPlaylistService.CheckSourceAsync(source);
-            string msg = res.IsSuccess
-                ? $"OK: {res.TotalCount} кан. ({res.ElapsedMs} ms)"
-                : $"Ошибка: {res.ErrorMessage}";
-            System.Windows.MessageBox.Show(this, msg, "Проверка плейлиста", MessageBoxButton.OK,
-                res.IsSuccess ? MessageBoxImage.Information : MessageBoxImage.Warning);
-        });
-        actionsPanel.Children.Add(btnCheck);
-
-        // Обновить
-        Button? btnRefresh = null;
-        btnRefresh = CreateIconButton("\uF190", "Обновить", async () =>
-        {
-            if (_iptvPlaylistService == null || btnRefresh == null) return;
-            btnRefresh.IsEnabled = false;
-            try
+        string details = string.Join(" · ", new[] { source.Kind.ToString(),
+            _iptvChecks.GetValueOrDefault(source.Id) ?? (_changedIptvSourceIds.Contains(source.Id)
+                ? Locale("IptvSettings_PendingSave")
+                : source.LastStatus == "Error" ? Locale("SettingsLists_CheckFailed")
+                : source.ChannelCount.ToString(System.Globalization.CultureInfo.CurrentCulture)) });
+        Grid row = BuildSettingsListRow(source.Name, details, source.IsEnabled, enabled => source.IsEnabled = enabled,
+            index, totalCount, offset => MoveIptvSource(index, offset), async () =>
             {
-                bool ok = await _iptvPlaylistService.RefreshSourceAsync(source);
+                if (_iptvPlaylistService == null) return;
+                var result = await _iptvPlaylistService.CheckSourceAsync(source, _pendingIptvSecrets.GetValueOrDefault(source.Id), _iptvOperations.Token);
+                if (_iptvOperations.IsCancellationRequested) return;
+                _iptvChecks[source.Id] = result.IsSuccess ? $"{Locale("SettingsLists_Checked")} · {result.TotalCount}" : Locale("SettingsLists_CheckFailed");
                 RefreshIptvSourcesList();
-            }
-            finally
+            }, () => EditIptvSource(source), () =>
             {
-                btnRefresh.IsEnabled = true;
-            }
-        });
-        actionsPanel.Children.Add(btnRefresh);
-
-        // Редактировать
-        var btnEdit = CreateIconButton("\uF3DD", "Редактировать", () =>
-        {
-            if (_iptvStore == null || _iptvPlaylistService == null) return;
-            var dlg = new IptvPlaylistDialog(source, _iptvStore, _iptvPlaylistService) { Owner = this };
-            if (dlg.ShowDialog() == true)
-            {
-                int idx = _iptvDraft.Sources.FindIndex(s => s.Id == source.Id);
-                if (idx >= 0)
-                {
-                    _iptvDraft.Sources[idx] = dlg.ResultSource;
-                    if (!string.IsNullOrWhiteSpace(dlg.PendingSecretLocation))
-                    {
-                        _pendingIptvSecrets[dlg.ResultSource.Id] = dlg.PendingSecretLocation;
-                    }
-                    RefreshIptvSourcesList();
-                }
-            }
-        });
-        actionsPanel.Children.Add(btnEdit);
-
-        // Удалить
-        var btnDelete = CreateIconButton("\uF34C", "Удалить", () =>
-        {
-            var confirm = System.Windows.MessageBox.Show(this,
-                $"Удалить плейлист \"{source.Name}\"?",
-                "Подтверждение удаления",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
-
-            if (confirm == MessageBoxResult.Yes)
-            {
-                _iptvDraft.Sources.RemoveAll(s => s.Id == source.Id);
+                _iptvDraft.Sources.Remove(source);
+                bool changed = _changedIptvSourceIds.Remove(source.Id);
                 _deletedIptvSourceIds.Add(source.Id);
-                _pendingIptvSecrets.Remove(source.Id);
+                RegisterListUndo(SettingsListKind.Iptv, () =>
+                {
+                    _deletedIptvSourceIds.Remove(source.Id);
+                    if (changed) _changedIptvSourceIds.Add(source.Id);
+                    _iptvDraft.Sources.Insert(Math.Min(index, _iptvDraft.Sources.Count), source);
+                    SetIptvSortOrder();
+                    RefreshIptvSourcesList();
+                });
+                if (_selectedIptvSource == source) _selectedIptvSource = null;
+                SetIptvSortOrder();
                 RefreshIptvSourcesList();
-            }
-        });
-        actionsPanel.Children.Add(btnDelete);
-
-        Grid.SetColumn(actionsPanel, 2);
-        row.Children.Add(actionsPanel);
-
+            });
+        row.Background = System.Windows.Media.Brushes.Transparent;
+        row.Focusable = true;
+        row.PreviewMouseLeftButtonDown += (_, _) => SelectSource();
+        row.GotKeyboardFocus += (_, _) => SelectSource();
+        if (_selectedIptvSource == source) ((Border)row.Children[0]).SetResourceReference(Border.BorderBrushProperty, "AccentColor");
         return row;
+
+        void SelectSource()
+        {
+            _selectedIptvSource = source;
+            foreach (Grid item in IptvSourcesList.Children.OfType<Grid>())
+            {
+                var surface = (Border)item.Children[0];
+                if (item == row) surface.SetResourceReference(Border.BorderBrushProperty, "AccentColor");
+                else surface.ClearValue(Border.BorderBrushProperty);
+            }
+            SelectIptvRefreshSource();
+        }
+    }
+
+    private void EditIptvSource(IptvPlaylistSource source)
+    {
+        if (_iptvStore == null || _iptvPlaylistService == null) return;
+        var dialog = new IptvPlaylistDialog(source, _iptvStore, _iptvPlaylistService,
+            _pendingIptvSecrets.GetValueOrDefault(source.Id)) { Owner = this };
+        if (dialog.ShowDialog() != true) return;
+        _iptvDraft.Sources[_iptvDraft.Sources.IndexOf(source)] = dialog.ResultSource;
+        _changedIptvSourceIds.Add(source.Id);
+        _iptvChecks.Remove(source.Id);
+        _pendingIptvSecrets.Remove(source.Id);
+        if (!string.IsNullOrWhiteSpace(dialog.PendingSecretLocation))
+        {
+            _pendingIptvSecrets[dialog.ResultSource.Id] = dialog.PendingSecretLocation;
+        }
+        if (_selectedIptvSource == source) _selectedIptvSource = dialog.ResultSource;
+        RefreshIptvSourcesList();
+    }
+
+    private void SelectIptvRefreshSource() =>
+        BtnRefreshSelectedIptv.IsEnabled = _selectedIptvSource is { } source && !_changedIptvSourceIds.Contains(source.Id);
+
+    private async void BtnRefreshSelectedIptv_Click(object sender, RoutedEventArgs e)
+    {
+        if (_iptvPlaylistService == null || _selectedIptvSource is not { } source) return;
+        BtnRefreshSelectedIptv.IsEnabled = false;
+        try
+        {
+            bool success = await _iptvPlaylistService.RefreshSourceAsync(source, _iptvOperations.Token);
+            if (_iptvOperations.IsCancellationRequested) return;
+            _iptvChecks[source.Id] = Locale(success ? "SettingsLists_Checked" : "SettingsLists_CheckFailed");
+            RefreshIptvSourcesList();
+        }
+        catch (OperationCanceledException) when (_iptvOperations.IsCancellationRequested) { }
+        catch (Exception) { ShowListMessage("SettingsLists_CheckFailed"); }
+        finally { SelectIptvRefreshSource(); }
+    }
+
+    private void SetIptvSortOrder()
+    {
+        for (int index = 0; index < _iptvDraft.Sources.Count; index++) _iptvDraft.Sources[index].SortOrder = index;
     }
 
     private Button CreateIconButton(string glyph, string tooltip, Action onClick)
@@ -269,6 +202,7 @@ public partial class AppSettingsWindow
             var newSource = dlg.ResultSource;
             newSource.SortOrder = _iptvDraft.Sources.Count;
             _iptvDraft.Sources.Add(newSource);
+            _changedIptvSourceIds.Add(newSource.Id);
 
             if (!string.IsNullOrWhiteSpace(dlg.PendingSecretLocation))
             {
@@ -289,7 +223,14 @@ public partial class AppSettingsWindow
         BtnRefreshAllIptv.IsEnabled = false;
         try
         {
-            int updated = await _iptvPlaylistService.RefreshAllUrlSourcesAsync(_iptvDraft.Sources);
+            int updated = 0;
+            var sources = _iptvDraft.Sources.Where(source => source.IsEnabled && !_changedIptvSourceIds.Contains(source.Id)).ToList();
+            foreach (var source in sources)
+            {
+                if (_iptvOperations.IsCancellationRequested) return;
+                if (await _iptvPlaylistService.RefreshSourceAsync(source, _iptvOperations.Token)) updated++;
+            }
+            if (_iptvOperations.IsCancellationRequested) return;
             RefreshIptvSourcesList();
             System.Windows.MessageBox.Show(this,
                 $"Обновлено плейлистов: {updated}",
@@ -311,45 +252,78 @@ public partial class AppSettingsWindow
         }
     }
 
-    private void CommitIptvDraftChanges()
+    private (IptvSettings Settings, HashSet<string> ToRefresh, List<IptvPlaylistSource> Retired) CommitIptvDraftChanges(
+        IptvSettings currentIptv)
     {
-        _iptvDraft.AutoUpdateEnabled = ChkIptvAutoUpdate.IsChecked == true;
+        IptvSettings draft = _iptvDraft.Clone();
+        draft.AutoUpdateEnabled = ChkIptvAutoUpdate.IsChecked == true;
         if (int.TryParse(TxtIptvUpdateInterval.Text.Trim(), out int interval) && interval >= 1 && interval <= 720)
         {
-            _iptvDraft.UpdateIntervalHours = interval;
+            draft.UpdateIntervalHours = interval;
         }
         else
         {
-            _iptvDraft.UpdateIntervalHours = 24;
+            draft.UpdateIntervalHours = 24;
         }
 
+        var retired = new List<IptvPlaylistSource>();
         if (_iptvStore != null)
         {
-            // Сохраняем ожидающие секреты
-            foreach (var (sourceId, secret) in _pendingIptvSecrets)
+            var original = currentIptv.Sources.ToDictionary(source => source.Id, StringComparer.OrdinalIgnoreCase);
+            foreach (var source in draft.Sources.Where(source => _changedIptvSourceIds.Contains(source.Id)))
             {
-                _iptvStore.SaveSecretLocation(sourceId, secret);
+                original.TryGetValue(source.Id, out var previous);
+                source.ContentRevision = Guid.NewGuid().ToString("N");
+                if (_pendingIptvSecrets.TryGetValue(source.Id, out string? secret))
+                {
+                    _iptvStore.SaveSecretLocation(source.SourceStorageId, secret);
+                }
+
+                string? sourceContent = source.InlineContent;
+                if (source.Kind == IptvSourceKind.LocalFile && previous?.Kind == IptvSourceKind.LocalFile &&
+                    previous.Location == source.Location && source.CopyLocalFileToStore)
+                {
+                    sourceContent = _iptvStore.ReadSourceFileContent(previous.SourceStorageId);
+                }
+
+                if (sourceContent is not null)
+                {
+                    _iptvStore.SaveSourceFileContent(source.SourceStorageId, sourceContent);
+                }
+                source.InlineContent = null;
+                source.LastRefreshedUtc = null;
+                source.LastStatus = null;
+                source.LastErrorMessage = null;
+                source.ChannelCount = 0;
+                if (previous is not null) retired.Add(previous);
             }
 
-            // Удаляем данные удаленных источников
-            foreach (string deletedId in _deletedIptvSourceIds)
-            {
-                _iptvStore.DeleteSecret(deletedId);
-                _iptvStore.DeleteCache(deletedId);
-                _iptvStore.DeleteSourceFile(deletedId);
-            }
+            retired.AddRange(currentIptv.Sources.Where(source => _deletedIptvSourceIds.Contains(source.Id)));
         }
 
-        _pendingIptvSecrets.Clear();
-        _deletedIptvSourceIds.Clear();
+        draft.LastAutoUpdateUtc = currentIptv.LastAutoUpdateUtc;
+        var toRefresh = draft.Sources.Where(source => source.IsEnabled &&
+            (_changedIptvSourceIds.Contains(source.Id) || source.LastRefreshedUtc is null))
+            .Select(source => source.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return (draft, toRefresh, retired);
+    }
 
-        _settings.Iptv = _iptvDraft.Clone();
+    private void RemoveRetiredIptvSources(List<IptvPlaylistSource> retired)
+    {
+        if (_iptvStore is null) return;
+        foreach (var source in retired)
+        {
+            _iptvStore.DeleteSecret(source.SourceStorageId);
+            _iptvStore.DeleteSourceFile(source.SourceStorageId);
+            if (_deletedIptvSourceIds.Contains(source.Id)) _iptvStore.DeleteCache(source.Id);
+        }
     }
 
     private void CleanupPendingIptvState()
     {
         _pendingIptvSecrets.Clear();
         _deletedIptvSourceIds.Clear();
+        _iptvOperations.Cancel();
         _iptvPlaylistService?.Dispose();
         _iptvPlaylistService = null;
     }

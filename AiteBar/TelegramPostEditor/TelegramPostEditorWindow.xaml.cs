@@ -23,21 +23,19 @@ namespace AiteBar;
 [SupportedOSPlatform("windows6.1")]
 public partial class TelegramPostEditorWindow : DarkWindow
 {
-    private const double DefaultWidth = 1360;
-    private const double DefaultHeight = 840;
+    private const double DefaultWidth = 1000;
+    private const double DefaultHeight = 690;
 
     private readonly AppSettingsService _settingsService;
     private readonly MainWindow? _mainWindow;
     private readonly AiGateway _aiGateway;
 
-    private readonly PostDbMigrator _migrator;
     private readonly PostRepository _repository;
     private readonly PostAutosaveService _autosave;
     private readonly PostMediaStore _mediaStore;
     private readonly PostInstructionService _instructionService;
     private readonly PostAiService _aiService;
     private readonly TelegramSecretStore _secretStore;
-    private readonly TelegramBotClient _botClient;
     private readonly TelegramChannelService _channelService;
     private readonly PublicationService _publicationService;
     private readonly PublicationSyncService _syncService;
@@ -46,45 +44,66 @@ public partial class TelegramPostEditorWindow : DarkWindow
     private readonly ObservableCollection<ChannelSelectionItem> _channelSelections = [];
     private PostDocument? _currentPost;
     private bool _isLoadingPost;
-    private bool _isRestoringPlacement;
+    private bool _changingDraft;
+    private bool _closingAfterSave;
     private CancellationTokenSource? _aiCts;
     private PostAiSuggestion? _lastSuggestion;
-    private string? _pairedDeviceId;
+    private TextRange? _aiReplacementRange;
+    private long _editorVersion;
+    private long _aiInputVersion;
 
     public TelegramPostEditorWindow(
         AppSettingsService settingsService,
         MainWindow? mainWindow,
         AiGateway aiGateway)
+        : this(settingsService, mainWindow, aiGateway, new PostDbMigrator(), new TelegramSecretStore(), new TelegramBotClient())
+    {
+    }
+
+    internal TelegramPostEditorWindow(
+        AppSettingsService settingsService, MainWindow? mainWindow, AiGateway aiGateway,
+        PostDbMigrator migrator, TelegramSecretStore secretStore, TelegramBotClient botClient,
+        ITelegramAiGateway? writingGateway = null, HttpClient? schedulingClient = null)
     {
         _settingsService = settingsService ?? throw new ArgumentNullException(nameof(settingsService));
         _mainWindow = mainWindow;
         _aiGateway = aiGateway ?? throw new ArgumentNullException(nameof(aiGateway));
 
-        _migrator = new PostDbMigrator();
-        _repository = new PostRepository(_migrator);
+        _repository = new PostRepository(migrator);
         _repository.EnsureBuiltInTemplates();
         _autosave = new PostAutosaveService(_repository);
-        _mediaStore = new PostMediaStore(_migrator);
-        _instructionService = new PostInstructionService(_migrator);
+        _mediaStore = new PostMediaStore(migrator, Path.Combine(Path.GetDirectoryName(migrator.DatabasePath)!, "Media"));
+        _instructionService = new PostInstructionService(migrator);
         _instructionService.EnsureBuiltInInstructions();
-        _aiService = new PostAiService(_aiGateway, _instructionService);
-        _secretStore = new TelegramSecretStore();
-        _botClient = new TelegramBotClient();
-        _channelService = new TelegramChannelService(_migrator, _botClient, _secretStore);
-        _publicationService = new PublicationService(_migrator, _mediaStore, _botClient, _secretStore, _channelService);
-        _syncService = new PublicationSyncService(new HttpClient { Timeout = TimeSpan.FromSeconds(45) }, _secretStore, _mediaStore);
+        _aiService = writingGateway == null
+            ? new PostAiService(_aiGateway, _instructionService)
+            : new PostAiService(writingGateway, _instructionService);
+        _secretStore = secretStore;
+        _channelService = new TelegramChannelService(migrator, botClient, _secretStore);
+        _publicationService = new PublicationService(migrator, _mediaStore, botClient, _secretStore, _channelService);
+        _syncService = new PublicationSyncService(
+            schedulingClient ?? new HttpClient(new HttpClientHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(45) },
+            _secretStore, _mediaStore);
         _backupService = new PostBackupService(_repository, _mediaStore);
 
         InitializeComponent();
 
         LstChannels.ItemsSource = _channelSelections;
-        TxtScheduleLocal.Text = DateTime.Now.AddHours(1).ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture);
-        _autosave.Saved += (_, _) => Dispatcher.BeginInvoke(() =>
+        TxtServerUrl.Text = _settingsService.Settings.TelegramPostEditorServerUrl ?? string.Empty;
+        UpdatePairingStatus();
+        DateTime defaultTime = DateTime.Now.AddHours(1);
+        ScheduleDate.SelectedDate = defaultTime.Date;
+        ScheduleTime.Text = defaultTime.ToString("HH:mm", CultureInfo.InvariantCulture);
+        ScheduleZone.Text = LocalizationService.Format("TelegramComposer_ScheduleZone", TimeZoneInfo.Local.DisplayName);
+        _autosave.Saved += (_, saved) => Dispatcher.BeginInvoke(() =>
         {
-            TxtStatusBar.Text = string.Format(
-                LocalizationService.Get("TelegramPostEditor_StatusSavedAt"),
-                DateTime.Now.ToString("HH:mm:ss", CultureInfo.CurrentCulture));
+            if (ReferenceEquals(saved, _currentPost))
+            {
+                TxtStatusBar.Text = LocalizationService.Get("QuickNote_SavedInitial");
+            }
         });
+        _autosave.SaveFailed += (_, _) => Dispatcher.BeginInvoke(() =>
+            TxtStatusBar.Text = LocalizationService.Get("TelegramComposer_SaveError"));
         CmbLibraryFilter.ItemsSource = new[]
         {
             LocalizationService.Get("TelegramPostEditor_AllDrafts"),
@@ -101,7 +120,13 @@ public partial class TelegramPostEditorWindow : DarkWindow
 
         InitializeAiControls();
         CmbInstruction.SelectionChanged += (_, _) => SyncCurrentPostFromUi(scheduleAutosave: true);
-        RefreshAllLists();
+        CreateAndLoadNewPost();
+        RefreshChannelsAndBots();
+        Activated += (_, _) =>
+        {
+            if (!_publicationBusy && PublishPage.IsVisible)
+                RefreshChannelsAndBots();
+        };
     }
 
     internal AiGateway AiGateway => _aiGateway;
@@ -140,9 +165,17 @@ public partial class TelegramPostEditorWindow : DarkWindow
         {
             new(null, null, null, LocalizationService.Get("TelegramPostEditor_AutoModel"), IsAuto: true)
         };
-        foreach (AiConnectionSettings conn in _settingsService.Settings.Ai.Connections.Where(c => c.IsEnabled))
+        var connections = _settingsService.Settings.Ai.Connections.Where(connection => connection.IsEnabled).ToList();
+        var repeatedChoices = connections.GroupBy(connection => (connection.ProviderId, connection.PreferredModelId))
+            .Where(group => group.Count() > 1).Select(group => group.Key).ToHashSet();
+        foreach (AiConnectionSettings conn in connections)
         {
-            modelChoices.Add(new PostAiModelChoice(conn.Id, conn.ProviderId, conn.PreferredModelId, conn.DisplayName));
+            string provider = AiProviderCatalog.TryGet(conn.ProviderId, out AiProviderDefinition definition)
+                ? definition.DisplayName : conn.ProviderId;
+            string model = conn.PreferredModelId ?? LocalizationService.Get("TelegramPostEditor_AutoModel");
+            string label = $"{model} · {provider}";
+            if (repeatedChoices.Contains((conn.ProviderId, conn.PreferredModelId))) label += $" · {conn.DisplayName}";
+            modelChoices.Add(new PostAiModelChoice(conn.Id, conn.ProviderId, conn.PreferredModelId, label));
         }
         CmbAiModel.ItemsSource = modelChoices;
         CmbAiModel.DisplayMemberPath = nameof(PostAiModelChoice.DisplayName);
@@ -161,14 +194,6 @@ public partial class TelegramPostEditorWindow : DarkWindow
         CmbInstruction.SelectedIndex = 0;
     }
 
-    private void RefreshAllLists()
-    {
-        RefreshPostsList();
-        RefreshChannelsAndBots();
-        RefreshEvents();
-        Activated += (_, _) => RefreshChannelsAndBots();
-    }
-
     private void RefreshPostsList()
     {
         bool includeDeleted = CmbLibraryFilter?.SelectedIndex == 1;
@@ -182,15 +207,8 @@ public partial class TelegramPostEditorWindow : DarkWindow
             posts = posts.OrderBy(p => p.Title, StringComparer.CurrentCultureIgnoreCase).ToList();
         }
         LstPosts.ItemsSource = posts;
-        if (_currentPost == null && posts.Count > 0)
-        {
-            LoadPostIntoEditor(posts[0]);
-            LstPosts.SelectedItem = posts[0];
-        }
-        else if (_currentPost == null)
-        {
-            CreateAndLoadNewPost();
-        }
+        LstPosts.SelectedItem = posts.FirstOrDefault(post => post.Id == _currentPost?.Id);
+        DraftSelection_Changed(this, null);
     }
 
     private void RefreshChannelsAndBots()
@@ -199,7 +217,6 @@ public partial class TelegramPostEditorWindow : DarkWindow
             .Where(c => c.IsSelected)
             .Select(c => c.Channel.Id)
             .ToHashSet(StringComparer.Ordinal);
-        bool hadSelections = _channelSelections.Count > 0;
 
         _channelSelections.Clear();
         IReadOnlyList<BotAccount> bots = _channelService.GetBots();
@@ -220,9 +237,12 @@ public partial class TelegramPostEditorWindow : DarkWindow
 
         IReadOnlyList<ChannelAccount> channels = _channelService.GetChannels();
         TxtNoChannelsHint.Visibility = channels.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        foreach (ChannelAccount ch in channels)
+        QuickConnectPanel.IsExpanded |= channels.Count == 0;
+        var displayOrder = _settingsService.Settings.TelegramChannelDisplayOrder;
+        foreach (ChannelAccount ch in channels.OrderBy(channel =>
+            displayOrder.IndexOf(channel.Id) is int index and >= 0 ? index : int.MaxValue))
         {
-            bool isSelected = hadSelections ? previouslySelected.Contains(ch.Id) : !ch.IsTestChannel;
+            bool isSelected = previouslySelected.Contains(ch.Id);
             botsById.TryGetValue(ch.BotId, out BotAccount? boundBot);
             bool hasToken = !string.IsNullOrWhiteSpace(_secretStore.ReadBotToken(ch.BotId));
             string subtitle;
@@ -232,48 +252,80 @@ public partial class TelegramPostEditorWindow : DarkWindow
             }
             else
             {
-                string chatPart = string.IsNullOrWhiteSpace(ch.Username)
-                    ? $"ID {ch.TelegramChatId}"
-                    : $"@{ch.Username.TrimStart('@')}";
-                string botPart = boundBot == null
-                    ? string.Empty
-                    : string.IsNullOrWhiteSpace(boundBot.Username)
-                        ? $" · {boundBot.DisplayName}"
-                        : $" · @{boundBot.Username.TrimStart('@')}";
-                subtitle = $"{chatPart}{botPart}";
+                subtitle = boundBot == null || string.IsNullOrWhiteSpace(boundBot.Username)
+                    ? boundBot?.DisplayName ?? string.Empty
+                    : $"@{boundBot.Username.TrimStart('@')}";
             }
 
             _channelSelections.Add(new ChannelSelectionItem(ch, isSelected, subtitle, hasToken));
         }
-        UpdatePreviewAndValidation();
+        RefreshPublishingCategories();
+        UpdatePublicationControls();
     }
 
-    private void RefreshEvents()
+    private sealed record PublishingCategory(string? Key, string Label);
+
+    private void RefreshPublishingCategories()
     {
-        LstEvents.ItemsSource = _publicationService.GetEvents(limit: 100);
+        var categories = _settingsService.Settings.TelegramPublishingCategories;
+        string? current = (CmbPublishingCategory.SelectedItem as PublishingCategory)?.Key;
+        var options = new List<PublishingCategory> { new(null, LocalizationService.Get("SettingsLists_AllCategories")) };
+        options.AddRange(_channelSelections
+            .Select(item => categories.GetValueOrDefault(item.Channel.Id, ""))
+            .Distinct(StringComparer.CurrentCultureIgnoreCase)
+            .OrderBy(category => category, StringComparer.CurrentCultureIgnoreCase)
+            .Select(category => new PublishingCategory(category,
+                category.Length == 0 ? LocalizationService.Get("SettingsLists_NoCategory") : category)));
+        CmbPublishingCategory.ItemsSource = options;
+        CmbPublishingCategory.SelectedItem = options.FirstOrDefault(option => option.Key == current) ?? options[0];
+        CmbPublishingCategory.Visibility = options.Count > 2 || options.Count == 2 && options[1].Key?.Length > 0
+            ? Visibility.Visible : Visibility.Collapsed;
+    }
+
+    private void PublishingCategory_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (LstChannels is null || LstChannels.ItemsSource is null) return;
+        string? selected = (CmbPublishingCategory.SelectedItem as PublishingCategory)?.Key;
+        var categories = _settingsService.Settings.TelegramPublishingCategories;
+        var view = System.Windows.Data.CollectionViewSource.GetDefaultView(_channelSelections);
+        view.Filter = selected is null ? null : item => item is ChannelSelectionItem channel &&
+            string.Equals(categories.GetValueOrDefault(channel.Channel.Id, ""), selected, StringComparison.CurrentCultureIgnoreCase);
     }
 
     private void CreateAndLoadNewPost()
     {
         var post = new PostDocument { Title = LocalizationService.Get("TelegramPostEditor_NewPost") };
-        _repository.SavePost(post);
-        LoadPostIntoEditor(post);
-        RefreshPostsList();
+        LoadPostIntoEditor(post, isNew: true);
     }
 
-    private void LoadPostIntoEditor(PostDocument post)
+    private void LoadPostIntoEditor(PostDocument post, bool isNew = false)
     {
         _isLoadingPost = true;
         try
         {
+            if (_currentPost?.Id != post.Id)
+            {
+                _aiCts?.Cancel();
+                _lastSuggestion = null;
+                AiSuggestionPanel.Visibility = Visibility.Collapsed;
+                AiOptionsPanel.Visibility = Visibility.Collapsed;
+                AiToggleButton.Tag = null;
+                AiPromptBox.Clear();
+                SendNowOption.IsChecked = true;
+                _publicationError = null;
+                foreach (ChannelSelectionItem item in _channelSelections)
+                    item.IsSelected = false;
+            }
             _currentPost = post;
-            TxtPostTitle.Text = post.Title;
+            TxtPostTitle.Text = isNew ? string.Empty : post.Title;
+            TxtStatusBar.Text = isNew ? string.Empty : LocalizationService.Get("QuickNote_SavedInitial");
+            SetDraftManagementEnabled(!isNew);
             TxtPostTitlePlaceholder.Visibility = string.IsNullOrEmpty(TxtPostTitle.Text) ? Visibility.Visible : Visibility.Collapsed;
             PostEditorRichTextBox.Document = TelegramDocumentSerializer.ToFlowDocument(post);
             SelectInstructionInCombo(post.InstructionId);
             RefreshAttachedMediaList();
             UpdatePreviewAndValidation();
-            TxtDeleteOrRestoreLabel.Text = post.DeletedUtc.HasValue
+            DeleteDraftMenuItem.Header = post.DeletedUtc.HasValue
                 ? LocalizationService.Get("TelegramPostEditor_Restore")
                 : LocalizationService.Get("TelegramPostEditor_MoveToTrash");
         }
@@ -315,6 +367,7 @@ public partial class TelegramPostEditorWindow : DarkWindow
             .Cast<PostMediaItem>()
             .ToList();
         LstAttachedMedia.ItemsSource = items;
+        _previewMediaDirty = true;
     }
 
     private void SyncCurrentPostFromUi(bool scheduleAutosave)
@@ -340,104 +393,38 @@ public partial class TelegramPostEditorWindow : DarkWindow
         {
             TxtStatusBar.Text = LocalizationService.Get("TelegramPostEditor_StatusSaving");
             _autosave.ScheduleSave(_currentPost);
+            SetDraftManagementEnabled(true);
         }
     }
 
-    private void UpdatePreviewAndValidation()
+    private void SetDraftManagementEnabled(bool enabled)
     {
-        if (_currentPost == null)
-        {
-            return;
-        }
-
-        List<PostMediaItem> resolvedMedia = _currentPost.Media
-            .OrderBy(a => a.SortOrder)
-            .Select(a => _mediaStore.GetById(a.MediaId))
-            .Where(m => m != null)
-            .Cast<PostMediaItem>()
-            .ToList();
-
-        int selectedCount = _channelSelections.Count(c => c.IsSelected);
-        TxtSelectedChannelsSummary.Text = string.Format(
-            LocalizationService.Get("TelegramPostEditor_SelectedChannelsSummary"),
-            selectedCount);
-
-        ChannelAccount? previewChannel = _channelSelections.FirstOrDefault(c => c.IsSelected)?.Channel
-            ?? _channelSelections.FirstOrDefault()?.Channel;
-
-        TelegramPreviewModel preview = TelegramPreviewService.BuildPreview(_currentPost, resolvedMedia, previewChannel);
-        TxtPreviewChannel.Text = previewChannel?.DisplayName
-            ?? LocalizationService.Get("TelegramPostEditor_PreviewDefaultChannel");
-        TxtPreviewSubtitle.Text = previewChannel != null && !string.IsNullOrWhiteSpace(previewChannel.Username)
-            ? $"@{previewChannel.Username.TrimStart('@')}"
-            : TxtSelectedChannelsSummary.Text;
-
-        PreviewMediaBadge.Visibility = resolvedMedia.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-        TxtPreviewMediaCount.Text = resolvedMedia.Count > 0
-            ? string.Format(LocalizationService.Get("TelegramPostEditor_SelectedCountSuffix"), resolvedMedia.Count)
-            : string.Empty;
-
-        bool isEmpty = string.IsNullOrWhiteSpace(preview.Content.Text) && resolvedMedia.Count == 0;
-        TxtEditorPlaceholder.Visibility = string.IsNullOrWhiteSpace(preview.Content.Text)
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-
-        int limit = resolvedMedia.Count > 0 ? TelegramValidationService.MaxCaptionLength : TelegramValidationService.MaxTextMessageLength;
-        TxtCharCounter.Text = $"{preview.Content.Text.Length} / {limit}";
-
-        if (isEmpty)
-        {
-            TxtPreviewBody.Foreground = (System.Windows.Media.Brush)FindResource("EditorMutedTextBrush");
-            TxtPreviewBody.Text = LocalizationService.Get("TelegramPostEditor_PreviewEmpty");
-            TxtValidationStatus.Foreground = (System.Windows.Media.Brush)FindResource("EditorMutedTextBrush");
-            TxtValidationStatus.Text = LocalizationService.Get("TelegramPostEditor_EmptyPostHint");
-            BtnPublishNow.IsEnabled = false;
-            BtnTestPublish.IsEnabled = false;
-            return;
-        }
-
-        TxtPreviewBody.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xF4, 0xF7, 0xFA));
-        TxtPreviewBody.Text = preview.Content.Text;
-
-        if (preview.Validation.IsValid)
-        {
-            TxtValidationStatus.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0x67, 0xC5, 0x87));
-            TxtValidationStatus.Text = preview.Validation.Warnings.Count > 0
-                ? $"{LocalizationService.Get("TelegramPostEditor_ReadyToPublish")} ({string.Join("; ", preview.Validation.Warnings)})"
-                : LocalizationService.Get("TelegramPostEditor_ReadyToPublish");
-            BtnPublishNow.IsEnabled = true;
-            BtnTestPublish.IsEnabled = true;
-        }
-        else
-        {
-            TxtValidationStatus.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE8, 0x5A, 0x5A));
-            TxtValidationStatus.Text = string.Join("\n", preview.Validation.Errors);
-            BtnPublishNow.IsEnabled = false;
-            BtnTestPublish.IsEnabled = false;
-        }
+        DuplicateDraftMenuItem.IsEnabled = enabled;
+        DeleteDraftMenuItem.IsEnabled = enabled;
     }
 
-    private void BtnNewPost_Click(object sender, RoutedEventArgs e) => CreateAndLoadNewPost();
+    private async void BtnNewPost_Click(object sender, RoutedEventArgs e)
+    {
+        await ChangeDraftAsync(CreateAndLoadNewPost);
+    }
 
     private async void BtnSavePost_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentPost == null) return;
+        if (_currentPost is not { } post) return;
         SyncCurrentPostFromUi(scheduleAutosave: false);
-        await _autosave.FlushAsync();
-        _repository.SavePost(_currentPost, createRevision: true);
-        RefreshPostsList();
-        TxtStatusBar.Text = string.Format(
-            LocalizationService.Get("TelegramPostEditor_StatusSavedAt"),
-            DateTime.Now.ToString("HH:mm:ss", CultureInfo.CurrentCulture));
+        await ChangeDraftAsync(() =>
+        {
+            _repository.SavePost(post, createRevision: true);
+            TxtStatusBar.Text = LocalizationService.Get("QuickNote_SavedInitial");
+            SetDraftManagementEnabled(true);
+        });
     }
 
-    private void BtnFromTemplate_Click(object sender, RoutedEventArgs e)
+    private async void BtnFromTemplate_Click(object sender, RoutedEventArgs e)
     {
         IReadOnlyList<PostTemplate> templates = _repository.GetTemplates();
         if (templates.Count == 0) return;
-        PostDocument draft = _repository.CreateDraftFromTemplate(templates[0].Id);
-        LoadPostIntoEditor(draft);
-        RefreshPostsList();
+        await ChangeDraftAsync(() => LoadPostIntoEditor(_repository.CreateDraftFromTemplate(templates[0].Id)));
     }
 
     private void BtnExportJson_Click(object sender, RoutedEventArgs e)
@@ -463,53 +450,84 @@ public partial class TelegramPostEditorWindow : DarkWindow
         RefreshPostsList();
     }
 
-    private void BtnChooseChannels_Click(object sender, RoutedEventArgs e)
+    private void BtnToggleAi_Click(object sender, RoutedEventArgs e)
     {
-        RightTabs.SelectedItem = TabChannelsItem;
+        AiOptionsPanel.Visibility = AiOptionsPanel.Visibility == Visibility.Visible
+            ? Visibility.Collapsed
+            : Visibility.Visible;
+        AiToggleButton.Tag = AiOptionsPanel.Visibility == Visibility.Visible ? "Active" : null;
+        if (AiOptionsPanel.Visibility == Visibility.Visible)
+        {
+            UpdateAiScope();
+            _ = Dispatcher.BeginInvoke(System.Windows.Threading.DispatcherPriority.Input, new Action(() =>
+            {
+                if (AiPromptBox.IsVisible)
+                    AiPromptBox.Focus();
+            }));
+        }
     }
 
-    private void BtnSchedulePost_Click(object sender, RoutedEventArgs e)
+    private void ChannelSelection_Changed(object sender, RoutedEventArgs e)
     {
-        RightTabs.SelectedItem = TabQueueItem;
+        if (sender is System.Windows.Controls.CheckBox { DataContext: ChannelSelectionItem item } checkBox)
+        {
+            item.IsSelected = checkBox.IsChecked == true;
+            _publicationError = null;
+            UpdatePublicationControls();
+        }
     }
-
-    private void ChannelSelection_Changed(object sender, RoutedEventArgs e) => UpdatePreviewAndValidation();
     private void CmbLibraryFilter_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshPostsList();
     private void CmbLibrarySort_SelectionChanged(object sender, SelectionChangedEventArgs e) => RefreshPostsList();
 
-    private void LstPosts_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void BtnDuplicatePost_Click(object sender, RoutedEventArgs e)
     {
-        if (LstPosts.SelectedItem is PostDocument selected && selected.Id != _currentPost?.Id)
+        if (_currentPost is { } post)
         {
-            LoadPostIntoEditor(selected);
+            await ChangeDraftAsync(() => LoadPostIntoEditor(_repository.DuplicatePost(post.Id)));
         }
     }
 
-    private void BtnDuplicatePost_Click(object sender, RoutedEventArgs e)
+    private async void BtnDeleteOrRestorePost_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentPost == null) return;
-        PostDocument copy = _repository.DuplicatePost(_currentPost.Id);
-        RefreshPostsList();
-        LoadPostIntoEditor(copy);
-    }
+        if (_currentPost is not { } post) return;
+        await ChangeDraftAsync(() =>
+        {
+            if (post.DeletedUtc.HasValue)
+                _repository.RestorePost(post.Id);
+            else
+                _repository.SoftDeletePost(post.Id);
 
-    private void BtnDeleteOrRestorePost_Click(object sender, RoutedEventArgs e)
-    {
-        if (_currentPost == null) return;
-        if (_currentPost.DeletedUtc.HasValue)
-        {
-            _repository.RestorePost(_currentPost.Id);
-        }
-        else
-        {
-            _repository.SoftDeletePost(_currentPost.Id);
-        }
-        _currentPost = null;
-        RefreshPostsList();
+            LoadPostIntoEditor(_repository.GetPost(post.Id) ?? post);
+        }, showEditor: false);
+        ShowDrafts_Click(sender, e);
     }
 
     private void EditorMetadata_Changed(object sender, RoutedEventArgs e) => SyncCurrentPostFromUi(scheduleAutosave: true);
-    private void PostEditorRichTextBox_TextChanged(object sender, TextChangedEventArgs e) => SyncCurrentPostFromUi(scheduleAutosave: true);
+    private void PostEditorRichTextBox_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        _editorVersion++;
+        SyncCurrentPostFromUi(scheduleAutosave: true);
+        UpdateAiScope();
+    }
+
+    private void PostSelection_Changed(object sender, RoutedEventArgs e) => UpdateAiScope();
+
+    private void UpdateAiScope()
+    {
+        if (AiScopeLabel == null) return;
+        TextSelection selection = PostEditorRichTextBox.Selection;
+        bool isExcerpt = !string.IsNullOrWhiteSpace(selection.Text);
+        bool isEmpty = string.IsNullOrWhiteSpace(new TextRange(
+            PostEditorRichTextBox.Document.ContentStart, PostEditorRichTextBox.Document.ContentEnd).Text);
+        AiScopeLabel.Text = isEmpty ? LocalizationService.Get("TelegramComposer_AiBrief")
+            : LocalizationService.Format("TelegramComposer_AiInputContext",
+                LocalizationService.Get(isExcerpt ? "TelegramComposer_AiSelection" : "TelegramComposer_AiWholePost"));
+        string aiLabel = LocalizationService.Get(isEmpty ? "TelegramComposer_AiStart" : "TelegramComposer_Assistant");
+        AiToggleButton.ToolTip = aiLabel;
+        System.Windows.Automation.AutomationProperties.SetName(AiToggleButton, aiLabel);
+        AiDraftButton.Visibility = isEmpty ? Visibility.Visible : Visibility.Collapsed;
+        AiShortenButton.Visibility = AiRewriteButton.Visibility = isEmpty ? Visibility.Collapsed : Visibility.Visible;
+    }
 
     private void BtnBold_Click(object sender, RoutedEventArgs e) => EditingCommands.ToggleBold.Execute(null, PostEditorRichTextBox);
     private void BtnItalic_Click(object sender, RoutedEventArgs e) => EditingCommands.ToggleItalic.Execute(null, PostEditorRichTextBox);
@@ -599,20 +617,37 @@ public partial class TelegramPostEditorWindow : DarkWindow
         SyncCurrentPostFromUi(scheduleAutosave: true);
     }
 
+    private async void QuickAi_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button { Tag: string tag } && Enum.TryParse(tag, out PostAiAction action))
+            await RunAiAsync(action);
+    }
+
     private async void BtnRunAi_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentPost == null) return;
+        await RunAiAsync(CmbAiAction.SelectedItem is PostAiActionItem actionItem
+            ? actionItem.Action : PostAiAction.Improve);
+    }
+
+    private async Task RunAiAsync(PostAiAction action)
+    {
+        if (_currentPost is not { } post || _aiCts != null) return;
         SyncCurrentPostFromUi(scheduleAutosave: false);
 
-        PostAiAction action = CmbAiAction.SelectedItem is PostAiActionItem actionItem
-            ? actionItem.Action
-            : PostAiAction.Improve;
-        string plainText = TelegramDocumentSerializer.ExtractPlainText(_currentPost);
-        if (string.IsNullOrWhiteSpace(plainText) && action != PostAiAction.CreateFromBrief)
+        TextSelection selection = PostEditorRichTextBox.Selection;
+        bool isExcerpt = !string.IsNullOrWhiteSpace(selection.Text);
+        var range = isExcerpt ? new TextRange(selection.Start, selection.End) : null;
+        string source = range?.Text ?? TelegramDocumentSerializer.ExtractPlainText(post);
+        string prompt = AiPromptBox.Text.Trim();
+        if (string.IsNullOrWhiteSpace(source) && (action != PostAiAction.CreateFromBrief || prompt.Length == 0))
         {
-            string emptyMsg = LocalizationService.Get("TelegramPostEditor_AiEmptyInput");
-            TxtStatusBar.Text = emptyMsg;
-            new DarkDialog(emptyMsg) { Owner = this }.ShowDialog();
+            _lastSuggestion = null;
+            ApplyAiButton.IsEnabled = false;
+            AiSuggestionPanel.Visibility = Visibility.Visible;
+            TxtAiSuggestion.Clear();
+            AiOriginalText.Visibility = Visibility.Collapsed;
+            TxtAiMeta.Text = LocalizationService.Get("TelegramComposer_AiBrief");
+            AiPromptBox.Focus();
             return;
         }
 
@@ -621,45 +656,67 @@ public partial class TelegramPostEditorWindow : DarkWindow
         string? instId = CmbInstruction.SelectedItem is PostInstruction inst && !string.IsNullOrWhiteSpace(inst.Id)
             ? inst.Id
             : null;
-        _currentPost.InstructionId = instId;
+        post.InstructionId = instId;
+        var input = new PostDocument
+        {
+            InstructionId = instId,
+            Blocks = range == null ? post.Blocks : [new PostBlock { Runs = [new PostTextRun { Text = source }] }]
+        };
+        long inputVersion = _editorVersion;
+        using var operation = new CancellationTokenSource();
+        _aiCts = operation;
+        _lastSuggestion = null;
 
-        _aiCts?.Cancel();
-        _aiCts?.Dispose();
-        _aiCts = new CancellationTokenSource();
-
-        BtnRunAi.IsEnabled = false;
+        BtnRunAi.IsEnabled = AiDraftButton.IsEnabled = AiShortenButton.IsEnabled = AiRewriteButton.IsEnabled = false;
         BtnStopAi.IsEnabled = true;
         BtnStopAi.Visibility = Visibility.Visible;
+        ApplyAiButton.IsEnabled = false;
         AiSuggestionPanel.Visibility = Visibility.Visible;
         TxtAiSuggestion.Text = string.Empty;
+        AiOriginalText.Text = isExcerpt ? source : string.Empty;
+        AiOriginalText.Visibility = isExcerpt ? Visibility.Visible : Visibility.Collapsed;
         TxtAiMeta.Text = LocalizationService.Get("TelegramPostEditor_AiGenerating");
 
-        var progress = new Progress<string>(text => TxtAiSuggestion.Text = text);
+        var progress = new Progress<string>(text =>
+        {
+            if (ReferenceEquals(_aiCts, operation) && !operation.IsCancellationRequested && _currentPost?.Id == post.Id)
+                TxtAiSuggestion.Text = text;
+        });
         try
         {
-            _lastSuggestion = await _aiService.GenerateSuggestionAsync(
-                _currentPost,
+            PostAiSuggestion suggestion = await _aiService.GenerateSuggestionAsync(
+                input,
                 action,
                 choice,
                 instId,
-                userPrompt: null,
+                userPrompt: prompt,
                 streamingProgress: progress,
-                cancellationToken: _aiCts.Token);
+                cancellationToken: operation.Token,
+                isExcerpt: isExcerpt);
 
-            TxtAiSuggestion.Text = _lastSuggestion.Content;
-            TxtAiMeta.Text = $"{_lastSuggestion.Metadata.ProviderId}/{_lastSuggestion.Metadata.ModelId}";
+            if (operation.IsCancellationRequested || _currentPost?.Id != post.Id) return;
+            _lastSuggestion = suggestion;
+            _aiReplacementRange = range;
+            _aiInputVersion = inputVersion;
+            TxtAiSuggestion.Text = suggestion.Content;
+            TxtAiMeta.Text = LocalizationService.Get(isExcerpt ? "TelegramComposer_AiSelection" : "TelegramComposer_AiWholePost");
+            ApplyAiButton.Content = LocalizationService.Get(isExcerpt ? "TelegramComposer_AiReplace" : "TelegramPostEditor_AiApply");
+            ApplyAiButton.IsEnabled = !string.IsNullOrWhiteSpace(suggestion.Content);
         }
         catch (OperationCanceledException)
         {
-            TxtAiMeta.Text = LocalizationService.Get("Common_Cancel");
+            if (_currentPost?.Id == post.Id)
+                TxtAiMeta.Text = LocalizationService.Get("Common_Cancel");
         }
         catch (Exception ex)
         {
-            TxtAiMeta.Text = ex.Message;
+            if (_currentPost?.Id == post.Id)
+                TxtAiMeta.Text = ex.Message;
         }
         finally
         {
-            BtnRunAi.IsEnabled = true;
+            _aiCts = null;
+            BtnRunAi.IsEnabled = AiDraftButton.IsEnabled = AiShortenButton.IsEnabled = AiRewriteButton.IsEnabled = true;
             BtnStopAi.IsEnabled = false;
             BtnStopAi.Visibility = Visibility.Collapsed;
         }
@@ -667,49 +724,44 @@ public partial class TelegramPostEditorWindow : DarkWindow
 
     private void BtnStopAi_Click(object sender, RoutedEventArgs e) => _aiCts?.Cancel();
 
-    private void BtnApplyAi_Click(object sender, RoutedEventArgs e)
+    private async void BtnApplyAi_Click(object sender, RoutedEventArgs e)
     {
-        if (_currentPost == null || string.IsNullOrWhiteSpace(TxtAiSuggestion.Text)) return;
-
-        List<PostBlock> parsedBlocks = TelegramDocumentSerializer.ParseMarkdownToBlocks(TxtAiSuggestion.Text);
-        _currentPost.Blocks = parsedBlocks.Count > 0
-            ? parsedBlocks
-            : [
-                new PostBlock
-                {
-                    Type = PostBlockType.Paragraph,
-                    Runs = [new PostTextRun { Text = TxtAiSuggestion.Text.Trim() }]
-                }
-            ];
-
-        if (_lastSuggestion != null)
+        if (_currentPost is not { } post || _lastSuggestion is not { } suggestion || string.IsNullOrWhiteSpace(suggestion.Content)) return;
+        await ChangeDraftAsync(() =>
         {
-            _currentPost.AiGenerationMetadata = _lastSuggestion.Metadata;
-        }
-        _repository.SavePost(_currentPost, createRevision: true);
-        LoadPostIntoEditor(_currentPost);
-        RefreshPostsList();
-        AiSuggestionPanel.Visibility = Visibility.Collapsed;
+            if (_aiInputVersion != _editorVersion)
+            {
+                TxtAiMeta.Text = LocalizationService.Get("TelegramComposer_AiStale");
+                ApplyAiButton.IsEnabled = false;
+                return;
+            }
+
+            post.AiGenerationMetadata = suggestion.Metadata;
+            if (_aiReplacementRange is { } range)
+            {
+                range.Text = suggestion.Content;
+                SyncCurrentPostFromUi(scheduleAutosave: false);
+                _repository.SavePost(post, createRevision: true);
+                BtnDismissAi_Click(sender, e);
+                return;
+            }
+
+            List<PostBlock> parsedBlocks = TelegramDocumentSerializer.ParseMarkdownToBlocks(suggestion.Content);
+            post.Blocks = parsedBlocks.Count > 0
+                ? parsedBlocks
+                : [new PostBlock { Runs = [new PostTextRun { Text = suggestion.Content.Trim() }] }];
+            _repository.SavePost(post, createRevision: true);
+            LoadPostIntoEditor(post);
+            BtnDismissAi_Click(sender, e);
+        });
     }
 
     private void BtnDismissAi_Click(object sender, RoutedEventArgs e)
     {
+        _aiCts?.Cancel();
         AiSuggestionPanel.Visibility = Visibility.Collapsed;
         _lastSuggestion = null;
-    }
-
-    private void PwdQuickBotToken_PasswordChanged(object sender, RoutedEventArgs e)
-    {
-        TxtQuickBotTokenPlaceholder.Visibility = string.IsNullOrEmpty(PwdQuickBotToken.Password)
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-    }
-
-    private void TxtQuickChannelInput_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        TxtQuickChannelPlaceholder.Visibility = string.IsNullOrEmpty(TxtQuickChannelInput.Text)
-            ? Visibility.Visible
-            : Visibility.Collapsed;
+        _aiReplacementRange = null;
     }
 
     private async void BtnQuickConnectBot_Click(object sender, RoutedEventArgs e)
@@ -768,15 +820,6 @@ public partial class TelegramPostEditorWindow : DarkWindow
         }
     }
 
-    private void BtnInlineDeleteChannel_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is System.Windows.Controls.Button { Tag: string channelId })
-        {
-            _channelService.DeleteChannel(channelId);
-            RefreshChannelsAndBots();
-        }
-    }
-
     private async void BtnOpenTelegramSettings_Click(object sender, RoutedEventArgs e)
     {
         MainWindow? main = _mainWindow
@@ -788,150 +831,21 @@ public partial class TelegramPostEditorWindow : DarkWindow
         }
     }
 
-    private async void BtnTestPublish_Click(object sender, RoutedEventArgs e)
-    {
-        if (_currentPost == null) return;
-        SyncCurrentPostFromUi(scheduleAutosave: false);
-
-        List<ChannelAccount> testChannels = _channelSelections.Select(c => c.Channel).Where(c => c.IsTestChannel).ToList();
-        if (testChannels.Count == 0)
-        {
-            new DarkDialog(LocalizationService.Get("TelegramPostEditor_NoTestChannelWarning")) { Owner = this }.ShowDialog();
-            return;
-        }
-
-        BtnTestPublish.IsEnabled = false;
-        try
-        {
-            _repository.SavePost(_currentPost, createRevision: false);
-            IReadOnlyList<PublicationTarget> res = await _publicationService.PublishNowAsync(_currentPost, testChannels, isTestRun: true);
-            RefreshEvents();
-            ReportPublishResults(res);
-        }
-        finally
-        {
-            UpdatePreviewAndValidation();
-        }
-    }
-
-    private async void BtnPublishNow_Click(object sender, RoutedEventArgs e)
-    {
-        if (_currentPost == null) return;
-        SyncCurrentPostFromUi(scheduleAutosave: false);
-
-        List<ChannelAccount> selected = _channelSelections.Where(c => c.IsSelected).Select(c => c.Channel).ToList();
-        if (selected.Count == 0)
-        {
-            new DarkDialog(LocalizationService.Get("TelegramPostEditor_SelectChannelWarning")) { Owner = this }.ShowDialog();
-            RightTabs.SelectedItem = TabChannelsItem;
-            return;
-        }
-
-        BtnPublishNow.IsEnabled = false;
-        try
-        {
-            _repository.SavePost(_currentPost, createRevision: true);
-            IReadOnlyList<PublicationTarget> res = await _publicationService.PublishNowAsync(_currentPost, selected, isTestRun: false);
-            RefreshEvents();
-            ReportPublishResults(res);
-        }
-        finally
-        {
-            UpdatePreviewAndValidation();
-        }
-    }
-
-    private void ReportPublishResults(IReadOnlyList<PublicationTarget> results)
-    {
-        int sentCount = results.Count(r => r.Status == WorkflowStatus.SENT);
-        TxtStatusBar.Text = $"{sentCount}/{results.Count} SENT";
-
-        List<string> errors = results
-            .Where(r => r.Status != WorkflowStatus.SENT)
-            .Select(r => string.IsNullOrWhiteSpace(r.LastErrorDetails) ? r.LastErrorCode ?? r.Status.ToString() : r.LastErrorDetails!)
-            .Distinct(StringComparer.Ordinal)
-            .ToList();
-
-        if (errors.Count > 0)
-        {
-            string message = string.Join("\n", errors);
-            TxtValidationStatus.Foreground = new SolidColorBrush(System.Windows.Media.Color.FromRgb(0xE8, 0x5A, 0x5A));
-            TxtValidationStatus.Text = message;
-            new DarkDialog($"{LocalizationService.Get("TelegramPostEditor_PublishFailedTitle")}\n\n{message}") { Owner = this }.ShowDialog();
-        }
-    }
-
-    private async void BtnPairServer_Click(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            ServerPairingResult pair = await _syncService.PairAsync(TxtServerUrl.Text, TxtPairingCode.Text, Environment.MachineName);
-            _pairedDeviceId = pair.DeviceId;
-            TxtPairingCode.Clear();
-            TxtModeBadge.Text = $"Сервер подключён ({pair.DeviceId[..6]})";
-        }
-        catch (Exception ex)
-        {
-            new DarkDialog(ex.Message) { Owner = this }.ShowDialog();
-        }
-    }
-
-    private async void BtnQueueServer_Click(object sender, RoutedEventArgs e)
-    {
-        if (_currentPost == null || string.IsNullOrWhiteSpace(_pairedDeviceId))
-        {
-            new DarkDialog("Сначала привяжите сервер планирования.") { Owner = this }.ShowDialog();
-            return;
-        }
-
-        if (!DateTime.TryParse(TxtScheduleLocal.Text, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out DateTime scheduledLocal))
-        {
-            new DarkDialog("Неверный формат даты/времени.") { Owner = this }.ShowDialog();
-            return;
-        }
-
-        List<ChannelAccount> selected = _channelSelections.Where(c => c.IsSelected).Select(c => c.Channel).ToList();
-        if (selected.Count == 0) return;
-
-        try
-        {
-            _repository.SavePost(_currentPost, createRevision: true);
-            List<(ChannelAccount, DateTime)> schedule = selected.Select(c => (c, scheduledLocal.ToUniversalTime())).ToList();
-            string serverPubId = await _syncService.QueuePostOnServerAsync(TxtServerUrl.Text, _pairedDeviceId, _currentPost, schedule);
-            TxtStatusBar.Text = $"Принято сервером (QUEUED_SERVER): {serverPubId}";
-        }
-        catch (Exception ex)
-        {
-            new DarkDialog($"Сервер не подтвердил очередь: {ex.Message}") { Owner = this }.ShowDialog();
-        }
-    }
-
     private void RestoreWindowPlacement(AppSettings settings)
     {
-        _isRestoringPlacement = true;
-        try
-        {
-            Rectangle work = GetTargetWorkArea(settings);
-            double maxWidth = Math.Max(MinWidth, work.Width - 24);
-            double maxHeight = Math.Max(MinHeight, work.Height - 24);
+        Rectangle work = GetTargetWorkArea(settings);
+        double maxWidth = Math.Max(MinWidth, work.Width - 24);
+        double maxHeight = Math.Max(MinHeight, work.Height - 24);
+        Width = Math.Clamp(settings.TelegramPostEditorWidth ?? DefaultWidth, MinWidth, maxWidth);
+        Height = Math.Clamp(settings.TelegramPostEditorHeight ?? DefaultHeight, MinHeight, maxHeight);
 
-            Width = Math.Clamp(settings.TelegramPostEditorWidth ?? DefaultWidth, MinWidth, maxWidth);
-            Height = Math.Clamp(settings.TelegramPostEditorHeight ?? DefaultHeight, MinHeight, maxHeight);
-
-            double desiredLeft = settings.TelegramPostEditorLeft ?? (work.Left + (work.Width - Width) / 2);
-            double desiredTop = settings.TelegramPostEditorTop ?? (work.Top + (work.Height - Height) / 2);
-
-            Left = Math.Clamp(desiredLeft, work.Left, Math.Max(work.Left, work.Right - Width));
-            Top = Math.Clamp(desiredTop, work.Top, Math.Max(work.Top, work.Bottom - Height));
-
-            WindowState = string.Equals(settings.TelegramPostEditorWindowState, nameof(WindowState.Maximized), StringComparison.Ordinal)
-                ? WindowState.Maximized
-                : WindowState.Normal;
-        }
-        finally
-        {
-            _isRestoringPlacement = false;
-        }
+        double desiredLeft = settings.TelegramPostEditorLeft ?? (work.Left + (work.Width - Width) / 2);
+        double desiredTop = settings.TelegramPostEditorTop ?? (work.Top + (work.Height - Height) / 2);
+        Left = Math.Clamp(desiredLeft, work.Left, Math.Max(work.Left, work.Right - Width));
+        Top = Math.Clamp(desiredTop, work.Top, Math.Max(work.Top, work.Bottom - Height));
+        WindowState = string.Equals(settings.TelegramPostEditorWindowState, nameof(WindowState.Maximized), StringComparison.Ordinal)
+            ? WindowState.Maximized
+            : WindowState.Normal;
     }
 
     private static Rectangle GetTargetWorkArea(AppSettings settings)
@@ -948,7 +862,7 @@ public partial class TelegramPostEditorWindow : DarkWindow
 
     private void PersistWindowPlacement()
     {
-        if (_isRestoringPlacement) return;
+        if (!IsLoaded) return;
         AppSettings settings = _settingsService.Settings;
         Rect bounds = WindowState == WindowState.Normal ? new Rect(Left, Top, Width, Height) : RestoreBounds;
         if (bounds.Width >= MinWidth && bounds.Height >= MinHeight)
@@ -961,25 +875,30 @@ public partial class TelegramPostEditorWindow : DarkWindow
         settings.TelegramPostEditorWindowState = WindowState == WindowState.Maximized ? nameof(WindowState.Maximized) : nameof(WindowState.Normal);
     }
 
-    private void Window_LocationChanged(object? sender, EventArgs e) { if (IsLoaded) PersistWindowPlacement(); }
-    private void Window_SizeChanged(object? sender, SizeChangedEventArgs e) { if (IsLoaded) PersistWindowPlacement(); }
-    private void Window_StateChanged(object? sender, EventArgs e) { if (IsLoaded) PersistWindowPlacement(); }
-
     private async void Window_Closing(object? sender, CancelEventArgs e)
     {
+        if (_closingAfterSave) return;
+        e.Cancel = true;
+        if (_publicationBusy || _changingDraft) return;
+        _changingDraft = true;
         _aiCts?.Cancel();
-        _aiCts?.Dispose();
         try
         {
             await _autosave.FlushAsync();
+            PersistWindowPlacement();
+            await _settingsService.SaveAsync();
+            _closingAfterSave = true;
+            _autosave.Dispose();
+            _ = Dispatcher.BeginInvoke(new Action(Close));
         }
-        catch
+        catch (Exception ex)
         {
-            // Ignore flush errors on close.
+            ShowWorkspaceError(ex);
         }
-        _autosave.Dispose();
-        PersistWindowPlacement();
-        await _settingsService.SaveAsync();
+        finally
+        {
+            _changingDraft = false;
+        }
     }
 
     public sealed record PostAiActionItem(PostAiAction Action, string DisplayName);
@@ -996,35 +915,22 @@ public partial class TelegramPostEditorWindow : DarkWindow
             Channel = channel;
             IsSelected = isSelected;
             Subtitle = subtitle;
+            HasValidBotToken = hasValidBotToken;
             SubtitleBrush = hasValidBotToken ? MutedBrush : WarningBrush;
         }
 
         public ChannelAccount Channel { get; }
-        public string DisplayName => Channel.IsTestChannel ? $"[TEST] {Channel.DisplayName}" : Channel.DisplayName;
+        public bool HasValidBotToken { get; }
+        public string DisplayName => Channel.IsTestChannel
+            ? LocalizationService.Format("TelegramComposer_TestChannel", Channel.DisplayName)
+            : Channel.DisplayName;
+        public string DestinationLabel => string.IsNullOrWhiteSpace(Channel.Username)
+            ? $"{DisplayName} · {Channel.TelegramChatId}"
+            : $"{DisplayName} · @{Channel.Username.TrimStart('@')}";
         public string Subtitle { get; }
         public System.Windows.Media.Brush SubtitleBrush { get; }
         public bool IsSelected { get; set; }
     }
-}
-
-public sealed class TelegramWorkflowStatusConverter : System.Windows.Data.IValueConverter
-{
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
-    {
-        return value is WorkflowStatus status
-            ? status switch
-            {
-                WorkflowStatus.DRAFT => LocalizationService.Get("TelegramPostEditor_StatusDraft"),
-                WorkflowStatus.QUEUED_LOCAL or WorkflowStatus.QUEUED_SERVER => LocalizationService.Get("TelegramPostEditor_StatusScheduled"),
-                WorkflowStatus.SENT => LocalizationService.Get("TelegramPostEditor_StatusPublished"),
-                WorkflowStatus.FAILED => LocalizationService.Get("TelegramPostEditor_StatusFailed"),
-                _ => status.ToString()
-            }
-            : string.Empty;
-    }
-
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        => throw new NotSupportedException();
 }
 
 public sealed class TelegramUtcToLocalConverter : System.Windows.Data.IValueConverter

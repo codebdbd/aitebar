@@ -58,9 +58,9 @@ public partial class AppSettingsWindow : DarkWindow
     private bool _activationDelaySelectionChanged;
     private readonly string _originalUiCulture;
     private string _selectedUiCulture = LocalizationService.AutoCulture;
-    private bool _isSynchronizingNavigation;
     private bool _isWindowLoaded;
     private AppSettingsSection _requestedSection;
+    private WindowState _stateBeforeMinimize = WindowState.Normal;
     private string? _draggedContextId;
     private Point _contextDragStartPoint;
     private string? _dragOverContextId;
@@ -85,6 +85,7 @@ public partial class AppSettingsWindow : DarkWindow
         _isLoadingSettings = true;
         LoadLanguageList();
         LoadSettings();
+        InitializeSettingsListDrafts();
         NormalizeDiscreteSettings();
         _panelSizeSelectionChanged = false;
         _activationZoneSelectionChanged = false;
@@ -93,6 +94,7 @@ public partial class AppSettingsWindow : DarkWindow
         RefreshLocalizedUi();
         InitializeTelegramSettings();
         InitializeIptvSettings();
+        RefreshSettingsListPicker();
         Closed += (_, _) =>
         {
             CleanupPendingAiCredentials();
@@ -107,8 +109,6 @@ public partial class AppSettingsWindow : DarkWindow
         HotkeySettingsSection,
         QuickToolsSettingsSection,
         AiProvidersSettingsSection,
-        TelegramSettingsSection,
-        IptvSettingsSection,
         AboutSettingsSection
     ];
 
@@ -118,42 +118,32 @@ public partial class AppSettingsWindow : DarkWindow
         NavigateToSection(_requestedSection);
     }
 
-    private void BtnKeepOnTop_Click(object sender, RoutedEventArgs e)
+    protected override void OnStateChanged(EventArgs e)
     {
-        Topmost = BtnKeepOnTop.IsChecked == true;
+        if (WindowState != WindowState.Minimized)
+        {
+            _stateBeforeMinimize = WindowState;
+        }
+        base.OnStateChanged(e);
+    }
+
+    internal void RestoreIfMinimized()
+    {
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = _stateBeforeMinimize;
+        }
     }
 
     private void SettingsNavigationList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (!_isWindowLoaded || _isSynchronizingNavigation || SettingsNavigationList.SelectedIndex < 0)
+        if (_isWindowLoaded && ReferenceEquals(e.Source, SettingsNavigationList))
         {
-            return;
+            ShowSettingsSection(SettingsNavigationList.SelectedIndex);
         }
-
-        ScrollToSection(SettingsNavigationList.SelectedIndex);
     }
 
-    private void SettingsScrollViewer_ScrollChanged(object sender, ScrollChangedEventArgs e)
-    {
-        if (!_isWindowLoaded || _isSynchronizingNavigation)
-        {
-            return;
-        }
-
-        FrameworkElement[] sections = GetSettingsSections();
-        double[] sectionTops = sections
-            .Select(GetSectionTop)
-            .ToArray();
-        int activeIndex = AppSettingsSectionNavigationHelper.GetActiveSectionIndex(
-            sectionTops,
-            SettingsScrollViewer.VerticalOffset,
-            SettingsScrollViewer.ViewportHeight,
-            SettingsScrollViewer.ExtentHeight);
-
-        SetNavigationSelection(activeIndex);
-    }
-
-    private void ScrollToSection(int sectionIndex)
+    private void ShowSettingsSection(int sectionIndex)
     {
         FrameworkElement[] sections = GetSettingsSections();
         if (sectionIndex < 0 || sectionIndex >= sections.Length)
@@ -161,45 +151,11 @@ public partial class AppSettingsWindow : DarkWindow
             return;
         }
 
-        double targetOffset = AppSettingsSectionNavigationHelper.GetTargetOffset(
-            GetSectionTop(sections[sectionIndex]),
-            SettingsScrollViewer.ScrollableHeight);
-        SettingsScrollViewer.ScrollToVerticalOffset(targetOffset);
-    }
-
-    private static double GetSectionTop(FrameworkElement section) =>
-        LayoutInformation.GetLayoutSlot(section).Top;
-
-    private void SetNavigationSelection(int sectionIndex)
-    {
-        if (sectionIndex < 0 || SettingsNavigationList.SelectedIndex == sectionIndex)
+        for (int i = 0; i < sections.Length; i++)
         {
-            return;
+            sections[i].Visibility = i == sectionIndex ? Visibility.Visible : Visibility.Collapsed;
         }
-
-        _isSynchronizingNavigation = true;
-        try
-        {
-            SettingsNavigationList.SelectedIndex = sectionIndex;
-        }
-        finally
-        {
-            _isSynchronizingNavigation = false;
-        }
-    }
-
-    private void QueueScrollToSection(int sectionIndex)
-    {
-        Dispatcher.BeginInvoke(DispatcherPriority.Loaded, () =>
-        {
-            if (!_isWindowLoaded)
-            {
-                return;
-            }
-
-            SetNavigationSelection(sectionIndex);
-            ScrollToSection(sectionIndex);
-        });
+        SettingsScrollViewer.ScrollToTop();
     }
 
     public void NavigateToSection(AppSettingsSection section)
@@ -211,14 +167,30 @@ public partial class AppSettingsWindow : DarkWindow
             return;
         }
 
-        if (section == AppSettingsSection.General)
+        if (section is AppSettingsSection.AiProviders or AppSettingsSection.Telegram or AppSettingsSection.Iptv or AppSettingsSection.SavedPrompts or AppSettingsSection.RssFeeds)
         {
-            SetNavigationSelection(sectionIndex);
-            SettingsScrollViewer.ScrollToTop();
-            return;
+            SettingsListPicker.SelectedIndex = (int)(section switch
+            {
+                AppSettingsSection.Telegram => SettingsListKind.TelegramPublishing,
+                AppSettingsSection.Iptv => SettingsListKind.Iptv,
+                AppSettingsSection.SavedPrompts => SettingsListKind.Prompts,
+                AppSettingsSection.RssFeeds => SettingsListKind.Rss,
+                _ => SettingsListKind.Ai
+            });
+            sectionIndex = (int)AppSettingsSection.AiProviders;
         }
-
-        QueueScrollToSection(sectionIndex);
+        else if (section == AppSettingsSection.About)
+        {
+            sectionIndex = GetSettingsSections().Length - 1;
+        }
+        if (SettingsNavigationList.SelectedIndex == sectionIndex)
+        {
+            ShowSettingsSection(sectionIndex);
+        }
+        else
+        {
+            SettingsNavigationList.SelectedIndex = sectionIndex;
+        }
     }
 
     private void LoadLanguageList()
@@ -315,7 +287,6 @@ public partial class AppSettingsWindow : DarkWindow
 
     private void RefreshLocalizedUi()
     {
-        int selectedSectionIndex = Math.Max(0, SettingsNavigationList.SelectedIndex);
         List<ContextRowDraft> drafts = CaptureContextRowDrafts();
         ReloadLocalizedChoiceLists();
         BuildContextRows(BuildContextDisplaySnapshot(_mainWindow.GetAllContextsSnapshot(), drafts));
@@ -325,12 +296,8 @@ public partial class AppSettingsWindow : DarkWindow
         BuildAiConnectionRows();
         UpdateAiDependentQuickToolAvailability();
         RefreshTelegramSettingsLists();
+        RefreshSettingsListPicker();
         UpdateAboutVersionText();
-
-        if (_isWindowLoaded)
-        {
-            QueueScrollToSection(selectedSectionIndex);
-        }
     }
 
     private (Grid Row, string TitleResourceKey)[] GetQuickToolRows() =>
@@ -397,83 +364,45 @@ public partial class AppSettingsWindow : DarkWindow
     private void BuildAiConnectionRows()
     {
         AiConnectionsList.Children.Clear();
-        TxtAiConnectionsEmpty.Visibility = _aiConnections.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-        AiConnectionSettings[] ordered = _aiConnections
+        TxtAiConnectionsEmpty.Visibility = VisibleWhen(_aiConnections.Count == 0);
+        List<AiConnectionSettings> ordered = OrderList(_aiConnections
             .OrderBy(connection => GetAiProviderRank(connection.ProviderId))
-            .ThenBy(connection => connection.DisplayName, StringComparer.CurrentCultureIgnoreCase)
-            .ToArray();
-
-        for (int index = 0; index < ordered.Length; index++)
+            .ThenBy(connection => connection.DisplayName, StringComparer.CurrentCultureIgnoreCase), _aiDisplayOrder, connection => connection.Id);
+        for (int index = 0; index < ordered.Count; index++)
         {
             AiConnectionSettings connection = ordered[index];
             AiProviderCatalog.TryGet(connection.ProviderId, out AiProviderDefinition provider);
-            var row = new Grid { Margin = new Thickness(0, 12, 0, 12) };
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            var details = new StackPanel { Margin = new Thickness(0, 0, 16, 0), VerticalAlignment = VerticalAlignment.Center };
-            details.Children.Add(new TextBlock
-            {
-                Text = connection.DisplayName,
-                Style = (Style)FindResource("ModernSettingTitleStyle"),
-                TextTrimming = TextTrimming.CharacterEllipsis
-            });
-            string providerLabel = string.IsNullOrWhiteSpace(connection.CustomBaseUrl)
-                ? provider.DisplayName
-                : $"{provider.DisplayName} ({connection.CustomBaseUrl})";
-            details.Children.Add(new TextBlock
-            {
-                Text = LocalizationService.Format("AiSettings_ConnectionDetails", providerLabel),
-                Style = (Style)FindResource("ModernSettingDescriptionStyle"),
-                TextWrapping = TextWrapping.Wrap
-            });
-            details.Children.Add(new TextBlock
-            {
-                Text = GetAiConnectionStatusText(connection.Id),
-                Foreground = (System.Windows.Media.Brush)FindResource("AccentColor"),
-                FontSize = 11,
-                Margin = new Thickness(0, 3, 0, 0),
-                TextWrapping = TextWrapping.Wrap
-            });
-            row.Children.Add(details);
-
-            var actions = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-            actions.Children.Add(CreateAiRowButton(LocalizationService.Get("AiSettings_Test"), "AiSettings_Test", connection.Id, BtnAiTest_Click, 90));
-            actions.Children.Add(CreateAiRowButton(LocalizationService.Get("Common_Delete"), "Common_Delete", connection.Id, BtnAiRemove_Click, 90));
-            Grid.SetColumn(actions, 1);
-            row.Children.Add(actions);
-            AiConnectionsList.Children.Add(row);
-
-            if (index < ordered.Length - 1)
-            {
-                AiConnectionsList.Children.Add(new Border { Style = (Style)FindResource("ModernDividerStyle") });
-            }
+            int position = index;
+            AiConnectionsList.Children.Add(BuildSettingsListRow(connection.DisplayName, $"{provider.DisplayName} · {GetAiConnectionStatusText(connection.Id)}",
+                connection.IsEnabled, enabled => { connection.IsEnabled = enabled; UpdateAiDependentQuickToolAvailability(); },
+                position, ordered.Count, offset =>
+                {
+                    MoveListItem(ordered, position, offset);
+                    _aiDisplayOrder.Clear();
+                    _aiDisplayOrder.AddRange(ordered.Select(item => item.Id));
+                    BuildAiConnectionRows();
+                },
+                async () =>
+                {
+                    var result = await _aiProviderClient.CheckConnectionAsync(connection, _listOperations.Token);
+                    if (_listOperations.IsCancellationRequested) return;
+                    _aiConnectionChecks[connection.Id] = result;
+                    BuildAiConnectionRows();
+                }, () => EditAiConnection(connection), () =>
+                {
+                    _aiConnections.Remove(connection);
+                    _removedAiCredentialTargets.Add(connection.CredentialTarget);
+                    RegisterListUndo(SettingsListKind.Ai, () =>
+                    {
+                        _removedAiCredentialTargets.Remove(connection.CredentialTarget);
+                        _aiConnections.Add(connection);
+                        BuildAiConnectionRows();
+                        UpdateAiDependentQuickToolAvailability();
+                    });
+                    BuildAiConnectionRows();
+                    UpdateAiDependentQuickToolAvailability();
+                }));
         }
-    }
-
-    private Button CreateAiRowButton(
-        string content,
-        string tooltipResourceKey,
-        string connectionId,
-        RoutedEventHandler handler,
-        double width,
-        bool isEnabled = true)
-    {
-        var button = new Button
-        {
-            Content = content,
-            ToolTip = LocalizationService.Get(tooltipResourceKey),
-            Tag = connectionId,
-            Style = (Style)FindResource("CommandButtonStyle"),
-            Width = width,
-            Height = 36,
-            Padding = new Thickness(15, 0, 15, 0),
-            FontSize = 12,
-            IsEnabled = isEnabled,
-            Margin = new Thickness(6, 0, 0, 0)
-        };
-        button.Click += handler;
-        return button;
     }
 
     private string GetAiConnectionStatusText(string connectionId)
@@ -499,86 +428,56 @@ public partial class AppSettingsWindow : DarkWindow
         return int.MaxValue;
     }
 
-    private void BtnAiAddConnection_Click(object sender, RoutedEventArgs e)
-    {
-        var existingNames = _aiConnections.Select(c => c.DisplayName);
-        var dialog = new AiConnectionDialog(existingNames) { Owner = this };
-        if (dialog.ShowDialog() != true)
-        {
-            return;
-        }
+    private void BtnAiAddConnection_Click(object sender, RoutedEventArgs e) => EditAiConnection(null);
 
-        string id = Guid.NewGuid().ToString("N");
-        string target = AiProviderCatalog.CreateCredentialTarget(id);
+    private void EditAiConnection(AiConnectionSettings? existing)
+    {
+        var names = _aiConnections.Where(connection => connection != existing).Select(connection => connection.DisplayName);
+        var dialog = new AiConnectionDialog(names, existing) { Owner = this };
+        if (dialog.ShowDialog() != true) return;
         try
         {
-            _aiCredentialStore.Write(target, dialog.ApiKey);
-            _aiConnections.Add(new AiConnectionSettings
-            {
-                Id = id,
-                ProviderId = dialog.ProviderId,
-                DisplayName = dialog.ConnectionName,
-                CredentialTarget = target,
-                IsEnabled = true,
-                CustomBaseUrl = dialog.CustomBaseUrl
-            });
-            _pendingAiCredentialTargets.Add(target);
-            BuildAiConnectionRows();
-            UpdateAiDependentQuickToolAvailability();
+            StageAiConnection(dialog.ConnectionName, dialog.ProviderId, dialog.CustomBaseUrl ?? "", dialog.ApiKey, existing?.IsEnabled ?? true, existing);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Logger.Log(ex);
-            new DarkDialog(LocalizationService.Get("AiSettings_CredentialSaveFailed")) { Owner = this }.ShowDialog();
+            ShowListMessage("SettingsLists_InvalidEntry");
         }
     }
 
-    private async void BtnAiTest_Click(object sender, RoutedEventArgs e)
+    private void StageAiConnection(string name, string providerId, string url, string token, bool enabled, AiConnectionSettings? existing = null)
     {
-        if (sender is not Button button || button.Tag is not string connectionId)
+        if (name.Length == 0 || !AiProviderCatalog.TryGet(providerId, out AiProviderDefinition provider) ||
+            _aiConnections.Any(connection => connection != existing && connection.DisplayName.Equals(name, StringComparison.OrdinalIgnoreCase)))
         {
-            return;
+            throw new InvalidOperationException();
         }
-        AiConnectionSettings? connection = _aiConnections.FirstOrDefault(item => item.Id == connectionId);
-        if (connection == null)
+        string? endpoint = null;
+        if (provider.RequiresCustomBaseUrl)
         {
-            return;
+            if (!AiProviderCatalog.TryNormalizeCustomBaseUrl(url, out string normalized)) throw new InvalidOperationException();
+            endpoint = normalized;
         }
-
-        button.IsEnabled = false;
-        button.Content = LocalizationService.Get("AiSettings_Testing");
-        try
+        if (token.Length == 0 && (existing is null || existing.ProviderId != provider.Id || existing.CustomBaseUrl != endpoint))
         {
-            _aiConnectionChecks[connection.Id] = await _aiProviderClient.CheckConnectionAsync(connection, CancellationToken.None);
+            throw new InvalidOperationException();
         }
-        finally
+        AiConnectionSettings connection = existing ?? new AiConnectionSettings();
+        if (token.Length > 0)
         {
-            BuildAiConnectionRows();
+            string newTarget = AiProviderCatalog.CreateCredentialTarget(Guid.NewGuid().ToString("N"));
+            _aiCredentialStore.Write(newTarget, token);
+            _pendingAiCredentialTargets.Add(newTarget);
+            if (connection.CredentialTarget.Length > 0) _removedAiCredentialTargets.Add(connection.CredentialTarget);
+            connection.CredentialTarget = newTarget;
         }
-    }
-
-    private void BtnAiRemove_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not Button button || button.Tag is not string connectionId)
-        {
-            return;
-        }
-        AiConnectionSettings? connection = _aiConnections.FirstOrDefault(item => item.Id == connectionId);
-        if (connection == null)
-        {
-            return;
-        }
-
-        _aiConnections.Remove(connection);
+        if (connection.ProviderId != provider.Id) connection.PreferredModelId = null;
+        connection.ProviderId = provider.Id;
+        connection.CustomBaseUrl = endpoint;
+        connection.DisplayName = name;
+        connection.IsEnabled = enabled;
         _aiConnectionChecks.Remove(connection.Id);
-        if (_pendingAiCredentialTargets.Remove(connection.CredentialTarget))
-        {
-            TryDeleteAiCredential(connection.CredentialTarget);
-        }
-        else
-        {
-            _removedAiCredentialTargets.Add(connection.CredentialTarget);
-        }
+        if (existing is null) _aiConnections.Add(connection);
         BuildAiConnectionRows();
         UpdateAiDependentQuickToolAvailability();
     }
@@ -731,6 +630,9 @@ public partial class AppSettingsWindow : DarkWindow
             await backupService.CreateAsync(safetyBackup, _mainWindow.GetAppSettings(), new BackupCreateOptions(false, false, null));
             await backupService.RestoreAsync(dialog.FileName, new BackupRestoreOptions(password), _mainWindow.GetSettingsService());
             IReadOnlyList<string> failedHotkeys = await _mainWindow.SaveAppSettings();
+            _mainWindow.QueueIptvSourceRefresh(_mainWindow.GetAppSettings().Iptv.Sources
+                .Where(source => source.IsEnabled && source.LastRefreshedUtc is null)
+                .Select(source => source.Id).ToHashSet(StringComparer.OrdinalIgnoreCase));
             _mainWindow.RefreshPanel();
             new DarkDialog(LocalizationService.Get("Backup_RestoreSuccess")) { Owner = this }.ShowDialog();
             if (failedHotkeys.Count > 0)
@@ -2041,6 +1943,7 @@ public partial class AppSettingsWindow : DarkWindow
 
     private async void BtnSave_Click(object sender, RoutedEventArgs e)
     {
+        if (!BtnSave.IsEnabled) return;
         bool clearSensitiveDraftBackups =
             ChkSaveTextProcessingDraft.IsChecked != true ||
             ChkSavePromptBuilderDrafts.IsChecked != true;
@@ -2063,12 +1966,27 @@ public partial class AppSettingsWindow : DarkWindow
 
         if (!ValidateHotkeyBindings(nextBinding, previousBinding, addButtonBinding, fileSorterBinding, iconConverterBinding, quickNoteBinding, colorPickerBinding, timerStopwatchBinding, qrCodeGeneratorBinding, clipboardManagerBinding, textProcessingBinding, promptBuilderBinding, zenEditorBinding, aiteProfilesBinding, telegramPostEditorBinding, iptvPlayerBinding))
         {
+            NavigateToSection(AppSettingsSection.Hotkeys);
             return;
         }
 
         UpdateAiDependentQuickToolAvailability();
 
-        _mainWindow.GetSettingsService().UpdateSettings(settings =>
+        (IptvPlayer.IptvSettings Settings, HashSet<string> ToRefresh, List<IptvPlayer.IptvPlaylistSource> Retired) iptv;
+        try
+        {
+            iptv = CommitIptvDraftChanges(_mainWindow.GetSettingsService().Settings.Iptv);
+        }
+        catch (Exception ex)
+        {
+            Logger.Log(ex);
+            new DarkDialog(LocalizationService.Format("Settings_SaveFailed", ex.Message)) { Owner = this }.ShowDialog();
+            return;
+        }
+
+        var settingsService = _mainWindow.GetSettingsService();
+        AppSettings beforeSave = settingsService.Settings;
+        settingsService.UpdateSettings(settings =>
         {
             settings.NextContextHotkey = nextBinding;
             settings.PreviousContextHotkey = previousBinding;
@@ -2087,8 +2005,8 @@ public partial class AppSettingsWindow : DarkWindow
             settings.TelegramPostEditorHotkey = telegramPostEditorBinding;
             settings.IptvPlayerHotkey = iptvPlayerBinding;
 
-            CommitIptvDraftChanges();
-            settings.Iptv = _iptvDraft.Clone();
+            settings.Iptv = iptv.Settings;
+            SaveSettingsListDrafts(settings);
 
             foreach (var (checkBox, definition) in GetUtilityVisibilityBindings())
             {
@@ -2162,26 +2080,54 @@ public partial class AppSettingsWindow : DarkWindow
                 .ToList());
         });
         IReadOnlyList<string> failedHotkeys;
+        bool settingsWritten = false;
+        _savingListDraft = true;
+        BtnSave.IsEnabled = false;
         try
         {
             failedHotkeys = await _mainWindow.SaveAppSettings();
-            if (clearSensitiveDraftBackups)
-            {
-                _mainWindow.GetSettingsService().ClearSettingsBackups();
-            }
+            settingsWritten = true;
+            SaveTelegramListDraft();
         }
         catch (Exception ex)
         {
             Logger.Log(ex);
-            new DarkDialog(LocalizationService.Format("Settings_SaveFailed", ex.Message))
+            settingsService.Settings = beforeSave;
+            bool restored = true;
+            if (settingsWritten)
+            {
+                try { await _mainWindow.SaveAppSettings(); }
+                catch (Exception restoreError)
+                {
+                    Logger.Log(restoreError);
+                    restored = false;
+                    _aiSettingsCommitted = true;
+                }
+            }
+            if (restored)
+            {
+                RemoveRetiredIptvSources(iptv.Settings.Sources.Where(source => _changedIptvSourceIds.Contains(source.Id)).ToList());
+            }
+            new DarkDialog(restored ? LocalizationService.Format("Settings_SaveFailed", ex.Message) : Locale("SettingsLists_RestoreFailed"))
             {
                 Owner = this
             }.ShowDialog();
             return;
         }
+        finally
+        {
+            _savingListDraft = false;
+            BtnSave.IsEnabled = true;
+        }
 
         LocalizationService.ApplyCulture(_selectedUiCulture);
         CommitAiCredentialChanges();
+        if (clearSensitiveDraftBackups)
+        {
+            settingsService.ClearSettingsBackups();
+        }
+        RemoveRetiredIptvSources(iptv.Retired);
+        _mainWindow.QueueIptvSourceRefresh(iptv.ToRefresh);
         _mainWindow.RefreshPanel();
 
         if (failedHotkeys.Count > 0)

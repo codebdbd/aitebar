@@ -82,8 +82,8 @@ public sealed class PublicationService
 
         foreach (PublicationTarget target in existingTargets)
         {
-            // Never automatically re-send SENT or UNKNOWN_RESULT targets.
-            if (target.Status is WorkflowStatus.SENT or WorkflowStatus.UNKNOWN_RESULT or WorkflowStatus.CANCELED)
+            if (target.Status != WorkflowStatus.FAILED || target.ServerId != null ||
+                target.PostId != document.Id || target.PostRevision != document.Revision)
             {
                 updated.Add(target);
                 continue;
@@ -203,7 +203,22 @@ public sealed class PublicationService
     {
         ArgumentNullException.ThrowIfNull(target);
         using SqliteConnection connection = _migrator.OpenConnection();
+        SaveTarget(connection, null, target);
+    }
+
+    internal void SaveTargets(IReadOnlyList<PublicationTarget> targets)
+    {
+        using SqliteConnection connection = _migrator.OpenConnection();
+        using SqliteTransaction transaction = connection.BeginTransaction();
+        foreach (PublicationTarget target in targets)
+            SaveTarget(connection, transaction, target);
+        transaction.Commit();
+    }
+
+    private static void SaveTarget(SqliteConnection connection, SqliteTransaction? transaction, PublicationTarget target)
+    {
         using SqliteCommand cmd = connection.CreateCommand();
+        cmd.Transaction = transaction;
         cmd.CommandText = """
             INSERT INTO publication_targets (id, post_id, post_revision, channel_id, scheduled_utc, status, server_id, last_sync_utc, telegram_ids_json, last_error_code, last_error_details)
             VALUES ($id, $postId, $rev, $channelId, $sched, $status, $serverId, $sync, $tgIds, $errCode, $errDetails)
@@ -339,7 +354,7 @@ public sealed class PublicationService
             }
         }
 
-        PostValidationSummary validation = TelegramValidationService.Validate(document, resolvedMedia, channel, channelOverride);
+        PostValidationSummary validation = TelegramValidationService.Validate(document, resolvedMedia, channelOverride);
         if (!validation.IsValid)
         {
             target.Status = WorkflowStatus.FAILED;

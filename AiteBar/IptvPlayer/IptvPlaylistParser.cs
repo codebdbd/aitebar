@@ -334,6 +334,10 @@ public static class IptvPlaylistParser
         return false;
     }
 
+    internal static bool IsMaskedSensitiveUrl(string? url) =>
+        url is not null && IsSensitiveUrl(url) && url.Contains("***", StringComparison.Ordinal) &&
+        string.Equals(url, MaskSensitiveUrl(url), StringComparison.Ordinal);
+
     public static string MaskSensitiveUrl(string? url)
     {
         if (string.IsNullOrWhiteSpace(url))

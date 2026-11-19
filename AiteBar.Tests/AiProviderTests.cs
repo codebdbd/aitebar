@@ -870,7 +870,7 @@ public sealed class AiProviderTests
 
         Assert.Contains("x:Name=\"AiProvidersSettingsSection\"", xaml);
         Assert.Contains("x:Name=\"AiConnectionsList\"", xaml);
-        Assert.Contains("BtnAiAddConnection_Click", xaml);
+        Assert.Contains("AddSettingsListEntry_Click", xaml);
         Assert.Contains("CleanupPendingAiCredentials", code);
         Assert.Contains("CommitAiCredentialChanges", code);
         Assert.Contains("new WindowsAiCredentialStore()", code);

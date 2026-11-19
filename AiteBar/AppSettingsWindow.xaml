@@ -6,9 +6,9 @@
 
         xmlns:local="clr-namespace:AiteBar"
 
-        Icon="pack://application:,,,/Resources/app.ico"
+        Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
 
-        Title="{local:Loc ResourceKey=AppSettingsWindow_Title}" Width="1200" Height="680"
+        Title="{local:Loc ResourceKey=AppSettingsWindow_Title}" Width="1080" Height="760"
 
         MinWidth="960" MinHeight="600"
 
@@ -16,7 +16,7 @@
 
         WindowStyle="SingleBorderWindow" ResizeMode="CanResize" ShowInTaskbar="True"
 
-        Topmost="True" WindowState="Maximized" Loaded="Window_Loaded">
+        Loaded="Window_Loaded">
 
 
 
@@ -209,13 +209,13 @@
             </Style>
 
             <SolidColorBrush x:Key="ModernCardBackground" Color="#20252D"/>
+            <SolidColorBrush x:Key="SettingsListRowBackground" Color="#252526"/>
             <SolidColorBrush x:Key="ModernRowDivider" Color="#303945"/>
 
             <Style x:Key="ModernSectionAnchorStyle" TargetType="Border">
                 <Setter Property="Background" Value="Transparent"/>
                 <Setter Property="Padding" Value="0"/>
                 <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="Margin" Value="0,0,0,32"/>
                 <Setter Property="VerticalAlignment" Value="Top"/>
             </Style>
 
@@ -608,47 +608,6 @@
                 </Setter>
             </Style>
 
-            <Style x:Key="SettingsTopmostToggleStyle" TargetType="ToggleButton">
-                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
-                <Setter Property="Height" Value="44"/>
-                <Setter Property="Padding" Value="14,0"/>
-                <Setter Property="Foreground" Value="{DynamicResource MutedText}"/>
-                <Setter Property="Background" Value="Transparent"/>
-                <Setter Property="BorderThickness" Value="0"/>
-                <Setter Property="Cursor" Value="Hand"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="ToggleButton">
-                            <Border x:Name="ToggleSurface" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" CornerRadius="4">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="ToggleSurface" Property="Background" Value="#2D2D2D"/>
-                                    <Setter Property="Foreground" Value="#F4F7FA"/>
-                                </Trigger>
-                                <Trigger Property="IsPressed" Value="True">
-                                    <Setter TargetName="ToggleSurface" Property="Background" Value="#383838"/>
-                                </Trigger>
-                                <Trigger Property="IsChecked" Value="True">
-                                    <Setter TargetName="ToggleSurface" Property="Background" Value="#25384A"/>
-                                    <Setter Property="Foreground" Value="{DynamicResource AccentColor}"/>
-                                </Trigger>
-                                <MultiTrigger>
-                                    <MultiTrigger.Conditions>
-                                        <Condition Property="IsKeyboardFocused" Value="True"/>
-                                        <Condition Property="local:KeyboardFocusVisualService.ShowKeyboardFocusCue" Value="True"/>
-                                    </MultiTrigger.Conditions>
-                                    <Setter TargetName="ToggleSurface" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
-                                    <Setter TargetName="ToggleSurface" Property="BorderThickness" Value="1"/>
-                                </MultiTrigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
-
 
         </ResourceDictionary>
 
@@ -656,11 +615,11 @@
 
 
 
-    <Grid x:Name="SettingsLayoutRoot" Margin="16">
+    <Grid x:Name="SettingsLayoutRoot" Margin="16" MaxWidth="1220">
 
         <Grid.ColumnDefinitions>
 
-            <ColumnDefinition Width="255"/>
+            <ColumnDefinition Width="230"/>
 
             <ColumnDefinition Width="24"/>
 
@@ -719,22 +678,9 @@
 
                 <ListBoxItem Style="{StaticResource SettingsNavigationItemStyle}"
                              Tag="&#xF15A;"
-                             ToolTip="{local:Loc ResourceKey=AiSettings_Title}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=AiSettings_Title}"
-                             Content="{local:Loc ResourceKey=AiSettings_Title}"/>
-
-                <ListBoxItem Style="{StaticResource SettingsNavigationItemStyle}"
-                             Tag="&#xF69A;"
-                             ToolTip="{local:Loc ResourceKey=TelegramSettings_Title}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=TelegramSettings_Title}"
-                             Content="{local:Loc ResourceKey=TelegramSettings_Title}"/>
-
-                <ListBoxItem x:Name="SettingsNavIptv"
-                             Style="{StaticResource SettingsNavigationItemStyle}"
-                             Tag="&#xEDC3;"
-                             ToolTip="{local:Loc ResourceKey=IptvSettings_Title}"
-                             AutomationProperties.Name="{local:Loc ResourceKey=IptvSettings_Title}"
-                             Content="{local:Loc ResourceKey=IptvSettings_Title}"/>
+                             ToolTip="{local:Loc ResourceKey=SettingsLists_Title}"
+                             AutomationProperties.Name="{local:Loc ResourceKey=SettingsLists_Title}"
+                             Content="{local:Loc ResourceKey=SettingsLists_Title}"/>
 
                 <ListBoxItem Style="{StaticResource SettingsNavigationItemStyle}"
                              Tag="&#xF4A2;"
@@ -750,7 +696,6 @@
               Grid.Row="0"
               Grid.RowSpan="2"
               Grid.Column="2"
-              MaxWidth="1000"
               HorizontalAlignment="Stretch">
 
             <Grid.RowDefinitions>
@@ -762,12 +707,11 @@
                       Grid.Row="0"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
-                      CanContentScroll="False"
-                      ScrollChanged="SettingsScrollViewer_ScrollChanged">
+                      CanContentScroll="False">
 
             <StackPanel x:Name="SettingsScrollContent" Margin="0,0,14,0">
 
-                <Border x:Name="GeneralSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
+                <Border x:Name="GeneralSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}">
 
                     <StackPanel>
 
@@ -903,7 +847,7 @@
 
                 </Border>
 
-                <Border x:Name="ContextSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
+                <Border x:Name="ContextSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Visibility="Collapsed">
 
                     <StackPanel>
 
@@ -931,7 +875,7 @@
 
                 </Border>
 
-                <Border x:Name="HotkeySettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
+                <Border x:Name="HotkeySettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Visibility="Collapsed">
 
                         <StackPanel Margin="0,0,0,4">
 
@@ -1042,7 +986,7 @@
 
                 </Border>
 
-                <Border x:Name="QuickToolsSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
+                <Border x:Name="QuickToolsSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Visibility="Collapsed">
 
                     <StackPanel>
 
@@ -1092,16 +1036,50 @@
 
                 </Border>
 
-                <Border x:Name="AiProvidersSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
+                <Border x:Name="AiProvidersSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Visibility="Collapsed">
                     <StackPanel>
-                        <TextBlock Text="{local:Loc ResourceKey=AiSettings_Title}"
-                                   Style="{StaticResource ModernSectionTitleStyle}"/>
-                        <TextBlock Text="{local:Loc ResourceKey=AiSettings_Description}"
-                                   Foreground="{StaticResource MutedText}"
-                                   FontSize="11"
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,18"/>
-
+                        <TextBlock Text="{local:Loc ResourceKey=SettingsLists_Title}" Style="{StaticResource ModernSectionTitleStyle}"/>
+                        <Border Style="{StaticResource ModernSettingsCardStyle}">
+                            <StackPanel>
+                                <Grid Margin="0,0,0,12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <ComboBox x:Name="SettingsListPicker" Width="264" HorizontalAlignment="Left"
+                                              AutomationProperties.Name="{local:Loc ResourceKey=SettingsLists_Title}"
+                                              SelectionChanged="SettingsListPicker_SelectionChanged"/>
+                                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="8,0,0,0">
+                                        <Button Style="{StaticResource PrimaryCommandButtonStyle}" MinWidth="92" Padding="12,0" Content="{local:Loc ResourceKey=SettingsLists_Add}" Click="AddSettingsListEntry_Click" Margin="0,0,6,0"/>
+                                        <Button Style="{StaticResource CommandButtonStyle}" MinWidth="92" Padding="12,0" Content="{local:Loc ResourceKey=SettingsLists_Import}" Click="ImportSettingsList_Click" Margin="0,0,6,0"/>
+                                        <Button Style="{StaticResource CommandButtonStyle}" MinWidth="92" Padding="12,0" Content="{local:Loc ResourceKey=SettingsLists_Export}" Click="ExportSettingsList_Click"/>
+                                    </StackPanel>
+                                </Grid>
+                                <StackPanel x:Name="AiListBody">
+                                    <StackPanel x:Name="AiConnectionsList"/>
+                                    <TextBlock x:Name="TxtAiConnectionsEmpty" Text="{local:Loc ResourceKey=AiSettings_NoConnections}" Style="{StaticResource ModernSettingDescriptionStyle}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <StackPanel x:Name="TelegramBotListBody" Visibility="Collapsed">
+                                    <StackPanel x:Name="TelegramBotsList"/>
+                                    <TextBlock x:Name="TxtTelegramBotsEmpty" Text="{local:Loc ResourceKey=TelegramSettings_NoBots}" Style="{StaticResource ModernSettingDescriptionStyle}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <StackPanel x:Name="TelegramChannelListBody" Visibility="Collapsed">
+                                    <StackPanel x:Name="TelegramChannelsList"/>
+                                    <TextBlock x:Name="TxtTelegramChannelsEmpty" Text="{local:Loc ResourceKey=TelegramSettings_NoChannels}" Style="{StaticResource ModernSettingDescriptionStyle}" TextWrapping="Wrap"/>
+                                </StackPanel>
+                                <StackPanel x:Name="IptvListBody" Visibility="Collapsed">
+                                    <StackPanel x:Name="IptvSourcesList"/>
+                                    <TextBlock x:Name="TxtIptvSourcesEmpty" Text="{local:Loc ResourceKey=IptvSettings_NoSources}" Style="{StaticResource ModernSettingDescriptionStyle}" TextWrapping="Wrap"/>
+                                    <WrapPanel Margin="0,10,0,0">
+                                        <Button x:Name="BtnRefreshSelectedIptv" IsEnabled="False" Style="{StaticResource CommandButtonStyle}" Content="{local:Loc ResourceKey=SettingsLists_RefreshSelected}" Click="BtnRefreshSelectedIptv_Click" Margin="0,0,6,0"/>
+                                        <Button x:Name="BtnRefreshAllIptv" Style="{StaticResource CommandButtonStyle}" Content="{local:Loc ResourceKey=IptvSettings_RefreshAll}" Click="BtnRefreshAllIptv_Click"/>
+                                    </WrapPanel>
+                                </StackPanel>
+                                <StackPanel x:Name="AdditionalListBody" Visibility="Collapsed"/>
+                                <Button x:Name="UndoListRemoval" Style="{StaticResource CommandButtonStyle}" Content="{local:Loc ResourceKey=SettingsLists_UndoRemove}" Click="UndoListRemoval_Click" HorizontalAlignment="Left" Visibility="Collapsed" Margin="0,8,0,0"/>
+                            </StackPanel>
+                        </Border>
+                        <StackPanel x:Name="AiListOptions" Margin="0,12,0,0">
                         <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0,0,0,16">
                             <StackPanel>
                                 <Grid>
@@ -1122,150 +1100,8 @@
                             </StackPanel>
                         </Border>
 
-                        <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0">
-                            <StackPanel>
-                                <Grid Margin="0,0,0,12">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel Margin="0,0,20,0">
-                                        <TextBlock Text="{local:Loc ResourceKey=AiSettings_Connections}" Style="{StaticResource ModernSettingTitleStyle}"/>
-                                        <TextBlock Text="{local:Loc ResourceKey=AiSettings_ConnectionsHint}" Style="{StaticResource ModernSettingDescriptionStyle}"/>
-                                    </StackPanel>
-                                    <Button Grid.Column="1"
-                                            Content="{local:Loc ResourceKey=AiSettings_AddConnection}"
-                                            Style="{StaticResource CommandButtonStyle}"
-                                            MinWidth="170"
-                                            Height="36"
-                                            Click="BtnAiAddConnection_Click"/>
-                                </Grid>
-                                <StackPanel x:Name="AiConnectionsList"/>
-                                <TextBlock x:Name="TxtAiConnectionsEmpty"
-                                           Text="{local:Loc ResourceKey=AiSettings_NoConnections}"
-                                           Style="{StaticResource ModernSettingDescriptionStyle}"
-                                           Margin="0,10,0,2"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <Border x:Name="TelegramSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
-                    <StackPanel>
-                        <TextBlock Text="{local:Loc ResourceKey=TelegramSettings_Title}"
-                                   Style="{StaticResource ModernSectionTitleStyle}"/>
-                        <TextBlock Text="{local:Loc ResourceKey=TelegramSettings_Description}"
-                                   Foreground="{StaticResource MutedText}"
-                                   FontSize="11"
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,18"/>
-
-                        <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0,0,0,16">
-                            <StackPanel>
-                                <TextBlock Text="{local:Loc ResourceKey=TelegramSettings_BotsTitle}" Style="{StaticResource ModernSettingTitleStyle}"/>
-                                <TextBlock Text="{local:Loc ResourceKey=TelegramSettings_BotTokenHint}" Style="{StaticResource ModernSettingDescriptionStyle}" Margin="0,2,0,10" TextWrapping="Wrap"/>
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <PasswordBox x:Name="PwdTelegramBotToken" Grid.Column="0" Height="36" Margin="0,0,10,0"/>
-                                    <Button x:Name="BtnTelegramAddBot"
-                                            Grid.Column="1"
-                                            Content="{local:Loc ResourceKey=TelegramSettings_AddBot}"
-                                            Style="{StaticResource CommandButtonStyle}"
-                                            Width="150"
-                                            Height="36"
-                                            Click="BtnTelegramAddBot_Click"/>
-                                </Grid>
-                                <StackPanel x:Name="TelegramBotsList"/>
-                                <TextBlock x:Name="TxtTelegramBotsEmpty"
-                                           Text="{local:Loc ResourceKey=TelegramSettings_NoBots}"
-                                           Style="{StaticResource ModernSettingDescriptionStyle}"
-                                           Margin="0,6,0,2"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
-
-                        <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0">
-                            <StackPanel>
-                                <TextBlock Text="{local:Loc ResourceKey=TelegramSettings_ChannelsTitle}" Style="{StaticResource ModernSettingTitleStyle}"/>
-                                <TextBlock Text="{local:Loc ResourceKey=TelegramSettings_ChannelInputHint}" Style="{StaticResource ModernSettingDescriptionStyle}" Margin="0,2,0,10" TextWrapping="Wrap"/>
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="TxtTelegramChannelInput" Grid.Column="0" Height="36" VerticalContentAlignment="Center" Margin="0,0,10,0"/>
-                                    <Button x:Name="BtnTelegramAddChannel"
-                                            Grid.Column="1"
-                                            Content="{local:Loc ResourceKey=TelegramSettings_AddChannel}"
-                                            Style="{StaticResource CommandButtonStyle}"
-                                            Width="150"
-                                            Height="36"
-                                            Click="BtnTelegramAddChannel_Click"/>
-                                </Grid>
-                                <StackPanel x:Name="TelegramChannelsList"/>
-                                <TextBlock x:Name="TxtTelegramChannelsEmpty"
-                                           Text="{local:Loc ResourceKey=TelegramSettings_NoChannels}"
-                                           Style="{StaticResource ModernSettingDescriptionStyle}"
-                                           Margin="0,6,0,2"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-                </Border>
-
-                <Border x:Name="IptvSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0,0,0,32">
-                    <StackPanel>
-                        <TextBlock Text="{local:Loc ResourceKey=IptvSettings_Title}"
-                                   Style="{StaticResource ModernSectionTitleStyle}"/>
-                        <TextBlock Text="{local:Loc ResourceKey=IptvSettings_Description}"
-                                   Foreground="{StaticResource MutedText}"
-                                   FontSize="11"
-                                   TextWrapping="Wrap"
-                                   Margin="0,0,0,18"/>
-
-                        <!-- Карточка: Источники плейлистов -->
-                        <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0,0,0,16">
-                            <StackPanel>
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Text="{local:Loc ResourceKey=IptvSettings_SourcesTitle}"
-                                               Style="{StaticResource ModernSettingTitleStyle}"
-                                               VerticalAlignment="Center"/>
-                                    <Button x:Name="BtnAddIptvPlaylist"
-                                            Grid.Column="1"
-                                            Content="{local:Loc ResourceKey=IptvSettings_AddPlaylist}"
-                                            Style="{StaticResource PrimaryCommandButtonStyle}"
-                                            Height="32"
-                                            Padding="12,0"
-                                            Margin="0,0,8,0"
-                                            Click="BtnAddIptvPlaylist_Click"/>
-                                    <Button x:Name="BtnRefreshAllIptv"
-                                            Grid.Column="2"
-                                            Content="{local:Loc ResourceKey=IptvSettings_RefreshAll}"
-                                            Style="{StaticResource CommandButtonStyle}"
-                                            Height="32"
-                                            Padding="12,0"
-                                            Click="BtnRefreshAllIptv_Click"/>
-                                </Grid>
-
-                                <StackPanel x:Name="IptvSourcesList" Margin="0,6,0,0"/>
-
-                                <TextBlock x:Name="TxtIptvSourcesEmpty"
-                                           Text="{local:Loc ResourceKey=IptvSettings_NoSources}"
-                                           Style="{StaticResource ModernSettingDescriptionStyle}"
-                                           Margin="0,6,0,2"
-                                           TextWrapping="Wrap"/>
-                            </StackPanel>
-                        </Border>
-
+                        </StackPanel>
+                        <StackPanel x:Name="IptvListOptions" Margin="0,12,0,0" Visibility="Collapsed">
                         <!-- Карточка: Параметры автообновления -->
                         <Border Style="{StaticResource ModernSettingsCardStyle}" Margin="0">
                             <StackPanel>
@@ -1311,10 +1147,11 @@
                                 </Grid>
                             </StackPanel>
                         </Border>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
 
-                <Border x:Name="AboutSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Margin="0">
+                <Border x:Name="AboutSettingsSection" Style="{StaticResource ModernSectionAnchorStyle}" Visibility="Collapsed">
                     <StackPanel>
                         <TextBlock Text="{local:Loc ResourceKey=About_Title}"
                                    Style="{StaticResource ModernSectionTitleStyle}"/>
@@ -1390,26 +1227,7 @@
 
 
         <Grid x:Name="SettingsFooter" Grid.Row="1" Margin="0,12,14,0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto"/>
-                <ColumnDefinition Width="*"/>
-                <ColumnDefinition Width="Auto"/>
-            </Grid.ColumnDefinitions>
-
-            <ToggleButton x:Name="BtnKeepOnTop"
-                          Grid.Column="0"
-                          Style="{StaticResource SettingsTopmostToggleStyle}"
-                          IsChecked="True"
-                          Click="BtnKeepOnTop_Click"
-                          ToolTip="{local:Loc ResourceKey=AppSettingsWindow_KeepOnTopHint}"
-                          AutomationProperties.Name="{local:Loc ResourceKey=AppSettingsWindow_KeepOnTop}">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock Text="&#xF601;" FontFamily="pack://application:,,,/Resources/#FluentSystemIcons-Regular" FontSize="17" Margin="0,0,8,0" VerticalAlignment="Center"/>
-                    <TextBlock Text="{local:Loc ResourceKey=AppSettingsWindow_KeepOnTop}" VerticalAlignment="Center"/>
-                </StackPanel>
-            </ToggleButton>
-
-            <StackPanel Grid.Column="2" Orientation="Horizontal">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button x:Name="BtnCancel" Content="{local:Loc ResourceKey=Common_Cancel}" Style="{StaticResource CommandButtonStyle}" Click="BtnCancel_Click" Width="150" Margin="0,0,10,0" IsCancel="True"/>
                 <Button x:Name="BtnSave" Content="{local:Loc ResourceKey=Common_Save}" Style="{StaticResource PrimaryCommandButtonStyle}" Click="BtnSave_Click" Width="180" IsDefault="True"/>
             </StackPanel>

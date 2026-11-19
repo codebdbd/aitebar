@@ -6,7 +6,9 @@ internal sealed record BackupRestoreOptions(string? Password);
 
 internal sealed record BackupSecretPayload(
     Dictionary<string, string> Credentials,
-    IReadOnlyList<ClipboardHistoryEntry>? ClipboardEntries);
+    IReadOnlyList<ClipboardHistoryEntry>? ClipboardEntries,
+    Dictionary<string, string>? IptvLocations = null,
+    Dictionary<string, string>? IptvSourceContents = null);
 
 internal sealed record BackupReadResult(
     AppSettings Settings,

@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using AiteBar;
@@ -112,6 +113,13 @@ public sealed class TelegramPublishingTests : IDisposable
         Assert.Equal(WorkflowStatus.SENT, firstRun[0].Status);
         Assert.Equal(WorkflowStatus.FAILED, firstRun[1].Status);
         Assert.Equal(2, sendCount);
+
+        PostDocument edited = repo.GetPost(doc.Id)!;
+        edited.Blocks[0].Runs[0].Text = "Edited after submission.";
+        repo.SavePost(edited);
+        await pubService.RetryFailedTargetsAsync(edited, firstRun);
+        Assert.Equal(2, sendCount);
+        Assert.Equal(WorkflowStatus.FAILED, firstRun[1].Status);
 
         IReadOnlyList<PublicationTarget> retryRun = await pubService.RetryFailedTargetsAsync(doc, firstRun);
         Assert.Equal(WorkflowStatus.SENT, retryRun[0].Status);
@@ -270,10 +278,120 @@ public sealed class TelegramPublishingTests : IDisposable
         Assert.True(info.CanPostMessages);
     }
 
+    [Fact]
+    public async Task ServerQueueRegistersScopedChannelAndKeepsRetryKeyAcrossRevisions()
+    {
+        const string url = "http://127.0.0.1:18000";
+        _secretStore.SaveBotToken("bot", "999:TEST");
+        var requests = new List<(string Method, string Path, string? Key, string Body)>();
+        using var client = new HttpClient(new StubHttpHandler(request =>
+        {
+            string? key = request.Headers.TryGetValues("Idempotency-Key", out var values) ? string.Join("", values) : null;
+            string body = request.Content?.ReadAsStringAsync().GetAwaiter().GetResult() ?? "";
+            requests.Add((request.Method.Method, request.RequestUri!.AbsolutePath, key, body));
+            return request.RequestUri!.AbsolutePath.EndsWith("/pair/confirm", StringComparison.Ordinal)
+                ? JsonOk("""{"deviceId":"device","accessToken":"access"}""")
+                : JsonOk("""{"serverPublicationId":"job"}""");
+        }));
+        var sync = new PublicationSyncService(client, _secretStore, _mediaStore);
+        ServerPairingResult pairing = await sync.PairAsync(url, "code", "Desktop");
+        var channel = new ChannelAccount { Id = "channel", BotId = "bot", TelegramChatId = -100123 };
+        var bot = new BotAccount { Id = "bot", DisplayName = "Bot" };
+        await sync.SyncChannelAsync(url, pairing.DeviceId, channel, bot, shareBotTokenWithServer: true);
+
+        var post = new PostDocument { Blocks = [new() { Runs = [new() { Text = "Post" }] }] };
+        (ChannelAccount, DateTime)[] slots = [(channel, DateTime.UtcNow.AddHours(1))];
+        Assert.Equal("job", await sync.QueuePostOnServerAsync(url, pairing.DeviceId, post, slots));
+        post.Revision++;
+        await sync.QueuePostOnServerAsync(url, pairing.DeviceId, post, slots);
+        post.Blocks[0].Runs[0].Text = "Updated post";
+        await sync.QueuePostOnServerAsync(url, pairing.DeviceId, post, slots);
+
+        Assert.Equal("access", _secretStore.ReadServerToken("device"));
+        Assert.Equal("PUT", requests[1].Method);
+        Assert.Equal("/api/v1/channels/device:channel", Uri.UnescapeDataString(requests[1].Path));
+        using var registration = JsonDocument.Parse(requests[1].Body);
+        Assert.Equal("device:bot", registration.RootElement.GetProperty("botId").GetString());
+        Assert.Equal("999:TEST", registration.RootElement.GetProperty("botToken").GetString());
+        using var queue = JsonDocument.Parse(requests[2].Body);
+        Assert.Equal("device:channel", queue.RootElement.GetProperty("targets")[0].GetProperty("channelId").GetString());
+        Assert.NotNull(requests[2].Key);
+        Assert.Equal(requests[2].Key, requests[3].Key);
+        Assert.NotEqual(requests[3].Key, requests[4].Key);
+    }
+
     private static HttpResponseMessage JsonOk(string json) => new(HttpStatusCode.OK)
     {
         Content = new StringContent(json, Encoding.UTF8, "application/json")
     };
+
+    [Fact]
+    public async Task ScheduleReceipt_TracksServerTargetsAcrossReopenAndRefresh()
+    {
+        const string url = "http://127.0.0.1:18000";
+        const string queued = """
+            {"targetId":"delivery","channelId":"device:channel","revision":1,
+             "scheduledAtUtc":"2026-11-19T18:00:00Z","status":"QUEUED_SERVER","telegramMessageIds":[]}
+            """;
+        DateTime movedTo = new(2026, 11, 20, 9, 0, 0, DateTimeKind.Utc);
+        string serverState = queued;
+        bool moved = false;
+        using var client = new HttpClient(new StubHttpHandler(request =>
+        {
+            if (request.Method == HttpMethod.Patch)
+            {
+                Assert.Equal("/api/v1/publications/delivery", request.RequestUri!.AbsolutePath);
+                Assert.Equal("token", request.Headers.Authorization?.Parameter);
+                using var payload = JsonDocument.Parse(request.Content!.ReadAsStringAsync().GetAwaiter().GetResult());
+                Assert.Equal(movedTo, payload.RootElement.GetProperty("scheduledAtUtc").GetDateTime());
+                serverState = queued.Replace("2026-11-19T18:00:00Z", "2026-11-20T09:00:00Z", StringComparison.Ordinal);
+                moved = true;
+                return JsonOk("{}");
+            }
+            if (request.Method == HttpMethod.Get)
+                return JsonOk(serverState);
+            return JsonOk("{\"serverPublicationId\":\"job\",\"targets\":[" + queued + "]}");
+        }));
+        _secretStore.SaveServerToken("device", "token");
+        var telegram = new TelegramBotClient();
+        var channels = new TelegramChannelService(_migrator, telegram, _secretStore);
+        channels.SaveBot(new BotAccount { Id = "bot", DisplayName = "Bot" });
+        var channel = new ChannelAccount { Id = "channel", BotId = "bot", TelegramChatId = -100123 };
+        channels.SaveChannel(channel);
+        var post = new PostRepository(_migrator).SavePost(new PostDocument
+        {
+            Blocks = [new() { Runs = [new() { Text = "Scheduled post" }] }]
+        });
+        var sync = new PublicationSyncService(client, _secretStore, _mediaStore);
+        var publications = new PublicationService(_migrator, _mediaStore, telegram, _secretStore, channels);
+        var receipt = await sync.SubmitScheduledAsync(url, "device", post, [(channel, DateTime.UtcNow.AddHours(1))]);
+        Assert.Throws<InvalidDataException>(() => PublicationSyncService.ReadScheduledTargets(
+            receipt, "another-device", post.Id, [channel]));
+        var targets = PublicationSyncService.ReadScheduledTargets(receipt, "device", post.Id, [channel]);
+        publications.SaveTargets(targets);
+        publications.SaveTargets(targets);
+
+        var reloaded = new PublicationService(_migrator, _mediaStore, telegram, _secretStore, channels);
+        PublicationTarget target = Assert.Single(reloaded.GetAllTargets());
+        Assert.Equal("delivery", target.ServerId);
+        Assert.Equal(channel.Id, target.ChannelId);
+        Assert.Equal(WorkflowStatus.QUEUED_SERVER, target.Status);
+
+        var updated = await sync.RescheduleTargetAsync(url, "device", target.ServerId!, movedTo);
+        Assert.True(moved);
+        PublicationSyncService.ApplyServerStatus(target, updated);
+        reloaded.SaveTargets([target]);
+        Assert.Equal(movedTo, Assert.Single(publications.GetAllTargets()).ScheduledUtc);
+        Assert.Equal("delivery", target.ServerId);
+        serverState = serverState.Replace("QUEUED_SERVER", "SENT", StringComparison.Ordinal)
+            .Replace("[]", "[84]", StringComparison.Ordinal);
+
+        var status = await sync.GetTargetStatusAsync(url, "device", target.ServerId!);
+        PublicationSyncService.ApplyServerStatus(target, status);
+        reloaded.SaveTargets([target]);
+        Assert.Equal(WorkflowStatus.SENT, Assert.Single(publications.GetAllTargets()).Status);
+        Assert.Equal(84, Assert.Single(publications.GetAllTargets()[0].TelegramMessageIds));
+    }
 
     public void Dispose()
     {
@@ -290,7 +408,7 @@ public sealed class TelegramPublishingTests : IDisposable
         }
     }
 
-    private sealed class InMemoryCredentialStore : IAiCredentialStore
+    internal sealed class InMemoryCredentialStore : IAiCredentialStore
     {
         private readonly Dictionary<string, string> _store = new(StringComparer.Ordinal);
         public void Write(string target, string secret) => _store[target] = secret;
@@ -298,7 +416,7 @@ public sealed class TelegramPublishingTests : IDisposable
         public bool Delete(string target) => _store.Remove(target);
     }
 
-    private sealed class StubHttpHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
+    internal sealed class StubHttpHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
             Task.FromResult(responder(request));

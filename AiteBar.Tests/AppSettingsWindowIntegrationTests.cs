@@ -6,19 +6,19 @@ namespace AiteBar.Tests;
 public sealed class AppSettingsWindowIntegrationTests
 {
     [Fact]
-    public void ProgramSettings_IsNormalByDefaultAndOffersAnExplicitSessionPin()
+    public void ProgramSettings_ReusesAndRestoresTheExistingWindowWithoutForcingItOnTop()
     {
         string repoRoot = FindRepoRoot();
         string settingsCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "AppSettingsWindow.xaml.cs"));
         string mainWindowCode = File.ReadAllText(Path.Combine(repoRoot, "AiteBar", "MainWindow.xaml.cs"));
 
-        Assert.Contains("private void BtnKeepOnTop_Click", settingsCode);
-        Assert.Contains("Topmost = BtnKeepOnTop.IsChecked == true;", settingsCode);
+        Assert.DoesNotContain("Topmost =", settingsCode);
         Assert.DoesNotContain("EnsureAlwaysOnTop", settingsCode);
         Assert.DoesNotContain("NativeMethods.SetWindowPos", settingsCode);
         Assert.Contains("settingsWindow.Show();", mainWindowCode);
         Assert.DoesNotContain("new AppSettingsWindow(this).ShowDialog();", mainWindowCode);
         Assert.Contains("private AppSettingsWindow? _appSettingsWindow;", mainWindowCode);
+        Assert.Contains("_appSettingsWindow.RestoreIfMinimized();", mainWindowCode);
         Assert.Contains("_appSettingsWindow.Activate();", mainWindowCode);
     }
 

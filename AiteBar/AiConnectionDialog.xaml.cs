@@ -14,13 +14,15 @@ public partial class AiConnectionDialog : DarkWindow
     }
 
     private readonly HashSet<string> _existingNames;
+    private readonly AiConnectionSettings? _existing;
 
     public AiConnectionDialog() : this(Enumerable.Empty<string>())
     {
     }
 
-    public AiConnectionDialog(IEnumerable<string> existingNames)
+    public AiConnectionDialog(IEnumerable<string> existingNames, AiConnectionSettings? existing = null)
     {
+        _existing = existing;
         InitializeComponent();
         _existingNames = new HashSet<string>(existingNames ?? Enumerable.Empty<string>(), StringComparer.OrdinalIgnoreCase);
         foreach (AiProviderDefinition provider in AiProviderCatalog.All)
@@ -28,6 +30,13 @@ public partial class AiConnectionDialog : DarkWindow
             CmbProvider.Items.Add(new ProviderOption(provider.Id, provider.DisplayName));
         }
         CmbProvider.SelectedIndex = 0;
+        if (existing is not null)
+        {
+            CmbProvider.SelectedItem = CmbProvider.Items.OfType<ProviderOption>().FirstOrDefault(option => option.Id == existing.ProviderId);
+            TxtDisplayName.Text = existing.DisplayName;
+            TxtBaseUrl.Text = existing.CustomBaseUrl ?? "";
+            BtnAdd.Content = LocalizationService.Get("Common_Save");
+        }
         UpdateAddState();
     }
 
@@ -118,7 +127,8 @@ public partial class AiConnectionDialog : DarkWindow
         BtnAdd.IsEnabled = CmbProvider.SelectedItem != null &&
                            validBaseUrl &&
                            !string.IsNullOrWhiteSpace(TxtDisplayName.Text) &&
-                           !string.IsNullOrWhiteSpace(PwdApiKey.Password);
+                           (!string.IsNullOrWhiteSpace(PwdApiKey.Password) ||
+                            _existing is not null && _existing.ProviderId == ProviderId && _existing.CustomBaseUrl == CustomBaseUrl);
     }
 
     private void BtnAdd_Click(object sender, RoutedEventArgs e)

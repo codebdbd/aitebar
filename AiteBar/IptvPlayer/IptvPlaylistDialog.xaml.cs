@@ -15,19 +15,22 @@ public partial class IptvPlaylistDialog : DarkWindow
     private readonly IptvPlayerStore _store;
     private readonly IptvPlaylistService _service;
     private string? _unmaskedSecretLocation;
+    private string? _displayedSecretLocation;
 
     public IptvPlaylistSource ResultSource { get; private set; }
-    public string? PendingSecretLocation => _unmaskedSecretLocation;
+    public string? PendingSecretLocation { get; private set; }
 
     internal IptvPlaylistDialog(
         IptvPlaylistSource? existingSource,
         IptvPlayerStore store,
-        IptvPlaylistService service)
+        IptvPlaylistService service,
+        string? draftSecretLocation = null)
     {
         InitializeComponent();
 
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _service = service ?? throw new ArgumentNullException(nameof(service));
+        _unmaskedSecretLocation = draftSecretLocation;
 
         if (existingSource != null)
         {
@@ -79,15 +82,20 @@ public partial class IptvPlaylistDialog : DarkWindow
         CmbKind.SelectedIndex = selectedIndex;
 
         string location = _source.Location;
-        string? secret = _store.ReadSecretLocation(_source.Id);
+        string? secret = _unmaskedSecretLocation ?? (IptvPlaylistParser.IsMaskedSensitiveUrl(location)
+            ? _store.ReadSecretLocation(_source.SourceStorageId)
+            : null);
         if (!string.IsNullOrWhiteSpace(secret))
         {
             _unmaskedSecretLocation = secret;
             location = IptvPlaylistParser.MaskSensitiveUrl(secret);
+            _displayedSecretLocation = location;
         }
 
         TxtLocation.Text = location;
-        TxtInlineContent.Text = _source.InlineContent ?? string.Empty;
+        TxtInlineContent.Text = _source.InlineContent ?? (_source.Kind == IptvSourceKind.InlineText
+            ? _store.ReadSourceFileContent(_source.SourceStorageId)
+            : null) ?? string.Empty;
         ChkAutoFallbackVariants.IsChecked = _source.AutoFallbackVariants;
         ChkCopyLocalFileToStore.IsChecked = _source.CopyLocalFileToStore;
         ChkIsEnabled.IsChecked = _source.IsEnabled;
@@ -172,7 +180,7 @@ public partial class IptvPlaylistDialog : DarkWindow
         try
         {
             var probe = BuildSourceFromForm();
-            var checkResult = await _service.CheckSourceAsync(probe);
+            var checkResult = await _service.CheckSourceAsync(probe, probe.Location);
 
             if (checkResult.IsSuccess)
             {
@@ -210,6 +218,12 @@ public partial class IptvPlaylistDialog : DarkWindow
         }
 
         var source = BuildSourceFromForm();
+        if ((source.Kind is IptvSourceKind.Url or IptvSourceKind.SingleStream) &&
+            IptvPlaylistParser.IsSensitiveUrl(source.Location) && !IptvPlaylistParser.IsMaskedSensitiveUrl(source.Location))
+        {
+            PendingSecretLocation = source.Location;
+            source.Location = IptvPlaylistParser.MaskSensitiveUrl(source.Location);
+        }
         ResultSource = source;
         DialogResult = true;
         Close();
@@ -234,27 +248,18 @@ public partial class IptvPlaylistDialog : DarkWindow
         };
 
         string locationText = TxtLocation.Text.Trim();
-        string effectiveLocation = locationText;
-
-        // Если введенная строка содержит маску и секрет не менялся, используем сохраненный секрет
-        if (locationText.Contains("***") && !string.IsNullOrWhiteSpace(_unmaskedSecretLocation))
-        {
-            effectiveLocation = _unmaskedSecretLocation;
-        }
-        else if (IptvPlaylistParser.IsSensitiveUrl(locationText))
-        {
-            // Пользователь ввел новый sensitive URL
-            _unmaskedSecretLocation = locationText;
-            effectiveLocation = IptvPlaylistParser.MaskSensitiveUrl(locationText);
-        }
+        string effectiveLocation = (kind is IptvSourceKind.Url or IptvSourceKind.SingleStream) && locationText == _displayedSecretLocation
+            ? _unmaskedSecretLocation ?? locationText
+            : locationText;
 
         return new IptvPlaylistSource
         {
             Id = _source.Id,
             Name = TxtName.Text.Trim(),
             Kind = kind,
-            Location = effectiveLocation,
-            InlineContent = TxtInlineContent.Text,
+            Location = kind == IptvSourceKind.InlineText ? string.Empty : effectiveLocation,
+            InlineContent = kind == IptvSourceKind.InlineText ? TxtInlineContent.Text : null,
+            ContentRevision = _source.ContentRevision,
             AutoFallbackVariants = ChkAutoFallbackVariants.IsChecked == true,
             CopyLocalFileToStore = ChkCopyLocalFileToStore.IsChecked == true,
             IsEnabled = ChkIsEnabled.IsChecked == true,

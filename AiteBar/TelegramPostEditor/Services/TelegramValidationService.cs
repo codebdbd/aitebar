@@ -15,7 +15,6 @@ public static class TelegramValidationService
     public static PostValidationSummary Validate(
         PostDocument document,
         IReadOnlyList<PostMediaItem> resolvedMedia,
-        ChannelAccount? targetChannel = null,
         ChannelPostOverride? channelOverride = null)
     {
         ArgumentNullException.ThrowIfNull(document);
@@ -96,11 +95,6 @@ public static class TelegramValidationService
             {
                 summary.Warnings.Add("External link detected: Telegram generates web preview cards independently and they may differ from local preview.");
             }
-        }
-
-        if (targetChannel == null)
-        {
-            summary.Warnings.Add("No target channel selected yet.");
         }
 
         summary.IsValid = summary.Errors.Count == 0;

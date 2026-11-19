@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.Versioning;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
@@ -15,9 +16,23 @@ namespace AiteBar.TelegramPostEditor.Services;
 
 public sealed record ServerPairingResult(string DeviceId, string AccessToken);
 
+internal sealed record ServerPublicationReceipt(string ServerPublicationId, List<ServerPublicationStatus>? Targets);
+
+internal sealed record ServerPublicationStatus(
+    string TargetId,
+    string ChannelId,
+    int Revision,
+    DateTime ScheduledAtUtc,
+    string Status,
+    List<long>? TelegramMessageIds,
+    string? LastErrorCode,
+    string? LastErrorDetails);
+
 [SupportedOSPlatform("windows6.1")]
 public sealed class PublicationSyncService
 {
+    private sealed record QueueTarget(string ChannelId, DateTime ScheduledAtUtc, object Content, List<string> MediaIds, object Options);
+
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase
@@ -67,11 +82,13 @@ public sealed class PublicationSyncService
         CancellationToken cancellationToken = default)
     {
         string baseUrl = ValidateServerUrl(serverBaseUrl);
-        string? botToken = shareBotTokenWithServer ? _secretStore.ReadBotToken(bot.Id) : null;
+        string? botToken = shareBotTokenWithServer
+            ? _secretStore.ReadBotToken(bot.Id) ?? throw new InvalidOperationException("The bot token is missing. Reconnect the bot first.")
+            : null;
 
         var payload = new
         {
-            botId = bot.Id,
+            botId = GetServerId(deviceId, bot.Id),
             botDisplayName = bot.DisplayName,
             botToken,
             telegramChatId = channel.TelegramChatId,
@@ -80,7 +97,8 @@ public sealed class PublicationSyncService
             timezone = channel.Timezone
         };
 
-        using HttpRequestMessage req = CreateAuthenticatedRequest(HttpMethod.Put, $"{baseUrl}/api/v1/channels/{channel.Id}", deviceId);
+        string channelId = Uri.EscapeDataString(GetServerId(deviceId, channel.Id));
+        using HttpRequestMessage req = CreateAuthenticatedRequest(HttpMethod.Put, $"{baseUrl}/api/v1/channels/{channelId}", deviceId);
         req.Content = new StringContent(JsonSerializer.Serialize(payload, JsonOptions), Encoding.UTF8, "application/json");
         using HttpResponseMessage resp = await _httpClient.SendAsync(req, cancellationToken).ConfigureAwait(false);
         resp.EnsureSuccessStatusCode();
@@ -93,10 +111,24 @@ public sealed class PublicationSyncService
         IReadOnlyList<(ChannelAccount Channel, DateTime ScheduledUtc)> schedule,
         CancellationToken cancellationToken = default)
     {
-        string baseUrl = ValidateServerUrl(serverBaseUrl);
-        var targetsPayload = new List<object>();
+        var receipt = await SubmitScheduledAsync(serverBaseUrl, deviceId, document, schedule, cancellationToken)
+            .ConfigureAwait(false);
+        return receipt.ServerPublicationId;
+    }
 
-        foreach ((ChannelAccount channel, DateTime scheduledUtc) in schedule)
+    internal async Task<ServerPublicationReceipt> SubmitScheduledAsync(
+        string serverBaseUrl,
+        string deviceId,
+        PostDocument document,
+        IReadOnlyList<(ChannelAccount Channel, DateTime ScheduledUtc)> schedule,
+        CancellationToken cancellationToken = default)
+    {
+        string baseUrl = ValidateServerUrl(serverBaseUrl);
+        var targetsPayload = new List<QueueTarget>();
+        var uploaded = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        foreach ((ChannelAccount channel, DateTime scheduledUtc) in schedule.OrderBy(slot => slot.Channel.Id, StringComparer.Ordinal)
+                     .ThenBy(slot => slot.ScheduledUtc))
         {
             document.ChannelOverrides.TryGetValue(channel.Id, out ChannelPostOverride? channelOverride);
             List<PostMediaAttachment> attachments = channelOverride?.Media ?? document.Media;
@@ -106,40 +138,50 @@ public sealed class PublicationSyncService
             {
                 PostMediaItem item = _mediaStore.GetById(att.MediaId)
                     ?? throw new InvalidOperationException($"Media '{att.MediaId}' was not found locally.");
-                await UploadMediaAsync(baseUrl, deviceId, item, cancellationToken).ConfigureAwait(false);
-                uploadedMediaIds.Add(item.Id);
+                if (!uploaded.TryGetValue(item.Id, out string? serverMediaId))
+                {
+                    serverMediaId = await UploadMediaAsync(baseUrl, deviceId, item, cancellationToken).ConfigureAwait(false);
+                    uploaded.Add(item.Id, serverMediaId);
+                }
+                uploadedMediaIds.Add(serverMediaId);
             }
 
             TelegramSerializedContent serialized = TelegramDocumentSerializer.SerializeForTelegram(document, channelOverride);
             List<InlineUrlButton> buttons = channelOverride?.Buttons ?? document.Buttons;
 
-            targetsPayload.Add(new
-            {
-                targetId = Guid.NewGuid().ToString("N"),
-                channelId = channel.Id,
-                scheduledAtUtc = scheduledUtc.ToUniversalTime(),
-                content = new
+            targetsPayload.Add(new QueueTarget(
+                GetServerId(deviceId, channel.Id),
+                scheduledUtc.ToUniversalTime(),
+                new
                 {
                     format = "telegram-document-v1",
                     text = serialized.Text,
                     entities = serialized.Entities.Select(e => new { type = e.Type, offset = e.Offset, length = e.Length, url = e.Url, language = e.Language }).ToArray(),
                     buttons = buttons.Select(b => new { text = b.Text, url = b.Url }).ToArray()
                 },
-                mediaIds = uploadedMediaIds,
-                options = new
+                uploadedMediaIds,
+                new
                 {
                     disableNotification = channelOverride?.DisableNotification ?? document.DisableNotification,
                     disableWebPagePreview = channelOverride?.DisableWebPagePreview ?? document.DisableWebPagePreview
-                }
-            });
+                }));
         }
 
-        string idempotencyKey = $"{document.Id}:rev{document.Revision}:{Guid.NewGuid():N}";
+        byte[] delivery = JsonSerializer.SerializeToUtf8Bytes(new { document.Id, Targets = targetsPayload }, JsonOptions);
+        string idempotencyKey = Convert.ToHexString(SHA256.HashData(delivery));
         var bodyObj = new
         {
             clientPostId = document.Id,
             revision = document.Revision,
-            targets = targetsPayload
+            targets = targetsPayload.Select(target => new
+            {
+                targetId = Guid.NewGuid().ToString("N"),
+                target.ChannelId,
+                target.ScheduledAtUtc,
+                target.Content,
+                target.MediaIds,
+                target.Options
+            }).ToArray()
         };
 
         using HttpRequestMessage req = CreateAuthenticatedRequest(HttpMethod.Post, $"{baseUrl}/api/v1/publications", deviceId);
@@ -150,8 +192,75 @@ public sealed class PublicationSyncService
         resp.EnsureSuccessStatusCode();
 
         string json = await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        using JsonDocument doc = JsonDocument.Parse(json);
-        return doc.RootElement.GetProperty("serverPublicationId").GetString() ?? string.Empty;
+        return JsonSerializer.Deserialize<ServerPublicationReceipt>(json, JsonOptions)
+            ?? throw new InvalidDataException("Server returned no publication receipt.");
+    }
+
+    internal async Task<ServerPublicationStatus> GetTargetStatusAsync(
+        string serverBaseUrl, string deviceId, string targetId, CancellationToken cancellationToken = default)
+    {
+        string baseUrl = ValidateServerUrl(serverBaseUrl);
+        string id = Uri.EscapeDataString(targetId);
+        using HttpRequestMessage request = CreateAuthenticatedRequest(HttpMethod.Get, $"{baseUrl}/api/v1/publications/{id}", deviceId);
+        using HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        string json = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+        ServerPublicationStatus? status = JsonSerializer.Deserialize<ServerPublicationStatus>(json, JsonOptions);
+        if (status == null || !string.Equals(status.TargetId, targetId, StringComparison.Ordinal))
+            throw new InvalidDataException("Server returned an unexpected publication target.");
+        return status;
+    }
+
+    internal async Task<ServerPublicationStatus> RescheduleTargetAsync(
+        string serverBaseUrl, string deviceId, string targetId, DateTime scheduledUtc, CancellationToken cancellationToken = default)
+    {
+        string baseUrl = ValidateServerUrl(serverBaseUrl);
+        string id = Uri.EscapeDataString(targetId);
+        using HttpRequestMessage request = CreateAuthenticatedRequest(HttpMethod.Patch, $"{baseUrl}/api/v1/publications/{id}", deviceId);
+        request.Content = new StringContent(JsonSerializer.Serialize(new { scheduledAtUtc = scheduledUtc.ToUniversalTime() }, JsonOptions),
+            Encoding.UTF8, "application/json");
+        using HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        response.EnsureSuccessStatusCode();
+        return await GetTargetStatusAsync(baseUrl, deviceId, targetId, cancellationToken).ConfigureAwait(false);
+    }
+
+    internal static IReadOnlyList<PublicationTarget> ReadScheduledTargets(
+        ServerPublicationReceipt receipt, string deviceId, string postId, IReadOnlyList<ChannelAccount> channels)
+    {
+        var channelsByServerId = channels.ToDictionary(channel => GetServerId(deviceId, channel.Id), StringComparer.Ordinal);
+        if (receipt.Targets == null || receipt.Targets.Count != channelsByServerId.Count ||
+            receipt.Targets.Select(target => target.ChannelId).Distinct(StringComparer.Ordinal).Count() != channelsByServerId.Count ||
+            receipt.Targets.Select(target => target.TargetId).Distinct(StringComparer.Ordinal).Count() != channelsByServerId.Count)
+            throw new InvalidDataException("Server did not acknowledge all publication targets.");
+
+        return receipt.Targets.Select(status =>
+        {
+            if (string.IsNullOrWhiteSpace(status.TargetId) || !channelsByServerId.TryGetValue(status.ChannelId, out var channel))
+                throw new InvalidDataException("Server returned an unexpected publication target.");
+
+            var target = new PublicationTarget
+            {
+                Id = status.TargetId,
+                PostId = postId,
+                ChannelId = channel.Id,
+                ServerId = status.TargetId
+            };
+            ApplyServerStatus(target, status);
+            return target;
+        }).ToList();
+    }
+
+    internal static void ApplyServerStatus(PublicationTarget target, ServerPublicationStatus status)
+    {
+        target.Status = Enum.TryParse(status.Status, out WorkflowStatus workflow) && Enum.IsDefined(workflow)
+            ? workflow
+            : WorkflowStatus.UNKNOWN_RESULT;
+        target.PostRevision = status.Revision;
+        target.ScheduledUtc = status.ScheduledAtUtc.ToUniversalTime();
+        target.TelegramMessageIds = status.TelegramMessageIds ?? [];
+        target.LastErrorCode = status.LastErrorCode;
+        target.LastErrorDetails = status.LastErrorDetails;
+        target.LastSyncUtc = DateTime.UtcNow;
     }
 
     public static IReadOnlyList<DateTime> DistributeSlots(
@@ -174,7 +283,7 @@ public sealed class PublicationSyncService
         return utcTimes;
     }
 
-    private async Task UploadMediaAsync(string baseUrl, string deviceId, PostMediaItem item, CancellationToken cancellationToken)
+    private async Task<string> UploadMediaAsync(string baseUrl, string deviceId, PostMediaItem item, CancellationToken cancellationToken)
     {
         string path = _mediaStore.ResolveAbsolutePath(item.RelativePath);
         using var form = new MultipartFormDataContent();
@@ -191,6 +300,8 @@ public sealed class PublicationSyncService
         req.Content = form;
         using HttpResponseMessage resp = await _httpClient.SendAsync(req, cancellationToken).ConfigureAwait(false);
         resp.EnsureSuccessStatusCode();
+        using JsonDocument response = JsonDocument.Parse(await resp.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
+        return response.RootElement.GetProperty("mediaId").GetString() ?? throw new InvalidDataException("Server returned no media ID.");
     }
 
     private HttpRequestMessage CreateAuthenticatedRequest(HttpMethod method, string url, string deviceId)
@@ -202,18 +313,25 @@ public sealed class PublicationSyncService
         return req;
     }
 
-    private static string ValidateServerUrl(string serverBaseUrl)
+    private static string GetServerId(string deviceId, string localId) => $"{deviceId}:{localId}";
+
+    internal static string ValidateServerUrl(string serverBaseUrl)
     {
         if (!Uri.TryCreate(serverBaseUrl, UriKind.Absolute, out Uri? uri))
         {
             throw new ArgumentException("Invalid server URL.", nameof(serverBaseUrl));
         }
 
-        if (uri.Scheme != Uri.UriSchemeHttps && !uri.IsLoopback)
+        if (uri.Scheme != Uri.UriSchemeHttps && (uri.Scheme != Uri.UriSchemeHttp || !uri.IsLoopback))
         {
             throw new InvalidOperationException("HTTPS is required for non-local server connections.");
         }
 
-        return serverBaseUrl.TrimEnd('/');
+        if (uri.UserInfo.Length > 0 || uri.Query.Length > 0 || uri.Fragment.Length > 0)
+        {
+            throw new ArgumentException("Server URL must not contain credentials, query parameters, or a fragment.", nameof(serverBaseUrl));
+        }
+
+        return uri.AbsoluteUri.TrimEnd('/');
     }
 }

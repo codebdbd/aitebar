@@ -183,7 +183,6 @@ Complete map of all button styles and their usage.
 ## ToggleButton/RadioButton Styles (Not buttons)
 - **HotkeyModifierButtonStyle**: AppSettingsWindow.xaml
 - **ModernSelectionCardStyle**: AppSettingsWindow.xaml
-- **SettingsTopmostToggleStyle**: AppSettingsWindow.xaml
 - **SegmentedRadioButtonStyle**: SettingsResources.xaml
 - **OptionRadioButtonStyle**: IconConverterWindow.xaml
 - **ModernSwitchStyle**: AppSettingsWindow.xaml (CheckBox)

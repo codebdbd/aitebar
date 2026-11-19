@@ -1,4 +1,5 @@
 using AiteBar;
+using AiteBar.IptvPlayer;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -44,6 +45,50 @@ public sealed class BackupServiceTests : IDisposable
         Assert.Equal("context-7", result.Settings.ActiveContextId);
         Assert.Equal("secret-value", result.Secrets!.Credentials[target]);
         Assert.Equal(new byte[] { 1, 2, 3 }, result.Icons["custom/icon.bin"]);
+    }
+
+    [Fact]
+    public async Task IptvBackupOmitsStreamCredentialsUnlessEncryptedAndRestoresSources()
+    {
+        const string location = "https://iptv.example/live/path-credential";
+        const string playlist = "#EXTM3U\n#EXTINF:-1,Channel\nhttps://iptv.example/live?token=inline-credential";
+        var credentials = new FakeCredentialStore();
+        var iptv = new IptvPlayerStore(null, credentials);
+        var remote = new IptvPlaylistSource { Id = "remote", Kind = IptvSourceKind.SingleStream, Location = location };
+        var inline = new IptvPlaylistSource { Id = "inline", Kind = IptvSourceKind.InlineText, InlineContent = playlist };
+        var settings = new AppSettings { Iptv = new IptvSettings { Sources = [remote, inline] } };
+        File.WriteAllText(iptv.GetCacheFilePath(remote.Id), $"legacy cache with {location}");
+        File.WriteAllText(iptv.FavoritesPath, """[{"channelKey":"favorite","streamUrl":"https://iptv.example/token-in-favorite"}]""");
+
+        var service = new BackupService(credentials);
+        string archive = Path.Combine(_root, "iptv.aitebarbackup");
+        await service.CreateAsync(archive, settings, new BackupCreateOptions(false, false, null));
+        using (ZipArchive zip = ZipFile.OpenRead(archive))
+        {
+            Assert.Null(zip.GetEntry("private.bin"));
+            Assert.Null(zip.GetEntry("iptv/Cache/remote.json"));
+            foreach (ZipArchiveEntry entry in zip.Entries)
+            {
+                using var reader = new StreamReader(entry.Open());
+                string content = await reader.ReadToEndAsync();
+                Assert.DoesNotContain("path-credential", content);
+                Assert.DoesNotContain("inline-credential", content);
+                Assert.DoesNotContain("token-in-favorite", content);
+            }
+        }
+
+        BackupReadResult portable = await service.ReadAsync(archive, new BackupRestoreOptions(null));
+        Assert.Empty(portable.Settings.Iptv.Sources[0].Location);
+        Assert.Null(portable.Settings.Iptv.Sources[1].InlineContent);
+        Assert.Equal(location, settings.Iptv.Sources[0].Location);
+
+        const string password = "test backup password";
+        await service.CreateAsync(archive, settings, new BackupCreateOptions(true, false, password));
+        var restored = new AppSettingsService(Path.Combine(_root, "config.json"), Path.Combine(_root, "settings.json"));
+        await service.RestoreAsync(archive, new BackupRestoreOptions(password), restored);
+        Assert.Equal(location, restored.Settings.Iptv.Sources[0].Location);
+        Assert.Equal(playlist, iptv.ReadSourceFileContent("inline"));
+        Assert.DoesNotContain("inline-credential", File.ReadAllText(iptv.GetSourceFilePath("inline")));
     }
 
     [Fact]

@@ -96,7 +96,7 @@ public sealed class PublicationWorker : BackgroundService
             var mediaFiles = new List<(string FilePath, int Kind)>();
             foreach (string mediaId in mediaIds)
             {
-                (string relPath, int kind)? info = ResolveMedia(mediaId);
+                (string relPath, int kind)? info = ResolveMedia(due.DeviceId, mediaId);
                 if (info == null)
                 {
                     outcome = new DispatchOutcome(false, [], false, false, null, "MEDIA_MISSING", $"Media '{mediaId}' missing on server.");
@@ -104,7 +104,10 @@ public sealed class PublicationWorker : BackgroundService
                     return true;
                 }
                 string absPath = Path.GetFullPath(Path.Combine(_mediaRoot, info.Value.relPath));
-                if (!File.Exists(absPath))
+                string relativePath = Path.GetRelativePath(_mediaRoot, absPath);
+                if (Path.IsPathRooted(relativePath) || relativePath == ".." ||
+                    relativePath.StartsWith($"..{Path.DirectorySeparatorChar}", StringComparison.Ordinal) ||
+                    !File.Exists(absPath))
                 {
                     outcome = new DispatchOutcome(false, [], false, false, null, "MEDIA_FILE_MISSING", $"Media file '{mediaId}' missing on disk.");
                     await FinalizeOutcomeAsync(due, startedUtc, outcome);
@@ -139,8 +142,8 @@ public sealed class PublicationWorker : BackgroundService
                    pt.media_hashes_json, pt.options_json, pt.attempt_count,
                    b.id, b.encrypted_token
             FROM publication_targets pt
-            JOIN channels c ON c.id = pt.channel_id
-            JOIN bots b ON b.id = c.bot_id
+            JOIN channels c ON c.id = pt.channel_id AND c.device_id = pt.device_id
+            JOIN bots b ON b.id = c.bot_id AND b.device_id = pt.device_id
             WHERE (pt.status = 'QUEUED_SERVER' AND pt.scheduled_at_utc <= $now)
                OR (pt.status = 'RETRY_WAIT' AND pt.next_attempt_utc <= $now)
             ORDER BY pt.scheduled_at_utc ASC
@@ -197,12 +200,13 @@ public sealed class PublicationWorker : BackgroundService
         return record;
     }
 
-    private (string RelativePath, int Kind)? ResolveMedia(string mediaId)
+    private (string RelativePath, int Kind)? ResolveMedia(string deviceId, string mediaId)
     {
         using SqliteConnection conn = _migrator.OpenConnection();
         using SqliteCommand cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT relative_path, kind FROM uploaded_media WHERE id = $id;";
+        cmd.CommandText = "SELECT relative_path, kind FROM uploaded_media WHERE id = $id AND device_id = $dev;";
         cmd.Parameters.AddWithValue("$id", mediaId);
+        cmd.Parameters.AddWithValue("$dev", deviceId);
         using SqliteDataReader reader = cmd.ExecuteReader();
         return reader.Read() ? (reader.GetString(0), reader.GetInt32(1)) : null;
     }

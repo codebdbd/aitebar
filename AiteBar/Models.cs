@@ -237,6 +237,13 @@ public class AppSettings
     public HotkeyBinding AiteProfilesHotkey { get; set; } = new();
     public HotkeyBinding TelegramPostEditorHotkey { get; set; } = new();
     public HotkeyBinding IptvPlayerHotkey { get; set; } = new();
+    public List<SettingsSourceEntry> RssFeeds { get; set; } = [];
+    public List<SettingsSourceEntry> TelegramReadingSources { get; set; } = [];
+    public List<SettingsSourceEntry> SavedPrompts { get; set; } = [];
+    public Dictionary<string, string> TelegramPublishingCategories { get; set; } = [];
+    public List<string> AiConnectionDisplayOrder { get; set; } = [];
+    public List<string> TelegramBotDisplayOrder { get; set; } = [];
+    public List<string> TelegramChannelDisplayOrder { get; set; } = [];
     public FileSortUndoState? LastFileSortOperation { get; set; }
     public MultiFileSortUndoState? LastMultiFileSortOperation { get; set; }
     public List<string> SavedFileSortFolders { get; set; } = [];
@@ -259,6 +266,8 @@ public class AppSettings
     public double? TelegramPostEditorWidth { get; set; }
     public double? TelegramPostEditorHeight { get; set; }
     public string? TelegramPostEditorWindowState { get; set; }
+    public string? TelegramPostEditorServerUrl { get; set; }
+    public string? TelegramPostEditorDeviceId { get; set; }
 
     public double? IptvPlayerLeft { get; set; }
     public double? IptvPlayerTop { get; set; }

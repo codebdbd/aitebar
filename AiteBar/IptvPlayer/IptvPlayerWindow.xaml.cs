@@ -8,6 +8,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using ButtonBase = System.Windows.Controls.Primitives.ButtonBase;
 
 namespace AiteBar.IptvPlayer;
 
@@ -22,39 +23,52 @@ public partial class IptvPlayerWindow : DarkWindow
 
     private List<IptvChannel> _fullCatalog = [];
     private List<IptvChannel> _filteredCatalog = [];
+    private List<IptvPlaylistSource> _playlistSources;
     private IptvChannel? _selectedChannel;
+    private IptvChannel? _displayedChannel;
+    private IptvChannel? _onAirChannel;
+    private IptvChannel? _pendingTune;
 
     private readonly DispatcherTimer _searchDebounceTimer;
-    private readonly DispatcherTimer _channelSwitchDebounceTimer;
-    private bool _isFullscreen;
+    private readonly DispatcherTimer _channelTuneTimer;
+    private IptvChannel? _queuedChannel;
+    private bool _isUpdatingVariants;
     private bool _isInitializing = true;
     private bool _isUpdatingFilters;
+    private bool _catalogReloadPending;
+    private int _catalogRequest;
     private bool _isClosing;
-    private WindowState _prevWindowState = WindowState.Normal;
-    private GridLength _prevSidebarWidth = new(360);
+    private GridLength _prevSidebarWidth = new(280);
 
     public IptvPlayerWindow(AppSettingsService? settingsService, MainWindow? mainWindow)
     {
         _settingsService = settingsService;
         _mainWindow = mainWindow;
+        _playlistSources = IptvCatalogService.GetEnabledSources(settingsService?.Settings.Iptv ?? new IptvSettings());
         _store = new IptvPlayerStore();
         _catalogService = new IptvCatalogService(_store);
 
         IptvLogoCache.Initialize(_store.CacheDirectory);
 
         InitializeComponent();
+        _videoControlsTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2.5) };
+        _videoControlsTimer.Tick += VideoControlsTimer_Tick;
+        _videoClickTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromMilliseconds(System.Windows.Forms.SystemInformation.DoubleClickTime)
+        };
+        _videoClickTimer.Tick += VideoClickTimer_Tick;
+        _channelTuneTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(180) };
+        _channelTuneTimer.Tick += ChannelTuneTimer_Tick;
+        _streamInfoTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(750) };
+        _streamInfoTimer.Tick += StreamInfoTimer_Tick;
 
         _searchDebounceTimer = new DispatcherTimer
         {
             Interval = TimeSpan.FromMilliseconds(150)
         };
         _searchDebounceTimer.Tick += SearchDebounceTimer_Tick;
-
-        _channelSwitchDebounceTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromMilliseconds(350)
-        };
-        _channelSwitchDebounceTimer.Tick += ChannelSwitchDebounceTimer_Tick;
+        UpdatePlaybackControls();
 
         Loaded += IptvPlayerWindow_Loaded;
         PreviewKeyDown += IptvPlayerWindow_PreviewKeyDown;
@@ -73,8 +87,6 @@ public partial class IptvPlayerWindow : DarkWindow
 
     private async void IptvPlayerWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        EnsureVideoViewBlackBackground();
-
         if (PnlLoadingChannels != null)
         {
             PnlLoadingChannels.Visibility = Visibility.Visible;
@@ -107,6 +119,8 @@ public partial class IptvPlayerWindow : DarkWindow
             _playbackService.VolumeChanged += OnPlaybackVolumeChanged;
             _playbackService.MutedChanged += OnPlaybackMutedChanged;
             _playbackService.CanPauseChanged += OnPlaybackCanPauseChanged;
+            _playbackService.VideoOutputChanged += OnVideoOutputChanged;
+            ApplyVideoCrop();
 
             try
             {
@@ -126,26 +140,23 @@ public partial class IptvPlayerWindow : DarkWindow
             {
                 _playbackService.ToggleMute();
             }
-        }
-        catch (Exception ex)
-        {
-            Logger.Log(ex);
-        }
-    }
-
-    private void EnsureVideoViewBlackBackground()
-    {
-        try
-        {
-            VlcVideoView.Background = Brushes.Black;
-            if (VideoContainer != null)
+            if (_pendingTune is { } requested)
             {
-                VideoContainer.Background = Brushes.Black;
+                _pendingTune = null;
+                PlayChannel(requested);
             }
         }
         catch (Exception ex)
         {
             Logger.Log(ex);
+            if (!_isClosing)
+            {
+                BtnPlayStop.IsEnabled = false;
+                _playbackEngineUnavailable = true;
+                _pendingTune = null;
+                UpdatePipOverlay();
+                TxtStatusMessage.Text = LocalizationService.Get("Iptv_EngineUnavailable");
+            }
         }
     }
 
@@ -189,184 +200,77 @@ public partial class IptvPlayerWindow : DarkWindow
 
     private async Task LoadPlayerStateAndCatalogAsync()
     {
-        _isInitializing = true;
         try
         {
             var state = await Task.Run(() => _store.LoadPlayerState());
+            if (_isClosing) return;
 
             SldVolume.Value = state.LastVolume;
-            TxtVolume.Text = $"{state.LastVolume}%";
+            BtnFillVideo.IsChecked = state.FillVideo;
 
             if (state.IsMuted)
             {
                 BtnMute.Content = "\uEB4A";
             }
 
-            if (!state.IsSidebarOpen)
+            _pipPlacement = state.PictureInPicturePlacement;
+            if (!state.IsSidebarOpen && _viewModes.Windowed == IptvViewMode.Standard)
             {
-                ColSidebar.Width = new GridLength(0);
-                Splitter.Visibility = Visibility.Collapsed;
+                ChangeViewMode(_viewModes.ToggleVideoOnly);
             }
 
             TxtSearch.Text = state.SearchQuery ?? string.Empty;
-
-            var settings = _settingsService?.Settings.Iptv ?? new IptvSettings();
-
-            var (catalog, playlistOptions, groupOptions, filtered) = await Task.Run(() =>
-            {
-                var cat = _catalogService.BuildCatalog(settings, includeTestStreams: false);
-
-                var plOptions = new List<IptvFilterOption>
-                {
-                    new("Все плейлисты", "ALL")
-                };
-                var distinctPlaylists = cat
-                    .Select(c => new { c.PlaylistId, c.PlaylistName })
-                    .DistinctBy(p => p.PlaylistId)
-                    .ToList();
-                foreach (var p in distinctPlaylists)
-                {
-                    plOptions.Add(new IptvFilterOption(
-                        string.IsNullOrWhiteSpace(p.PlaylistName) ? "Плейлист" : p.PlaylistName,
-                        p.PlaylistId));
-                }
-
-                var grpOptions = new List<IptvFilterOption>
-                {
-                    new("Все группы", "ALL"),
-                    new("★ Избранное", IptvCatalogService.FavoritesGroupKey)
-                };
-                var distinctGroups = cat
-                    .Select(c => c.Group)
-                    .Where(g => !string.IsNullOrWhiteSpace(g))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .OrderBy(g => g)
-                    .ToList();
-                foreach (var grp in distinctGroups)
-                {
-                    grpOptions.Add(new IptvFilterOption(grp, grp));
-                }
-
-                string? plFilter = state.SelectedPlaylistFilter;
-                if (string.Equals(plFilter, "ALL", StringComparison.OrdinalIgnoreCase)) plFilter = null;
-                string? grpFilter = state.SelectedGroupFilter;
-                if (string.Equals(grpFilter, "ALL", StringComparison.OrdinalIgnoreCase)) grpFilter = null;
-
-                var filteredList = _catalogService.FilterCatalog(
-                    cat,
-                    plFilter,
-                    grpFilter,
-                    state.SearchQuery?.Trim());
-
-                return (cat, plOptions, grpOptions, filteredList);
-            });
-
-            if (_isClosing) return;
-
-            _fullCatalog = catalog;
-            _filteredCatalog = filtered;
-
-            _isUpdatingFilters = true;
-            try
-            {
-                CmbPlaylists.ItemsSource = playlistOptions;
-                CmbPlaylists.SelectedValue = state.SelectedPlaylistFilter ?? "ALL";
-                if (CmbPlaylists.SelectedIndex < 0) CmbPlaylists.SelectedIndex = 0;
-
-                CmbGroups.ItemsSource = groupOptions;
-                CmbGroups.SelectedValue = state.SelectedGroupFilter ?? "ALL";
-                if (CmbGroups.SelectedIndex < 0) CmbGroups.SelectedIndex = 0;
-            }
-            finally
-            {
-                _isUpdatingFilters = false;
-            }
-
-            LstChannels.ItemsSource = _filteredCatalog;
-            if (PnlLoadingChannels != null) PnlLoadingChannels.Visibility = Visibility.Collapsed;
-            if (TxtNoChannels != null) TxtNoChannels.Visibility = _filteredCatalog.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
-
-            if (_filteredCatalog.Count > 0)
-            {
-                int index = -1;
-                if (!string.IsNullOrWhiteSpace(state.LastSelectedChannelKey))
-                {
-                    index = _filteredCatalog.FindIndex(c => string.Equals(c.Id, state.LastSelectedChannelKey, StringComparison.OrdinalIgnoreCase));
-                }
-
-                if (index >= 0)
-                {
-                    LstChannels.SelectedIndex = index;
-                    LstChannels.ScrollIntoView(_filteredCatalog[index]);
-                }
-                else
-                {
-                    LstChannels.SelectedIndex = 0;
-                }
-            }
+            await ReloadCatalogAsync(state);
         }
         catch (Exception ex)
         {
             Logger.Log(ex);
-            if (PnlLoadingChannels != null) PnlLoadingChannels.Visibility = Visibility.Collapsed;
-            if (TxtNoChannels != null) TxtNoChannels.Visibility = Visibility.Visible;
+            PnlLoadingChannels.Visibility = Visibility.Collapsed;
+            TxtNoChannels.Visibility = Visibility.Visible;
         }
         finally
         {
             _isInitializing = false;
+            if (_catalogReloadPending && !_isClosing)
+            {
+                _catalogReloadPending = false;
+                await ReloadCatalogAsync();
+            }
         }
     }
 
-    private async void ReloadCatalog(
-        string? targetChannelKey = null,
-        string? targetPlaylist = null,
-        string? targetGroup = null)
+    private async Task ReloadCatalogAsync(IptvPlayerState? initialState = null)
     {
-        if (PnlLoadingChannels != null) PnlLoadingChannels.Visibility = Visibility.Visible;
+        int request = ++_catalogRequest;
         try
         {
             var settings = _settingsService?.Settings.Iptv ?? new IptvSettings();
-            var (catalog, playlistOptions, groupOptions) = await Task.Run(() =>
+            var sources = IptvCatalogService.GetEnabledSources(settings);
+            var (catalog, groupOptions) = await Task.Run(() =>
             {
                 var cat = _catalogService.BuildCatalog(settings, includeTestStreams: false);
-
-                var plOptions = new List<IptvFilterOption>
+                var groups = new List<IptvFilterOption>
                 {
-                    new("Все плейлисты", "ALL")
+                    new(LocalizationService.Get("Iptv_AllGroups"), "ALL")
                 };
-                var distinctPlaylists = cat
-                    .Select(c => new { c.PlaylistId, c.PlaylistName })
-                    .DistinctBy(p => p.PlaylistId)
-                    .ToList();
-                foreach (var p in distinctPlaylists)
-                {
-                    plOptions.Add(new IptvFilterOption(
-                        string.IsNullOrWhiteSpace(p.PlaylistName) ? "Плейлист" : p.PlaylistName,
-                        p.PlaylistId));
-                }
-
-                var grpOptions = new List<IptvFilterOption>
-                {
-                    new("Все группы", "ALL"),
-                    new("★ Избранное", IptvCatalogService.FavoritesGroupKey)
-                };
-                var distinctGroups = cat
-                    .Select(c => c.Group)
-                    .Where(g => !string.IsNullOrWhiteSpace(g))
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .OrderBy(g => g)
-                    .ToList();
-                foreach (var grp in distinctGroups)
-                {
-                    grpOptions.Add(new IptvFilterOption(grp, grp));
-                }
-
-                return (cat, plOptions, grpOptions);
+                groups.AddRange(IptvCatalogService.GetGroupNames(cat)
+                    .Select(group => new IptvFilterOption(group, group)));
+                return (cat, groups);
             });
 
-            if (_isClosing) return;
+            if (_isClosing || request != _catalogRequest) return;
 
+            var previousIds = _playlistSources.Select(source => source.Id).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var addedSource = sources.LastOrDefault(source => !previousIds.Contains(source.Id));
+            string? targetPlaylist = addedSource?.Id ?? initialState?.SelectedPlaylistFilter ?? CmbPlaylists.SelectedValue as string;
+            string? targetGroup = initialState?.SelectedGroupFilter ?? CmbGroups.SelectedValue as string;
+            string? targetChannel = initialState?.LastSelectedChannelKey ?? _selectedChannel?.Id;
+            _playlistSources = sources;
             _fullCatalog = catalog;
+
+            var playlistOptions = new List<IptvFilterOption> { new(LocalizationService.Get("Iptv_AllPlaylists"), "ALL") };
+            playlistOptions.AddRange(sources.Select(source => new IptvFilterOption(
+                string.IsNullOrWhiteSpace(source.Name) ? "Плейлист" : source.Name, source.Id)));
 
             _isUpdatingFilters = true;
             try
@@ -376,15 +280,30 @@ public partial class IptvPlayerWindow : DarkWindow
                 if (CmbPlaylists.SelectedIndex < 0) CmbPlaylists.SelectedIndex = 0;
 
                 CmbGroups.ItemsSource = groupOptions;
-                CmbGroups.SelectedValue = targetGroup ?? "ALL";
+                if (initialState is not null)
+                {
+                    bool legacyFavorites = targetGroup == IptvCatalogService.FavoritesGroupKey;
+                    BtnFavorites.IsChecked = initialState.ShowFavorites || legacyFavorites;
+                    RestoreResolutionFilter(initialState.ResolutionFilter);
+                    if (legacyFavorites) targetGroup = null;
+                }
+                CmbGroups.SelectedValue = addedSource is null ? targetGroup ?? "ALL" : "ALL";
                 if (CmbGroups.SelectedIndex < 0) CmbGroups.SelectedIndex = 0;
+                if (addedSource is not null)
+                {
+                    BtnFavorites.IsChecked = false;
+                    RestoreResolutionFilter(IptvResolution.Any);
+                    TxtSearch.Clear();
+                    _searchDebounceTimer.Stop();
+                }
             }
             finally
             {
                 _isUpdatingFilters = false;
             }
 
-            ApplyFiltersAndRefreshList(targetChannelKey);
+            ApplyFiltersAndRefreshList(targetChannel);
+            UpdateOnAirChannel();
         }
         catch (Exception ex)
         {
@@ -392,7 +311,8 @@ public partial class IptvPlayerWindow : DarkWindow
         }
         finally
         {
-            if (PnlLoadingChannels != null) PnlLoadingChannels.Visibility = Visibility.Collapsed;
+            if (request == _catalogRequest)
+                PnlLoadingChannels.Visibility = Visibility.Collapsed;
         }
     }
 
@@ -412,12 +332,28 @@ public partial class IptvPlayerWindow : DarkWindow
 
         string query = TxtSearch.Text.Trim();
 
-        _filteredCatalog = _catalogService.FilterCatalog(_fullCatalog, plFilter, grpFilter, query);
-        LstChannels.ItemsSource = _filteredCatalog;
+        bool favoritesOnly = BtnFavorites.IsChecked == true;
+        BtnFavorites.Content = favoritesOnly ? "★" : "☆";
+        var filtered = IptvCatalogService.FilterChannels(_fullCatalog, plFilter, grpFilter, query,
+            favoritesOnly, GetResolutionFilter()).ToList();
+        bool changed = !_filteredCatalog.SequenceEqual(filtered);
+        if (changed)
+        {
+            _filteredCatalog = filtered;
+            LstChannels.ItemsSource = _filteredCatalog;
+        }
+        if (_queuedChannel is { } queued && !_filteredCatalog.Contains(queued))
+            CancelQueuedTune();
+        UpdateActiveFilterLabels();
 
         if (TxtNoChannels != null)
         {
             TxtNoChannels.Visibility = _filteredCatalog.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            if (_filteredCatalog.Count == 0)
+            {
+                TxtNoChannels.Text = LocalizationService.Get(favoritesOnly && !_fullCatalog.Exists(channel => channel.IsFavorite)
+                    ? "Iptv_NoFavorites" : GetEmptyCatalogMessage(plFilter));
+            }
         }
 
         if (_filteredCatalog.Count > 0)
@@ -428,108 +364,167 @@ public partial class IptvPlayerWindow : DarkWindow
                 index = _filteredCatalog.FindIndex(c => string.Equals(c.Id, preferredChannelKey, StringComparison.OrdinalIgnoreCase));
             }
 
-            if (index >= 0)
+            if (index >= 0 && LstChannels.SelectedIndex != index)
             {
                 LstChannels.SelectedIndex = index;
                 LstChannels.ScrollIntoView(_filteredCatalog[index]);
             }
-            else
+            else if (index < 0 && (changed || LstChannels.SelectedIndex < 0))
             {
                 LstChannels.SelectedIndex = 0;
             }
         }
+        UpdatePipOverlay();
+    }
+
+    private string GetEmptyCatalogMessage(string? playlistId)
+    {
+        if (_playlistSources.Count == 0) return "Iptv_AddPlaylistInSettings";
+
+        if (playlistId is null)
+        {
+            if (_fullCatalog.Count > 0) return "Iptv_NoMatchingChannels";
+            return _playlistSources.TrueForAll(source => source.LastStatus == "Error")
+                ? "Iptv_PlaylistLoadFailed" : "Iptv_PlaylistNotLoaded";
+        }
+
+        if (_fullCatalog.Exists(channel => string.Equals(channel.PlaylistId, playlistId, StringComparison.OrdinalIgnoreCase)))
+            return "Iptv_NoMatchingChannels";
+
+        var selectedSource = _playlistSources.Find(source => string.Equals(source.Id, playlistId, StringComparison.OrdinalIgnoreCase));
+        return selectedSource?.LastStatus == "Error" ? "Iptv_PlaylistLoadFailed" : "Iptv_PlaylistNotLoaded";
     }
 
     private void LstChannels_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (LstChannels.SelectedItem is IptvChannel channel)
+        _selectedChannel = LstChannels.SelectedItem as IptvChannel;
+        UpdateChannelDetails();
+    }
+
+    private void LstChannels_MouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.OriginalSource is not DependencyObject origin ||
+            ItemsControl.ContainerFromElement(LstChannels, origin) is not ListBoxItem { Content: IptvChannel channel } row)
         {
-            _selectedChannel = channel;
-            TxtActiveChannel.Text = channel.Title;
-            TxtActiveGroup.Text = $"• {channel.Group} ({channel.PlaylistName})";
+            return;
+        }
 
-            PopulateVariants(channel);
+        for (DependencyObject? element = origin; element != null && element != row;
+            element = element is Visual ? VisualTreeHelper.GetParent(element) : LogicalTreeHelper.GetParent(element))
+        {
+            if (element is ButtonBase) return;
+        }
 
-            if (!_isInitializing && _playbackService != null)
+        LstChannels.SelectedItem = channel;
+        PlayChannel(channel);
+    }
+
+    private static bool IsPlaybackActive(IptvPlaybackState state) => state is
+        IptvPlaybackState.Playing or IptvPlaybackState.Paused or IptvPlaybackState.Connecting or
+        IptvPlaybackState.Buffering or IptvPlaybackState.Reconnecting;
+
+    private void UpdateChannelDetails()
+    {
+        IptvChannel? channel = _playbackService is { } playback &&
+            (IsPlaybackActive(playback.State) || playback.State == IptvPlaybackState.Error)
+            ? playback.CurrentChannel
+            : _selectedChannel;
+
+        _isUpdatingVariants = true;
+        try
+        {
+            if (!ReferenceEquals(_displayedChannel, channel))
             {
-                // Задержка 350мс при быстром перелистывании каналов, чтобы не спамить LibVLC
-                _channelSwitchDebounceTimer.Stop();
-                _channelSwitchDebounceTimer.Start();
-            }
-        }
-    }
-
-    private void ChannelSwitchDebounceTimer_Tick(object? sender, EventArgs e)
-    {
-        _channelSwitchDebounceTimer.Stop();
-        if (_selectedChannel != null && _playbackService != null && !_isClosing)
-        {
-            _playbackService.PlayChannel(_selectedChannel);
-        }
-    }
-
-    private void LstChannels_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        _channelSwitchDebounceTimer.Stop();
-        if (_selectedChannel != null && _playbackService != null)
-        {
-            _playbackService.PlayChannel(_selectedChannel);
-        }
-    }
-
-    private void PopulateVariants(IptvChannel channel)
-    {
-        if (channel.Variants != null && channel.Variants.Count > 1)
-        {
-            CmbVariants.Items.Clear();
-            for (int i = 0; i < channel.Variants.Count; i++)
-            {
-                var v = channel.Variants[i];
-                CmbVariants.Items.Add(new ComboBoxItem
+                _displayedChannel = channel;
+                TxtActiveChannel.Text = channel?.Title ?? string.Empty;
+                CmbVariants.Items.Clear();
+                if (channel?.Variants.Count > 1)
                 {
-                    Content = string.IsNullOrWhiteSpace(v.Title) ? $"Variant {i + 1}" : v.Title,
-                    Tag = i
-                });
+                    for (int i = 0; i < channel.Variants.Count; i++)
+                    {
+                        string title = channel.Variants[i].Title;
+                        bool distinct = !string.IsNullOrWhiteSpace(title) && !string.Equals(title, channel.Title, StringComparison.OrdinalIgnoreCase) &&
+                            channel.Variants.Count(variant => string.Equals(variant.Title, title, StringComparison.OrdinalIgnoreCase)) == 1;
+                        CmbVariants.Items.Add(distinct ? title : LocalizationService.Format("Iptv_StreamNumber", i + 1));
+                    }
+                }
+                UpdateVariantVisibility();
             }
-            CmbVariants.SelectedIndex = Math.Clamp(channel.ActiveVariantIndex, 0, channel.Variants.Count - 1);
-            CmbVariants.Visibility = Visibility.Visible;
+
+            if (channel is not null && CmbVariants.Items.Count > 1)
+            {
+                CmbVariants.SelectedIndex = Math.Clamp(channel.ActiveVariantIndex, 0, CmbVariants.Items.Count - 1);
+            }
         }
-        else
+        finally
         {
-            CmbVariants.Visibility = Visibility.Collapsed;
+            _isUpdatingVariants = false;
         }
     }
 
     private void CmbVariants_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_playbackService != null && CmbVariants.SelectedItem is ComboBoxItem item && item.Tag is int idx)
+        if (_isUpdatingVariants || _displayedChannel is not { } channel || CmbVariants.SelectedIndex < 0) return;
+
+        int index = CmbVariants.SelectedIndex;
+        if (_playbackService is { } playback && IsPlaybackActive(playback.State) &&
+            ReferenceEquals(playback.CurrentChannel, channel))
         {
-            _playbackService.SelectVariant(idx);
+            playback.SelectVariant(index);
         }
+        else
+        {
+            channel.ActiveVariantIndex = index;
+        }
+    }
+
+    private bool PlayChannel(IptvChannel? channel)
+    {
+        if (channel is null || _isClosing || _playbackEngineUnavailable) return false;
+        _videoClickTimer.Stop();
+        CancelQueuedTune();
+        if (_playbackService is not { } playback)
+        {
+            _pendingTune = channel;
+            UpdatePipOverlay();
+            return true;
+        }
+
+        if (playback.CurrentChannel?.Id == channel.Id && IsPlaybackActive(playback.State))
+        {
+            if (playback.State == IptvPlaybackState.Paused) playback.TogglePlayPause();
+        }
+        else
+        {
+            playback.PlayChannel(channel);
+            UpdateChannelDetails();
+        }
+        UpdatePipOverlay();
+        return true;
     }
 
     private void BtnPlayStop_Click(object sender, RoutedEventArgs e)
     {
-        if (_playbackService == null) return;
+        _videoClickTimer.Stop();
+        CancelQueuedTune();
+        if (_playbackService is not { } playback)
+        {
+            PlayChannel(_selectedChannel);
+            return;
+        }
 
-        if (_playbackService.State == IptvPlaybackState.Playing ||
-            _playbackService.State == IptvPlaybackState.Buffering ||
-            _playbackService.State == IptvPlaybackState.Connecting)
-        {
-            _playbackService.Stop();
-        }
+        if (playback.State == IptvPlaybackState.Paused)
+            playback.TogglePlayPause();
+        else if (IsPlaybackActive(playback.State))
+            playback.Stop();
         else
-        {
-            if (_selectedChannel != null)
-            {
-                _playbackService.PlayChannel(_selectedChannel);
-            }
-        }
+            PlayChannel(_selectedChannel);
     }
 
     private void BtnPause_Click(object sender, RoutedEventArgs e)
     {
-        _playbackService?.TogglePlayPause();
+        _videoClickTimer.Stop();
+        TogglePlayback();
     }
 
     private void BtnMute_Click(object sender, RoutedEventArgs e)
@@ -539,64 +534,29 @@ public partial class IptvPlayerWindow : DarkWindow
 
     private void SldVolume_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
     {
-        if (TxtVolume == null)
-        {
-            return;
-        }
-
+        if (_updatingVolume) return;
         int vol = (int)Math.Round(e.NewValue);
         _playbackService?.SetVolume(vol);
-        TxtVolume.Text = $"{vol}%";
     }
 
-    private void BtnFullscreen_Click(object sender, RoutedEventArgs e)
+    private void SetSidebarVisible(bool visible)
     {
-        ToggleFullscreen();
-    }
-
-    private void ToggleFullscreen()
-    {
-        if (!_isFullscreen)
+        if (visible)
         {
-            _prevWindowState = WindowState;
-            _prevSidebarWidth = ColSidebar.Width;
-
-            ColSidebar.Width = new GridLength(0);
-            Splitter.Visibility = Visibility.Collapsed;
-
-            WindowState = WindowState.Normal;
-            WindowStyle = WindowStyle.None;
-            WindowState = WindowState.Maximized;
-
-            BtnFullscreen.Content = "\uE687"; // Exit fullscreen glyph
-            _isFullscreen = true;
+            ChannelsSidebar.Visibility = Visibility.Visible;
+            ColSidebar.MinWidth = 230;
+            ColSidebar.Width = _prevSidebarWidth;
+            Splitter.Visibility = Visibility.Visible;
         }
         else
         {
-            WindowState = WindowState.Normal;
-            WindowStyle = WindowStyle.SingleBorderWindow;
-            WindowState = _prevWindowState;
-
-            ColSidebar.Width = _prevSidebarWidth.Value > 0 ? _prevSidebarWidth : new GridLength(360);
-            Splitter.Visibility = Visibility.Visible;
-
-            BtnFullscreen.Content = "\uE684"; // Enter fullscreen glyph
-            _isFullscreen = false;
-        }
-    }
-
-    private void BtnToggleSidebar_Click(object sender, RoutedEventArgs e)
-    {
-        if (ColSidebar.Width.Value > 0)
-        {
-            _prevSidebarWidth = ColSidebar.Width;
+            if (ChannelsSidebar.IsKeyboardFocusWithin || FocusManager.GetFocusedElement(this) is TextBox or ComboBox)
+                BtnPictureInPicture.Focus();
+            ChannelsSidebar.Visibility = Visibility.Collapsed;
+            if (ColSidebar.Width.Value > 0) _prevSidebarWidth = ColSidebar.Width;
+            ColSidebar.MinWidth = 0;
             ColSidebar.Width = new GridLength(0);
             Splitter.Visibility = Visibility.Collapsed;
-        }
-        else
-        {
-            ColSidebar.Width = _prevSidebarWidth.Value > 0 ? _prevSidebarWidth : new GridLength(360);
-            Splitter.Visibility = Visibility.Visible;
         }
     }
 
@@ -648,8 +608,7 @@ public partial class IptvPlayerWindow : DarkWindow
         {
             _catalogService.ToggleFavorite(ch);
 
-            string? grp = CmbGroups.SelectedValue as string;
-            if (string.Equals(grp, IptvCatalogService.FavoritesGroupKey, StringComparison.OrdinalIgnoreCase))
+            if (BtnFavorites.IsChecked == true)
             {
                 ApplyFiltersAndRefreshList(_selectedChannel?.Id);
             }
@@ -658,124 +617,229 @@ public partial class IptvPlayerWindow : DarkWindow
 
     private void IptvPlayerWindow_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (FocusManager.GetFocusedElement(this) is TextBox ||
-            FocusManager.GetFocusedElement(this) is ComboBox)
+        if (e.Key == Key.Escape && _viewModes.Current is IptvViewMode.PictureInPicture or IptvViewMode.Fullscreen)
+        {
+            ChangeViewMode(_viewModes.Current == IptvViewMode.Fullscreen
+                ? _viewModes.ToggleFullscreen : _viewModes.ReturnToWindowed);
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.Escape && BtnFilters.IsChecked == true && ChannelsSidebar.IsVisible)
+        {
+            if (CmbGroups.IsDropDownOpen)
+                CmbGroups.IsDropDownOpen = false;
+            else if (CmbPlaylists.IsDropDownOpen)
+                CmbPlaylists.IsDropDownOpen = false;
+            else
+                CloseCatalogFilters();
+            e.Handled = true;
+            return;
+        }
+        if (e.Key == Key.Tab && _viewModes.Current == IptvViewMode.PictureInPicture)
+        {
+            _pipKeyboardNavigation = true;
+            UpdatePipOverlay();
+            if (ReferenceEquals(sender, this) && PipVideoOverlay.IsVisible)
+            {
+                FocusPipControl(PipVideoOverlay, (Keyboard.Modifiers & ModifierKeys.Shift) != 0
+                    ? "NextChannelButton" : "ReturnButton");
+                e.Handled = true;
+                return;
+            }
+        }
+        if (Keyboard.FocusedElement is TextBox or ComboBox ||
+            CmbGroups.IsDropDownOpen || CmbPlaylists.IsDropDownOpen || CmbVariants.IsDropDownOpen)
         {
             return;
         }
 
+        if (Keyboard.Modifiers != ModifierKeys.None) return;
+        RevealVideoControls();
+
         switch (e.Key)
         {
             case Key.PageDown:
+                _videoClickTimer.Stop();
                 NavigateChannel(1);
                 e.Handled = true;
                 break;
 
             case Key.PageUp:
+                _videoClickTimer.Stop();
                 NavigateChannel(-1);
                 e.Handled = true;
                 break;
 
             case Key.F:
-                ToggleFullscreen();
+                if (!e.IsRepeat) ChangeViewMode(_viewModes.ToggleFullscreen);
                 e.Handled = true;
                 break;
 
-            case Key.Escape:
-                if (_isFullscreen)
-                {
-                    ToggleFullscreen();
-                    e.Handled = true;
-                }
+            case Key.P:
+                if (!e.IsRepeat) ChangeViewMode(_viewModes.TogglePictureInPicture);
+                e.Handled = true;
+                break;
+
+            case Key.V when _viewModes.Current is IptvViewMode.Standard or IptvViewMode.VideoOnly:
+                if (!e.IsRepeat) ChangeViewMode(_viewModes.ToggleVideoOnly);
+                e.Handled = true;
                 break;
 
             case Key.M:
-                _playbackService?.ToggleMute();
+                if (!e.IsRepeat) _playbackService?.ToggleMute();
                 e.Handled = true;
                 break;
 
             case Key.Return:
-                _channelSwitchDebounceTimer.Stop();
-                if (_selectedChannel != null && _playbackService != null)
-                {
-                    _playbackService.PlayChannel(_selectedChannel);
-                    e.Handled = true;
-                }
+                if (!e.IsRepeat && Keyboard.FocusedElement is not ButtonBase)
+                    e.Handled = PlayChannel(_selectedChannel);
                 break;
 
             case Key.Space:
-                _playbackService?.TogglePlayPause();
-                e.Handled = true;
+                if (Keyboard.FocusedElement is ButtonBase) break;
+                _videoClickTimer.Stop();
+                if (_playbackService is { } playback && IsPlaybackActive(playback.State))
+                {
+                    if (!e.IsRepeat) TogglePlayback();
+                    e.Handled = true;
+                }
+                else if (!e.IsRepeat)
+                {
+                    e.Handled = PlayChannel(_selectedChannel);
+                }
                 break;
         }
     }
 
+    private void ChannelTuneTimer_Tick(object? sender, EventArgs e)
+    {
+        var channel = _queuedChannel;
+        CancelQueuedTune();
+        PlayChannel(channel);
+    }
+
+    private void CancelQueuedTune()
+    {
+        _channelTuneTimer.Stop();
+        _queuedChannel = null;
+    }
+
     private void NavigateChannel(int delta)
     {
-        if (_filteredCatalog.Count == 0) return;
+        int count = LstChannels.Items.Count;
+        if (count == 0 || _playbackEngineUnavailable) return;
 
-        int cur = LstChannels.SelectedIndex;
-        int next = cur + delta;
+        int next = LstChannels.SelectedIndex + delta;
+        if (next < 0) next = count - 1;
+        if (next >= count) next = 0;
 
-        if (next < 0) next = _filteredCatalog.Count - 1;
-        if (next >= _filteredCatalog.Count) next = 0;
+        if (LstChannels.Items[next] is IptvChannel channel)
+        {
+            LstChannels.SelectedIndex = next;
+            LstChannels.ScrollIntoView(channel);
+            _queuedChannel = channel;
+            _channelTuneTimer.Stop();
+            _channelTuneTimer.Start();
+            UpdatePipOverlay();
+        }
+    }
 
-        LstChannels.SelectedIndex = next;
-        LstChannels.ScrollIntoView(_filteredCatalog[next]);
+    private void OnVideoOutputChanged()
+    {
+        if (Dispatcher.HasShutdownStarted || _isClosing) return;
+        Dispatcher.BeginInvoke(() =>
+        {
+            if (!_isClosing)
+            {
+                UpdateVideoPresentation();
+            }
+        });
+    }
+
+    private void UpdateVideoPresentation()
+    {
+        bool hasVideo = _playbackService?.HasVideoOutput == true;
+        bool pip = _viewModes.Current == IptvViewMode.PictureInPicture;
+        bool showVideoSurface = hasVideo && !pip;
+        bool wasVideoSurfaceVisible = VideoSurface.Visibility == Visibility.Visible;
+        var oldOverlay = hasVideo ? PipIdleOverlay : PipVideoOverlay;
+        string? focusedControl = _pipKeyboardNavigation && oldOverlay.IsKeyboardFocusWithin &&
+            Keyboard.FocusedElement is FrameworkElement element
+            ? element.Name : null;
+        VlcVideoView.Visibility = hasVideo ? Visibility.Visible : Visibility.Hidden;
+        TxtStatusMessage.Visibility = hasVideo || pip ? Visibility.Collapsed : Visibility.Visible;
+        PipIdleOverlay.Visibility = pip && !hasVideo ? Visibility.Visible : Visibility.Collapsed;
+        PipVideoOverlay.Visibility = pip && hasVideo ? Visibility.Visible : Visibility.Collapsed;
+        VideoSurface.Visibility = showVideoSurface ? Visibility.Visible : Visibility.Collapsed;
+        TransportBar.Visibility = pip || (_viewModes.Current == IptvViewMode.Fullscreen && hasVideo)
+            ? Visibility.Collapsed : Visibility.Visible;
+        if (!showVideoSurface)
+        {
+            _videoControlsTimer.Stop();
+            _videoClickTimer.Stop();
+            VideoControls.Visibility = Visibility.Collapsed;
+        }
+        else if (!wasVideoSurfaceVisible)
+        {
+            RevealVideoControls();
+        }
+        UpdateOnAirChannel();
+        UpdateStreamInfoPresentation();
+        if (pip && focusedControl is not null)
+        {
+            var overlay = hasVideo ? PipVideoOverlay : PipIdleOverlay;
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (overlay.IsVisible) FocusPipControl(overlay, focusedControl);
+            }, DispatcherPriority.Input);
+        }
+    }
+
+    private void BtnFillVideo_Changed(object sender, RoutedEventArgs e)
+    {
+        if (VideoViewport is null) return;
+        VideoViewport.Fill = _viewModes.Current == IptvViewMode.PictureInPicture || BtnFillVideo.IsChecked == true;
+        ApplyVideoCrop();
+    }
+
+    private void VideoViewport_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (VideoViewport.Fill) ApplyVideoCrop();
+    }
+
+    private void ApplyVideoCrop()
+    {
+        _playbackService?.SetVideoCrop(IptvVideoViewport.GetCropGeometry(VideoViewport.Fill,
+            VideoViewport.ActualWidth, VideoViewport.ActualHeight));
     }
 
     private void OnPlaybackStateChanged(IptvPlaybackState state, string? message)
     {
         if (Dispatcher.HasShutdownStarted || _isClosing) return;
 
-        Dispatcher.BeginInvoke((Action)(() =>
+        Dispatcher.BeginInvoke(() =>
         {
-            switch (state)
+            if (_isClosing || _playbackService?.State != state) return;
+            UpdateChannelDetails();
+            UpdateOnAirChannel();
+            UpdateStreamInfoPresentation();
+            UpdatePipOverlay();
+            UpdatePlaybackControls();
+            if (state is IptvPlaybackState.Playing or IptvPlaybackState.Paused)
+                RevealVideoControls();
+            BtnPlayStop.Content = IsPlaybackActive(state) && state != IptvPlaybackState.Paused ? "\uF72B" : "\uF606";
+            TxtStatusMessage.Text = LocalizationService.Get(state switch
             {
-                case IptvPlaybackState.Connecting:
-                    BtnPlayStop.Content = "\uF72B"; // Stop icon
-                    StatusPanel.Visibility = Visibility.Visible;
-                    TxtStatusIcon.Text = "\uF190"; // Sync
-                    TxtStatusMessage.Text = message ?? "Подключение...";
-                    break;
-
-                case IptvPlaybackState.Buffering:
-                    BtnPlayStop.Content = "\uF72B";
-                    StatusPanel.Visibility = Visibility.Visible;
-                    TxtStatusIcon.Text = "\uF190";
-                    TxtStatusMessage.Text = message ?? "Буферизация...";
-                    break;
-
-                case IptvPlaybackState.Playing:
-                    BtnPlayStop.Content = "\uF72B";
-                    StatusPanel.Visibility = Visibility.Collapsed;
-                    break;
-
-                case IptvPlaybackState.Paused:
-                    BtnPlayStop.Content = "\uF606"; // Play icon
-                    StatusPanel.Visibility = Visibility.Collapsed;
-                    break;
-
-                case IptvPlaybackState.Stopped:
-                    BtnPlayStop.Content = "\uF606";
-                    StatusPanel.Visibility = Visibility.Collapsed;
-                    break;
-
-                case IptvPlaybackState.Reconnecting:
-                    BtnPlayStop.Content = "\uF72B";
-                    StatusPanel.Visibility = Visibility.Visible;
-                    TxtStatusIcon.Text = "\uF190";
-                    TxtStatusMessage.Text = message ?? "Переподключение...";
-                    break;
-
-                case IptvPlaybackState.Error:
-                    BtnPlayStop.Content = "\uF606";
-                    StatusPanel.Visibility = Visibility.Visible;
-                    TxtStatusIcon.Text = "\uF3F1"; // Error circle
-                    TxtStatusMessage.Text = message ?? "Ошибка воспроизведения";
-                    break;
-            }
-        }));
+                IptvPlaybackState.Connecting => "Iptv_OpeningStream",
+                IptvPlaybackState.Buffering => "Iptv_BufferingStream",
+                IptvPlaybackState.Reconnecting => "Iptv_ReconnectingStream",
+                IptvPlaybackState.Error => "Iptv_StreamUnavailable",
+                IptvPlaybackState.Stopped when _selectedChannel is null => "Iptv_SelectChannel",
+                IptvPlaybackState.Stopped => "Iptv_StreamStopped",
+                IptvPlaybackState.Playing or IptvPlaybackState.Paused when _playbackService.IsAudioOnly => "Iptv_AudioOnly",
+                _ => "Iptv_WaitingForVideo"
+            });
+        });
     }
 
     private void OnPlaybackVolumeChanged(int vol)
@@ -784,13 +848,15 @@ public partial class IptvPlayerWindow : DarkWindow
 
         Dispatcher.BeginInvoke((Action)(() =>
         {
-            if (SldVolume != null && Math.Abs(SldVolume.Value - vol) > 0.5)
+            _updatingVolume = true;
+            try
             {
-                SldVolume.Value = vol;
+                if (Math.Abs(SldVolume.Value - vol) > 0.5) SldVolume.Value = vol;
+                if (Math.Abs(VideoVolume.Value - vol) > 0.5) VideoVolume.Value = vol;
             }
-            if (TxtVolume != null)
+            finally
             {
-                TxtVolume.Text = $"{vol}%";
+                _updatingVolume = false;
             }
         }));
     }
@@ -801,10 +867,8 @@ public partial class IptvPlayerWindow : DarkWindow
 
         Dispatcher.BeginInvoke((Action)(() =>
         {
-            if (BtnMute != null)
-            {
-                BtnMute.Content = muted ? "\uEB4A" : "\uEB42";
-            }
+            BtnMute.Content = VideoMute.Content = muted ? "\uEB4A" : "\uEB42";
+            UpdatePlaybackControls();
         }));
     }
 
@@ -814,10 +878,8 @@ public partial class IptvPlayerWindow : DarkWindow
 
         Dispatcher.BeginInvoke((Action)(() =>
         {
-            if (BtnPause != null)
-            {
-                BtnPause.IsEnabled = canPause;
-            }
+            _canPauseStream = canPause;
+            UpdatePlaybackControls();
         }));
     }
 
@@ -825,9 +887,15 @@ public partial class IptvPlayerWindow : DarkWindow
     {
         if (Dispatcher.HasShutdownStarted || _isClosing) return;
 
-        Dispatcher.BeginInvoke((Action)(() =>
+        Dispatcher.BeginInvoke((Action)(async () =>
         {
-            ReloadCatalog(_selectedChannel?.Id);
+            if (_isClosing) return;
+            if (_isInitializing)
+            {
+                _catalogReloadPending = true;
+                return;
+            }
+            await ReloadCatalogAsync();
         }));
     }
 
@@ -835,7 +903,11 @@ public partial class IptvPlayerWindow : DarkWindow
     {
         _isClosing = true;
         _searchDebounceTimer.Stop();
-        _channelSwitchDebounceTimer.Stop();
+        _videoControlsTimer.Stop();
+        _videoClickTimer.Stop();
+        CancelSurfacePress();
+        _streamInfoTimer.Stop();
+        CancelQueuedTune();
 
         if (_playbackService != null)
         {
@@ -843,6 +915,7 @@ public partial class IptvPlayerWindow : DarkWindow
             _playbackService.VolumeChanged -= OnPlaybackVolumeChanged;
             _playbackService.MutedChanged -= OnPlaybackMutedChanged;
             _playbackService.CanPauseChanged -= OnPlaybackCanPauseChanged;
+            _playbackService.VideoOutputChanged -= OnVideoOutputChanged;
         }
 
         if (_settingsService != null)
@@ -851,13 +924,14 @@ public partial class IptvPlayerWindow : DarkWindow
 
             try
             {
+                WindowPlacement placement = _windowedPlacement ?? CaptureWindowPlacement();
                 _settingsService.UpdateSettings(s =>
                 {
-                    s.IptvPlayerWidth = Width;
-                    s.IptvPlayerHeight = Height;
-                    s.IptvPlayerLeft = Left;
-                    s.IptvPlayerTop = Top;
-                    s.IptvPlayerWindowState = WindowState.ToString();
+                    s.IptvPlayerWidth = placement.Bounds.Width;
+                    s.IptvPlayerHeight = placement.Bounds.Height;
+                    s.IptvPlayerLeft = placement.Bounds.Left;
+                    s.IptvPlayerTop = placement.Bounds.Top;
+                    s.IptvPlayerWindowState = placement.State.ToString();
                 });
             }
             catch (Exception ex)
@@ -873,10 +947,14 @@ public partial class IptvPlayerWindow : DarkWindow
                 LastSelectedChannelKey = _selectedChannel?.Id,
                 LastVolume = (int)Math.Round(SldVolume?.Value ?? 80),
                 IsMuted = _playbackService?.IsMuted ?? false,
-                IsSidebarOpen = ColSidebar?.Width.Value > 0,
+                IsSidebarOpen = _viewModes.Windowed == IptvViewMode.Standard,
+                FillVideo = BtnFillVideo.IsChecked == true,
+                PictureInPicturePlacement = _pipPlacement,
                 IsTestStreamsEnabled = false,
                 SelectedPlaylistFilter = CmbPlaylists?.SelectedValue as string,
                 SelectedGroupFilter = CmbGroups?.SelectedValue as string,
+                ShowFavorites = BtnFavorites.IsChecked == true,
+                ResolutionFilter = GetResolutionFilter(),
                 SearchQuery = TxtSearch?.Text ?? string.Empty
             };
             _store.SavePlayerState(state);

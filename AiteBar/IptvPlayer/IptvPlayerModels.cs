@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace AiteBar.IptvPlayer;
 
@@ -37,6 +38,7 @@ public sealed class IptvPlaylistSource
     public IptvSourceKind Kind { get; set; } = IptvSourceKind.Url;
     public string Location { get; set; } = string.Empty;
     public string? InlineContent { get; set; }
+    public string? ContentRevision { get; set; }
     public bool AutoFallbackVariants { get; set; } = true;
     public bool CopyLocalFileToStore { get; set; } = true;
     public bool IsEnabled { get; set; } = true;
@@ -47,6 +49,9 @@ public sealed class IptvPlaylistSource
     public string? LastErrorMessage { get; set; }
     public int ChannelCount { get; set; }
 
+    [JsonIgnore]
+    internal string SourceStorageId => ContentRevision is null ? Id : $"{Id}_{ContentRevision}";
+
     public IptvPlaylistSource Clone()
     {
         return new IptvPlaylistSource
@@ -56,6 +61,7 @@ public sealed class IptvPlaylistSource
             Kind = Kind,
             Location = Location,
             InlineContent = InlineContent,
+            ContentRevision = ContentRevision,
             AutoFallbackVariants = AutoFallbackVariants,
             CopyLocalFileToStore = CopyLocalFileToStore,
             IsEnabled = IsEnabled,
@@ -101,7 +107,10 @@ public sealed record IptvFilterOption(string Display, string? Value);
 [SupportedOSPlatform("windows6.1")]
 public sealed class IptvChannel : INotifyPropertyChanged
 {
+    private string _group = "Общие";
+    private string[]? _groupNames;
     private bool _isFavorite;
+    private bool _isOnAir;
     private ImageSource? _logoImage;
     private bool _logoFetchStarted;
 
@@ -111,26 +120,59 @@ public sealed class IptvChannel : INotifyPropertyChanged
     public string Title { get; set; } = string.Empty;
     public string CleanTitle { get; set; } = string.Empty;
     public string OriginalTitle { get; set; } = string.Empty;
-    public string Group { get; set; } = "Общие";
+    public string Group
+    {
+        get => _group;
+        set
+        {
+            if (_group == value) return;
+            _group = value;
+            _groupNames = null;
+        }
+    }
+
+    internal string[] GroupNames
+    {
+        get => _groupNames ??= SplitGroupNames(_group);
+        set => _groupNames = value;
+    }
+
+    internal static string[] SplitGroupNames(string? group) =>
+        group?.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries) ?? [];
     public string? LogoUrl { get; set; }
     public string? TvgId { get; set; }
     public string? TvgName { get; set; }
     public string StreamUrl { get; set; } = string.Empty;
     public List<IptvChannelVariant> Variants { get; set; } = [];
     public int ActiveVariantIndex { get; set; }
+    internal IptvResolution AvailableResolutions { get; set; }
+
+    [JsonIgnore]
+    public string? SecondaryText { get; internal set; }
+
+    [JsonIgnore]
+    public bool IsOnAir
+    {
+        get => _isOnAir;
+        internal set
+        {
+            if (_isOnAir == value) return;
+            _isOnAir = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsOnAir)));
+        }
+    }
 
     [JsonIgnore]
     public ImageSource? LogoImage
     {
         get
         {
-            if (_logoImage == null && !string.IsNullOrWhiteSpace(LogoUrl))
+            if (_logoImage == null && !_logoFetchStarted && !string.IsNullOrWhiteSpace(LogoUrl))
             {
-                _logoImage = IptvLogoCache.GetCachedLogo(LogoUrl);
-                if (_logoImage == null && !_logoFetchStarted)
+                _logoFetchStarted = true;
+                if (!IptvLogoCache.TryGetCachedLogo(LogoUrl, out _logoImage))
                 {
-                    _logoFetchStarted = true;
-                    _ = FetchLogoAsync();
+                    _ = FetchLogoAsync(LogoUrl);
                 }
             }
             return _logoImage;
@@ -145,11 +187,11 @@ public sealed class IptvChannel : INotifyPropertyChanged
         }
     }
 
-    private async Task FetchLogoAsync()
+    private async Task FetchLogoAsync(string url)
     {
         try
         {
-            var img = await IptvLogoCache.LoadLogoAsync(LogoUrl).ConfigureAwait(false);
+            var img = await Task.Run(() => IptvLogoCache.LoadLogoAsync(url)).ConfigureAwait(false);
             if (img != null)
             {
                 var app = Application.Current;
@@ -158,7 +200,7 @@ public sealed class IptvChannel : INotifyPropertyChanged
                     await app.Dispatcher.InvokeAsync(() =>
                     {
                         LogoImage = img;
-                    });
+                    }, DispatcherPriority.Background);
                 }
             }
         }
@@ -197,6 +239,7 @@ public sealed class IptvFavorite
     public string PlaylistId { get; set; } = string.Empty;
     public string? TvgId { get; set; }
     public string Title { get; set; } = string.Empty;
+    [JsonIgnore]
     public string StreamUrl { get; set; } = string.Empty;
     public DateTime AddedAtUtc { get; set; } = DateTime.UtcNow;
 }
@@ -207,9 +250,13 @@ public sealed class IptvPlayerState
     public int LastVolume { get; set; } = 80;
     public bool IsMuted { get; set; }
     public bool IsSidebarOpen { get; set; } = true;
+    public bool FillVideo { get; set; }
+    public IptvPipPlacement? PictureInPicturePlacement { get; set; }
     public bool IsTestStreamsEnabled { get; set; }
     public string? SelectedPlaylistFilter { get; set; }
     public string? SelectedGroupFilter { get; set; }
+    public bool ShowFavorites { get; set; }
+    public IptvResolution ResolutionFilter { get; set; }
     public string? SearchQuery { get; set; }
 }
 
@@ -263,6 +310,9 @@ public sealed class IptvSettings
 
 public static class IptvSettingsNormalizer
 {
+    internal static bool IsValidSourceId(string? sourceId) =>
+        !string.IsNullOrEmpty(sourceId) && sourceId.All(c => char.IsAsciiLetterOrDigit(c) || c is '_' or '-');
+
     public static IptvSettings Normalize(IptvSettings? input, out bool changed)
     {
         changed = false;
@@ -280,7 +330,12 @@ public static class IptvSettingsNormalizer
         for (int i = 0; i < current.Sources.Count; i++)
         {
             var src = current.Sources[i];
-            if (string.IsNullOrWhiteSpace(src.Id) || !seenIds.Add(src.Id))
+            if (src.ContentRevision is not null && !Guid.TryParseExact(src.ContentRevision, "N", out _))
+            {
+                src.ContentRevision = null;
+                changed = true;
+            }
+            if (!IsValidSourceId(src.Id) || !seenIds.Add(src.Id))
             {
                 src.Id = Guid.NewGuid().ToString("N");
                 changed = true;

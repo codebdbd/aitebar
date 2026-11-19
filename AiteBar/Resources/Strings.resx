@@ -2124,12 +2124,6 @@ Open the GitHub release page?</value>
   <data name="AppSettingsWindow_DelayMaxLabel" xml:space="preserve">
     <value>500 ms</value>
   </data>
-  <data name="AppSettingsWindow_KeepOnTop" xml:space="preserve">
-    <value>Always on top</value>
-  </data>
-  <data name="AppSettingsWindow_KeepOnTopHint" xml:space="preserve">
-    <value>Keep this settings window above other applications until it is closed.</value>
-  </data>
   <data name="QuickTool_QuickNote_Title" xml:space="preserve">
     <value>Quick note</value>
   </data>
@@ -5060,7 +5054,7 @@ Do you want to proceed with permanent deletion?</value>
     <value>Channels</value>
   </data>
   <data name="TelegramPostEditor_TabQueue" xml:space="preserve">
-    <value>Queue</value>
+    <value>Scheduled posts</value>
   </data>
   <data name="TelegramPostEditor_PreviewEmpty" xml:space="preserve">
     <value>Start typing or attach media to preview your Telegram message.</value>
@@ -5167,6 +5161,15 @@ Do you want to proceed with permanent deletion?</value>
   <data name="TelegramPostEditor_AiGenerating" xml:space="preserve">
     <value>Generating…</value>
   </data>
+  <data name="TelegramPostEditor_AiActionLabel" xml:space="preserve">
+    <value>AI Action</value>
+  </data>
+  <data name="TelegramPostEditor_AiInstructionLabel" xml:space="preserve">
+    <value>Instruction (Style)</value>
+  </data>
+  <data name="TelegramPostEditor_AiModelLabel" xml:space="preserve">
+    <value>AI Model</value>
+  </data>
   <data name="TelegramPostEditor_ChannelsSelectHeader" xml:space="preserve">
     <value>Channels for publishing</value>
   </data>
@@ -5243,7 +5246,7 @@ Do you want to proceed with permanent deletion?</value>
     <value>Add Playlist...</value>
   </data>
   <data name="IptvSettings_RefreshAll" xml:space="preserve">
-    <value>Update all URL playlists</value>
+    <value>Refresh all saved playlists</value>
   </data>
   <data name="IptvSettings_NoSources" xml:space="preserve">
     <value>No playlists configured yet. Click "Add Playlist..." to add an M3U stream URL or file.</value>
@@ -5316,5 +5319,578 @@ Do you want to proceed with permanent deletion?</value>
   </data>
   <data name="Iptv_ToggleEnabled" xml:space="preserve">
     <value>Toggle playlist enabled/disabled</value>
+  </data>
+  <data name="TelegramPostEditor_QueueTokenNotice" xml:space="preserve">
+    <value>Scheduling sends the selected channels’ bot tokens to the paired server.</value>
+  </data>
+  <data name="TelegramPostEditor_QueueConnected" xml:space="preserve">
+    <value>Scheduling server connected</value>
+  </data>
+  <data name="TelegramPostEditor_QueuePairAddress" xml:space="preserve">
+    <value>Pair this server address before scheduling.</value>
+  </data>
+  <data name="Iptv_SelectChannel" xml:space="preserve">
+    <value>Click a channel or use PgUp/PgDn</value>
+  </data>
+  <data name="Iptv_FillVideo" xml:space="preserve">
+    <value>Fill the video area (crops edges)</value>
+  </data>
+  <data name="Iptv_StreamVariant" xml:space="preserve">
+    <value>Stream source</value>
+  </data>
+  <data name="Iptv_StreamNumber" xml:space="preserve">
+    <value>Source {0}</value>
+  </data>
+  <data name="Iptv_OpeningStream" xml:space="preserve">
+    <value>Opening channel…</value>
+  </data>
+  <data name="Iptv_BufferingStream" xml:space="preserve">
+    <value>Buffering…</value>
+  </data>
+  <data name="Iptv_ReconnectingStream" xml:space="preserve">
+    <value>Reconnecting…</value>
+  </data>
+  <data name="Iptv_StreamUnavailable" xml:space="preserve">
+    <value>Channel unavailable. Try again or choose another channel.</value>
+  </data>
+  <data name="Iptv_StreamStopped" xml:space="preserve">
+    <value>Playback stopped. Click a channel or press Play.</value>
+  </data>
+  <data name="Iptv_AudioOnly" xml:space="preserve">
+    <value>Audio stream</value>
+  </data>
+  <data name="Iptv_WaitingForVideo" xml:space="preserve">
+    <value>Waiting for a video frame…</value>
+  </data>
+  <data name="Iptv_EngineUnavailable" xml:space="preserve">
+    <value>The playback engine could not start.</value>
+  </data>
+  <data name="Iptv_FillLabel" xml:space="preserve">
+    <value>Fill</value>
+  </data>
+  <data name="Iptv_Pause" xml:space="preserve">
+    <value>Pause (Space)</value>
+  </data>
+  <data name="Iptv_Resume" xml:space="preserve">
+    <value>Resume (Space)</value>
+  </data>
+  <data name="Iptv_PauseUnavailable" xml:space="preserve">
+    <value>This stream cannot be paused</value>
+  </data>
+  <data name="Iptv_EnterFullscreen" xml:space="preserve">
+    <value>Full screen (F)</value>
+  </data>
+  <data name="Iptv_ExitFullscreen" xml:space="preserve">
+    <value>Exit full screen (Esc)</value>
+  </data>
+  <data name="Iptv_Mute" xml:space="preserve">
+    <value>Mute (M)</value>
+  </data>
+  <data name="Iptv_Unmute" xml:space="preserve">
+    <value>Unmute (M)</value>
+  </data>
+  <data name="Iptv_Volume" xml:space="preserve">
+    <value>Volume</value>
+  </data>
+  <data name="Iptv_PictureInPicture" xml:space="preserve">
+    <value>Picture in picture (P)</value>
+  </data>
+  <data name="IptvSettings_PendingSave" xml:space="preserve">
+    <value>Click Save in Settings to load this playlist.</value>
+  </data>
+  <data name="Iptv_PlaylistNotLoaded" xml:space="preserve">
+    <value>Playlist channels have not been loaded yet.</value>
+  </data>
+  <data name="Iptv_PlaylistLoadFailed" xml:space="preserve">
+    <value>Could not load the playlist. Check the source in IPTV settings.</value>
+  </data>
+  <data name="Iptv_NoMatchingChannels" xml:space="preserve">
+    <value>No channels match the current filters.</value>
+  </data>
+  <data name="Iptv_AddPlaylistInSettings" xml:space="preserve">
+    <value>Add a playlist in IPTV settings.</value>
+  </data>
+  <data name="Iptv_SearchFavorites" xml:space="preserve">
+    <value>Search favorites</value>
+  </data>
+  <data name="Iptv_SearchChannels" xml:space="preserve">
+    <value>Search channels</value>
+  </data>
+  <data name="Iptv_ClearSearch" xml:space="preserve">
+    <value>Clear search</value>
+  </data>
+  <data name="Iptv_Favorites" xml:space="preserve">
+    <value>Favorites</value>
+  </data>
+  <data name="Iptv_Filters" xml:space="preserve">
+    <value>Filters</value>
+  </data>
+  <data name="Iptv_PlaylistFilter" xml:space="preserve">
+    <value>Playlist</value>
+  </data>
+  <data name="Iptv_GroupFilter" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="Iptv_ClearPlaylistFilter" xml:space="preserve">
+    <value>Remove playlist filter</value>
+  </data>
+  <data name="Iptv_ClearGroupFilter" xml:space="preserve">
+    <value>Remove group filter</value>
+  </data>
+  <data name="Iptv_ResolutionFilter" xml:space="preserve">
+    <value>Resolution from playlist labels</value>
+  </data>
+  <data name="Iptv_AnyResolution" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="Iptv_UhdOrHigher" xml:space="preserve">
+    <value>4K and above</value>
+  </data>
+  <data name="Iptv_ManageSources" xml:space="preserve">
+    <value>Sources</value>
+  </data>
+  <data name="Iptv_ResetFilters" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="Iptv_AllPlaylists" xml:space="preserve">
+    <value>All playlists</value>
+  </data>
+  <data name="Iptv_AllGroups" xml:space="preserve">
+    <value>All groups</value>
+  </data>
+  <data name="Iptv_NoFavorites" xml:space="preserve">
+    <value>Add a channel using its star to see it here.</value>
+  </data>
+  <data name="Iptv_OnAir" xml:space="preserve">
+    <value>Playing now</value>
+  </data>
+  <data name="Iptv_AddFavorite" xml:space="preserve">
+    <value>Add to favorites</value>
+  </data>
+  <data name="Iptv_RemoveFavorite" xml:space="preserve">
+    <value>Remove from favorites</value>
+  </data>
+  <data name="Iptv_RetryStream" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="Iptv_StreamInfo" xml:space="preserve">
+    <value>About this stream</value>
+  </data>
+  <data name="Iptv_FramesPerSecond" xml:space="preserve">
+    <value>{0:0.#} fps</value>
+  </data>
+  <data name="Iptv_VideoCodec" xml:space="preserve">
+    <value>Video codec: {0}</value>
+  </data>
+  <data name="Iptv_VideoBitrate" xml:space="preserve">
+    <value>Video bitrate: {0:0.#} kbps</value>
+  </data>
+  <data name="Iptv_DroppedFrames" xml:space="preserve">
+    <value>Dropped frames: {0}</value>
+  </data>
+  <data name="Iptv_NoActiveChannel" xml:space="preserve">
+    <value>No channel playing</value>
+  </data>
+  <data name="Iptv_PreviousChannel" xml:space="preserve">
+    <value>Previous channel (PgUp)</value>
+  </data>
+  <data name="Iptv_NextChannel" xml:space="preserve">
+    <value>Next channel (PgDn)</value>
+  </data>
+  <data name="Iptv_ReturnToWindow" xml:space="preserve">
+    <value>Return to player (P or Esc)</value>
+  </data>
+  <data name="Iptv_VideoOnly" xml:space="preserve">
+    <value>Show or hide channels (V)</value>
+  </data>
+  <data name="SettingsLists_Title" xml:space="preserve">
+    <value>Connect resources</value>
+  </data>
+  <data name="SettingsLists_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="SettingsLists_Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="SettingsLists_Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+  <data name="SettingsLists_UndoRemove" xml:space="preserve">
+    <value>Undo removal</value>
+  </data>
+  <data name="SettingsLists_TelegramReading" xml:space="preserve">
+    <value>Telegram channels for reading</value>
+  </data>
+  <data name="SettingsLists_TelegramPublishing" xml:space="preserve">
+    <value>Telegram channels for publishing</value>
+  </data>
+  <data name="SettingsLists_Rss" xml:space="preserve">
+    <value>RSS feeds</value>
+  </data>
+  <data name="SettingsLists_Prompts" xml:space="preserve">
+    <value>Prompts</value>
+  </data>
+  <data name="SettingsLists_Enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="SettingsLists_Up" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="SettingsLists_Down" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="SettingsLists_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="SettingsLists_CheckFailed" xml:space="preserve">
+    <value>Check failed</value>
+  </data>
+  <data name="SettingsLists_Checked" xml:space="preserve">
+    <value>Checked</value>
+  </data>
+  <data name="SettingsLists_AddressValid" xml:space="preserve">
+    <value>Address format is valid</value>
+  </data>
+  <data name="SettingsLists_Empty" xml:space="preserve">
+    <value>No entries yet</value>
+  </data>
+  <data name="SettingsLists_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SettingsLists_Category" xml:space="preserve">
+    <value>Category</value>
+  </data>
+  <data name="SettingsLists_RssUrl" xml:space="preserve">
+    <value>RSS URL</value>
+  </data>
+  <data name="SettingsLists_ChannelAddress" xml:space="preserve">
+    <value>Channel link, @username or ID</value>
+  </data>
+  <data name="SettingsLists_PromptText" xml:space="preserve">
+    <value>Prompt text</value>
+  </data>
+  <data name="SettingsLists_InvalidEntry" xml:space="preserve">
+    <value>Review the values. One or more fields are invalid, duplicated, or could not be verified.</value>
+  </data>
+  <data name="SettingsLists_RefreshSelected" xml:space="preserve">
+    <value>Refresh selected</value>
+  </data>
+  <data name="SettingsLists_TelegramInUse" xml:space="preserve">
+    <value>Telegram entry is in use by a channel or publication.</value>
+  </data>
+  <data name="SettingsLists_Token" xml:space="preserve">
+    <value>Bot token</value>
+  </data>
+  <data name="SettingsLists_ImportResult" xml:space="preserve">
+    <value>Added: {0}. Skipped: {1}. Errors: {2}.</value>
+  </data>
+  <data name="SettingsLists_ImportErrors" xml:space="preserve">
+    <value>Review lines: {0}</value>
+  </data>
+  <data name="SettingsLists_OpenFile" xml:space="preserve">
+    <value>Open TXT or MD…</value>
+  </data>
+  <data name="SettingsLists_PasteImport" xml:space="preserve">
+    <value>Paste from clipboard</value>
+  </data>
+  <data name="SettingsLists_EnterImport" xml:space="preserve">
+    <value>Enter text</value>
+  </data>
+  <data name="SettingsLists_EditImport" xml:space="preserve">
+    <value>Edit text</value>
+  </data>
+  <data name="SettingsLists_HideImport" xml:space="preserve">
+    <value>Hide text</value>
+  </data>
+  <data name="SettingsLists_IptvImportFormat" xml:space="preserve">
+    <value>Use tab-separated TXT, a Markdown table, or one playlist per line as Name,URL.</value>
+  </data>
+  <data name="SettingsLists_ImportFormat" xml:space="preserve">
+    <value>Use tab-separated columns in TXT or a table in Markdown.</value>
+  </data>
+  <data name="SettingsLists_ImportText" xml:space="preserve">
+    <value>Text to import</value>
+  </data>
+  <data name="SettingsLists_ImportReady" xml:space="preserve">
+    <value>Text loaded. Open the preview to review the rows.</value>
+  </data>
+  <data name="SettingsLists_ClipboardEmpty" xml:space="preserve">
+    <value>The clipboard contains no text.</value>
+  </data>
+  <data name="SettingsLists_ClipboardUnavailable" xml:space="preserve">
+    <value>Could not read the clipboard. Try again.</value>
+  </data>
+  <data name="SettingsLists_EmptyImportFile" xml:space="preserve">
+    <value>The selected file contains no text.</value>
+  </data>
+  <data name="SettingsLists_FileTooLarge" xml:space="preserve">
+    <value>Import text must be 4 MB or smaller.</value>
+  </data>
+  <data name="SettingsLists_AllCategories" xml:space="preserve">
+    <value>All categories</value>
+  </data>
+  <data name="SettingsLists_NoCategory" xml:space="preserve">
+    <value>Uncategorized</value>
+  </data>
+  <data name="SettingsLists_ManagePrompts" xml:space="preserve">
+    <value>Manage prompts…</value>
+  </data>
+  <data name="SettingsLists_Preview" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="SettingsLists_New" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="SettingsLists_AlreadyPresent" xml:space="preserve">
+    <value>Already exists</value>
+  </data>
+  <data name="SettingsLists_Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+  <data name="SettingsLists_UseDefaultBot" xml:space="preserve">
+    <value>Default bot</value>
+  </data>
+  <data name="SettingsLists_RestoreFailed" xml:space="preserve">
+    <value>Settings could not be restored. Reopen the settings before retrying.</value>
+  </data>
+  <data name="SettingsLists_SelectEntry" xml:space="preserve">
+    <value>Include</value>
+  </data>
+  <data name="SettingsLists_Line" xml:space="preserve">
+    <value>Line</value>
+  </data>
+  <data name="SettingsLists_Status" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="SettingsLists_Ai" xml:space="preserve">
+    <value>AI connections</value>
+  </data>
+  <data name="SettingsLists_Iptv" xml:space="preserve">
+    <value>IPTV sources</value>
+  </data>
+  <data name="SettingsLists_ConcurrentEdit" xml:space="preserve">
+    <value>Telegram data changed in another window. Reopen Settings and retry.</value>
+  </data>
+  <data name="SettingsLists_SelectToUpdate" xml:space="preserve">
+    <value>Exists · select to update</value>
+  </data>
+  <data name="SettingsLists_UpdatedCount" xml:space="preserve">
+    <value>Updated: {0}</value>
+  </data>
+  <data name="SettingsLists_Provider" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="SettingsLists_PlaylistType" xml:space="preserve">
+    <value>Source type</value>
+  </data>
+  <data name="SettingsLists_TelegramId" xml:space="preserve">
+    <value>Telegram ID</value>
+  </data>
+  <data name="SettingsLists_BotId" xml:space="preserve">
+    <value>Bot Telegram ID</value>
+  </data>
+  <data name="SettingsLists_LoadRss" xml:space="preserve">
+    <value>Load</value>
+  </data>
+  <data name="SettingsLists_InsertRss" xml:space="preserve">
+    <value>Insert selected</value>
+  </data>
+  <data name="SettingsLists_ManageRss" xml:space="preserve">
+    <value>Manage feeds</value>
+  </data>
+  <data name="SettingsLists_RssReady" xml:space="preserve">
+    <value>Select a feed and click Load.</value>
+  </data>
+  <data name="SettingsLists_NoFeeds" xml:space="preserve">
+    <value>No enabled feeds.</value>
+  </data>
+  <data name="SettingsLists_RssLoading" xml:space="preserve">
+    <value>Loading feed…</value>
+  </data>
+  <data name="SettingsLists_RssNoItems" xml:space="preserve">
+    <value>The feed has no items.</value>
+  </data>
+  <data name="SettingsLists_DefaultOrCurrentBot" xml:space="preserve">
+    <value>Default or current bot</value>
+  </data>
+  <data name="SettingsLists_RssShort" xml:space="preserve">
+    <value>RSS</value>
+  </data>
+  <data name="TelegramComposer_ApproximatePreview" xml:space="preserve">
+    <value>Approximate view in Telegram</value>
+  </data>
+  <data name="TelegramComposer_Assistant" xml:space="preserve">
+    <value>AI assistant</value>
+  </data>
+  <data name="TelegramComposer_BackToDraft" xml:space="preserve">
+    <value>Back to draft</value>
+  </data>
+  <data name="TelegramComposer_Canceled" xml:space="preserve">
+    <value>Canceled</value>
+  </data>
+  <data name="TelegramComposer_CheckChannel" xml:space="preserve">
+    <value>Check the channel before sending again.</value>
+  </data>
+  <data name="TelegramComposer_Connect" xml:space="preserve">
+    <value>Connect a bot or channel</value>
+  </data>
+  <data name="TelegramComposer_ConnectHint" xml:space="preserve">
+    <value>Connect a bot with permission to post, then add a channel.</value>
+  </data>
+  <data name="TelegramComposer_DeliveredCount" xml:space="preserve">
+    <value>Published to {0} of {1} channels</value>
+  </data>
+  <data name="TelegramComposer_DraftActions" xml:space="preserve">
+    <value>Draft actions</value>
+  </data>
+  <data name="TelegramComposer_Drafts" xml:space="preserve">
+    <value>Drafts</value>
+  </data>
+  <data name="TelegramComposer_DraftUnavailable" xml:space="preserve">
+    <value>The draft could not be opened.</value>
+  </data>
+  <data name="TelegramComposer_FutureTime" xml:space="preserve">
+    <value>Enter a future local date and a valid time in HH:mm.</value>
+  </data>
+  <data name="TelegramComposer_HidePreview" xml:space="preserve">
+    <value>Hide preview</value>
+  </data>
+  <data name="TelegramComposer_Later" xml:space="preserve">
+    <value>Schedule</value>
+  </data>
+  <data name="TelegramComposer_MessagePreview" xml:space="preserve">
+    <value>Telegram message</value>
+  </data>
+  <data name="TelegramComposer_Now" xml:space="preserve">
+    <value>Now</value>
+  </data>
+  <data name="TelegramComposer_OpenDraft" xml:space="preserve">
+    <value>Open draft</value>
+  </data>
+  <data name="TelegramComposer_PairRequired" xml:space="preserve">
+    <value>Connect the scheduling server to continue.</value>
+  </data>
+  <data name="TelegramComposer_Paused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="TelegramComposer_PostText" xml:space="preserve">
+    <value>Post text</value>
+  </data>
+  <data name="TelegramComposer_QueueEmpty" xml:space="preserve">
+    <value>No scheduled posts yet.</value>
+  </data>
+  <data name="TelegramComposer_QueueOffline" xml:space="preserve">
+    <value>Some statuses could not be updated. Showing the last known state.</value>
+  </data>
+  <data name="TelegramComposer_Refresh" xml:space="preserve">
+    <value>Refresh statuses</value>
+  </data>
+  <data name="TelegramComposer_RestoreToPublish" xml:space="preserve">
+    <value>Restore this draft before publishing.</value>
+  </data>
+  <data name="TelegramComposer_RetryFailed" xml:space="preserve">
+    <value>Retry failed deliveries</value>
+  </data>
+  <data name="TelegramComposer_RetryWait" xml:space="preserve">
+    <value>Waiting to retry</value>
+  </data>
+  <data name="TelegramComposer_Review" xml:space="preserve">
+    <value>Set up publishing</value>
+  </data>
+  <data name="TelegramComposer_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="TelegramComposer_Editor" xml:space="preserve">
+    <value>Editor</value>
+  </data>
+  <data name="TelegramComposer_SaveError" xml:space="preserve">
+    <value>Could not save the draft.</value>
+  </data>
+  <data name="TelegramComposer_Scheduled" xml:space="preserve">
+    <value>Schedule accepted</value>
+  </data>
+  <data name="TelegramComposer_Scheduler" xml:space="preserve">
+    <value>Scheduling server</value>
+  </data>
+  <data name="TelegramComposer_ScheduleZone" xml:space="preserve">
+    <value>Local date and time · {0}</value>
+  </data>
+  <data name="TelegramComposer_Submitting" xml:space="preserve">
+    <value>Working…</value>
+  </data>
+  <data name="TelegramComposer_TestChannel" xml:space="preserve">
+    <value>{0} (test)</value>
+  </data>
+  <data name="TelegramComposer_TimeFormat" xml:space="preserve">
+    <value>Time (HH:mm)</value>
+  </data>
+  <data name="TelegramComposer_Title" xml:space="preserve">
+    <value>Publications</value>
+  </data>
+  <data name="TelegramComposer_UnknownResult" xml:space="preserve">
+    <value>Delivery unconfirmed</value>
+  </data>
+  <data name="TelegramComposer_When" xml:space="preserve">
+    <value>When</value>
+  </data>
+  <data name="TelegramComposer_WhereToSend" xml:space="preserve">
+    <value>Where should this post go?</value>
+  </data>
+  <data name="TelegramComposer_Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="TelegramComposer_Routing" xml:space="preserve">
+    <value>Recipients and timing</value>
+  </data>
+  <data name="TelegramComposer_WhereSummary" xml:space="preserve">
+    <value>To: {0}</value>
+  </data>
+  <data name="TelegramComposer_WhenSummary" xml:space="preserve">
+    <value>When: {0}</value>
+  </data>
+  <data name="TelegramComposer_SelectRecipient" xml:space="preserve">
+    <value>Choose recipients</value>
+  </data>
+  <data name="TelegramComposer_ChooseTime" xml:space="preserve">
+    <value>Choose a time</value>
+  </data>
+  <data name="TelegramComposer_AiBrief" xml:space="preserve">
+    <value>Describe the post you want to write.</value>
+  </data>
+  <data name="TelegramComposer_AiDraft" xml:space="preserve">
+    <value>Write</value>
+  </data>
+  <data name="TelegramComposer_AiStart" xml:space="preserve">
+    <value>Write with AI</value>
+  </data>
+  <data name="TelegramComposer_AiInputContext" xml:space="preserve">
+    <value>{0} · What should change?</value>
+  </data>
+  <data name="TelegramComposer_AiRewrite" xml:space="preserve">
+    <value>Rewrite</value>
+  </data>
+  <data name="TelegramComposer_AiOptions" xml:space="preserve">
+    <value>AI options</value>
+  </data>
+  <data name="TelegramComposer_AiSelection" xml:space="preserve">
+    <value>Selected text</value>
+  </data>
+  <data name="TelegramComposer_AiWholePost" xml:space="preserve">
+    <value>Entire post</value>
+  </data>
+  <data name="TelegramComposer_AiReplace" xml:space="preserve">
+    <value>Replace</value>
+  </data>
+  <data name="TelegramComposer_AiStale" xml:space="preserve">
+    <value>The post changed. Generate a new suggestion for the current text.</value>
+  </data>
+  <data name="TelegramComposer_OpenPublished" xml:space="preserve">
+    <value>Open in Telegram</value>
+  </data>
+  <data name="TelegramComposer_Reschedule" xml:space="preserve">
+    <value>Change time</value>
+  </data>
+  <data name="TelegramComposer_RescheduleTime" xml:space="preserve">
+    <value>Local date and time (YYYY-MM-DD HH:mm) · {0}</value>
   </data>
 </root>

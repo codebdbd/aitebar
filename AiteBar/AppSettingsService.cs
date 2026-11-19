@@ -79,7 +79,7 @@ namespace AiteBar
             }
         }
 
-        private static AppSettings CloneAppSettings(AppSettings original)
+        internal static AppSettings CloneAppSettings(AppSettings original)
         {
             var clone = new AppSettings
             {
@@ -154,6 +154,13 @@ namespace AiteBar
                     }).ToList() ?? []
                 },
                 Iptv = original.Iptv != null ? original.Iptv.Clone() : new(),
+                RssFeeds = [.. original.RssFeeds ?? []],
+                TelegramReadingSources = [.. original.TelegramReadingSources ?? []],
+                SavedPrompts = [.. original.SavedPrompts ?? []],
+                TelegramPublishingCategories = new(original.TelegramPublishingCategories ?? [], StringComparer.Ordinal),
+                AiConnectionDisplayOrder = [.. original.AiConnectionDisplayOrder ?? []],
+                TelegramBotDisplayOrder = [.. original.TelegramBotDisplayOrder ?? []],
+                TelegramChannelDisplayOrder = [.. original.TelegramChannelDisplayOrder ?? []],
                 NextContextHotkey = new HotkeyBinding
                 {
                     Ctrl = original.NextContextHotkey.Ctrl,
@@ -340,6 +347,8 @@ namespace AiteBar
                 TelegramPostEditorWidth = original.TelegramPostEditorWidth,
                 TelegramPostEditorHeight = original.TelegramPostEditorHeight,
                 TelegramPostEditorWindowState = original.TelegramPostEditorWindowState,
+                TelegramPostEditorServerUrl = original.TelegramPostEditorServerUrl,
+                TelegramPostEditorDeviceId = original.TelegramPostEditorDeviceId,
                 IptvPlayerLeft = original.IptvPlayerLeft,
                 IptvPlayerTop = original.IptvPlayerTop,
                 IptvPlayerWidth = original.IptvPlayerWidth,

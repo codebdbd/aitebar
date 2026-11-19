@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using AiteBar.IptvPlayer;
 
 namespace AiteBar;
 
@@ -34,7 +35,21 @@ internal sealed class BackupService
         Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
         await using FileStream output = File.Create(destination);
         using var archive = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: false);
-        await WriteEntryAsync(archive, SettingsEntry, JsonSerializer.Serialize(settings, JsonOptions), cancellationToken);
+        AppSettings portableSettings = AppSettingsService.CloneAppSettings(settings);
+        foreach (var source in portableSettings.Iptv.Sources)
+        {
+            if (source.Kind is IptvSourceKind.Url or IptvSourceKind.SingleStream)
+            {
+                source.Location = string.Empty;
+            }
+            source.InlineContent = null;
+            source.LastRefreshedUtc = null;
+            source.LastErrorMessage = null;
+            source.LastStatus = null;
+            source.ChannelCount = 0;
+        }
+        portableSettings.Iptv.LastAutoUpdateUtc = null;
+        await WriteEntryAsync(archive, SettingsEntry, JsonSerializer.Serialize(portableSettings, JsonOptions), cancellationToken);
 
         if (Directory.Exists(PathHelper.IconsFolder))
         {
@@ -79,18 +94,17 @@ internal sealed class BackupService
         }
 
         string iptvRoot = Path.Combine(PathHelper.AppDataFolder, "IptvPlayer");
-        if (Directory.Exists(iptvRoot))
+        IptvPlayerStore? iptvStore = Directory.Exists(iptvRoot) || options.IncludeSecrets
+            ? new IptvPlayerStore(iptvRoot, _credentials)
+            : null;
+        if (iptvStore is not null)
         {
-            foreach (string path in Directory.EnumerateFiles(iptvRoot, "*", SearchOption.AllDirectories))
-            {
-                string relative = Path.GetRelativePath(iptvRoot, path).Replace('\\', '/');
-                // Пропускаем DPAPI Secrets, так как при экспорте секретов они шифруются в secrets payload
-                if (relative.StartsWith("Secrets/", StringComparison.OrdinalIgnoreCase))
-                {
-                    continue;
-                }
-                archive.CreateEntryFromFile(path, $"{IptvPrefix}{relative}", CompressionLevel.Optimal);
-            }
+            await WriteEntryAsync(archive, $"{IptvPrefix}favorites.json",
+                JsonSerializer.Serialize(iptvStore.LoadFavorites(), JsonOptions), cancellationToken);
+            var playerState = iptvStore.LoadPlayerState();
+            playerState.SearchQuery = null;
+            await WriteEntryAsync(archive, $"{IptvPrefix}player-state.json",
+                JsonSerializer.Serialize(playerState, JsonOptions), cancellationToken);
         }
 
         if (!options.IncludeSecrets) return;
@@ -100,16 +114,31 @@ internal sealed class BackupService
             if (!string.IsNullOrWhiteSpace(connection.CredentialTarget) && _credentials.Read(connection.CredentialTarget) is string value)
                 secrets[connection.CredentialTarget] = value;
         }
-        if (settings.Iptv?.Sources != null)
+        var iptvLocations = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        var iptvSourceContents = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var source in settings.Iptv?.Sources ?? [])
         {
-            foreach (var src in settings.Iptv.Sources)
+            if (!IptvSettingsNormalizer.IsValidSourceId(source.Id)) continue;
+
+            if (source.Kind is IptvSourceKind.Url or IptvSourceKind.SingleStream)
             {
-                string target = $"{WindowsAiCredentialStore.IptvSourceTargetPrefix}{src.Id}";
-                if (_credentials.Read(target) is string iptvSecret)
+                string? location = IptvPlaylistParser.IsMaskedSensitiveUrl(source.Location)
+                    ? iptvStore?.ReadSecretLocation(source.SourceStorageId)
+                    : source.Location;
+                if (!string.IsNullOrWhiteSpace(location))
                 {
-                    secrets[target] = iptvSecret;
+                    iptvLocations[source.Id] = location;
                 }
             }
+            else if ((source.InlineContent ?? iptvStore?.ReadSourceFileContent(source.SourceStorageId)) is string content)
+            {
+                iptvSourceContents[source.Id] = content;
+            }
+        }
+        if (!string.IsNullOrWhiteSpace(settings.TelegramPostEditorDeviceId))
+        {
+            string target = TelegramPostEditor.Services.TelegramSecretStore.GetServerTargetName(settings.TelegramPostEditorDeviceId);
+            if (_credentials.Read(target) is string token) secrets[target] = token;
         }
         if (File.Exists(telegramDb))
         {
@@ -125,7 +154,8 @@ internal sealed class BackupService
                     secrets[targetRef] = tgSecret;
             }
         }
-        var payload = new BackupSecretPayload(secrets, options.IncludeClipboard ? ClipboardHistoryService.Instance.Entries : null);
+        var payload = new BackupSecretPayload(secrets, options.IncludeClipboard ? ClipboardHistoryService.Instance.Entries : null,
+            iptvLocations, iptvSourceContents);
         await WriteEntryAsync(archive, SecretsEntry, Encrypt(JsonSerializer.SerializeToUtf8Bytes(payload, JsonOptions), options.Password!), cancellationToken);
     }
 
@@ -199,7 +229,7 @@ internal sealed class BackupService
                     throw new InvalidOperationException("A password is required for this backup.");
                 }
 
-                byte[] encryptedBytes = await ReadBoundedEntryBytesAsync(secretsEntry, MaxSingleEntryBytes, TrackUncompressedBytes, cancellationToken);
+                byte[] encryptedBytes = await ReadBoundedEntryBytesAsync(secretsEntry, MaxTotalUncompressedBytes, TrackUncompressedBytes, cancellationToken);
                 byte[] plaintext = Decrypt(encryptedBytes, options.Password);
                 try
                 {
@@ -319,13 +349,41 @@ internal sealed class BackupService
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
                 await File.WriteAllBytesAsync(destination, content, cancellationToken);
             }
+            new IptvPlayerStore(iptvRoot, _credentials).ProtectLegacyFiles();
         }
 
         if (backup.Secrets is not null)
         {
+            var iptvStore = new IptvPlayerStore(null, _credentials);
             foreach (var (target, secret) in backup.Secrets.Credentials)
             {
-                _credentials.Write(target, secret);
+                if (target.StartsWith(WindowsAiCredentialStore.IptvSourceTargetPrefix, StringComparison.Ordinal) &&
+                    IptvSettingsNormalizer.IsValidSourceId(target[WindowsAiCredentialStore.IptvSourceTargetPrefix.Length..]))
+                {
+                    iptvStore.SaveSecretLocation(target[WindowsAiCredentialStore.IptvSourceTargetPrefix.Length..], secret);
+                }
+                else
+                {
+                    _credentials.Write(target, secret);
+                }
+            }
+            foreach (var playlist in backup.Settings.Iptv?.Sources ?? [])
+            {
+                if (!IptvSettingsNormalizer.IsValidSourceId(playlist.Id)) continue;
+
+                if (backup.Secrets.IptvLocations?.TryGetValue(playlist.Id, out string? location) == true)
+                {
+                    playlist.Location = location;
+                    if (IptvPlaylistParser.IsSensitiveUrl(location))
+                    {
+                        iptvStore.SaveSecretLocation(playlist.SourceStorageId, location);
+                        playlist.Location = IptvPlaylistParser.MaskSensitiveUrl(location);
+                    }
+                }
+                if (backup.Secrets.IptvSourceContents?.TryGetValue(playlist.Id, out string? content) == true)
+                {
+                    iptvStore.SaveSourceFileContent(playlist.SourceStorageId, content);
+                }
             }
             if (backup.Secrets.ClipboardEntries is not null)
             {

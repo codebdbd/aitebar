@@ -350,19 +350,29 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBlock x:Name="TxtCounters"
                                            FontSize="13" Foreground="{DynamicResource MutedText}"
                                            VerticalAlignment="Center"
                                            AutomationProperties.LiveSetting="Polite"/>
-                                <TextBlock x:Name="TxtModelState" Grid.Column="1"
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0">
+                                    <Button x:Name="BtnSavedPrompts" Padding="6,2"
+                                            Content="{local:Loc ResourceKey=SettingsLists_Prompts}" Click="BtnSavedPrompts_Click"
+                                            VerticalAlignment="Center"/>
+                                    <Button x:Name="BtnRssSources" Content="{local:Loc ResourceKey=SettingsLists_RssShort}" Margin="6,0,0,0" Padding="6,2"
+                                            AutomationProperties.Name="{local:Loc ResourceKey=SettingsLists_Rss}"
+                                            ToolTip="{local:Loc ResourceKey=SettingsLists_Rss}" Click="BtnRssSources_Click"
+                                            VerticalAlignment="Center"/>
+                                </StackPanel>
+                                <TextBlock x:Name="TxtModelState" Grid.Column="2"
                                            Margin="20,0,0,0"
                                            FontSize="12" Foreground="{DynamicResource MutedText}"
                                            HorizontalAlignment="Right" VerticalAlignment="Center"
                                            TextTrimming="CharacterEllipsis" Visibility="Collapsed"
                                            AutomationProperties.LiveSetting="Polite"/>
-                                <Button x:Name="BtnOpenSettings" Grid.Column="1"
+                                <Button x:Name="BtnOpenSettings" Grid.Column="2"
                                         Margin="20,0,0,0"
                                         FontSize="12" Padding="0"
                                         HorizontalAlignment="Right" VerticalAlignment="Center"

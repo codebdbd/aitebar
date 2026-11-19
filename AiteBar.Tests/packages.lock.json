@@ -66,15 +66,15 @@
       },
       "LibVLCSharp": {
         "type": "Transitive",
-        "resolved": "3.9.0",
-        "contentHash": "wydvN5kotK5y/ZRC04/F6YUqesJCzdixaItRkR8L0/nOLSs2/BJ7rKRbU7BxkxpKIBqlN8EpuXxH/fQEZEHtuw=="
+        "resolved": "3.9.4",
+        "contentHash": "SmapcnMarT7eoiZeSIq0UhTrK/fdw+NDodfMft/S4Bnqlnz98zYtaAsQ3fO9U+O2KZKrOOf0R3jONUEShpjK4g=="
       },
       "LibVLCSharp.WPF": {
         "type": "Transitive",
-        "resolved": "3.9.0",
-        "contentHash": "pBOfuPmuZHwPEmjco0cpzDNEQXod3ASt3RpLRE/JV5/E6/9tQu5jsMeTe6hG1KzBiiAAp7nnVbZQt3DOPBqMCA==",
+        "resolved": "3.9.4",
+        "contentHash": "mU575rJM02MtTXqZG1sYiJF5DpPO6HRFKIYGFK0R9m0BRQKNvbYgIk6FkJPt6OC1Y04WAz+JykYz/MBBJfdpSw==",
         "dependencies": {
-          "LibVLCSharp": "3.9.0"
+          "LibVLCSharp": "3.9.4"
         }
       },
       "Microsoft.CodeCoverage": {
@@ -284,8 +284,8 @@
       "aitebar": {
         "type": "Project",
         "dependencies": {
-          "LibVLCSharp": "[3.9.0, )",
-          "LibVLCSharp.WPF": "[3.9.0, )",
+          "LibVLCSharp": "[3.9.4, )",
+          "LibVLCSharp.WPF": "[3.9.4, )",
           "Microsoft.Data.Sqlite": "[10.0.0, )",
           "QRCoder": "[1.8.0, )",
           "QRCoder.Xaml": "[1.8.0, )",

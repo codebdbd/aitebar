@@ -20,10 +20,7 @@ public static class IptvLogoCache
     private static readonly HashSet<string> s_failedUrls = new(StringComparer.OrdinalIgnoreCase);
     private static readonly object s_failedLock = new();
     private static readonly SemaphoreSlim s_downloadSemaphore = new(2, 2);
-    private static readonly HttpClient s_httpClient = new()
-    {
-        Timeout = TimeSpan.FromSeconds(2.5)
-    };
+    private static readonly HttpClient s_httpClient = new(new HttpClientHandler { AllowAutoRedirect = false });
     private static string? s_cacheDir;
 
     public static void Initialize(string cacheBaseDirectory)
@@ -42,38 +39,8 @@ public static class IptvLogoCache
         }
     }
 
-    public static ImageSource? GetCachedLogo(string? url)
-    {
-        if (string.IsNullOrWhiteSpace(url)) return null;
-
-        if (s_memoryCache.TryGetValue(url, out var cached))
-        {
-            return cached;
-        }
-
-        // Проверяем диск синхронно (очень быстро для локального SSD)
-        string hash = ComputeMd5(url);
-        string? filePath = s_cacheDir != null ? Path.Combine(s_cacheDir, $"{hash}.png") : null;
-
-        if (filePath != null && File.Exists(filePath))
-        {
-            try
-            {
-                var bitmap = LoadFromDisk(filePath);
-                if (bitmap != null)
-                {
-                    s_memoryCache[url] = bitmap;
-                    return bitmap;
-                }
-            }
-            catch
-            {
-                // Игнорируем ошибку чтения битого файла с диска
-            }
-        }
-
-        return null;
-    }
+    internal static bool TryGetCachedLogo(string url, out ImageSource? image) =>
+        s_memoryCache.TryGetValue(url, out image);
 
     public static async Task<ImageSource?> LoadLogoAsync(string? url, CancellationToken ct = default)
     {
@@ -118,15 +85,14 @@ public static class IptvLogoCache
         await s_downloadSemaphore.WaitAsync(ct).ConfigureAwait(false);
         try
         {
-            using var resp = await s_httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode)
-            {
-                RecordFailed(url);
-                return null;
-            }
+            if (s_memoryCache.TryGetValue(url, out cached)) return cached;
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(TimeSpan.FromSeconds(2.5));
+            var (bytes, _, _) = await IptvPlaylistService.DownloadRemoteBytesAsync(
+                s_httpClient, url, 5 * 1024 * 1024, timeout.Token).ConfigureAwait(false);
 
-            var bytes = await resp.Content.ReadAsByteArrayAsync(ct).ConfigureAwait(false);
-            if (bytes.Length == 0 || bytes.Length > 5 * 1024 * 1024)
+            var bitmap = DecodeBytes(bytes);
+            if (bitmap == null)
             {
                 RecordFailed(url);
                 return null;
@@ -144,12 +110,8 @@ public static class IptvLogoCache
                 }
             }
 
-            var bitmap = DecodeBytes(bytes);
-            if (bitmap != null)
-            {
-                s_memoryCache[url] = bitmap;
-                return bitmap;
-            }
+            s_memoryCache[url] = bitmap;
+            return bitmap;
         }
         catch
         {

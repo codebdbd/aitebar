@@ -1,906 +1,541 @@
 <local:DarkWindow x:Class="AiteBar.TelegramPostEditorWindow"
-        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:local="clr-namespace:AiteBar"
-        Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
-        Title="{local:Loc ResourceKey=TelegramPostEditor_Title}"
-        WindowClass="Workspace"
-        Width="1360" Height="840"
-        MinWidth="1060" MinHeight="680"
-        WindowStartupLocation="CenterScreen"
-        Background="{DynamicResource WindowBackground}"
-        Foreground="{DynamicResource PrimaryText}"
-        WindowStyle="SingleBorderWindow"
-        ResizeMode="CanResize"
-        ShowInTaskbar="True">
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="clr-namespace:AiteBar"
+    Icon="pack://application:,,,/AiteBar;component/Resources/app.ico"
+    Title="{local:Loc ResourceKey=TelegramPostEditor_Title}"
+    WindowClass="Workspace" Width="1000" Height="690" MinWidth="720" MinHeight="540"
+    WindowStartupLocation="CenterScreen" ResizeMode="CanResize" ShowInTaskbar="True"
+    Background="{DynamicResource WindowBackground}" Foreground="{DynamicResource PrimaryText}"
+    Closing="Window_Closing">
     <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/AiteBar;component/SettingsWindowResources.xaml"/>
                 <ResourceDictionary Source="/AiteBar;component/FormControlsResources.xaml"/>
                 <ResourceDictionary Source="/AiteBar;component/UtilityWindowResources.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-
-            <SolidColorBrush x:Key="EditorCardBrush" Color="#20252D"/>
-            <SolidColorBrush x:Key="EditorSurfaceBrush" Color="#171A20"/>
-            <SolidColorBrush x:Key="EditorItemHoverBrush" Color="#262D38"/>
-            <SolidColorBrush x:Key="EditorBorderBrush" Color="#2E3744"/>
-            <SolidColorBrush x:Key="EditorMutedTextBrush" Color="#9EA9B7"/>
-            <FontFamily x:Key="EditorIconFont">pack://application:,,,/Resources/#FluentSystemIcons-Regular</FontFamily>
-
-            <local:TelegramWorkflowStatusConverter x:Key="WorkflowStatusConverter"/>
-            <local:TelegramUtcToLocalConverter x:Key="UtcToLocalConverter"/>
-            <BooleanToVisibilityConverter x:Key="BoolToVis"/>
-
-            <Style x:Key="EditorTabItemStyle" TargetType="TabItem" BasedOn="{StaticResource UnderlineTabItemStyle}">
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="TabItem">
-                            <Border x:Name="Bd"
-                                    Background="Transparent"
-                                    BorderThickness="0,0,0,2"
-                                    BorderBrush="Transparent"
-                                    Margin="0,0,14,0"
-                                    Padding="4,6">
-                                <ContentPresenter ContentSource="Header"
-                                                  TextElement.Foreground="{TemplateBinding Foreground}"
-                                                  TextElement.FontSize="13"
-                                                  TextElement.FontWeight="SemiBold"/>
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="Bd" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
-                                    <Setter Property="Foreground" Value="#F4F7FA"/>
-                                </Trigger>
-                                <Trigger Property="IsSelected" Value="False">
-                                    <Setter Property="Foreground" Value="{StaticResource EditorMutedTextBrush}"/>
-                                </Trigger>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Cursor" Value="Hand"/>
-                                    <Setter Property="Foreground" Value="#F4F7FA"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
-
-            <Style x:Key="EditorToolbarIconButtonStyle" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
-                <Setter Property="Background" Value="{StaticResource EditorSurfaceBrush}"/>
-                <Setter Property="BorderBrush" Value="{StaticResource EditorBorderBrush}"/>
-                <Setter Property="Foreground" Value="#E8EDF2"/>
-                <Setter Property="Height" Value="{StaticResource ToolbarControlHeight}"/>
-                <Setter Property="MinWidth" Value="28"/>
-                <Setter Property="Padding" Value="8,0"/>
+            <SolidColorBrush x:Key="ComposerSurface" Color="#252526"/>
+            <SolidColorBrush x:Key="ComposerLine" Color="#37373B"/>
+            <SolidColorBrush x:Key="ComposerMuted" Color="#ACACB3"/>
+            <SolidColorBrush x:Key="ComposerError" Color="#F0A1A1"/>
+            <local:TelegramUtcToLocalConverter x:Key="DraftDateConverter"/>
+            <Style x:Key="ComposerCommand" TargetType="Button" BasedOn="{StaticResource ToolbarButtonStyle}">
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderBrush" Value="Transparent"/>
+                <Setter Property="Height" Value="32"/>
+                <Setter Property="MinWidth" Value="30"/>
+                <Setter Property="Padding" Value="9,0"/>
                 <Setter Property="Margin" Value="0,0,4,0"/>
             </Style>
-
-            <Style x:Key="TelegramPostListItemStyle" TargetType="ListBoxItem">
-                <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Style x:Key="ComposerHeading" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="24"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="Margin" Value="0,0,0,14"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+            </Style>
+            <Style x:Key="ComposerIcon" TargetType="Button" BasedOn="{StaticResource ComposerCommand}">
+                <Setter Property="FontFamily" Value="pack://application:,,,/AiteBar;component/Resources/#FluentSystemIcons-Regular"/>
+                <Setter Property="FontSize" Value="16"/>
+                <Setter Property="FontWeight" Value="Normal"/>
+                <Setter Property="Width" Value="30"/>
                 <Setter Property="Padding" Value="0"/>
-                <Setter Property="Margin" Value="0,0,0,6"/>
+                <Setter Property="Margin" Value="0,0,3,0"/>
+                <Style.Triggers>
+                    <Trigger Property="Tag" Value="Active">
+                        <Setter Property="Background" Value="{StaticResource ComposerSurface}"/>
+                        <Setter Property="BorderBrush" Value="{StaticResource ComposerLine}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="ComposerCaption" TargetType="TextBlock">
+                <Setter Property="Foreground" Value="{StaticResource ComposerMuted}"/>
+                <Setter Property="FontSize" Value="12"/>
+                <Setter Property="TextWrapping" Value="Wrap"/>
+            </Style>
+            <Style x:Key="ComposerMenu" TargetType="ContextMenu" BasedOn="{StaticResource DarkContextMenu}">
+                <Setter Property="Background" Value="{StaticResource ComposerSurface}"/>
+                <Setter Property="MinWidth" Value="190"/>
+            </Style>
+            <Style x:Key="ComposerNavigation" TargetType="Button" BasedOn="{StaticResource ComposerCommand}">
+                <Style.Triggers>
+                    <Trigger Property="Tag" Value="Active">
+                        <Setter Property="Background" Value="#203242"/>
+                        <Setter Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+                    </Trigger>
+                </Style.Triggers>
+            </Style>
+            <Style x:Key="ComposerDraftItem" TargetType="ListBoxItem">
+                <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
                 <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
                 <Setter Property="Template">
                     <Setter.Value>
                         <ControlTemplate TargetType="ListBoxItem">
-                            <Border x:Name="ItemBorder"
-                                    Background="{StaticResource EditorSurfaceBrush}"
-                                    BorderBrush="{StaticResource EditorBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="6"
-                                    Padding="10,8">
-                                <ContentPresenter/>
+                            <Border x:Name="DraftRow" Background="Transparent" BorderBrush="{StaticResource ComposerLine}"
+                                    BorderThickness="0,0,0,1" Padding="8,1">
+                                <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource EditorItemHoverBrush}"/>
-                                    <Setter TargetName="ItemBorder" Property="BorderBrush" Value="#3E4C5E"/>
-                                    <Setter Property="Cursor" Value="Hand"/>
+                                    <Setter TargetName="DraftRow" Property="Background" Value="{StaticResource ComposerSurface}"/>
                                 </Trigger>
                                 <Trigger Property="IsSelected" Value="True">
-                                    <Setter TargetName="ItemBorder" Property="Background" Value="#1E3144"/>
-                                    <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+                                    <Setter TargetName="DraftRow" Property="Background" Value="#203242"/>
+                                </Trigger>
+                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                    <Setter TargetName="DraftRow" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Setter.Value>
                 </Setter>
             </Style>
+            <DataTemplate x:Key="PublicationRow">
+                <Border BorderBrush="{StaticResource ComposerLine}" BorderThickness="0,0,0,1" Padding="0,10">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                        <TextBlock Text="{Binding Status}" FontSize="13" TextWrapping="Wrap" Margin="0,3,0,0"/>
+                        <TextBlock Text="{Binding Details}" Style="{StaticResource ComposerCaption}" Margin="0,2,0,0"/>
+                            <WrapPanel>
+                                <Button Content="{local:Loc ResourceKey=TelegramComposer_OpenPublished}" Style="{StaticResource ComposerCommand}"
+                                        Tag="{Binding Link}" Click="OpenPublished_Click" Visibility="{Binding LinkVisibility}"/>
+                                <Button Content="{local:Loc ResourceKey=TelegramComposer_Reschedule}" Style="{StaticResource ComposerCommand}"
+                                        Tag="{Binding Target}" Click="Reschedule_Click" Visibility="{Binding RescheduleVisibility}"/>
+                            </WrapPanel>
+                    </StackPanel>
+                </Border>
+            </DataTemplate>
         </ResourceDictionary>
     </Window.Resources>
 
-    <Grid Margin="12">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-
-        <!-- Top Action Bar -->
-        <Border Grid.Row="0"
-                Background="{StaticResource EditorCardBrush}"
-                BorderBrush="{StaticResource EditorBorderBrush}"
-                BorderThickness="1"
-                CornerRadius="8"
-                Padding="12,8"
-                Margin="0,0,0,10">
-            <DockPanel LastChildFill="False">
-                <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                    <Button x:Name="BtnNewPost"
-                            Style="{StaticResource PrimaryButtonStyle}"
-                            Height="34"
-                            Padding="12,0"
-                            Margin="0,0,8,0"
-                            Click="BtnNewPost_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xF10A;" FontFamily="{StaticResource EditorIconFont}" FontSize="13" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_NewPost}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="BtnFromTemplate"
-                            Style="{StaticResource SecondaryButtonStyle}"
-                            Height="34"
-                            Padding="12,0"
-                            Margin="0,0,8,0"
-                            Click="BtnFromTemplate_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE4DA;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_FromTemplate}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="BtnSavePost"
-                            Style="{StaticResource SecondaryButtonStyle}"
-                            Height="34"
-                            Padding="12,0"
-                            Margin="0,0,8,0"
-                            Click="BtnSavePost_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xE4DF;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="{local:Loc ResourceKey=Common_Save}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
-                    <Button x:Name="BtnExportJson"
-                            Style="{StaticResource SecondaryButtonStyle}"
-                            Height="34"
-                            Padding="12,0"
-                            Click="BtnExportJson_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#xF401;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_ExportJson}" VerticalAlignment="Center"/>
-                        </StackPanel>
-                    </Button>
+        <Border Background="{StaticResource ComposerSurface}" BorderBrush="{StaticResource ComposerLine}"
+                BorderThickness="0,0,0,1" Padding="20,8">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                <StackPanel x:Name="WorkspaceNavigation" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Grid Width="108" Margin="0,0,10,0">
+                        <TextBlock x:Name="EditorLocation" Text="{local:Loc ResourceKey=TelegramComposer_Editor}"
+                                   FontWeight="SemiBold" VerticalAlignment="Center" Margin="9,0"/>
+                        <Button x:Name="BackNavigationButton" Style="{StaticResource ComposerCommand}" Click="BackNavigation_Click"
+                                AutomationProperties.Name="{local:Loc ResourceKey=TelegramComposer_Back}" Visibility="Collapsed">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="←" Margin="0,0,6,0"/>
+                                <TextBlock Text="{local:Loc ResourceKey=TelegramComposer_Back}"/>
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    <Button x:Name="DraftsNavigationButton" Content="{local:Loc ResourceKey=TelegramComposer_Drafts}"
+                            Style="{StaticResource ComposerNavigation}" Click="ShowDrafts_Click"/>
+                    <Button x:Name="QueueNavigationButton" Content="{local:Loc ResourceKey=TelegramPostEditor_TabQueue}"
+                            Style="{StaticResource ComposerNavigation}" Click="ShowQueue_Click"/>
                 </StackPanel>
-
-                <Border DockPanel.Dock="Right"
-                        Background="{StaticResource EditorSurfaceBrush}"
-                        BorderBrush="{StaticResource EditorBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="4"
-                        Padding="10,5"
-                        VerticalAlignment="Center"
-                        ToolTip="{local:Loc ResourceKey=TelegramPostEditor_LocalModeTooltip}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="&#xEAC3;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" Foreground="{DynamicResource AccentColor}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                        <TextBlock x:Name="TxtModeBadge"
-                                   Text="{local:Loc ResourceKey=TelegramPostEditor_LocalModeBadge}"
-                                   Foreground="{StaticResource EditorMutedTextBrush}"
-                                   FontSize="12"
-                                   VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
-            </DockPanel>
+                <Grid Grid.Column="1" Margin="12,0,0,0">
+                    <Button x:Name="RetryPublicationButton" Content="{local:Loc ResourceKey=TelegramComposer_RetryFailed}"
+                            Style="{StaticResource PrimaryButtonStyle}" Click="RetryPublication_Click" Visibility="Collapsed"/>
+                </Grid>
+            </Grid>
         </Border>
 
-        <!-- Main Three-Pane Workspace -->
         <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="290" MinWidth="240"/>
-                <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="*" MinWidth="460"/>
-                <ColumnDefinition Width="10"/>
-                <ColumnDefinition Width="380" MinWidth="330"/>
-            </Grid.ColumnDefinitions>
-
-            <!-- Left: Library -->
-            <Border Grid.Column="0"
-                    Background="{StaticResource EditorCardBrush}"
-                    BorderBrush="{StaticResource EditorBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="14">
+            <Grid x:Name="EditorPage">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBlock Text="&#xE8AF;" FontFamily="{StaticResource EditorIconFont}" FontSize="15" Foreground="{DynamicResource AccentColor}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_LibraryHeader}" FontSize="14" FontWeight="SemiBold" Foreground="#F4F7FA" VerticalAlignment="Center"/>
-                    </StackPanel>
-
-                    <Grid Grid.Row="1" Margin="0,0,0,8">
-                        <TextBox x:Name="TxtSearchPosts"
-                                 Padding="30,0,10,0"
-                                 VerticalContentAlignment="Center"
-                                 TextChanged="TxtSearchPosts_TextChanged"/>
-                        <TextBlock Text="&#xF690;"
-                                   FontFamily="{StaticResource EditorIconFont}"
-                                   FontSize="15"
-                                   Foreground="{StaticResource EditorMutedTextBrush}"
-                                   Margin="10,0,0,0"
-                                   VerticalAlignment="Center"
-                                   IsHitTestVisible="False"/>
-                        <TextBlock x:Name="TxtSearchPlaceholder"
-                                   Text="{local:Loc ResourceKey=TelegramPostEditor_SearchPlaceholder}"
-                                   Foreground="{StaticResource EditorMutedTextBrush}"
-                                   FontSize="12"
-                                   Margin="34,0,10,0"
-                                   VerticalAlignment="Center"
-                                   IsHitTestVisible="False"/>
-                    </Grid>
-
-                    <Grid Grid.Row="2" Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="1.2*"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="0.9*"/>
-                        </Grid.ColumnDefinitions>
-                        <ComboBox x:Name="CmbLibraryFilter" Grid.Column="0" SelectionChanged="CmbLibraryFilter_SelectionChanged"/>
-                        <ComboBox x:Name="CmbLibrarySort" Grid.Column="2" SelectionChanged="CmbLibrarySort_SelectionChanged"/>
-                    </Grid>
-
-                    <ListBox x:Name="LstPosts"
-                             Grid.Row="3"
-                             Background="Transparent"
-                             BorderThickness="0"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                             ItemContainerStyle="{StaticResource TelegramPostListItemStyle}"
-                             SelectionChanged="LstPosts_SelectionChanged">
-                        <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0"
-                                               Text="&#xF3DC;"
-                                               FontFamily="{StaticResource EditorIconFont}"
-                                               FontSize="15"
-                                               Foreground="{StaticResource EditorMutedTextBrush}"
-                                               VerticalAlignment="Center"
-                                               Margin="0,0,10,0"/>
-                                    <StackPanel Grid.Column="1">
-                                        <TextBlock Text="{Binding Title}"
-                                                   Foreground="#F4F7FA"
-                                                   FontWeight="SemiBold"
-                                                   FontSize="13"
-                                                   TextTrimming="CharacterEllipsis"
-                                                   Margin="0,0,0,2"/>
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="{Binding WorkflowStatus, Converter={StaticResource WorkflowStatusConverter}}"
-                                                       FontSize="11"
-                                                       Foreground="{StaticResource EditorMutedTextBrush}"/>
-                                            <TextBlock Text=" · " FontSize="11" Foreground="{StaticResource EditorMutedTextBrush}"/>
-                                            <TextBlock Text="{Binding UpdatedUtc, Converter={StaticResource UtcToLocalConverter}}"
-                                                       FontSize="11"
-                                                       Foreground="{StaticResource EditorMutedTextBrush}"/>
-                                        </StackPanel>
-                                    </StackPanel>
-                                </Grid>
-                            </DataTemplate>
-                        </ListBox.ItemTemplate>
-                    </ListBox>
-
-                    <Grid Grid.Row="4" Margin="0,10,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="8"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <Button x:Name="BtnDuplicatePost"
-                                Grid.Column="0"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                Height="34"
-                                Padding="8,0"
-                                Click="BtnDuplicatePost_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xF32C;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_Duplicate}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                        <Button x:Name="BtnDeleteOrRestorePost"
-                                Grid.Column="2"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                Height="34"
-                                Padding="8,0"
-                                Click="BtnDeleteOrRestorePost_Click">
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="&#xF34D;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                <TextBlock x:Name="TxtDeleteOrRestoreLabel" Text="{local:Loc ResourceKey=TelegramPostEditor_MoveToTrash}" VerticalAlignment="Center"/>
-                            </StackPanel>
-                        </Button>
-                    </Grid>
-                </Grid>
-            </Border>
-
-            <GridSplitter Grid.Column="1" Width="10" HorizontalAlignment="Stretch" Background="Transparent"/>
-
-            <!-- Center: Editor + AI Panel -->
-            <Border Grid.Column="2"
-                    Background="{StaticResource EditorCardBrush}"
-                    BorderBrush="{StaticResource EditorBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="14">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                        <RowDefinition Height="Auto"/>
-                    </Grid.RowDefinitions>
-
-                    <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,10">
-                        <TextBlock Text="&#xF3DC;" FontFamily="{StaticResource EditorIconFont}" FontSize="15" Foreground="{DynamicResource AccentColor}" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_EditorHeader}" FontSize="14" FontWeight="SemiBold" Foreground="#F4F7FA" VerticalAlignment="Center"/>
-                    </StackPanel>
-
-                    <!-- Single Clean Draft Title -->
-                    <Grid Grid.Row="1" Margin="0,0,0,8">
-                        <TextBox x:Name="TxtPostTitle" VerticalContentAlignment="Center" Padding="10,0" TextChanged="EditorMetadata_Changed"/>
-                        <TextBlock x:Name="TxtPostTitlePlaceholder"
-                                   Text="{local:Loc ResourceKey=TelegramPostEditor_DraftTitleLabel}"
-                                   Foreground="{StaticResource EditorMutedTextBrush}"
-                                   FontSize="12"
-                                   Margin="12,0"
-                                   VerticalAlignment="Center"
-                                   IsHitTestVisible="False"/>
-                    </Grid>
-
-                    <!-- Formatting Toolbar -->
-                    <Border Grid.Row="2"
-                            Background="{StaticResource EditorSurfaceBrush}"
-                            BorderBrush="{StaticResource EditorBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="6,5"
-                            Margin="0,0,0,8">
-                        <WrapPanel VerticalAlignment="Center">
-                            <Button Style="{StaticResource EditorToolbarIconButtonStyle}"
-                                    Width="32" Padding="0"
-                                    ToolTip="{local:Loc ResourceKey=QuickNote_Bold}"
-                                    Click="BtnBold_Click">
-                                <TextBlock Text="&#xF7A5;" FontFamily="{StaticResource EditorIconFont}" FontSize="15"/>
-                            </Button>
-                            <Button Style="{StaticResource EditorToolbarIconButtonStyle}"
-                                    Width="32" Padding="0"
-                                    ToolTip="{local:Loc ResourceKey=QuickNote_Italic}"
-                                    Click="BtnItalic_Click">
-                                <TextBlock Text="&#xF7F4;" FontFamily="{StaticResource EditorIconFont}" FontSize="15"/>
-                            </Button>
-                            <Button Style="{StaticResource EditorToolbarIconButtonStyle}"
-                                    Width="32" Padding="0"
-                                    ToolTip="{local:Loc ResourceKey=QuickNote_Underline}"
-                                    Click="BtnUnderline_Click">
-                                <TextBlock Text="&#xF80A;" FontFamily="{StaticResource EditorIconFont}" FontSize="15"/>
-                            </Button>
-                            <Button Style="{StaticResource EditorToolbarIconButtonStyle}"
-                                    Width="32" Padding="0" Margin="0,0,8,0"
-                                    ToolTip="{local:Loc ResourceKey=QuickNote_Strikethrough}"
-                                    Click="BtnStrike_Click">
-                                <TextBlock Text="&#xED60;" FontFamily="{StaticResource EditorIconFont}" FontSize="15"/>
-                            </Button>
-                            <Border Width="1" Background="{StaticResource EditorBorderBrush}" Margin="0,4,8,4"/>
-                            <Button Content="{local:Loc ResourceKey=TelegramPostEditor_Spoiler}" Style="{StaticResource EditorToolbarIconButtonStyle}" Padding="10,0" Click="BtnSpoiler_Click"/>
-                            <Button Style="{StaticResource EditorToolbarIconButtonStyle}" Padding="10,0" Click="BtnInlineCode_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xF2EF;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                    <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_InlineCode}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Style="{StaticResource EditorToolbarIconButtonStyle}" Padding="10,0" Click="BtnQuote_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xF800;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                    <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_Quote}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                            <Button Style="{StaticResource EditorToolbarIconButtonStyle}" Padding="10,0" Margin="0" Click="BtnAddMedia_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xF48C;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                    <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_AddMedia}" VerticalAlignment="Center"/>
-                                </StackPanel>
-                            </Button>
-                        </WrapPanel>
-                    </Border>
-
-                    <!-- Structured AI Bar -->
-                    <Border Grid.Row="3"
-                            Background="{StaticResource EditorSurfaceBrush}"
-                            BorderBrush="{StaticResource EditorBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="6"
-                            Margin="0,0,0,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="1.1*" MinWidth="130"/>
-                                <ColumnDefinition Width="6"/>
-                                <ColumnDefinition Width="1.1*" MinWidth="130"/>
-                                <ColumnDefinition Width="6"/>
-                                <ColumnDefinition Width="1.1*" MinWidth="130"/>
-                                <ColumnDefinition Width="8"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <ComboBox x:Name="CmbAiModel" Grid.Column="0"/>
-                            <ComboBox x:Name="CmbInstruction" Grid.Column="2" DisplayMemberPath="Title"/>
-                            <ComboBox x:Name="CmbAiAction" Grid.Column="4" DisplayMemberPath="DisplayName"/>
-                            <StackPanel Grid.Column="6" Orientation="Horizontal">
-                                <Button x:Name="BtnRunAi"
-                                        Padding="12,0"
-                                        Height="36"
-                                        Style="{StaticResource PrimaryButtonStyle}"
-                                        Click="BtnRunAi_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xF7DA;" FontFamily="{StaticResource EditorIconFont}" FontSize="15" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_AiProcess}" VerticalAlignment="Center"/>
-                                    </StackPanel>
-                                </Button>
-                                <Button x:Name="BtnStopAi"
-                                        Content="{local:Loc ResourceKey=TelegramPostEditor_AiStop}"
-                                        Padding="10,0"
-                                        Height="36"
-                                        Margin="6,0,0,0"
-                                        Visibility="Collapsed"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        Click="BtnStopAi_Click"/>
-                            </StackPanel>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid x:Name="ComposerDocument" Margin="36,24,36,10" MaxWidth="740">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <DockPanel Grid.Row="0">
+                            <TextBlock x:Name="TxtStatusBar" DockPanel.Dock="Right" Style="{StaticResource ComposerCaption}"
+                                       VerticalAlignment="Center" Margin="12,0,0,0" MaxWidth="160" AutomationProperties.LiveSetting="Polite"/>
+                            <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_DraftTitleLabel}" Style="{StaticResource ComposerCaption}"/>
+                        </DockPanel>
+                        <Grid Grid.Row="1" Margin="0,1,0,12">
+                            <TextBox x:Name="TxtPostTitle" Background="Transparent" BorderThickness="0" Padding="0,2"
+                                     Height="Auto" FontSize="28" FontWeight="SemiBold" TextChanged="EditorMetadata_Changed"
+                                     AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_DraftTitleLabel}">
+                                <TextBox.Template>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <Border x:Name="TitleFocus" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,1">
+                                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}"/>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                                <Setter TargetName="TitleFocus" Property="BorderBrush" Value="{DynamicResource AccentColor}"/>
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </TextBox.Template>
+                            </TextBox>
+                            <TextBlock x:Name="TxtPostTitlePlaceholder" Text="{local:Loc ResourceKey=TelegramPostEditor_NewPost}"
+                                       Foreground="{StaticResource ComposerMuted}" FontSize="28" IsHitTestVisible="False"/>
                         </Grid>
-                    </Border>
-
-                    <!-- RichTextBox with Rounded Surface Container & Placeholder -->
-                    <Border Grid.Row="4"
-                            Background="{StaticResource EditorSurfaceBrush}"
-                            BorderBrush="{StaticResource EditorBorderBrush}"
-                            BorderThickness="1"
-                            CornerRadius="6">
-                        <Grid>
-                            <RichTextBox x:Name="PostEditorRichTextBox"
-                                         Background="Transparent"
-                                         Foreground="#F4F7FA"
-                                         CaretBrush="#F4F7FA"
-                                         BorderThickness="0"
-                                         Padding="14"
-                                         AcceptsReturn="True"
-                                         VerticalScrollBarVisibility="Auto"
-                                         FontSize="14"
+                        <Border Grid.Row="2" BorderBrush="{StaticResource ComposerLine}" BorderThickness="0,1,0,1" Padding="0,4">
+                            <WrapPanel>
+                                <Button x:Name="BoldButton" Content="&#xECD2;" Style="{StaticResource ComposerIcon}"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Bold}" ToolTip="{local:Loc ResourceKey=QuickNote_Bold}" Click="BtnBold_Click"/>
+                                <Button x:Name="ItalicButton" Content="&#xED36;" Style="{StaticResource ComposerIcon}"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Italic}" ToolTip="{local:Loc ResourceKey=QuickNote_Italic}" Click="BtnItalic_Click"/>
+                                <Button x:Name="UnderlineButton" Content="&#xED67;" Style="{StaticResource ComposerIcon}"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Underline}" ToolTip="{local:Loc ResourceKey=QuickNote_Underline}" Click="BtnUnderline_Click"/>
+                                <Button x:Name="StrikethroughButton" Content="&#xED5E;" Style="{StaticResource ComposerIcon}"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=QuickNote_Strikethrough}" ToolTip="{local:Loc ResourceKey=QuickNote_Strikethrough}" Click="BtnStrike_Click"/>
+                                <Button x:Name="SpoilerButton" Content="&#xE5F4;" Style="{StaticResource ComposerIcon}"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_Spoiler}" ToolTip="{local:Loc ResourceKey=TelegramPostEditor_Spoiler}" Click="BtnSpoiler_Click"/>
+                                <Button x:Name="CodeButton" Content="&#xF339;" Style="{StaticResource ComposerIcon}"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_InlineCode}" ToolTip="{local:Loc ResourceKey=TelegramPostEditor_InlineCode}" Click="BtnInlineCode_Click"/>
+                                <Button x:Name="QuoteButton" Content="&#xED59;" Style="{StaticResource ComposerIcon}"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_Quote}" ToolTip="{local:Loc ResourceKey=TelegramPostEditor_Quote}" Click="BtnQuote_Click"/>
+                                <Border Width="1" Height="20" Background="{StaticResource ComposerLine}" Margin="2,0,6,0" VerticalAlignment="Center"/>
+                                <Button x:Name="AttachMediaButton" Content="&#xF1A8;" Style="{StaticResource ComposerIcon}"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_AddMedia}" ToolTip="{local:Loc ResourceKey=TelegramPostEditor_AddMedia}" Click="BtnAddMedia_Click"/>
+                                <Button x:Name="PreviewButton" Content="&#xE5F1;" Style="{StaticResource ComposerIcon}"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_TabPreview}" ToolTip="{local:Loc ResourceKey=TelegramPostEditor_TabPreview}" Click="TogglePreview_Click"/>
+                                <Button x:Name="AiToggleButton" Content="&#xEB32;" Style="{StaticResource ComposerIcon}"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=TelegramComposer_Assistant}" ToolTip="{local:Loc ResourceKey=TelegramComposer_Assistant}" Click="BtnToggleAi_Click"/>
+                                <Button x:Name="DraftActionsButton" Content="&#xE823;" Style="{StaticResource ComposerIcon}" Click="OpenButtonMenu_Click"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=TelegramComposer_DraftActions}" ToolTip="{local:Loc ResourceKey=TelegramComposer_DraftActions}">
+                                    <Button.ContextMenu>
+                                        <ContextMenu Style="{StaticResource ComposerMenu}">
+                                            <MenuItem Header="{local:Loc ResourceKey=Common_Save}" Click="BtnSavePost_Click"/>
+                                            <MenuItem Header="{local:Loc ResourceKey=TelegramPostEditor_ExportJson}" Click="BtnExportJson_Click"/>
+                                            <MenuItem x:Name="DuplicateDraftMenuItem" Header="{local:Loc ResourceKey=TelegramPostEditor_Duplicate}" Click="BtnDuplicatePost_Click"/>
+                                            <MenuItem x:Name="DeleteDraftMenuItem" Header="{local:Loc ResourceKey=TelegramPostEditor_MoveToTrash}" Click="BtnDeleteOrRestorePost_Click"/>
+                                        </ContextMenu>
+                                    </Button.ContextMenu>
+                                </Button>
+                            </WrapPanel>
+                        </Border>
+                        <Grid Grid.Row="3" Margin="0,10,0,0">
+                            <RichTextBox x:Name="PostEditorRichTextBox" Background="Transparent" BorderThickness="0" Padding="0,3"
+                                         Foreground="{DynamicResource PrimaryText}" CaretBrush="{DynamicResource PrimaryText}"
+                                         SelectionChanged="PostSelection_Changed" IsInactiveSelectionHighlightEnabled="True"
+                                         FontSize="16" AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                                         AutomationProperties.Name="{local:Loc ResourceKey=TelegramComposer_PostText}"
                                          TextChanged="PostEditorRichTextBox_TextChanged"/>
-                            <TextBlock x:Name="TxtEditorPlaceholder"
-                                       Text="{local:Loc ResourceKey=TelegramPostEditor_EditorPlaceholder}"
-                                       Foreground="{StaticResource EditorMutedTextBrush}"
-                                       FontSize="14"
-                                       Margin="19,16,14,14"
-                                       IsHitTestVisible="False"/>
+                            <TextBlock x:Name="TxtEditorPlaceholder" Text="{local:Loc ResourceKey=TelegramPostEditor_EditorPlaceholder}"
+                                       Foreground="{StaticResource ComposerMuted}" FontSize="16" Margin="4,7,0,0" IsHitTestVisible="False"/>
                         </Grid>
-                    </Border>
-
-                    <!-- Attached Media List -->
-                    <ItemsControl x:Name="LstAttachedMedia" Grid.Row="5" Margin="0,8,0,0">
-                        <ItemsControl.ItemsPanel>
-                            <ItemsPanelTemplate>
-                                <WrapPanel/>
-                            </ItemsPanelTemplate>
-                        </ItemsControl.ItemsPanel>
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Background="{StaticResource EditorSurfaceBrush}"
-                                        BorderBrush="{StaticResource EditorBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="4"
-                                        Padding="8,4"
-                                        Margin="0,0,6,4">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xF48C;" FontFamily="{StaticResource EditorIconFont}" FontSize="13" Foreground="{StaticResource EditorMutedTextBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <TextBlock Text="{Binding FileName}" Foreground="#F4F7FA" FontSize="12" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                        <Button Tag="{Binding Id}" Width="20" Height="20" Padding="0" Style="{StaticResource SecondaryButtonStyle}" Click="BtnRemoveMedia_Click">
-                                            <TextBlock Text="&#xF36A;" FontFamily="{StaticResource EditorIconFont}" FontSize="11"/>
-                                        </Button>
-                                    </StackPanel>
-                                </Border>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-
-                    <!-- AI Suggestion Drawer -->
-                    <Border x:Name="AiSuggestionPanel"
-                            Grid.Row="6"
-                            Visibility="Collapsed"
-                            Background="{StaticResource EditorSurfaceBrush}"
-                            BorderBrush="{DynamicResource AccentColor}"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="10"
-                            Margin="0,8,0,0">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="120"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <TextBlock x:Name="TxtAiMeta" Grid.Row="0" FontSize="11" Foreground="{StaticResource EditorMutedTextBrush}" Margin="0,0,0,6"/>
-                            <TextBox x:Name="TxtAiSuggestion"
-                                     Grid.Row="1"
-                                     Height="Auto"
-                                     Padding="8"
-                                     IsReadOnly="True"
-                                     TextWrapping="Wrap"
-                                     VerticalScrollBarVisibility="Auto"
-                                     VerticalContentAlignment="Top"
-                                     AcceptsReturn="True"/>
-                            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
-                                <Button Content="{local:Loc ResourceKey=TelegramPostEditor_AiApply}" Style="{StaticResource PrimaryCompactButtonStyle}" Margin="0,0,8,0" Click="BtnApplyAi_Click"/>
-                                <Button Content="{local:Loc ResourceKey=TelegramPostEditor_AiDismiss}" Style="{StaticResource SecondaryCompactButtonStyle}" Click="BtnDismissAi_Click"/>
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- Editor Footer: Autosave + Char Counter -->
-                    <DockPanel Grid.Row="7" Margin="2,10,2,0">
-                        <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock Text="&#xE89C;" FontFamily="{StaticResource EditorIconFont}" FontSize="13" Foreground="{StaticResource EditorMutedTextBrush}" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                            <TextBlock x:Name="TxtStatusBar" Foreground="{StaticResource EditorMutedTextBrush}" FontSize="12" VerticalAlignment="Center"/>
-                        </StackPanel>
-                        <TextBlock x:Name="TxtCharCounter"
-                                   DockPanel.Dock="Right"
-                                   HorizontalAlignment="Right"
-                                   Foreground="{StaticResource EditorMutedTextBrush}"
-                                   FontSize="12"
-                                   VerticalAlignment="Center"/>
-                    </DockPanel>
-                </Grid>
-            </Border>
-
-            <GridSplitter Grid.Column="3" Width="10" HorizontalAlignment="Stretch" Background="Transparent"/>
-
-            <!-- Right: Preview, Channels, Queue -->
-            <Border Grid.Column="4"
-                    Background="{StaticResource EditorCardBrush}"
-                    BorderBrush="{StaticResource EditorBorderBrush}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Padding="14">
-                <TabControl x:Name="RightTabs" Style="{StaticResource UnderlineTabControlStyle}">
-                    <TabItem Header="{local:Loc ResourceKey=TelegramPostEditor_TabPreview}" Style="{StaticResource EditorTabItemStyle}">
-                        <Grid Margin="0,10,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-
-                            <!-- Channel summary bar -->
-                            <Border Grid.Row="0"
-                                    Background="{StaticResource EditorSurfaceBrush}"
-                                    BorderBrush="{StaticResource EditorBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="6"
-                                    Padding="10,7"
-                                    Margin="0,0,0,10">
-                                <DockPanel>
-                                    <TextBlock x:Name="TxtSelectedChannelsSummary" DockPanel.Dock="Left" Foreground="#E8EDF2" FontSize="12" VerticalAlignment="Center"/>
-                                    <Button DockPanel.Dock="Right"
-                                            HorizontalAlignment="Right"
-                                            Content="{local:Loc ResourceKey=TelegramPostEditor_TabChannels}"
-                                            Style="{StaticResource SecondaryButtonStyle}"
-                                            Height="26"
-                                            Padding="10,0"
-                                            Click="BtnChooseChannels_Click"/>
-                                </DockPanel>
-                            </Border>
-
-                            <!-- Telegram Message Bubble Preview -->
-                            <Border Grid.Row="1"
-                                    Background="{StaticResource EditorSurfaceBrush}"
-                                    BorderBrush="{StaticResource EditorBorderBrush}"
-                                    BorderThickness="1"
-                                    CornerRadius="6"
-                                    Padding="12">
-                                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                                    <Border Background="#1D2733"
-                                            BorderBrush="#2C3E50"
-                                            BorderThickness="1"
-                                            CornerRadius="8"
-                                            Padding="12"
-                                            VerticalAlignment="Top">
-                                        <StackPanel>
-                                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                                                <Border Width="32" Height="32" CornerRadius="16" Background="{DynamicResource AccentColor}" Margin="0,0,10,0">
-                                                    <TextBlock Text="&#xF69A;" FontFamily="{StaticResource EditorIconFont}" FontSize="15" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                                </Border>
-                                                <StackPanel VerticalAlignment="Center">
-                                                    <TextBlock x:Name="TxtPreviewChannel" FontWeight="SemiBold" FontSize="13" Foreground="#F4F7FA"/>
-                                                    <TextBlock x:Name="TxtPreviewSubtitle" FontSize="11" Foreground="{StaticResource EditorMutedTextBrush}"/>
-                                                </StackPanel>
+                        <ScrollViewer Grid.Row="4" MaxHeight="80" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="LstAttachedMedia">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Background="{StaticResource ComposerSurface}" CornerRadius="4" Padding="8,2" Margin="0,4,6,0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding FileName}" ToolTip="{Binding FileName}" MaxWidth="185"
+                                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                                <Button Content="×" Tag="{Binding Id}" Style="{StaticResource ComposerCommand}"
+                                                        AutomationProperties.Name="{local:Loc ResourceKey=Common_Delete}" Click="BtnRemoveMedia_Click"/>
                                             </StackPanel>
-
-                                            <Border x:Name="PreviewMediaBadge"
-                                                    Visibility="Collapsed"
-                                                    Background="#263342"
-                                                    CornerRadius="6"
-                                                    Padding="12,18"
-                                                    Margin="0,0,0,10">
-                                                <StackPanel HorizontalAlignment="Center">
-                                                    <TextBlock Text="&#xF48C;" FontFamily="{StaticResource EditorIconFont}" FontSize="24" Foreground="{StaticResource EditorMutedTextBrush}" HorizontalAlignment="Center" Margin="0,0,0,4"/>
-                                                    <TextBlock x:Name="TxtPreviewMediaCount" FontSize="11" Foreground="{StaticResource EditorMutedTextBrush}" HorizontalAlignment="Center"/>
-                                                </StackPanel>
-                                            </Border>
-
-                                            <TextBlock x:Name="TxtPreviewBody" FontSize="13" LineHeight="20" Foreground="#F4F7FA" TextWrapping="Wrap"/>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        <Border x:Name="AiOptionsPanel" Grid.Row="5" Visibility="Collapsed" Background="{StaticResource ComposerSurface}"
+                                CornerRadius="6" Padding="12" Margin="0,8,0,0">
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Content="×" VerticalAlignment="Top" Margin="6,0,0,0"
+                                        Style="{StaticResource ComposerCommand}" Click="BtnToggleAi_Click"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=Common_Close}" ToolTip="{local:Loc ResourceKey=Common_Close}"/>
+                                <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel>
+                                        <TextBlock x:Name="AiScopeLabel" Style="{StaticResource ComposerCaption}" Margin="0,0,0,5"/>
+                                        <TextBox x:Name="AiPromptBox" TextWrapping="Wrap" AcceptsReturn="True" Height="62"
+                                                 AutomationProperties.Name="{local:Loc ResourceKey=TelegramComposer_AiBrief}"
+                                                 ToolTip="{local:Loc ResourceKey=TelegramComposer_AiBrief}" Margin="0,0,0,6"/>
+                                        <WrapPanel Margin="0,0,0,6">
+                                            <Button x:Name="AiDraftButton" Tag="CreateFromBrief" Content="{local:Loc ResourceKey=TelegramComposer_AiDraft}"
+                                                    Click="QuickAi_Click" Margin="0,0,6,0"/>
+                                            <Button x:Name="AiShortenButton" Tag="Shorten" Content="{local:Loc ResourceKey=TelegramPostEditor_AiAction_Shorten}"
+                                                    Click="QuickAi_Click" Margin="0,0,6,0"/>
+                                            <Button x:Name="AiRewriteButton" Tag="Improve" Content="{local:Loc ResourceKey=TelegramComposer_AiRewrite}"
+                                                    Click="QuickAi_Click" Margin="0,0,6,0"/>
+                                            <Button x:Name="BtnStopAi" Content="{local:Loc ResourceKey=TelegramPostEditor_AiStop}"
+                                                    Click="BtnStopAi_Click" Visibility="Collapsed"/>
+                                        </WrapPanel>
+                                        <Expander Foreground="{DynamicResource PrimaryText}" Header="{local:Loc ResourceKey=TelegramComposer_AiOptions}">
+                                            <WrapPanel Margin="0,6,0,0">
+                                            <StackPanel Margin="0,0,8,6" Width="148">
+                                                <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_AiActionLabel}" Style="{StaticResource ComposerCaption}"/>
+                                                <ComboBox x:Name="CmbAiAction" DisplayMemberPath="DisplayName" AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_AiActionLabel}"/>
+                                            </StackPanel>
+                                            <StackPanel Margin="0,0,8,6" Width="148">
+                                                <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_AiInstructionLabel}" Style="{StaticResource ComposerCaption}"/>
+                                                <ComboBox x:Name="CmbInstruction" DisplayMemberPath="Title" AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_AiInstructionLabel}"/>
+                                            </StackPanel>
+                                            <StackPanel Margin="0,0,8,6" Width="148">
+                                                <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_AiModelLabel}" Style="{StaticResource ComposerCaption}"/>
+                                                <ComboBox x:Name="CmbAiModel" AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_AiModelLabel}"/>
+                                            </StackPanel>
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom" Margin="0,0,0,6">
+                                                <Button x:Name="BtnRunAi" Content="{local:Loc ResourceKey=TelegramPostEditor_AiProcess}" Click="BtnRunAi_Click"/>
+                                            </StackPanel>
+                                            </WrapPanel>
+                                        </Expander>
+                                        <StackPanel x:Name="AiSuggestionPanel" Visibility="Collapsed" Margin="0,8,0,0">
+                                            <TextBlock x:Name="TxtAiMeta" Style="{StaticResource ComposerCaption}"/>
+                                            <TextBlock x:Name="AiOriginalText" Style="{StaticResource ComposerCaption}" MaxHeight="42"
+                                                       TextTrimming="CharacterEllipsis" Visibility="Collapsed"/>
+                                            <TextBox x:Name="TxtAiSuggestion" Height="76" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" Margin="0,5,0,6"/>
+                                            <WrapPanel>
+                                                <Button x:Name="ApplyAiButton" Content="{local:Loc ResourceKey=TelegramPostEditor_AiApply}" Click="BtnApplyAi_Click" Margin="0,0,8,0"/>
+                                                <Button Content="{local:Loc ResourceKey=TelegramPostEditor_AiDismiss}" Style="{StaticResource ComposerCommand}" Click="BtnDismissAi_Click"/>
+                                            </WrapPanel>
                                         </StackPanel>
-                                    </Border>
-                                </ScrollViewer>
-                            </Border>
-
-                            <!-- Validation status -->
-                            <TextBlock x:Name="TxtValidationStatus"
-                                       Grid.Row="2"
-                                       FontSize="12"
-                                       Foreground="{StaticResource EditorMutedTextBrush}"
-                                       TextWrapping="Wrap"
-                                       Margin="0,10,0,10"/>
-
-                            <!-- Publish Actions -->
-                            <StackPanel Grid.Row="3">
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="8"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Button x:Name="BtnTestPublish"
-                                            Grid.Column="0"
-                                            Style="{StaticResource SecondaryButtonStyle}"
-                                            Height="36"
-                                            Padding="10,0"
-                                            Click="BtnTestPublish_Click">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xF69A;" FontFamily="{StaticResource EditorIconFont}" FontSize="13" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                            <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_TestPublish}" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button x:Name="BtnSchedulePost"
-                                            Grid.Column="2"
-                                            Style="{StaticResource SecondaryButtonStyle}"
-                                            Height="36"
-                                            Padding="12,0"
-                                            Click="BtnSchedulePost_Click">
-                                        <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="&#xF47E;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0"/>
-                                            <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_Schedule}" VerticalAlignment="Center"/>
-                                        </StackPanel>
-                                    </Button>
-                                </Grid>
-                                <Button x:Name="BtnPublishNow"
-                                        Style="{StaticResource PrimaryButtonStyle}"
-                                        Height="38"
-                                        Click="BtnPublishNow_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xF69A;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_PublishNow}" VerticalAlignment="Center"/>
                                     </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </Grid>
-                    </TabItem>
-
-                    <TabItem x:Name="TabChannelsItem" Header="{local:Loc ResourceKey=TelegramPostEditor_TabChannels}" Style="{StaticResource EditorTabItemStyle}">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="0,10,0,0">
-                            <StackPanel>
-                                <!-- Connected bots status -->
-                                <Border Background="{StaticResource EditorSurfaceBrush}"
-                                        BorderBrush="{StaticResource EditorBorderBrush}"
-                                        BorderThickness="1"
-                                        CornerRadius="6"
-                                        Padding="10,8"
-                                        Margin="0,0,0,10">
-                                    <TextBlock x:Name="TxtConnectedBotsSummary"
-                                               FontSize="12"
-                                               Foreground="#E8EDF2"
-                                               TextWrapping="Wrap"/>
+                                </ScrollViewer>
+                            </DockPanel>
+                        </Border>
+                    </Grid>
+                    <Border x:Name="SidebarDivider" Grid.Column="1" HorizontalAlignment="Left" Width="1" Margin="-16,0,0,0"
+                            Background="{StaticResource ComposerLine}" Visibility="Collapsed" IsHitTestVisible="False"/>
+                    <Border x:Name="PreviewPane" Grid.Column="1" Visibility="Collapsed" Width="300"
+                            Background="{StaticResource ComposerSurface}" BorderBrush="{StaticResource ComposerLine}" BorderThickness="1,0,0,0" Padding="16">
+                        <DockPanel>
+                            <DockPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                                <Button DockPanel.Dock="Right" Content="×" Style="{StaticResource ComposerCommand}"
+                                        AutomationProperties.Name="{local:Loc ResourceKey=Common_Close}" Click="TogglePreview_Click"/>
+                                <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_TabPreview}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                            </DockPanel>
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <Border Background="{DynamicResource WindowBackground}" CornerRadius="8" Padding="12" VerticalAlignment="Top">
+                                    <StackPanel>
+                                        <TextBlock x:Name="TxtPreviewChannel" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                        <TextBlock x:Name="TxtPreviewSubtitle" Style="{StaticResource ComposerCaption}"/>
+                                        <ItemsControl x:Name="PreviewMediaList" Margin="0,6,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <StackPanel Margin="0,0,0,6">
+                                                        <Image Source="{Binding Image}" MaxHeight="130" Stretch="Uniform" HorizontalAlignment="Left"/>
+                                                        <TextBlock Text="{Binding Name}" Style="{StaticResource ComposerCaption}"/>
+                                                    </StackPanel>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                        <FlowDocumentScrollViewer x:Name="PreviewDocument" VerticalScrollBarVisibility="Disabled" FontSize="14"
+                                                                  Foreground="{DynamicResource PrimaryText}" Margin="0,5,0,0"/>
+                                        <ItemsControl x:Name="PreviewButtonsList">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Text}" ToolTip="{Binding Url}" TextWrapping="Wrap" FontWeight="SemiBold" Margin="0,6,0,0"/>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
                                 </Border>
-
-                                <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_ChannelsSelectHeader}"
-                                           FontWeight="SemiBold"
-                                           FontSize="13"
-                                           Foreground="#F4F7FA"
-                                           Margin="0,0,0,6"/>
-
-                                <TextBlock x:Name="TxtNoChannelsHint"
-                                           Text="{local:Loc ResourceKey=TelegramSettings_NoChannels}"
-                                           FontSize="12"
-                                           Foreground="{StaticResource EditorMutedTextBrush}"
-                                           TextWrapping="Wrap"
-                                           Margin="0,0,0,8"/>
-
-                                <ItemsControl x:Name="LstChannels" Margin="0,0,0,12">
+                            </ScrollViewer>
+                        </DockPanel>
+                    </Border>
+                    <Grid x:Name="PublishPage" Grid.Column="1" Visibility="Collapsed" Width="334" Margin="0,12,14,8">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <StackPanel Margin="0,0,0,10">
+                            <TextBlock x:Name="RoutingHeading" Text="{local:Loc ResourceKey=TelegramComposer_WhereToSend}" Style="{StaticResource ComposerHeading}" Margin="0,0,0,3"/>
+                            <ScrollViewer MaxHeight="48" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
+                                <TextBlock x:Name="TxtSelectedChannelsSummary" Style="{StaticResource ComposerCaption}"/>
+                            </ScrollViewer>
+                            <TextBlock x:Name="TxtValidationStatus" Style="{StaticResource ComposerCaption}" AutomationProperties.LiveSetting="Polite"/>
+                        </StackPanel>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="PublishOptions">
+                                <StackPanel x:Name="RecipientsSection">
+                                <DockPanel Margin="0,0,0,6">
+                                    <Button DockPanel.Dock="Right" Content="{local:Loc ResourceKey=TelegramSettings_OpenSettings}"
+                                            Style="{StaticResource ComposerCommand}" Click="BtnOpenTelegramSettings_Click"/>
+                                    <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_TabChannels}" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                                </DockPanel>
+                                <TextBlock x:Name="TxtNoChannelsHint" Text="{local:Loc ResourceKey=TelegramComposer_ConnectHint}"
+                                           Style="{StaticResource ComposerCaption}" Margin="0,0,0,8"/>
+                                <ComboBox x:Name="CmbPublishingCategory" DisplayMemberPath="Label" Margin="0,0,0,6"
+                                          AutomationProperties.Name="{local:Loc ResourceKey=SettingsLists_AllCategories}"
+                                          SelectionChanged="PublishingCategory_SelectionChanged"/>
+                                <ItemsControl x:Name="LstChannels">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Background="{StaticResource EditorSurfaceBrush}"
-                                                    BorderBrush="{StaticResource EditorBorderBrush}"
-                                                    BorderThickness="1"
-                                                    CornerRadius="6"
-                                                    Padding="10,8"
-                                                    Margin="0,0,0,6">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                    </Grid.ColumnDefinitions>
-                                                    <CheckBox Grid.Column="0"
-                                                              IsChecked="{Binding IsSelected}"
-                                                              Checked="ChannelSelection_Changed"
-                                                              Unchecked="ChannelSelection_Changed"
-                                                              Margin="0"
-                                                              VerticalContentAlignment="Center">
-                                                        <StackPanel>
-                                                            <TextBlock Text="{Binding DisplayName}"
-                                                                       Foreground="#F4F7FA"
-                                                                       FontWeight="SemiBold"
-                                                                       FontSize="13"
-                                                                       TextTrimming="CharacterEllipsis"/>
-                                                            <TextBlock Text="{Binding Subtitle}"
-                                                                       Foreground="{Binding SubtitleBrush}"
-                                                                       FontSize="11"
-                                                                       TextWrapping="Wrap"/>
-                                                        </StackPanel>
-                                                    </CheckBox>
-                                                    <Button Grid.Column="1"
-                                                            Tag="{Binding Channel.Id}"
-                                                            Width="26" Height="26" Padding="0"
-                                                            Margin="6,0,0,0"
-                                                            VerticalAlignment="Center"
-                                                            Style="{StaticResource SecondaryButtonStyle}"
-                                                            ToolTip="{local:Loc ResourceKey=Common_Delete}"
-                                                            Click="BtnInlineDeleteChannel_Click">
-                                                        <TextBlock Text="&#xF36A;" FontFamily="{StaticResource EditorIconFont}" FontSize="12"/>
-                                                    </Button>
-                                                </Grid>
+                                            <Border BorderBrush="{StaticResource ComposerLine}" BorderThickness="0,0,0,1">
+                                                <CheckBox IsChecked="{Binding IsSelected, Mode=OneWay}" Click="ChannelSelection_Changed"
+                                                          Padding="4,6" MinHeight="46" VerticalContentAlignment="Center">
+                                                    <StackPanel Margin="4,0,0,0">
+                                                        <TextBlock Text="{Binding DestinationLabel}" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                                        <TextBlock Text="{Binding Subtitle}" Foreground="{Binding SubtitleBrush}" FontSize="12" TextWrapping="Wrap"/>
+                                                    </StackPanel>
+                                                </CheckBox>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
                                 </ItemsControl>
-
-                                <Border Height="1" Background="{StaticResource EditorBorderBrush}" Margin="0,2,0,12"/>
-
-                                <!-- Inline Quick Connect Bot & Channel -->
-                                <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_QuickConnectBotTitle}"
-                                           FontWeight="SemiBold"
-                                           FontSize="12"
-                                           Foreground="#F4F7FA"
-                                           Margin="0,0,0,6"/>
-                                <Grid Margin="0,0,0,10">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="8"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid Grid.Column="0">
-                                        <PasswordBox x:Name="PwdQuickBotToken" Padding="8,0" PasswordChanged="PwdQuickBotToken_PasswordChanged"/>
-                                        <TextBlock x:Name="TxtQuickBotTokenPlaceholder"
-                                                   Text="{local:Loc ResourceKey=TelegramPostEditor_BotTokenPlaceholder}"
-                                                   Foreground="{StaticResource EditorMutedTextBrush}"
-                                                   FontSize="11"
-                                                   Margin="10,0"
-                                                   VerticalAlignment="Center"
-                                                   IsHitTestVisible="False"/>
-                                    </Grid>
-                                    <Button x:Name="BtnQuickConnectBot"
-                                            Grid.Column="2"
-                                            Content="{local:Loc ResourceKey=TelegramPostEditor_ConnectButton}"
-                                            Style="{StaticResource SecondaryButtonStyle}"
-                                            Height="36"
-                                            Padding="12,0"
-                                            Click="BtnQuickConnectBot_Click"/>
-                                </Grid>
-
-                                <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_QuickConnectChannelTitle}"
-                                           FontWeight="SemiBold"
-                                           FontSize="12"
-                                           Foreground="#F4F7FA"
-                                           Margin="0,0,0,6"/>
-                                <Grid Margin="0,0,0,6">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="8"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <Grid Grid.Column="0">
-                                        <TextBox x:Name="TxtQuickChannelInput" Padding="8,0" TextChanged="TxtQuickChannelInput_TextChanged"/>
-                                        <TextBlock x:Name="TxtQuickChannelPlaceholder"
-                                                   Text="{local:Loc ResourceKey=TelegramPostEditor_ChannelInputPlaceholder}"
-                                                   Foreground="{StaticResource EditorMutedTextBrush}"
-                                                   FontSize="11"
-                                                   Margin="10,0"
-                                                   VerticalAlignment="Center"
-                                                   IsHitTestVisible="False"/>
-                                    </Grid>
-                                    <Button x:Name="BtnQuickConnectChannel"
-                                            Grid.Column="2"
-                                            Content="{local:Loc ResourceKey=TelegramPostEditor_ConnectButton}"
-                                            Style="{StaticResource SecondaryButtonStyle}"
-                                            Height="36"
-                                            Padding="12,0"
-                                            Click="BtnQuickConnectChannel_Click"/>
-                                </Grid>
-
-                                <CheckBox x:Name="ChkQuickTestChannel"
-                                          Content="{local:Loc ResourceKey=TelegramSettings_IsTestChannel}"
-                                          FontSize="12"
-                                          Margin="0,2,0,12"/>
-
-                                <Button x:Name="BtnOpenTelegramSettings"
-                                        Style="{StaticResource SecondaryButtonStyle}"
-                                        Height="36"
-                                        Padding="12,0"
-                                        Click="BtnOpenTelegramSettings_Click">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xF6A8;" FontFamily="{StaticResource EditorIconFont}" FontSize="14" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                                        <TextBlock Text="{local:Loc ResourceKey=TelegramSettings_OpenSettings}" VerticalAlignment="Center"/>
+                                <Expander x:Name="QuickConnectPanel" Header="{local:Loc ResourceKey=TelegramComposer_Connect}"
+                                          Foreground="{DynamicResource PrimaryText}" Margin="0,10,0,0">
+                                    <StackPanel Margin="0,8,0,0">
+                                        <TextBlock x:Name="TxtConnectedBotsSummary" Style="{StaticResource ComposerCaption}" Margin="0,0,0,8"/>
+                                        <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_BotTokenPlaceholder}" Style="{StaticResource ComposerCaption}"/>
+                                        <DockPanel Margin="0,4,0,8">
+                                            <Button x:Name="BtnQuickConnectBot" DockPanel.Dock="Right" Content="{local:Loc ResourceKey=TelegramSettings_AddBot}"
+                                                    Click="BtnQuickConnectBot_Click" Margin="8,0,0,0"/>
+                                            <PasswordBox x:Name="PwdQuickBotToken" AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_BotTokenPlaceholder}"/>
+                                        </DockPanel>
+                                        <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_ChannelInputPlaceholder}" Style="{StaticResource ComposerCaption}"/>
+                                        <DockPanel Margin="0,4,0,6">
+                                            <Button x:Name="BtnQuickConnectChannel" DockPanel.Dock="Right" Content="{local:Loc ResourceKey=TelegramSettings_AddChannel}"
+                                                    Click="BtnQuickConnectChannel_Click" Margin="8,0,0,0"/>
+                                            <TextBox x:Name="TxtQuickChannelInput" AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_ChannelInputPlaceholder}"/>
+                                        </DockPanel>
+                                        <CheckBox x:Name="ChkQuickTestChannel" Content="{local:Loc ResourceKey=TelegramSettings_IsTestChannel}"/>
                                     </StackPanel>
-                                </Button>
+                                </Expander>
+                                </StackPanel>
+                                <StackPanel x:Name="TimingSection" Visibility="Collapsed">
+                                <WrapPanel x:Name="TimeOptions">
+                                    <RadioButton x:Name="SendNowOption" GroupName="PublicationTime" IsChecked="True"
+                                                 Content="{local:Loc ResourceKey=TelegramComposer_Now}" Checked="PublicationTiming_Changed"
+                                                 Style="{StaticResource SelectionListRadioButtonStyle}" Margin="0,0,8,6"/>
+                                    <RadioButton x:Name="ScheduleOption" GroupName="PublicationTime"
+                                                 Content="{local:Loc ResourceKey=TelegramComposer_Later}" Checked="PublicationTiming_Changed"
+                                                 Style="{StaticResource SelectionListRadioButtonStyle}" Margin="0,0,0,6"/>
+                                </WrapPanel>
+                                <StackPanel x:Name="ScheduleFields" Visibility="Collapsed" Margin="0,0,0,8">
+                                    <TextBlock x:Name="ScheduleZone" Style="{StaticResource ComposerCaption}" Margin="0,2,0,5"/>
+                                    <WrapPanel>
+                                        <DatePicker x:Name="ScheduleDate" Width="160" SelectedDateChanged="ScheduleInput_Changed"
+                                                    Background="{StaticResource ComposerSurface}" Foreground="{DynamicResource PrimaryText}"
+                                                    BorderBrush="{StaticResource ComposerLine}" Margin="0,0,8,6"
+                                                    AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_QueueDateLabel}">
+                                            <DatePicker.Resources>
+                                                <Style TargetType="DatePickerTextBox">
+                                                    <Setter Property="Background" Value="{StaticResource ComposerSurface}"/>
+                                                    <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
+                                                    <Setter Property="Padding" Value="8,4"/>
+                                                    <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                                </Style>
+                                            </DatePicker.Resources>
+                                        </DatePicker>
+                                        <TextBox x:Name="ScheduleTime" Width="80" TextChanged="ScheduleInput_Changed" Margin="0,0,0,6"
+                                                 AutomationProperties.Name="{local:Loc ResourceKey=TelegramComposer_TimeFormat}" ToolTip="{local:Loc ResourceKey=TelegramComposer_TimeFormat}"/>
+                                    </WrapPanel>
+                                    <Expander x:Name="SchedulerSettings" Header="{local:Loc ResourceKey=TelegramComposer_Scheduler}"
+                                              Foreground="{DynamicResource PrimaryText}" Margin="0,4,0,0">
+                                        <StackPanel Margin="0,8,0,0">
+                                            <TextBlock x:Name="TxtModeBadge" Style="{StaticResource ComposerCaption}" Margin="0,0,0,6"/>
+                                            <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_QueueUrlLabel}" Style="{StaticResource ComposerCaption}"/>
+                                            <TextBox x:Name="TxtServerUrl" Margin="0,4,0,6" TextChanged="ScheduleInput_Changed"
+                                                     AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_QueueUrlLabel}"/>
+                                            <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_QueuePairCodePlaceholder}" Style="{StaticResource ComposerCaption}"/>
+                                            <DockPanel Margin="0,4,0,6">
+                                                <Button x:Name="BtnPairServer" DockPanel.Dock="Right" Content="{local:Loc ResourceKey=TelegramPostEditor_QueuePairButton}"
+                                                        Click="BtnPairServer_Click" Margin="8,0,0,0"/>
+                                                <TextBox x:Name="TxtPairingCode" AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_QueuePairCodePlaceholder}"
+                                                         ToolTip="{local:Loc ResourceKey=TelegramPostEditor_QueuePairCodePlaceholder}"/>
+                                            </DockPanel>
+                                        </StackPanel>
+                                    </Expander>
+                                    <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_QueueTokenNotice}" Style="{StaticResource ComposerCaption}" Margin="0,6,0,0"/>
+                                </StackPanel>
+                                </StackPanel>
                             </StackPanel>
                         </ScrollViewer>
-                    </TabItem>
+                    </Grid>
+                    <Grid x:Name="ResultPage" Grid.Column="1" Width="334" Visibility="Collapsed" Margin="0,12,14,8">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                        <StackPanel>
+                            <TextBlock x:Name="ResultHeading" Style="{StaticResource ComposerHeading}" AutomationProperties.LiveSetting="Polite"/>
+                            <TextBlock x:Name="ResultNotice" Style="{StaticResource ComposerCaption}"/>
+                        </StackPanel>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ResultRows" ItemTemplate="{StaticResource PublicationRow}"/>
+                        </ScrollViewer>
+                    </Grid>
+                </Grid>
+                <Border Grid.Row="1" BorderBrush="{StaticResource ComposerLine}" BorderThickness="0,1,0,0" Padding="20,6">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,4">
+                            <Button x:Name="SendPostButton" DockPanel.Dock="Right" Content="{local:Loc ResourceKey=TelegramComposer_Send}"
+                                    Style="{StaticResource PrimaryButtonStyle}" Click="SendPost_Click" Margin="12,0,0,0"/>
+                            <WrapPanel VerticalAlignment="Center">
+                                <Button x:Name="ReviewButton" Style="{StaticResource ComposerCommand}" Click="Review_Click" MaxWidth="310">
+                                    <TextBlock x:Name="EditorRecipients" TextTrimming="CharacterEllipsis"/>
+                                </Button>
+                                <Button x:Name="WhenButton" Style="{StaticResource ComposerCommand}" Click="ChooseTiming_Click"/>
+                            </WrapPanel>
+                        </DockPanel>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtCharCounter" Style="{StaticResource ComposerCaption}"/>
+                            <TextBlock x:Name="EditorValidation" Style="{StaticResource ComposerCaption}"/>
+                            <TextBlock x:Name="EditorSendError" Style="{StaticResource ComposerCaption}" AutomationProperties.LiveSetting="Polite"/>
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+            </Grid>
 
-                    <TabItem x:Name="TabQueueItem" Header="{local:Loc ResourceKey=TelegramPostEditor_TabQueue}" Style="{StaticResource EditorTabItemStyle}">
-                        <Grid Margin="0,10,0,0">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-
-                            <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                                <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_QueueUrlLabel}" FontSize="11" Foreground="{StaticResource EditorMutedTextBrush}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="TxtServerUrl" VerticalContentAlignment="Center" Margin="0,0,0,8"/>
-                                <Grid Margin="0,0,0,8">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <TextBox x:Name="TxtPairingCode" Grid.Column="0" VerticalContentAlignment="Center" Margin="0,0,6,0" ToolTip="{local:Loc ResourceKey=TelegramPostEditor_QueuePairCodePlaceholder}"/>
-                                    <Button Grid.Column="1" Content="{local:Loc ResourceKey=TelegramPostEditor_QueuePairButton}" Style="{StaticResource SecondaryButtonStyle}" Click="BtnPairServer_Click"/>
-                                </Grid>
-                                <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_QueueDateLabel}" FontSize="11" Foreground="{StaticResource EditorMutedTextBrush}" Margin="0,0,0,4"/>
-                                <TextBox x:Name="TxtScheduleLocal" VerticalContentAlignment="Center" Margin="0,0,0,8"/>
-                                <Button Content="{local:Loc ResourceKey=TelegramPostEditor_QueueSubmitButton}" Style="{StaticResource PrimaryButtonStyle}" Click="BtnQueueServer_Click"/>
+            <Grid x:Name="DraftsPage" Visibility="Collapsed" MaxWidth="700" Margin="28,22">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <DockPanel>
+                    <WrapPanel DockPanel.Dock="Right">
+                        <Button Content="{local:Loc ResourceKey=TelegramPostEditor_FromTemplate}" Click="BtnFromTemplate_Click" Margin="0,0,8,5"/>
+                        <Button x:Name="NewPostButton" Content="{local:Loc ResourceKey=TelegramPostEditor_NewPost}" Style="{StaticResource PrimaryButtonStyle}" Click="BtnNewPost_Click" Margin="0,0,0,5"/>
+                    </WrapPanel>
+                    <TextBlock Text="{local:Loc ResourceKey=TelegramComposer_Drafts}" Style="{StaticResource ComposerHeading}"/>
+                </DockPanel>
+                <DockPanel Grid.Row="1" Margin="0,0,0,10">
+                    <ComboBox x:Name="CmbLibrarySort" DockPanel.Dock="Right" MinWidth="110" Margin="8,0,0,0" SelectionChanged="CmbLibrarySort_SelectionChanged"
+                              AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_SortByDate}"/>
+                    <ComboBox x:Name="CmbLibraryFilter" DockPanel.Dock="Right" MinWidth="130" Margin="8,0,0,0" SelectionChanged="CmbLibraryFilter_SelectionChanged"
+                              AutomationProperties.Name="{local:Loc ResourceKey=TelegramComposer_Drafts}"/>
+                    <Grid>
+                        <TextBox x:Name="TxtSearchPosts" TextChanged="TxtSearchPosts_TextChanged"
+                                 AutomationProperties.Name="{local:Loc ResourceKey=TelegramPostEditor_SearchPlaceholder}"/>
+                        <TextBlock x:Name="TxtSearchPlaceholder" Text="{local:Loc ResourceKey=TelegramPostEditor_SearchPlaceholder}"
+                                   Style="{StaticResource ComposerCaption}" Margin="9,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                    </Grid>
+                </DockPanel>
+                <ListBox x:Name="LstPosts" Grid.Row="2" Background="Transparent" BorderThickness="0"
+                         ItemContainerStyle="{StaticResource ComposerDraftItem}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         MouseDoubleClick="OpenSelectedDraft_Click" KeyDown="Drafts_KeyDown" SelectionChanged="DraftSelection_Changed">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="5,8">
+                                <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                                <TextBlock Text="{Binding UpdatedUtc, Converter={StaticResource DraftDateConverter}}" Style="{StaticResource ComposerCaption}" Margin="0,2,0,0"/>
                             </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                <WrapPanel Grid.Row="3" Margin="0,10,0,0">
+                    <Button x:Name="OpenDraftButton" Content="{local:Loc ResourceKey=TelegramComposer_OpenDraft}" Click="OpenSelectedDraft_Click" Margin="0,0,8,0"/>
+                </WrapPanel>
+            </Grid>
 
-                            <ListBox x:Name="LstEvents"
-                                     Grid.Row="1"
-                                     Background="{StaticResource EditorSurfaceBrush}"
-                                     BorderBrush="{StaticResource EditorBorderBrush}"
-                                     BorderThickness="1">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Margin="6,4">
-                                            <TextBlock Text="{Binding EventType}" Foreground="#F4F7FA" FontWeight="SemiBold" FontSize="12"/>
-                                            <TextBlock Text="{Binding DetailsSanitized}" FontSize="11" Foreground="{StaticResource EditorMutedTextBrush}" TextWrapping="Wrap"/>
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </Grid>
-                    </TabItem>
-                </TabControl>
-            </Border>
+            <Grid x:Name="QueuePage" Visibility="Collapsed" MaxWidth="700" Margin="28,24">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <DockPanel>
+                    <WrapPanel DockPanel.Dock="Right">
+                        <Button x:Name="RefreshQueueButton" Content="{local:Loc ResourceKey=TelegramComposer_Refresh}" Click="RefreshQueue_Click" Margin="0,0,8,0"/>
+                    </WrapPanel>
+                    <TextBlock Text="{local:Loc ResourceKey=TelegramPostEditor_TabQueue}" Style="{StaticResource ComposerHeading}"/>
+                </DockPanel>
+                <TextBlock x:Name="QueueStatus" Grid.Row="1" Style="{StaticResource ComposerCaption}" AutomationProperties.LiveSetting="Polite"/>
+                <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                    <ItemsControl x:Name="QueueRows" ItemTemplate="{StaticResource PublicationRow}"/>
+                </ScrollViewer>
+            </Grid>
         </Grid>
     </Grid>
 </local:DarkWindow>

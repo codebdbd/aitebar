@@ -84,7 +84,8 @@ public sealed class PostAiService
         string? channelInstructionId,
         string? userPrompt = null,
         IProgress<string>? streamingProgress = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        bool isExcerpt = false)
     {
         ArgumentNullException.ThrowIfNull(document);
         ArgumentNullException.ThrowIfNull(modelChoice);
@@ -98,9 +99,12 @@ public sealed class PostAiService
             effectivePostInstructionId,
             actionTask);
 
+        string output = isExcerpt
+            ? "Return only the replacement for the selected excerpt as plain text. Keep the input language unless the task requests another language."
+            : "Write ONLY the finished post in the same language as the input text (do not analyze or label parts of the text):";
         string userContent = string.IsNullOrWhiteSpace(sourceText)
             ? actionTask
-            : $"Task: {actionTask}\nWrite ONLY the finished post in the same language as the input text (do not analyze or label parts of the text):\n\n{sourceText}";
+            : $"Task: {actionTask}\n{output}\n\n{sourceText}";
 
         var messages = new List<AiChatMessage>
         {
